@@ -31,6 +31,9 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
+        'pymongo>=3.2.1',
+        'mongoengine>=0.10.6',
+        'celery>=3.1.20',
     ],
     dependency_links=[
     ]
