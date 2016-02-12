@@ -1,7 +1,13 @@
+import logging
+from uuid import uuid4
+
 from celery import Celery
 
-from omega import defaults
-import pandas as pd
+from omegaml.store import OmegaStore
+from omegaml.util import is_dataframe, settings
+logger = logging.getLogger(__file__)
+
+
 class OmegaModelProxy(object):
 
     """
@@ -28,19 +34,47 @@ class OmegaModelProxy(object):
     def __init__(self, modelname, runtime=None):
         self.modelname = modelname
         self.runtime = runtime
+        self.pure_python = getattr(settings(), 'OMEGA_FORCE_PYTHON_CLIENT',
+                                   False)
+        self.pure_python = self.pure_python or self._client_is_pure_python()
 
     def fit(self, Xname, Yname):
-        omega_fit = self.runtime.task('omega.tasks.omega_fit')
-        return omega_fit.delay(self.modelname, Xname, Yname)
+        omega_fit = self.runtime.task('omegaml.tasks.omega_fit')
+        Xname = self._ensure_data_is_stored(Xname)
+        Yname = self._ensure_data_is_stored(Yname)
+        return omega_fit.delay(self.modelname, Xname, Yname,
+                               pure_python=self.pure_python)
 
     def predict(self, Xpath_or_data):
-        omega_predict = self.runtime.task('omega.tasks.omega_predict')
-        if isinstance(Xpath_or_data, pd.DataFrame):
-            Xname = '_temp'
-            self.runtime.omega.datasets.put(Xpath_or_data, Xname)
+        omega_predict = self.runtime.task('omegaml.tasks.omega_predict')
+        Xname = self._ensure_data_is_stored(Xpath_or_data)
+        return omega_predict.delay(self.modelname, Xname,
+                                   pure_python=self.pure_python)
+
+    def _ensure_data_is_stored(self, name_or_data):
+        if is_dataframe(name_or_data):
+            name = '_temp_%s' % uuid4().hex
+            self.runtime.omega.datasets.put(name_or_data, name)
+        elif isinstance(name_or_data, (list, tuple, dict)):
+            name = '_temp_%s' % uuid4().hex
+            self.runtime.omega.datasets.put(name_or_data, name)
+        elif isinstance(name_or_data, basestring):
+            name = name_or_data
         else:
-            Xname = Xpath_or_data
-        return omega_predict.delay(self.modelname, Xname)
+            raise TypeError(
+                'invalid type for Xpath_or_data', type(name_or_data))
+        return name
+
+    def _client_is_pure_python(self):
+        try:
+            import pandas as pd
+            import numpy as np
+            import sklearn
+        except Exception as e:
+            logging.getLogger().info(e)
+            return True
+        else:
+            return False
 
 
 class OmegaRuntime(object):
@@ -53,14 +87,15 @@ class OmegaRuntime(object):
         # initialize celery as a runtime
         celerykwargs = celerykwargs or {}
         celerykwargs.update({'backend': self.backend,
-                              'broker': self.broker,
-                              'include': ['omega.tasks']
-                              })
+                             'broker': self.broker,
+                             'include': ['omega.tasks']
+                             })
+        defaults = settings()
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
-        self.celeryapp = Celery('omega', **celerykwargs)
+        self.celeryapp = Celery('omegaml', **celerykwargs)
         self.celeryapp.conf.update(celeryconf)
         # needed to get it to actually load the tasks (???)
-        from omega.tasks import omega_fit, omega_predict
+        from omegaml.tasks import omega_fit, omega_predict
         self.celeryapp.finalize()
 
     def deploy(self, modelname):
@@ -76,6 +111,10 @@ class OmegaRuntime(object):
     def task(self, name):
         """
         retrieve the task function from the celery instance
+
+        we do it like this so we can per-OmegaRuntime instance
+        celery configurations (as opposed to using the default app's
+        import, which seems to confuse celery)
         """
         return self.celeryapp.tasks.get(name)
 
@@ -84,11 +123,11 @@ class Omega(object):
 
     def __init__(self, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None):
+        defaults = settings()
         backend = backend or defaults.OMEGA_RESULTS_BACKEND
         broker = backend or defaults.OMEGA_BROKER
-        from store import OmegaStore
         self.models = OmegaStore(prefix='models/')
-        self.datasets = OmegaStore(prefix='data')
+        self.datasets = OmegaStore(prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)

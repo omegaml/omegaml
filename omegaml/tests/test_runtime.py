@@ -2,17 +2,23 @@ import os
 from unittest import TestCase
 
 from sklearn.linear_model.base import LinearRegression
+from sklearn.utils.validation import NotFittedError
 
 import numpy as np
-from omega import Omega
+from omegaml import Omega
+from omegaml.util import override_settings, delete_database
 import pandas as pd
-from sklearn.utils.validation import NotFittedError
+override_settings(
+    OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
+    OMEGA_MONGO_COLLECTION='store'
+)
 
 
 class RuntimeTests(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
+        delete_database()
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -73,7 +79,7 @@ class RuntimeTests(TestCase):
         # create a model locally, store (unfitted) in Omega
         lr = LinearRegression()
         om.models.put(lr, 'mymodel2')
-        self.assertIn('models/mymodel', om.models.list('models/*'))
+        self.assertIn('models/mymodel2', om.models.list('models/*'))
         # predict locally for comparison
         lr.fit(X, Y)
         pred = lr.predict(X)
@@ -95,5 +101,38 @@ class RuntimeTests(TestCase):
         pred2 = result.get()
         self.assertTrue(
             (pred == pred1).all(), "runtime prediction is different(1)")
+        self.assertTrue(
+            (pred == pred2).all(), "runtime prediction is different(2)")
+
+    def test_predict_pure_python(self):
+        # create some data
+        x = np.array(range(0, 10))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = [[x] for x in list(df.x)]
+        Y = [[y] for y in list(df.y)]
+        # put into Omega -- assume a client with pandas, scikit learn
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.pure_python = True
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(X, 'datax')
+        om.datasets.put(Y, 'datay')
+        om.datasets.get('datax')
+        om.datasets.get('datay')
+        # have Omega fit the model then predict
+        lr = LinearRegression()
+        lr.fit(X, Y)
+        pred = lr.predict(X)
+        om.models.put(lr, 'mymodel2')
+        # -- using data provided locally
+        #    note this is the same as
+        #        om.datasets.put(X, 'foo')
+        #        om.runtime.model('mymodel2').predict('foo')
+        result = om.runtime.model('mymodel2').predict(X)
+        pred2 = result.get()
+        self.assertTrue(
+            (pred == pred2).all(), "runtime prediction is different(1)")
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(2)")
