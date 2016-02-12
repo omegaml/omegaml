@@ -1,0 +1,6 @@
+celery==3.1.20
+joblib==0.9.4
+jupyter==1.0.0
+jupyter-client==4.1.1
+jupyter-console==4.1.0
+jupyter-core==4.0.6
