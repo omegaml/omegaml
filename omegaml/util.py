@@ -21,6 +21,14 @@ def is_estimator(obj):
         False
 
 
+def is_ndarray(obj):
+    try:
+        import numpy as np
+        return isinstance(obj, np.ndarray)
+    except:
+        False
+
+
 def settings():
     """ wrapper to get omega settings from either django or omegamldefaults """
     global __settings

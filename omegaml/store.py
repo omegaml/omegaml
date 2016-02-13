@@ -13,7 +13,7 @@ from mongoengine.fields import GridFSProxy
 
 import omegaml
 from omegaml.documents import Metadata
-from omegaml.util import is_estimator, is_dataframe
+from omegaml.util import is_estimator, is_dataframe, is_ndarray
 
 
 class OmegaStore(object):
@@ -114,6 +114,8 @@ class OmegaStore(object):
             if kwargs.get('as_hdf', False):
                 return self.put_dataframe_as_hdf(obj, name, attributes)
             return self.put_dataframe_as_documents(obj, name, attributes)
+        elif is_ndarray(obj):
+            return self.put_ndarray_as_hdf(obj, name, attributes)
         elif isinstance(obj, (dict, list, tuple)):
             return self.put_pyobj_as_document(obj, name, attributes)
         else:
@@ -148,6 +150,16 @@ class OmegaStore(object):
                         kind=Metadata.PANDAS_HDF,
                         attributes=attributes,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
+
+    def put_ndarray_as_hdf(self, obj, name, attributes=None):
+        """ store numpy array as hdf
+
+        this is hack, converting the array to a dataframe then storing
+        it
+        """
+        import pandas as pd
+        df = pd.DataFrame(obj)
+        return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
     def put_pyobj_as_document(self, obj, name, attributes=None):
         """ store a dict as a document """

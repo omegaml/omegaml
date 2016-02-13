@@ -4,7 +4,7 @@ from uuid import uuid4
 from celery import Celery
 
 from omegaml.store import OmegaStore
-from omegaml.util import is_dataframe, settings
+from omegaml.util import is_dataframe, settings, is_ndarray
 logger = logging.getLogger(__file__)
 
 
@@ -53,6 +53,9 @@ class OmegaModelProxy(object):
 
     def _ensure_data_is_stored(self, name_or_data):
         if is_dataframe(name_or_data):
+            name = '_temp_%s' % uuid4().hex
+            self.runtime.omega.datasets.put(name_or_data, name)
+        elif is_ndarray(name_or_data):
             name = '_temp_%s' % uuid4().hex
             self.runtime.omega.datasets.put(name_or_data, name)
         elif isinstance(name_or_data, (list, tuple, dict)):
