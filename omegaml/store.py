@@ -164,6 +164,18 @@ class OmegaStore(object):
         db = self.mongodb
         return Metadata.objects(name=self.prefix + name)
 
+    def drop(self, name, version=-1):
+        meta = self.meta_for(name, version=version)[0]
+        if meta.collection:
+            self.mongodb.drop_collection(meta.collection)
+            meta.delete()
+            return True
+        if meta.gridfile is not None:
+            meta.gridfile.delete()
+            meta.delete()
+            return True
+        return False
+
     def get(self, name, version=-1, force_python=False):
         """
         retrieve an object
@@ -227,12 +239,15 @@ class OmegaStore(object):
 
     def get_object_as_python(self, meta, version=-1):
         if meta.kind == Metadata.SKLEARN_JOBLIB:
-            return meta.gridfile.read()
+            return meta.gridfile
+        if meta.kind == Metadata.PANDAS_HDF:
+            return meta.gridfile
         if meta.kind == Metadata.PANDAS_DFROWS:
             return list(getattr(self.mongodb, meta.collection).find())
         if meta.kind == Metadata.PYTHON_DATA:
             col = getattr(self.mongodb, meta.collection)
             return [d.get('data') for d in col.find(dict(_id=meta.objid))]
+        raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def list(self, pattern=None, regexp=None, raw=False):
         """
@@ -243,15 +258,20 @@ class OmegaStore(object):
 
         :param pattern: the unix file pattern or None for all
         :param regexp: the regexp. takes precedence over pattern
-        :param raw: if True return files as stored in GridFS, otherwise
-        return names as passed in by caller 
+        :param raw: if True return the meta data objects
         """
-        files = [d.name for d in Metadata.objects()]
-        if regexp:
-            files = [f for f in files if re.match(regexp, f)]
-        elif pattern:
-            files = [f for f in files if fnmatch(f, pattern)]
-        if not raw:
+        if raw:
+            meta = list(Metadata.objects())
+            if regexp:
+                files = [f for f in meta if re.match(regexp, meta.name)]
+            elif pattern:
+                files = [f for f in meta if fnmatch(meta.name, pattern)]
+        else:
+            files = [d.name for d in Metadata.objects()]
+            if regexp:
+                files = [f for f in files if re.match(regexp, f)]
+            elif pattern:
+                files = [f for f in files if fnmatch(f, pattern)]
             files = [f.replace('.omm', '') for f in files]
         return files
 

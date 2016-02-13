@@ -133,8 +133,8 @@ class StoreTests(unittest.TestCase):
         # store it remote
         store.put(lr, 'foo')
         # get it back as a zipfile
-        lr2 = store.get('foo', force_python=True)
-        with ZipFile(StringIO.StringIO(lr2)) as zipf:
+        lr2file = store.get('foo', force_python=True)
+        with ZipFile(StringIO.StringIO(lr2file.read())) as zipf:
             self.assertIn('foo', zipf.namelist())
 
     def test_store_with_metadata(self):
@@ -178,3 +178,16 @@ class StoreTests(unittest.TestCase):
         self.assertIn('hdfdf.hdf', store.fs.list())
         df2 = store.get('hdfdf')
         self.assertTrue(df.equals(df2), "dataframes differ")
+
+    def test_drop(self):
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        meta = store.put(df, 'hdfdf', as_hdf=True)
+        self.assertTrue(store.drop('hdfdf'))
+        meta = store.put(df, 'datadf')
+        self.assertTrue(store.drop('datadf'))
+        self.assertEqual(store.list(), [], 'expected the store to be empty')
