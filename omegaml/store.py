@@ -14,7 +14,6 @@ from mongoengine.fields import GridFSProxy
 import omegaml
 from omegaml.documents import Metadata
 from omegaml.util import is_estimator, is_dataframe
-import pandas as pd
 
 
 class OmegaStore(object):
@@ -126,6 +125,7 @@ class OmegaStore(object):
                 fzip, filename=self.prefix + name + '.omm')
         return Metadata(name=self.prefix + name,
                         kind=Metadata.SKLEARN_JOBLIB,
+                        metadata=meta,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
 
     def put_dataframe_as_documents(self, obj, name, meta=None):
@@ -135,6 +135,7 @@ class OmegaStore(object):
         datastore.insert_many((row[1].to_dict() for row in obj.iterrows()))
         return Metadata(name=self.prefix + name,
                         kind=Metadata.PANDAS_DFROWS,
+                        metadata=meta,
                         collection=datastore.name).save()
 
     def put_pyobj_as_document(self, obj, name, meta=None):
@@ -145,6 +146,7 @@ class OmegaStore(object):
         return Metadata(name=self.prefix + name,
                         kind=Metadata.PYTHON_DATA,
                         collection=datastore.name,
+                        metadata=meta,
                         objid=objid).save()
 
     def meta_for(self, name, version=-1):
@@ -189,6 +191,7 @@ class OmegaStore(object):
             return model
 
     def get_dataframe(self, name, version=-1):
+        import pandas as pd
         datastore = self.datastore(name)
         cursor = datastore.find()
         df = pd.DataFrame(list(cursor))

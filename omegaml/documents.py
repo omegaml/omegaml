@@ -1,8 +1,6 @@
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
-from mongoengine.fields import StringField, FileField
-
-
+from mongoengine.fields import StringField, FileField, DictField
 class Metadata(Document):
     # various kinds of data
     PANDAS_DFROWS = 'pandas.dfrows'
@@ -21,5 +19,7 @@ class Metadata(Document):
     collection = StringField()
     #: for PYTHON_DATA this is the actual document
     objid = ObjectIdField()
+    #: other meta attributes
+    metadata = DictField()
     # the actual db is defined in settings, OMEGA_MONGO_URL
     meta = {'db_alias' : 'omega'}
