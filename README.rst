@@ -7,6 +7,7 @@ be run remotely based on data previously loaded into the OmegaML datastore.
 
 .. code:: python
 
+   # this code is run locally, yet mymodel runs in the cloud
    Omega().runtime.models('mymodel').fit(X, Y)
    Omega().runtime.models('mymodel').predict(X)
 
@@ -142,3 +143,87 @@ automatically be generated so that the data can be easily retrieved later on.
    #    data temporarily in Omega
    om.runtime.models('mymodel').fit(X, Y)
    
+   
+Installation and configuration
+------------------------------
+
+*Disclaimer: This is as yet untested in a real-life deployment*
+
+Use from a "dumb" client (non scikit-learn):
+
+1. Install the omegaml package
+2. Configure the OMEGA_BROKER and OMEGA_MONGO_URL defaults
+
+.. code::
+
+   from omegalml.util import override_settings
+   
+   override_settings(
+    OMEGA_MONGO_URL = 'mongodb://host:port/database'
+    OMEGA_BROKER = 'amqp://user:password@host//'
+   )
+   
+   om = Omega()
+   ...
+   
+For Django applications, use the usual settings.py to specify the same. Omega
+will automatically detect it runs in a Django environment and get it's 
+configuration from the Django settings.
+
+.. code::
+   
+   # settings.py
+   ...
+   INSTALLED_APPS = (
+     ..., 
+     'omegaml',
+   )
+   ...
+   OMEGA_MONGO_URL = 'mongodb://host:port/database'
+   OMEGA_BROKER = 'amqp://user:password@host//'
+   
+To configure celery, use the `OMEGA_CELERY_CONFIG` dictionary:
+
+   OMEGA_CELERY_CONFIG = {
+       # any celery config variables such as queue or routing options
+       # this will be applied by calling Celery.app.conf.update()
+   }
+   
+   
+Deployment of the runtime
+-------------------------
+
+*Disclaimer: This is as yet untested in a real-life deployment*
+
+To deploy the runtime, use a heroku or dokku python buildpack that provides
+support for scikit-learn and pandas. To install any of the pydata stack,
+the easiest is to use anaconda's distribution which is e.g. provided 
+in the conda-buildpack at https://github.com/kennethreitz/conda-buildpack 
+and a conda-requirements.txt file::
+
+   # conda-requirements.txt
+   scipy
+   numpy
+   pandas
+   scikit-learn
+   
+To combine conda with pip install, add the conda site-packages to the pip
+virtualenv using a .pth file in site-packages:
+
+   # venv/site-packages/_conda.pth
+   /path/to/conda/lib/python2.7/site-packages
+   
+To configure omega, use the application's environment, e.g.::
+
+   export OMEGA_BROKER="amqp://user:password@host//"
+   export OMEGA_MONGO_URL="mongodb://host:port/database"
+   export OMEGA_CELERY_QUEUE="omegaq"
+  
+Finally, to run the omegalml runtime environment, you need a Procfile as follows:    
+
+   # Procfile
+   worker: celery worker --app omegaml.celeryapp 
+
+Note if you have a Django server that celery runs in, you may also use 
+settings.py as described above and then run celery using the Django celery app 
+(`python manage.py celery ...`)
