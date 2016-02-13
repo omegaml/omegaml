@@ -19,7 +19,7 @@ class Metadata(Document):
     collection = StringField()
     #: for PYTHON_DATA this is the actual document
     objid = ObjectIdField()
-    #: other meta attributes
-    metadata = DictField()
+    #: customer-defined other meta attributes
+    attributes = DictField()
     # the actual db is defined in settings, OMEGA_MONGO_URL
     meta = {'db_alias' : 'omega'}

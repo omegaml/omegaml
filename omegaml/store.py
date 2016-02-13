@@ -103,21 +103,23 @@ class OmegaStore(object):
             raise e
         return datastore
 
-    def put(self, obj, name, meta=None):
+    def put(self, obj, name, attributes=None, **kwargs):
         """ store an object
 
         store estimators, pipelines, numpy arrays or pandas dataframes
         """
         if is_estimator(obj):
-            return self.put_model(obj, name, meta)
+            return self.put_model(obj, name, attributes)
         elif is_dataframe(obj):
-            return self.put_dataframe_as_documents(obj, name, meta)
+            if kwargs.get('as_hdf', False):
+                return self.put_dataframe_as_hdf(obj, name, attributes)
+            return self.put_dataframe_as_documents(obj, name, attributes)
         elif isinstance(obj, (dict, list, tuple)):
-            return self.put_pyobj_as_document(obj, name, meta)
+            return self.put_pyobj_as_document(obj, name, attributes)
         else:
             raise TypeError('type %s not supported' % type(obj))
 
-    def put_model(self, obj, name, meta=None):
+    def put_model(self, obj, name, attributes=None):
         """ package model using joblib and store in GridFS """
         zipfname = self._package_model(obj, name)
         with open(zipfname) as fzip:
@@ -125,20 +127,29 @@ class OmegaStore(object):
                 fzip, filename=self.prefix + name + '.omm')
         return Metadata(name=self.prefix + name,
                         kind=Metadata.SKLEARN_JOBLIB,
-                        metadata=meta,
+                        attributes=attributes,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
 
-    def put_dataframe_as_documents(self, obj, name, meta=None):
+    def put_dataframe_as_documents(self, obj, name, attributes=None):
         """ store a dataframe as a row-wise collection of documents """
         datastore = self.datastore(name)
         datastore.drop()
         datastore.insert_many((row[1].to_dict() for row in obj.iterrows()))
         return Metadata(name=self.prefix + name,
                         kind=Metadata.PANDAS_DFROWS,
-                        metadata=meta,
+                        attributes=attributes,
                         collection=datastore.name).save()
 
-    def put_pyobj_as_document(self, obj, name, meta=None):
+    def put_dataframe_as_hdf(self, obj, name, attributes=None):
+        hdffname = self._package_dataframe2hdf(obj, name)
+        with open(hdffname) as fhdf:
+            fileid = self.fs.put(fhdf, filename=self.prefix + name + '.hdf')
+        return Metadata(name=self.prefix + name,
+                        kind=Metadata.PANDAS_HDF,
+                        attributes=attributes,
+                        gridfile=GridFSProxy(grid_id=fileid)).save()
+
+    def put_pyobj_as_document(self, obj, name, attributes=None):
         """ store a dict as a document """
         datastore = self.datastore(name)
         datastore.drop()
@@ -146,7 +157,7 @@ class OmegaStore(object):
         return Metadata(name=self.prefix + name,
                         kind=Metadata.PYTHON_DATA,
                         collection=datastore.name,
-                        metadata=meta,
+                        attributes=attributes,
                         objid=objid).save()
 
     def meta_for(self, name, version=-1):
@@ -171,6 +182,8 @@ class OmegaStore(object):
                 return self.get_dataframe(name, version=version)
             elif meta.kind == Metadata.PYTHON_DATA:
                 return self.get_python_data(name, version=version)
+            elif meta.kind == Metadata.PANDAS_HDF:
+                return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
 
     def get_model(self, name, version=-1):
@@ -197,6 +210,13 @@ class OmegaStore(object):
         df = pd.DataFrame(list(cursor))
         if '_id' in df.columns:
             del df['_id']
+        return df
+
+    def get_dataframe_hdf(self, name, version=-1):
+        filename = self.prefix + name + \
+            '.hdf' if not name.endswith('.hdf') else name
+        if filename.endswith('.hdf') and self.fs.exists(filename=filename):
+            df = self._extract_dataframe_hdf(filename, version=version)
         return df
 
     def get_python_data(self, name, version=-1):
@@ -264,3 +284,35 @@ class OmegaStore(object):
         model = joblib.load(mklfname)
         rmtree(lpath)
         return model
+
+    def _package_dataframe2hdf(self, df, filename, key=None):
+        """
+        package a dataframe as a hdf file
+        """
+        lpath = tempfile.mkdtemp()
+        fname = os.path.basename(filename)
+        hdffname = os.path.join(self.tmppath, fname + '.hdf')
+        key = key or fname
+        df.to_hdf(hdffname, key)
+        return hdffname
+
+    def _extract_dataframe_hdf(self, filename, version=-1):
+        """
+        extract a dataframe stored as hdf
+        """
+        import pandas as pd
+        hdffname = os.path.join(self.tmppath, filename)
+        dirname = os.path.dirname(hdffname)
+        try:
+            os.makedirs(dirname)
+        except OSError:
+            # OSError is raised if path exists already
+            pass
+        outf = self.fs.get_version(filename, version=version)
+        with open(hdffname, 'w') as hdff:
+            hdff.write(outf.read())
+        hdf = pd.HDFStore(hdffname)
+        key = hdf.keys()[0]
+        df = hdf[key]
+        hdf.close()
+        return df

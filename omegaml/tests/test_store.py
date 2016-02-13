@@ -136,3 +136,45 @@ class StoreTests(unittest.TestCase):
         lr2 = store.get('foo', force_python=True)
         with ZipFile(StringIO.StringIO(lr2)) as zipf:
             self.assertIn('foo', zipf.namelist())
+
+    def test_store_with_metadata(self):
+        om = OmegaStore(prefix='')
+        # dict
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        attributes = {'foo': 'bar'}
+        meta = om.put(data, 'data', attributes=attributes)
+        self.assertEqual(meta.kind, 'python.data')
+        self.assertEqual(meta.attributes, attributes)
+        data2 = om.get('data')
+        self.assertEqual(data, data2[0])
+        # dataframe
+        df = pd.DataFrame(data)
+        meta = om.put(df, 'datadf', attributes=attributes)
+        self.assertEqual(meta.kind, 'pandas.dfrows')
+        self.assertEqual(meta.attributes, attributes)
+        df2 = om.get('datadf')
+        self.assertTrue(df.equals(df2), "dataframes differ")
+        # model
+        lr = LogisticRegression()
+        meta = om.put(lr, 'mymodel', attributes=attributes)
+        self.assertEqual(meta.kind, 'sklearn.joblib')
+        self.assertEqual(meta.attributes, attributes)
+        lr2 = om.get('mymodel')
+        self.assertIsInstance(lr2, LogisticRegression)
+
+    def test_store_dataframe_as_hdf(self):
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        meta = store.put(df, 'hdfdf', as_hdf=True)
+        self.assertEqual(meta.kind, 'pandas.hdf')
+        # make sure the hdf file is actually there
+        self.assertIn('hdfdf.hdf', store.fs.list())
+        df2 = store.get('hdfdf')
+        self.assertTrue(df.equals(df2), "dataframes differ")

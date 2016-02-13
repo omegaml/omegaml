@@ -136,3 +136,34 @@ class RuntimeTests(TestCase):
             (pred == pred2).all(), "runtime prediction is different(1)")
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(2)")
+
+    def test_predict_hdf_dataframe(self):
+        # create some data
+        x = np.array(range(0, 10))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = [[x] for x in list(df.x)]
+        Y = [[y] for y in list(df.y)]
+        # put into Omega -- assume a client with pandas, scikit learn
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.pure_python = True
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(X, 'datax', as_hdf=True)
+        om.datasets.put(Y, 'datay', as_hdf=True)
+        # have Omega fit the model then predict
+        lr = LinearRegression()
+        lr.fit(X, Y)
+        pred = lr.predict(X)
+        om.models.put(lr, 'mymodel2')
+        # -- using data provided locally
+        #    note this is the same as
+        #        om.datasets.put(X, 'foo')
+        #        om.runtime.model('mymodel2').predict('foo')
+        result = om.runtime.model('mymodel2').predict(X)
+        pred2 = result.get()
+        self.assertTrue(
+            (pred == pred2).all(), "runtime prediction is different(1)")
+        self.assertTrue(
+            (pred == pred2).all(), "runtime prediction is different(2)")
