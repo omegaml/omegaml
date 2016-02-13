@@ -162,10 +162,14 @@ class OmegaStore(object):
 
     def meta_for(self, name, version=-1):
         db = self.mongodb
-        return Metadata.objects(name=self.prefix + name)
+        try:
+            meta = list(Metadata.objects(name=self.prefix + name))[version]
+        except IndexError:
+            meta = None
+        return meta
 
     def drop(self, name, version=-1):
-        meta = self.meta_for(name, version=version)[0]
+        meta = self.meta_for(name, version=version)
         if meta.collection:
             self.mongodb.drop_collection(meta.collection)
             meta.delete()
@@ -184,9 +188,8 @@ class OmegaStore(object):
         previously stored with put()
         """
         meta = self.meta_for(name, version=version)
-        if len(meta) == 0:
+        if meta is None:
             return None
-        meta = meta[0]
         if not force_python:
             if meta.kind == Metadata.SKLEARN_JOBLIB:
                 return self.get_model(name, version=version)

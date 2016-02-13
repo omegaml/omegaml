@@ -90,6 +90,10 @@ class RuntimeTests(TestCase):
         # have Omega fit the model then predict
         result = om.runtime.model('mymodel2').fit('datax', 'datay')
         result.get()
+        # check the new model version metadata includes the datax/y references
+        meta = om.models.meta_for('mymodel2')
+        self.assertIn('metaX', meta.attributes)
+        self.assertIn('metaY', meta.attributes)
         # -- using data already in Omega
         result = om.runtime.model('mymodel2').predict('datax')
         pred1 = result.get()

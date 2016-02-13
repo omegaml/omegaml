@@ -14,11 +14,11 @@ be run remotely based on data previously loaded into the OmegaML datastore.
 Features
 --------
 
-* store Pandas dataframes, numpy arrays or pure python dict, list, tuples
-* store scikit-learn Pipeline and Estimators
 * execute fit() and predict() methods locally or in a remote container
 * train models locally and deploy for online prediction with one simple command  
 * automated model versioning
+* store Pandas dataframes, numpy arrays or pure python dict, list, tuples
+* store scikit-learn Pipeline and Estimators
 
 Why OmegaML?
 ------------
