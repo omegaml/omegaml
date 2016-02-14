@@ -2,6 +2,7 @@ import os
 from unittest import TestCase
 
 from sklearn.linear_model.base import LinearRegression
+from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import NotFittedError
 
 import numpy as np
@@ -104,7 +105,7 @@ class RuntimeTests(TestCase):
         result = om.runtime.model('mymodel2').fit(X, Y)
         result = om.runtime.model('mymodel2').predict(X)
         pred2 = result.get()
-        # -- check the local data provided to fit was stored as intended 
+        # -- check the local data provided to fit was stored as intended
         meta = om.models.meta_for('mymodel2')
         self.assertIn('metaX', meta.attributes)
         self.assertIn('metaY', meta.attributes)
@@ -178,3 +179,36 @@ class RuntimeTests(TestCase):
             (pred == pred2).all(), "runtime prediction is different(1)")
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(2)")
+
+    def test_fit_pipeline(self):
+        # create some data
+        x = np.array(range(0, 10))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']]
+        Y = df[['y']]
+        # put into Omega
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(X, 'datax')
+        om.datasets.put(Y, 'datay')
+        om.datasets.get('datax')
+        om.datasets.get('datay')
+        # create a pipeline locally, store (unfitted) in Omega
+        p = Pipeline([
+            ('lr', LinearRegression()),
+        ])
+        om.models.put(p, 'mymodel2')
+        self.assertIn('models/mymodel2', om.models.list('models/*'))
+        # predict locally for comparison
+        p.fit(X, Y)
+        pred = p.predict(X)
+        # have Omega fit the model then predict
+        result = om.runtime.model('mymodel2').fit('datax', 'datay')
+        result.get()
+        result = om.runtime.model('mymodel2').predict('datax')
+        pred1 = result.get()
+        self.assertTrue(
+            (pred == pred1).all(), "runtime prediction is different(1)")
