@@ -101,8 +101,15 @@ class RuntimeTests(TestCase):
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtime.model('mymodel2').predict('foo')
+        result = om.runtime.model('mymodel2').fit(X, Y)
         result = om.runtime.model('mymodel2').predict(X)
         pred2 = result.get()
+        # -- check the local data provided to fit was stored as intended 
+        meta = om.models.meta_for('mymodel2')
+        self.assertIn('metaX', meta.attributes)
+        self.assertIn('metaY', meta.attributes)
+        self.assertIn('_fitX', meta.attributes.get('metaX').get('collection'))
+        self.assertIn('_fitY', meta.attributes.get('metaY').get('collection'))
         self.assertTrue(
             (pred == pred1).all(), "runtime prediction is different(1)")
         self.assertTrue(

@@ -40,8 +40,8 @@ class OmegaModelProxy(object):
 
     def fit(self, Xname, Yname):
         omega_fit = self.runtime.task('omegaml.tasks.omega_fit')
-        Xname = self._ensure_data_is_stored(Xname)
-        Yname = self._ensure_data_is_stored(Yname)
+        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
+        Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
                                pure_python=self.pure_python)
 
@@ -51,15 +51,15 @@ class OmegaModelProxy(object):
         return omega_predict.delay(self.modelname, Xname,
                                    pure_python=self.pure_python)
 
-    def _ensure_data_is_stored(self, name_or_data):
+    def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
         if is_dataframe(name_or_data):
-            name = '_temp_%s' % uuid4().hex
+            name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif is_ndarray(name_or_data):
-            name = '_temp_%s' % uuid4().hex
+            name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif isinstance(name_or_data, (list, tuple, dict)):
-            name = '_temp_%s' % uuid4().hex
+            name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif isinstance(name_or_data, basestring):
             name = name_or_data
