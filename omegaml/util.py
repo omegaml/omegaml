@@ -1,3 +1,4 @@
+import os
 import urlparse
 
 from mongoengine.connection import connect
@@ -47,7 +48,12 @@ def settings():
 
 def override_settings(**kwargs):
     """ test support """
-    settings().__dict__.update(kwargs)
+    cfgvars = settings().__dict__
+    cfgvars.update(kwargs)
+    # -- OMEGA_CELERY_CONFIG updates
+    for k in [k for k in kwargs.keys() if k.startswith('OMEGA_CELERY')]:
+        celery_k = k.replace('OMEGA_', '')
+        cfgvars['OMEGA_CELERY_CONFIG'][celery_k] = kwargs[k]
 
 
 def delete_database():

@@ -243,8 +243,8 @@ class Omega(object):
     def __init__(self, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None):
         defaults = settings()
-        backend = backend or defaults.OMEGA_RESULTS_BACKEND
         broker = backend or defaults.OMEGA_BROKER
+        backend = broker or defaults.OMEGA_RESULTS_BACKEND
         self.models = OmegaStore(prefix='models/')
         self.datasets = OmegaStore(prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
