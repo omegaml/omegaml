@@ -34,6 +34,7 @@ setup(
         'pymongo>=3.2.1',
         'mongoengine>=0.10.6',
         'celery>=3.1.20',
+        'joblib>=0.9.4',
     ],
     dependency_links=[
     ]
