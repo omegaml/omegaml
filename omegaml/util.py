@@ -48,12 +48,15 @@ def settings():
 
 def override_settings(**kwargs):
     """ test support """
-    cfgvars = settings().__dict__
-    cfgvars.update(kwargs)
+    cfgvars = settings()
+    for k, v in kwargs.iteritems():
+        setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
+    celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {}) 
     for k in [k for k in kwargs.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
-        cfgvars['OMEGA_CELERY_CONFIG'][celery_k] = kwargs[k]
+        celery_config[celery_k] = kwargs[k]
+    setattr(cfgvars, 'OMEGA_CELERY_CONFIG', celery_config)
 
 
 def delete_database():
