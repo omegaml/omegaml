@@ -1,3 +1,5 @@
+import os
+
 from celery import shared_task
 
 from omegaml import Omega
@@ -59,7 +61,7 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
 
 
 @shared_task
-def omega_score(modelname, Xname, Yname, rName=True, pure_python=True, 
+def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
     om = Omega()
     model = om.models.get(modelname)
@@ -108,6 +110,16 @@ def omega_transform(modelname, Xname, rName=None, **kwargs):
         meta = om.put(result, rName)
         result = meta
     return result
+
+
+@shared_task
+def omega_settings():
+    if os.environ.get('OMEGA_DEBUG'):
+        from omegaml.util import settings
+        defaults = settings()
+        return {k: getattr(defaults, k, '')
+                for k in dir(defaults) if k and k.isupper()}
+    return {'error': 'settings dump is disabled'}
 
 
 def get_data(om, name):
