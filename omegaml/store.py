@@ -105,9 +105,18 @@ class OmegaStore(object):
             return self._db
         self.parsed_url = urlparse.urlparse(self.mongo_url)
         self.database_name = self.parsed_url.path[1:]
+        # connect via mongoengine
+        # note this uses a MongoClient in the background, with pooled 
+        # connections. there are multiprocessing issues with pymongo:
+        # http://api.mongodb.org/python/3.2/faq.html#using-pymongo-with-multiprocessing
+        # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
+        # this defers connecting until the first access 
+        # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
         self._db = getattr(mongoengine.connect(self.database_name,
                                                host=self.mongo_url,
-                                               alias='omega'),
+                                               alias='omega',
+                                               connect=False,
+                                               serverSelectionTimeoutMS=2500),
                            self.database_name)
         return self._db
 

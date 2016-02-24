@@ -1,17 +1,29 @@
+"""
+example program to run in ipython
+"""
+
 # train a model to learn to duplicate numbers
 import pandas as pd
 import numpy as np
 import os
 from omegaml import Omega
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.datasets import load_iris
+from sklearn.linear_model import LinearRegression
+from omegaml.util import override_settings
+
+# make sure to set accordingly
+override_settings(
+    OMEGA_BROKER=os.environ.get('OMEGA_BROKER'),
+    OMEGA_CELERY_DEFAULT_QUEUE=os.environ.get('OMEGA_QUEUE'),
+    OMEGA_CELERY_DEFAULT_EXCHANGE=os.environ.get('OMEGA_EXCHANGE'),
+    OMEGA_MONGO_COLLECTION=os.environ.get('OMEGA_BUCKET', 'omegaml')
+)
 
 om = Omega()
 om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = False
 os.environ['DJANGO_SETTINGS_MODULE'] = ''
 
 # create a data frame with x, y
-x = np.array(range(0, 10))
+x = np.array(range(10, 20))
 y = x * 2
 df = pd.DataFrame(dict(x=x, y=y))
 
@@ -35,15 +47,21 @@ result.get()
 # -- using the data on the server
 result = om.runtime.model('duplicate').predict('datax')
 pred1 = result.get()
+
 # -- using local data
 new_x = np.random.randint(0,100,10).reshape(10,1)
 result = om.runtime.model('duplicate').predict(new_x)
 pred2 = result.get()
+#print pred2 
 
-assert (pred == pred1).all(), "oh snap, something went wrong!"
-assert (new_x * 2 == pred2).all(), "oh snap, something went wrong!"
+# use np.allclose in case we have floats
+assert np.allclose(pred, pred1), "oh snap, something went wrong! %s != %s" % (pred, pred1)
+assert np.allclose(new_x * 2, pred2), "oh snap, something went wrong! %s != %s" % (pred2, new_x * 2)
 
 print "nice, everything works. thank you very much"
 df1 = pd.DataFrame(dict(asked=X.x, result=pred1.flatten()), index=range(0, len(X)))
 df2 = pd.DataFrame(dict(asked=new_x.flatten(), result=pred2.flatten()), index=range(0, len(X)))
-pd.concat([df1, df2]).sort_values('asked')
+result = om.runtime.model('duplicate').predict([[5]])
+pred2 = result.get()
+
+pd.concat([df1, df2]).sort('asked')
