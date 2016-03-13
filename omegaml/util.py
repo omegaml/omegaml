@@ -37,8 +37,10 @@ def settings():
         return __settings
     try:
         # see if we're running as a django app
+        # DEBUG will probably always be as a djangon setting configuraiton
         from django.conf import settings as djsettings  # @UnresolvedImport
-        defaults = djsettings
+        if settings.DEBUG is not None:
+            defaults = djsettings
     except:
         import omegaml.defaults as omdefaults
         defaults = omdefaults
@@ -52,7 +54,7 @@ def override_settings(**kwargs):
     for k, v in kwargs.iteritems():
         setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
-    celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {}) 
+    celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {})
     for k in [k for k in kwargs.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
         celery_config[celery_k] = kwargs[k]
