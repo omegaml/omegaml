@@ -39,8 +39,7 @@ def settings():
         # see if we're running as a django app
         # DEBUG will probably always be as a djangon setting configuraiton
         from django.conf import settings as djsettings  # @UnresolvedImport
-        if settings.DEBUG is not None:
-            defaults = djsettings
+        defaults = djsettings
     except:
         import omegaml.defaults as omdefaults
         defaults = omdefaults
