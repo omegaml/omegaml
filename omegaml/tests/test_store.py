@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
 import pandas as pd
+import gridfs
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -165,6 +166,26 @@ class StoreTests(unittest.TestCase):
         lr2 = om.get('mymodel')
         self.assertIsInstance(lr2, LogisticRegression)
 
+    def test_store_dataframe_as_dfgroup(self):
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        result_data = {
+            'a': range(1, 2),
+            'b': '1',
+        }
+        df = pd.DataFrame(data)
+        result_df = pd.DataFrame(result_data)
+        store = OmegaStore()
+        groupby_columns = ['b']
+        meta = store.put(df, 'dfgroup', groupby=groupby_columns)
+        self.assertEqual(meta.kind, 'pandas.dfgroup')
+        # make sure the collection is created
+        self.assertIn('store.dfgroup.data', store.mongodb.collection_names())
+        df2 = store.get('dfgroup', kwargs={'b': '1'})
+        self.assertTrue(df2.equals(result_df))
+
     def test_store_dataframe_as_hdf(self):
         data = {
             'a': range(1, 10),
@@ -178,6 +199,14 @@ class StoreTests(unittest.TestCase):
         self.assertIn('hdfdf.hdf', store.fs.list())
         df2 = store.get('hdfdf')
         self.assertTrue(df.equals(df2), "dataframes differ")
+        override_settings(
+            OMEGA_MONGO_COLLECTION='tempabcdef'
+        )
+        store2 = OmegaStore()
+        # test hdf file is not there
+        self.assertNotIn('hdfdf.hdf', store2.fs.list())
+        # test a get on that bucket raises exception
+        self.assertRaises(gridfs.errors.NoFile, store2.get, 'hdfdf')
 
     def test_drop(self):
         data = {

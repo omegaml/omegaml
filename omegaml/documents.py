@@ -10,8 +10,9 @@ class Metadata(Document):
     PANDAS_DFROWS = 'pandas.dfrows'
     PANDAS_HDF = 'pandas.hdf'
     PYTHON_DATA = 'python.data'
+    PANDAS_DFGROUP = 'pandas.dfgroup'
     SKLEARN_JOBLIB = 'sklearn.joblib'
-    KINDS = (PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB)
+    KINDS = (PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB, PANDAS_DFGROUP)
     # fields
     #: this is the name of the data
     name = StringField()

@@ -33,8 +33,12 @@ setup(
     install_requires=[
         'pymongo>=3.2.1',
         'mongoengine>=0.10.6',
+        'numpy>=1.10.4',
+        'scipy>=0.17.0',
+        'scikit-learn>=0.17.1',
         'celery>=3.1.20',
         'joblib>=0.9.4',
+        'tables>=3.2.2',
     ],
     dependency_links=[
     ]

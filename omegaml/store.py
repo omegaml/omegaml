@@ -168,6 +168,9 @@ class OmegaStore(object):
         elif is_dataframe(obj):
             if kwargs.get('as_hdf', False):
                 return self.put_dataframe_as_hdf(obj, name, attributes)
+            elif kwargs.get('groupby'):
+                groupby = kwargs.get('groupby')
+                return self.put_dataframe_as_dfgroup(obj, name, groupby, attributes)
             return self.put_dataframe_as_documents(obj, name, attributes)
         elif is_ndarray(obj):
             return self.put_ndarray_as_hdf(obj, name, attributes)
@@ -194,6 +197,67 @@ class OmegaStore(object):
         datastore.insert_many((row[1].to_dict() for row in obj.iterrows()))
         return Metadata(name=self.prefix + name,
                         kind=Metadata.PANDAS_DFROWS,
+                        attributes=attributes,
+                        collection=datastore.name).save()
+
+    # def rearrange_rows(self, gdf_to_dict):
+    #     """
+    #     takes in a grouped gdf dict and rearranges the data
+    #     per row and values.
+    #     from {'col_1': {'row_1': 'val_1'}, 'col_2': {'row_1': 'val_1'}}
+    #     to [{row_1: {'col_1': val_1', 'col_2': 'val_2'}}]
+    #     """
+    #     result_list = []
+    #     result_dict = {}
+    #     # get the row index for this particular data set
+    #     # all values for column heads would have the same row indexes
+    #     # for that grouped column
+    #     row_indexes = gdf_to_dict.values()[0].keys()
+    #     for index in row_indexes:
+    #         all_col_data = {}
+    #         for col_head, row_data in gdf_to_dict.iteritems():
+    #             all_col_data[col_head] = str(row_data.get(index))
+    #         result_dict[str(index)] = all_col_data
+    #         result_list.append(result_dict)
+    #     return result_list
+
+    def get_df_grouped_docs(self, obj, groupby):
+        """
+        returns a mongo document grouped by the provided columns
+        """
+        for group_val, gdf in obj.groupby(groupby):
+            mongo_doc_dict = {}
+            # group_val is a str if only one col is provided
+            # is a tuple if more than one cols are provided.
+            if isinstance(group_val, tuple):
+                for grouped_cols in groupby:
+                    mongo_doc_dict[grouped_cols] = str(group_val[groupby.index(
+                        grouped_cols)])
+            else:
+                for grouped_cols in groupby:
+                    mongo_doc_dict[grouped_cols] = str(group_val)
+
+            datacols = list(set(gdf.columns) - set(groupby))
+            data_dict = {}
+            for row in gdf[datacols].iterrows():
+                row_data_dict = row[1].to_dict()
+                for k, v in row_data_dict.iteritems():
+                    row_data_dict[k] = str(v)
+                data = {str(row[0]): row_data_dict}
+                data_dict.update(data)
+
+            mongo_doc_dict['data'] = data_dict
+            yield mongo_doc_dict
+
+    def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
+        """ store a dataframe grouped by collection in a mongo document """
+        datastore = self.datastore(name)
+        datastore.drop()
+
+        datastore.insert_many(self.get_df_grouped_docs(obj, groupby))
+
+        return Metadata(name=self.prefix + name,
+                        kind=Metadata.PANDAS_DFGROUP,
                         attributes=attributes,
                         collection=datastore.name).save()
 
@@ -247,7 +311,7 @@ class OmegaStore(object):
             return True
         return False
 
-    def get(self, name, version=-1, force_python=False):
+    def get(self, name, version=-1, force_python=False, kwargs=None):
         """
         retrieve an object
 
@@ -262,6 +326,8 @@ class OmegaStore(object):
                 return self.get_model(name, version=version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe(name, version=version)
+            elif meta.kind == Metadata.PANDAS_DFGROUP:
+                return self.get_dataframe_dfgroup(name, version=version, kwargs=kwargs)
             elif meta.kind == Metadata.PYTHON_DATA:
                 return self.get_python_data(name, version=version)
             elif meta.kind == Metadata.PANDAS_HDF:
@@ -294,12 +360,43 @@ class OmegaStore(object):
             del df['_id']
         return df
 
+    def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
+        import pandas as pd
+        datastore = self.datastore(name)
+        cursor = datastore.find(kwargs, {'_id': False})
+        df = None
+        result_list = []
+        # get mongo document as is
+        for doc in cursor:
+            data = doc.get('data')
+            groupby_columns = list(set(doc.keys()) - set(['data']))
+            col_heads = data.values()[0].keys()
+            for row_index, col_data in data.iteritems():
+                result_dict = {}
+                for col in col_heads:
+                    result_dict[str(col)] = str(data[row_index].get(col))
+                for col in groupby_columns:
+                    result_dict[str(col)] = str(doc.get(col))
+                result_list.append(result_dict)
+
+            docdf = pd.DataFrame(result_list)
+
+            if df is not None:
+                df = pd.concat([df, docdf])
+            else:
+                df = docdf
+
+        return df
+
     def get_dataframe_hdf(self, name, version=-1):
+        df = None
         filename = self.prefix + name + \
             '.hdf' if not name.endswith('.hdf') else name
         if filename.endswith('.hdf') and self.fs.exists(filename=filename):
             df = self._extract_dataframe_hdf(filename, version=version)
-        return df
+            return df
+        else:
+            raise gridfs.errors.NoFile("{0} does not exist in mongo collection '{1}'".format(name, self.bucket))
 
     def get_python_data(self, name, version=-1):
         datastore = self.datastore(name)
@@ -398,7 +495,10 @@ class OmegaStore(object):
         except OSError:
             # OSError is raised if path exists already
             pass
-        outf = self.fs.get_version(filename, version=version)
+        try:
+            outf = self.fs.get_version(filename, version=version)
+        except gridfs.errors.NoFile, e:
+            raise e
         with open(hdffname, 'w') as hdff:
             hdff.write(outf.read())
         hdf = pd.HDFStore(hdffname)
