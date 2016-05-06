@@ -45,7 +45,7 @@ class RuntimeTests(TestCase):
         lr.fit(X, Y)
         pred = lr.predict(X)
         om.models.put(lr, 'mymodel')
-        self.assertIn('models/mymodel', om.models.list('models/*'))
+        self.assertIn('mymodel', om.models.list('*'))
         # have Omega predict it
         # -- using data already in Omega
         result = om.runtime.model('mymodel').predict('datax')
@@ -80,7 +80,7 @@ class RuntimeTests(TestCase):
         # create a model locally, store (unfitted) in Omega
         lr = LinearRegression()
         om.models.put(lr, 'mymodel2')
-        self.assertIn('models/mymodel2', om.models.list('models/*'))
+        self.assertIn('mymodel2', om.models.list('*'))
         # predict locally for comparison
         lr.fit(X, Y)
         pred = lr.predict(X)
@@ -131,8 +131,11 @@ class RuntimeTests(TestCase):
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
         om.datasets.put(X, 'datax')
         om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        Xhat = om.datasets.get('datax')
+        Yhat = om.datasets.get('datay')
+        print om.datasets.meta_for('datax').kind
+        self.assertEqual([X], Xhat)
+        self.assertEqual([Y], Yhat)
         # have Omega fit the model then predict
         lr = LinearRegression()
         lr.fit(X, Y)
@@ -173,7 +176,7 @@ class RuntimeTests(TestCase):
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtime.model('mymodel2').predict('foo')
-        result = om.runtime.model('mymodel2').predict(X)
+        result = om.runtime.model('mymodel2').predict('datax')
         pred2 = result.get()
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(1)")
@@ -201,7 +204,7 @@ class RuntimeTests(TestCase):
             ('lr', LinearRegression()),
         ])
         om.models.put(p, 'mymodel2')
-        self.assertIn('models/mymodel2', om.models.list('models/*'))
+        self.assertIn('mymodel2', om.models.list('*'))
         # predict locally for comparison
         p.fit(X, Y)
         pred = p.predict(X)

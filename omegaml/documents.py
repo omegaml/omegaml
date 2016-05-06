@@ -18,6 +18,10 @@ class Metadata(Document):
     # fields
     #: this is the name of the data
     name = StringField()
+    #: bucket
+    bucket = StringField()
+    #: prefix
+    prefix = StringField()
     #: kind of data
     kind = StringField(choices=KINDS)
     #: for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile

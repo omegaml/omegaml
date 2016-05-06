@@ -111,7 +111,7 @@ class StoreTests(unittest.TestCase):
             'b': range(1, 10)
         }
         meta = store.put(data, 'data')
-        data2 = store.get('data', force_python=True)[0]
+        data2 = store.get('data', force_python=True)
         self.assertEqual(data, data2)
         # dataframe
         # create some dataframe
@@ -150,7 +150,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'python.data')
         self.assertEqual(meta.attributes, attributes)
         data2 = om.get('data')
-        self.assertEqual(data, data2[0])
+        self.assertEqual([data], data2)
         # dataframe
         df = pd.DataFrame(data)
         meta = om.put(df, 'datadf', attributes=attributes)
@@ -197,11 +197,11 @@ class StoreTests(unittest.TestCase):
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
-        meta = store.put(df, 'hdfdf', as_hdf=True)
+        meta = store.put(df, 'foo', as_hdf=True)
         self.assertEqual(meta.kind, 'pandas.hdf')
         # make sure the hdf file is actually there
-        self.assertIn('hdfdf.hdf', store.fs.list())
-        df2 = store.get('hdfdf')
+        self.assertIn('store.foo.hdf', store.fs.list())
+        df2 = store.get('foo')
         self.assertTrue(df.equals(df2), "dataframes differ")
         override_settings(
             OMEGA_MONGO_COLLECTION='tempabcdef'

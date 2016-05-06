@@ -106,11 +106,11 @@ class OmegaStore(object):
         self.parsed_url = urlparse.urlparse(self.mongo_url)
         self.database_name = self.parsed_url.path[1:]
         # connect via mongoengine
-        # note this uses a MongoClient in the background, with pooled 
+        # note this uses a MongoClient in the background, with pooled
         # connections. there are multiprocessing issues with pymongo:
         # http://api.mongodb.org/python/3.2/faq.html#using-pymongo-with-multiprocessing
         # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
-        # this defers connecting until the first access 
+        # this defers connecting until the first access
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
         self._db = getattr(mongoengine.connect(self.database_name,
                                                host=self.mongo_url,
@@ -139,7 +139,8 @@ class OmegaStore(object):
         """
         # ensure initialization
         db = self.mongodb
-        return Metadata.objects(name=name)
+        return Metadata.objects(name=name, prefix=self.prefix,
+                                bucket=self.bucket)
 
     def datastore(self, name=None):
         """
@@ -149,8 +150,7 @@ class OmegaStore(object):
         collection name given on instantiation. the actual collection name
         used is always prefix + name + '.data'
         """
-        prefix = self.prefix.replace('/', '')
-        collection = '%s.%s.%s.data' % (self.bucket, prefix, name)
+        collection = self._get_obj_store_key(name, '.datastore')
         collection = collection.replace('..', '.')
         try:
             datastore = getattr(self.mongodb, collection)
@@ -166,16 +166,26 @@ class OmegaStore(object):
         if is_estimator(obj):
             return self.put_model(obj, name, attributes)
         elif is_dataframe(obj):
-            if kwargs.get('as_hdf', False):
-                return self.put_dataframe_as_hdf(obj, name, attributes)
+            if kwargs.pop('as_hdf', False):
+                return self.put_dataframe_as_hdf(
+                    obj, name, attributes, **kwargs)
             elif kwargs.get('groupby'):
                 groupby = kwargs.get('groupby')
-                return self.put_dataframe_as_dfgroup(obj, name, groupby, attributes)
-            return self.put_dataframe_as_documents(obj, name, attributes)
+                return self.put_dataframe_as_dfgroup(
+                    obj, name, groupby, attributes, **kwargs)
+            return self.put_dataframe_as_documents(
+                obj, name, attributes, **kwargs)
         elif is_ndarray(obj):
-            return self.put_ndarray_as_hdf(obj, name, attributes)
+            return self.put_ndarray_as_hdf(obj, name,
+                                           attributes=attributes,
+                                           **kwargs)
         elif isinstance(obj, (dict, list, tuple)):
-            return self.put_pyobj_as_document(obj, name, attributes)
+            if kwargs.pop('as_hdf', False):
+                self.put_pyobj_as_hdf(obj, name,
+                                      attributes=attributes, **kwargs)
+            return self.put_pyobj_as_document(obj, name,
+                                              attributes=attributes,
+                                              **kwargs)
         else:
             raise TypeError('type %s not supported' % type(obj))
 
@@ -184,18 +194,24 @@ class OmegaStore(object):
         zipfname = self._package_model(obj, name)
         with open(zipfname) as fzip:
             fileid = self.fs.put(
-                fzip, filename=self.prefix + name + '.omm')
-        return Metadata(name=self.prefix + name,
+                fzip, filename=self._get_obj_store_key(name, 'omm'))
+        return Metadata(name=name,
+                        prefix=self.prefix,
+                        bucket=self.bucket,
                         kind=Metadata.SKLEARN_JOBLIB,
                         attributes=attributes,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
 
-    def put_dataframe_as_documents(self, obj, name, attributes=None):
+    def put_dataframe_as_documents(self, obj, name, append=False,
+                                   attributes=None):
         """ store a dataframe as a row-wise collection of documents """
         datastore = self.datastore(name)
-        datastore.drop()
+        if not append:
+            datastore.drop()
         datastore.insert_many((row[1].to_dict() for row in obj.iterrows()))
-        return Metadata(name=self.prefix + name,
+        return Metadata(name=name,
+                        prefix=self.prefix,
+                        bucket=self.bucket,
                         kind=Metadata.PANDAS_DFROWS,
                         attributes=attributes,
                         collection=datastore.name).save()
@@ -243,10 +259,13 @@ class OmegaStore(object):
                         collection=datastore.name).save()
 
     def put_dataframe_as_hdf(self, obj, name, attributes=None):
-        hdffname = self._package_dataframe2hdf(obj, name)
+        filename = self._get_obj_store_key(name, '.hdf')
+        hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname) as fhdf:
-            fileid = self.fs.put(fhdf, filename=self.prefix + name + '.hdf')
-        return Metadata(name=self.prefix + name,
+            fileid = self.fs.put(fhdf, filename=filename)
+        return Metadata(name=name,
+                        prefix=self.prefix,
+                        bucket=self.bucket,
                         kind=Metadata.PANDAS_HDF,
                         attributes=attributes,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
@@ -261,12 +280,25 @@ class OmegaStore(object):
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
+    def put_pyobj_as_hdf(self, obj, name, attributes=None):
+        """
+        store list, tuple, dict as hdf
+
+        this requires the list, tuple or dict to be convertible into
+        a dataframe
+        """
+        import pandas as pd
+        df = pd.DataFrame(obj)
+        return self.put_dataframe_as_hdf(df, name, attributes=attributes)
+
     def put_pyobj_as_document(self, obj, name, attributes=None):
         """ store a dict as a document """
         datastore = self.datastore(name)
         datastore.drop()
         objid = datastore.insert({'data': obj})
-        return Metadata(name=self.prefix + name,
+        return Metadata(name=name,
+                        prefix=self.prefix,
+                        bucket=self.bucket,
                         kind=Metadata.PYTHON_DATA,
                         collection=datastore.name,
                         attributes=attributes,
@@ -275,8 +307,10 @@ class OmegaStore(object):
     def meta_for(self, name, version=-1):
         db = self.mongodb
         try:
-            meta = list(Metadata.objects(name=self.prefix + name))[version]
-        except IndexError:
+            meta = list(Metadata.objects(name=name,
+                                         prefix=self.prefix,
+                                         bucket=self.bucket))[version]
+        except IndexError as e:
             meta = None
         return meta
 
@@ -317,21 +351,19 @@ class OmegaStore(object):
         return self.get_object_as_python(meta, version=version)
 
     def get_model(self, name, version=-1):
-        filename = self.prefix + name + \
-            '.omm' if not name.endswith('.omm') else name
-        if filename.endswith('.omm') and self.fs.exists(filename=filename):
-            packagefname = os.path.join(self.tmppath, filename)
-            dirname = os.path.dirname(packagefname)
-            try:
-                os.makedirs(dirname)
-            except OSError:
-                # OSError is raised if path exists already
-                pass
-            outf = self.fs.get_version(filename, version=version)
-            with open(packagefname, 'w') as zipf:
-                zipf.write(outf.read())
-            model = self._extract_model(packagefname)
-            return model
+        filename = self._get_obj_store_key(name, '.omm')
+        packagefname = os.path.join(self.tmppath, name)
+        dirname = os.path.dirname(packagefname)
+        try:
+            os.makedirs(dirname)
+        except OSError:
+            # OSError is raised if path exists already
+            pass
+        outf = self.fs.get_version(filename, version=version)
+        with open(packagefname, 'w') as zipf:
+            zipf.write(outf.read())
+        model = self._extract_model(packagefname)
+        return model
 
     def get_dataframe(self, name, version=-1):
         import pandas as pd
@@ -420,7 +452,7 @@ class OmegaStore(object):
             return list(getattr(self.mongodb, meta.collection).find())
         if meta.kind == Metadata.PYTHON_DATA:
             col = getattr(self.mongodb, meta.collection)
-            return [d.get('data') for d in col.find(dict(_id=meta.objid))]
+            return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def list(self, pattern=None, regexp=None, raw=False):
@@ -435,19 +467,33 @@ class OmegaStore(object):
         :param raw: if True return the meta data objects
         """
         if raw:
-            meta = list(Metadata.objects())
+            meta = list(Metadata.objects(bucket=self.bucket,
+                                         prefix=self.prefix))
             if regexp:
                 files = [f for f in meta if re.match(regexp, meta.name)]
             elif pattern:
                 files = [f for f in meta if fnmatch(meta.name, pattern)]
         else:
-            files = [d.name for d in Metadata.objects()]
+            files = [d.name for d in Metadata.objects(bucket=self.bucket,
+                                                      prefix=self.prefix)]
             if regexp:
                 files = [f for f in files if re.match(regexp, f)]
             elif pattern:
                 files = [f for f in files if fnmatch(f, pattern)]
             files = [f.replace('.omm', '') for f in files]
         return files
+
+    def _get_obj_store_key(self, name, ext):
+        """
+        return the store key
+        """
+        name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
+        filename = '{bucket}.{prefix}.{name}'.format(
+            bucket=self.bucket,
+            prefix=self.prefix,
+            name=name,
+            ext=ext).replace('/', '_').replace('..', '.')
+        return filename
 
     def _package_model(self, model, filename):
         """
@@ -457,7 +503,7 @@ class OmegaStore(object):
         lpath = tempfile.mkdtemp()
         fname = os.path.basename(filename)
         mklfname = os.path.join(lpath, fname)
-        zipfname = os.path.join(self.tmppath, fname + '.omm')
+        zipfname = os.path.join(self.tmppath, fname)
         joblib.dump(model, mklfname)
         with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
             for part in glob.glob(os.path.join(lpath, '*')):
@@ -471,7 +517,7 @@ class OmegaStore(object):
         """
         import joblib
         lpath = tempfile.mkdtemp()
-        fname = os.path.basename(packagefname).replace('.omm', '')
+        fname = os.path.basename(packagefname)
         mklfname = os.path.join(lpath, fname)
         with ZipFile(packagefname) as zipf:
             zipf.extractall(lpath)
@@ -486,7 +532,7 @@ class OmegaStore(object):
         lpath = tempfile.mkdtemp()
         fname = os.path.basename(filename)
         hdffname = os.path.join(self.tmppath, fname + '.hdf')
-        key = key or fname
+        key = key or 'data'
         df.to_hdf(hdffname, key)
         return hdffname
 
