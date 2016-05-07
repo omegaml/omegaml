@@ -2,7 +2,7 @@ import logging
 from uuid import uuid4
 
 from celery import Celery
-
+import store
 from omegaml.store import OmegaStore
 from omegaml.jobs import OmegaJobs
 from omegaml.util import is_dataframe, settings, is_ndarray

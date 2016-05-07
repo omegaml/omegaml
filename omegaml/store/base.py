@@ -143,6 +143,11 @@ class OmegaStore(object):
                                 bucket=self.bucket)
 
     def datastore(self, name=None):
+        from warnings import warn
+        warn("OmegaStore.datastore() is deprecated, use collection()")
+        return self.collection(name=name)
+
+    def collection(self, name=None):
         """
         return a mongo db collection as a datastore
 
@@ -202,19 +207,45 @@ class OmegaStore(object):
                         attributes=attributes,
                         gridfile=GridFSProxy(grid_id=fileid)).save()
 
-    def put_dataframe_as_documents(self, obj, name, append=False,
-                                   attributes=None):
-        """ store a dataframe as a row-wise collection of documents """
-        datastore = self.datastore(name)
-        if not append:
-            datastore.drop()
-        datastore.insert_many((row[1].to_dict() for row in obj.iterrows()))
+    def put_dataframe_as_documents(self, obj, name, append=None,
+                                   attributes=None, index=None):
+        """ 
+        store a dataframe as a row-wise collection of documents
+
+        :param obj: the dataframe to store
+        :param name: the name of the item in the store
+        :param append: if False collection will be dropped before inserting,
+        if True existing documents will persist. Defaults to True. If not
+        specified and rows have been previously inserted, will issue a
+        warning.  
+        :param index: list of columns
+        :return: the Metadata object created     
+        """
+        collection = self.collection(name)
+        if append is False:
+            collection.drop()
+        elif append is None and collection.count(limit=1):
+            from warnings import warn
+            warn('%s already exists, will append rows' % name)
+        if index:
+            # get index keys
+            if isinstance(index, dict):
+                idx_kwargs = index
+                index = index.pop('columns')
+            else:
+                idx_kwargs = {}
+            # create index with appropriate options
+            from .queryops import MongoQueryOps
+            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
+            collection.create_index(keys, **idx_kwargs)
+        # bulk insert
+        collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
         return Metadata(name=name,
                         prefix=self.prefix,
                         bucket=self.bucket,
                         kind=Metadata.PANDAS_DFROWS,
                         attributes=attributes,
-                        collection=datastore.name).save()
+                        collection=collection.name).save()
 
     def get_df_grouped_docs(self, obj, groupby):
         """
@@ -293,7 +324,7 @@ class OmegaStore(object):
 
     def put_pyobj_as_document(self, obj, name, attributes=None):
         """ store a dict as a document """
-        datastore = self.datastore(name)
+        datastore = self.collection(name)
         datastore.drop()
         objid = datastore.insert({'data': obj})
         return Metadata(name=name,
@@ -326,7 +357,7 @@ class OmegaStore(object):
             return True
         return False
 
-    def get(self, name, version=-1, force_python=False, kwargs=None):
+    def get(self, name, version=-1, force_python=False, **kwargs):
         """
         retrieve an object
 
@@ -340,7 +371,8 @@ class OmegaStore(object):
             if meta.kind == Metadata.SKLEARN_JOBLIB:
                 return self.get_model(name, version=version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
-                return self.get_dataframe(name, version=version)
+                return self.get_dataframe_documents(name, version=version,
+                                                    **kwargs)
             elif meta.kind == Metadata.PANDAS_DFGROUP:
                 return self.get_dataframe_dfgroup(
                     name, version=version, kwargs=kwargs)
@@ -365,10 +397,19 @@ class OmegaStore(object):
         model = self._extract_model(packagefname)
         return model
 
-    def get_dataframe(self, name, version=-1):
+    def get_dataframe_documents(self, name, columns=None,
+                                filter=None, version=-1):
+        """
+        get dataframe from documents
+        """
         import pandas as pd
-        datastore = self.datastore(name)
-        cursor = datastore.find()
+        collection = self.collection(name)
+        if filter:
+            from query import Filter, MongoQ
+            query = Filter(collection, **filter).query
+            cursor = collection.find(filter=query, projection=columns)
+        else:
+            cursor = collection.find(projection=columns)
         df = pd.DataFrame(list(cursor))
         if '_id' in df.columns:
             del df['_id']
@@ -438,7 +479,7 @@ class OmegaStore(object):
                     name, self.bucket))
 
     def get_python_data(self, name, version=-1):
-        datastore = self.datastore(name)
+        datastore = self.collection(name)
         cursor = datastore.find()
         data = (d.get('data') for d in cursor)
         return list(data)

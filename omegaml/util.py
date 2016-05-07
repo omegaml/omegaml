@@ -67,3 +67,5 @@ def delete_database():
     parsed_url = urlparse.urlparse(host)
     database_name = parsed_url.path[1:]
     client.drop_database(database_name)
+
+ 
