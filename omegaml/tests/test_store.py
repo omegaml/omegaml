@@ -86,6 +86,46 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
 
+    def test_get_dataframe_filter(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # filter in mongodb
+        df2 = store.get('mydata', filter=dict(a__gt=1, a__lt=10))
+        # filter local dataframe
+        df = df[(df.a > 1) & (df.a < 10)].reset_index(drop='index')
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
+    def test_get_dataframe_project(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # filter in mongodb
+        df2 = store.get('mydata', columns=['a'])
+        # filter local dataframe
+        df = df[['a']]
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
+    def test_put_dataframe_with_index(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata', index=['a', '-b'])
+        idxs = list(store.collection('mydata').list_indexes())
+        idx_names = map(lambda v: dict(v).get('name'), idxs)
+        self.assertIn('asc_a__desc_b', idx_names)
+
     def test_put_python_dict(self):
         # create some data
         data = {

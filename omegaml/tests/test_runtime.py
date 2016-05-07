@@ -133,7 +133,6 @@ class RuntimeTests(TestCase):
         om.datasets.put(Y, 'datay')
         Xhat = om.datasets.get('datax')
         Yhat = om.datasets.get('datay')
-        print om.datasets.meta_for('datax').kind
         self.assertEqual([X], Xhat)
         self.assertEqual([Y], Yhat)
         # have Omega fit the model then predict
