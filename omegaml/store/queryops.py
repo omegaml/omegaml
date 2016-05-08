@@ -53,7 +53,10 @@ class MongoQueryOps(object):
         if kwargs:
             for _k, _v in kwargs.iteritems():
                 v.setdefault(_k, {})
-                v[_k].update(_v)
+                if isinstance(_v, dict):
+                    v[_k].update(_v)
+                else:
+                    v[_k] = _v
         return {"$group": v}
     def SUM(self, v):
         return {"$sum": v}

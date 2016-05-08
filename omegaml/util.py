@@ -68,4 +68,8 @@ def delete_database():
     database_name = parsed_url.path[1:]
     client.drop_database(database_name)
 
- 
+
+def make_tuple(arg):
+    if not isinstance(arg, (list, tuple)):
+        arg = (arg,)
+    return arg
