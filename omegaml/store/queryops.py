@@ -101,6 +101,39 @@ class MongoQueryOps(object):
         fout = fout or sys.stdout
         fout.write(df.to_latex())
         return fout
+    def LOOKUP(self, other, key=None, left_key=None, right_key=None,
+               target=None):
+        """
+        return a $lookup statement.
+
+        :param other: the other collection
+        :param key: the key field (applies to both left and right)
+        :param left_key: the left key field
+        :param right_key: the right key field 
+        :param target: the target array to store the matching other-documents
+        """
+        return {
+            "$lookup": {
+                "from": other,
+                "localField": key or left_key,
+                "foreignField": key or right_key,
+                "as": target or ("%s_%s" % (other, key or right_key))
+            }
+        }
+    def UNWIND(self, field):
+        """
+        returns $unwind for the given array field. the index in the
+        array will be stored as _index_<field>. 
+        """
+        return {
+            "$unwind": {
+                "path": "$%s" % field,
+                "includeArrayIndex": "%s_%s" % ('_index_', field),
+                "preserveNullAndEmptyArrays": False
+            }
+        }
+    def OUT(self, name):
+        return {"$out": name}
     def make_index(self, columns, **kwargs):
         """
         using columns specs like ['+A', '-A'] returns (key, index)
@@ -121,6 +154,13 @@ class MongoQueryOps(object):
                           for col in sort_cols])
         kwargs.setdefault('name', name)
         return idx, kwargs
+    def make_sortkey(self, columns, **kwargs):
+        """
+        using columns specs like ['+A', '-A'] returns (key, index)
+        pairs suitable for passing on to collection.sort()
+        """
+        sort_key, _ = self.make_index(columns)
+        return sort_key
 
 # convenience accessors
 x = MongoQueryOps()
