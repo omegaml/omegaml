@@ -1,11 +1,11 @@
-from omegaml import Omega
+from uuid import uuid4
+
+from pymongo.collection import Collection
+
 from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.util import make_tuple
-from pymongo.collection import Collection
 import pandas as pd
-import random
-from uuid import uuid4
 
 
 class MGrouper(object):
@@ -110,6 +110,9 @@ class MDataFrame(object):
         cursor = self._get_cursor()
         return self._get_dataframe_from_cursor(cursor)
     def _get_dataframe_from_cursor(self, cursor):
+        """ 
+        from the given cursor return a DataFrame
+        """
         df = pd.DataFrame(list(cursor))
         return df.drop('_id', 1)
     def _get_cursor(self):
@@ -173,7 +176,7 @@ class MDataFrame(object):
             else:
                 left_col = '%s' % right_col
             project[left_col] = '$%s.%s' % (target_field, right_col)
-        project = {"$project": project}
+        project = {"$project": project} 
         # store merged documents and return an MDataFrame to it
         out = qops.OUT(target_name)
         cursor = self.collection.aggregate([lookup, unwind, project, out])

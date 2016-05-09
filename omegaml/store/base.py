@@ -14,6 +14,7 @@ from mongoengine.fields import GridFSProxy
 import omegaml
 from omegaml.documents import Metadata
 from omegaml.util import is_estimator, is_dataframe, is_ndarray
+from datetime import datetime
 
 
 class OmegaStore(object):
@@ -208,7 +209,8 @@ class OmegaStore(object):
                         gridfile=GridFSProxy(grid_id=fileid)).save()
 
     def put_dataframe_as_documents(self, obj, name, append=None,
-                                   attributes=None, index=None):
+                                   attributes=None, index=None,
+                                   timestamp=None):
         """ 
         store a dataframe as a row-wise collection of documents
 
@@ -219,6 +221,10 @@ class OmegaStore(object):
         specified and rows have been previously inserted, will issue a
         warning.  
         :param index: list of columns
+        :param timestamp: if True or a field name adds a timestamp. if the
+        value is a boolean, uses _created as the field name. The timestamp
+        is dalways datetime.datetime.utcnow(). May be overriden by specifying
+        the tuple (col, datetime). 
         :return: the Metadata object created     
         """
         collection = self.collection(name)
@@ -238,6 +244,15 @@ class OmegaStore(object):
             from .queryops import MongoQueryOps
             keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
             collection.create_index(keys, **idx_kwargs)
+        if timestamp:
+            dt = datetime.datetime.utcnow()
+            if isinstance(timestamp, bool):
+                col = '_created'
+            elif isinstance(timestamp, basestring):
+                col = timestamp
+            elif isinstance(timestamp, tuple):
+                col, dt = timestamp
+            obj[col] = dt
         # bulk insert
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
         return Metadata(name=name,
