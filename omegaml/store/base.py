@@ -1,3 +1,4 @@
+from datetime import datetime
 from fnmatch import fnmatch
 import glob
 import os
@@ -14,7 +15,6 @@ from mongoengine.fields import GridFSProxy
 import omegaml
 from omegaml.documents import Metadata
 from omegaml.util import is_estimator, is_dataframe, is_ndarray
-from datetime import datetime
 
 
 class OmegaStore(object):

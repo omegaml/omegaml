@@ -8,7 +8,7 @@ from omegaml.store.query import Filter
 class FilteredCollection(Collection):
 
     """
-    a permantently filtered collection
+    a permanently filtered collection
 
     Supports all methods as a Collection does, however any filter or query
     argument is permanently set at instantiation
@@ -16,24 +16,34 @@ class FilteredCollection(Collection):
     fcoll = FilteredCollection(collection, query={ expression })
 
     Any subsequent operation will automatically apply the query expression. 
-    Note that all methods that accept a filter as their first argument now
-    only accept an optional filter= argument. If given the filter will be
-    applied in addition to the query expression. That is the first argument
-    should now be the second argument as per the pymongo documentation.
+
+    Note that v.v. a Collection all methods that accept a filter as their first  
+    argument have a changed signature - the filter argument is optional
+    with all FilteredCollection methods, as the filter is set at instantiation.
 
     Example:
 
     # in pymongo
-    find_one_and_replace(filter, replace)
+    filter = {expression}
+    coll.find_one_and_replace(filter, replace)
 
     # FilteredCollection
-    find_one_and_replace(replace, filter=None)
+    coll = FilteredCollection(query={expression})
+    coll.find_one_and_replace(replace, filter=None)
 
     This is so that calls to a FilteredCollection feel more natural, as opposed
-    to specifying an empty filter argument on every call.  
+    to specifying an empty filter argument on every call. Still, an additional
+    filter can be specified on every method that accepts the filter= optional
+    argument:  
+
+    # temporarily add another filter
+    coll.find_one_and_replace(replace, filter={expression})
+
+    Here expression will only apply to this particular method call. The
+    global filter set by query= is unchanged.
 
     If no expression is given, the empty expression {} is assumed. To change
-    the expression set fcoll.query = { expression }  
+    the expression for the set fcoll.query = { expression }  
     """
 
     def __init__(self, collection, query=None, **kwargs):
