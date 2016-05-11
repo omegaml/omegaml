@@ -27,8 +27,10 @@ class GeoJSON(dict):
             coordinates = [lon.lon, lon.lat]
         elif isinstance(lon, (float, int)) and isinstance(lat, (float, int)):
             coordinates = [float(lon), float(lat)]
-        elif isinstance(lon, dict) and 'coordinates' in lon:
-            coordinates = lon.get('coordinates')
+        elif isinstance(lon, dict):
+            coordinates = self.get_coordinates_from_geojson(lon)
+        elif isinstance(lon, (list, tuple)):
+            coordinates = lon
         elif isinstance(lon, basestring):
             coordinates = [float(c) for c in lon.split(',')]
         elif isinstance(coordinates, GeoJSON):
@@ -36,13 +38,23 @@ class GeoJSON(dict):
         elif isinstance(coordinates, (list, tuple)):
             coordinates = coordinates
         elif isinstance(coordinates, dict):
-            coordinates = coordinates.get('coordinates')
+            coordinates = self.get_coordinates_from_geojson(lon)
         elif isinstance(coordinates, basestring):
             coordinates = [float(c) for c in lon.split(',')]
         else:
             coordinates = []
         self.update(self.to_dict(coordinates))
         assert coordinates, "%s is not a valid coordinate" % coordinates
+    def get_coordinates_from_geojson(self, d):
+        if 'coordinates' in d:
+            coordinates = d.get('coordinates')
+        elif 'geometry' in d \
+                and d.get('geometry').get('type') == 'Point':
+            coordinates = d.get('geometry').get('coordinates')
+        else:
+            raise ValueError(
+                'expected a valid GeoJSON dict, got %s' % coordinates)
+        return coordinates
     @property
     def lat(self):
         return self.get('coordinates')[1]
@@ -184,7 +196,7 @@ class MongoQueryOps(object):
         """
         returns $unwind for the given array field. the index in the
         array will be output as _index_<field>. 
-        
+
         :param field: the array field to unwind from
         :param preserve: if True, the document is output even if the
         array field is empty.  
@@ -199,7 +211,7 @@ class MongoQueryOps(object):
     def OUT(self, name):
         return {"$out": name}
     def SET(self, column, value):
-        return {"$set" : { column : value }}
+        return {"$set": {column: value}}
     def NEAR(self, lon=None, lat=None, location=None, maxd=None, mind=None):
         """
         return a $near expression from an explicit lon/lat coordinate, a
@@ -223,6 +235,8 @@ class MongoQueryOps(object):
             lon, lat = location
         else:
             lon, lat = location.get('coordinates')
+        assert lon, "invalid coordinate lon=%s lat=%s" % (lon, lat)
+        assert lat, "invalid coordinate lon=%s lat=%s" % (lon, lat)
         nearq = {
             '$near': {
                 '$geometry': {
