@@ -3,6 +3,7 @@ from unittest.case import TestCase
 
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
+from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.store.queryops import GeoJSON
 import pandas as pd
@@ -63,15 +64,21 @@ class FilterQueryTests(TestCase):
         geodf['location'] = geodf.location.apply(lambda v: GeoJSON(v))
         om.datasets.put(geodf, 'geosample', append=False, index='@location')
         coll = om.datasets.collection('geosample')
-        mgeodf = MDataFrame(coll)
         # closest place
-        result = mgeodf.query(
-            location__near=dict(location=(8.541694, 47.3768866), maxd=1))
+        result = Filter(coll,
+                        location__near=dict(location=(8.541694, 47.3768866), maxd=1))
         places = result.value.place.unique()
         self.assertEqual(places, ['Zurich'])
         # ordered by distance
-        result = mgeodf.query(
-            location__near=dict(location=(8.541694, 47.3768866)))
+        result = Filter(coll,
+                        location__near=dict(location=(8.541694, 47.3768866)))
         places = list(result.value.place.unique())
         self.assertListEqual(places, 'Zurich,Bern,Geneva,New York'.split(','))
-         
+
+    def test_filter_subdoc(self):
+        coll = self.coll
+        coll.update_many(qops.IS(x=qops.LT(5)), qops.SET('subdoc.a', 99))
+        coll.update_many(qops.IS(x=qops.GTE(5)), qops.SET('subdoc.a', 0))
+        result = Filter(coll, subdoc__a__lt=10).value
+        self.assertEqual(set(result.x.unique()), set(range(5, 10)))
+

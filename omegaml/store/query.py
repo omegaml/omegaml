@@ -98,7 +98,9 @@ class MongoQ(object):
                         subq.append({k: vv})
         for k, v in self.conditions.iteritems():
             if '__' in k:
-                k, op = k.split('__')
+                parts = k.split('__')
+                k = '.'.join(parts[0:-1])
+                op = parts[-1]
             else:
                 op = 'eq'
             # standard logical operators
@@ -135,7 +137,10 @@ class MongoQ(object):
             elif op == 'near':
                 addq(k, qops.NEAR(v))
             else:
-                raise SyntaxError('Invalid operator %s on field %s' % (op, k))
+                # op from parts[-1] was not an opperator, so assume it is
+                # an attribute name and apply the eq operator
+                # e.g. Q(key__subkey=value)
+                addq('%s.%s' % (k, op), v)
         if self._inv:
             _query = {}
             for k, v in query.iteritems():

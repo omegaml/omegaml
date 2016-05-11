@@ -74,7 +74,7 @@ class GeoJSON(dict):
 
 class MongoQueryOps(object):
     UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN'
-             'EXISTS,TYPE,REGEX,EQ')
+             'EXISTS,TYPE,REGEX,EQ').split(',')
     """
     Simplified mongo query terms
 
@@ -92,7 +92,7 @@ class MongoQueryOps(object):
     result = coll.aggregate([query, groupby])
     """
     def __getattr__(self, k):
-        if k.upper().replace('_', '') in MongoQueryOps.UNARY.split(','):
+        if k.upper().replace('_', '') in MongoQueryOps.UNARY:
             return self.__unary(k.lower())
         raise AttributeError('operator %s is not supported' % k)
     def __unary(self, op):
@@ -131,6 +131,8 @@ class MongoQueryOps(object):
         return {"$sum": v}
     def COUNT(self):
         return self.SUM(1)
+    def IS(self, **kwargs):
+        return kwargs
     def as_dataframe(self, result, autoflat=True, flatten=None, groupby=None):
         """ transform a resultset into a dataframe"""
         import pandas as pd
