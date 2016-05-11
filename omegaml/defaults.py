@@ -32,3 +32,6 @@ if '--print-omega-defaults' in sys.argv:
     from pprint import pprint
     vars = { k : v for k,v in vars.iteritems() if k.startswith('OMEGA')}
     pprint(vars)
+# -- test
+if '-m unittest' in sys.argv:
+    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/test_omega')
