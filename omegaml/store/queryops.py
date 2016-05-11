@@ -1,6 +1,63 @@
+import json
 import sys
 
 import pymongo
+
+from omegaml.util import make_tuple
+
+
+class GeoJSON(dict):
+
+    """
+    simple GeoJSON object
+
+    input:
+        GeoJSON(lon, lat)
+        GeoJSON('lon,lat')
+        GeoJSON(geojson-object)
+        GeoJSON({ geojson dict with 'coordinates': [lon, lat] })
+        GeoJSON(coordinates=[lon, lat])
+
+    output:
+        GeoJSON.to_dict()
+        GeOJSON.to_json()  
+    """
+    def __init__(self, lon=None, lat=None, coordinates=None):
+        if isinstance(lon, GeoJSON):
+            coordinates = [lon.lon, lon.lat]
+        elif isinstance(lon, (float, int)) and isinstance(lat, (float, int)):
+            coordinates = [float(lon), float(lat)]
+        elif isinstance(lon, dict) and 'coordinates' in lon:
+            coordinates = lon.get('coordinates')
+        elif isinstance(lon, basestring):
+            coordinates = [float(c) for c in lon.split(',')]
+        elif isinstance(coordinates, GeoJSON):
+            coordinates = [coordinates.lon, coordinates.lat]
+        elif isinstance(coordinates, (list, tuple)):
+            coordinates = coordinates
+        elif isinstance(coordinates, dict):
+            coordinates = coordinates.get('coordinates')
+        elif isinstance(coordinates, basestring):
+            coordinates = [float(c) for c in lon.split(',')]
+        else:
+            coordinates = []
+        self.update(self.to_dict(coordinates))
+        assert coordinates, "%s is not a valid coordinate" % coordinates
+    @property
+    def lat(self):
+        return self.get('coordinates')[1]
+    @property
+    def lon(self):
+        return self.get('coordinates')[0]
+    def to_dict(self, coordinates=None):
+        return {
+            'type': 'Point',
+            'coordinates': coordinates or self.get('coordinates'),
+        }
+    def to_json(self):
+        return json.dumps(self.to_dict())
+    def __unicode__(self):
+        return u"%s" % self.to_json()
 
 
 class MongoQueryOps(object):
@@ -94,6 +151,9 @@ class MongoQueryOps(object):
     def CONTAINS(self, v):
         return {"$regex": '.*%s.*' % v}
     def SORT(self, **columns):
+        """
+        sort by columns
+        """
         return {"$sort": columns}
     def d(self, **kwargs):
         return dict(**kwargs)
@@ -115,46 +175,97 @@ class MongoQueryOps(object):
         return {
             "$lookup": {
                 "from": other,
-                "localField": key or left_key,
-                "foreignField": key or right_key,
+                "localField": left_key or key,
+                "foreignField": right_key or key,
                 "as": target or ("%s_%s" % (other, key or right_key))
             }
         }
-    def UNWIND(self, field):
+    def UNWIND(self, field, preserve=True):
         """
         returns $unwind for the given array field. the index in the
-        array will be stored as _index_<field>. 
+        array will be output as _index_<field>. 
+        
+        :param field: the array field to unwind from
+        :param preserve: if True, the document is output even if the
+        array field is empty.  
         """
         return {
             "$unwind": {
                 "path": "$%s" % field,
                 "includeArrayIndex": "%s_%s" % ('_index_', field),
-                "preserveNullAndEmptyArrays": False
+                "preserveNullAndEmptyArrays": preserve
             }
         }
     def OUT(self, name):
         return {"$out": name}
+    def SET(self, column, value):
+        return {"$set" : { column : value }}
+    def NEAR(self, lon=None, lat=None, location=None, maxd=None, mind=None):
+        """
+        return a $near expression from an explicit lon/lat coordinate, a
+        GeoJSON object, a GeoJSON dictionary or a string
+        """
+        if isinstance(lon, basestring):
+            location = GeoJSON(lon)
+        elif isinstance(lon, (list, tuple)):
+            location = GeoJSON(*lon)
+        elif isinstance(lon, GeoJSON):
+            location = lon
+        elif isinstance(lon, dict):
+            location = GeoJSON(lon.get('location'))
+            maxd = lon.get('maxd')
+            mind = lon.get('mind')
+        elif not location:
+            assert "invalid arguments. Specify coordinates=GeoJSON(lon, lat)"
+        else:
+            pass
+        if isinstance(location, (list, tuple)):
+            lon, lat = location
+        else:
+            lon, lat = location.get('coordinates')
+        nearq = {
+            '$near': {
+                '$geometry': {
+                    'type': 'Point',
+                    'coordinates': [lon, lat],
+                },
+            }
+        }
+        if maxd:
+            nearq['$near']['$maxDistance'] = maxd
+        if mind:
+            nearq['$near']['$minDistance'] = mind
+        return nearq
     def make_index(self, columns, **kwargs):
         """
         using columns specs like ['+A', '-A'] returns (key, index)
         pairs suitable for passing on to create_index. also generates
-        a name for the index based on the columns and ordering
+        a name for the index based on the columns and ordering. Use
+        '@coord' to create a geospecial index. The coord column must
+        be in GeoJSON format 
         """
-        sort_cols = ['+' + col if col[0] != '-' else col for col in columns]
+        SORTPREFIX = ['-', '+', '@']
+        DIRECTIONMAP = {
+            '-': pymongo.DESCENDING,
+            '+': pymongo.ASCENDING,
+            '@': pymongo.GEOSPHERE,
+            'default': pymongo.ASCENDING,
+        }
+        columns = make_tuple(columns)
+        direction_default = DIRECTIONMAP.get('default')
+        sort_cols = ['+' + col
+                     if col[0] not in SORTPREFIX else col for col in columns]
         # get sort kwargs
         def direction(col):
-            if col[0] == '-':
-                d = pymongo.DESCENDING
-            else:
-                d = pymongo.ASCENDING
-            return d
-        idx = [(col.replace('+', '').replace('-', ''), direction(col))
+            return DIRECTIONMAP.get(col[0], direction_default)
+        idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
+                direction(col))
                for col in sort_cols]
-        name = '__'.join([col.replace('-', 'desc_').replace('+', 'asc_')
+        name = '__'.join([col.replace('-', 'desc_').replace('+', 'asc_').replace('@', 'geo_')
                           for col in sort_cols])
         kwargs.setdefault('name', name)
         return idx, kwargs
-    def make_sortkey(self, columns, **kwargs):
+    def make_sortkey(self, columns):
         """
         using columns specs like ['+A', '-A'] returns (key, index)
         pairs suitable for passing on to collection.sort()

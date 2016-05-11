@@ -132,6 +132,8 @@ class MongoQ(object):
                 addq(k, qops.REGEX('^%s.*' % v))
             elif op == 'endswith':
                 addq(k, qops.REGEX('.*%s$' % v))
+            elif op == 'near':
+                addq(k, qops.NEAR(v))
             else:
                 raise SyntaxError('Invalid operator %s on field %s' % (op, k))
         if self._inv:

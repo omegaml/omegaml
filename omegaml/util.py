@@ -72,4 +72,24 @@ def delete_database():
 def make_tuple(arg):
     if not isinstance(arg, (list, tuple)):
         arg = (arg,)
+    return tuple(arg)
+
+
+def make_list(arg):
+    if not isinstance(arg, (list)):
+        arg = list(arg)
     return arg
+
+
+def flatten_columns(col, sep='_'):
+    # source http://stackoverflow.com/a/29437514
+    if not type(col) is tuple:
+        return col
+    else:
+        new_col = ''
+        for leveli, level in enumerate(col):
+            if not level == '':
+                if not leveli == 0:
+                    new_col += sep
+                new_col += level
+        return new_col

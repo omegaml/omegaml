@@ -220,7 +220,9 @@ class OmegaStore(object):
         if True existing documents will persist. Defaults to True. If not
         specified and rows have been previously inserted, will issue a
         warning.  
-        :param index: list of columns
+        :param index: list of columns, using +, -, @ as a column prefix to
+        specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the 
+        column has to represent a valid GeoJSON object.
         :param timestamp: if True or a field name adds a timestamp. if the
         value is a boolean, uses _created as the field name. The timestamp
         is dalways datetime.datetime.utcnow(). May be overriden by specifying
