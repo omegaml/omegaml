@@ -73,6 +73,29 @@ class OmegaModelProxy(object):
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
                                pure_python=self.pure_python, **kwargs)
+        
+    def partial_fit(self, Xname, Yname=None, **kwargs):
+        """
+        update the model
+
+        Calls .partial_fit(X, Y, **kwargs). If instead of dataset names actual 
+        data  is given, the data is stored using _fitX/fitY prefixes and 
+        a unique name. 
+
+        After fitting, a new model version is stored with its attributes
+        fitX and fitY pointing to the datasets, as well as the sklearn
+        version used.   
+
+        :param Xname: name of X dataset or data
+        :param Yname: name of Y dataset or data
+        :return: the model (self) or the string representation (python clients) 
+        """
+        omega_fit = self.runtime.task('omegaml.tasks.omega_partial_fit')
+        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
+        if Yname is not None:
+            Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
+        return omega_fit.delay(self.modelname, Xname, Yname,
+                               pure_python=self.pure_python, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
         """

@@ -128,6 +128,31 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
 
 
 @shared_task(base=OmegamlTask)
+def omega_partial_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    om = Omega()
+    model = om.models.get(modelname)
+    X, metaX = get_data(om, Xname)
+    Y, metaY = None, None
+    if Yname:
+        Y, metaY = get_data(om, Yname)
+    result = model.partial_fit(X, Y, **kwargs)
+    # store information required for retraining
+    model_attrs = {
+        'metaX': metaX.to_mongo(),
+        'metaY': metaY.to_mongo() if metaY is not None else None,
+    }
+    try:
+        import sklearn
+        model_attrs['scikit-learn'] = sklearn.__version__
+    except:
+        model_attrs['scikit-learn'] = 'unknown'
+    om.models.put(model, modelname, attributes=model_attrs)
+    if pure_python:
+        result = '%s' % result
+    return result
+
+
+@shared_task(base=OmegamlTask)
 def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
     om = Omega()

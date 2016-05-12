@@ -1,14 +1,18 @@
 import os
 from unittest import TestCase
 
+from scipy import ravel
 from sklearn.linear_model.base import LinearRegression
+from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import NotFittedError
+from sklearn.utils.validation import NotFittedError, DataConversionWarning
 
 import numpy as np
 from omegaml import Omega
 from omegaml.util import override_settings, delete_database
 import pandas as pd
+from sklearn.metrics.scorer import accuracy_scorer
+from sklearn.metrics.regression import mean_squared_error
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -115,6 +119,57 @@ class RuntimeTests(TestCase):
             (pred == pred1).all(), "runtime prediction is different(1)")
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(2)")
+
+    def test_partial_fit(self):
+        # create some data
+        x = np.array(range(0, 10))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']][0:2]
+        Y = df[['y']][0:2]
+        # put into Omega
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(df[['x']], 'datax-full')
+        om.datasets.put(X, 'datax')
+        om.datasets.put(Y, 'datay')
+        om.datasets.get('datax')
+        om.datasets.get('datay')
+        # create a model locally, store (unfitted) in Omega
+        # -- ignore warnings on y shape
+        import warnings
+        warnings.filterwarnings("ignore", category=DataConversionWarning)
+        lr = SGDRegressor()
+        om.models.put(lr, 'mymodel2')
+        # have Omega fit the model to get a start, then predict
+        result = om.runtime.model('mymodel2').fit('datax', 'datay')
+        result.get()
+        # check the new model version metadata includes the datax/y references
+        result = om.runtime.model('mymodel2').predict('datax-full')
+        pred1 = result.get()
+        mse = mean_squared_error(df.y, pred1)
+        self.assertGreater(mse, 90)
+        # fit mini batches add better training data, update model
+        batch_size = 2
+        for i, start in enumerate(range(0, len(df))):
+            previous_mse = mse
+            X = df[['x']][start:start + batch_size]
+            Y = df[['y']][start:start + batch_size]
+            om.datasets.put(X, 'datax-update', append=False)
+            om.datasets.put(Y, 'datay-update', append=False)
+            result = om.runtime.model('mymodel2').partial_fit(
+                'datax-update', 'datay-update')
+            result.get()
+            # check the new model version metadata includes the datax/y
+            # references
+            result = om.runtime.model('mymodel2').predict('datax-full')
+            pred1 = result.get()
+            mse = mean_squared_error(df.y, pred1)
+            self.assertLess(mse, previous_mse)
+        # mse == 0 is most accurate the best
+        self.assertLess(mse, 1.0)
 
     def test_predict_pure_python(self):
         # create some data
