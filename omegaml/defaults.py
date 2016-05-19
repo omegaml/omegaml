@@ -1,16 +1,23 @@
+import urlparse
+import os
+import sys
+
 OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = 'mongodb://localhost:27017/omega'
 OMEGA_MONGO_COLLECTION = 'store'
-OMEGA_BROKER = 'amqp://guest@localhost//'
-OMEGA_RESULT_BACKEND = 'amqp://'
+OMEGA_BROKER = 'amqp://guest@127.0.0.1:5672//'
+OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
+parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
 OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
+    'CELERY_MONGODB_BACKEND_SETTINGS': {
+        'database': parsed_url.path[1:],
+        'taskmeta_collection': 'omegaml_taskmeta',
+    }
 }
 
 # simple override from env vars
-import os
-import sys
 vars = locals()
 # -- top-level OMEGA_*
 for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
@@ -19,7 +26,7 @@ for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
 for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
     celery_k = k.replace('OMEGA_', '')
     vars['OMEGA_CELERY_CONFIG'][celery_k] = os.environ[k]
-# -- debug if required 
+# -- debug if required
 if '--print-omega-defaults' in sys.argv:
     from pprint import pprint
     vars = { k : v for k,v in vars.iteritems() if k.startswith('OMEGA')}

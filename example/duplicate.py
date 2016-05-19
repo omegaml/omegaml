@@ -71,7 +71,7 @@ def testOmegaml(
     result = om.runtime.model('duplicate').predict([[5]])
     pred2 = result.get()
 
-    pd.concat([df1, df2]).sort('asked')
+    pd.concat([df1, df2]).sort_values(by='asked')
 
 
 if __name__ == '__main__':
