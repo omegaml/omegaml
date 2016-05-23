@@ -92,7 +92,7 @@ class RuntimeTests(TestCase):
         result = om.runtime.model('mymodel2').fit('datax', 'datay')
         result.get()
         # check the new model version metadata includes the datax/y references
-        meta = om.models.meta_for('mymodel2')
+        meta = om.models.metadata('mymodel2')
         self.assertIn('metaX', meta.attributes)
         self.assertIn('metaY', meta.attributes)
         # -- using data already in Omega
@@ -106,7 +106,7 @@ class RuntimeTests(TestCase):
         result = om.runtime.model('mymodel2').predict(X)
         pred2 = result.get()
         # -- check the local data provided to fit was stored as intended
-        meta = om.models.meta_for('mymodel2')
+        meta = om.models.metadata('mymodel2')
         self.assertIn('metaX', meta.attributes)
         self.assertIn('metaY', meta.attributes)
         self.assertIn('_fitX', meta.attributes.get('metaX').get('collection'))

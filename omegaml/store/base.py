@@ -10,8 +10,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 import gridfs
 import mongoengine
+from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
-
 import omegaml
 from omegaml.documents import Metadata
 from omegaml.util import is_estimator, is_dataframe, is_ndarray
@@ -99,6 +99,7 @@ class OmegaStore(object):
         self.tmppath = defaults.OMEGA_TMP
         self.prefix = prefix or ''
         self._db = None
+        self._db = self.mongodb
 
     @property
     def mongodb(self):
@@ -134,14 +135,41 @@ class OmegaStore(object):
             raise e
         return self._fs
 
-    def metadata(self, name=None):
+    def metadata(self, name=None, bucket=None, prefix=None, version=-1):
         """
-        return metadata document(s) for the given entry name
+        return metadata document for the given entry name
+
+        FIXME: version attribute does not do anything
         """
-        # ensure initialization
         db = self.mongodb
-        return Metadata.objects(name=name, prefix=self.prefix,
-                                bucket=self.bucket)
+        prefix = prefix or self.prefix
+        bucket = bucket or self.bucket
+        return Metadata.objects(name=name, prefix=prefix,
+                                bucket=bucket).first()
+
+    def _make_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
+        """
+        create or update a metadata object
+
+        this retrieves a Metadata object if it exists given the kwargs. Only
+        the name, prefix and bucket arguments are considered
+
+        :param name: the object name
+        :param bucket: the bucket, optional, defaults to self.bucket 
+        :param prefix: the prefix, optional, defaults to self.prefix
+        """
+        bucket = bucket or self.bucket
+        prefix = prefix or self.prefix
+        meta = self.metadata(name=name,
+                             prefix=prefix,
+                             bucket=bucket)
+        if meta:
+            for k, v in kwargs.iteritems():
+                setattr(meta, k, v)
+        else:
+            meta = Metadata(name=name, bucket=bucket, prefix=prefix,
+                            **kwargs)
+        return meta
 
     def datastore(self, name=None):
         from warnings import warn
@@ -201,12 +229,12 @@ class OmegaStore(object):
         with open(zipfname) as fzip:
             fileid = self.fs.put(
                 fzip, filename=self._get_obj_store_key(name, 'omm'))
-        return Metadata(name=name,
-                        prefix=self.prefix,
-                        bucket=self.bucket,
-                        kind=Metadata.SKLEARN_JOBLIB,
-                        attributes=attributes,
-                        gridfile=GridFSProxy(grid_id=fileid)).save()
+        return self._make_metadata(name=name,
+                                   prefix=self.prefix,
+                                   bucket=self.bucket,
+                                   kind=Metadata.SKLEARN_JOBLIB,
+                                   attributes=attributes,
+                                   gridfile=GridFSProxy(grid_id=fileid)).save()
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
@@ -257,12 +285,12 @@ class OmegaStore(object):
             obj[col] = dt
         # bulk insert
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
-        return Metadata(name=name,
-                        prefix=self.prefix,
-                        bucket=self.bucket,
-                        kind=Metadata.PANDAS_DFROWS,
-                        attributes=attributes,
-                        collection=collection.name).save()
+        return self._make_metadata(name=name,
+                                   prefix=self.prefix,
+                                   bucket=self.bucket,
+                                   kind=Metadata.PANDAS_DFROWS,
+                                   attributes=attributes,
+                                   collection=collection.name).save()
 
     def get_df_grouped_docs(self, obj, groupby):
         """
@@ -311,12 +339,12 @@ class OmegaStore(object):
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname) as fhdf:
             fileid = self.fs.put(fhdf, filename=filename)
-        return Metadata(name=name,
-                        prefix=self.prefix,
-                        bucket=self.bucket,
-                        kind=Metadata.PANDAS_HDF,
-                        attributes=attributes,
-                        gridfile=GridFSProxy(grid_id=fileid)).save()
+        return self._make_metadata(name=name,
+                                   prefix=self.prefix,
+                                   bucket=self.bucket,
+                                   kind=Metadata.PANDAS_HDF,
+                                   attributes=attributes,
+                                   gridfile=GridFSProxy(grid_id=fileid)).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None):
         """ store numpy array as hdf
@@ -344,26 +372,18 @@ class OmegaStore(object):
         datastore = self.collection(name)
         datastore.drop()
         objid = datastore.insert({'data': obj})
-        return Metadata(name=name,
-                        prefix=self.prefix,
-                        bucket=self.bucket,
-                        kind=Metadata.PYTHON_DATA,
-                        collection=datastore.name,
-                        attributes=attributes,
-                        objid=objid).save()
-
-    def meta_for(self, name, version=-1):
-        db = self.mongodb
-        try:
-            meta = list(Metadata.objects(name=name,
-                                         prefix=self.prefix,
-                                         bucket=self.bucket))[version]
-        except IndexError as e:
-            meta = None
-        return meta
+        return self._make_metadata(name=name,
+                                   prefix=self.prefix,
+                                   bucket=self.bucket,
+                                   kind=Metadata.PYTHON_DATA,
+                                   collection=datastore.name,
+                                   attributes=attributes,
+                                   objid=objid).save()
 
     def drop(self, name, version=-1):
-        meta = self.meta_for(name, version=version)
+        meta = self.metadata(name, version=version)
+        if meta is None:
+            raise DoesNotExist(name)
         if meta.collection:
             self.mongodb.drop_collection(meta.collection)
             meta.delete()
@@ -381,7 +401,7 @@ class OmegaStore(object):
         retrieve estimators, pipelines, data array or pandas dataframe
         previously stored with put()
         """
-        meta = self.meta_for(name, version=version)
+        meta = self.metadata(name, version=version)
         if meta is None:
             return None
         if not force_python:
@@ -513,7 +533,7 @@ class OmegaStore(object):
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
-    def list(self, pattern=None, regexp=None, raw=False):
+    def list(self, pattern=None, regexp=None, kind=None, raw=False):
         """
         list all files in store
 
@@ -524,16 +544,21 @@ class OmegaStore(object):
         :param regexp: the regexp. takes precedence over pattern
         :param raw: if True return the meta data objects
         """
+        db = self.mongodb
+        searchkeys = dict(bucket=self.bucket,
+                          prefix=self.prefix)
+        if kind:
+            searchkeys.update(kind=kind)
+        meta = Metadata.objects(**searchkeys)
         if raw:
-            meta = list(Metadata.objects(bucket=self.bucket,
-                                         prefix=self.prefix))
             if regexp:
-                files = [f for f in meta if re.match(regexp, meta.name)]
+                files = [f for f in meta if re.match(regexp, f.name)]
             elif pattern:
-                files = [f for f in meta if fnmatch(meta.name, pattern)]
+                files = [f for f in meta if fnmatch(f.name, pattern)]
+            else:
+                files = [f for f in meta]
         else:
-            files = [d.name for d in Metadata.objects(bucket=self.bucket,
-                                                      prefix=self.prefix)]
+            files = [d.name for d in meta]
             if regexp:
                 files = [f for f in files if re.match(regexp, f)]
             elif pattern:

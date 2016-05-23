@@ -2,11 +2,13 @@ import StringIO
 import unittest
 from zipfile import ZipFile
 
+from mongoengine.connection import disconnect
+from omegaml.documents import Metadata
+from omegaml.store import OmegaStore
+from omegaml.util import override_settings, delete_database
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
-from omegaml.store import OmegaStore
-from omegaml.util import override_settings, delete_database
 import pandas as pd
 import gridfs
 override_settings(
@@ -23,6 +25,8 @@ class StoreTests(unittest.TestCase):
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
+        delete_database()
+        disconnect('omega')
 
     def test_package_model(self):
         # create a test model
@@ -252,6 +256,23 @@ class StoreTests(unittest.TestCase):
         # test a get on that bucket raises exception
         self.assertRaises(gridfs.errors.NoFile, store2.get, 'hdfdf')
 
+    def test_put_same_name(self):
+        """ test if metadata is updated instead of a new created """
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        # store the object
+        meta = store.put(df, 'foo')
+        # store it again
+        meta2 = store.put(df, 'foo', append=False)
+        # we should still have only one object in metadata
+        self.assertEqual(meta.pk, meta2.pk)
+        df2 = store.get('foo')
+        self.assertTrue(df.equals(df2))
+
     def test_drop(self):
         data = {
             'a': range(1, 10),
@@ -263,4 +284,33 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(store.drop('hdfdf'))
         meta = store.put(df, 'datadf')
         self.assertTrue(store.drop('datadf'))
-        self.assertEqual(store.list(), [], 'expected the store to be empty')
+        self.assertEqual(store.list('datadf'), [], 'expected the store to be empty')
+
+    def test_list_raw(self):
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        meta = store.put(df, 'hdfdf', as_hdf=True)
+        # list with pattern
+        entries = store.list(pattern='hdf*', raw=True)
+        self.assertTrue(isinstance(entries[0], Metadata))
+        self.assertEqual('hdfdf', entries[0].name)
+        self.assertEqual(len(entries), 1)
+        # list with regexp
+        entries = store.list(regexp='hdf.*', raw=True)
+        self.assertTrue(isinstance(entries[0], Metadata))
+        self.assertEqual('hdfdf', entries[0].name)
+        self.assertEqual(len(entries), 1)
+        # list without pattern nor regexp
+        entries = store.list('hdfdf', kind=Metadata.PANDAS_HDF, raw=True)
+        self.assertTrue(isinstance(entries[0], Metadata))
+        self.assertEqual('hdfdf', entries[0].name)
+        self.assertEqual(len(entries), 1)
+        # subset kind
+        entries = store.list('hdfdf', raw=True, kind=Metadata.PANDAS_DFROWS)
+        self.assertEqual(len(entries), 0)
+        entries = store.list('hdfdf', raw=True, kind=Metadata.PANDAS_HDF)
+        self.assertEqual(len(entries), 1)

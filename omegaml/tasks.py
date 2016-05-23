@@ -167,7 +167,7 @@ def omega_settings():
 
 def get_data(om, name):
     data = om.datasets.get(name)
-    meta = om.datasets.meta_for(name)
+    meta = om.datasets.metadata(name)
     if meta.kind == Metadata.PYTHON_DATA:
         # we can only use one python object at a time
         return data[0], meta

@@ -32,6 +32,7 @@ def is_ndarray(obj):
 
 def settings():
     """ wrapper to get omega settings from either django or omegamldefaults """
+    import omegaml.defaults as omdefaults
     global __settings
     if __settings is not None:
         return __settings
@@ -41,8 +42,14 @@ def settings():
         from django.conf import settings as djsettings  # @UnresolvedImport
         defaults = djsettings
     except:
-        import omegaml.defaults as omdefaults
         defaults = omdefaults
+    else:
+        # get default omega settings into django settings if not set
+        # there already
+        import omegaml.defaults as omdefaults
+        for k in dir(omdefaults):
+            if not hasattr(defaults, k):
+                setattr(defaults, k, getattr(omdefaults, k))
     __settings = defaults
     return __settings
 
