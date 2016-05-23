@@ -252,3 +252,10 @@ class Omega(object):
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
         self.jobs = OmegaJobs()
+
+
+# default instance
+_om = Omega()
+models = _om.datasets
+datasets = _om.datasets
+runtime = _om.runtime
