@@ -38,6 +38,15 @@ class Metadata(Document):
     meta = {
         'db_alias': 'omega',
         'indexes': [
-            'created', # most recent is last, i.e. [-1]
+            # unique entry
+            {
+                'fields': ['bucket', 'prefix', 'name'],
+            },
+            'created',  # most recent is last, i.e. [-1]
         ]
     }
+
+    def __unicode__(self):
+        kwargs = ('%s=%s' % (k, getattr(self, k))
+                  for k in self._fields.keys())
+        return u"Metadata(%s)" % ','.join(kwargs)
