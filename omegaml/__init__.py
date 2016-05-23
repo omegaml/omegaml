@@ -259,6 +259,6 @@ class Omega(object):
 
 # default instance
 _om = Omega()
-models = _om.datasets
+models = _om.models
 datasets = _om.datasets
 runtime = _om.runtime
