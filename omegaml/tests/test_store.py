@@ -140,6 +140,20 @@ class StoreTests(unittest.TestCase):
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         self.assertEquals([data], data2)
+        
+    def test_put_python_dict_multiple(self):
+        # create some data
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        store = OmegaStore(prefix='')
+        store.put(data, 'mydata')
+        store.put(data, 'mydata')
+        data2 = store.get('mydata')
+        # we will have stored the same object twice
+        self.assertEquals(data, data2[0])
+        self.assertEquals(data, data2[1])
 
     def test_get_forced_python(self):
         """
@@ -273,6 +287,28 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2))
 
+    def test_store_with_attributes(self):
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        # store the object, no attributes
+        meta = store.put(df, 'foo')
+        meta = store.metadata('foo')
+        self.assertEqual(meta.attributes, {})
+        # update attributes
+        meta = store.put(df, 'foo', append=False, attributes={'foo': 'bar'})
+        meta = store.metadata('foo')
+        self.assertEqual(meta.attributes, {'foo': 'bar'})
+        meta = store.put(
+            df, 'foo', append=False, attributes={'foo': 'bax',
+                                                 'foobar': 'barbar'})
+        meta = store.metadata('foo')
+        self.assertEqual(meta.attributes, {'foo': 'bax',
+                                           'foobar': 'barbar'})
+
     def test_drop(self):
         data = {
             'a': range(1, 10),
@@ -284,7 +320,8 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(store.drop('hdfdf'))
         meta = store.put(df, 'datadf')
         self.assertTrue(store.drop('datadf'))
-        self.assertEqual(store.list('datadf'), [], 'expected the store to be empty')
+        self.assertEqual(
+            store.list('datadf'), [], 'expected the store to be empty')
 
     def test_list_raw(self):
         data = {

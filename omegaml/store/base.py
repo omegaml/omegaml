@@ -86,11 +86,12 @@ class OmegaStore(object):
         a plugin system will enable extension to other types. 
     """
 
-    def __init__(self, mongo_url=None, bucket=None, prefix=None):
+    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None):
         """
         :param mongo_url: the mongourl to use for the gridfs
         :param bucket: the mongo collection to use for gridfs
-        :param prefix: the path prefix for files. defaults to blank 
+        :param prefix: the path prefix for files. defaults to blank
+        :param kind: the kind or list of kinds to limit this store to 
         """
         defaults = omegaml.settings()
         self.mongo_url = mongo_url or defaults.OMEGA_MONGO_URL
@@ -98,8 +99,11 @@ class OmegaStore(object):
         self._fs = None
         self.tmppath = defaults.OMEGA_TMP
         self.prefix = prefix or ''
+        self.force_kind = kind
+        # don't initialize db here to avoid using the default settings
+        # otherwise Metadata will already have a connection and not use
+        # the one provided in override_settings
         self._db = None
-        self._db = self.mongodb
 
     @property
     def mongodb(self):
@@ -142,6 +146,7 @@ class OmegaStore(object):
         FIXME: version attribute does not do anything
         """
         db = self.mongodb
+        fs = self.fs
         prefix = prefix or self.prefix
         bucket = bucket or self.bucket
         return Metadata.objects(name=name, prefix=prefix,
@@ -154,6 +159,16 @@ class OmegaStore(object):
         this retrieves a Metadata object if it exists given the kwargs. Only
         the name, prefix and bucket arguments are considered
 
+        for existing Metadata objects, the attributes kw is treated as follows:
+
+        * attributes=None, the existing attributes are left as is
+        * attributes={}, the attributes value on an existing metadata object
+        is reset to the empty dict
+        * attributes={ some : value }, the existing attributes are updated
+
+        For new metadata objects, attributes defaults to {} if not specified,
+        else is set as provided.    
+
         :param name: the object name
         :param bucket: the bucket, optional, defaults to self.bucket 
         :param prefix: the prefix, optional, defaults to self.prefix
@@ -165,7 +180,18 @@ class OmegaStore(object):
                              bucket=bucket)
         if meta:
             for k, v in kwargs.iteritems():
-                setattr(meta, k, v)
+                if k == 'attributes' and v is not None and len(v) > 0:
+                    previous = getattr(meta, k, {})
+                    previous.update(v)
+                    setattr(meta, k, previous)
+                elif k == 'attributes' and v is not None and len(v) == 0:
+                    setattr(meta, k, {})
+                elif k == 'attributes' and v is None:
+                    # ignore non specified attributes
+                    continue
+                else:
+                    # by default set whatever attribute is provided
+                    setattr(meta, k, v)
         else:
             meta = Metadata(name=name, bucket=bucket, prefix=prefix,
                             **kwargs)
@@ -229,12 +255,15 @@ class OmegaStore(object):
         with open(zipfname) as fzip:
             fileid = self.fs.put(
                 fzip, filename=self._get_obj_store_key(name, 'omm'))
+            gridfile = GridFSProxy(grid_id=fileid,
+                                   db_alias='omega',
+                                   collection_name=self.bucket)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=Metadata.SKLEARN_JOBLIB,
                                    attributes=attributes,
-                                   gridfile=GridFSProxy(grid_id=fileid)).save()
+                                   gridfile=gridfile).save()
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
@@ -251,9 +280,9 @@ class OmegaStore(object):
         :param index: list of columns, using +, -, @ as a column prefix to
         specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the 
         column has to represent a valid GeoJSON object.
-        :param timestamp: if True or a field name adds a timestamp. if the
-        value is a boolean, uses _created as the field name. The timestamp
-        is dalways datetime.datetime.utcnow(). May be overriden by specifying
+        :param timestamp: if True or a field name adds a timestamp. If the
+        value is a boolean or datetime, uses _created as the field name. The timestamp
+        is always datetime.datetime.utcnow(). May be overriden by specifying
         the tuple (col, datetime). 
         :return: the Metadata object created     
         """
@@ -280,6 +309,8 @@ class OmegaStore(object):
                 col = '_created'
             elif isinstance(timestamp, basestring):
                 col = timestamp
+            elif isinstance(timestamp, datetime):
+                col, dt = '_created', timestamp
             elif isinstance(timestamp, tuple):
                 col, dt = timestamp
             obj[col] = dt
@@ -367,16 +398,26 @@ class OmegaStore(object):
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
-    def put_pyobj_as_document(self, obj, name, attributes=None):
-        """ store a dict as a document """
-        datastore = self.collection(name)
-        datastore.drop()
-        objid = datastore.insert({'data': obj})
+    def put_pyobj_as_document(self, obj, name, attributes=None, append=True):
+        """ 
+        store a dict as a document
+
+        similar to put_dataframe_as_documents no data will be replaced by
+        default. that is, obj is appended as new documents into the objects'
+        mongo collection. to replace the data, specify append=False. 
+        """
+        collection = self.collection(name)
+        if append is False:
+            collection.drop()
+        elif append is None and collection.count(limit=1):
+            from warnings import warn
+            warn('%s already exists, will append rows' % name)
+        objid = collection.insert({'data': obj})
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=Metadata.PYTHON_DATA,
-                                   collection=datastore.name,
+                                   collection=collection.name,
                                    attributes=attributes,
                                    objid=objid).save()
 
@@ -435,12 +476,14 @@ class OmegaStore(object):
         return model
 
     def get_dataframe_documents(self, name, columns=None,
-                                filter=None, version=-1):
+                                filter=None, version=-1, **kwargs):
         """
         get dataframe from documents
         """
         import pandas as pd
         collection = self.collection(name)
+        if filter is None:
+            filter = kwargs
         if filter:
             from query import Filter, MongoQ
             query = Filter(collection, **filter).query
@@ -547,8 +590,12 @@ class OmegaStore(object):
         db = self.mongodb
         searchkeys = dict(bucket=self.bucket,
                           prefix=self.prefix)
-        if kind:
-            searchkeys.update(kind=kind)
+        if kind or self.force_kind:
+            kind = kind or self.force_kind
+            if isinstance(kind, (tuple, list)):
+                searchkeys.update(kind__in=kind)
+            else:
+                searchkeys.update(kind=kind)
         meta = Metadata.objects(**searchkeys)
         if raw:
             if regexp:

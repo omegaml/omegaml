@@ -2,10 +2,12 @@ import logging
 from uuid import uuid4
 
 from celery import Celery
-import store
+from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.jobs import OmegaJobs
 from omegaml.util import is_dataframe, settings, is_ndarray
+
+import store
 logger = logging.getLogger(__file__)
 
 
@@ -244,9 +246,10 @@ class Omega(object):
     def __init__(self, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None):
         defaults = settings()
-        broker = broker or defaults.OMEGA_BROKER
-        backend = backend or defaults.OMEGA_RESULT_BACKEND
-        self.models = OmegaStore(prefix='models/')
+        self.broker = broker or defaults.OMEGA_BROKER
+        self.backend = backend or defaults.OMEGA_RESULT_BACKEND
+        self.models = OmegaStore(prefix='models/', 
+                                 kind=Metadata.SKLEARN_JOBLIB)
         self.datasets = OmegaStore(prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,
