@@ -62,6 +62,41 @@ class StoreTests(unittest.TestCase):
         result2 = lr2.predict(X)
         self.assertTrue((result == result2).all())
 
+    def test_prefix_store(self):
+        """
+        this is to test if store prefixes work 
+        """
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        datasets = OmegaStore(prefix='data')
+        models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
+        datasets.put(df, 'test')
+        self.assertEqual(len(datasets.list()), 1)
+        self.assertEqual(len(models.list()), 0)
+
+    def test_custom_levels(self):
+        """
+        this is to test if custom path and levels can be provided ok 
+        """
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        datasets = OmegaStore(prefix='data')
+        models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
+        # directory-like levels
+        datasets.put(df, 'data/is/mypath/test')
+        datasets.put(df, 'data/is/mypath/test2')
+        self.assertEqual(len(datasets.list('data/*/mypath/*')), 2)
+        self.assertEqual(len(datasets.list('data/*/test')), 1)
+        # namespace-like levels
+        datasets.put(df, 'my.namespace.module.test')
+        datasets.put(df, 'my.namespace.module.test2')
+        self.assertEqual(len(datasets.list('*.module.*')), 2)
+        self.assertEqual(len(datasets.list('*.module.test2')), 1)
+
     def test_put_model_with_prefix(self):
         # create a test model
         iris = load_iris()
@@ -140,7 +175,7 @@ class StoreTests(unittest.TestCase):
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         self.assertEquals([data], data2)
-        
+
     def test_put_python_dict_multiple(self):
         # create some data
         data = {
