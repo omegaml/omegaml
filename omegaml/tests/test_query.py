@@ -74,6 +74,16 @@ class FilterQueryTests(TestCase):
                         location__near=dict(location=(8.541694, 47.3768866)))
         places = list(result.value.place.unique())
         self.assertListEqual(places, 'Zurich,Bern,Geneva,New York'.split(','))
+        # use tuple (lon, lat, maxd)
+        result = Filter(coll,
+                        location__near=(8.541694, 47.3768866, 1))
+        places = list(result.value.place.unique())
+        self.assertListEqual(places, 'Zurich'.split(','))
+        # use tuple (lon, lat, mind, maxd)
+        result = Filter(coll,
+                        location__near=(8.541694, 47.3768866, 0, 100))
+        places = list(result.value.place.unique())
+        self.assertListEqual(places, 'Zurich'.split(','))
 
     def test_filter_subdoc(self):
         coll = self.coll
@@ -81,4 +91,3 @@ class FilterQueryTests(TestCase):
         coll.update_many(qops.IS(x=qops.GTE(5)), qops.SET('subdoc.a', 0))
         result = Filter(coll, subdoc__a__lt=10).value
         self.assertEqual(set(result.x.unique()), set(range(5, 10)))
-

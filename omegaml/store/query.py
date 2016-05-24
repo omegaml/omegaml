@@ -130,6 +130,8 @@ class MongoQ(object):
                 addq(k, qops.TYPE('null'))
             elif op in ['islong', 'isint']:
                 addq(k, qops.TYPE('long'))
+            elif op == 'contains':
+                addq(k, qops.REGEX('^%s.*' % v))
             elif op == 'startswith':
                 addq(k, qops.REGEX('^%s.*' % v))
             elif op == 'endswith':

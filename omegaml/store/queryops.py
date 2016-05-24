@@ -222,7 +222,13 @@ class MongoQueryOps(object):
         if isinstance(lon, basestring):
             location = GeoJSON(lon)
         elif isinstance(lon, (list, tuple)):
-            location = GeoJSON(*lon)
+            if len(lon) == 4:
+                lon, lat, mind, maxd = lon
+            elif len(lon) == 3:
+                lon, lat, maxd = lon
+            else:
+                lon, lat = lon
+            location = GeoJSON(lon, lat)
         elif isinstance(lon, GeoJSON):
             location = lon
         elif isinstance(lon, dict):
