@@ -7,7 +7,6 @@ from omegaml.store import OmegaStore
 from omegaml.jobs import OmegaJobs
 from omegaml.util import is_dataframe, settings, is_ndarray
 
-import store
 logger = logging.getLogger(__file__)
 
 
@@ -42,7 +41,7 @@ class OmegaModelProxy(object):
         documentation would become very unspecific. We think it is much
         cleaner to have an explicit interface at the chance of missing
         features. If need should arise we can still implement a generic
-        method call. 
+        method call.
     """
 
     def __init__(self, modelname, runtime=None):
@@ -58,15 +57,15 @@ class OmegaModelProxy(object):
 
         Calls .fit(X, Y, **kwargs). If instead of dataset names actual data
         is given, the data is stored using _fitX/fitY prefixes and a unique
-        name. 
+        name.
 
         After fitting, a new model version is stored with its attributes
         fitX and fitY pointing to the datasets, as well as the sklearn
-        version used.   
+        version used.
 
         :param Xname: name of X dataset or data
         :param Yname: name of Y dataset or data
-        :return: the model (self) or the string representation (python clients) 
+        :return: the model (self) or the string representation (python clients)
         """
         omega_fit = self.runtime.task('omegaml.tasks.omega_fit')
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
@@ -75,9 +74,32 @@ class OmegaModelProxy(object):
         return omega_fit.delay(self.modelname, Xname, Yname,
                                pure_python=self.pure_python, **kwargs)
 
+    def partial_fit(self, Xname, Yname=None, **kwargs):
+        """
+        update the model
+
+        Calls .partial_fit(X, Y, **kwargs). If instead of dataset names actual
+        data  is given, the data is stored using _fitX/fitY prefixes and
+        a unique name.
+
+        After fitting, a new model version is stored with its attributes
+        fitX and fitY pointing to the datasets, as well as the sklearn
+        version used.
+
+        :param Xname: name of X dataset or data
+        :param Yname: name of Y dataset or data
+        :return: the model (self) or the string representation (python clients)
+        """
+        omega_fit = self.runtime.task('omegaml.tasks.omega_partial_fit')
+        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
+        if Yname is not None:
+            Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
+        return omega_fit.delay(self.modelname, Xname, Yname,
+                               pure_python=self.pure_python, **kwargs)
+
     def transform(self, Xname, rName=None, **kwargs):
         """
-        transform X 
+        transform X
 
         Calls .transform(X, **kwargs). If rName is given the result is
         stored as object rName
@@ -95,7 +117,7 @@ class OmegaModelProxy(object):
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
         """
-        fit & transform X 
+        fit & transform X
 
         Calls .fit_transform(X, Y, **kwargs). If rName is given the result is
         stored as object rName
@@ -240,6 +262,9 @@ class OmegaRuntime(object):
         """
         return self.celeryapp.tasks.get(name)
 
+    def settings(self):
+        return self.task('omegaml.tasks.omega_settings').delay().get()
+
 
 class Omega(object):
 
@@ -248,8 +273,9 @@ class Omega(object):
         defaults = settings()
         self.broker = broker or defaults.OMEGA_BROKER
         self.backend = backend or defaults.OMEGA_RESULT_BACKEND
-        self.models = OmegaStore(prefix='models/', 
-                                 kind=Metadata.SKLEARN_JOBLIB)
+        self.models = OmegaStore(
+            prefix='models/',
+            kind=Metadata.SKLEARN_JOBLIB)
         self.datasets = OmegaStore(prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,
