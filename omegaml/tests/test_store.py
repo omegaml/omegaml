@@ -4,6 +4,7 @@ import unittest
 from zipfile import ZipFile
 
 from mongoengine.connection import disconnect
+from mongoengine.errors import DoesNotExist
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
@@ -398,6 +399,14 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(store.drop('datadf'))
         self.assertEqual(
             store.list('datadf'), [], 'expected the store to be empty')
+        with self.assertRaises(DoesNotExist):
+            store.drop('foo', force=False)
+        try:
+            store.drop('foo', force=True)
+            raised = False
+        except:
+            raised = True
+        self.assertFalse(raised)
 
     def test_list_raw(self):
         data = {

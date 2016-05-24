@@ -421,10 +421,24 @@ class OmegaStore(object):
                                    attributes=attributes,
                                    objid=objid).save()
 
-    def drop(self, name, version=-1):
+    def drop(self, name, force=False, version=-1):
+        """
+        drop the object
+
+        :param name: the name of the object
+        :param force: if True ignores DoesNotExist exception, defaults to False
+        meaning this raises a DoesNotExist exception of the name does not 
+        exist
+        :return: True if object was deleted, False if not. If force is True and
+        the object does not exist it will still return True
+        """
         meta = self.metadata(name, version=version)
         if meta is None:
-            raise DoesNotExist(name)
+            if force:
+                # it's gone, so that's what we want
+                return True
+            else:
+                raise DoesNotExist()
         if meta.collection:
             self.mongodb.drop_collection(meta.collection)
             meta.delete()
