@@ -1,4 +1,5 @@
 import StringIO
+from datetime import timedelta
 import unittest
 from zipfile import ZipFile
 
@@ -6,6 +7,7 @@ from mongoengine.connection import disconnect
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
+from pandas.lib import Timestamp
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
@@ -124,6 +126,45 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata')
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
+    def test_put_dataframe_timestamp(self):
+        # create some dataframe
+        from datetime import datetime
+        df = pd.DataFrame({
+            'a': range(1, 10),
+            'b': range(1, 10)
+        })
+        store = OmegaStore(prefix='')
+        # -- check default timestamp
+        now = datetime.utcnow()
+        store.put(df, 'mydata', append=False, timestamp=True)
+        df2 = store.get('mydata')
+        _created = df2['_created'].astype(datetime).unique()[0].to_datetime()
+        self.assertEqual(_created.replace(second=0, microsecond=0),
+                         now.replace(second=0, microsecond=0))
+        # -- check custom timestamp column, default value
+        now = datetime.utcnow()
+        store.put(df, 'mydata', append=False, timestamp='CREATED')
+        df2 = store.get('mydata')
+        _created = df2['CREATED'].astype(datetime).unique()[0].to_datetime()
+        self.assertEqual(_created.replace(second=0, microsecond=0),
+                         now.replace(second=0, microsecond=0))
+        # -- check custom timestamp column, value as tuple
+        now = datetime.utcnow() - timedelta(days=1)
+        store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
+        df2 = store.get('mydata')
+        _created = df2['CREATED'].astype(datetime).unique()[0].to_datetime()
+        self.assertEqual(_created.replace(second=0, microsecond=0),
+                         now.replace(second=0, microsecond=0))
+        # set a day in the past to avoid accidentally creating the current
+        # datetime in mongo
+        now = datetime.now() - timedelta(days=1)
+        store.put(df, 'mydata', timestamp=now, append=False)
+        df2 = store.get('mydata')
+        # compare the data
+        _created = df2['_created'].astype(datetime).unique()[0].to_datetime()
+        self.assertEqual(_created.replace(microsecond=0),
+                         now.replace(microsecond=0))
 
     def test_get_dataframe_filter(self):
         # create some dataframe

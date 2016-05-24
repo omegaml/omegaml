@@ -304,7 +304,7 @@ class OmegaStore(object):
             keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
             collection.create_index(keys, **idx_kwargs)
         if timestamp:
-            dt = datetime.datetime.utcnow()
+            dt = datetime.utcnow()
             if isinstance(timestamp, bool):
                 col = '_created'
             elif isinstance(timestamp, basestring):
