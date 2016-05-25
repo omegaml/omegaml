@@ -12,9 +12,10 @@ import gridfs
 import mongoengine
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
-import omegaml
-from omegaml.documents import Metadata
-from omegaml.util import is_estimator, is_dataframe, is_ndarray
+from ..documents import Metadata
+
+from ..util import (is_estimator, is_dataframe, is_ndarray,
+                    settings as omega_settings)
 
 
 class OmegaStore(object):
@@ -93,7 +94,7 @@ class OmegaStore(object):
         :param prefix: the path prefix for files. defaults to blank
         :param kind: the kind or list of kinds to limit this store to 
         """
-        defaults = omegaml.settings()
+        defaults = omega_settings()
         self.mongo_url = mongo_url or defaults.OMEGA_MONGO_URL
         self.bucket = bucket or defaults.OMEGA_MONGO_COLLECTION
         self._fs = None
@@ -149,8 +150,9 @@ class OmegaStore(object):
         fs = self.fs
         prefix = prefix or self.prefix
         bucket = bucket or self.bucket
-        return Metadata.objects(name=name, prefix=prefix,
-                                bucket=bucket).first()
+        # Meta is to silence lint on import error
+        Meta = Metadata
+        return Meta.objects(name=name, prefix=prefix, bucket=bucket).first()
 
     def _make_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
         """
@@ -449,7 +451,8 @@ class OmegaStore(object):
             return True
         return False
 
-    def get(self, name, version=-1, force_python=False, **kwargs):
+    def get(self, name, version=-1, force_python=False,
+            **kwargs):
         """
         retrieve an object
 
@@ -489,24 +492,27 @@ class OmegaStore(object):
         model = self._extract_model(packagefname)
         return model
 
-    def get_dataframe_documents(self, name, columns=None,
+    def get_dataframe_documents(self, name, columns=None, lazy=False,
                                 filter=None, version=-1, **kwargs):
         """
         get dataframe from documents
         """
-        import pandas as pd
         collection = self.collection(name)
-        if filter is None:
-            filter = kwargs
-        if filter:
-            from query import Filter, MongoQ
-            query = Filter(collection, **filter).query
-            cursor = collection.find(filter=query, projection=columns)
+        if lazy:
+            from ..mdataframe import MDataFrame
+            # return just a reference to the collection
+            df = MDataFrame(collection, columns=columns).query(**kwargs)
         else:
-            cursor = collection.find(projection=columns)
-        df = pd.DataFrame(list(cursor))
-        if '_id' in df.columns:
-            del df['_id']
+            import pandas as pd
+            if filter:
+                from query import Filter
+                query = Filter(collection, **filter).query
+                cursor = collection.find(filter=query, projection=columns)
+            else:
+                cursor = collection.find(projection=columns)
+            df = pd.DataFrame.from_records(cursor)
+            if '_id' in df.columns:
+                del df['_id']
         return df
 
     def rebuild_params(self, kwargs, collection):

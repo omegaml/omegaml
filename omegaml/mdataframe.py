@@ -50,10 +50,16 @@ class MGrouper(object):
                              **_specs)
         # execute and return a dataframe
         pipeline = self._amend_pipeline([groupby])
-        data = list(self.collection.aggregate(pipeline))
-        for group in data:
-            group.update(group.pop('_id'))
-        return pd.DataFrame(data).set_index(make_list(self.columns), drop=True)
+        data = self.collection.aggregate(pipeline)
+        def get_data():
+            # we need this to build a pipeline for from_records
+            # to process, otherwise the cursor will be exhausted already
+            for group in data:
+                group.update(group.pop('_id'))
+                yield group
+        df = pd.DataFrame.from_records(get_data())
+        df = df.set_index(make_list(self.columns), drop=True)
+        return df
     def _amend_pipeline(self, pipeline):
         """ amend pipeline with default ops on coll.aggregate() calls """
         if self.should_sort:
@@ -172,6 +178,7 @@ class MDataFrame(object):
             kwargs = self.__getcopy_kwargs()
             kwargs.update(columns=cols_or_slice)
             return MDataFrame(self.collection, **kwargs)
+        raise ValueError('unknown accessor type %s' % type(cols_or_slice))
     def __setitem__(self, column, value):
         # True for any scalar type, numeric, bool, string
         if np.isscalar(value):
@@ -196,7 +203,7 @@ class MDataFrame(object):
         """ 
         from the given cursor return a DataFrame
         """
-        df = pd.DataFrame(list(cursor))
+        df = pd.DataFrame.from_records(cursor)
         if '_id' in df.columns:
             df.drop('_id', axis=1, inplace=True)
         if self.force_columns:

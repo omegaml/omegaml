@@ -1,13 +1,13 @@
+import os
 import random
 from unittest.case import TestCase
 
 from omegaml import Omega
+from omegaml.util import flatten_columns
+from pandas.util.testing import assert_frame_equal
+
 from omegaml.mdataframe import MDataFrame
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
-from omegaml.util import flatten_columns
-
-
 class MDataFrameTests(TestCase):
 
     def setUp(self):
@@ -195,3 +195,16 @@ class MDataFrameTests(TestCase):
         testdf = df.merge(other, on='x', how='left', sort=True)
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
+
+    def test_verylarge_dataframe(self):
+        if not os.environ.get('TEST_LARGE'):
+            return
+        other = pd.DataFrame({'x': range(0, int(10e6)),
+                              'y': range(0, int(10e6)),
+                              'z': range(0, int(10e6))})
+        coll = self.coll
+        df = self.df
+        result = MDataFrame(coll).value
+        self.assertEqual(set(MDataFrame(coll).columns),
+                         set(list(df.columns)))
+        self.assertTrue(result.equals(df))
