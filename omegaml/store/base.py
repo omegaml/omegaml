@@ -500,10 +500,11 @@ class OmegaStore(object):
         collection = self.collection(name)
         if lazy:
             from ..mdataframe import MDataFrame
-            # return just a reference to the collection
-            df = MDataFrame(collection, columns=columns).query(**kwargs)
+            filter = filter or kwargs
+            df = MDataFrame(collection, columns=columns).query(**filter)
         else:
             import pandas as pd
+            filter = filter or kwargs
             if filter:
                 from query import Filter
                 query = Filter(collection, **filter).query
