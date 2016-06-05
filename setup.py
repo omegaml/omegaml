@@ -39,6 +39,9 @@ setup(
         'celery>=3.1.20',
         'joblib>=0.9.4',
         'tables>=3.2.2',
+        'runipy>=0.1.5',
+        'croniter>=0.3.12',
+        'PyYAML>=3.11'
     ],
     dependency_links=[
     ]

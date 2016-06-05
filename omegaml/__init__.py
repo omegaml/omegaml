@@ -4,6 +4,7 @@ from uuid import uuid4
 from celery import Celery
 
 from omegaml.store import OmegaStore
+from omegaml.jobs import OmegaJobs
 from omegaml.util import is_dataframe, settings, is_ndarray
 logger = logging.getLogger(__file__)
 
@@ -250,3 +251,4 @@ class Omega(object):
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
+        self.jobs = OmegaJobs()

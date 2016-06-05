@@ -1,9 +1,47 @@
 import os
 
 from celery import shared_task
+from celery import Task
 
 from omegaml import Omega
+from omegaml.jobs import OmegaJobs
 from omegaml.documents import Metadata
+
+
+class NotebookTask(Task):
+    abstract = True
+
+    def __init__(self, *args, **kwargs):
+        jobs = OmegaJobs()
+        self.collection = getattr(jobs.store.mongodb, 'omegaml_nbstatus')
+
+    def on_success(self, retval, task_id, *args, **kwargs):
+        nbfile, config, last_runtime, next_runtime = args[0][0:4]
+        nb_status_data = {
+            "task_id": task_id,
+            "last_runtime": last_runtime,
+            "next_runtime": next_runtime,
+            "state": "SUCCESS",
+        }
+        self.collection.update_one({
+            "_id": nbfile
+            }, {
+            '$set': nb_status_data
+            }, upsert=True)
+
+    def on_failure(self, retval, task_id, *args, **kwargs):
+        nbfile, config, last_runtime, next_runtime = args[0][0:4]
+        nb_status_data = {
+            "task_id": task_id,
+            "last_runtime": last_runtime,
+            "next_runtime": next_runtime,
+            "state": "FAILURE",
+        }
+        self.collection.update_one({
+            "_id": nbfile
+            }, {
+            '$set': nb_status_data
+            }, upsert=True)
 
 
 @shared_task
@@ -129,3 +167,23 @@ def get_data(om, name):
         # we can only use one python object at a time
         return data[0], meta
     return data, meta
+
+
+@shared_task
+def run_omegaml_job(nb_file):
+    """
+    retrieves the notebook from gridfs and runs it
+    """
+    om = Omega()
+    result = om.jobs.run_notebook(nb_file)
+    return result
+
+
+@shared_task(base=NotebookTask)
+def schedule_omegaml_job(nb_file, config, run_at=None, next_run_time=None):
+    """
+    retrieves the notebook from gridfs and runs it
+    """
+    om = Omega()
+    result = om.jobs.run_notebook(nb_file)
+    return result

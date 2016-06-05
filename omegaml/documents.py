@@ -12,7 +12,8 @@ class Metadata(Document):
     PYTHON_DATA = 'python.data'
     PANDAS_DFGROUP = 'pandas.dfgroup'
     SKLEARN_JOBLIB = 'sklearn.joblib'
-    KINDS = (PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB, PANDAS_DFGROUP)
+    OMEGAML_JOBS = 'script.ipynb'
+    KINDS = (PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB, PANDAS_DFGROUP, OMEGAML_JOBS)
     # fields
     #: this is the name of the data
     name = StringField()

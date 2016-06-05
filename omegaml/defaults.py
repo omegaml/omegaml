@@ -7,6 +7,7 @@ OMEGA_MONGO_URL = 'mongodb://localhost:27017/omega'
 OMEGA_MONGO_COLLECTION = 'store'
 OMEGA_BROKER = 'amqp://guest@127.0.0.1:5672//'
 OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
+OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
 OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
