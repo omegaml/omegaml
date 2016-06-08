@@ -173,7 +173,7 @@ class StoreTests(unittest.TestCase):
         }
         result_data = {
             'a': range(1, 2),
-            'b': '1',
+            'b': 1,
         }
         df = pd.DataFrame(data)
         result_df = pd.DataFrame(result_data)
@@ -183,8 +183,10 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
         self.assertIn('store.dfgroup.data', store.mongodb.collection_names())
-        df2 = store.get('dfgroup', kwargs={'b': '1'})
+        df2 = store.get('dfgroup', kwargs={'b': 1})
         self.assertTrue(df2.equals(result_df))
+        df3 = store.get('dfgroup')
+        self.assertTrue(df3.equals(df))
 
     def test_store_dataframe_as_hdf(self):
         data = {

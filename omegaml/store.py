@@ -200,27 +200,6 @@ class OmegaStore(object):
                         attributes=attributes,
                         collection=datastore.name).save()
 
-    # def rearrange_rows(self, gdf_to_dict):
-    #     """
-    #     takes in a grouped gdf dict and rearranges the data
-    #     per row and values.
-    #     from {'col_1': {'row_1': 'val_1'}, 'col_2': {'row_1': 'val_1'}}
-    #     to [{row_1: {'col_1': val_1', 'col_2': 'val_2'}}]
-    #     """
-    #     result_list = []
-    #     result_dict = {}
-    #     # get the row index for this particular data set
-    #     # all values for column heads would have the same row indexes
-    #     # for that grouped column
-    #     row_indexes = gdf_to_dict.values()[0].keys()
-    #     for index in row_indexes:
-    #         all_col_data = {}
-    #         for col_head, row_data in gdf_to_dict.iteritems():
-    #             all_col_data[col_head] = str(row_data.get(index))
-    #         result_dict[str(index)] = all_col_data
-    #         result_list.append(result_dict)
-    #     return result_list
-
     def get_df_grouped_docs(self, obj, groupby):
         """
         returns a mongo document grouped by the provided columns
@@ -230,19 +209,22 @@ class OmegaStore(object):
             # group_val is a str if only one col is provided
             # is a tuple if more than one cols are provided.
             if isinstance(group_val, tuple):
-                for grouped_cols in groupby:
-                    mongo_doc_dict[grouped_cols] = str(group_val[groupby.index(
-                        grouped_cols)])
+                pass
             else:
-                for grouped_cols in groupby:
-                    mongo_doc_dict[grouped_cols] = str(group_val)
+                str_to_tuple = ()
+                str_to_tuple += (group_val,)
+                group_val = str_to_tuple
+
+            for grouped_cols in groupby:
+                mongo_doc_dict[grouped_cols] = group_val[groupby.index(
+                    grouped_cols)]
 
             datacols = list(set(gdf.columns) - set(groupby))
             data_dict = {}
             for row in gdf[datacols].iterrows():
                 row_data_dict = row[1].to_dict()
                 for k, v in row_data_dict.iteritems():
-                    row_data_dict[k] = str(v)
+                    row_data_dict[k] = v
                 data = {str(row[0]): row_data_dict}
                 data_dict.update(data)
 
@@ -374,17 +356,12 @@ class OmegaStore(object):
             for row_index, col_data in data.iteritems():
                 result_dict = {}
                 for col in col_heads:
-                    result_dict[str(col)] = str(data[row_index].get(col))
+                    result_dict[str(col)] = data[row_index].get(col)
                 for col in groupby_columns:
-                    result_dict[str(col)] = str(doc.get(col))
-                result_list.append(result_dict)
+                    result_dict[str(col)] = doc.get(col)
+            result_list.append(result_dict)
 
-            docdf = pd.DataFrame(result_list)
-
-            if df is not None:
-                df = pd.concat([df, docdf])
-            else:
-                df = docdf
+            df = pd.DataFrame(result_list)
 
         return df
 
