@@ -201,21 +201,23 @@ class OmegaJobs(object):
         """
         returns the result gridfile object for the respective Metadata
         """
+        fs = self.get_fs(self.defaults.OMEGA_NOTEBOOK_COLLECTION)
         if isinstance(job, Metadata):
-            return Metadata.gridfile
+            return fs.get(job.gridfile.grid_id)
 
         try:
-            metadata = Metadata.objects.filter(name=job)
+            metadata = Metadata.objects.order_by(
+                '-created').filter(name=job).first()
             if not metadata:
                 raise Metadata.DoesNotExist
-            return metadata[0].gridfile
+            return fs.get(metadata.gridfile.grid_id)
         except Metadata.DoesNotExist:
             try:
                 collection = self.get_collection('metadata')
-                metadata = collection.find_one({'attributes.task_id': job})
+                doc = collection.find_one({'attributes.task_id': job})
+                metadata = Metadata.objects.get(gridfile=doc.get('gridfile'))
                 if not metadata:
                     raise Exception
-                return Metadata.objects.get(
-                    gridfile=metadata.get('gridfile')).gridfile
+                return fs.get(metadata.gridfile.grid_id)
             except Exception:
                 raise Metadata.DoesNotExist('No job found related to the name or task id: {0}'.format(job))
