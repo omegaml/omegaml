@@ -4,44 +4,49 @@ from celery import shared_task
 from celery import Task
 
 from omegaml import Omega
-from omegaml.jobs import OmegaJobs
 from omegaml.documents import Metadata
 
 
 class NotebookTask(Task):
     abstract = True
 
-    def __init__(self, *args, **kwargs):
-        jobs = OmegaJobs()
-        self.collection = getattr(jobs.store.mongodb, 'omegaml_nbstatus')
-
     def on_success(self, retval, task_id, *args, **kwargs):
-        nbfile, config, last_runtime, next_runtime = args[0][0:4]
-        nb_status_data = {
-            "task_id": task_id,
-            "last_runtime": last_runtime,
-            "next_runtime": next_runtime,
-            "state": "SUCCESS",
-        }
-        self.collection.update_one({
-            "_id": nbfile
-            }, {
-            '$set': nb_status_data
-            }, upsert=True)
+        args, kwargs = args[0:2]
+        nbfile = args[0]
+        metadata = Metadata.objects.get(
+            name=nbfile, kind=Metadata.OMEGAML_RUNNING_JOBS)
+        attrs = metadata.attributes
+        attrs['state'] = 'SUCCESS'
+        attrs['task_id'] = task_id
+        metadata.kind = Metadata.OMEGAML_JOBS
+
+        if not kwargs:
+            pass
+        else:
+            attrs['last_run_time'] = kwargs.get('run_at')
+            attrs['next_run_time'] = kwargs.get('next_run_time')
+
+        metadata.attributes = attrs
+        metadata.save()
 
     def on_failure(self, retval, task_id, *args, **kwargs):
-        nbfile, config, last_runtime, next_runtime = args[0][0:4]
-        nb_status_data = {
-            "task_id": task_id,
-            "last_runtime": last_runtime,
-            "next_runtime": next_runtime,
-            "state": "FAILURE",
-        }
-        self.collection.update_one({
-            "_id": nbfile
-            }, {
-            '$set': nb_status_data
-            }, upsert=True)
+        args, kwargs = args[0:2]
+        nbfile = args[0]
+        metadata = Metadata.objects.get(
+            name=nbfile, kind=Metadata.OMEGAML_RUNNING_JOBS)
+        attrs = metadata.attributes
+        attrs['state'] = 'FAILURE'
+        attrs['task_id'] = task_id
+        metadata.kind = Metadata.OMEGAML_JOBS
+
+        if not kwargs:
+            pass
+        else:
+            attrs['last_run_time'] = kwargs.get('run_at')
+            attrs['next_run_time'] = kwargs.get('next_run_time')
+
+        metadata.attributes = attrs
+        metadata.save()
 
 
 @shared_task
@@ -169,7 +174,7 @@ def get_data(om, name):
     return data, meta
 
 
-@shared_task
+@shared_task(base=NotebookTask)
 def run_omegaml_job(nb_file):
     """
     retrieves the notebook from gridfs and runs it
@@ -180,7 +185,7 @@ def run_omegaml_job(nb_file):
 
 
 @shared_task(base=NotebookTask)
-def schedule_omegaml_job(nb_file, config, run_at=None, next_run_time=None):
+def schedule_omegaml_job(nb_file, **kwargs):
     """
     retrieves the notebook from gridfs and runs it
     """
