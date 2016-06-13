@@ -220,15 +220,14 @@ class OmegaStore(object):
                     grouped_cols)]
 
             datacols = list(set(gdf.columns) - set(groupby))
-            data_dict = {}
+            data_list = []
             for row in gdf[datacols].iterrows():
                 row_data_dict = row[1].to_dict()
                 for k, v in row_data_dict.iteritems():
                     row_data_dict[k] = v
-                data = {str(row[0]): row_data_dict}
-                data_dict.update(data)
+                data_list.append(row_data_dict)
 
-            mongo_doc_dict['data'] = data_dict
+            mongo_doc_dict['data'] = data_list
             yield mongo_doc_dict
 
     def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
@@ -309,7 +308,8 @@ class OmegaStore(object):
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe(name, version=version)
             elif meta.kind == Metadata.PANDAS_DFGROUP:
-                return self.get_dataframe_dfgroup(name, version=version, kwargs=kwargs)
+                return self.get_dataframe_dfgroup(
+                    name, version=version, kwargs=kwargs)
             elif meta.kind == Metadata.PYTHON_DATA:
                 return self.get_python_data(name, version=version)
             elif meta.kind == Metadata.PANDAS_HDF:
@@ -342,27 +342,55 @@ class OmegaStore(object):
             del df['_id']
         return df
 
-    def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
-        import pandas as pd
-        datastore = self.datastore(name)
-        cursor = datastore.find(kwargs, {'_id': False})
-        df = None
-        result_list = []
-        # get mongo document as is
+    def rebuild_params(self, kwargs, collection):
+        """
+        returns a modified set of parameters for querying mongodb
+        based on how the mongo document is structured and the
+        fields the document is grouped by
+
+        Note: Explicitly to be used only with get_grouped_data only
+        """
+        modified_params = {}
+        db_structure = collection.find_one({}, {'_id': False})
+        groupby_columns = list(set(db_structure.keys()) - set(['data']))
+        if kwargs is not None:
+            for item in kwargs:
+                if item not in groupby_columns:
+                    modified_query_param = 'data.'+item
+                    modified_params[modified_query_param] = kwargs.get(item)
+                else:
+                    modified_params[item] = kwargs.get(item)
+        return modified_params
+
+    def get_grouped_data(self, cursor, kwargs=None):
+        """
+        yields data from the mongo collection
+        """
+        kwargs = kwargs if kwargs else {}
         for doc in cursor:
             data = doc.get('data')
             groupby_columns = list(set(doc.keys()) - set(['data']))
-            col_heads = data.values()[0].keys()
-            for row_index, col_data in data.iteritems():
+            for col in groupby_columns:
+                if col in kwargs:
+                    kwargs.pop(col)
+            col_heads = data[0].keys()
+            for col_data in data:
                 result_dict = {}
-                for col in col_heads:
-                    result_dict[str(col)] = data[row_index].get(col)
-                for col in groupby_columns:
-                    result_dict[str(col)] = doc.get(col)
-            result_list.append(result_dict)
+                if kwargs.viewitems() <= col_data.viewitems():
+                    for col in col_heads:
+                        result_dict[str(col)] = col_data.get(col)
+                    for col in groupby_columns:
+                        result_dict[str(col)] = doc.get(col)
 
-            df = pd.DataFrame(result_list)
+                    yield result_dict
 
+    def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
+        import pandas as pd
+        datastore = self.datastore(name)
+        kwargs = kwargs if kwargs else {}
+        params = self.rebuild_params(kwargs, datastore)
+        cursor = datastore.find(params, {'_id': False})
+        df = pd.DataFrame(self.get_grouped_data(cursor, kwargs))
         return df
 
     def get_dataframe_hdf(self, name, version=-1):
@@ -373,7 +401,9 @@ class OmegaStore(object):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
-            raise gridfs.errors.NoFile("{0} does not exist in mongo collection '{1}'".format(name, self.bucket))
+            raise gridfs.errors.NoFile(
+                "{0} does not exist in mongo collection '{1}'".format(
+                    name, self.bucket))
 
     def get_python_data(self, name, version=-1):
         datastore = self.datastore(name)

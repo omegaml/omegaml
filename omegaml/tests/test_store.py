@@ -187,6 +187,8 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(df2.equals(result_df))
         df3 = store.get('dfgroup')
         self.assertTrue(df3.equals(df))
+        df4 = store.get('dfgroup', kwargs={'a': 1})
+        self.assertTrue(df4.equals(result_df))
 
     def test_store_dataframe_as_hdf(self):
         data = {
