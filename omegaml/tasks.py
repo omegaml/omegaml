@@ -5,6 +5,7 @@ from celery import Task
 
 from omegaml import Omega
 from omegaml.documents import Metadata
+from omegaml import signals
 
 
 class NotebookTask(Task):
@@ -49,7 +50,27 @@ class NotebookTask(Task):
         metadata.save()
 
 
-@shared_task
+class OmegamlTask(Task):
+    abstract = True
+
+    def on_success(self, retval, task_id, *args, **kwargs):
+        signals.mltask_end.send(sender=None, state="SUCCESS", task=self.name)
+
+    def on_failure(self, retval, task_id, *args, **kwargs):
+        signals.mltask_end.send(sender=None, state="FAILURE", task=self.name)
+
+
+def get_dataset_representations(items):
+    """
+    returns dict with x and y datasets
+    """
+    results = {}
+    results['Xname'] = items.get('Xname')
+    results['Yname'] = items.get('Yname')
+    return results
+
+
+@shared_task(base=OmegamlTask)
 def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
     om = Omega()
     model = om.models.get(modelname)
@@ -60,10 +81,11 @@ def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
     if rName:
         meta = om.put(result, rName)
         result = meta
+    signals.mltask_start.send(sender=None, name='omega_predict', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
                         **kwargs):
     om = Omega()
@@ -75,10 +97,11 @@ def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
     if rName:
         om.put(result, rName)
         result = meta
+    signals.mltask_start.send(sender=None, name='omega_predict_proba', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
     om = Omega()
     model = om.models.get(modelname)
@@ -100,10 +123,11 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
     om.models.put(model, modelname, attributes=model_attrs)
     if pure_python:
         result = '%s' % result
+    signals.mltask_start.send(sender=None, name='omega_fit', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
     om = Omega()
@@ -114,10 +138,11 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
     if rName:
         meta = om.put(result, rName)
         result = meta
+    signals.mltask_start.send(sender=None, name='omega_score', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
                         pure_python=True, **kwargs):
     om = Omega()
@@ -140,10 +165,11 @@ def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
     om.models.put(model, modelname, attributes=model_attrs)
     if rName:
         om.put(result, rName)
+    signals.mltask_start.send(sender=None, name='omega_fit_transform', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_transform(modelname, Xname, rName=None, **kwargs):
     om = Omega()
     model = om.models.get(modelname)
@@ -152,10 +178,11 @@ def omega_transform(modelname, Xname, rName=None, **kwargs):
     if rName:
         meta = om.put(result, rName)
         result = meta
+    signals.mltask_start.send(sender=None, name='omega_transform', args=get_dataset_representations(locals()))
     return result
 
 
-@shared_task
+@shared_task(base=OmegamlTask)
 def omega_settings():
     if os.environ.get('OMEGA_DEBUG'):
         from omegaml.util import settings
@@ -190,5 +217,5 @@ def schedule_omegaml_job(nb_file, **kwargs):
     retrieves the notebook from gridfs and runs it
     """
     om = Omega()
-    result = om.jobs.run_notebook(nb_file)
+    result = om.jobs.run(nb_file)
     return result

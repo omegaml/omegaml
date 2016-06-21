@@ -31,6 +31,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
+        'Django>=1.7,<1.8',
         'pymongo>=3.2.1',
         'mongoengine>=0.10.6',
         'pandas>=0.17.1',

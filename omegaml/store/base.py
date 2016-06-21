@@ -16,6 +16,7 @@ from ..documents import Metadata
 
 from ..util import (is_estimator, is_dataframe, is_ndarray,
                     settings as omega_settings)
+from omegaml import signals
 
 
 class OmegaStore(object):
@@ -263,6 +264,7 @@ class OmegaStore(object):
             gridfile = GridFSProxy(grid_id=fileid,
                                    db_alias='omega',
                                    collection_name=self.bucket)
+        signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -273,7 +275,7 @@ class OmegaStore(object):
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
                                    timestamp=None):
-        """ 
+        """
         store a dataframe as a row-wise collection of documents
 
         :param obj: the dataframe to store
@@ -281,15 +283,15 @@ class OmegaStore(object):
         :param append: if False collection will be dropped before inserting,
         if True existing documents will persist. Defaults to True. If not
         specified and rows have been previously inserted, will issue a
-        warning.  
+        warning.
         :param index: list of columns, using +, -, @ as a column prefix to
-        specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the 
+        specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the
         column has to represent a valid GeoJSON object.
         :param timestamp: if True or a field name adds a timestamp. If the
-        value is a boolean or datetime, uses _created as the field name. The timestamp
-        is always datetime.datetime.utcnow(). May be overriden by specifying
-        the tuple (col, datetime). 
-        :return: the Metadata object created     
+        value is a boolean or datetime, uses _created as the field name.
+        The timestamp is always datetime.datetime.utcnow(). May be overriden
+        by specifying the tuple (col, datetime).
+        :return: the Metadata object created
         """
         collection = self.collection(name)
         if append is False:
@@ -321,6 +323,7 @@ class OmegaStore(object):
             obj[col] = dt
         # bulk insert
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
+        signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -364,6 +367,7 @@ class OmegaStore(object):
         datastore.drop()
 
         datastore.insert_many(self.get_df_grouped_docs(obj, groupby))
+        signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -376,6 +380,7 @@ class OmegaStore(object):
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname) as fhdf:
             fileid = self.fs.put(fhdf, filename=filename)
+        signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -391,6 +396,7 @@ class OmegaStore(object):
         """
         import pandas as pd
         df = pd.DataFrame(obj)
+        signals.dataset_put.send(sender=None, name=name)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
     def put_pyobj_as_hdf(self, obj, name, attributes=None):
@@ -402,15 +408,16 @@ class OmegaStore(object):
         """
         import pandas as pd
         df = pd.DataFrame(obj)
+        signals.dataset_put.send(sender=None, name=name)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
     def put_pyobj_as_document(self, obj, name, attributes=None, append=True):
-        """ 
+        """
         store a dict as a document
 
         similar to put_dataframe_as_documents no data will be replaced by
         default. that is, obj is appended as new documents into the objects'
-        mongo collection. to replace the data, specify append=False. 
+        mongo collection. to replace the data, specify append=False.
         """
         collection = self.collection(name)
         if append is False:
@@ -419,6 +426,7 @@ class OmegaStore(object):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
         objid = collection.insert({'data': obj})
+        signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -433,7 +441,7 @@ class OmegaStore(object):
 
         :param name: the name of the object
         :param force: if True ignores DoesNotExist exception, defaults to False
-        meaning this raises a DoesNotExist exception of the name does not 
+        meaning this raises a DoesNotExist exception of the name does not
         exist
         :return: True if object was deleted, False if not. If force is True and
         the object does not exist it will still return True
@@ -494,6 +502,7 @@ class OmegaStore(object):
         with open(packagefname, 'w') as zipf:
             zipf.write(outf.read())
         model = self._extract_model(packagefname)
+        signals.dataset_get.send(sender=None, name=name)
         return model
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
@@ -518,6 +527,7 @@ class OmegaStore(object):
             df = pd.DataFrame.from_records(cursor)
             if '_id' in df.columns:
                 del df['_id']
+        signals.dataset_get.send(sender=None, name=name)
         return df
 
     def rebuild_params(self, kwargs, collection):
@@ -569,6 +579,7 @@ class OmegaStore(object):
         params = self.rebuild_params(kwargs, datastore)
         cursor = datastore.find(params, {'_id': False})
         df = pd.DataFrame(self.get_grouped_data(cursor, kwargs))
+        signals.dataset_get.send(sender=None, name=name)
         return df
 
     def get_dataframe_hdf(self, name, version=-1):
@@ -576,6 +587,7 @@ class OmegaStore(object):
         filename = self._get_obj_store_key(name, '.hdf')
         if filename.endswith('.hdf') and self.fs.exists(filename=filename):
             df = self._extract_dataframe_hdf(filename, version=version)
+            signals.dataset_get.send(sender=None, name=name)
             return df
         else:
             raise gridfs.errors.NoFile(
@@ -586,6 +598,7 @@ class OmegaStore(object):
         datastore = self.collection(name)
         cursor = datastore.find()
         data = (d.get('data') for d in cursor)
+        signals.dataset_get.send(sender=None, name=name)
         return list(data)
 
     def get_object_as_python(self, meta, version=-1):
@@ -604,7 +617,7 @@ class OmegaStore(object):
         """
         list all files in store
 
-        specify pattern as a unix pattern (e.g. 'models/*', 
+        specify pattern as a unix pattern (e.g. 'models/*',
         or specify regexp)
 
         :param pattern: the unix file pattern or None for all
@@ -651,7 +664,7 @@ class OmegaStore(object):
 
     def _package_model(self, model, filename):
         """
-        dump model using joblib and package all joblib files into zip 
+        dump model using joblib and package all joblib files into zip
         """
         import joblib
         lpath = tempfile.mkdtemp()

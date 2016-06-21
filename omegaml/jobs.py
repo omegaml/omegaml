@@ -13,6 +13,7 @@ import yaml
 import os
 import gridfs
 from nbformat import read, write
+from omegaml import signals
 
 
 class OmegaJobs(object):
@@ -62,6 +63,7 @@ class OmegaJobs(object):
         """
         from omegaml.tasks import run_omegaml_job
         result = run_omegaml_job.delay(nb_file)
+        signals.job_run.send(sender=None, name=nb_file)
         return result.get()
 
     def open_notebook(self, nb_filename):
@@ -209,8 +211,10 @@ class OmegaJobs(object):
                 name=nb_file,
                 kind=Metadata.OMEGAML_RUNNING_JOBS,
                 attributes=attrs).save()
-        return schedule_omegaml_job.apply_async(
+        result = schedule_omegaml_job.apply_async(
             args=[nb_file], eta=run_at, kwargs=kwargs)
+        signals.job_schedule.send(sender=None, name=nb_file)
+        return result
 
     def get_status(self, job):
         """
