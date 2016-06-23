@@ -67,13 +67,13 @@ class StoreTests(unittest.TestCase):
 
     def test_prefix_store(self):
         """
-        this is to test if store prefixes work 
+        this is to test if store prefixes work
         """
         df = pd.DataFrame({
             'a': range(1, 10),
             'b': range(1, 10)
         })
-        datasets = OmegaStore(prefix='data')
+        datasets = OmegaStore(prefix='teststore')
         models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
         datasets.put(df, 'test')
         self.assertEqual(len(datasets.list()), 1)
@@ -317,7 +317,7 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
-        self.assertIn('store.dfgroup.data', store.mongodb.collection_names())
+        self.assertIn('store.dfgroup.datastore', store.mongodb.collection_names())
         df2 = store.get('dfgroup', kwargs={'b': 1})
         self.assertTrue(df2.equals(result_df))
         df3 = store.get('dfgroup')
@@ -341,11 +341,11 @@ class StoreTests(unittest.TestCase):
         override_settings(
             OMEGA_MONGO_COLLECTION='tempabcdef'
         )
+        # test a get on that bucket raises exception
+        self.assertRaises(gridfs.errors.NoFile, store.get, 'hdfdf')
         store2 = OmegaStore()
         # test hdf file is not there
         self.assertNotIn('hdfdf.hdf', store2.fs.list())
-        # test a get on that bucket raises exception
-        self.assertRaises(gridfs.errors.NoFile, store2.get, 'hdfdf')
 
     def test_put_same_name(self):
         """ test if metadata is updated instead of a new created """
@@ -400,9 +400,9 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(
             store.list('datadf'), [], 'expected the store to be empty')
         with self.assertRaises(DoesNotExist):
-            store.drop('foo', force=False)
+            store.drop('nxstore', force=False)
         try:
-            store.drop('foo', force=True)
+            store.drop('nxstore', force=True)
             raised = False
         except:
             raised = True

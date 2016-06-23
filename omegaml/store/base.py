@@ -234,9 +234,12 @@ class OmegaStore(object):
             elif kwargs.get('groupby'):
                 groupby = kwargs.get('groupby')
                 return self.put_dataframe_as_dfgroup(
-                    obj, name, groupby, attributes, **kwargs)
+                    obj, name, groupby, attributes)
+            append = kwargs.get('append', None)
+            timestamp = kwargs.get('timestamp', None)
+            index = kwargs.get('index', None)
             return self.put_dataframe_as_documents(
-                obj, name, attributes, **kwargs)
+                obj, name, append, attributes, index, timestamp)
         elif is_ndarray(obj):
             return self.put_ndarray_as_hdf(obj, name,
                                            attributes=attributes,
@@ -361,11 +364,12 @@ class OmegaStore(object):
         datastore.drop()
 
         datastore.insert_many(self.get_df_grouped_docs(obj, groupby))
-
-        return Metadata(name=self.prefix + name,
-                        kind=Metadata.PANDAS_DFGROUP,
-                        attributes=attributes,
-                        collection=datastore.name).save()
+        return self._make_metadata(name=name,
+                                   prefix=self.prefix,
+                                   bucket=self.bucket,
+                                   kind=Metadata.PANDAS_DFGROUP,
+                                   attributes=attributes,
+                                   collection=datastore.name).save()
 
     def put_dataframe_as_hdf(self, obj, name, attributes=None):
         filename = self._get_obj_store_key(name, '.hdf')
@@ -470,7 +474,7 @@ class OmegaStore(object):
                                                     **kwargs)
             elif meta.kind == Metadata.PANDAS_DFGROUP:
                 return self.get_dataframe_dfgroup(
-                    name, version=version, kwargs=kwargs)
+                    name, version=version, **kwargs)
             elif meta.kind == Metadata.PYTHON_DATA:
                 return self.get_python_data(name, version=version)
             elif meta.kind == Metadata.PANDAS_HDF:
@@ -569,8 +573,7 @@ class OmegaStore(object):
 
     def get_dataframe_hdf(self, name, version=-1):
         df = None
-        filename = self.prefix + name + \
-            '.hdf' if not name.endswith('.hdf') else name
+        filename = self._get_obj_store_key(name, '.hdf')
         if filename.endswith('.hdf') and self.fs.exists(filename=filename):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df

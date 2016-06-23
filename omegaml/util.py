@@ -41,6 +41,8 @@ def settings():
         # DEBUG will probably always be as a djangon setting configuraiton
         from django.conf import settings as djsettings  # @UnresolvedImport
         defaults = djsettings
+        import django
+        django.setup()
     except:
         defaults = omdefaults
     else:
@@ -70,9 +72,9 @@ def override_settings(**kwargs):
 def delete_database():
     """ test support """
     host = settings().OMEGA_MONGO_URL
-    client = connect('omega', host=host)
     parsed_url = urlparse.urlparse(host)
     database_name = parsed_url.path[1:]
+    client = connect(database_name, host=parsed_url.netloc)
     client.drop_database(database_name)
 
 
