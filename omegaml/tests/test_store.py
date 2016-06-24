@@ -2,18 +2,15 @@ import StringIO
 from datetime import timedelta
 import unittest
 from zipfile import ZipFile
-
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
-from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
-from pandas.lib import Timestamp
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
-
 import pandas as pd
 import gridfs
+from omegaml.documents import Metadata
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -81,7 +78,7 @@ class StoreTests(unittest.TestCase):
 
     def test_custom_levels(self):
         """
-        this is to test if custom path and levels can be provided ok 
+        this is to test if custom path and levels can be provided ok
         """
         df = pd.DataFrame({
             'a': range(1, 10),
@@ -236,8 +233,8 @@ class StoreTests(unittest.TestCase):
         """
         this tests we can retrieve data as python values
 
-        the purpose is to test the basic mode of OmegaStore in 
-        case pandas and scikit learn are not available 
+        the purpose is to test the basic mode of OmegaStore in
+        case pandas and scikit learn are not available
         """
         store = OmegaStore(prefix='')
         # pure data
@@ -317,7 +314,8 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
-        self.assertIn('store.dfgroup.datastore', store.mongodb.collection_names())
+        self.assertIn(
+            'store.dfgroup.datastore', store.mongodb.collection_names())
         df2 = store.get('dfgroup', kwargs={'b': 1})
         self.assertTrue(df2.equals(result_df))
         df3 = store.get('dfgroup')
@@ -341,8 +339,13 @@ class StoreTests(unittest.TestCase):
         override_settings(
             OMEGA_MONGO_COLLECTION='tempabcdef'
         )
-        # test a get on that bucket raises exception
-        self.assertRaises(gridfs.errors.NoFile, store.get, 'hdfdf')
+        # test for non-existent file raises exception
+        meta = store.put(df2, 'foo_will_be_removed', as_hdf=True)
+        file_id = store.fs.get_last_version(
+            'store.foo_will_be_removed.hdf')._id
+        store.fs.delete(file_id)
+        self.assertRaises(
+            gridfs.errors.NoFile, store.get, 'foo_will_be_removed')
         store2 = OmegaStore()
         # test hdf file is not there
         self.assertNotIn('hdfdf.hdf', store2.fs.list())

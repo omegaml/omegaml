@@ -3,6 +3,7 @@ import datetime
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
 from mongoengine.fields import StringField, FileField, DictField, DateTimeField
+from omegaml.util import settings
 
 
 class Metadata(Document):
@@ -14,7 +15,9 @@ class Metadata(Document):
     SKLEARN_JOBLIB = 'sklearn.joblib'
     OMEGAML_JOBS = 'script.ipynb'
     OMEGAML_RUNNING_JOBS = 'job.run'
-    KINDS = (PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB, PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS)
+    KINDS = (
+            PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
+            PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS)
     # fields
     #: this is the name of the data
     name = StringField()
@@ -25,7 +28,9 @@ class Metadata(Document):
     #: kind of data
     kind = StringField(choices=KINDS)
     #: for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile
-    gridfile = FileField(db_alias='omega', collection_name='store')
+    gridfile = FileField(
+        db_alias='omega',
+        collection_name=settings().OMEGA_MONGO_COLLECTION)
     #: for PANDAS_DFROWS this is the collection
     collection = StringField()
     #: for PYTHON_DATA this is the actual document
