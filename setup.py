@@ -33,6 +33,7 @@ setup(
     install_requires=[
         'pymongo>=3.2.1',
         'mongoengine>=0.10.6',
+        'pandas>=0.17.1',
         'numpy>=1.10.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.17.1',
