@@ -223,7 +223,7 @@ class MDataFrame(object):
     def sort(self, columns):
         self.sort_order = make_tuple(columns)
         return self
-    def head(self, limit):
+    def head(self, limit=10):
         self.head_limit = limit
         return self
     def skip(self, topn):
