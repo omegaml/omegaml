@@ -8,6 +8,8 @@ from pandas.util.testing import assert_frame_equal
 
 from omegaml.mdataframe import MDataFrame
 import pandas as pd
+
+
 class MDataFrameTests(TestCase):
 
     def setUp(self):
@@ -208,3 +210,12 @@ class MDataFrameTests(TestCase):
         self.assertEqual(set(MDataFrame(coll).columns),
                          set(list(df.columns)))
         self.assertTrue(result.equals(df))
+
+    def test_unique_series(self):
+        coll = self.coll
+        df = self.df
+        om = self.om
+        om.datasets.put(df, 'uniques', append=False)
+        coll = om.datasets.collection('uniques')
+        result = MDataFrame(coll).x.unique().value
+        self.assertListEqual(list(result), list(df.x.unique()))

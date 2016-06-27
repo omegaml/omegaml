@@ -362,8 +362,14 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'foo')
         # store it again
         meta2 = store.put(df, 'foo', append=False)
-        # we should still have only one object in metadata
-        self.assertEqual(meta.pk, meta2.pk)
+        # we should still have a new object in metadata
+        # and the old should be gone
+        self.assertNotEqual(meta.pk, meta2.pk)
+        # Meta is to silence lint on import error
+        Meta = Metadata
+        metas = Meta.objects(name='foo', prefix=store.prefix,
+                             bucket=store.bucket).all()
+        self.assertEqual(len(metas), 1)
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2))
 
@@ -375,7 +381,7 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame(data)
         store = OmegaStore()
         # store the object, no attributes
-        meta = store.put(df, 'foo')
+        meta = store.put(df, 'foo', append=False)
         meta = store.metadata('foo')
         self.assertEqual(meta.attributes, {})
         # update attributes

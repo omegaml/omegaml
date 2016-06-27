@@ -296,6 +296,7 @@ class OmegaStore(object):
         collection = self.collection(name)
         if append is False:
             collection.drop()
+            meta = self.metadata(name).delete()
         elif append is None and collection.count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)

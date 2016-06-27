@@ -396,8 +396,10 @@ class MSeries(MDataFrame):
         """
         cursor = super(MSeries, self)._get_cursor()
         column = make_tuple(self.columns)[0]
-        val = super(MSeries, self)._get_dataframe_from_cursor(cursor)[column]
+        val = self._get_dataframe_from_cursor(cursor)
         if self.is_unique:
             # this is to make sure we return the same thing as pandas
             val = val[column].unique()
+        else:
+            val = val[column]
         return val
