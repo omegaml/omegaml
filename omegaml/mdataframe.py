@@ -8,6 +8,7 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter
 from omegaml.util import make_tuple, make_list
 import pandas as pd
+from omegaml.store.queryops import MongoQueryOps
 
 
 class MGrouper(object):
@@ -365,25 +366,34 @@ class MDataFrame(object):
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
         coll = FilteredCollection(self.collection, query=filter_criteria)
         return MDataFrame(coll, query=filter_criteria)
+    def create_index(self, keys, **kwargs):
+        """
+        create and index the easy way
+        """
+        keys, kwargs = MongoQueryOps().make_index(keys)
+        result = self.collection.create_index(keys, **kwargs)
+        return result
 
 
 class MSeries(MDataFrame):
 
+    """
+    Series implementation for MDataFrames 
+
+    behaves like a DataFrame but limited to one column.
+    """
     def __init__(self, *args, **kwargs):
         super(MSeries, self).__init__(*args, **kwargs)
         self.is_unique = False
-    """
-    Series implementation for MDataFrames 
-    
-    behaves like a DataFrame but limited to one column.
-    """
     def unique(self):
         self.is_unique = True
         return self
     def _get_cursor(self):
-        cursor = super(MSeries, self)._get_cursor()
         if self.is_unique:
-            cursor.distinct(make_tuple(self.columns)[0])
+            # this way indexes get applied
+            cursor = self.collection.distinct(make_tuple(self.columns)[0])
+        else:
+            cursor = super(MSeries, self)._get_cursor()
         return cursor
     @property
     def value(self):
@@ -394,12 +404,13 @@ class MSeries(MDataFrame):
         only distinct values are returned as an array, matching
         the behavior of a Series 
         """
-        cursor = super(MSeries, self)._get_cursor()
+        cursor = self._get_cursor()
         column = make_tuple(self.columns)[0]
-        val = self._get_dataframe_from_cursor(cursor)
         if self.is_unique:
+            # the .distinct() cursor returns a list of values
             # this is to make sure we return the same thing as pandas
-            val = val[column].unique()
+            val = [v for v in cursor]
         else:
+            val = self._get_dataframe_from_cursor(cursor)
             val = val[column]
         return val

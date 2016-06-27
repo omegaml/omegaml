@@ -260,11 +260,18 @@ class MongoQueryOps(object):
         return nearq
     def make_index(self, columns, **kwargs):
         """
+        return an index specification suitable for collection.create_index()
+
         using columns specs like ['+A', '-A'] returns (key, index)
         pairs suitable for passing on to create_index. also generates
         a name for the index based on the columns and ordering. Use
         '@coord' to create a geospecial index. The coord column must
-        be in GeoJSON format 
+        be in GeoJSON format
+
+        :param columns: a single index column, or a list of columns
+        :param kwargs: optional kwargs to merge. if kwargs contains the
+        'name' key it will be preserved
+        :return: (idx, **kwargs) tuple, pass as create_index(idx, **kwargs)  
         """
         SORTPREFIX = ['-', '+', '@']
         DIRECTIONMAP = {

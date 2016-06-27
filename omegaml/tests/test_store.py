@@ -445,3 +445,15 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(len(entries), 0)
         entries = store.list('hdfdf', raw=True, kind=Metadata.PANDAS_HDF)
         self.assertEqual(len(entries), 1)
+
+    def test_lazy_unique(self):
+        """ test getting a MDataFrame and unique values """
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        meta = store.put(df, 'foo', append=False)
+        val = store.get('foo', lazy=True).a.unique().value
+        self.assertListEqual(data['a'], list(val))
