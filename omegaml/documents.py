@@ -37,6 +37,8 @@ class Metadata(Document):
     objid = ObjectIdField()
     #: customer-defined other meta attributes
     attributes = DictField()
+    #: s3file attributes
+    s3file = DictField()
     #: created datetime
     created = DateTimeField(default=datetime.datetime.now)
     # the actual db is defined in settings, OMEGA_MONGO_URL

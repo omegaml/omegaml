@@ -43,6 +43,7 @@ setup(
         'runipy>=0.1.5',
         'croniter>=0.3.12',
         'PyYAML>=3.11'
+        'git+https://github.com/miraculixx/pycloudfs'
     ],
     dependency_links=[
     ]

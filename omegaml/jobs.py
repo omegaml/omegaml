@@ -6,6 +6,8 @@ import datetime
 from runipy.notebook_runner import NotebookRunner
 from mongoengine.fields import GridFSProxy
 from croniter import croniter
+from pycloudfs import S3Helper
+from django.conf import settings
 import re
 import yaml
 import os
@@ -103,11 +105,11 @@ class OmegaJobs(object):
             if yaml_conf.get("omegaml.script") is not None:
                 pass
             else:
-                raise ValueError('Notebook configuration either not present \
-                    or has errors!')
+                raise ValueError(
+                    'Notebook configuration either not present or has errors!')
         except Exception:
-            raise ValueError('Notebook configuration either not present \
-                or has errors!')
+            raise ValueError(
+                'Notebook configuration either not present or has errors!')
 
         return yaml_conf.get("omegaml.script")
 
@@ -128,10 +130,27 @@ class OmegaJobs(object):
         result_nb = 'result'+filename.lstrip('job')+'_{0}.ipynb'.format(ts)
         write(r.nb, open(result_nb, 'w',), version=3)
         # store results
-        # if config.get('results-store') == 's3':
-        #     bucket = os.environ.get('AWS_TEST_BUCKET', 'shrebo')
-        #     s3 = S3Helper(bucket=bucket, path='ipynb_results')
-        #     s3.upload_file(result_nb)
+        s3file = {}
+        fileid = None
+        if config.get('results-store') == 's3':
+            AWS_ACCESS_KEY_ID = os.environ.get(
+                'AWS_ACCESS_KEY_ID', getattr(
+                    settings, 'AWS_ACCESS_KEY_ID'))
+            AWS_SECRET_ACCESS_KEY = os.environ.get(
+                'AWS_SECRET_ACCESS_KEY', getattr(
+                    settings, 'AWS_SECRET_ACCESS_KEY'))
+            bucket = os.environ.get('AWS_TEST_BUCKET', 'shrebo')
+            path = 'ipynb_results'
+            s3 = S3Helper(
+                bucket=bucket,
+                path=path,
+                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+            s3file = dict(
+                bucket=bucket,
+                prefix=path,
+                name=result_nb)
+            s3.upload_file(result_nb)
         if config.get('results-store') == 'gridfs':
             fileid = gfs.put(open(
                 result_nb, 'r'), filename=os.path.basename(result_nb))
@@ -143,6 +162,7 @@ class OmegaJobs(object):
             metadata.gridfile = GridFSProxy(
                 grid_id=fileid,
                 collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION)
+            metadata.s3file = s3file
             metadata.save()
             return metadata
         except Metadata.DoesNotExist:
@@ -151,6 +171,7 @@ class OmegaJobs(object):
             return Metadata(
                 name=nb_filename,
                 kind=Metadata.OMEGAML_RUNNING_JOBS,
+                s3file=s3file,
                 gridfile=GridFSProxy(
                     grid_id=fileid,
                     collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION),
