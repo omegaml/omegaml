@@ -1,16 +1,19 @@
 import StringIO
 from datetime import timedelta
 import unittest
+import uuid
 from zipfile import ZipFile
+
+import gridfs
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
-from omegaml.store import OmegaStore
-from omegaml.util import override_settings, delete_database
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
-import pandas as pd
-import gridfs
+
 from omegaml.documents import Metadata
+from omegaml.store import OmegaStore
+from omegaml.util import override_settings, delete_database
+import pandas as pd
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -372,6 +375,19 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(len(metas), 1)
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2))
+
+    def test_put_append_false(self):
+        """ test if we can create a new dataframe without previous metadata """
+        data = {
+            'a': range(1, 10),
+            'b': range(1, 10)
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        # store the object
+        unique_name = uuid.uuid4().hex
+        meta = store.put(df, unique_name, append=False)
+        self.assertEqual(meta['name'], unique_name)
 
     def test_store_with_attributes(self):
         data = {

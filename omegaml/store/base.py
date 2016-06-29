@@ -200,6 +200,11 @@ class OmegaStore(object):
                             **kwargs)
         return meta
 
+    def _drop_metadata(self, name=None, **kwargs):
+        meta = self.metadata(name, **kwargs)
+        if meta is not None:
+            meta.delete()
+
     def datastore(self, name=None):
         from warnings import warn
         warn("OmegaStore.datastore() is deprecated, use collection()")
@@ -295,8 +300,7 @@ class OmegaStore(object):
         """
         collection = self.collection(name)
         if append is False:
-            collection.drop()
-            meta = self.metadata(name).delete()
+            self.drop(name, force=True)
         elif append is None and collection.count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
@@ -456,11 +460,11 @@ class OmegaStore(object):
                 raise DoesNotExist()
         if meta.collection:
             self.mongodb.drop_collection(meta.collection)
-            meta.delete()
+            self._drop_metadata(name)
             return True
         if meta.gridfile is not None:
             meta.gridfile.delete()
-            meta.delete()
+            self._drop_metadata(name)
             return True
         return False
 
@@ -545,7 +549,7 @@ class OmegaStore(object):
         if kwargs is not None:
             for item in kwargs:
                 if item not in groupby_columns:
-                    modified_query_param = 'data.'+item
+                    modified_query_param = 'data.' + item
                     modified_params[modified_query_param] = kwargs.get(item)
                 else:
                     modified_params[item] = kwargs.get(item)
