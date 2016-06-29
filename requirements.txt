@@ -15,3 +15,5 @@ scikit-learn==0.17.1
 runipy==0.1.5
 croniter==0.3.12
 PyYAML==3.11
+nbformat==4.0.1
+git+https://github.com/miraculixx/pycloudfs@v0.1.0#egg=pycloudfs-0.1.0
