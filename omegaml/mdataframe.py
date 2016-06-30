@@ -196,6 +196,21 @@ class MDataFrame(object):
         else:
             result = [col for col in doc.keys() if col != '_id']
         return result
+    def inspect(self, explain=False):
+        """
+        inspect this dataframe
+        """
+        if isinstance(self.collection, FilteredCollection):
+            query = self.collection.query
+        else:
+            query = '*',
+        if explain:
+            explain = self._get_cursor().explain()
+        return {
+            'projection': self.columns,
+            'query': query,
+            'explain': explain or 'specify explain=True'
+        }
     @property
     def value(self):
         cursor = self._get_cursor()
