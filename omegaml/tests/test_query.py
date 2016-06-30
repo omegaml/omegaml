@@ -91,3 +91,13 @@ class FilterQueryTests(TestCase):
         coll.update_many(qops.IS(x=qops.GTE(5)), qops.SET('subdoc.a', 0))
         result = Filter(coll, subdoc__a__lt=10).value
         self.assertEqual(set(result.x.unique()), set(range(5, 10)))
+
+    def test_query_null(self):
+        om = self.om
+        df = pd.DataFrame({'x': range(0, 5),
+                           'y': [1, 2, 3, None, None]})
+        om.datasets.put(df, 'foox', append=False)
+        result = om.datasets.get('foox', y__isnull=True)
+        df.x = df.x.astype(float)
+        test = df[df.isnull().any(axis=1)].reset_index(drop=True)
+        self.assertTrue(result.equals(test))

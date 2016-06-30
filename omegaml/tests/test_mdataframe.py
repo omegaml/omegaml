@@ -219,3 +219,13 @@ class MDataFrameTests(TestCase):
         coll = om.datasets.collection('uniques')
         result = MDataFrame(coll).x.unique().value
         self.assertListEqual(list(result), list(df.x.unique()))
+
+    def test_query_null(self):
+        om = self.om
+        df = pd.DataFrame({'x': range(0, 5),
+                           'y': [1, 2, 3, None, None]})
+        om.datasets.put(df, 'foox', append=False)
+        result = om.datasets.get('foox', y__isnull=True, lazy=True).value
+        df.x = df.x.astype(float)
+        test = df[df.isnull().any(axis=1)].reset_index(drop=True)
+        self.assertTrue(result.equals(test))

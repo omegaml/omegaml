@@ -127,7 +127,9 @@ class MongoQ(object):
             elif op == 'isbool':
                 addq(k, qops.TYPE('bool'))
             elif op == 'isnull':
-                addq(k, qops.TYPE('null'))
+                # http://stackoverflow.com/a/944733
+                nan = float('nan')
+                addq(k, qops.EQ(nan) if v else qops.NE(nan))
             elif op in ['islong', 'isint']:
                 addq(k, qops.TYPE('long'))
             elif op == 'contains':
