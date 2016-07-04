@@ -1,6 +1,7 @@
 import urlparse
 import os
 import sys
+from util import load_class
 
 OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = 'mongodb://localhost:27017/omega'
@@ -16,6 +17,10 @@ OMEGA_CELERY_CONFIG = {
         'database': parsed_url.path[1:],
         'taskmeta_collection': 'omegaml_taskmeta',
     }
+}
+
+OMEGA_BACKENDS = {
+    'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend')
 }
 
 # simple override from env vars

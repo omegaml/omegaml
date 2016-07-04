@@ -1,5 +1,7 @@
 import os
 import urlparse
+from django.utils import six, importlib
+import logging
 
 from mongoengine.connection import connect
 __settings = None
@@ -102,3 +104,21 @@ def flatten_columns(col, sep='_'):
                     new_col += sep
                 new_col += level
         return new_col
+
+
+def load_class(requested_class):
+    """
+    Check if requested_class is a string, if so attempt to load
+    class from module, otherwise return requested_class as is
+    """
+    if isinstance(requested_class, six.string_types):
+        module_name, class_name = requested_class.rsplit(".", 1)
+        try:
+            m = importlib.import_module(module_name)
+            return getattr(m, class_name)
+        except:
+            logging.debug(
+                'could not load module %s for class %s' % (
+                    module_name, class_name))
+            raise
+    return requested_class

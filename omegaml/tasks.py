@@ -73,15 +73,11 @@ def get_dataset_representations(items):
 @shared_task(base=OmegamlTask)
 def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    data, meta = get_data(om, Xname)
-    result = model.predict(data, **kwargs)
-    if pure_python:
-        result = result.tolist()
-    if rName:
-        meta = om.put(result, rName)
-        result = meta
-    signals.mltask_start.send(sender=None, name='omega_predict', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.predict(modelname, Xname, rName, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_predict',
+        args=get_dataset_representations(locals()))
     return result
 
 
@@ -89,66 +85,37 @@ def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
 def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
                         **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    data, meta = get_data(om, Xname)
-    result = model.predict_proba(data, **kwargs)
-    if pure_python:
-        result = result.tolist()
-    if rName:
-        om.put(result, rName)
-        result = meta
-    signals.mltask_start.send(sender=None, name='omega_predict_proba', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.predict_proba(
+        modelname, Xname, rName, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_predict_proba',
+        args=get_dataset_representations(locals()))
     return result
 
 
 @shared_task(base=OmegamlTask)
 def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    X, metaX = get_data(om, Xname)
-    Y, metaY = None, None
-    if Yname:
-        Y, metaY = get_data(om, Yname)
-    result = model.fit(X, Y, **kwargs)
-    # store information required for retraining
-    model_attrs = {
-        'metaX': metaX.to_mongo(),
-        'metaY': metaY.to_mongo() if metaY is not None else None,
-    }
-    try:
-        import sklearn
-        model_attrs['scikit-learn'] = sklearn.__version__
-    except:
-        model_attrs['scikit-learn'] = 'unknown'
-    om.models.put(model, modelname, attributes=model_attrs)
-    if pure_python:
-        result = '%s' % result
-    signals.mltask_start.send(sender=None, name='omega_fit', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.fit(
+        modelname, Xname, Yname, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_fit',
+        args=get_dataset_representations(locals()))
     return result
 
 
 @shared_task(base=OmegamlTask)
-def omega_partial_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
+def omega_partial_fit(
+        modelname, Xname, Yname=None, pure_python=True, **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    X, metaX = get_data(om, Xname)
-    Y, metaY = None, None
-    if Yname:
-        Y, metaY = get_data(om, Yname)
-    result = model.partial_fit(X, Y, **kwargs)
-    # store information required for retraining
-    model_attrs = {
-        'metaX': metaX.to_mongo(),
-        'metaY': metaY.to_mongo() if metaY is not None else None,
-    }
-    try:
-        import sklearn
-        model_attrs['scikit-learn'] = sklearn.__version__
-    except:
-        model_attrs['scikit-learn'] = 'unknown'
-    om.models.put(model, modelname, attributes=model_attrs)
-    if pure_python:
-        result = '%s' % result
+    backend = om.models.get_backend(modelname)
+    result = backend.partial_fit(
+        modelname, Xname, Yname, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_partial_fit',
+        args=get_dataset_representations(locals()))
     return result
 
 
@@ -156,14 +123,12 @@ def omega_partial_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
 def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    X, _ = get_data(om, Xname)
-    Y, _ = get_data(om, Yname)
-    result = model.score(X, Y, **kwargs)
-    if rName:
-        meta = om.put(result, rName)
-        result = meta
-    signals.mltask_start.send(sender=None, name='omega_score', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.score(
+        modelname, Xname, Yname, rName, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_score',
+        args=get_dataset_representations(locals()))
     return result
 
 
@@ -171,39 +136,23 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
 def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
                         pure_python=True, **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    X, metaX = get_data(om, Xname)
-    Y, metaY = None, None
-    if Yname:
-        Y, metaY = get_data(om, Yname)
-    result = model.fit_transform(X, Y, **kwargs)
-    # store information required for retraining
-    model_attrs = {
-        'metaX': metaX.to_mongo(),
-        'metaY': metaY.to_mongo() if metaY is not None else None
-    }
-    try:
-        import sklearn
-        model_attrs['scikit-learn'] = sklearn.__version__
-    except:
-        model_attrs['scikit-learn'] = 'unknown'
-    om.models.put(model, modelname, attributes=model_attrs)
-    if rName:
-        om.put(result, rName)
-    signals.mltask_start.send(sender=None, name='omega_fit_transform', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.score(
+        modelname, Xname, Yname, rName, pure_python, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_fit_transform',
+        args=get_dataset_representations(locals()))
     return result
 
 
 @shared_task(base=OmegamlTask)
 def omega_transform(modelname, Xname, rName=None, **kwargs):
     om = Omega()
-    model = om.models.get(modelname)
-    X, _ = get_data(om, Xname)
-    result = model.transform(X, **kwargs)
-    if rName:
-        meta = om.put(result, rName)
-        result = meta
-    signals.mltask_start.send(sender=None, name='omega_transform', args=get_dataset_representations(locals()))
+    backend = om.models.get_backend(modelname)
+    result = backend.transform(modelname, Xname, rName, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_transform',
+        args=get_dataset_representations(locals()))
     return result
 
 
@@ -215,15 +164,6 @@ def omega_settings():
         return {k: getattr(defaults, k, '')
                 for k in dir(defaults) if k and k.isupper()}
     return {'error': 'settings dump is disabled'}
-
-
-def get_data(om, name):
-    data = om.datasets.get(name)
-    meta = om.datasets.metadata(name)
-    if meta.kind == Metadata.PYTHON_DATA:
-        # we can only use one python object at a time
-        return data[0], meta
-    return data, meta
 
 
 @shared_task(base=NotebookTask)

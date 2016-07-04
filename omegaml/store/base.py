@@ -1,12 +1,9 @@
 from datetime import datetime
 from fnmatch import fnmatch
-import glob
 import os
 import re
-from shutil import rmtree
 import tempfile
 import urlparse
-from zipfile import ZipFile, ZIP_DEFLATED
 
 import gridfs
 import mongoengine
@@ -95,11 +92,11 @@ class OmegaStore(object):
         :param prefix: the path prefix for files. defaults to blank
         :param kind: the kind or list of kinds to limit this store to 
         """
-        defaults = omega_settings()
-        self.mongo_url = mongo_url or defaults.OMEGA_MONGO_URL
-        self.bucket = bucket or defaults.OMEGA_MONGO_COLLECTION
+        self.defaults = omega_settings()
+        self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
+        self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         self._fs = None
-        self.tmppath = defaults.OMEGA_TMP
+        self.tmppath = self.defaults.OMEGA_TMP
         self.prefix = prefix or ''
         self.force_kind = kind
         # don't initialize db here to avoid using the default settings
@@ -232,7 +229,10 @@ class OmegaStore(object):
         store estimators, pipelines, numpy arrays or pandas dataframes
         """
         if is_estimator(obj):
-            return self.put_model(obj, name, attributes)
+            backend = self.defaults.OMEGA_BACKENDS[Metadata.SKLEARN_JOBLIB](
+                self)
+            signals.dataset_get.send(sender=None, name=name)
+            return backend.put_model(obj, name, attributes)
         elif is_dataframe(obj):
             if kwargs.pop('as_hdf', False):
                 return self.put_dataframe_as_hdf(
@@ -259,23 +259,6 @@ class OmegaStore(object):
                                               **kwargs)
         else:
             raise TypeError('type %s not supported' % type(obj))
-
-    def put_model(self, obj, name, attributes=None):
-        """ package model using joblib and store in GridFS """
-        zipfname = self._package_model(obj, name)
-        with open(zipfname) as fzip:
-            fileid = self.fs.put(
-                fzip, filename=self._get_obj_store_key(name, 'omm'))
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias='omega',
-                                   collection_name=self.bucket)
-        signals.dataset_put.send(sender=None, name=name)
-        return self._make_metadata(name=name,
-                                   prefix=self.prefix,
-                                   bucket=self.bucket,
-                                   kind=Metadata.SKLEARN_JOBLIB,
-                                   attributes=attributes,
-                                   gridfile=gridfile).save()
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
@@ -468,6 +451,13 @@ class OmegaStore(object):
             return True
         return False
 
+    def get_backend(self, name, version=-1):
+        meta = self.metadata(name, version=version)
+        if meta is not None:
+            backend = self.defaults.OMEGA_BACKENDS[meta.kind](self)
+            return backend
+        return None
+
     def get(self, name, version=-1, force_python=False,
             **kwargs):
         """
@@ -481,7 +471,8 @@ class OmegaStore(object):
             return None
         if not force_python:
             if meta.kind == Metadata.SKLEARN_JOBLIB:
-                return self.get_model(name, version=version)
+                backend = self.get_backend(name, version)
+                return backend.get_model(name, version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe_documents(name, version=version,
                                                     **kwargs)
@@ -493,22 +484,6 @@ class OmegaStore(object):
             elif meta.kind == Metadata.PANDAS_HDF:
                 return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
-
-    def get_model(self, name, version=-1):
-        filename = self._get_obj_store_key(name, '.omm')
-        packagefname = os.path.join(self.tmppath, name)
-        dirname = os.path.dirname(packagefname)
-        try:
-            os.makedirs(dirname)
-        except OSError:
-            # OSError is raised if path exists already
-            pass
-        outf = self.fs.get_version(filename, version=version)
-        with open(packagefname, 'w') as zipf:
-            zipf.write(outf.read())
-        model = self._extract_model(packagefname)
-        signals.dataset_get.send(sender=None, name=name)
-        return model
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
                                 filter=None, version=-1, **kwargs):
@@ -666,36 +641,6 @@ class OmegaStore(object):
             name=name,
             ext=ext).replace('/', '_').replace('..', '.')
         return filename
-
-    def _package_model(self, model, filename):
-        """
-        dump model using joblib and package all joblib files into zip
-        """
-        import joblib
-        lpath = tempfile.mkdtemp()
-        fname = os.path.basename(filename)
-        mklfname = os.path.join(lpath, fname)
-        zipfname = os.path.join(self.tmppath, fname)
-        joblib.dump(model, mklfname)
-        with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
-            for part in glob.glob(os.path.join(lpath, '*')):
-                zipf.write(part, os.path.basename(part))
-        rmtree(lpath)
-        return zipfname
-
-    def _extract_model(self, packagefname):
-        """
-        load model using joblib from a zip file created with _package_model
-        """
-        import joblib
-        lpath = tempfile.mkdtemp()
-        fname = os.path.basename(packagefname)
-        mklfname = os.path.join(lpath, fname)
-        with ZipFile(packagefname) as zipf:
-            zipf.extractall(lpath)
-        model = joblib.load(mklfname)
-        rmtree(lpath)
-        return model
 
     def _package_dataframe2hdf(self, df, filename, key=None):
         """

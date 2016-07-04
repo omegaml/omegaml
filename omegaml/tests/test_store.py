@@ -14,6 +14,7 @@ from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
 import pandas as pd
+from omegaml import backends
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -33,6 +34,7 @@ class StoreTests(unittest.TestCase):
 
     def test_package_model(self):
         # create a test model
+        store = OmegaStore()
         iris = load_iris()
         X = iris.data
         Y = iris.target
@@ -40,10 +42,10 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
-        store = OmegaStore()
-        zipfname = store._package_model(lr, 'models/foo')
+        backend = backends.ScikitLearnBackend(store)
+        zipfname = backend._package_model(lr, 'models/foo')
         # load it, try predicting
-        lr2 = store._extract_model(zipfname)
+        lr2 = backend._extract_model(zipfname)
         self.assertIsInstance(lr2, LogisticRegression)
         result2 = lr2.predict(X)
         self.assertTrue((result == result2).all())

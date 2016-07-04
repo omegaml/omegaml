@@ -16,8 +16,8 @@ class Metadata(Document):
     OMEGAML_JOBS = 'script.ipynb'
     OMEGAML_RUNNING_JOBS = 'job.run'
     KINDS = (
-            PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
-            PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS)
+        PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
+        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS)
     # fields
     #: this is the name of the data
     name = StringField()

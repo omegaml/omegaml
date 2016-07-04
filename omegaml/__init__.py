@@ -293,9 +293,9 @@ class Omega(object):
 
     def __init__(self, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None):
-        defaults = settings()
-        self.broker = broker or defaults.OMEGA_BROKER
-        self.backend = backend or defaults.OMEGA_RESULT_BACKEND
+        self.defaults = settings()
+        self.broker = broker or self.defaults.OMEGA_BROKER
+        self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(
             prefix='models/',
             kind=Metadata.SKLEARN_JOBLIB)
@@ -305,6 +305,13 @@ class Omega(object):
                                     celerykwargs=None)
         self.jobs = OmegaJobs()
 
+    def get_data(self, name):
+        data = self.datasets.get(name)
+        meta = self.datasets.metadata(name)
+        if meta.kind == Metadata.PYTHON_DATA:
+            # we can only use one python object at a time
+            return data[0], meta
+        return data, meta
 
 # default instance
 _om = Omega()
