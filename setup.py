@@ -45,7 +45,8 @@ setup(
         'croniter>=0.3.12',
         'PyYAML>=3.11',
         'nbformat>=4.0.1',
-        'pycloudfs==0.1.0'
+        'pycloudfs==0.1.0',
+        'jupyter-client>=4.1.1',
     ],
     dependency_links=[
         'git+https://github.com/miraculixx/pycloudfs@v0.1.0#egg=pycloudfs-0.1.0'
