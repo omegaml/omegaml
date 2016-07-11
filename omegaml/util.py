@@ -43,9 +43,17 @@ def settings():
         # DEBUG will probably always be as a djangon setting configuraiton
         from django.conf import settings as djsettings  # @UnresolvedImport
         defaults = djsettings
-        import django
-        django.setup()
-    except:
+        # this is to test if django was initialized. if not revert
+        # to using omdefaults
+        try:
+            getattr(defaults, 'SECRET_KEY')
+        except:
+            from warnings import warn
+            warn("Using omegaml.defaults because Django was not initialized."
+                 "Try importing omegaml within a method instead of at the "
+                 "module level")
+            raise
+    except Exception as e:
         defaults = omdefaults
     else:
         # get default omega settings into django settings if not set
