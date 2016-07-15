@@ -318,3 +318,4 @@ _om = Omega()
 models = _om.models
 datasets = _om.datasets
 runtime = _om.runtime
+jobs = _om.jobs

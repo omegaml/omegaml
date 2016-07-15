@@ -1,13 +1,12 @@
 
 
 from unittest import TestCase
-import omegaml
 from omegaml import Omega
 from omegaml.documents import Metadata
 import tempfile
 import gridfs
 from nbformat import write, v4
-from omegaml.util import override_settings
+from omegaml.util import override_settings, settings as omegaml_settings
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_NOTEBOOK_COLLECTION='ipynbtest'
@@ -24,7 +23,7 @@ class JobTests(TestCase):
 
     def test_job_list(self):
         om = Omega()
-        defaults = omegaml.settings()
+        defaults = omegaml_settings()
         fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
         dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []
@@ -48,7 +47,7 @@ class JobTests(TestCase):
 
     def test_job_run_invalid(self):
         om = Omega()
-        defaults = omegaml.settings()
+        defaults = omegaml_settings()
         fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
         dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []
@@ -65,7 +64,7 @@ class JobTests(TestCase):
 
     def test_job_run_valid(self):
         om = Omega()
-        defaults = omegaml.settings()
+        defaults = omegaml_settings()
         fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
         dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []
@@ -96,7 +95,7 @@ class JobTests(TestCase):
 
     def test_job_status(self):
         om = Omega()
-        defaults = omegaml.settings()
+        defaults = omegaml_settings()
         fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
         dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []

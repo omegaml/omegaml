@@ -6,17 +6,24 @@ from util import load_class
 OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = 'mongodb://localhost:27017/omega'
 OMEGA_MONGO_COLLECTION = 'store'
-OMEGA_BROKER = 'amqp://guest@127.0.0.1:5672//'
+OMEGA_BROKER = os.environ.get('OMEGA_BROKER', 'amqp://guest@127.0.0.1:5672//')
 OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
 OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
+    'BROKER_URL': OMEGA_BROKER,
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_MONGODB_BACKEND_SETTINGS': {
         'database': parsed_url.path[1:],
         'taskmeta_collection': 'omegaml_taskmeta',
-    }
+    },
+    'CELERYBEAT_SCHEDULE': {
+        'execute_scripts': {
+            'task': 'omegaml.tasks.execute_scripts',
+            'schedule': 60,
+        },
+    },
 }
 
 OMEGA_BACKENDS = {

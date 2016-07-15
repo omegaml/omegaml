@@ -1,5 +1,4 @@
 
-import omegaml
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 import datetime
@@ -14,6 +13,7 @@ import os
 import gridfs
 from nbformat import read, write
 from omegaml import signals
+from omegaml.util import settings as omega_settings
 
 
 class OmegaJobs(object):
@@ -21,7 +21,7 @@ class OmegaJobs(object):
     Omega Jobs API
     """
     def __init__(self):
-        self.defaults = omegaml.settings()
+        self.defaults = omega_settings()
         self.store = OmegaStore(prefix=None)
         self._db = self.store.mongodb
 
