@@ -1,6 +1,5 @@
 from StringIO import StringIO
-
-
+import os
 class DataFrameFile(object):
     """
     Simple file-like object for a dataframe. Read-only
@@ -25,14 +24,16 @@ class OmegaFSStorage(object):
     """
     Basic support for omegaml as a django-storage object
     """
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         import omegaml as om
         self.datasets = om.datasets
-
+        
     def listdir(self, path):
         if path.startswith('/'):
             path = path[1:]
-        return self.datasets.list('%s' % path)
+        allfiles = self.datasets.list('%s' % path)
+        dirs = [os.path.dirname(d) for d in allfiles if '/' in d]
+        return dirs, allfiles
 
     def exists(self, name):
         return name in self.datasets.list()
