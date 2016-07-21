@@ -313,9 +313,33 @@ class Omega(object):
             return data[0], meta
         return data, meta
 
+
+class OmegaDeferredInstance():
+
+    """
+    A deferred instance of Omega() that is only instantiated on access
+
+    This is to ensure that module-level imports don't trigger instantiation
+    of Omega. 
+    """
+
+    def __init__(self, base=None, attribute=None):
+        self.omega = None
+        self.base = base
+        self.attribute = attribute
+
+    def __getattr__(self, name):
+        if self.base:
+            base = getattr(self.base, self.attribute)
+            return getattr(base, name)
+        if self.omega is None:
+            self.omega = Omega()
+        return getattr(self.omega, name)
+
 # default instance
-_om = Omega()
-models = _om.models
-datasets = _om.datasets
-runtime = _om.runtime
-jobs = _om.jobs
+# -- these are deferred instanced that is the actual Omega instance
+#    is only created on actual attribute access
+_om = OmegaDeferredInstance()
+datasets = OmegaDeferredInstance(_om, 'datasets')
+models = OmegaDeferredInstance(_om, 'models')
+jobs = OmegaDeferredInstance(_om, 'jobs')
