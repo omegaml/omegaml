@@ -4,7 +4,7 @@ import sys
 from util import load_class
 
 OMEGA_TMP = '/tmp'
-OMEGA_MONGO_URL = 'mongodb://localhost:27017/omega'
+OMEGA_MONGO_URL = os.environ.get('OMEGA_MONGO_URL', 'mongodb://localhost:27017/omega')
 OMEGA_MONGO_COLLECTION = 'store'
 OMEGA_BROKER = os.environ.get('OMEGA_BROKER', 'amqp://guest@127.0.0.1:5672//')
 OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
