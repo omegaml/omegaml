@@ -32,11 +32,11 @@ class StorageTests(unittest.TestCase):
         meta = self.datasets.put(df, 'foo')
         fulllist = self.datasets.list()
         storage = OmegaFSStorage()
-        result = storage.listdir('/')
-        self.assertListEqual(fulllist, result)
+        dirs, entries = list(storage.listdir('/'))
+        self.assertListEqual(fulllist, entries)
         meta = self.datasets.put(df, 'foo2')
-        result = storage.listdir('/')
-        self.assertListEqual(fulllist + ['foo2'], result)
+        dirs, entries = storage.listdir('/')
+        self.assertListEqual(fulllist + ['foo2'], entries)
 
     def test_exists(self):
         df = pd.DataFrame({'a': range(0, 10)})
