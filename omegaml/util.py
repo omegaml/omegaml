@@ -32,6 +32,19 @@ def is_ndarray(obj):
         False
 
 
+def is_spark_mllib(obj):
+    """
+    # unlike scikit learn obj is not the actual model, but a specification of
+    # the model for the spark server to create. so obj is the name of the
+    # python class, e.g. obj=pyspark.mllib.clustering.KMeans
+    """
+    try:
+        cls = load_class(obj)
+        return 'pyspark.mllib' in cls.__module__
+    except:
+        return False
+
+
 def settings():
     """ wrapper to get omega settings from either django or omegamldefaults """
     import omegaml.defaults as omdefaults

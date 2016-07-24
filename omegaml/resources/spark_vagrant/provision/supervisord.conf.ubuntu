@@ -1,0 +1,44 @@
+[unix_http_server]
+file=/tmp/supervisor.sock   ; path to your socket file
+
+[supervisord]
+logfile=supervisord.log
+pidfile=supervisord.pid ; pidfile location
+nodaemon=false              ; run supervisord as a daemon
+minfds=1024                 ; number of startup file descriptors
+minprocs=200                ; number of process descriptors
+user=root                   ; default user
+
+[supervisorctl]
+serverurl=unix:///tmp/supervisor.sock ; use unix:// schem for a unix sockets.
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[program:celeryd]
+command=/home/vagrant/anaconda/bin/celery worker -E -B -A omegaml.celeryapp -l debug
+environment=
+    SPARK_HOME=/home/vagrant/spark,
+    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.9-src.zip,
+    PYSPARK_PYTHON=/home/vagrant/anaconda/bin/python,
+    PYSPARK_DRIVER_PYTHON=/home/vagrant/anaconda/bin/python,
+stdout_logfile=/tmp/celeryd.log
+stderr_logfile=/tmp/celeryd.log
+autostart=true
+autorestart=true
+startsecs=10
+stopwaitsecs=600
+
+[program:ipythonnbserver]
+command=/home/vagrant/anaconda/bin/ipython notebook --profile=pyspark --ip='*'
+environment=
+    SPARK_HOME=/home/vagrant/spark,
+    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.9-src.zip,
+    PYSPARK_PYTHON=/home/vagrant/anaconda/bin/python,
+    PYSPARK_DRIVER_PYTHON=/home/vagrant/anaconda/bin/python,
+stdout_logfile=/tmp/ipython.log
+stderr_logfile=/tmp/ipython.log
+autostart=true
+autorestart=true
+startsecs=10
+stopwaitsecs=600

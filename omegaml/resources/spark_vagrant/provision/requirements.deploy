@@ -1,0 +1,6 @@
+# anaconda 2.4 installs ipython v4.0.2 we need v3.x
+ipython==3.0.0
+# install supervisord to start celery worker
+supervisor==3.3.0
+# install ipynb gridfs store to use with ipython notebook server
+git+https://github.com/miraculixx/ipynbstore-gridfs

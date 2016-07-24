@@ -27,7 +27,8 @@ OMEGA_CELERY_CONFIG = {
 }
 
 OMEGA_BACKENDS = {
-    'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend')
+    'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend'),
+    'spark.mllib': load_class('omegaml.backends.SparkBackend')
 }
 
 # simple override from env vars

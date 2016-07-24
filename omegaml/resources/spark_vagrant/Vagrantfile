@@ -1,0 +1,23 @@
+env_vars = "OMEGA_MONGO_URL OMEGA_BROKER"
+env_hash =  {}
+
+for env in env_vars.split(" ")
+    if ENV[env]
+        env_hash[env] = ENV[env]
+    end
+end
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu/trusty64"
+    # ipython
+    config.vm.network "forwarded_port", guest: 8888, host: 18888
+    # spark
+    config.vm.network "forwarded_port", guest: 8080, host: 18080
+    config.vm.network "forwarded_port", guest: 8081, host: 18081
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = "2048"
+        end
+    config.vm.provision "shell", path: "bootstrap.sh", privileged: false, env: env_hash
+    config.vm.provision :shell, path: "provision/init.sh", run: "always", privileged: false, env: env_hash
+    config.vm.synced_folder "../../../../omegaml/", "/opt/omegaml"
+end

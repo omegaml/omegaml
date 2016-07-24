@@ -2,7 +2,9 @@ import datetime
 
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
-from mongoengine.fields import StringField, FileField, DictField, DateTimeField
+from mongoengine.fields import (
+    StringField, FileField, DictField, DateTimeField, URLField
+)
 from omegaml.util import settings
 
 
@@ -14,10 +16,11 @@ class Metadata(Document):
     PANDAS_DFGROUP = 'pandas.dfgroup'
     SKLEARN_JOBLIB = 'sklearn.joblib'
     OMEGAML_JOBS = 'script.ipynb'
+    SPARK_MLLIB = 'spark.mllib'
     OMEGAML_RUNNING_JOBS = 'job.run'
     KINDS = (
         PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
-        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS)
+        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB)
     # fields
     #: this is the name of the data
     name = StringField()
@@ -39,6 +42,8 @@ class Metadata(Document):
     attributes = DictField()
     #: s3file attributes
     s3file = DictField()
+    #: spark uri
+    uri = StringField()
     #: created datetime
     created = DateTimeField(default=datetime.datetime.now)
     # the actual db is defined in settings, OMEGA_MONGO_URL

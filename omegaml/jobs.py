@@ -157,6 +157,8 @@ class OmegaJobs(object):
             fileid = gfs.put(open(
                 result_nb, 'r'), filename=os.path.basename(result_nb))
         os.remove(result_nb) if os.path.isfile(result_nb) else None
+        # shutdown the ipython kernel
+        r.shutdown_kernel()
         # check if this job was scheduled earlier
         try:
             metadata = Metadata.objects.get(

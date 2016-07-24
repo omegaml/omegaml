@@ -1,0 +1,14 @@
+libblas-dev
+liblapack3
+liblapack-dev
+libatlas-dev
+libatlas3-base
+libopenblas-dev
+libffi-dev
+libssl-dev
+libgeos-dev
+libhdf5-dev
+python-dev
+git-core
+openjdk-7-jre
+openjdk-7-jdk

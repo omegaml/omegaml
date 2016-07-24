@@ -11,7 +11,7 @@ from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from ..documents import Metadata
 
-from ..util import (is_estimator, is_dataframe, is_ndarray,
+from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings)
 from omegaml import signals
 
@@ -224,14 +224,20 @@ class OmegaStore(object):
         return datastore
 
     def put(self, obj, name, attributes=None, **kwargs):
-        """ store an object
+        """
+        store an object
 
         store estimators, pipelines, numpy arrays or pandas dataframes
         """
         if is_estimator(obj):
             backend = self.defaults.OMEGA_BACKENDS[Metadata.SKLEARN_JOBLIB](
                 self)
-            signals.dataset_get.send(sender=None, name=name)
+            signals.dataset_put.send(sender=None, name=name)
+            return backend.put_model(obj, name, attributes)
+        elif is_spark_mllib(obj):
+            backend = self.defaults.OMEGA_BACKENDS[Metadata.SPARK_MLLIB](
+                self)
+            signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes)
         elif is_dataframe(obj):
             if kwargs.pop('as_hdf', False):
@@ -471,6 +477,9 @@ class OmegaStore(object):
             return None
         if not force_python:
             if meta.kind == Metadata.SKLEARN_JOBLIB:
+                backend = self.get_backend(name, version)
+                return backend.get_model(name, version)
+            elif meta.kind == Metadata.SPARK_MLLIB:
                 backend = self.get_backend(name, version)
                 return backend.get_model(name, version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
