@@ -1,23 +1,52 @@
-env_vars = "OMEGA_MONGO_URL OMEGA_BROKER"
-env_hash =  {}
+require 'socket'
 
-for env in env_vars.split(" ")
-    if ENV[env]
-        env_hash[env] = ENV[env]
+# config
+HOST_IP = Socket.ip_address_list[1].ip_address
+omegaml_config = {
+  'HOST_IP' => HOST_IP,
+  'OMEGA_BASE_PATH' => "../../../../omegaml/",
+  'OMEGA_MONGO_URL' => "mongodb://#{HOST_IP}:27017/omega",
+  'OMEGA_BROKER' => "amqp://guest@#{HOST_IP}:5672//",
+  'HOST_IPYNB_HTTP_PORT' => 18888,
+  'HOST_IPYNB_SPARK_MASTER_PORT' => 18080,
+  'HOST_IPYNB_SPARK_WORKER_PORT' => 18081,
+}
+
+# build envs to pass on to the vm
+env_hash =  {}
+for env in omegaml_config.keys
+    val = ENV[env] || omegaml_config[env]
+    if val
+        env_hash[env] = val
+    else
+      print "[WARN] Empty #{env} - please export #{env}=<address>\n"
     end
 end
+
+# message
+env_sym = env_hash.map { |k, v| [k.to_sym, v] }.to_h #Hash.symbolized_keys not working
+omegaml_http = "http://%{HOST_IP}:%{HOST_IPYNB_HTTP_PORT}" % env_sym 
+message = "omegaml is ready for you - #{omegaml_http}"
+
 
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/trusty64"
     # ipython
-    config.vm.network "forwarded_port", guest: 8888, host: 18888
+    config.vm.network "forwarded_port", guest: 8888, host: env_hash['HOST_IPYNB_HTTP_PORT']
     # spark
-    config.vm.network "forwarded_port", guest: 8080, host: 18080
-    config.vm.network "forwarded_port", guest: 8081, host: 18081
+    config.vm.network "forwarded_port", guest: 8080, host: env_hash['HOST_IPYNB_SPARK_MASTER_PORT']
+    config.vm.network "forwarded_port", guest: 8081, host: env_hash['HOST_IPYNB_SPARK_WORKER_PORT']
     config.vm.provider "virtualbox" do |vb|
         vb.memory = "2048"
         end
+    # run provisioning
     config.vm.provision "shell", path: "bootstrap.sh", privileged: false, env: env_hash
     config.vm.provision :shell, path: "provision/init.sh", run: "always", privileged: false, env: env_hash
-    config.vm.synced_folder "../../../../omegaml/", "/opt/omegaml"
+    # omegaml dev setup
+    config.vm.synced_folder env_hash['OMEGA_BASE_PATH'], "/opt/omegaml"  
+    config.vm.define :omegaml do |t|
+    config.vm.post_up_message = message
+    end
 end
+
+print 
