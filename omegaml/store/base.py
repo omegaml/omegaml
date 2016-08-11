@@ -240,6 +240,10 @@ class OmegaStore(object):
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes)
         elif is_dataframe(obj):
+            if obj.empty:
+                from warnings import warn
+                warn('Provided dataframe is empty, ignoring it, doing nothing here!')
+                return None
             if kwargs.pop('as_hdf', False):
                 return self.put_dataframe_as_hdf(
                     obj, name, attributes, **kwargs)
