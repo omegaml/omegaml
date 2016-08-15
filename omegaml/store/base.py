@@ -238,7 +238,7 @@ class OmegaStore(object):
             backend = self.defaults.OMEGA_BACKENDS[Metadata.SPARK_MLLIB](
                 self)
             signals.dataset_put.send(sender=None, name=name)
-            return backend.put_model(obj, name, attributes)
+            return backend.put_model(obj, name, attributes, **kwargs)
         elif is_dataframe(obj):
             if obj.empty:
                 from warnings import warn

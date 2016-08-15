@@ -297,8 +297,7 @@ class Omega(object):
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(
-            prefix='models/',
-            kind=Metadata.SKLEARN_JOBLIB)
+            prefix='models/')
         self.datasets = OmegaStore(prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,

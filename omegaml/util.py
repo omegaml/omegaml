@@ -39,8 +39,7 @@ def is_spark_mllib(obj):
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
     try:
-        cls = load_class(obj)
-        return 'pyspark.mllib' in cls.__module__
+        return 'pyspark.mllib' in obj
     except:
         return False
 
@@ -143,3 +142,37 @@ def load_class(requested_class):
                     module_name, class_name))
             raise
     return requested_class
+
+
+def get_rdd_from_df(df):
+    """
+    takes a pandas df and returns a spark RDD
+    """
+    from pyspark import SparkContext, SQLContext
+    from pyspark.mllib.linalg import Vectors
+    sc = SparkContext.getOrCreate()
+    from warnings import warn
+    warn(
+        "get_rdd_from_df creates a spark context, it is recommended"
+        " that you use SparkContext.getOrCreate() to prevent multiple context"
+        " creation")
+    sqlContext = SQLContext(sc)
+    spark_df = sqlContext.createDataFrame(df)
+    rdd = spark_df.map(lambda data: Vectors.dense([float(x) for x in data]))
+    return rdd
+
+
+def get_labeledpoints(Xname, Yname):
+    """
+    returns a labeledpoint RDD from the datasets provided
+    """
+    import omegaml as om
+    from pyspark.mllib.regression import LabeledPoint
+    # import from datastore
+    X = om.datasets.get(Xname)
+    Y = om.datasets.get(Yname)
+    result = Y.join(X)
+    # create labeled point
+    rdd = get_rdd_from_df(result)
+    labeled_point = rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
+    return labeled_point

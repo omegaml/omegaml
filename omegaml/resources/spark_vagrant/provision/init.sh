@@ -32,6 +32,10 @@ done
 # Start Spark
 ##
 $HOME/spark/sbin/start-all.sh
+echo "Formatting namenode"
+$HOME/hadoop/bin/hdfs namenode -format -force
+$HOME/hadoop/sbin/start-dfs.sh
+$HOME/hadoop/sbin/start-yarn.sh
 wait
 
 ##

@@ -37,7 +37,7 @@ Vagrant.configure("2") do |config|
     config.vm.network "forwarded_port", guest: 8080, host: env_hash['HOST_IPYNB_SPARK_MASTER_PORT']
     config.vm.network "forwarded_port", guest: 8081, host: env_hash['HOST_IPYNB_SPARK_WORKER_PORT']
     config.vm.provider "virtualbox" do |vb|
-        vb.memory = "2048"
+        vb.memory = "4096"
         end
     # run provisioning
     config.vm.provision "shell", path: "bootstrap.sh", privileged: false, env: env_hash
