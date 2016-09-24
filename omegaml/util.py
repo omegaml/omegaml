@@ -176,3 +176,11 @@ def get_labeledpoints(Xname, Yname):
     rdd = get_rdd_from_df(result)
     labeled_point = rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
     return labeled_point
+
+
+def get_labeled_points_from_rdd(rdd):
+    """
+    returns a labeledpoint from the RDD provided
+    """
+    from pyspark.mllib.regression import LabeledPoint
+    return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))

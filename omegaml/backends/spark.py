@@ -100,9 +100,17 @@ class SparkBackend(BaseBackend):
                 warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
                 raise e
         else:
-            # using 3 clusters
-            # https://git.io/v6mxX
-            result = model.train(rdd, 3)
+            ##
+            # TBD: per model fit/train method selection
+            ##
+            if 'KMeans' in meta.uri:
+                # using 3 clusters
+                # https://git.io/v6mxX
+                result = model.train(rdd, 3)
+            elif 'LogisticRegressionWithLBFGS' in meta.uri:
+                from omegaml.util import get_labeled_points_from_rdd
+                labeled_point = get_labeled_points_from_rdd(rdd)
+                result = model.train(labeled_point)
         sc.stop()
         self.put_model(result, modelname)
         return result

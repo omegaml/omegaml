@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import os
 from omegaml import Omega
-from omegaml.util import override_settings
+from omegaml.util import override_settings, get_labeledpoints
+from StringIO import StringIO
 import argparse
 
 
@@ -33,16 +34,52 @@ def testOmegaml(
     # create a data frame with x, y
     x = np.array(range(10, 20))
     y = x * 2
-    df = pd.DataFrame(dict(x=x, y=y))
+    
+    data = """
+    label,legs,wings,sound
+    0,4,0,1
+    0,4,0,2
+    0,2,1,3
+    1,2,1,4
+    """
+
+    test_data = """
+    label,legs,wings,sound
+    0,4,0,1
+    0,4,0,2
+    0,2,1,3
+    1,2,1,4
+    0,2,1,3
+    0,4,0,2
+    1,2,1,4
+    """
+
+    infile_orig = StringIO(data)
+    infile_test = StringIO(test_data)
+    df_orig = pd.read_csv(infile_orig)
+    df_test = pd.read_csv(infile_test)
+    df_array = pd.DataFrame(dict(x=x, y=y))
 
     # create and store spark KMeans model
-    om.models.put('pyspark.mllib.clustering.KMeans', 'sparktest')
+    om.models.put(
+        'pyspark.mllib.clustering.KMeans',
+        'sparktest')
+    om.models.put(
+        'pyspark.mllib.classification.LogisticRegressionWithLBFGS',
+        'sparklogictest')
 
     # prepare and store data for training the model
-    X = df[['x']]
-    Y = df[['y']]
-    om.datasets.put(X, 'spark_datax')
-    om.datasets.put(Y, 'spark_datay')
+    X_arr = df_array[['x']]
+    Y_arr = df_array[['y']]
+    om.datasets.put(X_arr, 'spark_datax')
+    om.datasets.put(Y_arr, 'spark_datay')
+    om.datasets.put(df_orig, 'logic_orig')
+
+    # split test data in multiple dfs
+    om.datasets.put(pd.DataFrame(
+        df_test[df_test.columns[0]]), 'logic_test_labels')
+    om.datasets.put(pd.DataFrame(
+        df_test[df_test.columns[1:]]), 'logic_test_features')
 
     # train & store trained model using spark
     om.runtime.model('sparktest').fit('spark_datax')
@@ -53,8 +90,30 @@ def testOmegaml(
     pred1 = result.get()
 
     # use np.allclose in case we have floats
-    assert len(pred1.index) == len(df.index), "oh snap, something went wrong! %s != %s" % (len(pred1.index), len(df.index))
+    assert len(pred1.index) == len(df_array.index), "oh snap, something went wrong! %s != %s" % (len(pred1.index), len(df_array.index))
+    print "==========================="
+    print "Spark KMeans test succeeded"
+    print "==========================="
+    # get labeled point to use for logistic regression test
+    labeled_point_test = get_labeledpoints(
+        'logic_test_features', 'logic_test_labels')
+    result = om.runtime.model('sparklogictest').fit('logic_orig')
+    pred2 = result.get()
 
+    labels_and_preds = labeled_point_test.map(
+        lambda pred: (pred.label, pred2.predict(pred.features)))
+    accuracy_test = labels_and_preds.filter(
+        lambda (v, p): v == p).count() / float(labeled_point_test.count())
+
+    assert accuracy_test >= 0.75, "not ok, %s" % (accuracy_test)
+
+    prediction = [
+        'animal' if lp[1] == 0 else 'plane'
+        for lp in labels_and_preds.toLocalIterator()]
+    print "Here's what I think", prediction
+    print "==========================="
+    print "LogisticRegressionWithLBFGS test succeeded"
+    print "==========================="
     print "nice, everything works. thank you very much"
 
 
