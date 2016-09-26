@@ -63,7 +63,7 @@ def testOmegaml(
     # create and store spark KMeans model
     om.models.put(
         'pyspark.mllib.clustering.KMeans',
-        'sparktest')
+        'sparktest', params=dict(k=10))
     om.models.put(
         'pyspark.mllib.classification.LogisticRegressionWithLBFGS',
         'sparklogictest')

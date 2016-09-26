@@ -9,6 +9,12 @@ class SparkBackend(BaseBackend):
     """
     Spark Backend
     """
+    SPARK_MLLIB_TRAINERS = {
+        'pyspark.mllib.clustering.KMeans': 'train_kmeans',
+        'pyspark.mllib.classification.LogisticRegressionWithLBFGS':
+        'train_logisticregressionwithlbfgs',
+    }
+
     def __init__(self, store):
         self.store = store
 
@@ -91,26 +97,17 @@ class SparkBackend(BaseBackend):
             rdd = spark_df.map(lambda data: Vectors.dense(
                 [float(x) for x in data]))
 
-        if params:
-            try:
-                result = model.train(rdd, **params)
-            except Exception, e:
-                from warnings import warn
-                warn("Please make sure necessary parameters are provided!")
-                warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
-                raise e
+        mllib = meta.uri.rsplit('spark://mllib/')[1]
+
+        trainer_method = self.SPARK_MLLIB_TRAINERS.get(mllib)
+
+        if trainer_method is None:
+            raise NotImplementedError
         else:
-            ##
-            # TBD: per model fit/train method selection
-            ##
-            if 'KMeans' in meta.uri:
-                # using 3 clusters
-                # https://git.io/v6mxX
-                result = model.train(rdd, 3)
-            elif 'LogisticRegressionWithLBFGS' in meta.uri:
-                from omegaml.util import get_labeled_points_from_rdd
-                labeled_point = get_labeled_points_from_rdd(rdd)
-                result = model.train(labeled_point)
+            trainer = getattr(self, trainer_method)
+
+        result = trainer(model, rdd, params)
+
         sc.stop()
         self.put_model(result, modelname)
         return result
@@ -132,4 +129,32 @@ class SparkBackend(BaseBackend):
         result = om.datasets.get(temp_name)
         if rName:
             result = meta
+        return result
+
+    def train_kmeans(self, model, rdd, params):
+        try:
+            if params is None:
+                result = model.train(rdd)
+            else:
+                result = model.train(rdd, **params)
+        except Exception, e:
+            from warnings import warn
+            warn("Please make sure necessary parameters are provided!")
+            warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
+            raise e
+        return result
+
+    def train_logisticregressionwithlbfgs(self, model, rdd, params):
+        from omegaml.util import get_labeled_points_from_rdd
+        labeled_point = get_labeled_points_from_rdd(rdd)
+        try:
+            if params is None:
+                result = model.train(labeled_point)
+            else:
+                result = model.train(labeled_point, **params)
+        except Exception, e:
+            from warnings import warn
+            warn("Please make sure necessary parameters are provided!")
+            warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
+            raise e
         return result
