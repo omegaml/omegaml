@@ -5,7 +5,8 @@ from scipy import ravel
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import NotFittedError, DataConversionWarning
+from sklearn.utils.validation import DataConversionWarning
+from sklearn.exceptions import NotFittedError
 
 import numpy as np
 from omegaml import Omega
