@@ -19,7 +19,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 command=/home/vagrant/anaconda/bin/celery worker -E -B -A omegaml.celeryapp -l debug
 environment=
     SPARK_HOME=/home/vagrant/spark,
-    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.9-src.zip,
+    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.10.1-src.zip,
     PYSPARK_PYTHON=/home/vagrant/anaconda/bin/python,
     PYSPARK_DRIVER_PYTHON=/home/vagrant/anaconda/bin/python,
 stdout_logfile=/tmp/celeryd.log
@@ -33,7 +33,7 @@ stopwaitsecs=600
 command=/home/vagrant/anaconda/bin/ipython notebook --profile=pyspark --ip='*'
 environment=
     SPARK_HOME=/home/vagrant/spark,
-    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.9-src.zip,
+    PYTHONPATH=/home/vagrant/anaconda:/home/vagrant/spark/python:/home/vagrant/spark/python/lib/py4j-0.10.1-src.zip,
     PYSPARK_PYTHON=/home/vagrant/anaconda/bin/python,
     PYSPARK_DRIVER_PYTHON=/home/vagrant/anaconda/bin/python,
 stdout_logfile=/tmp/ipython.log

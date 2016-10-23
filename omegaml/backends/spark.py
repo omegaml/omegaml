@@ -94,7 +94,7 @@ class SparkBackend(BaseBackend):
             from ..util import get_labeledpoints
             rdd = get_labeledpoints(Xname, Yname)
         else:
-            rdd = spark_df.map(lambda data: Vectors.dense(
+            rdd = spark_df.rdd.map(lambda data: Vectors.dense(
                 [float(x) for x in data]))
 
         mllib = meta.uri.rsplit('spark://mllib/')[1]

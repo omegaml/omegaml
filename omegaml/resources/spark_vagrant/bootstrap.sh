@@ -41,7 +41,7 @@ download $ANACONDA_URL
 if [[ ! -d $HOME/spark ]]; then
     mkdir $HOME/spark
 fi
-tar -zxf spark-1.6.2-bin-hadoop2.4.tgz --strip 1 -C $HOME/spark
+tar -zxf spark-2.0.0-bin-hadoop2.4.tgz --strip 1 -C $HOME/spark
 rm -rf $HOME/spark/conf
 ln -s /vagrant/provision/conf /home/vagrant/spark/conf
 
@@ -71,7 +71,7 @@ echo "installing Anaconda2-4.1.1-Linux-x86_64.sh"
 cat >> .bashrc << EOF
 export PATH=$HOME/anaconda/bin:/home/vagrant/hadoop/bin/:/home/vagrant/spark/bin/:$PATH
 export SPARK_HOME=$HOME/spark
-export PYTHONPATH=$HOME/anaconda:$HOME/spark/python:$HOME/spark/python/lib/py4j-0.9-src.zip
+export PYTHONPATH=$HOME/anaconda:$HOME/spark/python:$HOME/spark/python/lib/py4j-0.10.1-src.zip
 export PYSPARK_PYTHON=$HOME/anaconda/bin/python
 export PYSPARK_DRIVER_PYTHON=$HOME/anaconda/bin/python
 export HADOOP_HOME="/home/vagrant/hadoop"

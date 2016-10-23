@@ -158,7 +158,8 @@ def get_rdd_from_df(df):
         " creation")
     sqlContext = SQLContext(sc)
     spark_df = sqlContext.createDataFrame(df)
-    rdd = spark_df.map(lambda data: Vectors.dense([float(x) for x in data]))
+    rdd = spark_df.rdd.map(lambda data: Vectors.dense(
+        [float(x) for x in data]))
     return rdd
 
 

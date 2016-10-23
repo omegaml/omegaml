@@ -34,7 +34,7 @@ def testOmegaml(
     # create a data frame with x, y
     x = np.array(range(10, 20))
     y = x * 2
-    
+
     data = """
     label,legs,wings,sound
     0,4,0,1
@@ -82,7 +82,8 @@ def testOmegaml(
         df_test[df_test.columns[1:]]), 'logic_test_features')
 
     # train & store trained model using spark
-    om.runtime.model('sparktest').fit('spark_datax')
+    result = om.runtime.model('sparktest').fit('spark_datax')
+    result.get()
 
     # check the model actually works
     # -- using the data on the server
@@ -95,11 +96,11 @@ def testOmegaml(
     print "Spark KMeans test succeeded"
     print "==========================="
     # get labeled point to use for logistic regression test
-    labeled_point_test = get_labeledpoints(
-        'logic_test_features', 'logic_test_labels')
     result = om.runtime.model('sparklogictest').fit('logic_orig')
     pred2 = result.get()
 
+    labeled_point_test = get_labeledpoints(
+        'logic_test_features', 'logic_test_labels')
     labels_and_preds = labeled_point_test.map(
         lambda pred: (pred.label, pred2.predict(pred.features)))
     accuracy_test = labels_and_preds.filter(
