@@ -67,6 +67,9 @@ class OmegaJobs(object):
         return result.get()
 
     def open_notebook(self, nb_filename):
+        """
+        Reads and returns a notebook
+        """
         try:
             # for version 3
             notebook = read(open(nb_filename), as_version=3)

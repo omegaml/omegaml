@@ -10,13 +10,16 @@ from shutil import rmtree
 
 
 class ScikitLearnBackend(BaseBackend):
-    """ScikitLearnBackend"""
+    """
+    OmegaML backend to use with ScikitLearn
+    """
     def __init__(self, store):
         self.store = store
 
     def _package_model(self, model, filename):
         """
-        dump model using joblib and package all joblib files into zip
+        Dumps a model using joblib and packages all of joblib files into a zip
+        file
         """
         import joblib
         lpath = tempfile.mkdtemp()
@@ -32,7 +35,7 @@ class ScikitLearnBackend(BaseBackend):
 
     def _extract_model(self, packagefname):
         """
-        load model using joblib from a zip file created with _package_model
+        Loads a model using joblib from a zip file created with _package_model
         """
         import joblib
         lpath = tempfile.mkdtemp()
@@ -45,6 +48,9 @@ class ScikitLearnBackend(BaseBackend):
         return model
 
     def get_model(self, name, version=-1):
+        """
+        Retrieves a pre-stored model
+        """
         filename = self.store._get_obj_store_key(name, '.omm')
         packagefname = os.path.join(self.store.tmppath, name)
         dirname = os.path.dirname(packagefname)
@@ -60,7 +66,9 @@ class ScikitLearnBackend(BaseBackend):
         return model
 
     def put_model(self, obj, name, attributes=None):
-        """ package model using joblib and store in GridFS """
+        """
+        Packages a model using joblib and stores in GridFS
+        """
         from ..documents import Metadata
         zipfname = self._package_model(obj, name)
         with open(zipfname) as fzip:

@@ -17,6 +17,9 @@ class DataFrameFile(object):
     def close(self):
         pass
     def read(self):
+        """
+        :return: JSON Object
+        """
         return self.df.to_json()
 
 

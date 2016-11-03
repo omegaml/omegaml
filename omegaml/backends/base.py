@@ -1,7 +1,9 @@
 
 
 class BaseBackend(object):
-    """BaseBackend"""
+    """
+    OmegaML BaseBackend to be subclassed by other arbitrary backends
+    """
 
     def put_model(self):
         raise NotImplementedError

@@ -7,20 +7,20 @@ from uuid import uuid4
 
 class SparkBackend(BaseBackend):
     """
-    Spark Backend
+    OmegaML backend to use with Spark installations
     """
-    SPARK_MLLIB_TRAINERS = {
-        'pyspark.mllib.clustering.KMeans': 'train_kmeans',
-        'pyspark.mllib.classification.LogisticRegressionWithLBFGS':
-        'train_logisticregressionwithlbfgs',
-    }
 
     def __init__(self, store):
+        self.SPARK_MLLIB_TRAINERS = {
+            'pyspark.mllib.clustering.KMeans': 'train_kmeans',
+            'pyspark.mllib.classification.LogisticRegressionWithLBFGS':
+            'train_logisticregressionwithlbfgs',
+        }
         self.store = store
 
     def put_model(self, obj, name, attributes=None, **kwargs):
         """
-        create a meta data object that is later used to submit spark jobs.
+        Creates a metadata object that is later used to submit spark jobs.
         """
         from ..documents import Metadata
         params = kwargs.get('params')
@@ -61,7 +61,10 @@ class SparkBackend(BaseBackend):
                 uri=uri).save()
 
     def get_model(self, name, version=-1):
-        """ return a class """
+        """
+        Returns a pre-stored model or a spark ml library class dependent on the
+        content and type of metadata stored
+        """
         from ..util import load_class
         meta = self.store.metadata(name, version=-1)
         if meta.gridfile.grid_id is not None:
@@ -132,6 +135,9 @@ class SparkBackend(BaseBackend):
         return result
 
     def train_kmeans(self, model, rdd, params):
+        """
+        Trains a model using KMeans
+        """
         try:
             if params is None:
                 result = model.train(rdd)
@@ -145,6 +151,9 @@ class SparkBackend(BaseBackend):
         return result
 
     def train_logisticregressionwithlbfgs(self, model, rdd, params):
+        """
+        Trains a model using logistic regression
+        """
         from omegaml.util import get_labeled_points_from_rdd
         labeled_point = get_labeled_points_from_rdd(rdd)
         try:

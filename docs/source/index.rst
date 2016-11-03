@@ -1,17 +1,16 @@
-.. omegaml documentation master file, created by
-   sphinx-quickstart on Tue Oct 11 19:28:24 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Welcome to OmegaML!
+===================
 
-Welcome to omegaml's documentation!
-===================================
-
-Contents:
+Omegaml is a API based service for ......
 
 .. toctree::
    :maxdepth: 2
 
-   somedoc
+   kickstart
+   mongorabbit
+   omegamlvagrant
+   examples
+   putget
 
 Indices and tables
 ==================
