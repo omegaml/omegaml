@@ -1,0 +1,18 @@
+This sphinx project is setup to work as follows:
+
+1. change to the virtualenv for omegaml 
+2. cd docs
+3. make livehtml
+
+livehtml will monitor the source folder and automatically
+rebuild the html pages whenever a new file is added or an
+existing file changes.
+
+So to edit and browse the results:
+
+4. edit files in source/*.rst
+5. open localhost:8000
+
+
+
+
