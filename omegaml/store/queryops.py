@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 import json
 import sys
 
 import pymongo
 
 from omegaml.util import make_tuple
+import six
 
 
 class GeoJSON(dict):
@@ -31,7 +33,7 @@ class GeoJSON(dict):
             coordinates = self.get_coordinates_from_geojson(lon)
         elif isinstance(lon, (list, tuple)):
             coordinates = lon
-        elif isinstance(lon, basestring):
+        elif isinstance(lon, six.string_types):
             coordinates = [float(c) for c in lon.split(',')]
         elif isinstance(coordinates, GeoJSON):
             coordinates = [coordinates.lon, coordinates.lat]
@@ -39,7 +41,7 @@ class GeoJSON(dict):
             coordinates = coordinates
         elif isinstance(coordinates, dict):
             coordinates = self.get_coordinates_from_geojson(lon)
-        elif isinstance(coordinates, basestring):
+        elif isinstance(coordinates, six.string_types):
             coordinates = [float(c) for c in lon.split(',')]
         else:
             coordinates = []
@@ -120,7 +122,7 @@ class MongoQueryOps(object):
             v['_id'].update({k: '$%s' % (k.replace('__', '.'))
                              for k in columns})
         if kwargs:
-            for _k, _v in kwargs.iteritems():
+            for _k, _v in six.iteritems(kwargs):
                 v.setdefault(_k, {})
                 if isinstance(_v, dict):
                     v[_k].update(_v)
@@ -141,7 +143,7 @@ class MongoQueryOps(object):
             for r in seq:
                 row = {}
                 row.update(r)
-                if flatten in row.keys():
+                if flatten in list(row.keys()):
                     row.update(row.get(flatten))
                 yield row
         if autoflat or flatten == True:
@@ -149,7 +151,7 @@ class MongoQueryOps(object):
         df = pd.DataFrame(do_flatten(result))
         if groupby and len(df.index) > 0:
             if isinstance(groupby, bool):
-                cols = df.iloc[0]['_id'].keys()
+                cols = list(df.iloc[0]['_id'].keys())
             else:
                 cols = groupby
             df.set_index(cols, inplace=True)
@@ -219,7 +221,7 @@ class MongoQueryOps(object):
         return a $near expression from an explicit lon/lat coordinate, a
         GeoJSON object, a GeoJSON dictionary or a string
         """
-        if isinstance(lon, basestring):
+        if isinstance(lon, six.string_types):
             location = GeoJSON(lon)
         elif isinstance(lon, (list, tuple)):
             if len(lon) == 4:

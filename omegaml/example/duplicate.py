@@ -3,6 +3,8 @@
 example program to run in ipython
 """
 # train a model to learn to duplicate numbers
+from __future__ import absolute_import
+from __future__ import print_function
 import pandas as pd
 import numpy as np
 import os
@@ -10,6 +12,7 @@ from omegaml import Omega
 from sklearn.linear_model import LinearRegression
 from omegaml.util import override_settings
 import argparse
+from six.moves import range
 
 
 def testOmegaml(
@@ -32,7 +35,7 @@ def testOmegaml(
     os.environ['DJANGO_SETTINGS_MODULE'] = ''
 
     # create a data frame with x, y
-    x = np.array(range(10, 20))
+    x = np.array(list(range(10, 20)))
     y = x * 2
     df = pd.DataFrame(dict(x=x, y=y))
 
@@ -65,9 +68,9 @@ def testOmegaml(
     assert np.allclose(pred, pred1), "oh snap, something went wrong! %s != %s" % (pred, pred1)
     assert np.allclose(new_x * 2, pred2), "oh snap, something went wrong! %s != %s" % (pred2, new_x * 2)
 
-    print "nice, everything works. thank you very much"
-    df1 = pd.DataFrame(dict(asked=X.x, result=pred1.flatten()), index=range(0, len(X)))
-    df2 = pd.DataFrame(dict(asked=new_x.flatten(), result=pred2.flatten()), index=range(0, len(X)))
+    print("nice, everything works. thank you very much")
+    df1 = pd.DataFrame(dict(asked=X.x, result=pred1.flatten()), index=list(range(0, len(X))))
+    df2 = pd.DataFrame(dict(asked=new_x.flatten(), result=pred2.flatten()), index=list(range(0, len(X))))
     result = om.runtime.model('duplicate').predict([[5]])
     pred2 = result.get()
 

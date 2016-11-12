@@ -1,11 +1,11 @@
 
+from __future__ import absolute_import
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 import datetime
 from runipy.notebook_runner import NotebookRunner
 from mongoengine.fields import GridFSProxy
 from croniter import croniter
-from pycloudfs import S3Helper
 from django.conf import settings
 import re
 import yaml
@@ -124,6 +124,7 @@ class OmegaJobs(object):
         the job parameter is the name of the job script as in ipynb.
         Inserts and returns the Metadata document for the job.
         """
+        from pycloudfs import S3Helper
         gfs = self.get_fs()
         config = self.get_notebook_config(nb_filename)
         # nb_filename = 'job_'+nb_file+'.ipynb'

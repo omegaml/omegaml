@@ -1,4 +1,5 @@
 # Configuration file for ipython-notebook.
+from __future__ import absolute_import
 import os
 c = get_config()
 # Notebook config

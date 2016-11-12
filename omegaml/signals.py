@@ -3,6 +3,7 @@ Created on Jun 21, 2015
 
 @author: @gaumire
 '''
+from __future__ import absolute_import
 from django.dispatch.dispatcher import Signal
 
 

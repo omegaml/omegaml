@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import
 from pymongo.collection import Collection
 
 from omegaml.store import qops

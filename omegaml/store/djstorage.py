@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from StringIO import StringIO
 import os
 class DataFrameFile(object):

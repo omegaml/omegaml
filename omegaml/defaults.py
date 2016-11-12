@@ -1,7 +1,8 @@
-import urlparse
+from __future__ import absolute_import
 import os
 import sys
-from util import load_class
+from .util import load_class, urlparse
+import six
 
 OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = os.environ.get('OMEGA_MONGO_URL', 'mongodb://localhost:27017/omega')
@@ -43,7 +44,7 @@ for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
 # -- debug if required
 if '--print-omega-defaults' in sys.argv:
     from pprint import pprint
-    vars = { k : v for k,v in vars.iteritems() if k.startswith('OMEGA')}
+    vars = { k : v for k,v in six.iteritems(vars) if k.startswith('OMEGA')}
     pprint(vars)
 # -- test
 if '-m unittest' in sys.argv:

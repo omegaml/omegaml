@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from contextlib import closing
 import unittest
 
@@ -7,6 +8,7 @@ import omegaml as om
 from omegaml.store.djstorage import OmegaFSStorage
 from omegaml.util import override_settings, delete_database
 import pandas as pd
+from six.moves import range
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -28,7 +30,7 @@ class StorageTests(unittest.TestCase):
         disconnect('omega')
 
     def test_listdir(self):
-        df = pd.DataFrame({'a': range(0, 10)})
+        df = pd.DataFrame({'a': list(range(0, 10))})
         meta = self.datasets.put(df, 'foo')
         fulllist = self.datasets.list()
         storage = OmegaFSStorage()
@@ -39,7 +41,7 @@ class StorageTests(unittest.TestCase):
         self.assertListEqual(fulllist + ['foo2'], entries)
 
     def test_exists(self):
-        df = pd.DataFrame({'a': range(0, 10)})
+        df = pd.DataFrame({'a': list(range(0, 10))})
         meta = self.datasets.put(df, 'foo')
         fulllist = self.datasets.list()
         storage = OmegaFSStorage()
@@ -50,19 +52,19 @@ class StorageTests(unittest.TestCase):
 
     def test_save(self):
         # store as dataframe
-        df = pd.DataFrame({'a': range(0, 10)})
+        df = pd.DataFrame({'a': list(range(0, 10))})
         storage = OmegaFSStorage()
         name = storage.save('foo', df)
         self.assertEqual(name, 'foo')
         # store from a json source
-        df = pd.DataFrame({'a': range(0, 10)})
+        df = pd.DataFrame({'a': list(range(0, 10))})
         storage = OmegaFSStorage()
         name = storage.save('foo2', df.to_json())
         self.assertEqual(name, 'foo2')
 
     def test_open(self):
         # store as dataframe
-        df = pd.DataFrame({'a': range(0, 10)})
+        df = pd.DataFrame({'a': list(range(0, 10))})
         storage = OmegaFSStorage()
         name = storage.save('foo', df)
         # open & read

@@ -1,10 +1,11 @@
 
 
+from __future__ import absolute_import
 import tempfile
 import glob
 import os
 from mongoengine.fields import GridFSProxy
-from base import BaseBackend
+from .base import BaseBackend
 from zipfile import ZipFile, ZIP_DEFLATED
 from shutil import rmtree
 

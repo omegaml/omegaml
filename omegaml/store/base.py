@@ -338,14 +338,14 @@ class OmegaStore(object):
         # ensure column names to be strings
         obj.columns = [str(col) for col in obj.columns]
         # create mongon indicies for data frame index columns
-        df_idxcols = [col for col in obj.columns if col.startswith('__idx_')]
+        df_idxcols = [col for col in obj.columns if col.startswith('_idx')]
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             collection.create_index(keys, **idx_kwargs)
         # bulk insert
-		# -- get native objects
+            # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
-        #    pymongo raises Cannot Encode object for int64 types 
+        #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
         signals.dataset_put.send(sender=None, name=name)
@@ -484,7 +484,7 @@ class OmegaStore(object):
             backend = self.defaults.OMEGA_BACKENDS[meta.kind](self)
             return backend
         return None
-    
+
     def getl(self, *args, **kwargs):
         """ convenience to return MDataFrame """
         return self.get(*args, lazy=True, **kwargs)

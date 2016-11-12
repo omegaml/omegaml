@@ -1,6 +1,7 @@
 
 
-from base import BaseBackend
+from __future__ import absolute_import
+from .base import BaseBackend
 from mongoengine.fields import GridFSProxy
 from uuid import uuid4
 
@@ -143,7 +144,7 @@ class SparkBackend(BaseBackend):
                 result = model.train(rdd)
             else:
                 result = model.train(rdd, **params)
-        except Exception, e:
+        except Exception as e:
             from warnings import warn
             warn("Please make sure necessary parameters are provided!")
             warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
@@ -161,7 +162,7 @@ class SparkBackend(BaseBackend):
                 result = model.train(labeled_point)
             else:
                 result = model.train(labeled_point, **params)
-        except Exception, e:
+        except Exception as e:
             from warnings import warn
             warn("Please make sure necessary parameters are provided!")
             warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")

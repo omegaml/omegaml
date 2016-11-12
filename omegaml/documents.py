@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 
 from mongoengine.base.fields import ObjectIdField
@@ -38,6 +39,8 @@ class Metadata(Document):
     collection = StringField()
     #: for PYTHON_DATA this is the actual document
     objid = ObjectIdField()
+    #: omegaml technical attributes, e.g. column indicies
+    kind_meta = DictField()
     #: customer-defined other meta attributes
     attributes = DictField()
     #: s3file attributes

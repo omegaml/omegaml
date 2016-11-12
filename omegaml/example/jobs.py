@@ -3,6 +3,8 @@
 example program to run in ipython
 """
 # demo the functionality of the jobs API
+from __future__ import absolute_import
+from __future__ import print_function
 from omegaml import Omega
 from omegaml.documents import Metadata
 from omegaml.util import override_settings
@@ -31,35 +33,35 @@ def testOmegamlJobs(
         fs.put(f.read(), filename=nb_file)
     # list jobs
     job_list = om.jobs.list()
-    print "Job list:"
-    print job_list
+    print("Job list:")
+    print(job_list)
     # run notebook
     result = om.jobs.run(nb_file)
     # retrieve result from metadata
     metadata = Metadata.objects.get(created=result.created)
-    print "\n"
-    print "Result from metadata:"
+    print("\n")
+    print("Result from metadata:")
     file = om.jobs.get_result(metadata)
-    print file
-    print "Filename: {0}".format(file.filename)
+    print(file)
+    print("Filename: {0}".format(file.filename))
     task_id = metadata.attributes.get('task_id')
-    print "\n"
-    print "Result from task_id:"
-    print "Task ID: {0}".format(task_id)
+    print("\n")
+    print("Result from task_id:")
+    print("Task ID: {0}".format(task_id))
     file = om.jobs.get_result(metadata)
-    print file
-    print "Filename: {0}".format(file.filename)
+    print(file)
+    print("Filename: {0}".format(file.filename))
     # retrieve result from task_id
-    print "\n"
-    print "Result from notebook filename:"
-    print "Notebook Script: {0}".format(nb_file)
+    print("\n")
+    print("Result from notebook filename:")
+    print("Notebook Script: {0}".format(nb_file))
     # retrieve result from task_id
     file = om.jobs.get_result(nb_file)
-    print file
-    print "Filename: {0}".format(file.filename)
-    print "\n"
-    print "Job Status:"
-    print om.jobs.get_status(nb_file)
+    print(file)
+    print("Filename: {0}".format(file.filename))
+    print("\n")
+    print("Job Status:")
+    print(om.jobs.get_status(nb_file))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

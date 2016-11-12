@@ -3,6 +3,8 @@
 example program to run in ipython
 """
 # train a model to learn to duplicate numbers
+from __future__ import absolute_import
+from __future__ import print_function
 import pandas as pd
 import numpy as np
 import os
@@ -10,6 +12,7 @@ from omegaml import Omega
 from omegaml.util import override_settings, get_labeledpoints
 from StringIO import StringIO
 import argparse
+from six.moves import range
 
 
 def testOmegaml(
@@ -32,7 +35,7 @@ def testOmegaml(
     os.environ['DJANGO_SETTINGS_MODULE'] = ''
 
     # create a data frame with x, y
-    x = np.array(range(10, 20))
+    x = np.array(list(range(10, 20)))
     y = x * 2
 
     data = """
@@ -92,9 +95,9 @@ def testOmegaml(
 
     # use np.allclose in case we have floats
     assert len(pred1.index) == len(df_array.index), "oh snap, something went wrong! %s != %s" % (len(pred1.index), len(df_array.index))
-    print "==========================="
-    print "Spark KMeans test succeeded"
-    print "==========================="
+    print("===========================")
+    print("Spark KMeans test succeeded")
+    print("===========================")
     # get labeled point to use for logistic regression test
     result = om.runtime.model('sparklogictest').fit('logic_orig')
     pred2 = result.get()
@@ -104,18 +107,18 @@ def testOmegaml(
     labels_and_preds = labeled_point_test.map(
         lambda pred: (pred.label, pred2.predict(pred.features)))
     accuracy_test = labels_and_preds.filter(
-        lambda (v, p): v == p).count() / float(labeled_point_test.count())
+        lambda v_p: v_p[0] == v_p[1]).count() / float(labeled_point_test.count())
 
     assert accuracy_test >= 0.75, "not ok, %s" % (accuracy_test)
 
     prediction = [
         'animal' if lp[1] == 0 else 'plane'
         for lp in labels_and_preds.toLocalIterator()]
-    print "Here's what I think", prediction
-    print "==========================="
-    print "LogisticRegressionWithLBFGS test succeeded"
-    print "==========================="
-    print "nice, everything works. thank you very much"
+    print("Here's what I think", prediction)
+    print("===========================")
+    print("LogisticRegressionWithLBFGS test succeeded")
+    print("===========================")
+    print("nice, everything works. thank you very much")
 
 
 if __name__ == '__main__':

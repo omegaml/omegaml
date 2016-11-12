@@ -1,8 +1,9 @@
 import copy
 
+import six
+
 from omegaml.store.queryops import MongoQueryOps
-
-
+from omegaml.util import restore_index
 class MongoQ(object):
 
     """
@@ -96,13 +97,10 @@ class MongoQ(object):
                         subq.extend(vv)
                     else:
                         subq.append({k: vv})
-<<<<<<< HEAD
-        for k, v in self.conditions.iteritems():
-=======
         for k, v in six.iteritems(self.conditions):
             # transform query operators as '<foo>__<op>', 
->>>>>>> 64123fa... add unit tests for loc indexer, fix some bugs
-            if '__' in k:
+            # however preserve dunder '__<foo>' names ss columns
+            if '__' in k and not k.startswith('__'):
                 parts = k.split('__')
                 k = '.'.join(parts[0:-1])
                 op = parts[-1]
@@ -152,8 +150,8 @@ class MongoQ(object):
                 addq('%s.%s' % (k, op), v)
         if self._inv:
             _query = {}
-            for k, v in query.iteritems():
-                if not isinstance(v, (basestring, float, int, long)):
+            for k, v in six.iteritems(query):
+                if not isinstance(v, (six.string_types, float, int, int)):
                     _query[k] = qops.NOT(v)
                 else:
                     _query[k] = qops.NOT(qops.EQ(v))
@@ -253,9 +251,10 @@ class Filter(object):
         result = self.q.apply_filter(self.coll)
         try:
             import pandas as pd
-            result = pd.DataFrame(list(result))
+            result = pd.DataFrame.from_records(result)
             if '_id' in result.columns:
                 del result['_id']
+            result = restore_index(result, dict())
         except ImportError:
             result = list(result)
         return result

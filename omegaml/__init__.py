@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 from uuid import uuid4
 
@@ -6,6 +7,7 @@ from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.jobs import OmegaJobs
 from omegaml.util import is_dataframe, settings, is_ndarray
+import six
 
 logger = logging.getLogger(__file__)
 
@@ -225,7 +227,7 @@ class OmegaModelProxy(object):
         elif isinstance(name_or_data, (list, tuple, dict)):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
-        elif isinstance(name_or_data, basestring):
+        elif isinstance(name_or_data, six.string_types):
             name = name_or_data
         else:
             raise TypeError(

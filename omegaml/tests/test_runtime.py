@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 from unittest import TestCase
 
@@ -14,6 +15,7 @@ from omegaml.util import override_settings, delete_database
 import pandas as pd
 from sklearn.metrics.scorer import accuracy_scorer
 from sklearn.metrics.regression import mean_squared_error
+from six.moves import range
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -31,7 +33,7 @@ class RuntimeTests(TestCase):
 
     def test_predict(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -68,7 +70,7 @@ class RuntimeTests(TestCase):
 
     def test_fit(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -123,7 +125,7 @@ class RuntimeTests(TestCase):
 
     def test_partial_fit(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -174,7 +176,7 @@ class RuntimeTests(TestCase):
 
     def test_predict_pure_python(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -209,7 +211,7 @@ class RuntimeTests(TestCase):
 
     def test_predict_hdf_dataframe(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -240,7 +242,7 @@ class RuntimeTests(TestCase):
 
     def test_fit_pipeline(self):
         # create some data
-        x = np.array(range(0, 10))
+        x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
