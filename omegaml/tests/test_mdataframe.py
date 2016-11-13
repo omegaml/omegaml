@@ -247,6 +247,9 @@ class MDataFrameTests(TestCase):
         # by slice
         dfx = om.datasets.getl('foo').loc[2:4].value
         assert_frame_equal(df.loc[2:4], dfx)
+        # by list
+        dfx = om.datasets.getl('foo').loc[[2,4]].value
+        assert_frame_equal(df.loc[[2,4]], dfx)
 
     def test_locindexer_character_index(self):
         om = self.om
@@ -263,6 +266,9 @@ class MDataFrameTests(TestCase):
         # by slice
         dfx = om.datasets.getl('foo').loc['c':'f'].value
         assert_frame_equal(df.loc['c':'f'], dfx)
+        # by list
+        dfx = om.datasets.getl('foo').loc[['c', 'f']].value
+        assert_frame_equal(df.loc[['c', 'f']], dfx)
 
     def test_locindexer_timeseries_index(self):
         om = self.om

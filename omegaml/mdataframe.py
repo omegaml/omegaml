@@ -2,13 +2,14 @@ from __future__ import absolute_import
 
 from uuid import uuid4
 
+from numpy import isscalar
 from pymongo.collection import Collection
 import six
 
 import numpy as np
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
-from omegaml.store.query import Filter
+from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index
 import pandas as pd
@@ -118,23 +119,66 @@ class MLocIndexer(object):
     def __init__(self, mdataframe):
         self.mdataframe = mdataframe
     def __getitem__(self, specs):
+        filterq, projection = self._get_filter(specs)
+        if filterq:
+            df = self.mdataframe.query(filterq)
+            df.from_loc_indexer = True
+        if projection:
+            df = df[projection]
+        return df
+    def __setitem__(self, specs, value):
+        raise NotImplemented
+    def _get_filter(self, specs):
+        filterq = []
+        projection = []
         idx_cols = self.mdataframe._get_frame_index()
-        flt_kwargs = {}
         specs = make_tuple(specs)
-        for i, spec in enumerate(specs):
-            col = idx_cols[i]
-            if isinstance(spec, slice):
-                start, stop, step = spec.start, spec.stop, spec.step
-                if start is not None:
-                    flt_kwargs['{}__gte'.format(col)] = start
-                if stop is not None:
-                    flt_kwargs['{}__lte'.format(col)] = stop
-            else:
-                flt_kwargs[col] = spec
+        flt_kwargs = {}
+        if (isinstance(specs, (list, tuple))
+                and isscalar(specs[0]) and len(idx_cols) == 1):
+            # single column index with list of scalar values
+            flt_kwargs['{}__in'.format(idx_cols[0])] = specs
+        else:
+            # list/tuple of slices or scalar values, or MultiIndex
+            for i, spec in enumerate(specs):
+                if i < len(idx_cols):
+                    col = idx_cols[i]
+                    if isinstance(spec, slice):
+                        start, stop = spec.start, spec.stop
+                        if start is not None:
+                            flt_kwargs['{}__gte'.format(col)] = start
+                        if stop is not None:
+                            flt_kwargs['{}__lte'.format(col)] = stop
+                    elif isscalar(col):
+                        flt_kwargs[col] = spec
+                else:
+                    # we're out of index columns, let's look at columns
+                    projection.extend(self._get_projection(spec))
         if flt_kwargs:
-            self.mdataframe.query_inplace(**flt_kwargs)
-            self.mdataframe.from_loc_indexer = True
-        return self.mdataframe
+            filterq.append(MongoQ(**flt_kwargs))
+        finalq = None
+        for q in filterq:
+            if finalq:
+                finalq |= q
+            else:
+                finalq = q
+        return finalq, projection
+    def _get_projection(self, spec):
+        columns = self.mdataframe.columns
+        if np.isscalar(spec):
+            return [spec]
+        if isinstance(spec, (tuple, list)):
+            assert all(columns.index(col) for col in columns)
+            return spec
+        if isinstance(spec, slice):
+            start, stop = slice.start, slice.stop
+            if start and not isinstance(start, int):
+                start = columns.index(start)
+            if stop and not isinstance(stop, int):
+                # sliced ranges are inclusive
+                stop = columns.index(stop) + 1
+            return columns[slice(start, stop)]
+        raise IndexError
 
 
 class MSeriesGroupby(MGrouper):
@@ -435,7 +479,7 @@ class MDataFrame(object):
         """
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
         coll = FilteredCollection(self.collection, query=filter_criteria)
-        return MDataFrame(coll, query=filter_criteria, 
+        return MDataFrame(coll, query=filter_criteria,
                           **self.__getcopy_kwargs(without='query'))
     def create_index(self, keys, **kwargs):
         """
