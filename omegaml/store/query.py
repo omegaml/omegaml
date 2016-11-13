@@ -96,7 +96,12 @@ class MongoQ(object):
                         subq.extend(vv)
                     else:
                         subq.append({k: vv})
+<<<<<<< HEAD
         for k, v in self.conditions.iteritems():
+=======
+        for k, v in six.iteritems(self.conditions):
+            # transform query operators as '<foo>__<op>', 
+>>>>>>> 64123fa... add unit tests for loc indexer, fix some bugs
             if '__' in k:
                 parts = k.split('__')
                 k = '.'.join(parts[0:-1])

@@ -1,9 +1,17 @@
-import os
-import urlparse
-from django.utils import six, importlib
+from __future__ import absolute_import
+
 import logging
+import os
 
 from mongoengine.connection import connect
+
+from django.utils import six, importlib
+try:
+    import urlparse
+except:
+    from urllib import parse as urlparse
+
+
 __settings = None
 
 
@@ -81,7 +89,7 @@ def settings():
 def override_settings(**kwargs):
     """ test support """
     cfgvars = settings()
-    for k, v in kwargs.iteritems():
+    for k, v in six.iteritems(kwargs):
         setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
     celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {})
@@ -185,3 +193,39 @@ def get_labeled_points_from_rdd(rdd):
     """
     from pyspark.mllib.regression import LabeledPoint
     return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
+
+
+def unravel_index(df):
+    """ 
+    convert index columns into dataframe columns
+
+    :param df: the dataframe
+    :return: the unravelled dataframe, meta
+    """
+    # remember original names
+    idx_meta = {
+        'names': df.index.names,
+    }
+    # convert index names so we can restore them later
+    store_idxnames = ['_idx_{}'.format(name or i)
+                      for i, name in enumerate(idx_meta['names'])]
+    df.index.names = store_idxnames
+    unravelled = df.reset_index(), idx_meta
+    # restore index names on original dataframe
+    df.index.names = idx_meta['names']
+    return unravelled
+
+
+def restore_index(df, idx_meta):
+    """
+    restore index proper
+
+    :parm
+    """
+    # -- get index columns
+    index_cols = [col for col in df.columns if col.startswith('_idx')]
+    # -- set index columns
+    result = df.set_index(index_cols) if index_cols else df
+    if index_cols:
+        result.index.names = idx_meta.get('names', [None] * len(index_cols))
+    return result

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import StringIO
 from datetime import timedelta
 import unittest
@@ -15,6 +16,8 @@ from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
 import pandas as pd
 from omegaml import backends
+from six.moves import range
+from pandas.util.testing import assert_frame_equal
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -72,8 +75,8 @@ class StoreTests(unittest.TestCase):
         this is to test if store prefixes work
         """
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         datasets = OmegaStore(prefix='teststore')
         models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
@@ -86,8 +89,8 @@ class StoreTests(unittest.TestCase):
         this is to test if custom path and levels can be provided ok
         """
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         datasets = OmegaStore(prefix='data')
         models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
@@ -122,8 +125,8 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe(self):
         # create some dataframe
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
@@ -134,8 +137,8 @@ class StoreTests(unittest.TestCase):
         # create some dataframe
         from datetime import datetime
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store = OmegaStore(prefix='')
         # -- check default timestamp
@@ -172,22 +175,22 @@ class StoreTests(unittest.TestCase):
     def test_get_dataframe_filter(self):
         # create some dataframe
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
         df2 = store.get('mydata', filter=dict(a__gt=1, a__lt=10))
         # filter local dataframe
-        df = df[(df.a > 1) & (df.a < 10)].reset_index(drop='index')
+        df = df[(df.a > 1) & (df.a < 10)]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
 
     def test_get_dataframe_project(self):
         # create some dataframe
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
@@ -200,8 +203,8 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_with_index(self):
         # create some dataframe
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata', index=['a', '-b'])
@@ -209,11 +212,43 @@ class StoreTests(unittest.TestCase):
         idx_names = map(lambda v: dict(v).get('name'), idxs)
         self.assertIn('asc_a__desc_b', idx_names)
 
+    def test_put_dataframe_timeseries(self):
+        # create some dataframe
+        tsidx = pd.date_range(pd.datetime(2016, 1, 1), pd.datetime(2016, 4, 1))
+        df = pd.DataFrame({
+            'a': list(range(0, len(tsidx))),
+            'b': list(range(0, len(tsidx)))
+        }, index=tsidx)
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        dfx = store.get('mydata')
+        assert_frame_equal(df, dfx)
+        idxs = list(store.collection('mydata').list_indexes())
+        idx_names = [dict(v).get('name') for v in idxs]
+        self.assertIn('asc__idx_0', idx_names)
+
+    def test_put_dataframe_multiindex(self):
+        # create some dataframe
+        store = OmegaStore(prefix='')
+        midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
+                                     [u'one', u'two']],
+                             labels=[
+                                 [0, 0, 1, 1, 2, 2, 3, 3],
+                                 [0, 1, 0, 1, 0, 1, 0, 1]],
+                             names=[u'first', u'second'])
+        df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
+        store.put(df, 'mydata')
+        dfx = store.get('mydata')
+        assert_frame_equal(df, dfx)
+        idxs = list(store.collection('mydata').list_indexes())
+        idx_names = [dict(v).get('name') for v in idxs]
+        self.assertIn('asc__idx_first__asc__idx_second', idx_names)
+
     def test_put_python_dict(self):
         # create some data
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         store = OmegaStore(prefix='')
         store.put(data, 'mydata')
@@ -223,8 +258,8 @@ class StoreTests(unittest.TestCase):
     def test_put_python_dict_multiple(self):
         # create some data
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         store = OmegaStore(prefix='')
         store.put(data, 'mydata')
@@ -244,8 +279,8 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore(prefix='')
         # pure data
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         meta = store.put(data, 'data')
         data2 = store.get('data', force_python=True)
@@ -253,14 +288,15 @@ class StoreTests(unittest.TestCase):
         # dataframe
         # create some dataframe
         df = pd.DataFrame({
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         })
         store.put(df, 'mydata')
         df2 = store.get('mydata', force_python=True)
-        for r in df2:
-            del r['_id']
         df2 = pd.DataFrame(df2)
+        real_cols = [col for col in df2.columns
+                     if col != '_id' and not col.startswith('_idx')]
+        df2 = df2[real_cols]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
         # model
         iris = load_iris()
@@ -279,8 +315,8 @@ class StoreTests(unittest.TestCase):
         om = OmegaStore(prefix='')
         # dict
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         attributes = {'foo': 'bar'}
         meta = om.put(data, 'data', attributes=attributes)
@@ -305,11 +341,11 @@ class StoreTests(unittest.TestCase):
 
     def test_store_dataframe_as_dfgroup(self):
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         result_data = {
-            'a': range(1, 2),
+            'a': list(range(1, 2)),
             'b': 1,
         }
         df = pd.DataFrame(data)
@@ -330,8 +366,8 @@ class StoreTests(unittest.TestCase):
 
     def test_store_dataframe_as_hdf(self):
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -358,8 +394,8 @@ class StoreTests(unittest.TestCase):
     def test_put_same_name(self):
         """ test if metadata is updated instead of a new created """
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -381,8 +417,8 @@ class StoreTests(unittest.TestCase):
     def test_put_append_false(self):
         """ test if we can create a new dataframe without previous metadata """
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -393,8 +429,8 @@ class StoreTests(unittest.TestCase):
 
     def test_store_with_attributes(self):
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -415,8 +451,8 @@ class StoreTests(unittest.TestCase):
 
     def test_drop(self):
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -437,8 +473,8 @@ class StoreTests(unittest.TestCase):
 
     def test_list_raw(self):
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
@@ -467,11 +503,13 @@ class StoreTests(unittest.TestCase):
     def test_lazy_unique(self):
         """ test getting a MDataFrame and unique values """
         data = {
-            'a': range(1, 10),
-            'b': range(1, 10)
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
         store = OmegaStore()
         meta = store.put(df, 'foo', append=False)
         val = store.get('foo', lazy=True).a.unique().value
         self.assertListEqual(data['a'], list(val))
+        
+    

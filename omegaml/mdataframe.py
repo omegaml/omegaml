@@ -1,14 +1,17 @@
+from __future__ import absolute_import
+
 from uuid import uuid4
 
 from pymongo.collection import Collection
+import six
 
 import numpy as np
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter
-from omegaml.util import make_tuple, make_list
-import pandas as pd
 from omegaml.store.queryops import MongoQueryOps
+from omegaml.util import make_tuple, make_list, restore_index
+import pandas as pd
 
 
 class MGrouper(object):
@@ -43,7 +46,7 @@ class MGrouper(object):
                 '$%s' % MGrouper.STATS_MAP.get(stat, stat): '$%s' % column}
         # generate $group command
         _specs = {}
-        for column, stats in specs.iteritems():
+        for column, stats in six.iteritems(specs):
             stats = make_tuple(stats)
             for stat in stats:
                 add_stats(_specs, column, stat)
@@ -70,7 +73,8 @@ class MGrouper(object):
     def _non_group_columns(self):
         """ get all columns in mdataframe that is not in columns """
         return [col for col in self.mdataframe.columns
-                if col not in self.columns and col != '_id']
+                if col not in self.columns and col != '_id'
+                and not col.startswith('_idx')]
     def _count(self):
         count_columns = self._non_group_columns()
         if len(count_columns) == 0:
@@ -106,6 +110,33 @@ class MGrouper(object):
             yield keys, data
 
 
+class MLocIndexer(object):
+
+    """
+    implements the LocIndexer for MDataFrames
+    """
+    def __init__(self, mdataframe):
+        self.mdataframe = mdataframe
+    def __getitem__(self, specs):
+        idx_cols = self.mdataframe._get_frame_index()
+        flt_kwargs = {}
+        specs = make_tuple(specs)
+        for i, spec in enumerate(specs):
+            col = idx_cols[i]
+            if isinstance(spec, slice):
+                start, stop, step = spec.start, spec.stop, spec.step
+                if start is not None:
+                    flt_kwargs['{}__gte'.format(col)] = start
+                if stop is not None:
+                    flt_kwargs['{}__lte'.format(col)] = stop
+            else:
+                flt_kwargs[col] = spec
+        if flt_kwargs:
+            self.mdataframe.query_inplace(**flt_kwargs)
+            self.mdataframe.from_loc_indexer = True
+        return self.mdataframe
+
+
 class MSeriesGroupby(MGrouper):
 
     """
@@ -136,10 +167,11 @@ class MDataFrame(object):
     """
     def __init__(self, collection, columns=None, query=None,
                  limit=None, skip=None, sort_order=None,
-                 force_columns=None):
+                 force_columns=None, **kwargs):
         self.collection = collection
         #: columns in frame
-        self.columns = columns or self._get_fields()
+        self.columns = make_tuple(columns) if columns else self._get_fields()
+        self.columns = [str(col) for col in self.columns]
         #: columns to sort by, defaults to not sorted
         self.sort_order = sort_order
         #: top n documents to fetch
@@ -150,6 +182,8 @@ class MDataFrame(object):
         self.filter_criteria = query or {}
         #: force columns -- on output add columns not present
         self.force_columns = force_columns or []
+        #: was this created from the loc indexer?
+        self.from_loc_indexer = kwargs.get('from_loc_indexer', False)
         if self.filter_criteria:
             # make sure we have a filtered collection with the criteria given
             self.query_inplace(**self.filter_criteria)
@@ -160,9 +194,7 @@ class MDataFrame(object):
                       limit=self.head_limit,
                       skip=self.skip_topn,
                       query=self.filter_criteria)
-        for k in without or []:
-            if k in kwargs:
-                del kwargs[k]
+        [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
     def __getattr__(self, attr):
         if attr in self.columns:
@@ -171,7 +203,7 @@ class MDataFrame(object):
             return MSeries(self.collection, **kwargs)
         raise AttributeError(attr)
     def __getitem__(self, cols_or_slice):
-        if isinstance(cols_or_slice, basestring):
+        if isinstance(cols_or_slice, six.string_types):
             kwargs = self.__getcopy_kwargs()
             kwargs.update(columns=make_tuple(cols_or_slice))
             return MSeries(self.collection, **kwargs)
@@ -194,7 +226,17 @@ class MDataFrame(object):
         if doc is None:
             result = []
         else:
-            result = [col for col in doc.keys() if col != '_id']
+            result = [col for col in doc.keys()
+                      if col != '_id' and not col.startswith('_idx')]
+        return result
+    def _get_frame_index(self):
+        """ return the dataframe's index columns """
+        doc = self.collection.find_one()
+        if doc is None:
+            result = []
+        else:
+            result = [col for col in doc.keys()
+                      if col.startswith('_idx')]
         return result
     def inspect(self, explain=False):
         """
@@ -214,12 +256,19 @@ class MDataFrame(object):
     @property
     def value(self):
         cursor = self._get_cursor()
-        return self._get_dataframe_from_cursor(cursor)
+        df = self._get_dataframe_from_cursor(cursor)
+        # this ensures the equiv. of pandas df.loc[n] is a Series
+        if len(df) == 1 and self.from_loc_indexer:
+            df = df.T
+            df = df[df.columns[0]]
+        return df
+
     def _get_dataframe_from_cursor(self, cursor):
         """ 
         from the given cursor return a DataFrame
         """
         df = pd.DataFrame.from_records(cursor)
+        df = restore_index(df, dict())
         if '_id' in df.columns:
             df.drop('_id', axis=1, inplace=True)
         if self.force_columns:
@@ -228,7 +277,9 @@ class MDataFrame(object):
                 df[col] = np.NaN
         return df
     def _get_cursor(self):
-        cursor = self.collection.find(projection=self.columns)
+        projection = make_tuple(self.columns)
+        projection += make_tuple(self._get_frame_index())
+        cursor = self.collection.find(projection=projection)
         if self.sort_order:
             cursor.sort(qops.make_sortkey(make_tuple(self.sort_order)))
         if self.head_limit:
@@ -259,7 +310,7 @@ class MDataFrame(object):
         for key in [on, left_on, right_on]:
             if key:
                 assert isinstance(
-                    key, basestring), "only single column merge keys are supported (%s)" % key
+                    key, six.string_types), "only single column merge keys are supported (%s)" % key
         if isinstance(right, Collection):
             right = MDataFrame(right)
         assert isinstance(
@@ -288,11 +339,15 @@ class MDataFrame(object):
             if left_col == '_id':
                 project[left_col] = 1
                 continue
+            if left_col.startswith('_idx'):
+                continue
             if left_col != (on or left_on) and left_col in right.columns:
                 left_col = '%s%s' % (left_col, suffixes[0])
             project[left_col] = "$%s" % source_left_col
         for right_col in right.columns:
             if right_col == '_id':
+                continue
+            if right_col.startswith('_idx'):
                 continue
             if right_col == (on or right_on) and right_col == (on or left_on):
                 # if the merge field is the same in both frames, we already
@@ -303,7 +358,7 @@ class MDataFrame(object):
             else:
                 left_col = '%s' % right_col
             project[left_col] = '$%s.%s' % (target_field, right_col)
-        expected_columns = project.keys()
+        expected_columns = list(project.keys())
         project = {"$project": project}
         # store merged documents and return an MDataFrame to it
         out = qops.OUT(target_name)
@@ -380,7 +435,8 @@ class MDataFrame(object):
         """
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
         coll = FilteredCollection(self.collection, query=filter_criteria)
-        return MDataFrame(coll, query=filter_criteria)
+        return MDataFrame(coll, query=filter_criteria, 
+                          **self.__getcopy_kwargs(without='query'))
     def create_index(self, keys, **kwargs):
         """
         create and index the easy way
@@ -388,6 +444,9 @@ class MDataFrame(object):
         keys, kwargs = MongoQueryOps().make_index(keys)
         result = self.collection.create_index(keys, **kwargs)
         return result
+    @property
+    def loc(self):
+        return MLocIndexer(self)
 
 
 class MSeries(MDataFrame):

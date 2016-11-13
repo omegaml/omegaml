@@ -1,19 +1,23 @@
+from __future__ import absolute_import
+
 from datetime import datetime
 from fnmatch import fnmatch
 import os
 import re
 import tempfile
-import urlparse
 
 import gridfs
 import mongoengine
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
-from ..documents import Metadata
+import six
 
-from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
-                    settings as omega_settings)
 from omegaml import signals
+from omegaml.util import unravel_index, restore_index, make_tuple
+
+from ..documents import Metadata
+from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
+                    settings as omega_settings, urlparse)
 
 
 class OmegaStore(object):
@@ -56,7 +60,7 @@ class OmegaStore(object):
             Any forward slash in prefix is ignored (e.g. 'data/' 
             becomes 'data')
 
-        DataFrames by default stored in their own collection, every
+        DataFrames by default are stored in their own collection, every
         row becomes a document. To store dataframes as a binary file,
         use `put(...., as_hdf=True).` `.get()` will always return a dataframe.
 
@@ -191,7 +195,7 @@ class OmegaStore(object):
                              prefix=prefix,
                              bucket=bucket)
         if meta:
-            for k, v in kwargs.iteritems():
+            for k, v in six.iteritems(kwargs):
                 if k == 'attributes' and v is not None and len(v) > 0:
                     previous = getattr(meta, k, {})
                     previous.update(v)
@@ -214,14 +218,6 @@ class OmegaStore(object):
         if meta is not None:
             meta.delete()
 
-    def datastore(self, name=None):
-        """
-        Returns a datastore as collection
-        """
-        from warnings import warn
-        warn("OmegaStore.datastore() is deprecated, use collection()")
-        return self.collection(name=name)
-
     def collection(self, name=None):
         """
         Returns a mongo db collection as a datastore
@@ -238,7 +234,7 @@ class OmegaStore(object):
             raise e
         return datastore
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, attributes=None, groupby=None, **kwargs):
         """
         Stores an objecs, store estimators, pipelines, numpy arrays or
         pandas dataframes
@@ -256,13 +252,13 @@ class OmegaStore(object):
         elif is_dataframe(obj):
             if obj.empty:
                 from warnings import warn
-                warn('Provided dataframe is empty, ignoring it, doing nothing here!')
+                warn(
+                    'Provided dataframe is empty, ignoring it, doing nothing here!')
                 return None
             if kwargs.pop('as_hdf', False):
                 return self.put_dataframe_as_hdf(
                     obj, name, attributes, **kwargs)
-            elif kwargs.get('groupby'):
-                groupby = kwargs.get('groupby')
+            elif groupby:
                 return self.put_dataframe_as_dfgroup(
                     obj, name, groupby, attributes)
             append = kwargs.get('append', None)
@@ -305,6 +301,7 @@ class OmegaStore(object):
         by specifying the tuple (col, datetime).
         :return: the Metadata object created
         """
+        from .queryops import MongoQueryOps
         collection = self.collection(name)
         if append is False:
             self.drop(name, force=True)
@@ -319,66 +316,71 @@ class OmegaStore(object):
             else:
                 idx_kwargs = {}
             # create index with appropriate options
-            from .queryops import MongoQueryOps
             keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
             collection.create_index(keys, **idx_kwargs)
         if timestamp:
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
                 col = '_created'
-            elif isinstance(timestamp, basestring):
+            elif isinstance(timestamp, six.string_types):
                 col = timestamp
             elif isinstance(timestamp, datetime):
                 col, dt = '_created', timestamp
             elif isinstance(timestamp, tuple):
                 col, dt = timestamp
             obj[col] = dt
+        # store dataframe indicies
+        obj, idx_meta = unravel_index(obj)
+        kind_meta = {
+            'columns': obj.columns,
+            'idx_meta': idx_meta
+        }
+        # ensure column names to be strings
+        obj.columns = [str(col) for col in obj.columns]
+        # create mongon indicies for data frame index columns
+        df_idxcols = [col for col in obj.columns if col.startswith('__idx_')]
+        if df_idxcols:
+            keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
+            collection.create_index(keys, **idx_kwargs)
         # bulk insert
+		# -- get native objects
+        # -- seems to be required since pymongo 3.3.x. if not converted
+        #    pymongo raises Cannot Encode object for int64 types 
+        obj = obj.astype('O')
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
         signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=Metadata.PANDAS_DFROWS,
+                                   kind_meta=kind_meta,
                                    attributes=attributes,
                                    collection=collection.name).save()
 
-    def get_df_grouped_docs(self, obj, groupby):
-        """
-        returns a mongo document grouped by the provided columns
-        """
-        for group_val, gdf in obj.groupby(groupby):
-            mongo_doc_dict = {}
-            # group_val is a str if only one col is provided
-            # is a tuple if more than one cols are provided.
-            if isinstance(group_val, tuple):
-                pass
-            else:
-                str_to_tuple = ()
-                str_to_tuple += (group_val,)
-                group_val = str_to_tuple
-
-            for grouped_cols in groupby:
-                mongo_doc_dict[grouped_cols] = group_val[groupby.index(
-                    grouped_cols)]
-
-            datacols = list(set(gdf.columns) - set(groupby))
-            data_list = []
-            for row in gdf[datacols].iterrows():
-                row_data_dict = row[1].to_dict()
-                for k, v in row_data_dict.iteritems():
-                    row_data_dict[k] = v
-                data_list.append(row_data_dict)
-
-            mongo_doc_dict['data'] = data_list
-            yield mongo_doc_dict
-
     def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
-        """ store a dataframe grouped by collection in a mongo document """
-        datastore = self.datastore(name)
-        datastore.drop()
+        """ 
+        store a dataframe grouped by columns in a mongo document 
 
-        datastore.insert_many(self.get_df_grouped_docs(obj, groupby))
+        # each group
+        {
+           #group keys
+           key: val,
+           _data: [
+              # only data keys
+              { key: val, ... }
+           ]
+        }
+        """
+        def row_to_doc(obj):
+            for gval, gdf in obj.groupby(groupby):
+                gval = make_tuple(gval)
+                doc = dict(zip(groupby, gval))
+                datacols = list(set(gdf.columns) - set(groupby))
+                doc['_data'] = gdf[datacols].to_dict('records')
+                yield doc
+        datastore = self.collection(name)
+        datastore.drop()
+        datastore.insert_many(row_to_doc(obj))
         signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
@@ -390,7 +392,7 @@ class OmegaStore(object):
     def put_dataframe_as_hdf(self, obj, name, attributes=None):
         filename = self._get_obj_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
-        with open(hdffname) as fhdf:
+        with open(hdffname, 'rb') as fhdf:
             fileid = self.fs.put(fhdf, filename=filename)
         signals.dataset_put.send(sender=None, name=name)
         return self._make_metadata(name=name,
@@ -460,37 +462,32 @@ class OmegaStore(object):
                     the object does not exist it will still return True
         """
         meta = self.metadata(name, version=version)
-        if meta is None:
-            if force:
-                # it's gone, so that's what we want
+        if meta is None and not force:
+            raise DoesNotExist()
+        collection = self.collection(name)
+        if collection:
+            self.mongodb.drop_collection(collection.name)
+        if meta:
+            if meta.collection:
+                self.mongodb.drop_collection(meta.collection)
+                self._drop_metadata(name)
                 return True
-            else:
-                raise DoesNotExist()
-        if meta.collection:
-            self.mongodb.drop_collection(meta.collection)
-            self._drop_metadata(name)
-            return True
-        if meta.gridfile is not None:
-            meta.gridfile.delete()
-            self._drop_metadata(name)
-            return True
+            if meta and meta.gridfile is not None:
+                meta.gridfile.delete()
+                self._drop_metadata(name)
+                return True
         return False
 
     def get_backend(self, name, version=-1):
-        """
-        Returns a backend
-
-        :param name: The name of object
-        :param version: The version of object
-
-        :return: Returns a backend to be used to process the respective object
-            See `omegaml.defaults` for a list of supported backends.
-        """
         meta = self.metadata(name, version=version)
         if meta is not None:
             backend = self.defaults.OMEGA_BACKENDS[meta.kind](self)
             return backend
         return None
+    
+    def getl(self, *args, **kwargs):
+        """ convenience to return MDataFrame """
+        return self.get(*args, lazy=True, **kwargs)
 
     def get(self, name, version=-1, force_python=False,
             **kwargs):
@@ -539,7 +536,7 @@ class OmegaStore(object):
             import pandas as pd
             filter = filter or kwargs
             if filter:
-                from query import Filter
+                from .query import Filter
                 query = Filter(collection, **filter).query
                 cursor = collection.find(filter=query, projection=columns)
             else:
@@ -547,6 +544,10 @@ class OmegaStore(object):
             df = pd.DataFrame.from_records(cursor)
             if '_id' in df.columns:
                 del df['_id']
+            meta = self.metadata(name)
+            idx_meta = meta.kind_meta.get('idx_meta')
+            if idx_meta:
+                df = restore_index(df, idx_meta)
         signals.dataset_get.send(sender=None, name=name)
         return df
 
@@ -566,56 +567,29 @@ class OmegaStore(object):
         """
         modified_params = {}
         db_structure = collection.find_one({}, {'_id': False})
-        groupby_columns = list(set(db_structure.keys()) - set(['data']))
+        groupby_columns = list(set(db_structure.keys()) - set(['_data']))
         if kwargs is not None:
             for item in kwargs:
                 if item not in groupby_columns:
-                    modified_query_param = 'data.' + item
+                    modified_query_param = '_data.' + item
                     modified_params[modified_query_param] = kwargs.get(item)
                 else:
                     modified_params[item] = kwargs.get(item)
         return modified_params
 
-    def get_grouped_data(self, cursor, kwargs=None):
-        """
-        Yields data from the mongo collection
-
-        :param cursor: Mongo cursor
-        :return: Returns a generator object
-        """
-        kwargs = kwargs if kwargs else {}
-        for doc in cursor:
-            data = doc.get('data')
-            groupby_columns = list(set(doc.keys()) - set(['data']))
-            for col in groupby_columns:
-                if col in kwargs:
-                    kwargs.pop(col)
-            col_heads = data[0].keys()
-            for col_data in data:
-                result_dict = {}
-                if kwargs.viewitems() <= col_data.viewitems():
-                    for col in col_heads:
-                        result_dict[str(col)] = col_data.get(col)
-                    for col in groupby_columns:
-                        result_dict[str(col)] = doc.get(col)
-
-                    yield result_dict
-
     def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
-        """
-        Retrieve object as python grouped pandas dataframe
-
-        :param name: The name of object
-        :param version: The version of object
-
-        :return: Returns a grouped dataframe
-        """
         import pandas as pd
-        datastore = self.datastore(name)
+        def convert_doc_to_row(cursor):
+            for doc in cursor:
+                data = doc.pop('_data', [])
+                for row in data:
+                    doc.update(row)
+                    yield doc
+        datastore = self.collection(name)
         kwargs = kwargs if kwargs else {}
         params = self.rebuild_params(kwargs, datastore)
         cursor = datastore.find(params, {'_id': False})
-        df = pd.DataFrame(self.get_grouped_data(cursor, kwargs))
+        df = pd.DataFrame(convert_doc_to_row(cursor))
         signals.dataset_get.send(sender=None, name=name)
         return df
 
@@ -759,19 +733,16 @@ class OmegaStore(object):
         import pandas as pd
         hdffname = os.path.join(self.tmppath, filename)
         dirname = os.path.dirname(hdffname)
-        try:
+        if not os.path.exists(dirname):
             os.makedirs(dirname)
-        except OSError:
-            # OSError is raised if path exists already
-            pass
         try:
             outf = self.fs.get_version(filename, version=version)
-        except gridfs.errors.NoFile, e:
+        except gridfs.errors.NoFile as e:
             raise e
-        with open(hdffname, 'w') as hdff:
+        with open(hdffname, 'wb') as hdff:
             hdff.write(outf.read())
         hdf = pd.HDFStore(hdffname)
-        key = hdf.keys()[0]
+        key = list(hdf.keys())[0]
         df = hdf[key]
         hdf.close()
         return df

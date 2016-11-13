@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import random
 from unittest.case import TestCase
 
@@ -7,6 +8,8 @@ from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.store.queryops import GeoJSON
 import pandas as pd
+from six.moves import range
+from pandas.util.testing import assert_frame_equal
 # see https://gist.github.com/miraculixx/f01304186fc47d041da5a712774ac487
 locations = [{'location': {'coordinates': [-74.0059413, 40.7127837],
                            'type': 'Point'},
@@ -26,8 +29,8 @@ class FilterQueryTests(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        df = self.df = pd.DataFrame({'x': range(0, 10) + range(0, 10),
-                                     'y': random.sample(range(0, 100), 20)})
+        df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
+                                     'y': random.sample(list(range(0, 100)), 20)})
         om = self.om = Omega()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
@@ -39,7 +42,7 @@ class FilterQueryTests(TestCase):
         coll = self.coll
         df = self.df
         result = Filter(coll, x=0).value
-        testdf = df[df.x == 0].reset_index(drop=True)
+        testdf = df[df.x == 0]
         self.assertTrue(result.equals(testdf))
 
     def test_filter_and(self):
@@ -47,14 +50,14 @@ class FilterQueryTests(TestCase):
         df = self.df
         y = int(df.y.unique()[0])
         result = Filter(coll, x=0, y=y).value
-        testdf = df[(df.x == 0) & (df.y == y)].reset_index(drop=True)
+        testdf = df[(df.x == 0) & (df.y == y)]
         self.assertTrue(result.equals(testdf))
 
     def test_filter_or(self):
         coll = self.coll
         df = self.df
         result = Filter(coll, x=0, y__gt=5).value
-        testdf = df[(df.x == 0) & (df.y > 5)].reset_index(drop=True)
+        testdf = df[(df.x == 0) & (df.y > 5)]
         self.assertTrue(result.equals(testdf))
 
     def test_filter_near(self):
@@ -94,10 +97,9 @@ class FilterQueryTests(TestCase):
 
     def test_query_null(self):
         om = self.om
-        df = pd.DataFrame({'x': range(0, 5),
+        df = pd.DataFrame({'x': list(range(0, 5)),
                            'y': [1, 2, 3, None, None]})
         om.datasets.put(df, 'foox', append=False)
         result = om.datasets.get('foox', y__isnull=True)
-        df.x = df.x.astype(float)
-        test = df[df.isnull().any(axis=1)].reset_index(drop=True)
-        self.assertTrue(result.equals(test))
+        test = df[df.isnull().any(axis=1)]
+        assert_frame_equal(result, test)

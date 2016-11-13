@@ -49,7 +49,7 @@ class FilteredCollection(Collection):
     the expression for the set fcoll.query = { expression }  
     """
 
-    def __init__(self, collection, query=None, **kwargs):
+    def __init__(self, collection, query=None, projection=None, **kwargs):
         if isinstance(collection, Collection):
             database = collection.database
             name = collection.name
@@ -59,6 +59,7 @@ class FilteredCollection(Collection):
         super(FilteredCollection, self).__init__(
             database, name, create=False, **kwargs)
         self.query = Filter(self, **query).query
+        self.projection = projection
     def replace_one(self, replacement, filter=None, upsert=False,
                     bypass_document_validation=False):
         query = dict(self.query)

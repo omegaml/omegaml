@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import random
 from unittest.case import TestCase
 
@@ -6,14 +7,15 @@ from pymongo.collection import Collection
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
 import pandas as pd
+from six.moves import range
 
 
 class FilteredCollectionTests(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        df = pd.DataFrame({'x': range(0, 10) + range(0, 10),
-                           'y': random.sample(range(0, 100), 20)})
+        df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
+                           'y': random.sample(list(range(0, 100)), 20)})
         om = Omega()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
@@ -57,9 +59,11 @@ class FilteredCollectionTests(TestCase):
         query = {'x': 9}
         fcoll = FilteredCollection(self.coll, query=query)
         result = fcoll.find_one_and_update({'$set': {'xy': 9000}})
+        # make sure we get what we wanted
         self.assertIsInstance(result, dict)
         self.assertEqual(result.get('x'), 9)
-        result_n = fcoll.find_one()
+        # be sure to get the same as before, then test it was updated
+        result_n = fcoll.find_one({'_id': result.get('_id')})
         self.assertEqual(result_n.get('xy'), 9000)
         self.assertEqual(result_n.get('y'), result.get('y'))
 

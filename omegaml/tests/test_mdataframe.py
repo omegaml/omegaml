@@ -1,21 +1,25 @@
+from __future__ import absolute_import
+
 import os
 import random
+import string
 from unittest.case import TestCase
 
-from omegaml import Omega
-from omegaml.util import flatten_columns
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
+from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
+from omegaml.util import flatten_columns
 import pandas as pd
+from six.moves import range
 
 
 class MDataFrameTests(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        df = self.df = pd.DataFrame({'x': range(0, 10) + range(0, 10),
-                                     'y': random.sample(range(0, 100), 20)})
+        df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
+                                     'y': random.sample(list(range(0, 100)), 20)})
         om = self.om = Omega()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
@@ -30,7 +34,7 @@ class MDataFrameTests(TestCase):
         for key, groupdf in MDataFrame(coll).groupby(['x']):
             x = key.get('x')
             keys.append(x)
-            subdf = df[df.x == x].reset_index(drop=True)
+            subdf = df[df.x == x]
             assert_frame_equal(subdf, groupdf.value)
         self.assertEqual(set(keys), set(df.x))
 
@@ -109,16 +113,16 @@ class MDataFrameTests(TestCase):
         df = self.df
         result = MDataFrame(coll).sort(['-x', '-y']).value
         df = df.sort_values(
-            ['x', 'y'], ascending=[False, False]).reset_index(drop=True)
-        self.assertTrue(df.equals(result))
+            ['x', 'y'], ascending=[False, False])
+        assert_frame_equal(df, result)
 
     def test_mdataframe_merge(self):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': range(0, 20),
-                              'y': range(0, 20),
-                              'z': range(0, 20)})
+        other = pd.DataFrame({'x': list(range(0, 20)),
+                              'y': list(range(0, 20)),
+                              'z': list(range(0, 20))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -129,9 +133,9 @@ class MDataFrameTests(TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'s': range(0, 20),
-                              'y': range(0, 20),
-                              'z': range(0, 20)})
+        other = pd.DataFrame({'s': list(range(0, 20)),
+                              'y': list(range(0, 20)),
+                              'z': list(range(0, 20))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, left_on='x',
@@ -144,9 +148,9 @@ class MDataFrameTests(TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': range(50, 55),
-                              'y': range(0, 5),
-                              'z': range(0, 5)})
+        other = pd.DataFrame({'x': list(range(50, 55)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -158,9 +162,9 @@ class MDataFrameTests(TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': range(0, 5),
-                              'y': range(0, 5),
-                              'z': range(0, 5)})
+        other = pd.DataFrame({'x': list(range(0, 5)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -172,9 +176,9 @@ class MDataFrameTests(TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': range(0, 5),
-                              'y': range(0, 5),
-                              'z': range(0, 5)})
+        other = pd.DataFrame({'x': list(range(0, 5)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='inner',
@@ -187,9 +191,9 @@ class MDataFrameTests(TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': range(0, 5),
-                              'y': range(0, 5),
-                              'z': range(0, 5)})
+        other = pd.DataFrame({'x': list(range(0, 5)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left',
@@ -201,9 +205,9 @@ class MDataFrameTests(TestCase):
     def test_verylarge_dataframe(self):
         if not os.environ.get('TEST_LARGE'):
             return
-        other = pd.DataFrame({'x': range(0, int(10e6)),
-                              'y': range(0, int(10e6)),
-                              'z': range(0, int(10e6))})
+        other = pd.DataFrame({'x': list(range(0, int(10e6))),
+                              'y': list(range(0, int(10e6))),
+                              'z': list(range(0, int(10e6)))})
         coll = self.coll
         df = self.df
         result = MDataFrame(coll).value
@@ -222,10 +226,72 @@ class MDataFrameTests(TestCase):
 
     def test_query_null(self):
         om = self.om
-        df = pd.DataFrame({'x': range(0, 5),
+        df = pd.DataFrame({'x': list(range(0, 5)),
                            'y': [1, 2, 3, None, None]})
         om.datasets.put(df, 'foox', append=False)
         result = om.datasets.get('foox', y__isnull=True, lazy=True).value
-        df.x = df.x.astype(float)
-        test = df[df.isnull().any(axis=1)].reset_index(drop=True)
-        self.assertTrue(result.equals(test))
+        test = df[df.isnull().any(axis=1)]
+        assert_frame_equal(result, test)
+
+    def test_locindexer_numeric_index(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        df = pd.DataFrame(data)
+        om.datasets.put(df, 'foo', append=False)
+        # by label
+        dfx = om.datasets.getl('foo').loc[4].value
+        assert_series_equal(df.loc[4], dfx)
+        # by slice
+        dfx = om.datasets.getl('foo').loc[2:4].value
+        assert_frame_equal(df.loc[2:4], dfx)
+
+    def test_locindexer_character_index(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        idx = string.ascii_lowercase[0:9]
+        df = pd.DataFrame(data, index=(c for c in idx))
+        om.datasets.put(df, 'foo', append=False)
+        # by label
+        dfx = om.datasets.getl('foo').loc['c'].value
+        assert_series_equal(df.loc['c'], dfx)
+        # by slice
+        dfx = om.datasets.getl('foo').loc['c':'f'].value
+        assert_frame_equal(df.loc['c':'f'], dfx)
+
+    def test_locindexer_timeseries_index(self):
+        om = self.om
+        # create some dataframe
+        tsidx = pd.date_range(pd.datetime(2016, 1, 1), pd.datetime(2016, 4, 1))
+        df = pd.DataFrame({
+            'a': list(range(0, len(tsidx))),
+            'b': list(range(0, len(tsidx)))
+        }, index=tsidx)
+        om.datasets.put(df, 'foo', append=False)
+        # by label
+        dfx = om.datasets.getl('foo').loc[pd.datetime(2016, 2, 3)].value
+        assert_series_equal(dfx, df.loc[pd.datetime(2016, 2, 3)])
+        # by slice
+        start, end = pd.datetime(2016, 2, 3), pd.datetime(2016, 2, 8)
+        dfx = om.datasets.getl('foo').loc[start:end].value
+        assert_frame_equal(df.loc[start:end], dfx)
+
+    def test_locindexer_multiindex(self):
+        # create some dataframe
+        om = self.om
+        midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
+                                     [u'one', u'two']],
+                             labels=[
+                                 [0, 0, 1, 1, 2, 2, 3, 3],
+                                 [0, 1, 0, 1, 0, 1, 0, 1]],
+                             names=[u'first', u'second'])
+        df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
+        om.datasets.put(df, 'foo', append=False)
+        dfx = om.datasets.getl('foo').loc['bar', 'one'].value
+        assert_series_equal(dfx, df.loc['bar', 'one'])
+        
