@@ -23,6 +23,14 @@ def is_dataframe(obj):
         return False
 
 
+def is_series(obj):
+    try:
+        import pandas as pd
+        return isinstance(obj, pd.Series) and not isinstance(obj, pd.DataFrame)
+    except:
+        return False
+
+
 def is_estimator(obj):
     try:
         from sklearn.base import BaseEstimator

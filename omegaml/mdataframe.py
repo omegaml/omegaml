@@ -125,6 +125,8 @@ class MLocIndexer(object):
             df.from_loc_indexer = True
         if projection:
             df = df[projection]
+        if isinstance(self.mdataframe, MSeries):
+            df = df._as_mseries(df.columns[0])
         return df
     def __setitem__(self, specs, value):
         raise NotImplemented
@@ -236,7 +238,8 @@ class MDataFrame(object):
         kwargs = dict(columns=self.columns,
                       sort_order=self.sort_order,
                       limit=self.head_limit,
-                      skip=self.skip_topn,
+                      skip=self.skip_topn, 
+                      from_loc_indexer=self.from_loc_indexer,
                       query=self.filter_criteria)
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
@@ -248,9 +251,10 @@ class MDataFrame(object):
         raise AttributeError(attr)
     def __getitem__(self, cols_or_slice):
         if isinstance(cols_or_slice, six.string_types):
-            kwargs = self.__getcopy_kwargs()
-            kwargs.update(columns=make_tuple(cols_or_slice))
-            return MSeries(self.collection, **kwargs)
+            return self._as_mseries(cols_or_slice)
+        elif isinstance(cols_or_slice, int):
+            column = self.columns[cols_or_slice]
+            return self._as_mseries(column)
         elif isinstance(cols_or_slice, (tuple, list)):
             kwargs = self.__getcopy_kwargs()
             kwargs.update(columns=cols_or_slice)
@@ -282,6 +286,10 @@ class MDataFrame(object):
             result = [col for col in doc.keys()
                       if col.startswith('_idx')]
         return result
+    def _as_mseries(self, column):
+        kwargs = self.__getcopy_kwargs()
+        kwargs.update(columns=make_tuple(column))
+        return MSeries(self.collection, **kwargs)
     def inspect(self, explain=False):
         """
         inspect this dataframe
@@ -531,4 +539,6 @@ class MSeries(MDataFrame):
         else:
             val = self._get_dataframe_from_cursor(cursor)
             val = val[column]
+            if len(val) == 1 and self.from_loc_indexer:
+                val = val.iloc[0]
         return val

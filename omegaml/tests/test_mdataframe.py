@@ -248,8 +248,8 @@ class MDataFrameTests(TestCase):
         dfx = om.datasets.getl('foo').loc[2:4].value
         assert_frame_equal(df.loc[2:4], dfx)
         # by list
-        dfx = om.datasets.getl('foo').loc[[2,4]].value
-        assert_frame_equal(df.loc[[2,4]], dfx)
+        dfx = om.datasets.getl('foo').loc[[2, 4]].value
+        assert_frame_equal(df.loc[[2, 4]], dfx)
 
     def test_locindexer_character_index(self):
         om = self.om
@@ -300,4 +300,20 @@ class MDataFrameTests(TestCase):
         om.datasets.put(df, 'foo', append=False)
         dfx = om.datasets.getl('foo').loc['bar', 'one'].value
         assert_series_equal(dfx, df.loc['bar', 'one'])
-        
+
+    def test_locindexer_series(self):
+        """ test storing a pandas series with it's own index """
+        om = self.om
+        series = pd.Series(range(10),
+                           name='foo',
+                           index=pd.date_range(pd.datetime(2016, 1, 1),
+                                               pd.datetime(2016, 1, 10)))
+        om.datasets.put(series, 'fooseries', append=False)
+        # try data range
+        daterange = slice(pd.datetime(2016, 1, 5), pd.datetime(2016, 1, 10))
+        series2 = om.datasets.getl('fooseries').loc[daterange].value
+        assert_series_equal(series2, series.loc[daterange])
+        # try single date
+        daterange = pd.datetime(2016, 1, 5)
+        series2 = om.datasets.getl('fooseries').loc[daterange].value
+        self.assertEqual(series2, series.loc[daterange])

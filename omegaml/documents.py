@@ -11,7 +11,8 @@ from omegaml.util import settings
 
 class Metadata(Document):
     # various kinds of data
-    PANDAS_DFROWS = 'pandas.dfrows'
+    PANDAS_DFROWS = 'pandas.dfrows'  # dataframe
+    PANDAS_SEROWS = 'pandas.serows'  # series
     PANDAS_HDF = 'pandas.hdf'
     PYTHON_DATA = 'python.data'
     PANDAS_DFGROUP = 'pandas.dfgroup'
@@ -20,7 +21,7 @@ class Metadata(Document):
     SPARK_MLLIB = 'spark.mllib'
     OMEGAML_RUNNING_JOBS = 'job.run'
     KINDS = (
-        PANDAS_DFROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
+        PANDAS_DFROWS, PANDAS_SEROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
         PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB)
     # fields
     #: this is the name of the data

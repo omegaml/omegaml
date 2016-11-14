@@ -18,6 +18,7 @@ import pandas as pd
 from omegaml import backends
 from six.moves import range
 from pandas.util.testing import assert_frame_equal
+from blaze.compatibility import assert_series_equal
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -330,7 +331,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfrows')
         self.assertEqual(meta.attributes, attributes)
         df2 = om.get('datadf')
-        self.assertTrue(df.equals(df2), "dataframes differ")
+        assert_frame_equal(df, df2)
         # model
         lr = LogisticRegression()
         meta = om.put(lr, 'mymodel', attributes=attributes)
@@ -511,5 +512,36 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'foo', append=False)
         val = store.get('foo', lazy=True).a.unique().value
         self.assertListEqual(data['a'], list(val))
-        
+
+    def test_store_series(self):
+        """ test storing a pandas series with it's own index """
+        from string import ascii_lowercase
+        series = pd.Series(range(10), index=(c for c in ascii_lowercase[0:10]))
+        store = OmegaStore()
+        store.put(series, 'fooseries', append=False)
+        series2 = store.get('fooseries')
+        assert_series_equal(series, series2)
+
+    def test_store_named_series(self):
+        """ test storing a pandas series with it's own index """
+        from string import ascii_lowercase
+        series = pd.Series(range(10),
+                           name='foo',
+                           index=(c for c in ascii_lowercase[0:10]))
+        store = OmegaStore()
+        store.put(series, 'fooseries', append=False)
+        series2 = store.get('fooseries')
+        assert_series_equal(series, series2)
+
+    def test_store_series_timeindex(self):
+        """ test storing a pandas series with it's own index """
+        series = pd.Series(range(10),
+                           name='foo',
+                           index=pd.date_range(pd.datetime(2016, 1, 1), 
+                                               pd.datetime(2016, 1, 10)))
+        store = OmegaStore()
+        store.put(series, 'fooseries', append=False)
+        series2 = store.get('fooseries')
+        assert_series_equal(series, series2)
+
     

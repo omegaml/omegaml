@@ -17,7 +17,7 @@ from omegaml.util import unravel_index, restore_index, make_tuple
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
-                    settings as omega_settings, urlparse)
+                    settings as omega_settings, urlparse, is_series)
 
 
 class OmegaStore(object):
@@ -159,6 +159,8 @@ class OmegaStore(object):
         Returns a metadata document for the given entry name
 
         FIXME: version attribute does not do anything
+        FIXME: metadata should be stored in a bucket-specific collection
+        to enable access control, see https://docs.mongodb.com/manual/reference/method/db.createRole/#db.createRole
         """
         db = self.mongodb
         fs = self.fs
@@ -249,7 +251,7 @@ class OmegaStore(object):
                 self)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes, **kwargs)
-        elif is_dataframe(obj):
+        elif is_dataframe(obj) or is_series(obj):
             if obj.empty:
                 from warnings import warn
                 warn(
@@ -303,6 +305,12 @@ class OmegaStore(object):
         """
         from .queryops import MongoQueryOps
         collection = self.collection(name)
+        if is_series(obj):
+            import pandas as pd
+            obj = pd.DataFrame(obj, index=obj.index, columns=[obj.name])
+            store_series = True
+        else:
+            store_series = False
         if append is False:
             self.drop(name, force=True)
         elif append is None and collection.count(limit=1):
@@ -349,10 +357,13 @@ class OmegaStore(object):
         obj = obj.astype('O')
         collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
         signals.dataset_put.send(sender=None, name=name)
+        kind = (Metadata.PANDAS_SEROWS
+                if store_series
+                else Metadata.PANDAS_DFROWS)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
-                                   kind=Metadata.PANDAS_DFROWS,
+                                   kind=kind,
                                    kind_meta=kind_meta,
                                    attributes=attributes,
                                    collection=collection.name).save()
@@ -513,6 +524,10 @@ class OmegaStore(object):
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe_documents(name, version=version,
                                                     **kwargs)
+            elif meta.kind == Metadata.PANDAS_SEROWS:
+                return self.get_dataframe_documents(name, version=version,
+                                                    is_series=True,
+                                                    **kwargs)
             elif meta.kind == Metadata.PANDAS_DFGROUP:
                 return self.get_dataframe_dfgroup(
                     name, version=version, **kwargs)
@@ -523,7 +538,8 @@ class OmegaStore(object):
         return self.get_object_as_python(meta, version=version)
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
-                                filter=None, version=-1, **kwargs):
+                                filter=None, version=-1, is_series=False,
+                                **kwargs):
         """
         Retrieve dataframe from documents
         """
@@ -532,6 +548,8 @@ class OmegaStore(object):
             from ..mdataframe import MDataFrame
             filter = filter or kwargs
             df = MDataFrame(collection, columns=columns).query(**filter)
+            if is_series:
+                df = df[0]
         else:
             import pandas as pd
             filter = filter or kwargs
@@ -548,6 +566,12 @@ class OmegaStore(object):
             idx_meta = meta.kind_meta.get('idx_meta')
             if idx_meta:
                 df = restore_index(df, idx_meta)
+            if is_series:
+                index = df.index
+                name = df.columns[0]
+                df = df[name]
+                df.index = index
+                df.name = None if name == 'None' else name
         signals.dataset_get.send(sender=None, name=name)
         return df
 
@@ -563,7 +587,7 @@ class OmegaStore(object):
         :param collection: The name of mongodb collection
         :return: Returns a set of parameters as dictionary.
 
-        
+
         """
         modified_params = {}
         db_structure = collection.find_one({}, {'_id': False})
@@ -727,7 +751,7 @@ class OmegaStore(object):
 
         :param filename: The name of file
         :param version: The version of file
-        
+
         :return: Pandas dataframe
         """
         import pandas as pd
