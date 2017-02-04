@@ -11,6 +11,7 @@ Omegaml is a API based service for ......
    omegamlvagrant
    examples
    putget
+   mdataframe
 
 Indices and tables
 ==================

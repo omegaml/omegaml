@@ -231,9 +231,13 @@ def restore_index(df, idx_meta):
     :parm
     """
     # -- get index columns
-    index_cols = [col for col in df.columns if col.startswith('_idx')]
+    index_cols = [col for col in df.columns if col and col.startswith('_idx')]
     # -- set index columns
     result = df.set_index(index_cols) if index_cols else df
     if index_cols:
         result.index.names = idx_meta.get('names', [None] * len(index_cols))
     return result
+
+
+def jsonescape(s):
+    return str(s).replace('.', '_')

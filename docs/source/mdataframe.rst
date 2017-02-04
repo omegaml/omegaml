@@ -65,7 +65,7 @@ To access an out-of-core MDataFrame you need to put some data into MongoDB:
     Out: <Metadata: Metadata(kind=pandas.dfrows,name=foo, ...)
     
 This stores the :code:`df` DataFrame with name :code:`foo`. We can get it
-back just as quick:
+back just as quickly:
 
 .. code:: python
 
@@ -86,14 +86,20 @@ back just as quick:
             
 You may wonder what we just got back? It's a standard pandas DataFrame:
 
+.. code:: python
+
     In : type(om.datasets.get('foo') 
     
     Out: pandas.core.frame.DataFrame
     
 This omegaml's default behavior: it returns the same data that it received.
 
-  
-       
+Filtering data
+--------------
+
+.. code:: python
+
+    In :         
 
 
 
@@ -102,4 +108,3 @@ This omegaml's default behavior: it returns the same data that it received.
 
 
 
- 

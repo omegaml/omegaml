@@ -13,7 +13,7 @@ from mongoengine.fields import GridFSProxy
 import six
 
 from omegaml import signals
-from omegaml.util import unravel_index, restore_index, make_tuple
+from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -339,12 +339,13 @@ class OmegaStore(object):
             obj[col] = dt
         # store dataframe indicies
         obj, idx_meta = unravel_index(obj)
+        stored_columns = [jsonescape(col) for col in obj.columns]
         kind_meta = {
-            'columns': obj.columns,
+            'columns': zip(obj.columns, stored_columns),
             'idx_meta': idx_meta
         }
         # ensure column names to be strings
-        obj.columns = [str(col) for col in obj.columns]
+        obj.columns = stored_columns
         # create mongon indicies for data frame index columns
         df_idxcols = [col for col in obj.columns if col.startswith('_idx')]
         if df_idxcols:
@@ -559,10 +560,26 @@ class OmegaStore(object):
                 cursor = collection.find(filter=query, projection=columns)
             else:
                 cursor = collection.find(projection=columns)
+            # restore dataframe
             df = pd.DataFrame.from_records(cursor)
             if '_id' in df.columns:
                 del df['_id']
             meta = self.metadata(name)
+            # -- restore columns
+            meta_columns = meta.kind_meta.get('columns')
+            if meta_columns:
+                # apply projection, if any
+                if columns:
+                    # get only projected columns
+                    # meta_columns is zip(origin_column, stored_column)
+                    orig_columns = dict({k: v for k, v in meta_columns
+                                         if k in columns or v in columns})
+                else:
+                    # restore columns to original name
+                    # meta_columns is zip(origin_column, stored_column)
+                    orig_columns = dict({v: k for k, v in meta_columns})
+                df.rename(columns=orig_columns, inplace=True)
+            # -- restore indexes
             idx_meta = meta.kind_meta.get('idx_meta')
             if idx_meta:
                 df = restore_index(df, idx_meta)

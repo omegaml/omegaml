@@ -543,5 +543,13 @@ class StoreTests(unittest.TestCase):
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
+        
+    def test_store_irregular_column_names(self):
+        df = pd.DataFrame({'x.1': range(10)})
+        store = OmegaStore()
+        store.put(df, 'foo', append=False)
+        df2 = store.get('foo')
+        self.assertEqual(df.columns, df2.columns)
+                           
 
     
