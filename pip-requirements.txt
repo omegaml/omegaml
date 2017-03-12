@@ -1,0 +1,11 @@
+Django==1.7.11
+celery==3.1.25
+joblib==0.9.4
+pymongo==3.2.2
+mongoengine==0.10.6
+runipy==0.1.5
+croniter==0.3.12
+PyYAML==3.11
+nbformat==4.0.1
+git+https://github.com/miraculixx/pycloudfs@v0.1.0#egg=pycloudfs-0.1.0
+django-extensions==1.7.7
