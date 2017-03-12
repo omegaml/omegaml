@@ -1,0 +1,9 @@
+# conda-requirements.txt
+scipy
+numpy
+pandas
+scikit-learn
+jupyter
+pytables
+nose
+nosexcover

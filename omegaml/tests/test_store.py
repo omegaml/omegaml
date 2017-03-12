@@ -17,8 +17,7 @@ from omegaml.util import override_settings, delete_database
 import pandas as pd
 from omegaml import backends
 from six.moves import range
-from pandas.util.testing import assert_frame_equal
-from blaze.compatibility import assert_series_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -537,19 +536,16 @@ class StoreTests(unittest.TestCase):
         """ test storing a pandas series with it's own index """
         series = pd.Series(range(10),
                            name='foo',
-                           index=pd.date_range(pd.datetime(2016, 1, 1), 
+                           index=pd.date_range(pd.datetime(2016, 1, 1),
                                                pd.datetime(2016, 1, 10)))
         store = OmegaStore()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
-        
+
     def test_store_irregular_column_names(self):
         df = pd.DataFrame({'x.1': range(10)})
         store = OmegaStore()
         store.put(df, 'foo', append=False)
         df2 = store.get('foo')
         self.assertEqual(df.columns, df2.columns)
-                           
-
-    
