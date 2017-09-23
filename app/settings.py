@@ -36,6 +36,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'omegaweb',
+    'tastypie_swagger',
+    'tastypiex',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -47,9 +50,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'x.urls'
+ROOT_URLCONF = 'app.urls'
 
-WSGI_APPLICATION = 'x.wsgi.application'
+WSGI_APPLICATION = 'app.wsgi.application'
 
 
 # Database
@@ -80,3 +83,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+API_CONFIG = {
+    'apis': (
+        ('omegaweb', 'omegaweb.api.v1_api'),
+    ),
+}
