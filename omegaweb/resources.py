@@ -16,7 +16,7 @@ isTrue = lambda v: v.lower() in ['yes', 'y', 't', 'true', '1']
 
 class ObjectResource(Resource):
     data = DictField('data')
-    dtypes = DictField('dtypes', readonly=True)
+    dtypes = DictField('dtypes', readonly=True, blank=True, null=True)
 
     class Meta:
         list_allowed_methods = ['get']
@@ -48,11 +48,17 @@ class ObjectResource(Resource):
         om.datasets.drop(pk)
         return bundle
 
+    def detail_uri_kwargs(self, bundle_or_obj):
+        return dict(pk=bundle_or_obj.data.get('data', {}).get('name'))
+
     def obj_get_list(self, bundle, **kwargs):
         bundle.objs = [
-            BundleObj({'data': {
-                'name': item.name,
-                'kind': item.kind,
-            }}) for item in om.datasets.list(raw=True)
+            BundleObj({
+                'data': {
+                    'name': item.name,
+                    'kind': item.kind,
+                },
+                'dtypes': None
+            }) for item in om.datasets.list(raw=True)
         ]
         return bundle.objs

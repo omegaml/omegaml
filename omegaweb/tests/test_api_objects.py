@@ -13,8 +13,17 @@ class ObjectResourceTests(ResourceTestCase):
                                      'y': random.sample(list(range(0, 100)), 20)})
         om = self.om = Omega()
         om.datasets.put(df, 'sample', append=False)
+        om.datasets.put(df, 'sample2', append=False)
         self.coll = om.datasets.collection('sample')
 
     def testGetData(self):
+        """
+        test object listing 
+        """
         resp = self.api_client.get('/api/v1/object/')
-        print(resp)
+        data = self.deserialize(resp)
+        self.assertIn('meta', data)
+        self.assertEqual(2, data.get('meta').get('total_count'))
+        objects = [item.get('data').get('name')
+                   for item in data.get('objects')]
+        self.assertEqual(['sample', 'sample2'], objects)

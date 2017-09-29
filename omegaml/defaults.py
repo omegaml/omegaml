@@ -4,6 +4,7 @@ import sys
 from .util import load_class, urlparse
 import six
 import yaml
+from pprint import pprint
 
 OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = os.environ.get(
@@ -72,3 +73,4 @@ update_from_env()
 # -- test
 if any(m in sys.argv for m in ('unittest', 'test')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/test_omega')
+    #pprint(locals())
