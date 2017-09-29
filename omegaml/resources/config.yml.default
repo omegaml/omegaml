@@ -1,0 +1,11 @@
+OMEGA_TMP: /tmp
+OMEGA_MONGO_URL: mongodb://localhost:27017/omega
+OMEGA_MONGO_COLLECTION: omegaml
+OMEGA_BROKER: amqp://guest@127.0.0.1:5672//
+OMEGA_RESULT_BACKEND: mongodb://localhost:27017/omega
+OMEGA_NOTEBOOK_COLLECTION: ipynb
+OMEGA_CELERY_CONFIG:
+  CELERY_ACCEPT_CONTENT: [pickle, json, msgpack, yaml]
+  CELERY_MONGODB_BACKEND_SETTINGS:
+    database: mongodb://localhost:27017/omega
+    taskmeta_collection: omegaml_taskmeta
