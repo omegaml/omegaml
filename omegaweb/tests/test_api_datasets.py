@@ -81,6 +81,26 @@ class DatasetResourceTests(ResourceTestCase):
         # resp = self.api_client.get(self.url('sample', 'orient=split'))
         # resp = self.api_client.get(self.url('sample', 'orient=index'))
 
+    def test_get_dataset_filtered(self):
+        """
+        test get a dataset 
+        """
+        # -- try some filter
+        resp = self.api_client.get(self.url('sample', 'x__gt=5'))
+        df = self.restore_dataframe(self.deserialize(resp))
+        sdf = self.df[self.df.x > 5]
+        assert_frame_equal(df, sdf, check_index_type=False)
+        # -- try some more
+        resp = self.api_client.get(self.url('sample', 'x=5'))
+        df = self.restore_dataframe(self.deserialize(resp))
+        sdf = self.df[self.df.x == 5]
+        assert_frame_equal(df, sdf, check_index_type=False)
+        # -- try some more
+        resp = self.api_client.get(self.url('sample', 'x=5&y__gt=2'))
+        df = self.restore_dataframe(self.deserialize(resp))
+        sdf = self.df[(self.df.x == 5) & (self.df.y > 2)]
+        assert_frame_equal(df, sdf, check_index_type=False)
+
     def test_create_dataset(self):
         data = {
             'append': False,

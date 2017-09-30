@@ -1,12 +1,14 @@
+from mongoengine.errors import DoesNotExist
+from six import iteritems
 from tastypie.bundle import Bundle
+from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, DictField, ListField
+from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
+import numpy as np
 import omegaml as om
 import pandas as pd
-from mongoengine.errors import DoesNotExist
-from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.http import HttpForbidden, HttpNotFound
 
 
 class BundleObj(dict):
@@ -30,13 +32,32 @@ class DatasetResource(Resource):
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
 
+    def restore_filter(self, bundle, name):
+        """
+        restore filter kwargs for query in om.datasets.get
+        """
+        # -- get filters as specified on request query args
+        fltkwargs = {k: v for k, v in iteritems(bundle.request.GET)
+                     if k not in ['orient']}
+        # -- get dtypes of dataframe and convert filter values
+        metadata = om.datasets.metadata(name)
+        kind_meta = metadata.kind_meta or {}
+        dtypes = kind_meta.get('dtypes')
+        for k, v in iteritems(fltkwargs):
+            # -- get column name without operator (e.g. x__gt => x)
+            dtype = dtypes.get(k.split('__')[0])
+            v = getattr(np, dtype, str)(v)
+            fltkwargs[k] = v
+        return fltkwargs
+
     def obj_get(self, bundle, **kwargs):
         """
         Get a dataset
         """
-        orient = bundle.request.GET.get('orient', 'dict')
         name = kwargs.get('pk')
-        obj = om.datasets.get(name)
+        orient = bundle.request.GET.get('orient', 'dict')
+        fltkwargs = self.restore_filter(bundle, name)
+        obj = om.datasets.get(name, filter=fltkwargs)
         if isinstance(obj, (pd.DataFrame, pd.Series)):
             df = obj
             data = df.reset_index(drop=True).to_dict(orient)
