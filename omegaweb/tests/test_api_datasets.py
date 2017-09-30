@@ -4,18 +4,19 @@ import random
 from tastypie.test import ResourceTestCase
 
 from omegaml import Omega
-from omegaweb.tests.util import assertDictEqualJSON
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 
-class ObjectResourceTests(ResourceTestCase):
+class DatasetResourceTests(ResourceTestCase):
 
     def setUp(self):
-        super(ObjectResourceTests, self).setUp()
+        super(DatasetResourceTests, self).setUp()
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
                                      'y': random.sample(list(range(0, 100)), 20)})
         om = self.om = Omega()
+        for ds in om.datasets.list():
+            om.datasets.drop(ds)
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
 
@@ -45,7 +46,7 @@ class ObjectResourceTests(ResourceTestCase):
 
     def test_get_list(self):
         """
-        test object listing 
+        test dataset listing 
         """
         om = self.om
         df = self.df
@@ -58,9 +59,9 @@ class ObjectResourceTests(ResourceTestCase):
                    for item in data.get('objects')]
         self.assertEqual(['sample', 'sample2'], objects)
 
-    def test_get_object(self):
+    def test_get_dataset(self):
         """
-        test get an object 
+        test get a dataset 
         """
         # -- get orient=dict
         resp = self.api_client.get(self.url('sample'))
@@ -79,3 +80,57 @@ class ObjectResourceTests(ResourceTestCase):
         # resp = self.api_client.get(self.url('sample', 'orient=series') #
         # resp = self.api_client.get(self.url('sample', 'orient=split'))
         # resp = self.api_client.get(self.url('sample', 'orient=index'))
+
+    def test_create_dataset(self):
+        data = {
+            'append': False,
+            'data': self.df.to_dict('records'),
+            'orient': 'columns',
+            'index': {
+                'type': type(self.df.index).__name__,
+                'values': list(self.df.index.values),
+
+            }
+        }
+        # put twice to see if it really creates, not appends
+        resp = self.api_client.put(self.url('newdata'), data=data)
+        resp = self.api_client.put(self.url('newdata'), data=data)
+        df = self.om.datasets.get('newdata')
+        assert_frame_equal(df, self.df)
+
+    def test_append_dataset(self):
+        data = {
+            'append': True,
+            'data': self.df.to_dict('records'),
+            'orient': 'columns',
+            'index': {
+                'type': type(self.df.index).__name__,
+                'values': list(self.df.index.values),
+
+            }
+        }
+        # put twice to see if it really appends, not replaces
+        resp = self.api_client.put(self.url('newdata'), data=data)
+        resp = self.api_client.put(self.url('newdata'), data=data)
+        df = self.om.datasets.get('newdata')
+        assert_frame_equal(df, self.df.append(self.df))
+
+    def test_drop_dataset(self):
+        # see if a dataset does not exist
+        resp = self.api_client.delete(self.url('newdata'))
+        self.assertEqual(resp.status_code, 404)
+        # put a dataset and delete it
+        data = {
+            'append': True,
+            'data': self.df.to_dict('records'),
+            'orient': 'columns',
+            'index': {
+                'type': type(self.df.index).__name__,
+                'values': list(self.df.index.values),
+
+            }
+        }
+        resp = self.api_client.put(self.url('newdata'), data=data)
+        self.assertEqual(resp.status_code, 204)
+        resp = self.api_client.delete(self.url('newdata'))
+        self.assertEqual(resp.status_code, 204)

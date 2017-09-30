@@ -4,6 +4,9 @@ from tastypie.resources import Resource
 
 import omegaml as om
 import pandas as pd
+from mongoengine.errors import DoesNotExist
+from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.http import HttpForbidden, HttpNotFound
 
 
 class BundleObj(dict):
@@ -11,10 +14,11 @@ class BundleObj(dict):
     __setattr__ = dict.__setitem__
 
 
-isTrue = lambda v: v.lower() in ['yes', 'y', 't', 'true', '1']
+isTrue = lambda v: v if isinstance(v, bool) else (
+    v.lower() in ['yes', 'y', 't', 'true', '1'])
 
 
-class ObjectResource(Resource):
+class DatasetResource(Resource):
     data = DictField('data')
     index = DictField('index', blank=True, null=True)
     dtypes = DictField('dtypes', blank=True, null=True)
@@ -52,25 +56,23 @@ class ObjectResource(Resource):
         bundle.name = name
         return bundle
 
-    def obj_create(self, bundle, **kwargs):
-        pk = kwargs.get('pk')
-        append = False
-        orient = bundle.data.get('orient', 'columns')
-        df = pd.DataFrame.from_dict(bundle.data.get('data'), orient=orient)
-        om.datasets.put(df, pk, append=append)
-        return bundle
-
     def obj_update(self, bundle, **kwargs):
         pk = kwargs.get('pk')
         append = isTrue(bundle.data.get('append', 'true'))
         orient = bundle.data.get('orient', 'columns')
         df = pd.DataFrame.from_dict(bundle.data.get('data'), orient=orient)
+        index = bundle.data.get('index')
+        if index and 'values' in index:
+            df.index = index.get('values')
         om.datasets.put(df, pk, append=append)
         return bundle
 
     def obj_delete(self, bundle, **kwargs):
         pk = kwargs.get('pk')
-        om.datasets.drop(pk)
+        try:
+            om.datasets.drop(pk)
+        except DoesNotExist:
+            raise ImmediateHttpResponse(HttpNotFound())
         return bundle
 
     def detail_uri_kwargs(self, bundle_or_obj):
