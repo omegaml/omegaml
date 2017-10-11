@@ -344,3 +344,5 @@ _om = OmegaDeferredInstance()
 datasets = OmegaDeferredInstance(_om, 'datasets')
 models = OmegaDeferredInstance(_om, 'models')
 jobs = OmegaDeferredInstance(_om, 'jobs')
+runtime = OmegaDeferredInstance(_om, 'runtime')
+
