@@ -5,3 +5,4 @@ django-tastypie==0.13.3
 django-tastypie==0.13.3
 django-tastypie-swagger==0.1.4
 requests==2.18.4
+django-extensions==1.7.7

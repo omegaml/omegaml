@@ -12,7 +12,7 @@ class EnvSettingsGlobal(object):
 
     # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
     import os
-    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+    BASE_DIR = os.path.join(os.path.dirname(__file__), '..')
 
     # Quick-start development settings - unsuitable for production
     # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -36,9 +36,6 @@ class EnvSettingsGlobal(object):
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        'omegaweb',
-        'tastypie_swagger',
-        'tastypiex',
     )
 
     MIDDLEWARE_CLASSES = (
@@ -82,8 +79,3 @@ class EnvSettingsGlobal(object):
 
     STATIC_URL = '/static/'
 
-    API_CONFIG = {
-        'apis': (
-            ('omegaweb', 'omegaweb.api.v1_api'),
-        ),
-    }
