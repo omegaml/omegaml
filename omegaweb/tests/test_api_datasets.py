@@ -65,6 +65,7 @@ class DatasetResourceTests(ResourceTestCase):
         """
         # -- get orient=dict
         resp = self.api_client.get(self.url('sample'))
+        self.assertHttpOK(resp)
         df = self.restore_dataframe(self.deserialize(resp))
         assert_frame_equal(df, self.df, check_index_type=False)
         # -- get orient=records
