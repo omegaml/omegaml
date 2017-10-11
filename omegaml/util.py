@@ -9,7 +9,7 @@ from django.utils import six, importlib
 try:
     import urlparse
 except:
-    from urllib import parse as urlparse
+    from urllib import parse 
 
 
 __settings = None

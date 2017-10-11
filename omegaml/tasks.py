@@ -7,6 +7,8 @@ from celery import Task
 from omegaml import Omega
 from omegaml.documents import Metadata
 from omegaml import signals
+from mongoengine.errors import DoesNotExist
+from sklearn.exceptions import NotFittedError
 
 
 class NotebookTask(Task):
@@ -206,5 +208,5 @@ def execute_scripts():
                 pass
             else:
                 om.jobs.schedule(nb_file)
-        except Metadata.DoesNotExist:
+        except DoesNotExist:
             om.jobs.schedule(nb_file)

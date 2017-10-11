@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import StringIO
+
 from datetime import timedelta
 import unittest
 import uuid
@@ -8,16 +8,17 @@ from zipfile import ZipFile
 import gridfs
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
+from pandas.util.testing import assert_frame_equal, assert_series_equal
+from six import StringIO
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
+from omegaml import backends
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
 import pandas as pd
-from omegaml import backends
 from six.moves import range
-from pandas.util.testing import assert_frame_equal, assert_series_equal
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
@@ -308,7 +309,7 @@ class StoreTests(unittest.TestCase):
         store.put(lr, 'foo')
         # get it back as a zipfile
         lr2file = store.get('foo', force_python=True)
-        with ZipFile(StringIO.StringIO(lr2file.read())) as zipf:
+        with ZipFile(StringIO(lr2file.read())) as zipf:
             self.assertIn('foo', zipf.namelist())
 
     def test_store_with_metadata(self):

@@ -10,6 +10,7 @@ import gridfs
 import mongoengine
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
+from six import iteritems
 import six
 
 from omegaml import signals
@@ -307,7 +308,7 @@ class OmegaStore(object):
         collection = self.collection(name)
         if is_series(obj):
             import pandas as pd
-            obj = pd.DataFrame(obj, index=obj.index, columns=[obj.name])
+            obj = pd.DataFrame(obj, index=obj.index, columns=[str(obj.name)])
             store_series = True
         else:
             store_series = False
@@ -340,8 +341,14 @@ class OmegaStore(object):
         # store dataframe indicies
         obj, idx_meta = unravel_index(obj)
         stored_columns = [jsonescape(col) for col in obj.columns]
+        column_map = zip(obj.columns, stored_columns)
+        dtypes = {
+            dict(column_map).get(k): v.name 
+            for k, v in iteritems(obj.dtypes)
+        }
         kind_meta = {
-            'columns': zip(obj.columns, stored_columns),
+            'columns': column_map,
+            'dtypes': dtypes,
             'idx_meta': idx_meta
         }
         # ensure column names to be strings
@@ -352,7 +359,7 @@ class OmegaStore(object):
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             collection.create_index(keys, **idx_kwargs)
         # bulk insert
-            # -- get native objects
+        # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')

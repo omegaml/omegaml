@@ -75,7 +75,7 @@ class OmegaModelProxy(object):
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
                                pure_python=self.pure_python, **kwargs)
-        
+
     def partial_fit(self, Xname, Yname=None, **kwargs):
         """
         update the model
@@ -344,3 +344,5 @@ _om = OmegaDeferredInstance()
 datasets = OmegaDeferredInstance(_om, 'datasets')
 models = OmegaDeferredInstance(_om, 'models')
 jobs = OmegaDeferredInstance(_om, 'jobs')
+runtime = OmegaDeferredInstance(_om, 'runtime')
+

@@ -84,7 +84,7 @@ back just as quickly:
             8   8
             9   9
             
-You may wonder what we just got back? It's a standard pandas DataFrame:
+We get back a standard pd.DataFrame:
 
 .. code:: python
 

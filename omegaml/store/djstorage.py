@@ -1,7 +1,10 @@
 from __future__ import absolute_import
-from StringIO import StringIO
+from six import StringIO
 import os
+
+
 class DataFrameFile(object):
+
     """
     Simple file-like object for a dataframe. Read-only
     """
@@ -25,13 +28,14 @@ class DataFrameFile(object):
 
 
 class OmegaFSStorage(object):
+
     """
     Basic support for omegaml as a django-storage object
     """
     def __init__(self, *args, **kwargs):
         import omegaml as om
         self.datasets = om.datasets
-        
+
     def listdir(self, path):
         if path.startswith('/'):
             path = path[1:]
