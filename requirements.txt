@@ -6,3 +6,6 @@ django-tastypie==0.13.3
 django-tastypie-swagger==0.1.4
 requests==2.18.4
 django-extensions==1.7.7
+django-sekizai==0.10.0
+django-bootstrap3==9.0.0
+django-bootstrap3==9.0.0
