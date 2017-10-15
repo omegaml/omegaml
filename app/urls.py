@@ -11,6 +11,8 @@ urlpatterns = patterns('',
                        url(r'^', include('landingpage.urls')),
                        url(r'^accounts/', include('allauth.urls')),
                        url(r'^admin/', include(admin.site.urls)),
+                       url('^payments/', include('payments.urls')),
+                       url('^orders/', include('orders.urls')),
                        )
 
 urlpatterns += patterns('', *apis.urls)

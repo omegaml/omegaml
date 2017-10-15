@@ -19,12 +19,14 @@ class EnvSettings_Local(Config_DjangoSekizai,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         EnvSettingsGlobal):
+    _prefix_apps = ('landingpage',)
     _addl_apps = ('omegaweb',
                   'tastypie_swagger',
                   'tastypiex',
-                  'landingpage',
                   'orders',
+                  'organizations',
                   'django_extensions')
+    StackableSettings.patch_apps(_prefix_apps, prepend=True)
     StackableSettings.patch_apps(_addl_apps)
 
     API_CONFIG = {
