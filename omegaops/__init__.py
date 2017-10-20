@@ -1,3 +1,6 @@
+import json
+from landingpage.models import ServiceDeployment, ServicePlan
+
 from pymongo.mongo_client import MongoClient
 
 
@@ -21,8 +24,19 @@ def add_user(dbname, username, password):
     _admin_newdb.add_user(username, password, roles=roles)
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
-    client = MongoClient(MONGO_URL.format(user=username,
-                                          password=password,
-                                          dbname=dbname))
+    client_mongo_url = MONGO_URL.format(user=username,
+                                        password=password,
+                                        dbname=dbname)
+    client = MongoClient(client_mongo_url)
     newdb = client[dbname]
-    return newdb
+    return newdb, client_mongo_url
+
+
+def add_service_deployment(user, config):
+    """
+    add the service deployment
+    """
+    plan = ServicePlan.objects.get(name='omegaml')
+    user.services.create(user=user,
+                         offering=plan,
+                         settings=json.dumps(config))
