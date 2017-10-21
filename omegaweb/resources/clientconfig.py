@@ -1,5 +1,7 @@
 from tastypie.fields import DictField
 from tastypie.resources import Resource
+from tastypie.authentication import ApiKeyAuthentication
+from omegaops import get_client_config
 
 
 class ClientConfigResource(Resource):
@@ -7,13 +9,14 @@ class ClientConfigResource(Resource):
 
     class Meta:
         list_allowed_methods = ['get']
-        detail_allowed_methods = ['get', 'put', 'delete']
+        detail_allowed_methods = []
         resource_name = 'config'
+        authentication = ApiKeyAuthentication()
 
-    def obj_get(self, bundle, **kwargs):
+    def obj_get_list(self, bundle, **kwargs):
         """
         get the configuration
         """
-        
-        bundle.data = default_config
-        return bundle
+        config = get_client_config(bundle.request.user)
+        bundle.data = config or {}
+        return [bundle]

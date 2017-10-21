@@ -60,5 +60,4 @@ class OmegaOpsTest(TestCase):
         plan = service.offering.name
         self.assertEqual(plan, 'omegaml')
         service_config = service.settings
-        service_config = json.loads(service_config)
         self.assertDictEqual(service_config, config)

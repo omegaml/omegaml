@@ -37,6 +37,40 @@ def add_service_deployment(user, config):
     add the service deployment
     """
     plan = ServicePlan.objects.get(name='omegaml')
+    text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
+        **locals())
     user.services.create(user=user,
+                         text=text,
                          offering=plan,
-                         settings=json.dumps(config))
+                         settings=config)
+
+
+def get_client_config(user):
+    """
+    return the full client configuration
+    """
+    settings = user.services.get(offering__name='omegaml').settings
+    # TODO get base url from settings
+    mongo_base_url = "mongodb://{username}:{password}@localhost:27019/{dbname}"
+    mongo_url = mongo_base_url.format(**settings)
+    client_config = {
+        "OMEGA_CELERY_CONFIG": {
+            "CELERY_MONGODB_BACKEND_SETTINGS": {
+                "taskmeta_collection": "omegaml_taskmeta",
+                "database": mongo_url,
+            },
+            "CELERY_ACCEPT_CONTENT": [
+                "pickle",
+                "json",
+                "msgpack",
+                "yaml"
+            ]
+        },
+        "OMEGA_MONGO_URL": mongo_url,
+        "OMEGA_RESULT_BACKEND": mongo_url,
+        "OMEGA_NOTEBOOK_COLLECTION": "ipynb",
+        "OMEGA_TMP": "/tmp",
+        "OMEGA_MONGO_COLLECTION": "omegaml",
+        "OMEGA_BROKER": "amqp://guest@127.0.0.1:5672//"
+    }
+    return client_config
