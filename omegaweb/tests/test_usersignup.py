@@ -30,4 +30,3 @@ class UserSignupTests(TestCase):
         service = user.services.first()
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('dbname', service.settings)
-        print(service.settings)
