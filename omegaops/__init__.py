@@ -1,5 +1,6 @@
 import json
 from landingpage.models import ServiceDeployment, ServicePlan
+import os
 
 from pymongo.mongo_client import MongoClient
 
@@ -10,13 +11,15 @@ def add_user(dbname, username, password):
 
     only this user will have access r/w rights to the database.
     """
-    MONGO_URL = 'mongodb://{user}:{password}@localhost:27019/{dbname}'
     roles = roles = [{
         'role': 'readWrite',
         'db': dbname,
     }]
     # create the db but NEVER return this db. it will have admin rights.
     # TODO move admin db, user, password to secure settings
+    MONGO_URL = os.environ.get('MONGO_URL',
+                               'mongodb://{user}:{password}@localhost:27019/{dbname}')
+
     client = MongoClient(MONGO_URL.format(user='admin',
                                           password='foobar',
                                           dbname='admin'))

@@ -1,6 +1,5 @@
 # keep shippable happy
 pip 
-
 django-tastypie==0.13.3
 django-tastypie==0.13.3
 django-tastypie-swagger==0.1.4
@@ -10,3 +9,16 @@ django-sekizai==0.10.0
 django-bootstrap3==9.0.0
 django-bootstrap3==9.0.0
 jsonfield==2.0.2
+git+https://github.com/miraculixx/stackable@add-configs
+git+https://7e1788c2225509b4949b1f573130e77a51b948a2@github.com/miraculixx/landingpage
+pymongo
+gunicorn
+docutils==0.13.1
+mongoengine==0.10.6
+celery==3.1.25
+runipy==0.1.5
+stripe==1.67.0
+joblib==0.9.4
+croniter==0.3.12
+futures==3.0.5
+dj-database-url==0.4.2
