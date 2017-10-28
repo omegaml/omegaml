@@ -1,0 +1,4 @@
+# keep shippable happy
+-e ../stackable
+-e ../landingpage
+
