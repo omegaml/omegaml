@@ -41,4 +41,4 @@ class EnvSettings_Local(Config_DjangoSekizai,
 
     SITE_ID = 1
 
-    ALLOWED_HOSTS = ['omegaml.dokku.me']
+    
