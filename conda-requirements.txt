@@ -3,7 +3,7 @@ scipy
 numpy
 pandas
 scikit-learn
-jupyterle
+jupyter
 pytables
 nose
 nosexcover
