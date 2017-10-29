@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+if [[ -f pip-uninstall.txt ]]; then
+   pip uninstall -y -r pip-uninstall.txt
+fi
