@@ -17,12 +17,11 @@ def add_user(dbname, username, password):
     }]
     # create the db but NEVER return this db. it will have admin rights.
     # TODO move admin db, user, password to secure settings
+    MONGO_URL = settings.MONGO_ADMIN_URL
     MONGO_URL = os.environ.get('MONGO_URL',
                                'mongodb://{user}:{password}@localhost:27019/{dbname}')
 
-    client = MongoClient(MONGO_URL.format(user='admin',
-                                          password='foobar',
-                                          dbname='admin'))
+    client = MongoClient(MONGO_URL)
     _admin_newdb = client[dbname]
     _admin_newdb.add_user(username, password, roles=roles)
     # we need to get the newdb from the client otherwise
