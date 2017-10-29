@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+if [[ -f pip-reinstall.txt ]]; then
+   pip uninstall -y -r pip-reinstall.txt | indent
+   pip install -r requirements.txt  --exists-action=w --allow-all-external | indent
+fi
