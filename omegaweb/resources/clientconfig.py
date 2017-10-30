@@ -19,4 +19,5 @@ class ClientConfigResource(Resource):
         """
         config = get_client_config(bundle.request.user)
         bundle.data = config or {}
+        bundle.pk = config.get('user')
         return [bundle]

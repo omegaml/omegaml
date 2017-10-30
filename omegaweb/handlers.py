@@ -17,7 +17,7 @@ def handle_usersignup(sender, request=None, user=None, **kwargs):
     omops.add_user(dbname, username, password)
     config = {
         'dbname': dbname,
-        'username': username,
+        'user': username,
         'password': password,
     }
     omops.add_service_deployment(user, config)

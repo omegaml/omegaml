@@ -47,8 +47,10 @@ def get_client_config(user):
     """
     return the full client configuration
     """
-    settings = user.services.get(offering__name='omegaml').settings
-    mongo_url = settings.BASE_MONGO_URL.format(**settings)
+    config = user.services.get(offering__name='omegaml').settings
+    # backwards compatibility
+    config['user'] = config.get('username') or config.get('user')
+    mongo_url = settings.BASE_MONGO_URL.format(**config)
     # FIXME get amqp from env
     client_config = {
         "OMEGA_CELERY_CONFIG": {
