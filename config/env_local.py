@@ -11,8 +11,6 @@ from stackable.stackable import StackableSettings
 
 from config.env_global import EnvSettingsGlobal
 
-base_mongo_url = 'mongodb://{user}:{password}@localhost:27019/{dbname}'
-
 
 class EnvSettings_Local(Config_DjangoSekizai,
                         Config_Bootstrap3,
@@ -40,7 +38,8 @@ class EnvSettings_Local(Config_DjangoSekizai,
         ),
     }
 
-    MONGO_ADMIN_URL = base_mongo_url.format(user='admin',
+    BASE_MONGO_URL = 'mongodb://{user}:{password}@localhost:27019/{dbname}'
+    MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
                                             password='foobar',
                                             dbname='admin')
     MONGO_URL = os.environ.get('MONGO_URL')
