@@ -56,3 +56,11 @@ def setupomega():
         sudo('dokku mongo:create mongodb')
         sudo('dokku mysql:create mysqldb')
         sudo('dokku rabbitmq:create rabbitmq')
+
+
+@task
+def setenv():
+    cmd = ('python -m stackable.encryptkeys '
+           '--keysfile $HOME/.stackable/omegaml.keys '
+           '--envclass EnvSettings_dokku')
+    local(cmd)
