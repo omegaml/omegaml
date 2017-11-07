@@ -1,7 +1,9 @@
+
 import os
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
+from stackable.contrib.config.conf_constance import Config_DjangoConstance
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
@@ -15,6 +17,7 @@ from config.env_global import EnvSettingsGlobal
 class EnvSettings_Local(Config_DjangoSekizai,
                         Config_Bootstrap3,
                         Config_DjangoPayments,
+                        Config_DjangoConstance,
                         Config_FileEmail,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
@@ -38,10 +41,15 @@ class EnvSettings_Local(Config_DjangoSekizai,
         ),
     }
 
-    BASE_MONGO_URL = 'mongodb://{user}:{password}@localhost:27019/{dbname}'
+    BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}:27019/{dbname}'
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
+                                            mongohost='localhost',
                                             password='foobar',
                                             dbname='admin')
     MONGO_URL = os.environ.get('MONGO_URL')
 
     SITE_ID = 1
+
+    CONSTANCE_CONFIG = {
+        'MONGO_HOST': ('localhost', 'mongo db host name')
+    }

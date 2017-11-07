@@ -10,5 +10,7 @@ class EnvSettings_dokku(Config_Dokku,
                         Config_DjangoWhitenoise,
                         EnvSettings_Local):
     ALLOWED_HOSTS = ['omegaml.dokku.me']
-    # FIXME must use the actual domain where user can access mongo db 
-    BASE_MONGO_URL = 'mongodb://{user}:{password}@localhost:27019/{dbname}'
+
+    CONSTANCE_CONFIG = {
+        'MONGO_HOST': ('dokku.me', 'mongo db host name')
+    }

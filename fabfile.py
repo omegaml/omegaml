@@ -53,9 +53,15 @@ def setupdokku():
 @roles("dokku-ssh")
 def setupomega():
     with sudosu('dokku'):
+        # create services
+        sudo('dokku apps:create omegaml')
         sudo('dokku mongo:create mongodb')
         sudo('dokku mysql:create mysqldb')
         sudo('dokku rabbitmq:create rabbitmq')
+        # link services
+        sudo('dokku mongo:link mongodb omegaml')
+        sudo('dokku mysql:link mysqldb omegaml')
+        sudo('dokku rabbitmq:link rabbitmq omegaml')
 
 
 @task

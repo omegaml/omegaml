@@ -20,8 +20,9 @@ if __name__ == '__main__':
         with open(defaults.config_file, 'w') as fconfig:
             auth = TastypieApiKeyAuth(args.userid,
                                       args.apikey)
-            resp = requests.get(
-                'http://omegaml.dokku.me/api/v1/config/', auth=auth)
+            url = 'http://omegaml.dokku.me/api/v1/config/'
+            url = 'http://localhost:8000/api/v1/config/'
+            resp = requests.get(url, auth=auth)
             fail_msg = ("Not authenticated using --userid {args.userid}"
                         " --apikey {args.apikey}, error was {resp.status_code}, {resp.content}")
             assert resp.status_code == 200, fail_msg.format(**locals())

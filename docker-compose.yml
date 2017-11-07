@@ -4,5 +4,6 @@ services:
     image: mongo
     ports:
       - "27019:27017"
+      - "27020:28017"
     command: ["--auth"]
   

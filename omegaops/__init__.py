@@ -2,6 +2,7 @@ import json
 from landingpage.models import ServiceDeployment, ServicePlan
 import os
 
+from constance import config
 from django.conf import settings
 from pymongo.mongo_client import MongoClient
 
@@ -47,10 +48,12 @@ def get_client_config(user):
     """
     return the full client configuration
     """
-    config = user.services.get(offering__name='omegaml').settings
-    # backwards compatibility
-    config['user'] = config.get('username') or config.get('user')
-    mongo_url = settings.BASE_MONGO_URL.format(**config)
+    user_settings = user.services.get(offering__name='omegaml').settings
+    user_settings['user'] = user_settings.get(
+        'username') or user_settings.get('user')
+
+    mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
+                                               **user_settings)
     # FIXME get amqp from env
     client_config = {
         "OMEGA_CELERY_CONFIG": {
