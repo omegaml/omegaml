@@ -12,5 +12,5 @@ class EnvSettings_dokku(Config_Dokku,
     ALLOWED_HOSTS = ['omegaml.dokku.me']
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('dokku.me', 'mongo db host name')
+        'MONGO_HOST': ('dokku.me:27017', 'mongo db host:port')
     }

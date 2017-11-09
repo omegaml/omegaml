@@ -7,10 +7,13 @@ import yaml
 from pprint import pprint
 
 OMEGA_TMP = '/tmp'
-OMEGA_MONGO_URL = os.environ.get(
-    'OMEGA_MONGO_URL', 'mongodb://localhost:27017/omega')
+OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
+                   os.environ.get('MONGO_URL') or
+                   'mongodb://localhost:27017/omega')
 OMEGA_MONGO_COLLECTION = 'store'
-OMEGA_BROKER = os.environ.get('OMEGA_BROKER', 'amqp://guest@127.0.0.1:5672//')
+OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
+                os.environ.get('RABBITMQ_URL') or
+                'amqp://guest@127.0.0.1:5672//')
 OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
@@ -73,4 +76,4 @@ update_from_env()
 # -- test
 if any(m in sys.argv for m in ('unittest', 'test')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/test_omega')
-    #pprint(locals())
+    # pprint(locals())

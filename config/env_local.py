@@ -41,7 +41,7 @@ class EnvSettings_Local(Config_DjangoSekizai,
         ),
     }
 
-    BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}:27019/{dbname}'
+    BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
                                             mongohost='localhost',
                                             password='foobar',
@@ -51,5 +51,5 @@ class EnvSettings_Local(Config_DjangoSekizai,
     SITE_ID = 1
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost', 'mongo db host name')
+        'MONGO_HOST': ('localhost:27019', 'mongo db host name')
     }
