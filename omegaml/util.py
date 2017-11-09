@@ -9,7 +9,7 @@ from django.utils import six, importlib
 try:
     import urlparse
 except:
-    from urllib import parse 
+    from urllib import parse
 
 
 __settings = None
@@ -241,3 +241,28 @@ def restore_index(df, idx_meta):
 
 def jsonescape(s):
     return str(s).replace('.', '_')
+
+
+def grouper(n, iterable):
+    # https://stackoverflow.com/a/8998040
+    import itertools
+    it = iter(iterable)
+    while True:
+        chunk_it = itertools.islice(it, n)
+        try:
+            first_el = next(chunk_it)
+        except StopIteration:
+            return
+        yield itertools.chain((first_el,), chunk_it)
+
+
+def cursor_to_dataframe(cursor):
+    # a faster and less memory hungry variant of DataFrame.from_records
+    # works by building a set of smaller dataframes to reduce memory
+    # consumption
+    import pandas as pd
+    frames = []
+    chunk_size = int(cursor.count() * .1)
+    for chunk in grouper(chunk_size, cursor):
+        frames.append(pd.DataFrame.from_records(chunk))
+    return pd.concat(frames)

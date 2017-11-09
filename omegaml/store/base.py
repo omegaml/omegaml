@@ -14,7 +14,8 @@ from six import iteritems
 import six
 
 from omegaml import signals
-from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape
+from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
+    cursor_to_dataframe
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -343,7 +344,7 @@ class OmegaStore(object):
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = zip(obj.columns, stored_columns)
         dtypes = {
-            dict(column_map).get(k): v.name 
+            dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
         }
         kind_meta = {
@@ -363,7 +364,8 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
+        #collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
+        collection.insert_many(obj.to_dict(orient='records'))
         signals.dataset_put.send(sender=None, name=name)
         kind = (Metadata.PANDAS_SEROWS
                 if store_series
@@ -568,7 +570,7 @@ class OmegaStore(object):
             else:
                 cursor = collection.find(projection=columns)
             # restore dataframe
-            df = pd.DataFrame.from_records(cursor)
+            df = cursor_to_dataframe(cursor)
             if '_id' in df.columns:
                 del df['_id']
             meta = self.metadata(name)

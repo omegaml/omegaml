@@ -11,7 +11,8 @@ from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
-from omegaml.util import make_tuple, make_list, restore_index
+from omegaml.util import make_tuple, make_list, restore_index,\
+    cursor_to_dataframe
 import pandas as pd
 
 
@@ -33,6 +34,10 @@ class MGrouper(object):
     def __getattr__(self, attr):
         if attr in self.columns:
             return MSeriesGroupby(self, self.collection, attr)
+        def statfunc():
+            columns = self.columns or self._non_group_columns()
+            return self.agg({col: attr for col in columns})
+        return statfunc
     def agg(self, specs):
         return self.aggregate(specs)
     def aggregate(self, specs):
@@ -55,15 +60,19 @@ class MGrouper(object):
                              **_specs)
         # execute and return a dataframe
         pipeline = self._amend_pipeline([groupby])
-        data = self.collection.aggregate(pipeline)
+        data = self.collection.aggregate(pipeline, allowDiskUse=True)
         def get_data():
             # we need this to build a pipeline for from_records
             # to process, otherwise the cursor will be exhausted already
             for group in data:
-                group.update(group.pop('_id'))
+                _id = group.pop('_id')
+                if isinstance(_id, dict):
+                    group.update(_id)
                 yield group
         df = pd.DataFrame.from_records(get_data())
-        df = df.set_index(make_list(self.columns), drop=True)
+        columns = make_list(self.columns)
+        if columns:
+            df = df.set_index(columns, drop=True)
         return df
     def _amend_pipeline(self, pipeline):
         """ amend pipeline with default ops on coll.aggregate() calls """
@@ -211,6 +220,9 @@ class MDataFrame(object):
     Behaves like a pandas DataFrame. Actual results are returned
     as pandas DataFrames.
     """
+
+    STATFUNCS = ['mean', 'std', 'min', 'max', 'sum', 'var']
+
     def __init__(self, collection, columns=None, query=None,
                  limit=None, skip=None, sort_order=None,
                  force_columns=None, **kwargs):
@@ -238,12 +250,14 @@ class MDataFrame(object):
         kwargs = dict(columns=self.columns,
                       sort_order=self.sort_order,
                       limit=self.head_limit,
-                      skip=self.skip_topn, 
+                      skip=self.skip_topn,
                       from_loc_indexer=self.from_loc_indexer,
                       query=self.filter_criteria)
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
     def __getattr__(self, attr):
+        if attr in MDataFrame.STATFUNCS:
+            return self.statfunc(attr)
         if attr in self.columns:
             kwargs = self.__getcopy_kwargs()
             kwargs.update(columns=attr)
@@ -267,6 +281,9 @@ class MDataFrame(object):
                                                  update=qops.SET(column, value))
             self.columns.append(column)
         return self
+    def statfunc(self, stat):
+        aggr = MGrouper(self, self.collection, [], sort=False)
+        return getattr(aggr, stat)
     def groupby(self, columns, sort=True):
         return MGrouper(self, self.collection, columns, sort=sort)
     def _get_fields(self):
@@ -305,6 +322,8 @@ class MDataFrame(object):
             'query': query,
             'explain': explain or 'specify explain=True'
         }
+    def __len__(self):
+        return self._get_cursor().count()
     @property
     def value(self):
         cursor = self._get_cursor()
@@ -319,7 +338,7 @@ class MDataFrame(object):
         """ 
         from the given cursor return a DataFrame
         """
-        df = pd.DataFrame.from_records(cursor)
+        df = cursor_to_dataframe(cursor)
         df = restore_index(df, dict())
         if '_id' in df.columns:
             df.drop('_id', axis=1, inplace=True)
