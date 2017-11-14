@@ -1,17 +1,18 @@
 from mongoengine.errors import DoesNotExist
 from six import iteritems
-from tastypie.bundle import Bundle
+from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.fields import CharField, DictField, ListField
+from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
 import numpy as np
-import omegaml as om
-from .util import BundleObj
+from omegaml import Omega
+from omegaops import get_client_config
+from omegaweb.resources.util import isTrue
 import pandas as pd
-isTrue = lambda v: v if isinstance(v, bool) else (
-    v.lower() in ['yes', 'y', 't', 'true', '1'])
+
+from .util import BundleObj
 
 
 class DatasetResource(Resource):
@@ -25,6 +26,7 @@ class DatasetResource(Resource):
         list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
+        authentication = ApiKeyAuthentication()
 
     def restore_filter(self, bundle, name):
         """
@@ -34,6 +36,7 @@ class DatasetResource(Resource):
         fltkwargs = {k: v for k, v in iteritems(bundle.request.GET)
                      if k not in ['orient']}
         # -- get dtypes of dataframe and convert filter values
+        om = self.get_omega(bundle)
         metadata = om.datasets.metadata(name)
         kind_meta = metadata.kind_meta or {}
         dtypes = kind_meta.get('dtypes')
@@ -51,6 +54,7 @@ class DatasetResource(Resource):
         name = kwargs.get('pk')
         orient = bundle.request.GET.get('orient', 'dict')
         fltkwargs = self.restore_filter(bundle, name)
+        om = self.get_omega(bundle)
         obj = om.datasets.get(name, filter=fltkwargs)
         if isinstance(obj, (pd.DataFrame, pd.Series)):
             df = obj
@@ -73,6 +77,7 @@ class DatasetResource(Resource):
 
     def obj_update(self, bundle, **kwargs):
         pk = kwargs.get('pk')
+        om = self.get_omega(bundle)
         append = isTrue(bundle.data.get('append', 'true'))
         orient = bundle.data.get('orient', 'columns')
         df = pd.DataFrame.from_dict(bundle.data.get('data'), orient=orient)
@@ -84,6 +89,7 @@ class DatasetResource(Resource):
 
     def obj_delete(self, bundle, **kwargs):
         pk = kwargs.get('pk')
+        om = self.get_omega(bundle)
         try:
             om.datasets.drop(pk)
         except DoesNotExist:
@@ -96,6 +102,7 @@ class DatasetResource(Resource):
         return dict(pk=name)
 
     def obj_get_list(self, bundle, **kwargs):
+        om = self.get_omega(bundle)
         bundle.objs = [
             BundleObj({
                 'data': {
@@ -109,3 +116,14 @@ class DatasetResource(Resource):
             }) for item in om.datasets.list(raw=True)
         ]
         return bundle.objs
+
+    def get_omega(self, bundle_or_request):
+        """
+        Return an Omega instance configured to the request's user
+        """
+        request = getattr(bundle_or_request, 'request', bundle_or_request)
+        user = request.user
+        config = get_client_config(user)
+        mongo_url = config.get('OMEGA_MONGO_URL')
+        om = Omega(mongo_url=mongo_url)
+        return om

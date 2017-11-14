@@ -99,29 +99,6 @@ class OmegaModelProxy(object):
         return omega_fit.delay(self.modelname, Xname, Yname,
                                pure_python=self.pure_python, **kwargs)
 
-    def partial_fit(self, Xname, Yname=None, **kwargs):
-        """
-        update the model
-
-        Calls .partial_fit(X, Y, **kwargs). If instead of dataset names actual
-        data  is given, the data is stored using _fitX/fitY prefixes and
-        a unique name.
-
-        After fitting, a new model version is stored with its attributes
-        fitX and fitY pointing to the datasets, as well as the sklearn
-        version used.
-
-        :param Xname: name of X dataset or data
-        :param Yname: name of Y dataset or data
-        :return: the model (self) or the string representation (python clients)
-        """
-        omega_fit = self.runtime.task('omegaml.tasks.omega_partial_fit')
-        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
-        if Yname is not None:
-            Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
-        return omega_fit.delay(self.modelname, Xname, Yname,
-                               pure_python=self.pure_python, **kwargs)
-
     def transform(self, Xname, rName=None, **kwargs):
         """
         transform X
@@ -293,14 +270,13 @@ class OmegaRuntime(object):
 
 class Omega(object):
 
-    def __init__(self, backend=None, broker=None,
+    def __init__(self, mongo_url=None, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None):
         self.defaults = settings()
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
-        self.models = OmegaStore(
-            prefix='models/')
-        self.datasets = OmegaStore(prefix='data/')
+        self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
+        self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
@@ -345,4 +321,3 @@ datasets = OmegaDeferredInstance(_om, 'datasets')
 models = OmegaDeferredInstance(_om, 'models')
 jobs = OmegaDeferredInstance(_om, 'jobs')
 runtime = OmegaDeferredInstance(_om, 'runtime')
-

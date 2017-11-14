@@ -43,7 +43,7 @@ class EnvSettings_Local(Config_DjangoSekizai,
 
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
-                                            mongohost='localhost',
+                                            mongohost='localhost:27019',
                                             password='foobar',
                                             dbname='admin')
     MONGO_URL = os.environ.get('MONGO_URL')

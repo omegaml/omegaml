@@ -36,8 +36,8 @@ class ModelResourceTests(ResourceTestCase):
                            'y': y})
         X = df[['x']]
         Y = df[['y']]
-        om.datasets.put(X, 'X')
-        om.datasets.put(Y, 'Y')
+        om.datasets.put(X, 'X', append=False)
+        om.datasets.put(Y, 'Y', append=False)
         # create a pipeline, fit, store
         p = Pipeline([
             ('lr', LinearRegression()),
@@ -57,8 +57,8 @@ class ModelResourceTests(ResourceTestCase):
                            'y': y})
         X = df[['x']]
         Y = df[['y']]
-        om.datasets.put(X, 'X')
-        om.datasets.put(Y, 'Y')
+        om.datasets.put(X, 'X', append=False)
+        om.datasets.put(Y, 'Y', append=False)
         # create a pipeline without fitting yet
         p = Pipeline([
             ('lr', LinearRegression()),

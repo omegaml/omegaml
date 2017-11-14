@@ -8,6 +8,7 @@ import tempfile
 
 import gridfs
 import mongoengine
+from mongoengine.connection import register_connection, disconnect
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
@@ -124,8 +125,16 @@ class OmegaStore(object):
         """
         if self._db is not None:
             return self._db
+        # parse salient parts of mongourl, e.g.
+        # mongodb://user:password@host/dbname
         self.parsed_url = urlparse.urlparse(self.mongo_url)
         self.database_name = self.parsed_url.path[1:]
+        host = self.parsed_url.netloc
+        creds = host.split('@')[0]
+        username, password = None, None
+        if ':' in creds:
+            username, password = creds.split(':')
+            #host = host.replace(creds, '')[1:]
         # connect via mongoengine
         # note this uses a MongoClient in the background, with pooled
         # connections. there are multiprocessing issues with pymongo:
@@ -133,11 +142,17 @@ class OmegaStore(object):
         # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
         # this defers connecting until the first access
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
-        self._db = getattr(mongoengine.connect(self.database_name,
-                                               host=self.mongo_url,
-                                               alias='omega',
-                                               connect=False,
-                                               serverSelectionTimeoutMS=2500),
+        alias = 'omega'
+        # always disconnect before registering a new connection because
+        # get_connection forgets all connection settings upon disconnect WTF?!
+        disconnect(alias)
+        register_connection(alias, self.database_name,
+                            host=host,
+                            username=username,
+                            password=password,
+                            connect=False,
+                            serverSelectionTimeoutMS=2500)
+        self._db = getattr(mongoengine.connect(self.database_name, alias),
                            self.database_name)
         return self._db
 

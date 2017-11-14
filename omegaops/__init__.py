@@ -5,6 +5,7 @@ import os
 from constance import config
 from django.conf import settings
 from pymongo.mongo_client import MongoClient
+from boto.pyami.installers.ubuntu.trac import Trac
 
 
 def add_user(dbname, username, password):
@@ -23,7 +24,9 @@ def add_user(dbname, username, password):
     _admin_newdb.add_user(username, password, roles=roles)
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
+    mongohost = config.MONGO_HOST
     client_mongo_url = settings.BASE_MONGO_URL.format(user=username,
+                                                      mongohost=mongohost,
                                                       password=password,
                                                       dbname=dbname)
     client = MongoClient(client_mongo_url)

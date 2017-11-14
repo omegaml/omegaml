@@ -256,13 +256,15 @@ def grouper(n, iterable):
         yield itertools.chain((first_el,), chunk_it)
 
 
-def cursor_to_dataframe(cursor):
+def cursor_to_dataframe(cursor, chunk_size=10000):
     # a faster and less memory hungry variant of DataFrame.from_records
     # works by building a set of smaller dataframes to reduce memory
-    # consumption
+    # consumption. Note chunks are of size max. chunk_size.
     import pandas as pd
     frames = []
-    chunk_size = int(cursor.count() * .1)
+    count = cursor.count()
+    chunk_size = max(chunk_size, int(count * .1))
     for chunk in grouper(chunk_size, cursor):
         frames.append(pd.DataFrame.from_records(chunk))
-    return pd.concat(frames)
+    df = pd.concat(frames)
+    return df
