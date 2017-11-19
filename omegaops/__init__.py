@@ -78,4 +78,6 @@ def get_client_config(user):
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_BROKER": "amqp://guest@127.0.0.1:5672//"
     }
+    if True or config.CELERY_ALWAYS_EAGER:
+        client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
     return client_config

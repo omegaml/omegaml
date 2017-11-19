@@ -46,7 +46,8 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
-        backend = backends.ScikitLearnBackend(store)
+        backend = backends.ScikitLearnBackend(model_store=store,
+                                              data_store=store)
         zipfname = backend._package_model(lr, 'models/foo')
         # load it, try predicting
         lr2 = backend._extract_model(zipfname)

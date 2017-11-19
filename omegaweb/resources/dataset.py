@@ -7,15 +7,14 @@ from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
 import numpy as np
-from omegaml import Omega
-from omegaops import get_client_config
+from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
 
 from .util import BundleObj
 
 
-class DatasetResource(Resource):
+class DatasetResource(OmegaResourceMixin, Resource):
     data = DictField('data')
     index = DictField('index', blank=True, null=True)
     dtypes = DictField('dtypes', blank=True, null=True)
@@ -116,14 +115,3 @@ class DatasetResource(Resource):
             }) for item in om.datasets.list(raw=True)
         ]
         return bundle.objs
-
-    def get_omega(self, bundle_or_request):
-        """
-        Return an Omega instance configured to the request's user
-        """
-        request = getattr(bundle_or_request, 'request', bundle_or_request)
-        user = request.user
-        config = get_client_config(user)
-        mongo_url = config.get('OMEGA_MONGO_URL')
-        om = Omega(mongo_url=mongo_url)
-        return om

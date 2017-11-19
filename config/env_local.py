@@ -51,5 +51,6 @@ class EnvSettings_Local(Config_DjangoSekizai,
     SITE_ID = 1
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost:27019', 'mongo db host name')
+        'MONGO_HOST': ('localhost:27019', 'mongo db host name'),
+        'CELERY_ALWAYS_EAGER': (True, 'celery always eager')
     }

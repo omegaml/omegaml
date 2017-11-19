@@ -54,10 +54,9 @@ def is_spark_mllib(obj):
     # the model for the spark server to create. so obj is the name of the
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
-    try:
+    if isinstance(obj, basestring):
         return 'pyspark.mllib' in obj
-    except:
-        return False
+    return False
 
 
 def settings():
@@ -268,3 +267,22 @@ def cursor_to_dataframe(cursor, chunk_size=10000):
         frames.append(pd.DataFrame.from_records(chunk))
     df = pd.concat(frames)
     return df
+
+
+def reshaped(data):
+    """
+    check if data is 1d and if so reshape to a column vector
+    """
+    import pandas as pd
+    import numpy as np
+    if isinstance(data, (pd.Series, pd.DataFrame)):
+        if len(data.shape) == 1:
+            data = data.values.reshape(-1, 1)
+    elif isinstance(data, np.ndarray):
+        if len(data.shape) == 1:
+            data = data.reshape(-1, 1)
+    elif isinstance(data, list):
+        data = np.array(data)
+        if len(data.shape) == 1:
+            data = data.reshape(-1, 1)
+    return data

@@ -258,14 +258,13 @@ class OmegaStore(object):
         Stores an objecs, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
+        # TODO implement an extensible backend plugin architecture
         if is_estimator(obj):
-            backend = self.defaults.OMEGA_BACKENDS[Metadata.SKLEARN_JOBLIB](
-                self)
+            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes)
         elif is_spark_mllib(obj):
-            backend = self.defaults.OMEGA_BACKENDS[Metadata.SPARK_MLLIB](
-                self)
+            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
@@ -514,10 +513,23 @@ class OmegaStore(object):
                 return True
         return False
 
-    def get_backend(self, name, version=-1):
-        meta = self.metadata(name, version=version)
+    def get_backend_bykind(self, kind, model_store=None, data_store=None,
+                           **kwargs):
+        backend_cls = self.defaults.OMEGA_BACKENDS[kind]
+        model_store = model_store or self
+        data_store = data_store or self
+        backend = backend_cls(model_store=model_store, 
+                              data_store=data_store, **kwargs)
+        return backend
+
+    def get_backend(self, name, model_store=None, data_store=None, **kwargs):
+        meta = self.metadata(name)
         if meta is not None:
-            backend = self.defaults.OMEGA_BACKENDS[meta.kind](self)
+            backend_cls = self.defaults.OMEGA_BACKENDS[meta.kind]
+            model_store = model_store or self
+            data_store = data_store or self
+            backend = backend_cls(model_store=model_store,
+                                  data_store=data_store, **kwargs)
             return backend
         return None
 
@@ -541,10 +553,10 @@ class OmegaStore(object):
             return None
         if not force_python:
             if meta.kind == Metadata.SKLEARN_JOBLIB:
-                backend = self.get_backend(name, version)
-                return backend.get_model(name, version)
+                backend = self.get_backend(name)
+                return backend.get_model(name)
             elif meta.kind == Metadata.SPARK_MLLIB:
-                backend = self.get_backend(name, version)
+                backend = self.get_backend(name)
                 return backend.get_model(name, version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe_documents(name, version=version,

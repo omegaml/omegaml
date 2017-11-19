@@ -75,8 +75,8 @@ def get_dataset_representations(items):
 
 @shared_task(base=OmegamlTask)
 def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.predict(modelname, Xname, rName, pure_python, **kwargs)
     signals.mltask_start.send(
         sender=None, name='omega_predict',
@@ -87,8 +87,8 @@ def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
 @shared_task(base=OmegamlTask)
 def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
                         **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.predict_proba(
         modelname, Xname, rName, pure_python, **kwargs)
     signals.mltask_start.send(
@@ -99,8 +99,8 @@ def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
 
 @shared_task(base=OmegamlTask)
 def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.fit(
         modelname, Xname, Yname, pure_python, **kwargs)
     signals.mltask_start.send(
@@ -112,8 +112,8 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
 @shared_task(base=OmegamlTask)
 def omega_partial_fit(
         modelname, Xname, Yname=None, pure_python=True, **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.partial_fit(
         modelname, Xname, Yname, pure_python, **kwargs)
     signals.mltask_start.send(
@@ -125,8 +125,8 @@ def omega_partial_fit(
 @shared_task(base=OmegamlTask)
 def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.score(
         modelname, Xname, Yname, rName, pure_python, **kwargs)
     signals.mltask_start.send(
@@ -138,8 +138,8 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
 @shared_task(base=OmegamlTask)
 def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
                         pure_python=True, **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.score(
         modelname, Xname, Yname, rName, pure_python, **kwargs)
     signals.mltask_start.send(
@@ -150,8 +150,8 @@ def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
 
 @shared_task(base=OmegamlTask)
 def omega_transform(modelname, Xname, rName=None, **kwargs):
-    om = Omega()
-    backend = om.models.get_backend(modelname)
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.transform(modelname, Xname, rName, **kwargs)
     signals.mltask_start.send(
         sender=None, name='omega_transform',
@@ -170,11 +170,11 @@ def omega_settings():
 
 
 @shared_task(base=NotebookTask)
-def run_omegaml_job(nb_file):
+def run_omegaml_job(nb_file, **kwargs):
     """
     runs omegaml job
     """
-    om = Omega()
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     result = om.jobs.run_notebook(nb_file)
     return result
 
@@ -184,19 +184,19 @@ def schedule_omegaml_job(nb_file, **kwargs):
     """
     schedules the running of omegaml job
     """
-    om = Omega()
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     result = om.jobs.run_notebook(nb_file)
     return result
 
 
 @shared_task(base=OmegamlTask)
-def execute_scripts():
+def execute_scripts(**kwargs):
     """
     will retrieve all scripts from the mongodb
     (as per a respective OMEGAML_SCRIPTS_GRIDFS setting),
     provided they are marked for execution at the time of execution
     """
-    om = Omega()
+    om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     # Search tasks from mongo
     job_list = om.jobs.list()
     for nb_file in job_list:

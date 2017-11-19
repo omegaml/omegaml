@@ -1,17 +1,16 @@
-from celery.result import AsyncResult, EagerResult
-from mongoengine.fields import DictField
-from tastypie.fields import CharField, DictField, ListField
+from sklearn.exceptions import NotFittedError
+from tastypie.authentication import ApiKeyAuthentication
+from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.fields import CharField, ListField
+from tastypie.http import HttpBadRequest
 from tastypie.resources import Resource
 
-import omegaml as om
+from omegaweb.resources.omegamixin import OmegaResourceMixin
 
 from .util import BundleObj
-from sklearn.exceptions import NotFittedError
-from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.http import HttpBadRequest
 
 
-class ModelResource(Resource):
+class ModelResource(OmegaResourceMixin, Resource):
     datax = CharField(attribute='datax', blank=True, null=True)
     datay = CharField(attribute='datay', blank=True, null=True)
     result = ListField(attribute='result', readonly=True, blank=True,
@@ -21,11 +20,13 @@ class ModelResource(Resource):
         list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'model'
+        authentication = ApiKeyAuthentication()
 
     def obj_get(self, bundle, **kwargs):
         """
         get a prediction
         """
+        om = self.get_omega(bundle)
         name = kwargs.get('pk')
         query = bundle.request.GET
         datax = query.get('datax') or bundle.data.get('datax')
@@ -47,11 +48,12 @@ class ModelResource(Resource):
         """
         train a model
         """
+        om = self.get_omega(bundle)
         name = kwargs.get('pk')
         query = bundle.request.GET
         datax = query.get('datax') or bundle.data.get('datax')
         datay = query.get('datay') or bundle.data.get('datay')
         result = om.runtime.model(name).fit(datax, datay)
         data = result.get()
-        bundle.result = [result]
+        bundle.result = [data]
         return bundle

@@ -46,12 +46,13 @@ class OmegaModelProxy(object):
         method call.
     """
 
-    def __init__(self, modelname, runtime=None):
+    def __init__(self, modelname, runtime=None, mongo_url=None):
         self.modelname = modelname
         self.runtime = runtime
         self.pure_python = getattr(settings(), 'OMEGA_FORCE_PYTHON_CLIENT',
                                    False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
+        self.mongo_url = mongo_url
 
     def fit(self, Xname, Yname=None, **kwargs):
         """
@@ -74,6 +75,7 @@ class OmegaModelProxy(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
+                               mongo_url=self.mongo_url,
                                pure_python=self.pure_python, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
@@ -97,6 +99,7 @@ class OmegaModelProxy(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
+                               mongo_url=self.mongo_url,
                                pure_python=self.pure_python, **kwargs)
 
     def transform(self, Xname, rName=None, **kwargs):
@@ -115,6 +118,7 @@ class OmegaModelProxy(object):
         Xname = self._ensure_data_is_stored(Xname)
         return omega_transform.delay(self.modelname, Xname,
                                      rName=rName,
+                                     mongo_url=self.mongo_url,
                                      pure_python=self.pure_python, **kwargs)
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
@@ -138,6 +142,7 @@ class OmegaModelProxy(object):
             Yname = self._ensure_data_is_stored(Yname)
         return omega_fit_transform.delay(self.modelname, Xname, Yname,
                                          rName=rName, transform=True,
+                                         mongo_url=self.mongo_url,
                                          pure_python=self.pure_python, **kwargs)
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
@@ -155,6 +160,7 @@ class OmegaModelProxy(object):
         omega_predict = self.runtime.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName,
+                                   mongo_url=self.mongo_url,
                                    pure_python=self.pure_python, **kwargs)
 
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
@@ -173,6 +179,7 @@ class OmegaModelProxy(object):
             'omegaml.tasks.omega_predict_proba')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName,
+                                         mongo_url=self.mongo_url,
                                          pure_python=self.pure_python, **kwargs)
 
     def score(self, Xname, yName, rName=None, **kwargs):
@@ -192,6 +199,7 @@ class OmegaModelProxy(object):
         Xname = self._ensure_data_is_stored(Xname)
         yName = self._ensure_data_is_stored(yName)
         return omega_score.delay(self.modelname, Xname, rName=rName,
+                                 mongo_url=self.mongo_url,
                                  pure_python=self.pure_python, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
@@ -225,10 +233,11 @@ class OmegaModelProxy(object):
 
 class OmegaRuntime(object):
 
-    def __init__(self, omega, backend=None,
+    def __init__(self, omega, backend=None, mongo_url=None,
                  broker=None, celerykwargs=None, celeryconf=None):
         self.backend = backend or 'amqp://'
         self.broker = broker or 'amqp://guest@localhost//'
+        self.mongo_url = mongo_url
         self.omega = omega
         # initialize celery as a runtime
         celerykwargs = celerykwargs or {}
@@ -252,7 +261,8 @@ class OmegaRuntime(object):
         """
         return a model for remote execution
         """
-        return OmegaModelProxy(modelname, runtime=self)
+        return OmegaModelProxy(modelname, runtime=self,
+                               mongo_url=self.mongo_url)
 
     def task(self, name):
         """
@@ -278,6 +288,7 @@ class Omega(object):
         self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
         self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
         self.runtime = OmegaRuntime(self, backend=backend,
+                                    mongo_url=mongo_url,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
         self.jobs = OmegaJobs()

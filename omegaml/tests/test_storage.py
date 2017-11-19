@@ -9,6 +9,8 @@ from omegaml.store.djstorage import OmegaFSStorage
 from omegaml.util import override_settings, delete_database
 import pandas as pd
 from six.moves import range
+
+# settings for tests
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
     OMEGA_MONGO_COLLECTION='store'
