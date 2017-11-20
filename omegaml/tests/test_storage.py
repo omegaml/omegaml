@@ -4,7 +4,6 @@ import unittest
 
 from mongoengine.connection import disconnect
 
-import omegaml as om
 from omegaml.store.djstorage import OmegaFSStorage
 from omegaml.util import override_settings, delete_database
 import pandas as pd
@@ -22,20 +21,22 @@ class StorageTests(unittest.TestCase):
     """ test django storages """
 
     def setUp(self):
+        import omegaml as om
         unittest.TestCase.setUp(self)
-        delete_database()
         self.datasets = om.datasets
+        for ds in self.datasets.list():
+            self.datasets.drop(ds)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-        delete_database()
-        disconnect('omega')
 
     def test_listdir(self):
         df = pd.DataFrame({'a': list(range(0, 10))})
         meta = self.datasets.put(df, 'foo')
         fulllist = self.datasets.list()
         storage = OmegaFSStorage()
+        print(storage.datasets.mongodb)
+        print(self.datasets.mongodb)
         dirs, entries = list(storage.listdir('/'))
         self.assertListEqual(fulllist, entries)
         meta = self.datasets.put(df, 'foo2')
