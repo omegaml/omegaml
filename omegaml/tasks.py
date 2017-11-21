@@ -128,7 +128,8 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.score(
-        modelname, Xname, Yname, rName, pure_python, **kwargs)
+        modelname, Xname, Yname, rName=rName, pure_python=pure_python,
+        **kwargs)
     signals.mltask_start.send(
         sender=None, name='omega_score',
         args=get_dataset_representations(locals()))

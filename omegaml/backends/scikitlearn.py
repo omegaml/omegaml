@@ -13,6 +13,8 @@ from mongoengine.fields import GridFSProxy
 from omegaml.util import reshaped
 
 from .base import BaseBackend
+
+
 class ScikitLearnBackend(BaseBackend):
 
     """
@@ -206,6 +208,3 @@ class ScikitLearnBackend(BaseBackend):
             meta = self.data_store.put(result, rName)
             result = meta
         return result
-
-
-

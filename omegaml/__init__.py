@@ -198,7 +198,7 @@ class OmegaModelProxy(object):
         omega_score = self.runtime.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
         yName = self._ensure_data_is_stored(yName)
-        return omega_score.delay(self.modelname, Xname, rName=rName,
+        return omega_score.delay(self.modelname, Xname, yName, rName=rName,
                                  mongo_url=self.mongo_url,
                                  pure_python=self.pure_python, **kwargs)
 

@@ -27,6 +27,6 @@ if __name__ == '__main__':
                         " --apikey {args.apikey}, error was {resp.status_code}, {resp.content}")
             assert resp.status_code == 200, fail_msg.format(**locals())
             configs = resp.json()
-            config = configs['objects'][0]['data']
+            config = configs['data']
             yaml.safe_dump(config, fconfig, default_flow_style=False)
             print("Config is in {defaults.config_file}".format(**locals()))

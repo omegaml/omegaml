@@ -22,7 +22,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
     orient = CharField('orient', blank=True, null=True)
 
     class Meta:
-        list_allowed_methods = ['get']
+        list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
         authentication = ApiKeyAuthentication()
