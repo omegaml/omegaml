@@ -6,7 +6,6 @@ requests==2.18.4
 django-extensions==1.7.7
 django-sekizai==0.10.0
 django-bootstrap3==9.0.0
-django-bootstrap3==9.0.0
 jsonfield==2.0.2
 git+https://github.com/miraculixx/stackable@add-configs
 git+https://7e1788c2225509b4949b1f573130e77a51b948a2@github.com/miraculixx/landingpage
