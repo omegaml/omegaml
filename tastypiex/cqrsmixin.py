@@ -56,7 +56,6 @@ class CQRSApiMixin(object):
                     'http_method': http_method,
                 }
                 self._meta.extra_actions.append(action)
-        print(self._meta.extra_actions)
         return urls
 
 

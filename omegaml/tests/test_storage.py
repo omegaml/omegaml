@@ -35,8 +35,6 @@ class StorageTests(unittest.TestCase):
         meta = self.datasets.put(df, 'foo')
         fulllist = self.datasets.list()
         storage = OmegaFSStorage()
-        print(storage.datasets.mongodb)
-        print(self.datasets.mongodb)
         dirs, entries = list(storage.listdir('/'))
         self.assertListEqual(fulllist, entries)
         meta = self.datasets.put(df, 'foo2')

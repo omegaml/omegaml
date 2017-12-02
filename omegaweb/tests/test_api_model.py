@@ -17,7 +17,7 @@ class ModelResourceTests(ResourceTestCase):
 
     def setUp(self):
         super(ModelResourceTests, self).setUp()
-        self.api_client = ClientRequestTracer(self.api_client)
+        #self.api_client = ClientRequestTracer(self.api_client)
         # setup django user
         self.username = username = 'test'
         self.email = email = 'test@omegaml.io'

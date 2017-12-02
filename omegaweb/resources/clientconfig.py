@@ -8,12 +8,12 @@ class ClientConfigResource(Resource):
     data = DictField('data')
 
     class Meta:
-        list_allowed_methods = ['']
-        detail_allowed_methods = ['get']
+        list_allowed_methods = ['get']
+        detail_allowed_methods = ['']
         resource_name = 'config'
         authentication = ApiKeyAuthentication()
 
-    def obj_get(self, bundle, **kwargs):
+    def obj_get_list(self, bundle, **kwargs):
         """
         get the configuration
         """
