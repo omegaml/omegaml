@@ -28,6 +28,23 @@ class ApiCentralView(object):
         return view
 
 
+class RedocView(object):
+
+    def __init__(self, template=None):
+        self.template = template or 'tastypiex/redoc.html'
+
+    def docview(self, request, *args, **kwargs):
+        context = {
+            'request': request,
+        }
+        return render(request, self.template, context)
+
+    def as_view(self):
+        def view(request, *args, **kwargs):
+            return self.docview(request, *args, **kwargs)
+        return view
+
+
 class ApiCentralizer(object):
 
     """
@@ -95,11 +112,13 @@ class ApiCentralizer(object):
         urlpatterns += patterns('', *ApiCentralizer(swaggerui=False).get_swagger_urls(path))
     """
     def __init__(self, config=None, apis=None, mixins=None, meta=None,
-                 path=None, swaggerui=False, autoinit=True, docstyle='markdown'):
+                 path=None, swaggerui=True, autoinit=True,
+                 docstyle='markdown', redocui=True):
         self.config = config or []
         self.apis = apis or self.get_apis(self.config)
         self.path = path or r'^api/'
         self.swaggerui = swaggerui or 'tastypie_swagger' in settings.INSTALLED_APPS
+        self.redocui = redocui
         self.docstyle = docstyle
         if autoinit:
             self.centralize(self.apis, mixins=mixins, meta=meta)
@@ -190,6 +209,9 @@ class ApiCentralizer(object):
             urls.extend(self.get_swagger_urls(docpath))
             # add main docview with links to per-api swagger ui
             urls.append(url(docpath + '$', self.get_docview()))
+        if self.redocui:
+            docpath = (r'%s/redoc/' % self.path).replace('//', '/')
+            urls.append(url(docpath + '$', self.get_redocview()))
         return urls
 
     def get_swagger_urls(self, path, apis=None):
@@ -257,3 +279,9 @@ class ApiCentralizer(object):
                 'namespace': '%s:index' % self.get_swagger_url_namespace(api),
             })
         return ApiCentralView(docapis, template=template).as_view()
+
+    def get_redocview(self, template=None):
+        """
+        return the view to ReDoc
+        """
+        return RedocView().as_view()
