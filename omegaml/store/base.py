@@ -8,13 +8,16 @@ import tempfile
 
 import gridfs
 import mongoengine
+from mongoengine.connection import register_connection, disconnect,\
+    get_connection, connect
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
 import six
 
 from omegaml import signals
-from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape
+from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
+    cursor_to_dataframe
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -123,8 +126,16 @@ class OmegaStore(object):
         """
         if self._db is not None:
             return self._db
+        # parse salient parts of mongourl, e.g.
+        # mongodb://user:password@host/dbname
         self.parsed_url = urlparse.urlparse(self.mongo_url)
         self.database_name = self.parsed_url.path[1:]
+        host = self.parsed_url.netloc
+        username, password = None, None
+        if '@' in host:
+            creds, host = host.split('@', 1)
+            if ':' in creds:
+                username, password = creds.split(':')
         # connect via mongoengine
         # note this uses a MongoClient in the background, with pooled
         # connections. there are multiprocessing issues with pymongo:
@@ -132,12 +143,22 @@ class OmegaStore(object):
         # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
         # this defers connecting until the first access
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
-        self._db = getattr(mongoengine.connect(self.database_name,
-                                               host=self.mongo_url,
-                                               alias='omega',
-                                               connect=False,
-                                               serverSelectionTimeoutMS=2500),
-                           self.database_name)
+        alias = 'omega'
+        # always disconnect before registering a new connection because
+        # connect forgets all connection settings upon disconnect WTF?!
+        disconnect(alias)
+        connection = connect(alias=alias, db=self.database_name,
+                             host=host,
+                             username=username,
+                             password=password,
+                             connect=False,
+                             serverSelectionTimeoutMS=2500)
+        self._db = getattr(connection, self.database_name)
+        # mongoengine 0.15.0 connection setup is seriously broken -- it does
+        # not remember username/password on authenticated connections
+        # so we reauthenticate here
+        if username and password:
+            self._db.authenticate(username, password)
         return self._db
 
     @property
@@ -242,14 +263,13 @@ class OmegaStore(object):
         Stores an objecs, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
+        # TODO implement an extensible backend plugin architecture
         if is_estimator(obj):
-            backend = self.defaults.OMEGA_BACKENDS[Metadata.SKLEARN_JOBLIB](
-                self)
+            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes)
         elif is_spark_mllib(obj):
-            backend = self.defaults.OMEGA_BACKENDS[Metadata.SPARK_MLLIB](
-                self)
+            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
@@ -343,7 +363,7 @@ class OmegaStore(object):
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = zip(obj.columns, stored_columns)
         dtypes = {
-            dict(column_map).get(k): v.name 
+            dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
         }
         kind_meta = {
@@ -363,7 +383,8 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
+        #collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
+        collection.insert_many(obj.to_dict(orient='records'))
         signals.dataset_put.send(sender=None, name=name)
         kind = (Metadata.PANDAS_SEROWS
                 if store_series
@@ -497,10 +518,23 @@ class OmegaStore(object):
                 return True
         return False
 
-    def get_backend(self, name, version=-1):
-        meta = self.metadata(name, version=version)
+    def get_backend_bykind(self, kind, model_store=None, data_store=None,
+                           **kwargs):
+        backend_cls = self.defaults.OMEGA_BACKENDS[kind]
+        model_store = model_store or self
+        data_store = data_store or self
+        backend = backend_cls(model_store=model_store,
+                              data_store=data_store, **kwargs)
+        return backend
+
+    def get_backend(self, name, model_store=None, data_store=None, **kwargs):
+        meta = self.metadata(name)
         if meta is not None:
-            backend = self.defaults.OMEGA_BACKENDS[meta.kind](self)
+            backend_cls = self.defaults.OMEGA_BACKENDS[meta.kind]
+            model_store = model_store or self
+            data_store = data_store or self
+            backend = backend_cls(model_store=model_store,
+                                  data_store=data_store, **kwargs)
             return backend
         return None
 
@@ -524,10 +558,10 @@ class OmegaStore(object):
             return None
         if not force_python:
             if meta.kind == Metadata.SKLEARN_JOBLIB:
-                backend = self.get_backend(name, version)
-                return backend.get_model(name, version)
+                backend = self.get_backend(name)
+                return backend.get_model(name)
             elif meta.kind == Metadata.SPARK_MLLIB:
-                backend = self.get_backend(name, version)
+                backend = self.get_backend(name)
                 return backend.get_model(name, version)
             elif meta.kind == Metadata.PANDAS_DFROWS:
                 return self.get_dataframe_documents(name, version=version,
@@ -568,7 +602,7 @@ class OmegaStore(object):
             else:
                 cursor = collection.find(projection=columns)
             # restore dataframe
-            df = pd.DataFrame.from_records(cursor)
+            df = cursor_to_dataframe(cursor)
             if '_id' in df.columns:
                 del df['_id']
             meta = self.metadata(name)

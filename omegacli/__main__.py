@@ -1,7 +1,10 @@
 import argparse
-from omegaml import defaults
+
+import requests
 import yaml
 
+from omegacli.auth import TastypieApiKeyAuth
+from omegaml import defaults
 parser = argparse.ArgumentParser(description='omegaml cli')
 subparsers = parser.add_subparsers(help='commands')
 
@@ -15,25 +18,15 @@ args = parser.parse_args()
 if __name__ == '__main__':
     if args.command == 'init':
         with open(defaults.config_file, 'w') as fconfig:
-            # TODO get this config from the server using userid/apikey
-            default_config = {
-                "OMEGA_CELERY_CONFIG": {
-                    "CELERY_MONGODB_BACKEND_SETTINGS": {
-                        "taskmeta_collection": "omegaml_taskmeta",
-                        "database": "mongodb://localhost:27017/omega"
-                    },
-                    "CELERY_ACCEPT_CONTENT": [
-                        "pickle",
-                        "json",
-                        "msgpack",
-                        "yaml"
-                    ]
-                },
-                "OMEGA_MONGO_URL": "mongodb://localhost:27017/omega",
-                "OMEGA_RESULT_BACKEND": "mongodb://localhost:27017/omega",
-                "OMEGA_NOTEBOOK_COLLECTION": "ipynb",
-                "OMEGA_TMP": "/tmp",
-                "OMEGA_MONGO_COLLECTION": "omegaml",
-                "OMEGA_BROKER": "amqp://guest@127.0.0.1:5672//"
-            }
-            yaml.dump(default_config, fconfig, default_flow_style=False)
+            auth = TastypieApiKeyAuth(args.userid,
+                                      args.apikey)
+            url = 'http://omegaml.dokku.me/api/v1/config/'
+            #url = 'http://localhost:8000/api/v1/config/'
+            resp = requests.get(url, auth=auth)
+            fail_msg = ("Not authenticated using --userid {args.userid}"
+                        " --apikey {args.apikey}, error was {resp.status_code}, {resp.content}")
+            assert resp.status_code == 200, fail_msg.format(**locals())
+            configs = resp.json()
+            config = configs['data']
+            yaml.safe_dump(config, fconfig, default_flow_style=False)
+            print("Config is in {defaults.config_file}".format(**locals()))

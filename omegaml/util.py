@@ -9,7 +9,7 @@ from django.utils import six, importlib
 try:
     import urlparse
 except:
-    from urllib import parse 
+    from urllib import parse
 
 
 __settings = None
@@ -54,10 +54,9 @@ def is_spark_mllib(obj):
     # the model for the spark server to create. so obj is the name of the
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
-    try:
+    if isinstance(obj, basestring):
         return 'pyspark.mllib' in obj
-    except:
-        return False
+    return False
 
 
 def settings():
@@ -241,3 +240,49 @@ def restore_index(df, idx_meta):
 
 def jsonescape(s):
     return str(s).replace('.', '_')
+
+
+def grouper(n, iterable):
+    # https://stackoverflow.com/a/8998040
+    import itertools
+    it = iter(iterable)
+    while True:
+        chunk_it = itertools.islice(it, n)
+        try:
+            first_el = next(chunk_it)
+        except StopIteration:
+            return
+        yield itertools.chain((first_el,), chunk_it)
+
+
+def cursor_to_dataframe(cursor, chunk_size=10000):
+    # a faster and less memory hungry variant of DataFrame.from_records
+    # works by building a set of smaller dataframes to reduce memory
+    # consumption. Note chunks are of size max. chunk_size.
+    import pandas as pd
+    frames = []
+    count = cursor.count()
+    chunk_size = max(chunk_size, int(count * .1))
+    for chunk in grouper(chunk_size, cursor):
+        frames.append(pd.DataFrame.from_records(chunk))
+    df = pd.concat(frames)
+    return df
+
+
+def reshaped(data):
+    """
+    check if data is 1d and if so reshape to a column vector
+    """
+    import pandas as pd
+    import numpy as np
+    if isinstance(data, (pd.Series, pd.DataFrame)):
+        if len(data.shape) == 1:
+            data = data.values.reshape(-1, 1)
+    elif isinstance(data, np.ndarray):
+        if len(data.shape) == 1:
+            data = data.reshape(-1, 1)
+    elif isinstance(data, list):
+        data = np.array(data)
+        if len(data.shape) == 1:
+            data = data.reshape(-1, 1)
+    return data

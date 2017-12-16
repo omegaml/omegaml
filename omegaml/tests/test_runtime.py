@@ -1,20 +1,21 @@
 from __future__ import absolute_import
+
 import os
 from unittest import TestCase
 
 from scipy import ravel
+from sklearn.exceptions import NotFittedError
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
+from sklearn.metrics.regression import mean_squared_error
+from sklearn.metrics.scorer import accuracy_scorer
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
-from sklearn.exceptions import NotFittedError
 
 import numpy as np
 from omegaml import Omega
-from omegaml.util import override_settings, delete_database
+from omegaml.util import override_settings, delete_database, reshaped
 import pandas as pd
-from sklearn.metrics.scorer import accuracy_scorer
-from sklearn.metrics.regression import mean_squared_error
 from six.moves import range
 override_settings(
     OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
@@ -202,7 +203,7 @@ class RuntimeTests(TestCase):
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtime.model('mymodel2').predict('foo')
-        result = om.runtime.model('mymodel2').predict(X)
+        result = om.runtime.model('mymodel2').predict(reshaped(X))
         pred2 = result.get()
         self.assertTrue(
             (pred == pred2).all(), "runtime prediction is different(1)")
@@ -215,8 +216,8 @@ class RuntimeTests(TestCase):
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
-        X = [[x] for x in list(df.x)]
-        Y = [[y] for y in list(df.y)]
+        X = df['x']
+        Y = df['y']
         # put into Omega -- assume a client with pandas, scikit learn
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
         om = Omega()
@@ -226,8 +227,8 @@ class RuntimeTests(TestCase):
         om.datasets.put(Y, 'datay', as_hdf=True)
         # have Omega fit the model then predict
         lr = LinearRegression()
-        lr.fit(X, Y)
-        pred = lr.predict(X)
+        lr.fit(reshaped(X), reshaped(Y))
+        pred = lr.predict(reshaped(X))
         om.models.put(lr, 'mymodel2')
         # -- using data provided locally
         #    note this is the same as
@@ -263,8 +264,8 @@ class RuntimeTests(TestCase):
         om.models.put(p, 'mymodel2')
         self.assertIn('mymodel2', om.models.list('*'))
         # predict locally for comparison
-        p.fit(X, Y)
-        pred = p.predict(X)
+        p.fit(reshaped(X), reshaped(Y))
+        pred = p.predict(reshaped(X))
         # have Omega fit the model then predict
         result = om.runtime.model('mymodel2').fit('datax', 'datay')
         result.get()

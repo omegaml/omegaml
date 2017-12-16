@@ -1,20 +1,44 @@
+from landingpage.models import ServicePlan
 import os
 import random
+import time
 
+from django.contrib.auth.models import User
+from pandas.util.testing import assert_frame_equal
 from tastypie.test import ResourceTestCase
 
 from omegaml import Omega
+from omegaops import add_service_deployment, get_client_config, add_user
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
 
 
 class DatasetResourceTests(ResourceTestCase):
 
     def setUp(self):
         super(DatasetResourceTests, self).setUp()
+        # setup django user
+        self.username = username = 'test'
+        self.email = email = 'test@omegaml.io'
+        self.password = password = 'password'
+        self.user = User.objects.create_user(username, email, password)
+        self.apikey = self.user.api_key.key
+        # setup omega credentials
+        # FIXME refactor to remove dependency to landingpage (omegaweb should
+        # have an injectable config module of sorts)
+        ServicePlan.objects.create(name='omegaml')
+        self.config = {
+            'dbname': 'testdb',
+            'username': self.user.username,
+            'password': 'foobar',
+        }
+        add_user(self.config['dbname'], self.config['username'],
+                 self.config['password'])
+        add_service_deployment(self.user, self.config)
+        # setup test data
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
                                      'y': random.sample(list(range(0, 100)), 20)})
-        om = self.om = Omega()
+        config = get_client_config(self.user)
+        om = self.om = Omega(mongo_url=config.get('OMEGA_MONGO_URL'))
         for ds in om.datasets.list():
             om.datasets.drop(ds)
         om.datasets.put(df, 'sample', append=False)
@@ -30,6 +54,9 @@ class DatasetResourceTests(ResourceTestCase):
 
     def resource(self, filename):
         return os.path.join(os.path.dirname(__file__), 'resources', filename)
+
+    def get_credentials(self):
+        return self.create_apikey(self.username, self.apikey)
 
     def restore_dataframe(self, data, orient='dict'):
         if orient in ['dict', 'list']:
@@ -51,7 +78,8 @@ class DatasetResourceTests(ResourceTestCase):
         om = self.om
         df = self.df
         om.datasets.put(df, 'sample2', append=False)
-        resp = self.api_client.get(self.url())
+        resp = self.api_client.get(self.url(),
+                                   authentication=self.get_credentials())
         data = self.deserialize(resp)
         self.assertIn('meta', data)
         self.assertEqual(2, data.get('meta').get('total_count'))
@@ -64,16 +92,19 @@ class DatasetResourceTests(ResourceTestCase):
         test get a dataset 
         """
         # -- get orient=dict
-        resp = self.api_client.get(self.url('sample'))
+        resp = self.api_client.get(
+            self.url('sample'), authentication=self.get_credentials())
         self.assertHttpOK(resp)
         df = self.restore_dataframe(self.deserialize(resp))
         assert_frame_equal(df, self.df, check_index_type=False)
         # -- get orient=records
-        resp = self.api_client.get(self.url('sample', 'orient=records'))
+        resp = self.api_client.get(self.url('sample', 'orient=records'),
+                                   authentication=self.get_credentials())
         df = self.restore_dataframe(self.deserialize(resp), 'records')
         assert_frame_equal(df, self.df, check_index_type=False)
         # -- get orient=list
-        resp = self.api_client.get(self.url('sample', 'orient=list'))
+        resp = self.api_client.get(self.url('sample', 'orient=list'),
+                                   authentication=self.get_credentials())
         df = self.restore_dataframe(self.deserialize(resp), 'list')
         assert_frame_equal(df, self.df, check_index_type=False)
 
@@ -87,17 +118,21 @@ class DatasetResourceTests(ResourceTestCase):
         test get a dataset 
         """
         # -- try some filter
-        resp = self.api_client.get(self.url('sample', 'x__gt=5'))
+        resp = self.api_client.get(self.url('sample', 'x__gt=5'),
+                                   authentication=self.get_credentials())
+        self.assertHttpOK(resp)
         df = self.restore_dataframe(self.deserialize(resp))
         sdf = self.df[self.df.x > 5]
         assert_frame_equal(df, sdf, check_index_type=False)
         # -- try some more
-        resp = self.api_client.get(self.url('sample', 'x=5'))
+        resp = self.api_client.get(self.url('sample', 'x=5'),
+                                   authentication=self.get_credentials())
         df = self.restore_dataframe(self.deserialize(resp))
         sdf = self.df[self.df.x == 5]
         assert_frame_equal(df, sdf, check_index_type=False)
         # -- try some more
-        resp = self.api_client.get(self.url('sample', 'x=5&y__gt=2'))
+        resp = self.api_client.get(self.url('sample', 'x=5&y__gt=2'),
+                                   authentication=self.get_credentials())
         df = self.restore_dataframe(self.deserialize(resp))
         sdf = self.df[(self.df.x == 5) & (self.df.y > 2)]
         assert_frame_equal(df, sdf, check_index_type=False)
@@ -114,8 +149,10 @@ class DatasetResourceTests(ResourceTestCase):
             }
         }
         # put twice to see if it really creates, not appends
-        resp = self.api_client.put(self.url('newdata'), data=data)
-        resp = self.api_client.put(self.url('newdata'), data=data)
+        resp = self.api_client.put(self.url('newdata'), data=data,
+                                   authentication=self.get_credentials())
+        resp = self.api_client.put(self.url('newdata'), data=data,
+                                   authentication=self.get_credentials())
         df = self.om.datasets.get('newdata')
         assert_frame_equal(df, self.df)
 
@@ -131,14 +168,17 @@ class DatasetResourceTests(ResourceTestCase):
             }
         }
         # put twice to see if it really appends, not replaces
-        resp = self.api_client.put(self.url('newdata'), data=data)
-        resp = self.api_client.put(self.url('newdata'), data=data)
+        resp = self.api_client.put(self.url('newdata'), data=data,
+                                   authentication=self.get_credentials())
+        resp = self.api_client.put(self.url('newdata'), data=data,
+                                   authentication=self.get_credentials())
         df = self.om.datasets.get('newdata')
         assert_frame_equal(df, self.df.append(self.df))
 
     def test_drop_dataset(self):
         # see if a dataset does not exist
-        resp = self.api_client.delete(self.url('newdata'))
+        resp = self.api_client.delete(self.url('newdata'),
+                                      authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 404)
         # put a dataset and delete it
         data = {
@@ -151,7 +191,9 @@ class DatasetResourceTests(ResourceTestCase):
 
             }
         }
-        resp = self.api_client.put(self.url('newdata'), data=data)
+        resp = self.api_client.put(self.url('newdata'), data=data,
+                                   authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 204)
-        resp = self.api_client.delete(self.url('newdata'))
+        resp = self.api_client.delete(self.url('newdata'),
+                                      authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 204)

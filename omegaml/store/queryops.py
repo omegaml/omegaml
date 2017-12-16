@@ -117,7 +117,9 @@ class MongoQueryOps(object):
         from collections import OrderedDict
         if not v:
             v = OrderedDict()
-        if columns:
+        if not columns:
+            v['_id'] = None
+        else:
             v.setdefault('_id', {})
             v['_id'].update({k: '$%s' % (k.replace('__', '.'))
                              for k in columns})

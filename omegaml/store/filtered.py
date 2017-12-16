@@ -90,11 +90,11 @@ class FilteredCollection(Collection):
         query = dict(self.query)
         query.update(filter or {})
         return super(FilteredCollection, self).delete_many(query)
-    def aggregate(self, pipeline, filter=None):
+    def aggregate(self, pipeline, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
         pipeline.insert(0, qops.MATCH(query))
-        return super(FilteredCollection, self).aggregate(pipeline)
+        return super(FilteredCollection, self).aggregate(pipeline, **kwargs)
     def find(self, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
