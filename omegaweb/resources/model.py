@@ -14,12 +14,16 @@ from omegaml.util import load_class
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
-    datax = CharField(attribute='datax', blank=True, null=True)
-    datay = CharField(attribute='datay', blank=True, null=True)
+    datax = CharField(attribute='datax', blank=True, null=True,
+                      help_text='The name of X dataset')
+    datay = CharField(attribute='datay', blank=True, null=True,
+                      help_text='The name of Y dataset')
     result = ListField(attribute='result', readonly=True, blank=True,
-                       null=True)
+                       null=True, help_text='the list of results')
     model = DictField(attribute='model', readonly=True, blank=True,
-                      null=True)
+                      null=True, help_text='Dictionary of model details')
+    pipeline = ListField(attribute='model', blank=True,
+                         null=True, help_text='List of pipeline steps')
 
     class Meta:
         list_allowed_methods = ['get', 'post']
