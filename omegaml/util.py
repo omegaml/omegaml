@@ -3,13 +3,13 @@ from __future__ import absolute_import
 import logging
 import os
 
-from mongoengine.connection import connect
-
 from django.utils import six, importlib
+from mongoengine.connection import connect
+from six import string_types
 try:
     import urlparse
 except:
-    from urllib import parse
+    from urllib import parse as urlparse
 
 
 __settings = None
@@ -54,7 +54,7 @@ def is_spark_mllib(obj):
     # the model for the spark server to create. so obj is the name of the
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
-    if isinstance(obj, basestring):
+    if isinstance(obj, string_types):
         return 'pyspark.mllib' in obj
     return False
 

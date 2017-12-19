@@ -91,7 +91,7 @@ class OmegaJobs(object):
         try:
             # nb_filename = 'job_'+nb_file+'.ipynb'
             outf = gfs.get_last_version(nb_filename)
-            with open(nb_filename, 'w') as nb_file:
+            with open(nb_filename, 'wb') as nb_file:
                 nb_file.write(outf.read())
         except gridfs.errors.NoFile:
             raise gridfs.errors.NoFile(
@@ -158,8 +158,8 @@ class OmegaJobs(object):
                 name=result_nb)
             s3.upload_file(result_nb)
         if config.get('results-store') == 'gridfs':
-            fileid = gfs.put(open(
-                result_nb, 'r'), filename=os.path.basename(result_nb))
+            with open(result_nb, 'rb') as fin:
+                fileid = gfs.put(fin, filename=os.path.basename(result_nb))
         os.remove(result_nb) if os.path.isfile(result_nb) else None
         # shutdown the ipython kernel
         r.shutdown_kernel()

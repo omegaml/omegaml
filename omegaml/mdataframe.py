@@ -448,7 +448,7 @@ class MDataFrame(object):
         determine the collection name of the given parameter
 
         returns the collection name if some is a MDataFrame, a Collection
-        or a basestring. Otherwise returns default
+        or a string_type. Otherwise returns default
         """
         if isinstance(some, MDataFrame):
             name = some.collection.name

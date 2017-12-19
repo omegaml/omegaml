@@ -2,7 +2,6 @@ import json
 
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
-from tastypie.bundle import Bundle
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, ListField, DictField
 from tastypie.http import HttpBadRequest, HttpCreated, HttpAccepted

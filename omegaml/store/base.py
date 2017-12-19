@@ -361,9 +361,9 @@ class OmegaStore(object):
         # store dataframe indicies
         obj, idx_meta = unravel_index(obj)
         stored_columns = [jsonescape(col) for col in obj.columns]
-        column_map = zip(obj.columns, stored_columns)
+        column_map = dict(zip(obj.columns, stored_columns))
         dtypes = {
-            dict(column_map).get(k): v.name
+            column_map.get(k): v.name
             for k, v in iteritems(obj.dtypes)
         }
         kind_meta = {
@@ -389,13 +389,14 @@ class OmegaStore(object):
         kind = (Metadata.PANDAS_SEROWS
                 if store_series
                 else Metadata.PANDAS_DFROWS)
-        return self._make_metadata(name=name,
+        meta = self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=kind,
                                    kind_meta=kind_meta,
                                    attributes=attributes,
-                                   collection=collection.name).save()
+                                   collection=collection.name)
+        return meta.save()
 
     def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
         """ 
@@ -612,13 +613,12 @@ class OmegaStore(object):
                 # apply projection, if any
                 if columns:
                     # get only projected columns
-                    # meta_columns is zip(origin_column, stored_column)
-                    orig_columns = dict({k: v for k, v in meta_columns
+                    # meta_columns is {origin_column: stored_column}
+                    orig_columns = dict({k: v for k, v in iteritems(meta_columns)
                                          if k in columns or v in columns})
                 else:
                     # restore columns to original name
-                    # meta_columns is zip(origin_column, stored_column)
-                    orig_columns = dict({v: k for k, v in meta_columns})
+                    orig_columns = meta_columns
                 df.rename(columns=orig_columns, inplace=True)
             # -- restore indexes
             idx_meta = meta.kind_meta.get('idx_meta')

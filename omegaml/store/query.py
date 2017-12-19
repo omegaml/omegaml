@@ -151,7 +151,7 @@ class MongoQ(object):
         if self._inv:
             _query = {}
             for k, v in six.iteritems(query):
-                if not isinstance(v, (six.string_types, float, int, int)):
+                if not isinstance(v, (six.string_types, float, int)):
                     _query[k] = qops.NOT(v)
                 else:
                     _query[k] = qops.NOT(qops.EQ(v))
