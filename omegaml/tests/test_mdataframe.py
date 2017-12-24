@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import random
 import string
+import time
 from unittest.case import TestCase
 
 from pandas.util.testing import assert_frame_equal, assert_series_equal
@@ -297,8 +298,8 @@ class MDataFrameTests(TestCase):
                                  [0, 1, 0, 1, 0, 1, 0, 1]],
                              names=[u'first', u'second'])
         df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
-        om.datasets.put(df, 'foo', append=False)
-        dfx = om.datasets.getl('foo').loc['bar', 'one'].value
+        om.datasets.put(df, 'foomidx', append=False)
+        dfx = om.datasets.getl('foomidx').loc['bar', 'one'].value
         assert_series_equal(dfx, df.loc['bar', 'one'])
 
     def test_locindexer_series(self):

@@ -12,10 +12,8 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index,\
-    cursor_to_dataframe
+    cursor_to_dataframe, restore_index_columns_order
 import pandas as pd
-
-
 class MGrouper(object):
 
     """
@@ -300,8 +298,7 @@ class MDataFrame(object):
         if doc is None:
             result = []
         else:
-            result = [col for col in doc.keys()
-                      if col.startswith('_idx')]
+            result = restore_index_columns_order(doc.keys())
         return result
     def _as_mseries(self, column):
         kwargs = self.__getcopy_kwargs()

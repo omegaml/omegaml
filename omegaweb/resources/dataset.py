@@ -1,5 +1,7 @@
+
 from mongoengine.errors import DoesNotExist
 from six import iteritems
+from six.moves import builtins
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, DictField
@@ -39,10 +41,17 @@ class DatasetResource(OmegaResourceMixin, Resource):
         metadata = om.datasets.metadata(name)
         kind_meta = metadata.kind_meta or {}
         dtypes = kind_meta.get('dtypes')
+        # get numpy/python typemap. this is required for Py3 support
+        # adopted from https://stackoverflow.com/a/34919415
+        np_typemap = {v: getattr(builtins, k)
+                      for k, v in np.typeDict.items()
+                      if k in vars(builtins)}
         for k, v in iteritems(fltkwargs):
             # -- get column name without operator (e.g. x__gt => x)
-            dtype = dtypes.get(k.split('__')[0])
-            v = getattr(np, dtype, str)(v)
+            col = k.split('__')[0]
+            dtype = dtypes.get(col)
+            # -- get dtyped value and convert to python type
+            v = np_typemap.get(getattr(np, dtype, str), str)(v)
             fltkwargs[k] = v
         return fltkwargs
 
@@ -57,15 +66,22 @@ class DatasetResource(OmegaResourceMixin, Resource):
         obj = om.datasets.get(name, filter=fltkwargs)
         if isinstance(obj, (pd.DataFrame, pd.Series)):
             df = obj
-            data = df.reset_index(drop=True).to_dict(orient)
+            # get index values as python types to support Py3
+            index_values = list(obj.index.astype('O').values)
+            index_type = type(obj.index).__name__
+            # get data set values as python types to support Py3
+            df = df.reset_index(drop=True)
+            df.index = df.index.astype('O')
+            data = df.astype('O').to_dict(orient)
+            # build bundle
             if isinstance(data, dict):
                 bundle.data = data
             else:
                 bundle.data = dict(rows=data)
             bundle.dtypes = df.dtypes.to_dict()
             bundle.index = {
-                'type': type(obj.index).__name__,
-                'values': list(obj.index),
+                'type': index_type,
+                'values': index_values,
             }
             bundle.orient = orient
         else:

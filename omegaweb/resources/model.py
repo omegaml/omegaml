@@ -1,4 +1,5 @@
 import json
+import trace
 
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
@@ -7,9 +8,9 @@ from tastypie.fields import CharField, ListField, DictField
 from tastypie.http import HttpBadRequest, HttpCreated, HttpAccepted
 from tastypie.resources import Resource
 
+from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
-from omegaml.util import load_class
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
@@ -153,7 +154,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         create a model
         """
         om = self.get_omega(request)
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('latin1'))
         name = data.get('name')
         pipeline = data.get('pipeline')
         # TODO extend with more models

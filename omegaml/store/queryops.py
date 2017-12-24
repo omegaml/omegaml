@@ -294,7 +294,10 @@ class MongoQueryOps(object):
         idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
                 direction(col))
                for col in sort_cols]
-        name = '__'.join([col.replace('-', 'desc_').replace('+', 'asc_').replace('@', 'geo_')
+        name = '__'.join([(col
+                           .replace('-', 'desc_')
+                           .replace('+', 'asc_')
+                           .replace('@', 'geo_'))
                           for col in sort_cols])
         kwargs.setdefault('name', name)
         return idx, kwargs

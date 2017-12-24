@@ -206,6 +206,12 @@ def unravel_index(df):
     """ 
     convert index columns into dataframe columns
 
+    index columns are stored in the dataframe, named '_idx#<n>_<name>'
+    where n is the sequence and name is the nth index name.
+
+    Use restore_index_columns_order to get back the original index columns
+    in sequence.
+
     :param df: the dataframe
     :return: the unravelled dataframe, meta
     """
@@ -214,13 +220,31 @@ def unravel_index(df):
         'names': df.index.names,
     }
     # convert index names so we can restore them later
-    store_idxnames = ['_idx_{}'.format(name or i)
+    store_idxnames = ['_idx#{}_{}'.format(i, name or i)
                       for i, name in enumerate(idx_meta['names'])]
     df.index.names = store_idxnames
     unravelled = df.reset_index(), idx_meta
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
     return unravelled
+
+
+def restore_index_columns_order(columns):
+    """
+    from an iterable of column names get the index columns in sequence order
+
+    index columns are named '_idx#<n>_<name>' where n is the sequence
+    of the original index column and name is the name
+    """
+    def get_index_order(col):
+        if '_idx#' in col:
+            n = col.split('_')[1].split('#')[1]
+        else:
+            n = 0
+        return n
+    index_cols = (col for col in columns if col and col.startswith('_idx'))
+    index_cols = sorted(index_cols, key=get_index_order)
+    return index_cols
 
 
 def restore_index(df, idx_meta):
@@ -230,7 +254,7 @@ def restore_index(df, idx_meta):
     :parm
     """
     # -- get index columns
-    index_cols = [col for col in df.columns if col and col.startswith('_idx')]
+    index_cols = restore_index_columns_order(df.columns)
     # -- set index columns
     result = df.set_index(index_cols) if index_cols else df
     if index_cols:
@@ -262,10 +286,13 @@ def cursor_to_dataframe(cursor, chunk_size=10000):
     import pandas as pd
     frames = []
     count = cursor.count()
-    chunk_size = max(chunk_size, int(count * .1))
-    for chunk in grouper(chunk_size, cursor):
-        frames.append(pd.DataFrame.from_records(chunk))
-    df = pd.concat(frames)
+    if count > 0:
+        chunk_size = max(chunk_size, int(count * .1))
+        for chunk in grouper(chunk_size, cursor):
+            frames.append(pd.DataFrame.from_records(chunk))
+        df = pd.concat(frames)
+    else:
+        df = pd.DataFrame()
     return df
 
 

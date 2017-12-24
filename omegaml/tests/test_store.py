@@ -227,7 +227,7 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(df, dfx)
         idxs = list(store.collection('mydata').list_indexes())
         idx_names = [dict(v).get('name') for v in idxs]
-        self.assertIn('asc__idx_0', idx_names)
+        self.assertIn('asc__idx#0_0', idx_names)
 
     def test_put_dataframe_multiindex(self):
         # create some dataframe
@@ -244,7 +244,7 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(df, dfx)
         idxs = list(store.collection('mydata').list_indexes())
         idx_names = [dict(v).get('name') for v in idxs]
-        self.assertIn('asc__idx_first__asc__idx_second', idx_names)
+        self.assertIn('asc__idx#0_first__asc__idx#1_second', idx_names)
 
     def test_put_python_dict(self):
         # create some data
