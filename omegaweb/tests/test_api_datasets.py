@@ -5,9 +5,9 @@ import time
 
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_frame_equal
+from six import iteritems
 from tastypie.test import ResourceTestCase
 
-from omegaml import Omega
 from omegaops import add_service_deployment, get_client_config, add_user
 import pandas as pd
 
@@ -15,6 +15,8 @@ import pandas as pd
 class DatasetResourceTests(ResourceTestCase):
 
     def setUp(self):
+        from omegaml import Omega
+
         super(DatasetResourceTests, self).setUp()
         # setup django user
         self.username = username = 'test'
@@ -138,16 +140,7 @@ class DatasetResourceTests(ResourceTestCase):
         assert_frame_equal(df, sdf, check_index_type=False)
 
     def test_create_dataset(self):
-        data = {
-            'append': False,
-            'data': self.df.to_dict('records'),
-            'orient': 'columns',
-            'index': {
-                'type': type(self.df.index).__name__,
-                'values': list(self.df.index.values),
-
-            }
-        }
+        data = pandas_to_apidata(self.df, append=False)
         # put twice to see if it really creates, not appends
         resp = self.api_client.put(self.url('newdata'), data=data,
                                    authentication=self.get_credentials())
@@ -157,16 +150,7 @@ class DatasetResourceTests(ResourceTestCase):
         assert_frame_equal(df, self.df)
 
     def test_append_dataset(self):
-        data = {
-            'append': True,
-            'data': self.df.to_dict('records'),
-            'orient': 'columns',
-            'index': {
-                'type': type(self.df.index).__name__,
-                'values': list(self.df.index.values),
-
-            }
-        }
+        data = pandas_to_apidata(self.df, append=True)
         # put twice to see if it really appends, not replaces
         resp = self.api_client.put(self.url('newdata'), data=data,
                                    authentication=self.get_credentials())
@@ -181,19 +165,28 @@ class DatasetResourceTests(ResourceTestCase):
                                       authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 404)
         # put a dataset and delete it
-        data = {
-            'append': True,
-            'data': self.df.to_dict('records'),
-            'orient': 'columns',
-            'index': {
-                'type': type(self.df.index).__name__,
-                'values': list(self.df.index.values),
-
-            }
-        }
+        data = pandas_to_apidata(self.df, append=True)
         resp = self.api_client.put(self.url('newdata'), data=data,
                                    authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 204)
         resp = self.api_client.delete(self.url('newdata'),
                                       authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 204)
+
+
+def pandas_to_apidata(df, append=False):
+    # TODO put logic for this into client lib
+    data = {
+        'append': append,
+        'data': df.to_dict('records'),
+        'dtypes': {k: str(v)
+                   for k, v in iteritems(df.dtypes.to_dict())},
+        'orient': 'columns',
+        'index': {
+            'type': type(df.index).__name__,
+            # ensure type conversion to object for Py3 tastypie does
+            # not recognize numpy.int64
+            'values': list(df.index.astype('O').values),
+        }
+    }
+    return data

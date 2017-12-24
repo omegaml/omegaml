@@ -20,9 +20,9 @@ class OmegaJobs(object):
     """
     Omega Jobs API
     """
-    def __init__(self):
+    def __init__(self, store=None):
         self.defaults = omega_settings()
-        self.store = OmegaStore(prefix=None)
+        self.store = store or OmegaStore(prefix=None)
         self._db = self.store.mongodb
 
     def get_fs(self, collection=None):

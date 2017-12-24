@@ -79,7 +79,13 @@ class DatasetResource(OmegaResourceMixin, Resource):
         om = self.get_omega(bundle)
         append = isTrue(bundle.data.get('append', 'true'))
         orient = bundle.data.get('orient', 'columns')
-        df = pd.DataFrame.from_dict(bundle.data.get('data'), orient=orient)
+        dtypes = bundle.data.get('dtypes')
+        # convert dtypes back to numpy dtypes
+        # -- see https://github.com/pandas-dev/pandas/issues/14655#issuecomment-260736368
+        if dtypes:
+            dtypes = {k: np.dtype(v) for k, v in iteritems(dtypes)}
+        df = pd.DataFrame.from_dict(bundle.data.get('data'),
+                                    orient=orient).astype(dtypes)
         index = bundle.data.get('index')
         if index and 'values' in index:
             df.index = index.get('values')
