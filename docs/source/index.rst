@@ -13,7 +13,7 @@ Omegaml is a API based service for ......
    putget
    mdataframe
    Untitled
-   design
+   guide/index
 
 Indices and tables
 ==================
