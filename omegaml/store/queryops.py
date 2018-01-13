@@ -78,7 +78,7 @@ class MongoQueryOps(object):
     UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN'
              'EXISTS,TYPE,REGEX,EQ').split(',')
     """
-    Simplified mongo query terms
+    A Pythonic API to build Mongo query statements 
 
     Examples:
 

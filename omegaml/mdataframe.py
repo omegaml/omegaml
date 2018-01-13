@@ -14,6 +14,8 @@ from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index,\
     cursor_to_dataframe, restore_index_columns_order
 import pandas as pd
+
+
 class MGrouper(object):
 
     """
@@ -41,6 +43,9 @@ class MGrouper(object):
     def aggregate(self, specs):
         """
         aggregate by given specs
+        
+        See the following link for a list of supported operations. 
+        https://docs.mongodb.com/manual/reference/operator/aggregation/group/
 
         :param specs: a dictionary of { column : function | list[functions] } 
         pairs. 
@@ -320,9 +325,17 @@ class MDataFrame(object):
             'explain': explain or 'specify explain=True'
         }
     def __len__(self):
+        """
+        the projected number of rows when resolving
+        """
         return self._get_cursor().count()
     @property
     def value(self):
+        """
+        resolve the query and return a Pandas DataFrame
+
+        :return: the result of the query as a pandas DataFrame 
+        """
         cursor = self._get_cursor()
         df = self._get_dataframe_from_cursor(cursor)
         # this ensures the equiv. of pandas df.loc[n] is a Series
@@ -356,12 +369,33 @@ class MDataFrame(object):
             cursor.skip(self.skip_topn)
         return cursor
     def sort(self, columns):
+        """
+        sort by specified columns
+
+        :param columns: str of single column or a list of columns. Sort order
+                        is specified as the + (ascending) or - (descending)
+                        prefix to the column name. Default sort order is
+                        ascending.
+        :return: the MDataFrame
+        """
         self.sort_order = make_tuple(columns)
         return self
     def head(self, limit=10):
+        """
+        return up to limit numbers of rows
+
+        :param limit: the number of rows to return. Defaults to 10
+        :return: the MDataFrame
+        """
         self.head_limit = limit
         return self
     def skip(self, topn):
+        """
+        skip the topn number of rows
+
+        :param topn: the number of rows to skip.
+        :return: the MDataFrame 
+        """
         self.skip_topn = topn
         return self
     def merge(self, right, on=None, left_on=None, right_on=None,
@@ -371,6 +405,21 @@ class MDataFrame(object):
         merge this dataframe with another dataframe. only left outer joins
         are currently supported. the output is saved as a new collection,
         target name (defaults to a generated name if not specified).
+
+        :param right: the other MDataFrame
+        :param on: the list of key columns to merge by
+        :param left_on: the list of the key columns to merge on this dataframe
+        :param right_on: the list of the key columns to merge on the other 
+        dataframe
+        :param how: the method to merge. supported are left, inner, right. 
+        Defaults to inner
+        :param target: the name of the collection to store the merge results
+        in. If not provided a temporary name will be created.
+        :param suffixes: the suffixes to apply to identical left and right 
+        columns
+        :param sort: if True the merge results will be sorted. If False the
+        MongoDB natural order is implied.
+        :returns: the MDataFrame to the target MDataFrame
         """
         # validate input
         supported_how = ["left", 'inner', 'right']

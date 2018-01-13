@@ -238,6 +238,7 @@ class OmegaStore(object):
         return meta
 
     def _drop_metadata(self, name=None, **kwargs):
+        # internal method to delete meta data of an object
         meta = self.metadata(name, **kwargs)
         if meta is not None:
             meta.delete()
@@ -521,6 +522,15 @@ class OmegaStore(object):
 
     def get_backend_bykind(self, kind, model_store=None, data_store=None,
                            **kwargs):
+        """
+        return the backend by a given object kind
+
+        :param kind: The object kind
+        :param model_store: the OmegaStore instance used to store models
+        :param data_store: the OmegaStore instance used to store data
+        :param kwargs: the kwargs passed to the backend initialization
+        :return: the backend 
+        """
         backend_cls = self.defaults.OMEGA_BACKENDS[kind]
         model_store = model_store or self
         data_store = data_store or self
@@ -529,6 +539,15 @@ class OmegaStore(object):
         return backend
 
     def get_backend(self, name, model_store=None, data_store=None, **kwargs):
+        """
+        return the backend by a given object name
+
+        :param kind: The object kind
+        :param model_store: the OmegaStore instance used to store models
+        :param data_store: the OmegaStore instance used to store data
+        :param kwargs: the kwargs passed to the backend initialization
+        :return: the backend 
+        """
         meta = self.metadata(name)
         if meta is not None:
             backend_cls = self.defaults.OMEGA_BACKENDS[meta.kind]
@@ -540,7 +559,11 @@ class OmegaStore(object):
         return None
 
     def getl(self, *args, **kwargs):
-        """ convenience to return MDataFrame """
+        """ return a lazy MDataFrame for a given object
+
+        Same as .get, but returns a MDataFrame
+
+        """
         return self.get(*args, lazy=True, **kwargs)
 
     def get(self, name, version=-1, force_python=False,
@@ -549,8 +572,9 @@ class OmegaStore(object):
         Retrieve an object
 
         :param name: The name of the object
-        :param version: Version of the stored object
+        :param version: Version of the stored object (not supported)
         :param force_python: Return as a python object
+        :param kwargs: kwargs depending on object kind 
         :return: an object, estimator, pipelines, data array or pandas dataframe
             previously stored with put()
         """
@@ -584,7 +608,18 @@ class OmegaStore(object):
                                 filter=None, version=-1, is_series=False,
                                 **kwargs):
         """
-        Retrieve dataframe from documents
+        Internal method to return DataFrame from documents 
+
+        :param name: the name of the object (str)
+        :param columns: the column projection as a list of column names
+        :param lazy: if True returns a lazy representation as an MDataFrame. 
+        If False retrieves all data and returns a DataFrame (default) 
+        :param filter: the filter to be applied as a column__op=value dict 
+        :param version: the version to retrieve (not supported)
+        :param is_series: if True retruns a Series instead of a DataFrame
+        :param kwargs: remaining kwargs are used a filter. The filter kwarg
+        overrides other kwargs.
+        :return: the retrieved object (DataFrame, Series or MDataFrame) 
         """
         collection = self.collection(name)
         if lazy:
@@ -644,8 +679,6 @@ class OmegaStore(object):
         :param kwargs: Mongo filter arguments
         :param collection: The name of mongodb collection
         :return: Returns a set of parameters as dictionary.
-
-
         """
         modified_params = {}
         db_structure = collection.find_one({}, {'_id': False})
@@ -660,6 +693,14 @@ class OmegaStore(object):
         return modified_params
 
     def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
+        """
+        Return a grouped dataframe
+
+        :param name: the name of the object
+        :param version: not supported
+        :param kwargs: mongo db query arguments to be passed to 
+        collection.find() as a filter. 
+        """
         import pandas as pd
         def convert_doc_to_row(cursor):
             for doc in cursor:
@@ -680,8 +721,7 @@ class OmegaStore(object):
         Retrieve dataframe from hdf
 
         :param name: The name of object
-        :param version: The version of object
-
+        :param version: The version of object (not supported)
         :return: Returns a python pandas dataframe
         :raises: gridfs.errors.NoFile
         """
