@@ -347,3 +347,9 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+import sys
+import os
+sys.path.insert(0, os.path.join(os.getcwd(), '..', '..'))
+print(sys.path)
+import omegaml

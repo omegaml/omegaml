@@ -329,7 +329,10 @@ class OmegaDeferredInstance():
 # -- these are deferred instanced that is the actual Omega instance
 #    is only created on actual attribute access
 _om = OmegaDeferredInstance()
+#: the OmegaStore for data
 datasets = OmegaDeferredInstance(_om, 'datasets')
+#: the OmegaStore for models
 models = OmegaDeferredInstance(_om, 'models')
 jobs = OmegaDeferredInstance(_om, 'jobs')
+#: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')
