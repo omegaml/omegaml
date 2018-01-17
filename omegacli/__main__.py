@@ -3,7 +3,7 @@ import argparse
 import requests
 import yaml
 
-from omegacli.auth import TastypieApiKeyAuth
+from omegacli.auth import OmegaRestApiAuth
 from omegaml import defaults
 parser = argparse.ArgumentParser(description='omegaml cli')
 subparsers = parser.add_subparsers(help='commands')
@@ -18,8 +18,8 @@ args = parser.parse_args()
 if __name__ == '__main__':
     if args.command == 'init':
         with open(defaults.config_file, 'w') as fconfig:
-            auth = TastypieApiKeyAuth(args.userid,
-                                      args.apikey)
+            auth = OmegaRestApiAuth(args.userid,
+                                    args.apikey)
             url = 'http://omegaml.dokku.me/api/v1/config/'
             #url = 'http://localhost:8000/api/v1/config/'
             resp = requests.get(url, auth=auth)

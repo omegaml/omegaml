@@ -67,10 +67,11 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         datax = query.get('datax')
         datay = query.get('datay')
         result = om.runtime.model(name).fit(datax, datay)
+        meta = result.get()
         data = {
             'datax': datax,
             'datay': datay,
-            'result': [result.get()]
+            'result': 'ok' if meta else 'error',
         }
         return self.create_response(request, data, response_class=HttpAccepted)
 
@@ -162,6 +163,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'LinearRegression': 'sklearn.linear_model.LinearRegression',
             'LogisticRegression': 'sklearn.linear_model.LogisticRegression',
         }
+        # TODO setup a pipeline instead of singular models 
         for step in pipeline:
             modelkind, kwargs = step
             model_cls = MODEL_MAP.get(modelkind)

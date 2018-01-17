@@ -10,7 +10,7 @@ OMEGA_TMP = '/tmp'
 OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    os.environ.get('MONGO_URL') or
                    'mongodb://localhost:27017/omega')
-OMEGA_MONGO_COLLECTION = 'store'
+OMEGA_MONGO_COLLECTION = 'omegaml'
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
                 'amqp://guest@127.0.0.1:5672//')

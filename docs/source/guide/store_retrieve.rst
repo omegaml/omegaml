@@ -43,8 +43,8 @@ To replace all documents in a collection use the :code:`append=False` kwarg.
     => 
     [['data']]
 
-Pandas DataFrames
-+++++++++++++++++
+Pandas DataFrames, Series
++++++++++++++++++++++++++
 
 Pandas Dataframes are stored in much the same way. Note however that DataFrames 
 provide additional support on querying, as shown in the next section 

@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.githubpages',
+    #'sphinx.ext.githubpages',
 ]
 
 # https://github.com/snide/sphinx_rtd_theme

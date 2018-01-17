@@ -8,3 +8,5 @@ Guide
    getstarted
    store_retrieve
    filterdf
+   modelstore
+   restapi

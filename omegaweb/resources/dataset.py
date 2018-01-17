@@ -24,7 +24,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
     orient = CharField('orient', blank=True, null=True)
 
     class Meta:
-        list_allowed_methods = ['get', 'post']
+        list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
         authentication = ApiKeyAuthentication()
@@ -100,6 +100,9 @@ class DatasetResource(OmegaResourceMixin, Resource):
         # -- see https://github.com/pandas-dev/pandas/issues/14655#issuecomment-260736368
         if dtypes:
             dtypes = {k: np.dtype(v) for k, v in iteritems(dtypes)}
+        # pandas only likes orient = records or columns
+        if orient == 'dict':
+            orient = 'columns'
         df = pd.DataFrame.from_dict(bundle.data.get('data'),
                                     orient=orient).astype(dtypes)
         index = bundle.data.get('index')
