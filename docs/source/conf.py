@@ -34,8 +34,13 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.autosummary',
     #'sphinx.ext.githubpages',
 ]
+
+# https://stackoverflow.com/a/40809562
+autodoc_default_flags = ['members']
+autosummary_generate = True
 
 # https://github.com/snide/sphinx_rtd_theme
 import sphinx_rtd_theme

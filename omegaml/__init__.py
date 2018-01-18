@@ -234,6 +234,9 @@ class OmegaModelProxy(object):
 
 
 class OmegaRuntime(object):
+    """
+    omegaml compute cluster gateway 
+    """
 
     def __init__(self, omega, backend=None, mongo_url=None,
                  broker=None, celerykwargs=None, celeryconf=None):
@@ -335,6 +338,7 @@ _om = OmegaDeferredInstance()
 datasets = OmegaDeferredInstance(_om, 'datasets')
 #: the OmegaStore for models
 models = OmegaDeferredInstance(_om, 'models')
+#: the jobs API
 jobs = OmegaDeferredInstance(_om, 'jobs')
 #: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')

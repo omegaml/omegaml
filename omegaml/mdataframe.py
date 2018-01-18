@@ -39,11 +39,14 @@ class MGrouper(object):
             return self.agg({col: attr for col in columns})
         return statfunc
     def agg(self, specs):
+        """
+        shortcut for .aggregate
+        """
         return self.aggregate(specs)
     def aggregate(self, specs):
         """
         aggregate by given specs
-        
+
         See the following link for a list of supported operations. 
         https://docs.mongodb.com/manual/reference/operator/aggregation/group/
 
@@ -131,6 +134,17 @@ class MLocIndexer(object):
     def __init__(self, mdataframe):
         self.mdataframe = mdataframe
     def __getitem__(self, specs):
+        """
+        access by index
+
+        use as mdf.loc[specs] where specs is any of
+
+        * a list or tuple of scalar index values, e.g. .loc[(1,2,3)]
+        * a slice of values e.g. .loc[1:5]
+        * a list of slices, e.g. .loc[1:5, 2:3]
+
+        :return: the sliced part of the MDataFrame
+        """
         filterq, projection = self._get_filter(specs)
         if filterq:
             df = self.mdataframe.query(filterq)
@@ -202,7 +216,9 @@ class MSeriesGroupby(MGrouper):
     """
     def count(self):
         """
-        return series count 
+        return series count
+
+        :return: counts by group 
         """
         # MGrouper will insert a _count column, see _count(). we remove
         # that column again and return a series named as the group column
@@ -288,6 +304,13 @@ class MDataFrame(object):
         aggr = MGrouper(self, self.collection, [], sort=False)
         return getattr(aggr, stat)
     def groupby(self, columns, sort=True):
+        """
+        Group by a given set of columns
+
+        :param columns: the list of columns
+        :param sort: if True sort by group key
+        :return: MGrouper
+        """
         return MGrouper(self, self.collection, columns, sort=sort)
     def _get_fields(self):
         doc = self.collection.find_one()
@@ -311,7 +334,9 @@ class MDataFrame(object):
         return MSeries(self.collection, **kwargs)
     def inspect(self, explain=False):
         """
-        inspect this dataframe
+        inspect this dataframe's actual mongodb query
+
+        :param explain: if True explains access path
         """
         if isinstance(self.collection, FilteredCollection):
             query = self.collection.query
@@ -563,6 +588,13 @@ class MDataFrame(object):
         return result
     @property
     def loc(self):
+        """
+        Access by index
+
+        Use as mdf.loc[index_value]
+
+        :return: MLocIndexer
+        """
         return MLocIndexer(self)
 
 
@@ -577,6 +609,11 @@ class MSeries(MDataFrame):
         super(MSeries, self).__init__(*args, **kwargs)
         self.is_unique = False
     def unique(self):
+        """
+        return the unique set of values for the series
+
+        :return: MSeries
+        """
         self.is_unique = True
         return self
     def _get_cursor(self):
@@ -593,7 +630,9 @@ class MSeries(MDataFrame):
 
         this is a Series unless unique() was called. If unique()
         only distinct values are returned as an array, matching
-        the behavior of a Series 
+        the behavior of a Series
+
+        :return: pandas.Series 
         """
         cursor = self._get_cursor()
         column = make_tuple(self.columns)[0]
