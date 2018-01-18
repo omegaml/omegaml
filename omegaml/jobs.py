@@ -14,14 +14,20 @@ import gridfs
 from nbformat import read, write
 from omegaml import signals
 from omegaml.util import settings as omega_settings
+from omegaml.tasks import run_omegaml_job
 
 
 class OmegaJobs(object):
+
     """
     Omega Jobs API
     """
+
+    # TODO this class is in serious need for refactoring
+
     def __init__(self, store=None):
         self.defaults = omega_settings()
+        # FIXME should be 'jobs' prefix
         self.store = store or OmegaStore(prefix=None)
         self._db = self.store.mongodb
 
@@ -29,6 +35,7 @@ class OmegaJobs(object):
         """
         get gridfs instance using url and collection provided
         """
+        # FIXME this should use store.fs or store.collection
         if collection is None:
             collection = self.defaults.OMEGA_NOTEBOOK_COLLECTION
 
@@ -43,6 +50,7 @@ class OmegaJobs(object):
         """
         returns the collection object
         """
+        # FIXME this should use store.collection 
         return getattr(self.store.mongodb, collection)
 
     def list(self, jobfilter='.*'):
@@ -51,6 +59,7 @@ class OmegaJobs(object):
         filter is a regex on the name of the ipynb entry.
         The default is all, i.e. `.*`
         """
+        # FIXME this should use store.list
         gfs = self.get_fs()
         file_list = gfs.list()
         job_list = [job for job in file_list if job.startswith(
@@ -59,7 +68,7 @@ class OmegaJobs(object):
 
     def run(self, nb_file):
         """
-        run the notebook using a celery task
+        run the notebook on the runtime cluster
         """
         from omegaml.tasks import run_omegaml_job
         result = run_omegaml_job.delay(nb_file)
@@ -126,14 +135,17 @@ class OmegaJobs(object):
         """
         from pycloudfs import S3Helper
         gfs = self.get_fs()
+        # FIXME get the notebook from mongo store without storing locally
         config = self.get_notebook_config(nb_filename)
         # nb_filename = 'job_'+nb_file+'.ipynb'
+        # FIXME this only works because get_notebook_config stored the file
+        # locally
         notebook = self.open_notebook(nb_filename)
         r = NotebookRunner(notebook)
         r.run_notebook(skip_exceptions=True)
         filename, ext = os.path.splitext(nb_filename)
         ts = datetime.datetime.now().strftime('%s')
-        result_nb = 'result'+filename.lstrip('job')+'_{0}.ipynb'.format(ts)
+        result_nb = 'result' + filename.lstrip('job') + '_{0}.ipynb'.format(ts)
         write(r.nb, open(result_nb, 'w',), version=3)
         # store results
         s3file = {}
@@ -170,12 +182,15 @@ class OmegaJobs(object):
             metadata.gridfile = GridFSProxy(
                 grid_id=fileid,
                 collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION)
+            metadata.attrs['state'] = 'EXECUTED'
             metadata.s3file = s3file
             metadata.save()
+            # FIXME return only at function end, same below
             return metadata
         except Metadata.DoesNotExist:
             attrs = {}
             attrs['config'] = config
+            attrs['state'] = 'EXECUTED'
             return Metadata(
                 name=nb_filename,
                 kind=Metadata.OMEGAML_RUNNING_JOBS,
@@ -190,6 +205,12 @@ class OmegaJobs(object):
         Schedule a processing of a notebook as per the interval
         specified on the job script
         """
+        # FIXME this looks somewhat unstable. currently we schedule by
+        #       inserting metadata that sets the state of the job to
+        #       RECEIVED. Then the task execute_script which is 
+        #       scheduled by celery gets all new jobs not yet in RECEIVED
+        #       state, and schedules for the next iteration. What happens
+        #       if a job was scheduled already how will it get reschduled?  
         attrs = {}
         config = self.get_notebook_config(nb_file)
         now = datetime.datetime.now()
@@ -207,6 +228,7 @@ class OmegaJobs(object):
             metadata = Metadata.objects.get(
                 name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
             if metadata.attributes.get('state') == "RECEIVED":
+                # FIXME return only at end of method.
                 return metadata.attributes.get('task_id')
         except Metadata.DoesNotExist:
             # set attributes
@@ -217,7 +239,7 @@ class OmegaJobs(object):
                 name=nb_file,
                 kind=Metadata.OMEGAML_RUNNING_JOBS,
                 attributes=attrs).save()
-        result = schedule_omegaml_job.apply_async(
+        result = run_omegaml_job.apply_async(
             args=[nb_file], eta=run_at, kwargs=kwargs)
         signals.job_schedule.send(sender=None, name=nb_file)
         return result
@@ -226,6 +248,7 @@ class OmegaJobs(object):
         """
         returns list of Metadata objects for this job
         """
+        # FIXME this should use the store.metadata
         return Metadata.objects.filter(name=job, kind__in=Metadata.KINDS)
 
     def get_result(self, job):
@@ -251,4 +274,5 @@ class OmegaJobs(object):
                     raise Exception
                 return fs.get(metadata.gridfile.grid_id)
             except Exception:
-                raise Metadata.DoesNotExist('No job found related to the name or task id: {0}'.format(job))
+                raise Metadata.DoesNotExist(
+                    'No job found related to the name or task id: {0}'.format(job))

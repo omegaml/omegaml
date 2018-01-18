@@ -23,28 +23,30 @@ class OmegaModelProxy(object):
 
     Usage:
 
-        om = Omega()
-        # train a model
-        # result is AsyncResult, use .get() to return it's result
-        result = om.runtime.model('foo').fit('datax', 'datay')
-        result.get()
+        .. code::
 
-        # predict
-        result = om.runtime.model('foo').predict('datax')
-        # result is AsyncResult, use .get() to return it's result
-        print result.get()
+            om = Omega()
+            # train a model
+            # result is AsyncResult, use .get() to return it's result
+            result = om.runtime.model('foo').fit('datax', 'datay')
+            result.get()
 
-    Implementation note:
-
-        We decided to implement each method call explicitely in both
-        this class and the celery tasks. While it would be possible to
-        implement a generic method and task that passes the method and
-        arguments to be called, maintainability would suffer and the
-        documentation would become very unspecific. We think it is much
-        cleaner to have an explicit interface at the chance of missing
-        features. If need should arise we can still implement a generic
-        method call.
+            # predict
+            result = om.runtime.model('foo').predict('datax')
+            # result is AsyncResult, use .get() to return it's result
+            print result.get()
     """
+
+#     Implementation note:
+#
+#     We decided to implement each method call explicitely in both
+#     this class and the celery tasks. While it would be possible to
+#     implement a generic method and task that passes the method and
+#     arguments to be called, maintainability would suffer and the
+#     documentation would become very unspecific. We think it is much
+#     cleaner to have an explicit interface at the chance of missing
+#     features. If need should arise we can still implement a generic
+#     method call.
 
     def __init__(self, modelname, runtime=None, mongo_url=None):
         self.modelname = modelname

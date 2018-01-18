@@ -97,10 +97,8 @@ from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
 
 
-
-
-
 class OmegaStore(object):
+
     def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None):
         """
         :param mongo_url: the mongourl to use for the gridfs

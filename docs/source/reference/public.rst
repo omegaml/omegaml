@@ -20,4 +20,19 @@ omegaml.store
 .. autoclass:: omegaml.store.base.OmegaStore
    :members: list,get,put,drop
    
-   
+
+omegaml.runtime
+---------------
+
+.. autoclass:: omegaml.OmegaRuntime
+   :members: model
+
+.. autoclass:: omegaml.OmegaModelProxy
+   :members:   
+
+
+omegaml.jobs
+------------
+
+.. autoclass:: omegaml.jobs.OmegaJobs
+   :members: run, run_notebook, schedule

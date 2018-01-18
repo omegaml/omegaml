@@ -186,7 +186,7 @@ def schedule_omegaml_job(nb_file, **kwargs):
     schedules the running of omegaml job
     """
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
-    result = om.jobs.run_notebook(nb_file)
+    result = om.jobs.schedule(nb_file)
     return result
 
 
