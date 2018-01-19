@@ -6,13 +6,7 @@ Omegaml is a API based service for ......
 .. toctree::
    :maxdepth: 2
 
-   kickstart
-   mongorabbit
-   omegamlvagrant
-   examples
-   putget
-   mdataframe
-   Untitled 
+   admin/index
    guide/index
    reference/index
 

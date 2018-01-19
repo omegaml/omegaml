@@ -49,7 +49,7 @@ omegaml.runtime
 .. autoclass:: omegaml.OmegaModelProxy
    :members:   
 
-
+  
 omegaml.jobs
 ++++++++++++ 
 
@@ -61,11 +61,11 @@ omegaml.mdataframe
 ++++++++++++++++++ 
 
 .. autoclass:: omegaml.mdataframe.MDataFrame
-   :members: groupby, inspect, __len__, value, sort, head, skip, merge, query, create_index, loc
+   :members: groupby, inspect, __len__, value, sort, head, skip, merge, query, query_inplace, create_index, loc
    :special-members: __len__
 
 .. autoclass:: omegaml.mdataframe.MSeries
-   :inherited-members: groupby, inspect, value, sort, head, skip, merge, query, create_index, loc   
+   :inherited-members: groupby, inspect, value, sort, head, skip, merge, query, query_inplace, create_index, loc   
    :special-members: __len__
 
 

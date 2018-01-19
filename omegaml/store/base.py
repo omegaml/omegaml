@@ -98,6 +98,9 @@ from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
 
 
 class OmegaStore(object):
+    """
+    The storage backend for models and data
+    """
 
     def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None):
         """

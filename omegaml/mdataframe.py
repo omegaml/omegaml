@@ -246,20 +246,20 @@ class MDataFrame(object):
                  limit=None, skip=None, sort_order=None,
                  force_columns=None, **kwargs):
         self.collection = collection
-        #: columns in frame
+        # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields()
         self.columns = [str(col) for col in self.columns]
-        #: columns to sort by, defaults to not sorted
+        # columns to sort by, defaults to not sorted
         self.sort_order = sort_order
-        #: top n documents to fetch
+        # top n documents to fetch
         self.head_limit = limit
-        #: top n documents to skip before returning
+        # top n documents to skip before returning
         self.skip_topn = skip
-        #: filter criteria
+        # filter criteria
         self.filter_criteria = query or {}
-        #: force columns -- on output add columns not present
+        # force columns -- on output add columns not present
         self.force_columns = force_columns or []
-        #: was this created from the loc indexer?
+        # was this created from the loc indexer?
         self.from_loc_indexer = kwargs.get('from_loc_indexer', False)
         if self.filter_criteria:
             # make sure we have a filtered collection with the criteria given
