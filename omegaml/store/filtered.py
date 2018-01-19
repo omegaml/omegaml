@@ -25,12 +25,12 @@ class FilteredCollection(Collection):
         Example:
 
             # in pymongo
-            
+
             filter = {expression}
             coll.find_one_and_replace(filter, replace)
 
             # FilteredCollection
-            
+
             coll = FilteredCollection(query={expression})
             coll.find_one_and_replace(replace, filter=None)
 
@@ -40,7 +40,7 @@ class FilteredCollection(Collection):
     argument:  
 
             # temporarily add another filter
-            
+
             coll.find_one_and_replace(replace, filter={expression})
 
     Here expression will only apply to this particular method call. The

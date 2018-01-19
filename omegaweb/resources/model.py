@@ -1,16 +1,16 @@
 import json
+import trace
 
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
-from tastypie.bundle import Bundle
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, ListField, DictField
 from tastypie.http import HttpBadRequest, HttpCreated, HttpAccepted
 from tastypie.resources import Resource
 
+from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
-from omegaml.util import load_class
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
@@ -67,10 +67,11 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         datax = query.get('datax')
         datay = query.get('datay')
         result = om.runtime.model(name).fit(datax, datay)
+        meta = result.get()
         data = {
             'datax': datax,
             'datay': datay,
-            'result': [result.get()]
+            'result': 'ok' if meta else 'error',
         }
         return self.create_response(request, data, response_class=HttpAccepted)
 
@@ -154,7 +155,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         create a model
         """
         om = self.get_omega(request)
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('latin1'))
         name = data.get('name')
         pipeline = data.get('pipeline')
         # TODO extend with more models
@@ -162,6 +163,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'LinearRegression': 'sklearn.linear_model.LinearRegression',
             'LogisticRegression': 'sklearn.linear_model.LogisticRegression',
         }
+        # TODO setup a pipeline instead of singular models 
         for step in pipeline:
             modelkind, kwargs = step
             model_cls = MODEL_MAP.get(modelkind)

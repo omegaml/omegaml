@@ -2,15 +2,15 @@
 from requests.auth import AuthBase
 
 
-class TastypieApiKeyAuth(AuthBase):
+class OmegaRestApiAuth(AuthBase):
 
     """
     Sets the appropriate authentication headers
-    for the Tastypie API key authentication.
+    for the Omega REST API key authentication.
 
     Usage:
-        auth = TastypieApiKeyAuth('jezdez', 
-                                  '25fdd0d9d210acb78b5b845fe8284a3c93630252')
+        auth = OmegaAuth('jezdez', 
+                         '25fdd0d9d210acb78b5b845fe8284a3c93630252')
         response = requests.get('http://api.foo.bar/v1/spam/', auth=auth)
     """
     def __init__(self, username, api_key):

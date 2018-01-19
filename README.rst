@@ -147,8 +147,6 @@ automatically be generated so that the data can be easily retrieved later on.
 Installation and configuration
 ------------------------------
 
-*Disclaimer: This is as yet untested in a real-life deployment*
-
 Use from a "dumb" client (non scikit-learn):
 
 1. Install the omegaml package

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.shortcuts import render
 from docutils.core import publish_parts
+from six import string_types
 
 from tastypiex.modresource import add_resource_mixins,\
     override_resource_meta
@@ -127,7 +128,7 @@ class ApiCentralizer(object):
         """ centralize all resources in an Api """
         for api in apis:
             # if a string is given, load
-            if isinstance(api, basestring):
+            if isinstance(api, string_types):
                 api = load_api(api)
             for resource in api._registry.values():
                 self.centralize_resource(resource, mixins=mixins, meta=meta)
@@ -135,7 +136,7 @@ class ApiCentralizer(object):
 
     def centralize_resource(self, resource, mixins=None, meta=None):
         """override Meta attributes in a Resource or add mixins"""
-        if isinstance(resource, basestring):
+        if isinstance(resource, string_types):
             # load resource if given as a string path.to.api.resource
             parts = resource.split('.')
             apipath, api_name = '.'.join(parts[0:-1]), parts[-1]
@@ -200,7 +201,7 @@ class ApiCentralizer(object):
         assert self.apis, "ApiCentralizer: no apis known. Did you specify autoinit=True?"
         urls = []
         for api in self.apis:
-            if isinstance(api, basestring):
+            if isinstance(api, string_types):
                 api = load_api(api)
             urls.append(url(path, include(api.urls)))
         if self.swaggerui:
@@ -228,7 +229,7 @@ class ApiCentralizer(object):
         if '{api_name}' not in path:
             path = (r'%s/{api_name}/' % path).replace('//', '/')
         for api in apis:
-            if isinstance(api, basestring):
+            if isinstance(api, string_types):
                 api = load_api(api)
             namespace = self.get_swagger_url_namespace(api)
             kwargs = {
@@ -271,7 +272,7 @@ class ApiCentralizer(object):
         apis = apis or self.apis
         docapis = []
         for api in apis:
-            if isinstance(api, basestring):
+            if isinstance(api, string_types):
                 api = load_api(api)
 
             docapis.append({

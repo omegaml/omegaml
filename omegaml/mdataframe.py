@@ -12,7 +12,7 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index,\
-    cursor_to_dataframe
+    cursor_to_dataframe, restore_index_columns_order
 import pandas as pd
 
 
@@ -39,10 +39,16 @@ class MGrouper(object):
             return self.agg({col: attr for col in columns})
         return statfunc
     def agg(self, specs):
+        """
+        shortcut for .aggregate
+        """
         return self.aggregate(specs)
     def aggregate(self, specs):
         """
         aggregate by given specs
+
+        See the following link for a list of supported operations. 
+        https://docs.mongodb.com/manual/reference/operator/aggregation/group/
 
         :param specs: a dictionary of { column : function | list[functions] } 
         pairs. 
@@ -128,6 +134,17 @@ class MLocIndexer(object):
     def __init__(self, mdataframe):
         self.mdataframe = mdataframe
     def __getitem__(self, specs):
+        """
+        access by index
+
+        use as mdf.loc[specs] where specs is any of
+
+        * a list or tuple of scalar index values, e.g. .loc[(1,2,3)]
+        * a slice of values e.g. .loc[1:5]
+        * a list of slices, e.g. .loc[1:5, 2:3]
+
+        :return: the sliced part of the MDataFrame
+        """
         filterq, projection = self._get_filter(specs)
         if filterq:
             df = self.mdataframe.query(filterq)
@@ -199,7 +216,9 @@ class MSeriesGroupby(MGrouper):
     """
     def count(self):
         """
-        return series count 
+        return series count
+
+        :return: counts by group 
         """
         # MGrouper will insert a _count column, see _count(). we remove
         # that column again and return a series named as the group column
@@ -227,20 +246,20 @@ class MDataFrame(object):
                  limit=None, skip=None, sort_order=None,
                  force_columns=None, **kwargs):
         self.collection = collection
-        #: columns in frame
+        # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields()
         self.columns = [str(col) for col in self.columns]
-        #: columns to sort by, defaults to not sorted
+        # columns to sort by, defaults to not sorted
         self.sort_order = sort_order
-        #: top n documents to fetch
+        # top n documents to fetch
         self.head_limit = limit
-        #: top n documents to skip before returning
+        # top n documents to skip before returning
         self.skip_topn = skip
-        #: filter criteria
+        # filter criteria
         self.filter_criteria = query or {}
-        #: force columns -- on output add columns not present
+        # force columns -- on output add columns not present
         self.force_columns = force_columns or []
-        #: was this created from the loc indexer?
+        # was this created from the loc indexer?
         self.from_loc_indexer = kwargs.get('from_loc_indexer', False)
         if self.filter_criteria:
             # make sure we have a filtered collection with the criteria given
@@ -285,6 +304,13 @@ class MDataFrame(object):
         aggr = MGrouper(self, self.collection, [], sort=False)
         return getattr(aggr, stat)
     def groupby(self, columns, sort=True):
+        """
+        Group by a given set of columns
+
+        :param columns: the list of columns
+        :param sort: if True sort by group key
+        :return: MGrouper
+        """
         return MGrouper(self, self.collection, columns, sort=sort)
     def _get_fields(self):
         doc = self.collection.find_one()
@@ -300,8 +326,7 @@ class MDataFrame(object):
         if doc is None:
             result = []
         else:
-            result = [col for col in doc.keys()
-                      if col.startswith('_idx')]
+            result = restore_index_columns_order(doc.keys())
         return result
     def _as_mseries(self, column):
         kwargs = self.__getcopy_kwargs()
@@ -309,7 +334,9 @@ class MDataFrame(object):
         return MSeries(self.collection, **kwargs)
     def inspect(self, explain=False):
         """
-        inspect this dataframe
+        inspect this dataframe's actual mongodb query
+
+        :param explain: if True explains access path
         """
         if isinstance(self.collection, FilteredCollection):
             query = self.collection.query
@@ -323,9 +350,17 @@ class MDataFrame(object):
             'explain': explain or 'specify explain=True'
         }
     def __len__(self):
+        """
+        the projected number of rows when resolving
+        """
         return self._get_cursor().count()
     @property
     def value(self):
+        """
+        resolve the query and return a Pandas DataFrame
+
+        :return: the result of the query as a pandas DataFrame 
+        """
         cursor = self._get_cursor()
         df = self._get_dataframe_from_cursor(cursor)
         # this ensures the equiv. of pandas df.loc[n] is a Series
@@ -359,12 +394,33 @@ class MDataFrame(object):
             cursor.skip(self.skip_topn)
         return cursor
     def sort(self, columns):
+        """
+        sort by specified columns
+
+        :param columns: str of single column or a list of columns. Sort order
+                        is specified as the + (ascending) or - (descending)
+                        prefix to the column name. Default sort order is
+                        ascending.
+        :return: the MDataFrame
+        """
         self.sort_order = make_tuple(columns)
         return self
     def head(self, limit=10):
+        """
+        return up to limit numbers of rows
+
+        :param limit: the number of rows to return. Defaults to 10
+        :return: the MDataFrame
+        """
         self.head_limit = limit
         return self
     def skip(self, topn):
+        """
+        skip the topn number of rows
+
+        :param topn: the number of rows to skip.
+        :return: the MDataFrame 
+        """
         self.skip_topn = topn
         return self
     def merge(self, right, on=None, left_on=None, right_on=None,
@@ -374,6 +430,21 @@ class MDataFrame(object):
         merge this dataframe with another dataframe. only left outer joins
         are currently supported. the output is saved as a new collection,
         target name (defaults to a generated name if not specified).
+
+        :param right: the other MDataFrame
+        :param on: the list of key columns to merge by
+        :param left_on: the list of the key columns to merge on this dataframe
+        :param right_on: the list of the key columns to merge on the other 
+        dataframe
+        :param how: the method to merge. supported are left, inner, right. 
+        Defaults to inner
+        :param target: the name of the collection to store the merge results
+        in. If not provided a temporary name will be created.
+        :param suffixes: the suffixes to apply to identical left and right 
+        columns
+        :param sort: if True the merge results will be sorted. If False the
+        MongoDB natural order is implied.
+        :returns: the MDataFrame to the target MDataFrame
         """
         # validate input
         supported_how = ["left", 'inner', 'right']
@@ -448,7 +519,7 @@ class MDataFrame(object):
         determine the collection name of the given parameter
 
         returns the collection name if some is a MDataFrame, a Collection
-        or a basestring. Otherwise returns default
+        or a string_type. Otherwise returns default
         """
         if isinstance(some, MDataFrame):
             name = some.collection.name
@@ -517,6 +588,13 @@ class MDataFrame(object):
         return result
     @property
     def loc(self):
+        """
+        Access by index
+
+        Use as mdf.loc[index_value]
+
+        :return: MLocIndexer
+        """
         return MLocIndexer(self)
 
 
@@ -531,6 +609,11 @@ class MSeries(MDataFrame):
         super(MSeries, self).__init__(*args, **kwargs)
         self.is_unique = False
     def unique(self):
+        """
+        return the unique set of values for the series
+
+        :return: MSeries
+        """
         self.is_unique = True
         return self
     def _get_cursor(self):
@@ -547,7 +630,9 @@ class MSeries(MDataFrame):
 
         this is a Series unless unique() was called. If unique()
         only distinct values are returned as an array, matching
-        the behavior of a Series 
+        the behavior of a Series
+
+        :return: pandas.Series 
         """
         cursor = self._get_cursor()
         column = make_tuple(self.columns)[0]

@@ -180,7 +180,7 @@ class RuntimeTests(TestCase):
         x = np.array(list(range(0, 10)))
         y = x * 2
         df = pd.DataFrame({'x': x,
-                           'y': y})
+                           'y': y}).astype('O')
         X = [[x] for x in list(df.x)]
         Y = [[y] for y in list(df.y)]
         # put into Omega -- assume a client with pandas, scikit learn

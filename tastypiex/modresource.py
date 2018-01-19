@@ -1,3 +1,4 @@
+from six import iteritems
 def override_api_meta(api, meta, resources=None):
     """
     override all meta for resources in an api
@@ -12,7 +13,7 @@ def override_api_meta(api, meta, resources=None):
     """
     if resources:
         # filter by resource name
-        resources = (v for k, v in api._registry.iteritems() if k in resources)
+        resources = (v for k, v in iteritems(api._registry) if k in resources)
     else:
         resources = api._registry.values()
     for resource in resources:
@@ -24,7 +25,7 @@ def override_resource_meta(resource, meta):
     """ override meta """
     if meta:
         # override Meta attributes
-        for k, v in meta.__dict__.iteritems():
+        for k, v in iteritems(meta.__dict__):
             if k.startswith('__'):
                 continue
             setattr(resource._meta.__class__, k, v)

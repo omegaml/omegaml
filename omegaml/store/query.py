@@ -4,6 +4,8 @@ import six
 
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import restore_index
+
+
 class MongoQ(object):
 
     """
@@ -56,16 +58,47 @@ class MongoQ(object):
         return 'Q %s' % ('\n'.join(r))
 
     def value(self, collection):
+        """
+        resolve the query by actually applying the filter on given collection
+
+        :param collection: the collection objec
+        :return: the result of the apply_filter() call 
+        """
         return self.apply_filter(collection)
 
     def apply_filter(self, collection):
+        """
+        apply the filter to the given collection
+
+        This builds the actual mongo query using build_filters and
+        calls apply_conditions to execute the query 
+
+        :param collection: the collection object
+        :return: the result of the apply_conditions() call
+        """
         query = self.build_filters()
         return self.apply_conditions(collection, query)
 
     def apply_conditions(self, collection, query):
+        """
+        apply the mongo query on a given collection
+
+        :param collection: the collection 
+        :param query: the query dictionary applicable to collection.find()
+        :return: the result of collection.find()  
+        """
         return collection.find(query)
 
     def build_filters(self):
+        """
+        build the complex mongodb filter from query definitions
+
+        This takes all query definitions in qlist, builds queries
+        using .build_conditions() and concatenates the queries by
+        and/or as defined the in qlist's op value.
+
+        :return: the query suitable for the collection.find() method
+        """
         query = {}
         for i, (op, q) in enumerate(self.qlist):
             if i == 0:
@@ -84,6 +117,15 @@ class MongoQ(object):
         return query
 
     def build_conditions(self):
+        """
+        For a given query definition return the collection.find() simple query
+
+        Using all conditions, build the query as a dictionary suitable for
+        collection.find(). This uses MongoQueryOps to transform query 
+        definitions into mongo db syntax.
+
+        :return: the query in mongo db syntax  
+        """
         query = {}
         qops = MongoQueryOps()
         def addq(k, v):
@@ -98,7 +140,7 @@ class MongoQ(object):
                     else:
                         subq.append({k: vv})
         for k, v in six.iteritems(self.conditions):
-            # transform query operators as '<foo>__<op>', 
+            # transform query operators as '<foo>__<op>',
             # however preserve dunder '__<foo>' names ss columns
             if '__' in k and not k.startswith('__'):
                 parts = k.split('__')
@@ -151,7 +193,7 @@ class MongoQ(object):
         if self._inv:
             _query = {}
             for k, v in six.iteritems(query):
-                if not isinstance(v, (six.string_types, float, int, int)):
+                if not isinstance(v, (six.string_types, float, int)):
                     _query[k] = qops.NOT(v)
                 else:
                     _query[k] = qops.NOT(qops.EQ(v))
@@ -159,15 +201,24 @@ class MongoQ(object):
         return query
 
     def negate(self):
+        """
+        negate the query
+        """
         self._inv = True
         return self
 
     def __and__(self, other):
+        """
+        combine with another MongoQ object using AND
+        """
         q = copy.deepcopy(self)
         q.qlist.append(('&', other))
         return q
 
     def __or__(self, other):
+        """
+        combine with another MongoQ object using OR
+        """
         q = copy.deepcopy(self)
         q.qlist.append(('|', other))
         return q
@@ -208,12 +259,48 @@ class Filter(object):
     _debug = False
 
     def __init__(self, coll, __query=None, **kwargs):
+        """
+        Filter objects use MongoQ query expression to build
+        complex filters.
+
+        Internally, Filter keeps the .q MongoQ object to represent
+        the filter. Filter thus is a thin wrapper around MongoQ to 
+        represent the human-readable high-level API to MongoQ:
+
+        .filter -- add a new condition with AND
+        .exclude -- exclude values given a condition 
+        .count -- count result lengths. note this triggers .value
+        .value -- evaluate the filter
+
+        In addition Filter supports tracing errors by using the .trace
+        flag (set to True, defaults to False).
+
+        :param coll: the collection to apply this filter to
+        :param __query: a MongoQ object (used internally to combine
+        filters)
+        :param kwargs: the filter as a dict of column__op=value pairs
+        """
         self.coll = coll
         self.trace = False
         self.exc = None
         self.q = self.build_query(__query, **kwargs)
 
     def build_query(self, __query=None, **kwargs):
+        """
+        build the MongoQ object from given kwargs
+
+        Specify either the __query or the kwargs. If __query is
+        specified it is returned unchanged. If kwargs is passed these
+        are used to build a new MongoQ object. The rationale for this
+        is so that build_query can be used without an if statement in
+        the calling code (i.e. this methods wraps the if statement on
+        whether to build a new MongoQ object or to use the existing,
+        making for more readable code).
+
+        :param __query: the MongoQ object to use
+        :param kwargs: the filter as a dict of column__op=value pairs
+        :return: the MongoQ object
+        """
         if __query:
             q = __query
         else:
@@ -222,13 +309,24 @@ class Filter(object):
 
     @property
     def query(self):
+        """
+        Convenience method to return the filter's query in MongoDB syntax
+        """
         return self.q.build_filters()
 
     def count(self):
+        """
+        Resolve the query and count number of rows
+        """
         return len(self.value.index)
 
     @property
     def value(self):
+        """
+        Resolve the query and return its results
+
+        Uses self.evaluate() in a safe manner.
+        """
         try:
             value = self.evaluate()
         except KeyError as e:
@@ -240,14 +338,33 @@ class Filter(object):
         return value
 
     def filter(self, query=None, **kwargs):
+        """
+        Add a new query expression using AND
+
+        :param query: an existing MongoQ object (optional)
+        :param kwargs: the kwargs as column__op=value pairs
+        """
         self.q &= self.build_query(query, **kwargs)
         return self
 
     def exclude(self, query=None, **kwargs):
+        """
+        Add a new negated query expression
+
+        This is the equivalent of .filter(~query)
+
+        :param query: an existing MongoQ object (optional)
+        :param kwargs: the kwargs as column__op=value pairs
+        """
         self.q &= ~self.build_query(query, **kwargs)
         return self
 
     def evaluate(self):
+        """
+        evaluate the query
+
+        :return: the pandas DataFrame
+        """
         result = self.q.apply_filter(self.coll)
         try:
             import pandas as pd

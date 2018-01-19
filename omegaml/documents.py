@@ -66,3 +66,5 @@ class Metadata(Document):
         kwargs = ('%s=%s' % (k, getattr(self, k))
                   for k in self._fields.keys())
         return u"Metadata(%s)" % ','.join(kwargs)
+
+    

@@ -95,7 +95,7 @@ class JobTests(TestCase):
         with open(dummy_nb_file, 'w') as f:
             write(nb, f, version=4)
         # upload job notebook
-        with open(dummy_nb_file, 'r') as f:
+        with open(dummy_nb_file, 'rb') as f:
             fs.put(f.read(), filename=nb_file)
         result = om.jobs.run_notebook(nb_file)
         self.assertIsInstance(result, Metadata)
@@ -126,7 +126,7 @@ class JobTests(TestCase):
         with open(dummy_nb_file, 'w') as f:
             write(nb, f, version=4)
         # upload job notebook
-        with open(dummy_nb_file, 'r') as f:
+        with open(dummy_nb_file, 'rb') as f:
             fs.put(f.read(), filename=nb_file)
         om.jobs.run_notebook('job_dummy.ipynb')
         expected = Metadata.objects.filter(

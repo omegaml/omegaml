@@ -1,3 +1,4 @@
+from __future__ import print_function
 class ClientRequestTracer(object):
 
     """
@@ -32,11 +33,11 @@ class ClientRequestTracer(object):
         if name in __traces__ and hasattr(attr, '__call__'):
             def trace(*args, **kwargs):
                 title = "Request: %s, %s, %s " % (name, args, kwargs)
-                print title
+                print(title)
                 resp = attr(*args, **kwargs)
                 if print_response:
-                    print "Response:\n", resp
-                    print "*" * 10
+                    print("Response:\n", resp)
+                    print("*" * 10)
                 return resp
             return trace
         return attr

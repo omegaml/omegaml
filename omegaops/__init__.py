@@ -5,7 +5,6 @@ import os
 from constance import config
 from django.conf import settings
 from pymongo.mongo_client import MongoClient
-from boto.pyami.installers.ubuntu.trac import Trac
 
 
 def add_user(dbname, username, password):

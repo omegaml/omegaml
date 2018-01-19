@@ -1,6 +1,4 @@
-import inspect
-
-from django.conf.urls import url as urlfn
+from six import iteritems
 from tastypie.utils import trailing_slash
 
 
@@ -27,10 +25,12 @@ class CQRSApiMixin(object):
         """
         prepend command urls as <resource_name>/<uri>/<command>
         """
+        from django.conf.urls import url as urlfn
+
         urls = super(CQRSApiMixin, self).prepend_urls()
         if not hasattr(self._meta, 'extra_actions'):
             self._meta.extra_actions = []
-        for name, method in self.__class__.__dict__.iteritems():
+        for name, method in iteritems(self.__class__.__dict__):
             if not hasattr(method, 'cqrsapi'):
                 continue
             # link meta information

@@ -23,28 +23,30 @@ class OmegaModelProxy(object):
 
     Usage:
 
-        om = Omega()
-        # train a model
-        # result is AsyncResult, use .get() to return it's result
-        result = om.runtime.model('foo').fit('datax', 'datay')
-        result.get()
+        .. code::
 
-        # predict
-        result = om.runtime.model('foo').predict('datax')
-        # result is AsyncResult, use .get() to return it's result
-        print result.get()
+            om = Omega()
+            # train a model
+            # result is AsyncResult, use .get() to return it's result
+            result = om.runtime.model('foo').fit('datax', 'datay')
+            result.get()
 
-    Implementation note:
-
-        We decided to implement each method call explicitely in both
-        this class and the celery tasks. While it would be possible to
-        implement a generic method and task that passes the method and
-        arguments to be called, maintainability would suffer and the
-        documentation would become very unspecific. We think it is much
-        cleaner to have an explicit interface at the chance of missing
-        features. If need should arise we can still implement a generic
-        method call.
+            # predict
+            result = om.runtime.model('foo').predict('datax')
+            # result is AsyncResult, use .get() to return it's result
+            print result.get()
     """
+
+#     Implementation note:
+#
+#     We decided to implement each method call explicitely in both
+#     this class and the celery tasks. While it would be possible to
+#     implement a generic method and task that passes the method and
+#     arguments to be called, maintainability would suffer and the
+#     documentation would become very unspecific. We think it is much
+#     cleaner to have an explicit interface at the chance of missing
+#     features. If need should arise we can still implement a generic
+#     method call.
 
     def __init__(self, modelname, runtime=None, mongo_url=None):
         self.modelname = modelname
@@ -232,6 +234,9 @@ class OmegaModelProxy(object):
 
 
 class OmegaRuntime(object):
+    """
+    omegaml compute cluster gateway 
+    """
 
     def __init__(self, omega, backend=None, mongo_url=None,
                  broker=None, celerykwargs=None, celeryconf=None):
@@ -287,11 +292,12 @@ class Omega(object):
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
         self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
+        self.jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobdata/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     mongo_url=mongo_url,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
-        self.jobs = OmegaJobs()
+        self.jobs = OmegaJobs(store=self.jobdata)
 
     def get_data(self, name):
         data = self.datasets.get(name)
@@ -328,7 +334,11 @@ class OmegaDeferredInstance():
 # -- these are deferred instanced that is the actual Omega instance
 #    is only created on actual attribute access
 _om = OmegaDeferredInstance()
+#: the OmegaStore for data
 datasets = OmegaDeferredInstance(_om, 'datasets')
+#: the OmegaStore for models
 models = OmegaDeferredInstance(_om, 'models')
+#: the jobs API
 jobs = OmegaDeferredInstance(_om, 'jobs')
+#: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')

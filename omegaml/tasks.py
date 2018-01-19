@@ -4,7 +4,6 @@ import os
 from celery import shared_task
 from celery import Task
 
-from omegaml import Omega
 from omegaml.documents import Metadata
 from omegaml import signals
 from mongoengine.errors import DoesNotExist
@@ -75,6 +74,7 @@ def get_dataset_representations(items):
 
 @shared_task(base=OmegamlTask)
 def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.predict(modelname, Xname, rName, pure_python, **kwargs)
@@ -87,6 +87,7 @@ def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
 @shared_task(base=OmegamlTask)
 def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
                         **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.predict_proba(
@@ -99,6 +100,7 @@ def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
 
 @shared_task(base=OmegamlTask)
 def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.fit(
@@ -112,6 +114,7 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
 @shared_task(base=OmegamlTask)
 def omega_partial_fit(
         modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.partial_fit(
@@ -125,6 +128,7 @@ def omega_partial_fit(
 @shared_task(base=OmegamlTask)
 def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.score(
@@ -139,6 +143,7 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
 @shared_task(base=OmegamlTask)
 def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
                         pure_python=True, **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.score(
@@ -151,6 +156,7 @@ def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
 
 @shared_task(base=OmegamlTask)
 def omega_transform(modelname, Xname, rName=None, **kwargs):
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     backend = om.models.get_backend(modelname, data_store=om.datasets)
     result = backend.transform(modelname, Xname, rName, **kwargs)
@@ -175,6 +181,7 @@ def run_omegaml_job(nb_file, **kwargs):
     """
     runs omegaml job
     """
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     result = om.jobs.run_notebook(nb_file)
     return result
@@ -185,8 +192,9 @@ def schedule_omegaml_job(nb_file, **kwargs):
     """
     schedules the running of omegaml job
     """
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
-    result = om.jobs.run_notebook(nb_file)
+    result = om.jobs.schedule(nb_file)
     return result
 
 
@@ -197,6 +205,7 @@ def execute_scripts(**kwargs):
     (as per a respective OMEGAML_SCRIPTS_GRIDFS setting),
     provided they are marked for execution at the time of execution
     """
+    from omegaml import Omega
     om = Omega(mongo_url=kwargs.pop('mongo_url', None))
     # Search tasks from mongo
     job_list = om.jobs.list()

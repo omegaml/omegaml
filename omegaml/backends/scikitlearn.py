@@ -70,7 +70,7 @@ class ScikitLearnBackend(BaseBackend):
             # OSError is raised if path exists already
             pass
         outf = self.model_store.fs.get_version(filename, version=version)
-        with open(packagefname, 'w') as zipf:
+        with open(packagefname, 'wb') as zipf:
             zipf.write(outf.read())
         model = self._extract_model(packagefname)
         return model
@@ -81,7 +81,7 @@ class ScikitLearnBackend(BaseBackend):
         """
         from ..documents import Metadata
         zipfname = self._package_model(obj, name)
-        with open(zipfname) as fzip:
+        with open(zipfname, 'rb') as fzip:
             fileid = self.model_store.fs.put(
                 fzip, filename=self.model_store._get_obj_store_key(name, 'omm'))
             gridfile = GridFSProxy(grid_id=fileid,

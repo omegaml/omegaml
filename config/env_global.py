@@ -78,4 +78,3 @@ class EnvSettingsGlobal(object):
     # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
     STATIC_URL = '/static/'
-
