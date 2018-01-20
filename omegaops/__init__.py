@@ -56,9 +56,11 @@ def get_client_config(user):
 
     mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
                                                **user_settings)
+    broker_url = "amqp://guest@127.0.0.1:5672//"
     # FIXME get amqp from env
     client_config = {
         "OMEGA_CELERY_CONFIG": {
+            "BROKER_URL": broker_url,
             "CELERY_MONGODB_BACKEND_SETTINGS": {
                 "taskmeta_collection": "omegaml_taskmeta",
                 "database": mongo_url,
@@ -75,7 +77,7 @@ def get_client_config(user):
         "OMEGA_NOTEBOOK_COLLECTION": "ipynb",
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
-        "OMEGA_BROKER": "amqp://guest@127.0.0.1:5672//"
+        "OMEGA_BROKER": broker_url,
     }
     if True or config.CELERY_ALWAYS_EAGER:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True

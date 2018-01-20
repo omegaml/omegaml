@@ -19,8 +19,8 @@ OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
 OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
-    #'BROKER_URL': OMEGA_BROKER,
-    #'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
+    'BROKER_URL': OMEGA_BROKER,
+    'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_MONGODB_BACKEND_SETTINGS': {
         'database': parsed_url.path[1:],
         'taskmeta_collection': 'omegaml_taskmeta',
@@ -37,6 +37,9 @@ OMEGA_BACKENDS = {
     'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend'),
     'spark.mllib': load_class('omegaml.backends.SparkBackend')
 }
+
+#: the omegaweb url
+OMEGA_RESTAPI_URL = 'http://omegaml.dokku.me/'
 
 # overrides
 vars = locals()

@@ -191,8 +191,6 @@ To configure celery, use the `OMEGA_CELERY_CONFIG` dictionary:
 Deployment of the runtime
 -------------------------
 
-*Disclaimer: This is as yet untested in a real-life deployment*
-
 To deploy the runtime, use a heroku or dokku python buildpack that provides
 support for scikit-learn and pandas. To install any of the pydata stack,
 the easiest is to use anaconda's distribution which is e.g. provided 
