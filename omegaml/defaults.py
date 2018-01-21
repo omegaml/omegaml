@@ -41,11 +41,6 @@ OMEGA_BACKENDS = {
 #: the omegaweb url
 OMEGA_RESTAPI_URL = 'http://omegaml.dokku.me/'
 
-# overrides
-vars = locals()
-user_homedir = os.path.expanduser('~')
-config_file = os.path.join(user_homedir, '.omegaml', 'config.yml')
-
 
 def update_from_config(vars=vars):
     # override from configuration file
@@ -73,10 +68,16 @@ def update_from_env(vars=vars):
         pprint(vars)
 
 
-update_from_config()
-update_from_env()
-
 # -- test
 if any(m in sys.argv for m in ('unittest', 'test')):
-    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/test_omega')
-    # pprint(locals())
+    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
+    OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
+    OMEGA_RESTAPI_URL = ''
+else:
+    # overrides in actual operations
+    # this is to avoid using production settings during test
+    vars = locals()
+    user_homedir = os.path.expanduser('~')
+    config_file = os.path.join(user_homedir, '.omegaml', 'config.yml')
+    update_from_config()
+    update_from_env()

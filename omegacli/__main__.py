@@ -16,6 +16,9 @@ init_parser.add_argument('--apikey', help='omegaml apikey')
 args = parser.parse_args()
 
 if __name__ == '__main__':
+    if not hasattr(args, 'command'):
+        parser.print_help()
+        exit(1)
     if args.command == 'init':
         with open(defaults.config_file, 'w') as fconfig:
             auth = OmegaRestApiAuth(args.userid,
@@ -28,5 +31,7 @@ if __name__ == '__main__':
             assert resp.status_code == 200, fail_msg.format(**locals())
             configs = resp.json()
             config = configs['objects'][0]['data']
+            config['OMEGA_USERID'] = args.userid
+            config['OMEGA_APIKEY'] = args.apikey
             yaml.safe_dump(config, fconfig, default_flow_style=False)
             print("Config is in {defaults.config_file}".format(**locals()))

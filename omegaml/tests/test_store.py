@@ -19,10 +19,6 @@ from omegaml.store import OmegaStore
 from omegaml.util import override_settings, delete_database
 import pandas as pd
 from six.moves import range
-override_settings(
-    OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
-    OMEGA_MONGO_COLLECTION='store'
-)
 
 
 class StoreTests(unittest.TestCase):
@@ -358,7 +354,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
         self.assertIn(
-            'store.dfgroup.datastore', store.mongodb.collection_names())
+            'omegaml.dfgroup.datastore', store.mongodb.collection_names())
         df2 = store.get('dfgroup', kwargs={'b': 1})
         self.assertTrue(df2.equals(result_df))
         df3 = store.get('dfgroup')
@@ -376,16 +372,13 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'foo', as_hdf=True)
         self.assertEqual(meta.kind, 'pandas.hdf')
         # make sure the hdf file is actually there
-        self.assertIn('store.foo.hdf', store.fs.list())
+        self.assertIn('omegaml.foo.hdf', store.fs.list())
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2), "dataframes differ")
-        override_settings(
-            OMEGA_MONGO_COLLECTION='tempabcdef'
-        )
         # test for non-existent file raises exception
         meta = store.put(df2, 'foo_will_be_removed', as_hdf=True)
         file_id = store.fs.get_last_version(
-            'store.foo_will_be_removed.hdf')._id
+            'omegaml.foo_will_be_removed.hdf')._id
         store.fs.delete(file_id)
         self.assertRaises(
             gridfs.errors.NoFile, store.get, 'foo_will_be_removed')

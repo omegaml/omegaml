@@ -8,8 +8,8 @@ import six
 
 from omegaml.documents import Metadata
 from omegaml.jobs import OmegaJobs
-from omegaml.runtime.proxy import OmegaRuntime
 from omegaml.store import OmegaStore
+from omegaml.runtime import OmegaRuntime
 from omegaml.util import is_dataframe, settings, is_ndarray
 logger = logging.getLogger(__file__)
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__file__)
 class Omega(object):
 
     def __init__(self, mongo_url=None, backend=None, broker=None,
-                 celeryconf=None, celerykwargs=None):
+                 celeryconf=None, celerykwargs=None, auth=None):
         self.defaults = settings()
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
@@ -25,7 +25,7 @@ class Omega(object):
         self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
         self.jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobdata/')
         self.runtime = OmegaRuntime(self, backend=backend,
-                                    mongo_url=mongo_url,
+                                    auth=auth,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
         self.jobs = OmegaJobs(store=self.jobdata)

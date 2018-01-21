@@ -79,6 +79,6 @@ def get_client_config(user):
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_BROKER": broker_url,
     }
-    if True or config.CELERY_ALWAYS_EAGER:
+    if config.CELERY_ALWAYS_EAGER:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
     return client_config
