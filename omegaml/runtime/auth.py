@@ -51,12 +51,23 @@ def get_omega_for_task(auth=None):
     """
     import omegaml as omdefault
     if auth is not None:
-        api_auth = OmegaRestApiAuth(auth.userid,
-                                    auth.apikey)
-        configs = get_user_config_from_api(api_auth)
-        config = configs['objects'][0]['data']
-        mongo_url = config['OMEGA_MONGO_URL']
-        om = omdefault.Omega(mongo_url=mongo_url)
+        if isinstance(auth, (list, tuple)):
+            # we get a serialized tuple, recreate auth object
+            # -- this is a hack to easily support python 2/3 client/server mix
+            userid, apikey = auth
+            auth = OmegaRuntimeAuthentication(userid, apikey)
+        try:
+            api_auth = OmegaRestApiAuth(auth.userid,
+                                        auth.apikey)
+            configs = get_user_config_from_api(api_auth)
+        except:
+            # fallback to no auth
+            auth = None
+            om = omdefault
+        else:
+            config = configs['objects'][0]['data']
+            mongo_url = config['OMEGA_MONGO_URL']
+            om = omdefault.Omega(mongo_url=mongo_url)
     else:
         om = omdefault
     return om

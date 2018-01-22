@@ -14,6 +14,8 @@ from sklearn.utils.validation import DataConversionWarning
 
 import numpy as np
 from omegaml import Omega
+import omegaml
+from omegaml.runtime.auth import OmegaRuntimeAuthentication, get_omega_for_task
 from omegaml.util import delete_database, reshaped
 import pandas as pd
 from six.moves import range
@@ -269,3 +271,19 @@ class RuntimeTests(TestCase):
         pred1 = result.get()
         self.assertTrue(
             (pred == pred1).all(), "runtime prediction is different(1)")
+
+    def test_runtime_auth(self):
+        # set auth explicitely
+        auth = OmegaRuntimeAuthentication('foo', 'bar')
+        om = Omega(auth=auth)
+        om.runtime.pure_python = True
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        self.assertEquals(om.runtime.auth, auth)
+        # set auth indirectly
+        defaults = omegaml.defaults
+        defaults.OMEGA_USERID = 'foo'
+        defaults.OMEGA_APIKEY = 'bar'
+        om = Omega()
+        self.assertEquals(om.runtime.auth.userid, defaults.OMEGA_USERID)
+        self.assertEquals(om.runtime.auth.apikey, defaults.OMEGA_APIKEY)
+        

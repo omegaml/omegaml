@@ -68,9 +68,14 @@ class OmegaRuntime(object):
         if self._auth is None:
             try:
                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
-                              apikey=getattr(defaults, 'OMEGA_APIKIEY'))
+                              apikey=getattr(defaults, 'OMEGA_APIKEY'))
                 self._auth = OmegaRuntimeAuthentication(**kwargs)
             except:
                 # we don't set authentication if not provided
                 pass
         return self._auth
+
+    @property
+    def auth_tuple(self):
+        auth = self.auth
+        return auth.userid, auth.apikey

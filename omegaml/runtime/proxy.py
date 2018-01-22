@@ -73,7 +73,7 @@ class OmegaModelProxy(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
-                               auth=self.runtime.auth,
+                               auth=self.runtime.auth_tuple,
                                pure_python=self.pure_python, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
@@ -97,7 +97,7 @@ class OmegaModelProxy(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
         return omega_fit.delay(self.modelname, Xname, Yname,
-                               auth=self.runtime.auth,
+                               auth=self.runtime.auth_tuple,
                                pure_python=self.pure_python, **kwargs)
 
     def transform(self, Xname, rName=None, **kwargs):
@@ -116,7 +116,7 @@ class OmegaModelProxy(object):
         Xname = self._ensure_data_is_stored(Xname)
         return omega_transform.delay(self.modelname, Xname,
                                      rName=rName,
-                                     auth=self.runtime.auth,
+                                     auth=self.runtime.auth_tuple,
                                      pure_python=self.pure_python, **kwargs)
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
@@ -140,7 +140,7 @@ class OmegaModelProxy(object):
             Yname = self._ensure_data_is_stored(Yname)
         return omega_fit_transform.delay(self.modelname, Xname, Yname,
                                          rName=rName, transform=True,
-                                         auth=self.runtime.auth,
+                                         auth=self.runtime.auth_tuple,
                                          pure_python=self.pure_python, **kwargs)
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
@@ -158,7 +158,7 @@ class OmegaModelProxy(object):
         omega_predict = self.runtime.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName,
-                                   auth=self.runtime.auth,
+                                   auth=self.runtime.auth_tuple,
                                    pure_python=self.pure_python, **kwargs)
 
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
@@ -177,7 +177,7 @@ class OmegaModelProxy(object):
             'omegaml.tasks.omega_predict_proba')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName,
-                                         auth=self.runtime.auth,
+                                         auth=self.runtime.auth_tuple,
                                          pure_python=self.pure_python, **kwargs)
 
     def score(self, Xname, yName, rName=None, **kwargs):
@@ -197,7 +197,7 @@ class OmegaModelProxy(object):
         Xname = self._ensure_data_is_stored(Xname)
         yName = self._ensure_data_is_stored(yName)
         return omega_score.delay(self.modelname, Xname, yName, rName=rName,
-                                 auth=self.runtime.auth,
+                                 auth=self.runtime.auth_tuple,
                                  pure_python=self.pure_python, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):

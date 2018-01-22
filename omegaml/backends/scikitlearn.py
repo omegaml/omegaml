@@ -36,7 +36,7 @@ class ScikitLearnBackend(BaseBackend):
         fname = os.path.basename(filename)
         mklfname = os.path.join(lpath, fname)
         zipfname = os.path.join(self.model_store.tmppath, fname)
-        joblib.dump(model, mklfname)
+        joblib.dump(model, mklfname, protocol=2)
         with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
             for part in glob.glob(os.path.join(lpath, '*')):
                 zipf.write(part, os.path.basename(part))
