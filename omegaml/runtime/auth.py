@@ -56,8 +56,7 @@ def get_omega_for_task(auth=None):
         configs = get_user_config_from_api(api_auth)
         config = configs['objects'][0]['data']
         mongo_url = config['OMEGA_MONGO_URL']
-        backend = config['OMEGA_RESULT_BACKEND']
-        om = omdefault.Omega(mongo_url=mongo_url, backend=backend)
+        om = omdefault.Omega(mongo_url=mongo_url)
     else:
         om = omdefault
     return om

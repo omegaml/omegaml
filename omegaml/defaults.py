@@ -14,17 +14,14 @@ OMEGA_MONGO_COLLECTION = 'omegaml'
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
                 'amqp://guest@127.0.0.1:5672//')
-OMEGA_RESULT_BACKEND = OMEGA_MONGO_URL
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
-parsed_url = urlparse.urlparse(OMEGA_RESULT_BACKEND)
+OMEGA_RESULT_BACKEND = 'amqp'
+
+parsed_url = urlparse.urlparse(OMEGA_MONGO_URL)
 OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
     'BROKER_URL': OMEGA_BROKER,
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
-    'CELERY_MONGODB_BACKEND_SETTINGS': {
-        'database': parsed_url.path[1:],
-        'taskmeta_collection': 'omegaml_taskmeta',
-    },
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.tasks.execute_scripts',
@@ -40,6 +37,10 @@ OMEGA_BACKENDS = {
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = 'http://omegaml.dokku.me/'
+#: omega user id
+OMEGA_USERID = None
+#: omega apikey
+OMEGA_APIKEY = None
 
 
 def update_from_config(vars=vars):
@@ -76,8 +77,7 @@ if any(m in sys.argv for m in ('unittest', 'test')):
 else:
     # overrides in actual operations
     # this is to avoid using production settings during test
-    vars = locals()
     user_homedir = os.path.expanduser('~')
     config_file = os.path.join(user_homedir, '.omegaml', 'config.yml')
-    update_from_config()
-    update_from_env()
+    update_from_config(globals())
+    update_from_env(globals())

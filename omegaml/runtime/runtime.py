@@ -16,7 +16,7 @@ class OmegaRuntime(object):
 
     def __init__(self, omega, backend=None,
                  broker=None, celerykwargs=None, celeryconf=None, auth=None):
-        self.backend = backend or 'amqp://'
+        self.backend = backend or 'amqp'
         self.broker = broker or 'amqp://guest@localhost//'
         self.omega = omega
         self._auth = auth
@@ -65,4 +65,12 @@ class OmegaRuntime(object):
         """
         return the current client authentication or None if not configured
         """
+        if self._auth is None:
+            try:
+                kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
+                              apikey=getattr(defaults, 'OMEGA_APIKIEY'))
+                self._auth = OmegaRuntimeAuthentication(**kwargs)
+            except:
+                # we don't set authentication if not provided
+                pass
         return self._auth

@@ -52,5 +52,6 @@ class EnvSettings_Local(Config_DjangoSekizai,
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('localhost:27019', 'mongo db host name'),
-        'CELERY_ALWAYS_EAGER': (True, 'celery always eager')
+        'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
+        'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }

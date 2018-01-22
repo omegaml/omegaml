@@ -56,15 +56,12 @@ def get_client_config(user):
 
     mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
                                                **user_settings)
-    broker_url = "amqp://guest@127.0.0.1:5672//"
-    # FIXME get amqp from env
+    # FIXME permission user instead of standard
+    broker_url = config.BROKER_URL
     client_config = {
         "OMEGA_CELERY_CONFIG": {
             "BROKER_URL": broker_url,
-            "CELERY_MONGODB_BACKEND_SETTINGS": {
-                "taskmeta_collection": "omegaml_taskmeta",
-                "database": mongo_url,
-            },
+            "CELERY_RESULT_BACKEND": 'amqp',
             "CELERY_ACCEPT_CONTENT": [
                 "pickle",
                 "json",
@@ -73,11 +70,9 @@ def get_client_config(user):
             ]
         },
         "OMEGA_MONGO_URL": mongo_url,
-        "OMEGA_RESULT_BACKEND": mongo_url,
         "OMEGA_NOTEBOOK_COLLECTION": "ipynb",
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
-        "OMEGA_BROKER": broker_url,
     }
     if config.CELERY_ALWAYS_EAGER:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True

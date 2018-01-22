@@ -12,5 +12,8 @@ class EnvSettings_dokku(Config_Dokku,
     ALLOWED_HOSTS = ['omegaml.dokku.me']
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('dokku.me:27017', 'mongo db host:port'),
+        'MONGO_HOST': ('localhost:27019', 'mongo db host name'),
+        'BROKER_URL': ('amqp://guest@dokku.me:5672//', 
+                       'rabbitmq broker url'),
+        'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
     }
