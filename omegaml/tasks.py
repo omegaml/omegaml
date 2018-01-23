@@ -4,6 +4,7 @@ import os
 
 from celery import Task
 from celery import shared_task
+from celery.signals import worker_process_init
 from mongoengine.errors import DoesNotExist
 
 from omegaml import signals
@@ -212,3 +213,16 @@ def execute_scripts(**kwargs):
                 om.jobs.schedule(nb_file)
         except DoesNotExist:
             om.jobs.schedule(nb_file)
+
+
+@worker_process_init.connect
+def fix_multiprocessing(**kwargs):
+    # allow celery to start sub processes
+    # this is required for sklearn joblib unpickle support
+    # issue see https://github.com/celery/billiard/issues/168
+    # fix source https://github.com/celery/celery/issues/1709
+    from multiprocessing import current_process
+    try:
+        current_process()._config
+    except AttributeError:
+        current_process()._config = {'semprefix': '/mp'}
