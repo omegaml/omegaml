@@ -9,15 +9,17 @@ class OmegaRestApiAuth(AuthBase):
     for the Omega REST API key authentication.
 
     Usage:
-        auth = OmegaAuth('jezdez', 
+        auth = OmegaRestApiAuth('jezdez', 
                          '25fdd0d9d210acb78b5b845fe8284a3c93630252')
         response = requests.get('http://api.foo.bar/v1/spam/', auth=auth)
     """
-    def __init__(self, username, api_key):
+    def __init__(self, username, apikey):
         self.username = username
-        self.api_key = api_key
+        self.apikey = apikey
+
+    def get_credentials(self):
+        return 'ApiKey %s:%s' % (self.username, self.apikey)
 
     def __call__(self, r):
-        r.headers['Authorization'] = 'ApiKey %s:%s' % (
-            self.username, self.api_key)
+        r.headers['Authorization'] = self.get_credentials()
         return r

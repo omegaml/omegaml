@@ -7,11 +7,7 @@ from omegaml.documents import Metadata
 import tempfile
 import gridfs
 from nbformat import write, v4
-from omegaml.util import override_settings, settings as omegaml_settings
-override_settings(
-    OMEGA_MONGO_URL='mongodb://localhost:27017/omegatest',
-    OMEGA_NOTEBOOK_COLLECTION='ipynbtest'
-)
+from omegaml.util import settings as omegaml_settings
 
 
 class JobTests(TestCase):

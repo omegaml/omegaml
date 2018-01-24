@@ -2,6 +2,31 @@ from __future__ import absolute_import
 from six import StringIO
 import os
 
+
+class DataFrameFile(object):
+
+    """
+    Simple file-like object for a dataframe. Read-only
+    """
+    def __init__(self, df):
+        self.df = df
+    def __enter__(self):
+        self.open()
+        return self
+    def __exit__(self, type, value, traceback):
+        self.close()
+        return True
+    def open(self):
+        pass
+    def close(self):
+        pass
+    def read(self):
+        """
+        :return: JSON Object
+        """
+        return self.df.to_json()
+
+
 class OmegaFSStorage(object):
 
     """

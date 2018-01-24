@@ -182,7 +182,7 @@ class OmegaJobs(object):
             metadata.gridfile = GridFSProxy(
                 grid_id=fileid,
                 collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION)
-            metadata.attrs['state'] = 'EXECUTED'
+            metadata.attributes['state'] = 'EXECUTED'
             metadata.s3file = s3file
             metadata.save()
             # FIXME return only at function end, same below

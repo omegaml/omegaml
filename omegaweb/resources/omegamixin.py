@@ -1,3 +1,6 @@
+from omegaml.runtime.auth import OmegaRuntimeAuthentication
+
+
 class OmegaResourceMixin(object):
 
     """
@@ -15,6 +18,9 @@ class OmegaResourceMixin(object):
         user = request.user
         config = get_client_config(user)
         mongo_url = config.get('OMEGA_MONGO_URL')
+        user = request.user
+        auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)
         om = Omega(mongo_url=mongo_url,
+                   auth=auth,
                    celeryconf=config.get('OMEGA_CELERY_CONFIG'))
         return om

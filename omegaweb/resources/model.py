@@ -163,7 +163,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'LinearRegression': 'sklearn.linear_model.LinearRegression',
             'LogisticRegression': 'sklearn.linear_model.LogisticRegression',
         }
-        # TODO setup a pipeline instead of singular models 
+        # TODO setup a pipeline instead of singular models
         for step in pipeline:
             modelkind, kwargs = step
             model_cls = MODEL_MAP.get(modelkind)
