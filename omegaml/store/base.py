@@ -89,15 +89,15 @@ from six import iteritems
 import six
 
 from omegaml import signals
+from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
     cursor_to_dataframe
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
-
-
 class OmegaStore(object):
+
     """
     The storage backend for models and data
     """
@@ -387,7 +387,8 @@ class OmegaStore(object):
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
         #collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
-        collection.insert_many(obj.to_dict(orient='records'))
+        # collection.insert_many(obj.to_dict(orient='records'))
+        fast_insert(obj, self, name)
         signals.dataset_put.send(sender=None, name=name)
         kind = (Metadata.PANDAS_SEROWS
                 if store_series
