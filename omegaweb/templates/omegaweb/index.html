@@ -1,0 +1,33 @@
+{% extends "omegaweb/base.html" %}
+{% load static %}
+
+{% block header %}
+<style>
+div.logo {
+        width: 200px;
+        height: 200px;
+
+        position:absolute; /*it can be fixed too*/
+        left:0; right:0;
+        top:0; bottom:0;
+        margin:auto;
+
+        /*this to solve "the content will not be cut when the window is smaller than the content": */
+        max-width:100%;
+        max-height:100%;
+        overflow:auto;
+}
+
+div.logo a {
+    margin-top: 20px;
+    width: 200px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logo">
+<img src="{% static 'omegaml/logo.jpg' %}"></img>
+<a class="btn btn-large" href="/accounts/signup">sign in</a>
+</div>
+{% endblock %}

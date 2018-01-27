@@ -1,5 +1,5 @@
-'''
-Created on 5 Oct 2017
+from django.shortcuts import render
 
-@author: patrick
-'''
+
+def index(request):
+    return render(request, 'omegaweb/index.html')
