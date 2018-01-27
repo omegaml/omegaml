@@ -1,0 +1,38 @@
+/* navigation header */
+
+.navbar-default {
+	background-color: #3f6096;
+}
+
+.navbar-brand {
+	height: 100%;
+}
+
+.navbar-nav {
+	padding:15px;
+}
+
+.navbar-default .navbar-nav>li>a {
+	color: white;
+}
+
+/* bootstrap panels */
+
+.panel-title {
+	color: white !important;
+}
+
+.panel-heading a {
+	color: white !important;
+}
+
+.panel-heading {
+	color: white !important;
+	background-color: #3f6096 !important;
+}
+
+/* main page container */
+
+.landingpage-container {
+	width: 100%;
+}

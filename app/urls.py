@@ -1,3 +1,4 @@
+import debug_toolbar
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
@@ -10,6 +11,7 @@ urlpatterns = patterns('',
                        url(r'^admin/', include(admin.site.urls)),
                        url('^payments/', include('payments.urls')),
                        url('^orders/', include('orders.urls')),
+                       url(r'^__debug__/', include(debug_toolbar.urls)),
                        )
 
 urlpatterns += patterns('', *apis.urls)

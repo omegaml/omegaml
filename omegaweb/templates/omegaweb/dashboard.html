@@ -1,0 +1,52 @@
+{% extends "landingpage/base.html" %} {% block subcontent %}
+<div class="row menu">
+	<div class="col-md-3">
+		<div class="panel-group" id="accordion">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" data-parent="#accordion"
+							href="#collapseOne"><span
+							class="glyphicon glyphicon-folder-close"> </span>contents</a>
+					</h4>
+				</div>
+				<div id="collapseOne" class="panel-collapse collapse in">
+					<div class="panel-body">
+						<table class="table">
+							<tr>
+								<td><span class="glyphicon glyphicon-pencil text-primary"></span><a
+									data-target='.panel.app' href="#datasets">Datasets</a>
+								</td>
+							</tr>
+							<tr>
+								<td><span class="glyphicon glyphicon-pencil text-primary"></span><a
+									data-target='.panel.account' href="#models">Models</a></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<div>
+<div>
+<div class="col-sm-9 col-md-9">
+    <div class="well panel app open">
+      <h3 id='datasets'>Datasets</h2>
+			{% for name in datasets %}
+			{{name}}
+			{% empty %}
+      <p>There are currently no datasets.<p>
+      {% endfor %}
+    </div>
+    
+    <div class="well panel app open">
+      <h3 id="models">Models</h2>
+      {% for name in models %}
+      {{name}}
+      {% empty %}
+      <p>There are currently no models.
+      {% endfor %}
+    </div>
+</div>
+{% endblock %}
