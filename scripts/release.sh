@@ -7,6 +7,7 @@
 ## Options:
 ##      --release=VALUE      the release name
 ##      --header=VALUE       the path to the header inserted into python files
+##      --source=VALUE       the path to the source, defaults to the current directory
 ##
 
 # script setup to parse options
@@ -15,12 +16,15 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
 # script configuration
-release=${distname:=release}
+sourcedir=${source:=.}
+sourcedir=$(realpath $source)
+release=${distname:=$(basename $(realpath $sourcedir))}
 releasefilesdir=$script_dir/../release/
 headerfqn=${header:=$releasefilesdir/source/COPYRIGHT}
-headerfqn=$(realpath $header)
+headerfqn=$(realpath $headerfqn)
 distdir=$script_dir/../dist
 distdir=$(realpath $distdir)
+
 
 # execute
 setup() {
@@ -43,7 +47,7 @@ obfuscate () {
     # 2. obfuscate and prepend header file on each file
     pushd $distdir/$release
     tar -xzf ../$release.tgz 
-    # -- build a script to to it, then execute
+    # -- build a script, then execute
     find . -name "*py" | xargs -L1 -I{} echo "echo Minify {} && pyminifier -o {}_pym --gzip {} && cat $headerfqn {}_pym > {} && rm {}_pym"  > obfuscate.sh
     chmod +x obfuscate.sh && obfuscate.sh
     popd
@@ -92,11 +96,15 @@ clean () {
     rm -rf $distdir/releasezip
 }
 
+pushd $sourcedir
 setup
 build_sdist
 obfuscate
 build_wheel
-build_docs
+if [[ -d $sourcedir/docs ]]; then
+  build_docs
+fi
 build_release
 finalize
 clean
+popd
