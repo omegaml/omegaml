@@ -1,2 +1,2 @@
-from .dataset import DatasetResource
-from .model import ModelResource
+from omegaweb.resources.dataset import DatasetResource
+from omegaweb.resources.model import ModelResource

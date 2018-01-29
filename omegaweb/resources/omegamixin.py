@@ -1,4 +1,3 @@
-from omegaml.runtime.auth import OmegaRuntimeAuthentication
 from omegaweb.resources.util import get_omega_for_user
 
 

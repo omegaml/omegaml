@@ -1,5 +1,4 @@
 import json
-import trace
 
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication

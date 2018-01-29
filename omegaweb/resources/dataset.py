@@ -8,10 +8,10 @@ from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
-import numpy as np
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
+import numpy as np
 
 from .util import BundleObj
 
