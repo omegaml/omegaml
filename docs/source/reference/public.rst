@@ -9,8 +9,8 @@ Public API
      omegaml.jobs
 
      omegaml.store.base.OmegaStore
-     omegaml.OmegaRuntime
-     omegaml.OmegaModelProxy 
+     omegaml.runtime.OmegaRuntime
+     omegaml.runtime.OmegaModelProxy 
      omegaml.jobs.OmegaJobs 
      omegaml.mdataframe.MDataFrame
      omegaml.mdataframe.MGrouper
@@ -43,10 +43,10 @@ omegaml.store
 omegaml.runtime
 +++++++++++++++
 
-.. autoclass:: omegaml.OmegaRuntime
+.. autoclass:: omegaml.runtime.OmegaRuntime
    :members: model
 
-.. autoclass:: omegaml.OmegaModelProxy
+.. autoclass:: omegaml.runtime.OmegaModelProxy
    :members:   
 
   

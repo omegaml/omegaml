@@ -26,3 +26,4 @@ Fabric==1.14.0
 django-constance[database]==2.0.0
 sphinx-autobuild==0.6.0
 coverage==4.4.2
+pyminifier==2.1
