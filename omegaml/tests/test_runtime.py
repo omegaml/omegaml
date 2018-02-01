@@ -3,19 +3,17 @@ from __future__ import absolute_import
 import os
 from unittest import TestCase
 
-from scipy import ravel
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.metrics.regression import mean_squared_error
-from sklearn.metrics.scorer import accuracy_scorer
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
 import numpy as np
+from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import Omega
 import omegaml
-from omegaml.runtime.auth import OmegaRuntimeAuthentication, get_omega_for_task
 from omegaml.util import delete_database, reshaped
 import pandas as pd
 from six.moves import range
@@ -286,4 +284,3 @@ class RuntimeTests(TestCase):
         om = Omega()
         self.assertEquals(om.runtime.auth.userid, defaults.OMEGA_USERID)
         self.assertEquals(om.runtime.auth.apikey, defaults.OMEGA_APIKEY)
-        
