@@ -1,2 +1,7 @@
 {% extends "base.html" %}
-
+{% load sekizai_tags staticfiles %}
+{% block head %}
+{% addtoblock "pagejs" %}
+<script type="text/javascript" src="{% static 'omegaweb/js/main.js' %}"></script>
+{% endaddtoblock "pagejs" %}
+{% endblock head %}

@@ -1,4 +1,9 @@
-{% extends "landingpage/base.html" %} {% block subcontent %}
+{% extends "landingpage/base.html" %}
+{% load sekizai_tags staticfiles %} 
+{% block subcontent %}
+{% addtoblock "css" %}
+<link href="{% static 'omegaweb/js/lib/backgrid/lib/backgrid.css' %}" rel="stylesheet">
+{% endaddtoblock "css" %}
 <div class="row menu">
 	<div class="col-md-3">
 		<div class="panel-group" id="accordion">
@@ -27,26 +32,125 @@
 				</div>
 			</div>
 		</div>
+		<div class="panel-group" id="accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion"
+              href="#collapseOne"><span
+              class="glyphicon glyphicon-folder-close"> </span>development</a>
+          </h4>
+        </div>
+        <div id="collapseOne" class="panel-collapse collapse in">
+          <div class="panel-body">
+            <table class="table">
+              <tr>
+                <td><span class="glyphicon glyphicon-pencil text-primary"></span><a
+                  data-target='.panel.app' href="http://localhost:8888/notebooks/google-predict.ipynb?kernel_name=python2" target=_>Notebook</a>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="glyphicon glyphicon-pencil text-primary"></span><a
+                  data-target='.panel.app' href="http://localhost:8001/" target=_>Documentation</a>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 	</div>
 <div>
 <div>
-<div class="col-sm-9 col-md-9">
-    <div class="well panel app open">
+  <div class="col-sm-9 col-md-9">
+    <div class="well panel app open datasets">
       <h3 id='datasets'>Datasets</h2>
-			{% for name in datasets %}
-			{{name}}
-			{% empty %}
-      <p>There are currently no datasets.<p>
-      {% endfor %}
+			<div class="table-responsive backgrid-container"></div>
     </div>
-    
-    <div class="well panel app open">
+    <div class="well panel app open models">
       <h3 id="models">Models</h2>
-      {% for name in models %}
-      {{name}}
-      {% empty %}
-      <p>There are currently no models.
-      {% endfor %}
+      <div class="table-responsive backgrid-container"></div>
     </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block custom %}
+{% addtoblock "pagejs" %}
+<script>
+$(function() {
+    require(['omegaweb/js/views/generictable', 
+             'omegaweb/js/models/dataset',
+             'omegaweb/js/models/model',
+             'backbone'], function(GenericTableView, Dataset, Model, $B) {
+        function column(name, label, cell, options) {
+            var coldef = {
+                name : name,
+                label : label,
+                cell : cell || 'string',
+                width: 80,
+            };
+            return _.defaults(coldef, options);
+        };;
+       var tableOptions = {
+          columns: [column('name', 'Name'), column('kind', 'Kind')],
+       };
+       /* fetch datasets */
+       var datasets = new Dataset.objects({
+       });
+       datasets.reset([{
+           name: 'foo',
+           kind: 'dataframe'
+       }]);
+       datasets.fetch({
+           reset: true,
+       });
+       /* fetch models */
+       var models = new Model.objects({
+       });
+       models.reset([{
+           name: 'foo',
+           kind: 'dataframe'
+       }]);
+       models.fetch({
+           reset: true,
+       });
+       /* parse data */
+       function mapDatasetToTableData(data) {
+           var tableData = _.map(data.objects, function(obj) {
+                   return {
+                       'name': obj.data.name,
+                       'kind': obj.data.kind,
+                   }
+           });
+           return tableData;
+       };
+       function mapModelToTableData(data) {
+           var tableData = _.map(data.objects, function(obj) {
+               return {
+                   'name': obj.model.name,
+                   'kind': obj.model.kind,
+               }
+           });
+           return tableData;
+       };
+       datasets.parse = mapDatasetToTableData;
+       models.parse = mapModelToTableData;
+       /* display  */
+       var datasetsView = new GenericTableView({
+           el: '.panel.datasets',
+           tableOptions: tableOptions,
+           collection: datasets,
+       }); 
+       datasetsView.render();
+       var modelsView = new GenericTableView({
+           el: '.panel.models',
+           tableOptions: tableOptions,
+           collection: models,
+       }); 
+       modelsView.render();
+    });
+});
+</script>
+{% endaddtoblock "pagejs" %}
 {% endblock %}

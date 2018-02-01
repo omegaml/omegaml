@@ -1,0 +1,15 @@
+{
+  "name": "omegaweb",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "commercial",
+  "dependencies": {
+    "backgrid": "^0.3.8",
+    "backgrid-select-all": "^0.3.5",
+    "datatables.net": "^1.10.16",
+    "yarn": "^1.3.2"
+  },
+  "scripts": {
+    "weblib": "yarn --modules-folder ./static/omegaweb/js/lib"
+  }
+}

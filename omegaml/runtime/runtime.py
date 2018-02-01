@@ -2,12 +2,10 @@ from __future__ import absolute_import
 
 from celery import Celery
 
+from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import defaults
-from omegaml.runtime.auth import OmegaRuntimeAuthentication
 from omegaml.runtime.proxy import OmegaModelProxy
 from omegaml.util import settings
-
-
 class OmegaRuntime(object):
 
     """

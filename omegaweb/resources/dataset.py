@@ -137,6 +137,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
                 'name': None,
                 'index': None,
                 'orient': None,
-            }) for item in om.datasets.list(raw=True)
+            }) for item in om.datasets.list(raw=True) 
+                       if not item.name.startswith('_temp')
         ]
         return bundle.objs

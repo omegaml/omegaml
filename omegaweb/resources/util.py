@@ -1,4 +1,4 @@
-from omegaml.runtime.auth import OmegaRuntimeAuthentication
+from omegacommon.auth import OmegaRuntimeAuthentication
 
 
 class BundleObj(dict):

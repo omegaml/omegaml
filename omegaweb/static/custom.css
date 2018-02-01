@@ -36,3 +36,9 @@
 .landingpage-container {
 	width: 100%;
 }
+
+/* datasets and model tables */
+.backgrid-container {
+  height: 100% !important;
+  background-color: white !important;
+}
