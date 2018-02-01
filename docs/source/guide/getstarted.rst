@@ -1,6 +1,13 @@
 Getting started
 ===============
 
+Setting up
+----------
+
+.. code::
+
+  python -m omegacli init --userid test5 --apikey APIKEY --url OMEGA_URL
+
 Loading omega|ml
 ----------------
 
@@ -17,3 +24,12 @@ Once loaded :code:`om` provides 3 environments that are immediately usable:
 * :code:`om.runtime` - the omega|ml remote execution environment 
 
 
+Loading omegaml from python
+---------------------------
+
+.. code:: python
+
+   from omegacommon.userconf import get_omega_from_apikey
+   
+   om = get_omega_from_apikey(username, apikey, api_url=url)
+    

@@ -4,6 +4,7 @@ from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
+from stackable.contrib.config.conf_debugtoolbar import Config_DebugToolbar
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
@@ -19,20 +20,20 @@ class EnvSettings_Local(Config_DjangoSekizai,
                         Config_DjangoPayments,
                         Config_DjangoConstance,
                         Config_FileEmail,
+                        #Config_DebugToolbar,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
                         EnvSettingsGlobal):
-    _prefix_apps = ('landingpage',)
+    _prefix_apps = ('omegaweb', 'landingpage', 'orders')
     _addl_apps = ('tastypie',
                   'tastypie_swagger',
                   'tastypiex',
-                  'orders',
                   'organizations',
                   'django_extensions',
-                  'omegaweb')
-    StackableSettings.patch_apps(_prefix_apps, prepend=True)
+                  )
+    StackableSettings.patch_apps(_prefix_apps, at='django.contrib.staticfiles')
     StackableSettings.patch_apps(_addl_apps)
 
     API_CONFIG = {
@@ -55,3 +56,5 @@ class EnvSettings_Local(Config_DjangoSekizai,
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }
+
+    DEBUG = True

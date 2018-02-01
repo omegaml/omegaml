@@ -1,42 +1,4 @@
-
-from omegacli.auth import OmegaRestApiAuth
-from omegaml import defaults
-
-
-class OmegaRuntimeAuthentication:
-
-    """
-    The runtime authentication
-    """
-
-    def __init__(self, userid, apikey):
-        self.userid = userid
-        self.apikey = apikey
-
-
-def get_user_config_from_api(api_auth):
-    # safe way to talk to either the remote API or the in-process test server
-    api_url = defaults.OMEGA_RESTAPI_URL + '/api/v1/config/'
-    # -- setup appropriate client API
-    if defaults.OMEGA_RESTAPI_URL.startswith('http'):
-        import requests
-        server = requests
-        server_kwargs = dict(auth=api_auth)
-        deserialize = lambda resp: resp.json()
-    else:
-        import json
-        from tastypie.test import TestApiClient
-        server = TestApiClient()
-        server_kwargs = dict(authentication=api_auth.get_credentials())
-        deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
-    # -- actual logic to get configs
-    fail_msg = ("Not authenticated using userid {api_auth.username}"
-                " apikey {api_auth.apikey}, error was {resp.status_code}, "
-                "{resp.content}")
-    resp = server.get(api_url, **server_kwargs)
-    assert resp.status_code == 200, fail_msg.format(**locals())
-    configs = deserialize(resp)
-    return configs
+from omegacommon.userconf import get_omega_from_apikey
 
 
 def get_omega_for_task(auth=None):
@@ -55,19 +17,7 @@ def get_omega_for_task(auth=None):
             # we get a serialized tuple, recreate auth object
             # -- this is a hack to easily support python 2/3 client/server mix
             userid, apikey = auth
-            auth = OmegaRuntimeAuthentication(userid, apikey)
-        try:
-            api_auth = OmegaRestApiAuth(auth.userid,
-                                        auth.apikey)
-            configs = get_user_config_from_api(api_auth)
-        except:
-            # fallback to no auth
-            auth = None
-            om = omdefault
-        else:
-            config = configs['objects'][0]['data']
-            mongo_url = config['OMEGA_MONGO_URL']
-            om = omdefault.Omega(mongo_url=mongo_url)
+            om = get_omega_from_apikey(userid, apikey)
     else:
         om = omdefault
     return om

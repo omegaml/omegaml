@@ -23,3 +23,14 @@ class OmegaRestApiAuth(AuthBase):
     def __call__(self, r):
         r.headers['Authorization'] = self.get_credentials()
         return r
+
+
+class OmegaRuntimeAuthentication:
+
+    """
+    The runtime authentication
+    """
+
+    def __init__(self, userid, apikey):
+        self.userid = userid
+        self.apikey = apikey

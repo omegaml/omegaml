@@ -8,10 +8,10 @@ from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
-import numpy as np
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
+import numpy as np
 
 from .util import BundleObj
 
@@ -137,6 +137,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
                 'name': None,
                 'index': None,
                 'orient': None,
-            }) for item in om.datasets.list(raw=True)
+            }) for item in om.datasets.list(raw=True) 
+                       if not item.name.startswith('_temp')
         ]
         return bundle.objs

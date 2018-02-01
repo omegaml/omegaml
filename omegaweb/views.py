@@ -1,5 +1,14 @@
-'''
-Created on 5 Oct 2017
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
-@author: patrick
-'''
+from omegaweb.resources.util import get_omega_for_user
+
+
+@login_required
+def dashboard(request):
+    om = get_omega_for_user(request.user)
+    datasets = om.datasets.list()
+    context = {
+        'datasets': datasets,
+    }
+    return render(request, 'omegaweb/dashboard.html', context)

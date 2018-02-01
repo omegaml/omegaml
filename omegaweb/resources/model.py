@@ -1,5 +1,4 @@
 import json
-import trace
 
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
@@ -10,6 +9,7 @@ from tastypie.resources import Resource
 
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
+from omegaweb.resources.util import BundleObj
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
 
@@ -150,6 +150,29 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         }
         return data
 
+    def get_list(self, request, **kwargs):
+        om = self.get_omega(request)
+        objs = [{
+                'model': {
+                    'name': meta.name,
+                    'kind': meta.kind,
+                    'created': '{}'.format(meta.created),
+                    'bucket': meta.bucket,
+                }
+            } for meta in om.models.list(raw=True)
+        ]
+        data = {
+          'meta': {
+             'limit': 20,
+             'next': None,
+             'offset': 0,
+             'previous': None,
+             'total_count': len(objs),
+          },
+          'objects': objs,
+        }
+        return self.create_response(request, data)
+        
     def post_list(self, request, **kwargs):
         """
         create a model

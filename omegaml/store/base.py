@@ -774,7 +774,8 @@ class OmegaStore(object):
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
-    def list(self, pattern=None, regexp=None, kind=None, raw=False):
+    def list(self, pattern=None, regexp=None, kind=None, raw=False,
+             include_temp=False):
         """
         List all files in store
 
@@ -811,6 +812,8 @@ class OmegaStore(object):
             elif pattern:
                 files = [f for f in files if fnmatch(f, pattern)]
             files = [f.replace('.omm', '') for f in files]
+            if not include_temp:
+                files = [f for f in files if not f.startswith('_temp')]
         return files
 
     def _get_obj_store_key(self, name, ext):

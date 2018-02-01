@@ -20,7 +20,9 @@ def add_user(dbname, username, password):
     # create the db but NEVER return this db. it will have admin rights.
     client = MongoClient(settings.MONGO_ADMIN_URL)
     _admin_newdb = client[dbname]
+    # add user and reset password in case the user was there already
     _admin_newdb.add_user(username, password, roles=roles)
+    _admin_newdb.command("updateUser", username, pwd=password)
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
     mongohost = config.MONGO_HOST

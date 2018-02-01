@@ -29,7 +29,10 @@ class OmegaJobs(object):
         self.defaults = omega_settings()
         # FIXME should be 'jobs' prefix
         self.store = store or OmegaStore(prefix=None)
-        self._db = self.store.mongodb
+
+    @property
+    def _db(self):
+        return self.store.mongodb
 
     def get_fs(self, collection=None):
         """
@@ -50,7 +53,7 @@ class OmegaJobs(object):
         """
         returns the collection object
         """
-        # FIXME this should use store.collection 
+        # FIXME this should use store.collection
         return getattr(self.store.mongodb, collection)
 
     def list(self, jobfilter='.*'):
@@ -207,10 +210,10 @@ class OmegaJobs(object):
         """
         # FIXME this looks somewhat unstable. currently we schedule by
         #       inserting metadata that sets the state of the job to
-        #       RECEIVED. Then the task execute_script which is 
+        #       RECEIVED. Then the task execute_script which is
         #       scheduled by celery gets all new jobs not yet in RECEIVED
         #       state, and schedules for the next iteration. What happens
-        #       if a job was scheduled already how will it get reschduled?  
+        #       if a job was scheduled already how will it get reschduled?
         attrs = {}
         config = self.get_notebook_config(nb_file)
         now = datetime.datetime.now()
