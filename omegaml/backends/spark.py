@@ -1,23 +1,25 @@
 
 
 from __future__ import absolute_import
-from .base import BaseBackend
+from omegaml.backends.basemodel import BaseModelBackend
 from mongoengine.fields import GridFSProxy
 from uuid import uuid4
 
 
-class SparkBackend(BaseBackend):
+class SparkBackend(BaseModelBackend):
     """
     OmegaML backend to use with Spark installations
     """
 
-    def __init__(self, store):
+    def __init__(self, model_store=None, data_store=None, **kwargs):
         self.SPARK_MLLIB_TRAINERS = {
             'pyspark.mllib.clustering.KMeans': 'train_kmeans',
             'pyspark.mllib.classification.LogisticRegressionWithLBFGS':
             'train_logisticregressionwithlbfgs',
         }
-        self.store = store
+        # FIXME adapt to model_store and data_store attributes
+        self.model_store = model_store
+        self.data_store = data_store
 
     def put_model(self, obj, name, attributes=None, **kwargs):
         """
@@ -28,10 +30,10 @@ class SparkBackend(BaseBackend):
         if isinstance(obj, str):
             uri = "spark://mllib/" + str(obj)
             attributes = dict(params=params) if params else {}
-            return self.store._make_metadata(
+            return self.model_store._make_metadata(
                 name=name,
-                prefix=self.store.prefix,
-                bucket=self.store.bucket,
+                prefix=self.model_store.prefix,
+                bucket=self.model_store.bucket,
                 uri=uri,
                 attributes=attributes,
                 gridfile=None,
@@ -45,17 +47,17 @@ class SparkBackend(BaseBackend):
             sc.stop()
             attrs = {'hdfs_filename': filename}
             with open(filename, 'w+') as fzip:
-                fileid = self.store.fs.put(
-                    fzip, filename=self.store._get_obj_store_key(
+                fileid = self.model_store.fs.put(
+                    fzip, filename=self.model_store._get_obj_store_key(
                         filename, 'omm'))
                 gridfile = GridFSProxy(
                     grid_id=fileid,
                     db_alias='omega',
-                    collection_name=self.store.bucket)
-            return self.store._make_metadata(
+                    collection_name=self.model_store.bucket)
+            return self.model_store._make_metadata(
                 name=name,
-                prefix=self.store.prefix,
-                bucket=self.store.bucket,
+                prefix=self.model_store.prefix,
+                bucket=self.model_store.bucket,
                 kind=Metadata.SPARK_MLLIB,
                 attributes=attrs,
                 gridfile=gridfile,
@@ -67,7 +69,7 @@ class SparkBackend(BaseBackend):
         content and type of metadata stored
         """
         from ..util import load_class
-        meta = self.store.metadata(name, version=-1)
+        meta = self.model_store.metadata(name, version=-1)
         if meta.gridfile.grid_id is not None:
             from pyspark import SparkContext
             sc = SparkContext.getOrCreate()
@@ -83,12 +85,11 @@ class SparkBackend(BaseBackend):
     def fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         from pyspark import SparkContext, SQLContext
         from pyspark.mllib.linalg import Vectors
-        meta = self.store.metadata(modelname)
+        meta = self.model_store.metadata(modelname)
         params = meta.attributes.get('params')
         # method train requires a DataFrame with a Vector
         # http://stackoverflow.com/a/36143084/1350619
-        import omegaml as om
-        dataX = om.datasets.get(Xname)
+        dataX = self.data_store.get(Xname)
         model = self.get_model(modelname)
         sc = SparkContext.getOrCreate()
         sqlContext = SQLContext(sc)
@@ -119,18 +120,17 @@ class SparkBackend(BaseBackend):
     def predict(
             self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         from pyspark import SparkContext, SQLContext
-        import omegaml as om
-        data = om.datasets.get(Xname)
+        data = self.data_store.get(Xname)
         model = self.get_model(modelname)
         sc = SparkContext.getOrCreate()
         sqlContext = SQLContext(sc)
         spark_df = sqlContext.createDataFrame(data)
         result = model.predict(spark_df.rdd.map(list))
         temp_name = rName if rName else '%s_%s' % (Xname, uuid4().hex)
-        meta = om.datasets.put(
+        meta = self.data_store.put(
             result.map(lambda x: (x, )).toDF().toPandas(), temp_name)
         sc.stop()
-        result = om.datasets.get(temp_name)
+        result = self.data_store.get(temp_name)
         if rName:
             result = meta
         return result
