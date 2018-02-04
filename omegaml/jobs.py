@@ -1,20 +1,26 @@
 
 from __future__ import absolute_import
-from omegaml.documents import Metadata
-from omegaml.store import OmegaStore
+
 import datetime
-from runipy.notebook_runner import NotebookRunner
-from mongoengine.fields import GridFSProxy
+import os
+import re
+from uuid import uuid4
+
 from croniter import croniter
 from django.conf import settings
-import re
-import yaml
-import os
 import gridfs
-from nbformat import read, write
+from mongoengine.fields import GridFSProxy
+from nbformat import read as nbread, write as nbwrite
+from nbformat.v4.nbbase import nbformat
+from runipy.notebook_runner import NotebookRunner
+from six import StringIO, BytesIO
+import yaml
+
 from omegaml import signals
-from omegaml.util import settings as omega_settings
+from omegaml.documents import Metadata
+from omegaml.store import OmegaStore
 from omegaml.tasks import run_omegaml_job
+from omegaml.util import settings as omega_settings
 
 
 class OmegaJobs(object):
@@ -25,28 +31,84 @@ class OmegaJobs(object):
 
     # TODO this class is in serious need for refactoring
 
-    def __init__(self, store=None):
+    def __init__(self, prefix=None, store=None):
         self.defaults = omega_settings()
         # FIXME should be 'jobs' prefix
-        self.store = store or OmegaStore(prefix=None)
+        prefix = prefix or 'jobs'
+        self.store = store or OmegaStore(prefix=prefix)
+        self.kind = Metadata.OMEGAML_JOBS
 
     @property
     def _db(self):
         return self.store.mongodb
 
+    @property
+    def _fs(self):
+        return self.store.fs
+
+    def collection(self, name):
+        return self.store.collection(name)
+
+    def drop(self, name):
+        return self.store.drop(name)
+
+    def metadata(self, name):
+        return self.store.metadata(name)
+
+    def put(self, obj, name, attributes=None):
+        """
+        Store a NotebookNode
+
+        :param obj: the NotebookNode to store
+        :param name: the name of the notebook
+        """
+        sbuf = StringIO()
+        bbuf = BytesIO()
+        # nbwrite expects string, fs.put expects bytes
+        nbwrite(obj, sbuf, version=4)
+        sbuf.seek(0)
+        bbuf.write(sbuf.getvalue().encode('utf8'))
+        bbuf.seek(0)
+        # see if we have a file alredy, if so replace the gridfile
+        meta = self.store.metadata(name)
+        if not meta:
+            filename = uuid4().hex
+            fileid = self._fs.put(bbuf, filename=filename)
+            meta = self.store._make_metadata(name=name,
+                                             prefix=self.store.prefix,
+                                             bucket=self.store.bucket,
+                                             kind=self.kind,
+                                             attributes=attributes,
+                                             gridfile=GridFSProxy(grid_id=fileid))
+        else:
+            meta.gridfile.replace(bbuf)
+        return meta.save()
+
+    def get(self, name):
+        """
+        Retrieve a notebook and return a NotebookNode
+        """
+        meta = self.store.metadata(name)
+        if meta:
+            try:
+                outf = meta.gridfile
+            except gridfs.errors.NoFile as e:
+                raise e
+            # nbwrite wants a string, outf is bytes
+            sbuf = StringIO()
+            sbuf.write(outf.read().decode('utf8'))
+            sbuf.seek(0)
+            nb = nbread(sbuf, as_version=4)
+            return nb
+        else:
+            raise gridfs.errors.NoFile(
+                ">{0}< does not exist in jobs bucket '{1}'".format(
+                    name, self.store.bucket))
+
     def get_fs(self, collection=None):
         """
         get gridfs instance using url and collection provided
         """
-        # FIXME this should use store.fs or store.collection
-        if collection is None:
-            collection = self.defaults.OMEGA_NOTEBOOK_COLLECTION
-
-        try:
-            self._fs = gridfs.GridFS(self.store.mongodb, collection)
-        except Exception as e:
-            raise e
-
         return self._fs
 
     def get_collection(self, collection):
@@ -56,17 +118,13 @@ class OmegaJobs(object):
         # FIXME this should use store.collection
         return getattr(self.store.mongodb, collection)
 
-    def list(self, jobfilter='.*'):
+    def list(self, jobfilter='.*', raw=False):
         """
         list all jobs matching filter.
         filter is a regex on the name of the ipynb entry.
         The default is all, i.e. `.*`
         """
-        # FIXME this should use store.list
-        gfs = self.get_fs()
-        file_list = gfs.list()
-        job_list = [job for job in file_list if job.startswith(
-            'job_') and job.endswith('.ipynb') and re.search(jobfilter, job)]
+        job_list = self.store.list(regexp=jobfilter, raw=raw)
         return job_list
 
     def run(self, nb_file):
@@ -84,10 +142,10 @@ class OmegaJobs(object):
         """
         try:
             # for version 3
-            notebook = read(open(nb_filename), as_version=3)
+            notebook = nbread(open(nb_filename), as_version=3)
         except Exception:
             # for version 4
-            notebook = read(open(nb_filename), as_version=4)
+            notebook = nbread(open(nb_filename), as_version=4)
         except Exception:
             raise ValueError(
                 "Notebook {0} do not match any applicable versions!".format(
@@ -149,7 +207,7 @@ class OmegaJobs(object):
         filename, ext = os.path.splitext(nb_filename)
         ts = datetime.datetime.now().strftime('%s')
         result_nb = 'result' + filename.lstrip('job') + '_{0}.ipynb'.format(ts)
-        write(r.nb, open(result_nb, 'w',), version=3)
+        nbwrite(r.nb, open(result_nb, 'w',), version=3)
         # store results
         s3file = {}
         fileid = None

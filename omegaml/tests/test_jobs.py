@@ -17,6 +17,8 @@ class JobTests(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
+        for fn in self.om.jobs.list():
+            self.om.jobs.drop(fn)
 
     @property
     def om(self):
@@ -30,27 +32,34 @@ class JobTests(TestCase):
         fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
         return fs
 
-    def test_job_list(self):
-        fs = self.fs
-        dummy_nb_file = tempfile.NamedTemporaryFile().name
+    def test_job_put_get(self):
+        om = self.om
+        # create a notebook
         cells = []
         code = "print 'hello'"
         cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put the notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        self.assertEqual(meta.name, 'testjob')
+        # read it back and see what's in it
+        notebook2 = om.jobs.get('testjob')
+        self.assertDictEqual(notebook2, notebook)
+
+    def test_job_list(self):
+        fs = self.fs
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print 'hello'"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put the notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        self.assertEqual(meta.name, 'testjob')
         nb = v4.new_notebook(cells=cells)
-        with open(dummy_nb_file, 'w') as f:
-            write(nb, f, version=4)
-        # upload dummy notebook
-        with open(dummy_nb_file, 'rb') as f:
-            data = f.read()
-            fs.put(data, filename="dummy.ipynb")
-        nb_list = fs.list()
-        expected = 'dummy.ipynb'
-        self.assertIn(expected, nb_list)
-        # upload job notebook
-        with open(dummy_nb_file, 'rb') as f:
-            fs.put(f.read(), filename="job_dummy.ipynb")
         job_list = self.om.jobs.list()
-        expected = 'job_dummy.ipynb'
+        expected = 'testjob'
         self.assertIn(expected, job_list)
 
     def test_job_run_invalid(self):
