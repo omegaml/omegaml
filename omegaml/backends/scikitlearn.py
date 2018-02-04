@@ -12,20 +12,14 @@ from mongoengine.fields import GridFSProxy
 
 from omegaml.util import reshaped
 
-from .base import BaseBackend
+from omegaml.backends.basemodel import BaseModelBackend
 
 
-class ScikitLearnBackend(BaseBackend):
+class ScikitLearnBackend(BaseModelBackend):
 
     """
     OmegaML backend to use with ScikitLearn
     """
-    def __init__(self, model_store=None, data_store=None, **kwargs):
-        assert model_store, "Need a model store"
-        assert data_store, "Need a data store"
-        self.model_store = model_store
-        self.data_store = data_store
-
     def _package_model(self, model, filename):
         """
         Dumps a model using joblib and packages all of joblib files into a zip

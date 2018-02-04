@@ -194,6 +194,31 @@ class OmegaStore(object):
         Meta = Metadata
         return Meta.objects(name=name, prefix=prefix, bucket=bucket).first()
 
+    def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
+        """
+        create or update a metadata object
+
+        this retrieves a Metadata object if it exists given the kwargs. Only
+        the name, prefix and bucket arguments are considered
+
+        for existing Metadata objects, the attributes kw is treated as follows:
+
+        * attributes=None, the existing attributes are left as is
+        * attributes={}, the attributes value on an existing metadata object
+        is reset to the empty dict
+        * attributes={ some : value }, the existing attributes are updated
+
+        For new metadata objects, attributes defaults to {} if not specified,
+        else is set as provided.    
+
+        :param name: the object name
+        :param bucket: the bucket, optional, defaults to self.bucket 
+        :param prefix: the prefix, optional, defaults to self.prefix
+        """
+        # TODO kept _make_metadata for backwards compatibility.
+        return self._make_metadata(name, bucket=bucket, prefix=prefix,
+                                   kind=kind, **kwargs)
+
     def _make_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
         """
         create or update a metadata object
@@ -261,12 +286,22 @@ class OmegaStore(object):
             raise e
         return datastore
 
-    def put(self, obj, name, attributes=None, groupby=None, **kwargs):
+    def register_backend(self, kind, backend):
+        self.defaults.OMEGA_BACKENDS[kind] = backend
+        if kind not in Metadata.KINDS:
+            Metadata.KINDS.append(kind)
+        return self
+
+    def put(self, obj, name, attributes=None, **kwargs):
         """
         Stores an objecs, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
         # TODO implement an extensible backend plugin architecture
+        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_BACKENDS):
+            if backend_cls.supports(obj, attributes=attributes, **kwargs):
+                backend = self.get_backend_bykind(kind)
+                return backend.put(obj, name, attributes=attributes, **kwargs)
         if is_estimator(obj):
             backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
@@ -276,6 +311,7 @@ class OmegaStore(object):
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
+            groupby = kwargs.get('groupby')
             if obj.empty:
                 from warnings import warn
                 warn(
@@ -553,12 +589,13 @@ class OmegaStore(object):
         """
         meta = self.metadata(name)
         if meta is not None:
-            backend_cls = self.defaults.OMEGA_BACKENDS[meta.kind]
-            model_store = model_store or self
-            data_store = data_store or self
-            backend = backend_cls(model_store=model_store,
-                                  data_store=data_store, **kwargs)
-            return backend
+            backend_cls = self.defaults.OMEGA_BACKENDS.get(meta.kind)
+            if backend_cls:
+                model_store = model_store or self
+                data_store = data_store or self
+                backend = backend_cls(model_store=model_store,
+                                      data_store=data_store, **kwargs)
+                return backend
         return None
 
     def getl(self, *args, **kwargs):
@@ -585,6 +622,9 @@ class OmegaStore(object):
         if meta is None:
             return None
         if not force_python:
+            backend = self.get_backend(name)
+            if backend is not None:
+                return backend.get(name, **kwargs)
             if meta.kind == Metadata.SKLEARN_JOBLIB:
                 backend = self.get_backend(name)
                 return backend.get_model(name)

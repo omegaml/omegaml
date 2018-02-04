@@ -10,7 +10,10 @@ from omegaml.util import settings
 
 
 class Metadata(Document):
-    # various kinds of data
+    """
+    Metadata stores information about objects in OmegaStore
+    """
+    # default kinds of data
     PANDAS_DFROWS = 'pandas.dfrows'  # dataframe
     PANDAS_SEROWS = 'pandas.serows'  # series
     PANDAS_HDF = 'pandas.hdf'
@@ -20,9 +23,10 @@ class Metadata(Document):
     OMEGAML_JOBS = 'script.ipynb'
     SPARK_MLLIB = 'spark.mllib'
     OMEGAML_RUNNING_JOBS = 'job.run'
-    KINDS = (
+    #: the list of accepted data types. extend using OmegaStore.register_backend
+    KINDS = [
         PANDAS_DFROWS, PANDAS_SEROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
-        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB)
+        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB]
     # fields
     #: this is the name of the data
     name = StringField()

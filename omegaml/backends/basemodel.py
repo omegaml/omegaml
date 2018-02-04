@@ -1,12 +1,45 @@
 
 
-class BaseBackend(object):
+class BaseModelBackend(object):
 
     """
-    OmegaML BaseBackend to be subclassed by other arbitrary backends
+    OmegaML BaseModelBackend to be subclassed by other arbitrary backends
 
-    This provides the abstract interface for any backend to be implemented
+    This provides the abstract interface for any model backend to be implemented
     """
+    def __init__(self, model_store=None, data_store=None, **kwargs):
+        assert model_store, "Need a model store"
+        assert data_store, "Need a data store"
+        self.model_store = model_store
+        self.data_store = data_store
+
+    @classmethod
+    def supports(self, obj, **kwargs):
+        """
+        test if this backend supports this obj
+        """
+        return False
+
+    def get(self, name, **kwargs):
+        """
+        retrieve a model
+
+        :param name: the name of the object
+        :param version: the version of the object (not supported)
+        """
+        # support new backend architecture while keeping back compatibility
+        return self.get_model(name)
+
+    def put(self, obj, name, **kwargs):
+        """
+        store a model
+
+        :param obj: the model object to be stored
+        :param name: the name of the object
+        :param attributes: attributes for meta data
+        """
+        # support new backend architecture while keeping back compatibility
+        return self.put_model(obj, name, **kwargs)
 
     def put_model(self, obj, name, attributes=None):
         """

@@ -1,4 +1,4 @@
 from __future__ import absolute_import
-from .base import BaseBackend
+from omegaml.backends.basemodel import BaseModelBackend
 from .scikitlearn import ScikitLearnBackend
 from .spark import SparkBackend

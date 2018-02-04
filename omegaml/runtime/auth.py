@@ -12,7 +12,9 @@ def get_omega_for_task(auth=None):
     :return: the Omega instance configured for the user
     """
     import omegaml as omdefault
-    if auth is not None:
+    is_auth_not_provided = lambda auth: (auth is not None
+                                         and (None, None) != auth)
+    if is_auth_not_provided(auth):
         if isinstance(auth, (list, tuple)):
             # we get a serialized tuple, recreate auth object
             # -- this is a hack to easily support python 2/3 client/server mix
