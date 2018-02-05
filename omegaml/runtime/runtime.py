@@ -4,8 +4,9 @@ from celery import Celery
 
 from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import defaults
-from omegaml.runtime.proxy import OmegaModelProxy
 from omegaml.util import settings
+
+
 class OmegaRuntime(object):
 
     """
@@ -19,17 +20,18 @@ class OmegaRuntime(object):
         self.omega = omega
         self._auth = auth
         # initialize celery as a runtime
+        # needed to get it to actually load the tasks (???)
+        from omegaml import tasks 
+        from omegajobs import tasks
         celerykwargs = celerykwargs or {}
         celerykwargs.update({'backend': self.backend,
                              'broker': self.broker,
-                             'include': ['omega.tasks']
+                             'include': ['omega.tasks', 'omegajobs.tasks']
                              })
         defaults = settings()
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
         self.celeryapp = Celery('omegaml', **celerykwargs)
         self.celeryapp.conf.update(celeryconf)
-        # needed to get it to actually load the tasks (???)
-        from omegaml.tasks import omega_fit, omega_predict
         self.celeryapp.finalize()
 
     def deploy(self, modelname):
@@ -40,7 +42,15 @@ class OmegaRuntime(object):
         """
         return a model for remote execution
         """
+        from omegaml.runtime.modelproxy import OmegaModelProxy
         return OmegaModelProxy(modelname, runtime=self)
+
+    def job(self, jobname):
+        """
+        return a job for remote exeuction
+        """
+        from omegaml.runtime.jobproxy import OmegaJobProxy
+        return OmegaJobProxy(jobname, runtime=self)
 
     def task(self, name):
         """

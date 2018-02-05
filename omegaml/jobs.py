@@ -2,24 +2,21 @@
 from __future__ import absolute_import
 
 import datetime
-import os
 import re
 from uuid import uuid4
 
 from croniter import croniter
-from django.conf import settings
 import gridfs
 from mongoengine.fields import GridFSProxy
+from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite
-from nbformat.v4.nbbase import nbformat
-from runipy.notebook_runner import NotebookRunner
 from six import StringIO, BytesIO
 import yaml
 
+from omegajobs.tasks import run_omegaml_job
 from omegaml import signals
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
-from omegaml.tasks import run_omegaml_job
 from omegaml.util import settings as omega_settings
 
 
@@ -47,13 +44,24 @@ class OmegaJobs(object):
         return self.store.fs
 
     def collection(self, name):
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
         return self.store.collection(name)
 
     def drop(self, name):
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
         return self.store.drop(name)
 
     def metadata(self, name):
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
         return self.store.metadata(name)
+
+    def exists(self, name):
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
+        return len(self.store.list(name)) > 0
 
     def put(self, obj, name, attributes=None):
         """
@@ -62,6 +70,8 @@ class OmegaJobs(object):
         :param obj: the NotebookNode to store
         :param name: the name of the notebook
         """
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
         sbuf = StringIO()
         bbuf = BytesIO()
         # nbwrite expects string, fs.put expects bytes
@@ -69,7 +79,7 @@ class OmegaJobs(object):
         sbuf.seek(0)
         bbuf.write(sbuf.getvalue().encode('utf8'))
         bbuf.seek(0)
-        # see if we have a file alredy, if so replace the gridfile
+        # see if we have a file already, if so replace the gridfile
         meta = self.store.metadata(name)
         if not meta:
             filename = uuid4().hex
@@ -88,6 +98,8 @@ class OmegaJobs(object):
         """
         Retrieve a notebook and return a NotebookNode
         """
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
         meta = self.store.metadata(name)
         if meta:
             try:
@@ -127,48 +139,12 @@ class OmegaJobs(object):
         job_list = self.store.list(regexp=jobfilter, raw=raw)
         return job_list
 
-    def run(self, nb_file):
-        """
-        run the notebook on the runtime cluster
-        """
-        from omegaml.tasks import run_omegaml_job
-        result = run_omegaml_job.delay(nb_file)
-        signals.job_run.send(sender=None, name=nb_file)
-        return result.get()
-
-    def open_notebook(self, nb_filename):
-        """
-        Reads and returns a notebook
-        """
-        try:
-            # for version 3
-            notebook = nbread(open(nb_filename), as_version=3)
-        except Exception:
-            # for version 4
-            notebook = nbread(open(nb_filename), as_version=4)
-        except Exception:
-            raise ValueError(
-                "Notebook {0} do not match any applicable versions!".format(
-                    nb_filename))
-        return notebook
-
     def get_notebook_config(self, nb_filename):
         """
         returns the omegaml script config on
         the notebook's first cell
         """
-        gfs = self.get_fs()
-        try:
-            # nb_filename = 'job_'+nb_file+'.ipynb'
-            outf = gfs.get_last_version(nb_filename)
-            with open(nb_filename, 'wb') as nb_file:
-                nb_file.write(outf.read())
-        except gridfs.errors.NoFile:
-            raise gridfs.errors.NoFile(
-                "Notebook {0} does not exist in collection '{1}'".format(
-                    nb_filename, self.defaults.OMEGA_NOTEBOOK_COLLECTION))
-
-        notebook = self.open_notebook(nb_filename)
+        notebook = self.get(nb_filename)
         config_cell = notebook.get('worksheets')[0].get('cells')[0]
         yaml_conf = '\n'.join(
             [re.sub('#', '', x, 1) for x in str(
@@ -188,78 +164,49 @@ class OmegaJobs(object):
 
         return yaml_conf.get("omegaml.script")
 
-    def run_notebook(self, nb_filename):
+    def run(self, name):
         """
-        run the job immediately.
+        Run a job immediately
+
+        The job is run and the results are stored in the given filename
+
+        :param name: the name of the jobfile
+        :return: the metadata of the job
+        """
+        return self.run_notebook(name)
+
+    def run_notebook(self, name):
+        """
+        run a given notebook immediately.
         the job parameter is the name of the job script as in ipynb.
         Inserts and returns the Metadata document for the job.
         """
-        from pycloudfs import S3Helper
-        gfs = self.get_fs()
-        # FIXME get the notebook from mongo store without storing locally
-        config = self.get_notebook_config(nb_filename)
-        # nb_filename = 'job_'+nb_file+'.ipynb'
-        # FIXME this only works because get_notebook_config stored the file
-        # locally
-        notebook = self.open_notebook(nb_filename)
-        r = NotebookRunner(notebook)
-        r.run_notebook(skip_exceptions=True)
-        filename, ext = os.path.splitext(nb_filename)
+        notebook = self.get(name)
+        meta_job = self.metadata(name)
         ts = datetime.datetime.now().strftime('%s')
-        result_nb = 'result' + filename.lstrip('job') + '_{0}.ipynb'.format(ts)
-        nbwrite(r.nb, open(result_nb, 'w',), version=3)
-        # store results
-        s3file = {}
-        fileid = None
-        if config.get('results-store') == 's3':
-            AWS_ACCESS_KEY_ID = os.environ.get(
-                'AWS_ACCESS_KEY_ID', getattr(
-                    settings, 'AWS_ACCESS_KEY_ID'))
-            AWS_SECRET_ACCESS_KEY = os.environ.get(
-                'AWS_SECRET_ACCESS_KEY', getattr(
-                    settings, 'AWS_SECRET_ACCESS_KEY'))
-            bucket = os.environ.get('AWS_TEST_BUCKET', 'shrebo')
-            path = 'ipynb_results'
-            s3 = S3Helper(
-                bucket=bucket,
-                path=path,
-                aws_access_key_id=AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-            s3file = dict(
-                bucket=bucket,
-                prefix=path,
-                name=result_nb)
-            s3.upload_file(result_nb)
-        if config.get('results-store') == 'gridfs':
-            with open(result_nb, 'rb') as fin:
-                fileid = gfs.put(fin, filename=os.path.basename(result_nb))
-        os.remove(result_nb) if os.path.isfile(result_nb) else None
-        # shutdown the ipython kernel
-        r.shutdown_kernel()
-        # check if this job was scheduled earlier
+        # execute
         try:
-            metadata = Metadata.objects.get(
-                name=nb_filename, kind=Metadata.OMEGAML_RUNNING_JOBS)
-            metadata.gridfile = GridFSProxy(
-                grid_id=fileid,
-                collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION)
-            metadata.attributes['state'] = 'EXECUTED'
-            metadata.s3file = s3file
-            metadata.save()
-            # FIXME return only at function end, same below
-            return metadata
-        except Metadata.DoesNotExist:
-            attrs = {}
-            attrs['config'] = config
-            attrs['state'] = 'EXECUTED'
-            return Metadata(
-                name=nb_filename,
-                kind=Metadata.OMEGAML_RUNNING_JOBS,
-                s3file=s3file,
-                gridfile=GridFSProxy(
-                    grid_id=fileid,
-                    collection_name=self.defaults.OMEGA_NOTEBOOK_COLLECTION),
-                attributes=attrs).save()
+            ep = ExecutePreprocessor()
+            ep.preprocess(notebook, {'metadata': {'path': '/'}})
+        except Exception as e:
+            status = str(e)
+        else:
+            status = 'OK'
+            # record results
+            meta_results = self.put(
+                notebook, 'results/{name}_{ts}'.format(**locals()))
+            meta_results.attributes['source_job'] = name
+            meta_results.save()
+            job_results = meta_job.attributes.get('job_results', [])
+            job_results.append(meta_results.name)
+            meta_job.attributes['job_results'] = job_results
+        # record final job status
+        job_runs = meta_job.attributes.get('job_runs', {})
+        job_runs[ts] = status
+        meta_job.attributes['job_runs'] = job_runs
+        meta_job.save()
+
+        return meta_job
 
     def schedule(self, nb_file):
         """
@@ -279,7 +226,7 @@ class OmegaJobs(object):
         iter_next = croniter(interval, now)
         run_at = iter_next.get_next(datetime.datetime)
         next_run_time = iter_next.get_next(datetime.datetime)
-        from omegaml.tasks import schedule_omegaml_job
+        from omegajobs.tasks import schedule_omegaml_job
         kwargs = dict(
             config=config,
             run_at=run_at,
@@ -309,31 +256,3 @@ class OmegaJobs(object):
         """
         returns list of Metadata objects for this job
         """
-        # FIXME this should use the store.metadata
-        return Metadata.objects.filter(name=job, kind__in=Metadata.KINDS)
-
-    def get_result(self, job):
-        """
-        returns the result gridfile object for the respective Metadata
-        """
-        fs = self.get_fs(self.defaults.OMEGA_NOTEBOOK_COLLECTION)
-        if isinstance(job, Metadata):
-            return fs.get(job.gridfile.grid_id)
-
-        try:
-            metadata = Metadata.objects.order_by(
-                '-created').filter(name=job).first()
-            if not metadata:
-                raise Metadata.DoesNotExist
-            return fs.get(metadata.gridfile.grid_id)
-        except Metadata.DoesNotExist:
-            try:
-                collection = self.get_collection('metadata')
-                doc = collection.find_one({'attributes.task_id': job})
-                metadata = Metadata.objects.get(gridfile=doc.get('gridfile'))
-                if not metadata:
-                    raise Exception
-                return fs.get(metadata.gridfile.grid_id)
-            except Exception:
-                raise Metadata.DoesNotExist(
-                    'No job found related to the name or task id: {0}'.format(job))
