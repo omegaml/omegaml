@@ -253,7 +253,7 @@ Create a model
     => 
     <Response [201]>
     {'model': {'bucket': 'store',
-     'created': '2018-01-16 22:05:06.192000',
+     'created': '2016-01-16 22:05:06.192000',
      'kind': 'sklearn.joblib',
      'name': 'mymodel'}}
 
@@ -300,3 +300,123 @@ Subsequently, the model is ready for prediction:
      'datay': None,
      'result': [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]}
    
+
+Working with jobs
+-----------------
+
+The jobs api supports creating, executing and status-checking jobs on 
+the cluster. 
+
+.. warnings:: 
+
+    Creating jobs via the API assumes that the user creating the job 
+    is trusted. Any code can be inserted and could potentially compromise
+    your cluster.      
+    
+    
+Creating a job
+++++++++++++++
+
+.. code::
+    
+    data = {
+        'code': "print('hello')",        
+    }
+    resp = requests.post('http://localhost:8001/api/v1/job/testjob/',
+                         json=data, auth=auth)
+    resp.json()
+    => 
+    {u'job_runs': [], u'job_results': {}, 
+    u'name': u'testjob.ipynb', 
+    u'created': u'2016-02-06T21:31:39.326097'}
+                   
+                   
+Listing jobs
+++++++++++++
+
+.. code::
+
+   resp = requests.get('http://localhost:8001/api/v1/job/',
+                         auth=auth)
+   resp.json()
+   =>
+   {u'meta': {u'previous': None, u'total_count': 1, 
+              u'offset': 0, u'limit': 20, u'next': None}, 
+   u'objects': [{u'job_runs': [], 
+                 u'job_results': {}, u'name': u'testjob.ipynb', 
+                 u'created': u'2016-02-06T21:33:49.833000'}]}
+
+Getting information on a job
+++++++++++++++++++++++++++++
+
+.. code::
+
+   resp = requests.get('http://localhost:8001/api/v1/job/testjob/',
+                         json=data, auth=auth)
+   resp.json()
+   =>
+   {u'content': {u'nbformat_minor': 0, u'nbformat': 4, 
+    u'cells': [{u'execution_count': None, u'cell_type': 
+                u'code', u'source': u"print('hello')", 
+                u'outputs': [], u'metadata': {}}], 
+                u'metadata': {}}, u'job_runs': [], 
+                u'job_results': {}, 
+                u'name': u'testjob.ipynb', 
+                u'created': u'2016-02-06T21:44:59.290000'}
+
+
+Running a job
++++++++++++++
+
+.. code::
+
+   resp = requests.post('http://localhost:8001/api/v1/job/testjob/run/',
+                         auth=auth)
+   resp.json()
+   =>
+   {u'job_runs': {u'1517953074': u'OK'}, 
+    u'job_results': [u'results/testjob_1517953074.ipynb'], 
+    u'name': u'testjob.ipynb', 
+    u'created': u'2016-02-06T21:37:54.014000'}
+   
+
+Getting job results
++++++++++++++++++++
+
+To get job results in iPython notebook format, use 
+
+.. code::
+
+      
+   resp = requests.get('http://localhost:8001/api/v1/job/results/testjob_1517953074.ipynb/',
+                         auth=auth)
+   resp.json()
+   =>
+   {u'source_job': u'testjob', u'job_results': {}, 
+   u'created': u'2016-02-06T21:36:06.704000', 
+   u'content': {u'nbformat_minor': 0, u'nbformat': 4, 
+                u'cells': [{u'execution_count': 1, u'cell_type': u'code', 
+                            u'source': u"print('hello')", 
+                            u'outputs': [{u'output_type': 
+                                          u'stream', u'name': u'stdout', 
+                                          u'text': u'hello\n'}], 
+                                          u'metadata': {}}], 
+                u'metadata': {}}, 
+   u'job_runs': [], 
+   u'name': u'results/testjob_1517952965.ipynb'}
+   
+   
+Getting a job report
+++++++++++++++++++++
+
+To get job results in HTML format, use
+
+.. code::
+
+   resp = requests.get('http://localhost:8001/api/v1/job/export/testjob_1517953074.ipynb/',
+                         auth=auth)
+   resp.json()
+   =>
+   {u'content': "<html> ... </html>",
+    u'name': 'testjob_1517953074.ipynb'}
+

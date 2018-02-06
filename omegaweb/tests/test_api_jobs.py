@@ -1,18 +1,17 @@
 from landingpage.models import ServicePlan
 
 from django.contrib.auth.models import User
+from nbformat import v4
 from tastypie.test import ResourceTestCase
 
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
-from nbformat import v4
-
-
+from tastypiex.requesttrace import ClientRequestTracer
 class JobResourceTests(ResourceTestCase):
 
     def setUp(self):
         super(JobResourceTests, self).setUp()
-        #self.api_client = ClientRequestTracer(self.api_client, response=False)
+        self.api_client = ClientRequestTracer(self.api_client, response=False)
         # setup django user
         self.username = username = 'test'
         self.email = email = 'test@omegaml.io'
@@ -73,6 +72,7 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('job_results', data)
         self.assertIn('job_runs', data)
         self.assertIn('name', data)
+        print(data)
         self.assertEqual(data['name'], 'testjob.ipynb')
         # run the job locally and see if we get results ok
         om.jobs.run('testjob')
@@ -133,6 +133,25 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('objects', data)
         self.assertEqual(len(data['objects']), 1)
 
+    def test_job_create(self):
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        data = {
+            'code': code,
+        }
+        # see what we get
+        resp = self.api_client.post(self.url('testjob'), data=data,
+                                    authentication=self.get_credentials())
+        self.assertHttpCreated(resp)
+        data = self.deserialize(resp)
+        self.assertIn('created', data)
+        self.assertIn('job_results', data)
+        self.assertIn('job_runs', data)
+        self.assertIn('name', data)
+        self.assertEqual(data['name'], 'testjob.ipynb')
+
     def test_job_report(self):
         om = self.om
         # create a notebook
@@ -150,3 +169,4 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('content', data)
         self.assertIn('name', data)
         self.assertIn('<html>', data['content'])
+        

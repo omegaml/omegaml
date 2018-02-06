@@ -1,5 +1,6 @@
 import json
 
+from nbformat import v4
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import DictField
@@ -16,8 +17,8 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
                         null=True, help_text='Notebook content')
 
     class Meta:
-        list_allowed_methods = ['get', 'post']
-        detail_allowed_methods = ['get', 'delete']
+        list_allowed_methods = ['get']
+        detail_allowed_methods = ['get', 'post', 'delete']
         resource_name = 'job'
         authentication = ApiKeyAuthentication()
 
@@ -69,12 +70,24 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         }
         return self.create_response(request, data)
 
-    def post_list(self, request, **kwargs):
+    def post_detail(self, request, **kwargs):
         """
         create a new job
         """
+        name = kwargs.get('pk')
         om = self.get_omega(request)
-        data = self._getmodel_detail(request, name)
+        try:
+            code = self.deserialize(request, request.body).get('code')
+            if not code:
+                raise ImmediateHttpResponse(
+                    HttpBadRequest(str("Need job code to create a new job ")))
+        except Exception as e:
+            raise ImmediateHttpResponse(str(e))
+        cells = []
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        meta = om.jobs.put(notebook, name)
+        data = self._get_job_detail(meta)
         return self.create_response(request, data, response_class=HttpCreated)
 
     @cqrsapi(allowed_methods=['get'])
