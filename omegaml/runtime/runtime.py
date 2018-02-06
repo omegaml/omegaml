@@ -34,10 +34,6 @@ class OmegaRuntime(object):
         self.celeryapp.conf.update(celeryconf)
         self.celeryapp.finalize()
 
-    def deploy(self, modelname):
-        # dokku deploy to container
-        pass
-
     def model(self, modelname):
         """
         return a model for remote execution
