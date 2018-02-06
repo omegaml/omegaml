@@ -116,9 +116,9 @@ class JobTests(TestCase):
         self.assertEqual(len(runs), 1)
         self.assertIn('An error occurred', list(runs.values())[0])
 
-    def test_export_job(self):
+    def test_export_job_html(self):
         """
-        test export a job
+        test export a job to HTML
         """
         fs = self.fs
         om = self.om
@@ -135,6 +135,27 @@ class JobTests(TestCase):
         resultnb_name = meta.attributes['job_results'][0]
         outpath = '/tmp/test.html'
         om.jobs.export(resultnb_name, outpath)
+        self.assertTrue(os.path.exists(outpath))
+
+    def test_export_job_pdf(self):
+        """
+        test export a job to PDF
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        om.jobs.run('testjob')
+        # get results and output
+        meta = om.jobs.metadata('testjob')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.pdf'
+        om.jobs.export(resultnb_name, outpath, 'pdf')
         self.assertTrue(os.path.exists(outpath))
 
     def old_test_job_run_valid(self):

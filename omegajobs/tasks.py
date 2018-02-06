@@ -61,7 +61,7 @@ def run_omegaml_job(self, nb_file, **kwargs):
     """
     self.om = om = get_omega_for_task(auth=kwargs.pop('auth', None))
     result = om.jobs.run_notebook(nb_file)
-    return result
+    return result.to_json()
 
 
 @shared_task(base=NotebookTask)

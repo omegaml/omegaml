@@ -10,6 +10,7 @@ import gridfs
 from mongoengine.fields import GridFSProxy
 import nbconvert
 from nbconvert.exporters.html import HTMLExporter
+from nbconvert.exporters.pdf import PDFExporter
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite
 from six import StringIO, BytesIO
@@ -177,14 +178,37 @@ class OmegaJobs(object):
         """
         return self.run_notebook(name)
 
-    def export(self, name, localpath):
+    def export(self, name, localpath, format='html'):
+        """
+        Export a job or result file to HTML
+
+        The job is exported in the given format. 
+
+        :param name: the name of the job, as in jobs.get
+        :param localpath: the path of the local file to write. If you
+        specify an empty path or 'memory' a tuple of (body, resource) 
+        is returned instead
+        :param format: the output format. currently only 'html' is supported
+        :return: the (data, resources) tuple as returned by nbconvert. For
+        format html data is the HTML's body, for PDF it is the pdf file contents
+        """
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
-        exporter = HTMLExporter()
-        #exporter.template_file = 'basic'
+        # (exporter class, filemode
+        EXPORTERS = {
+            'html': (HTMLExporter, ''),
+            'htmlbody': (HTMLExporter, ''),
+            'pdf': (PDFExporter, 'b')
+        }
+        # get exporter according to format
+        exporter_cls, fmode = EXPORTERS[format]
+        exporter = exporter_cls()
+        # get notebook, convert and store in file if requested
         notebook = self.get(name)
-        (body, resources) = exporter.from_notebook_node(notebook)
-        with open(localpath, 'w') as fout:
-            fout.write(body)
+        (data, resources) = exporter.from_notebook_node(notebook)
+        if localpath and localpath != 'memory':
+            with open(localpath, 'w' + fmode) as fout:
+                fout.write(data)
+        return data, resources
 
     def run_notebook(self, name):
         """
@@ -216,7 +240,6 @@ class OmegaJobs(object):
         job_runs[ts] = status
         meta_job.attributes['job_runs'] = job_runs
         meta_job.save()
-
         return meta_job
 
     def schedule(self, nb_file):
