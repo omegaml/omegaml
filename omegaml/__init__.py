@@ -23,12 +23,12 @@ class Omega(object):
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
         self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
-        self.jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobdata/')
+        self._jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobs/')
         self.runtime = OmegaRuntime(self, backend=backend,
                                     auth=auth,
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
-        self.jobs = OmegaJobs(store=self.jobdata)
+        self.jobs = OmegaJobs(store=self._jobdata)
 
     def get_data(self, name):
         data = self.datasets.get(name)

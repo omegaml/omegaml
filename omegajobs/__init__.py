@@ -1,0 +1,1 @@
+from omegajobs.omegacontentsmgr import OmegaStoreContentsManager

@@ -1,3 +1,6 @@
+"""
+omega runtime model tasks 
+"""
 from __future__ import absolute_import
 
 import os
@@ -5,53 +8,9 @@ import os
 from celery import Task
 from celery import shared_task
 from celery.signals import worker_process_init
-from mongoengine.errors import DoesNotExist
 
 from omegaml import signals
-from omegaml.documents import Metadata
 from omegaml.runtime.auth import get_omega_for_task
-
-
-class NotebookTask(Task):
-    abstract = True
-
-    def on_success(self, retval, task_id, *args, **kwargs):
-        args, kwargs = args[0:2]
-        nbfile = args[0]
-        metadata = Metadata.objects.get(
-            name=nbfile, kind=Metadata.OMEGAML_RUNNING_JOBS)
-        attrs = metadata.attributes
-        attrs['state'] = 'SUCCESS'
-        attrs['task_id'] = task_id
-        metadata.kind = Metadata.OMEGAML_JOBS
-
-        if not kwargs:
-            pass
-        else:
-            attrs['last_run_time'] = kwargs.get('run_at')
-            attrs['next_run_time'] = kwargs.get('next_run_time')
-
-        metadata.attributes = attrs
-        metadata.save()
-
-    def on_failure(self, retval, task_id, *args, **kwargs):
-        args, kwargs = args[0:2]
-        nbfile = args[0]
-        metadata = Metadata.objects.get(
-            name=nbfile, kind=Metadata.OMEGAML_RUNNING_JOBS)
-        attrs = metadata.attributes
-        attrs['state'] = 'FAILURE'
-        attrs['task_id'] = task_id
-        metadata.kind = Metadata.OMEGAML_JOBS
-
-        if not kwargs:
-            pass
-        else:
-            attrs['last_run_time'] = kwargs.get('run_at')
-            attrs['next_run_time'] = kwargs.get('next_run_time')
-
-        metadata.attributes = attrs
-        metadata.save()
 
 
 class OmegamlTask(Task):
@@ -169,50 +128,6 @@ def omega_settings():
         return {k: getattr(defaults, k, '')
                 for k in dir(defaults) if k and k.isupper()}
     return {'error': 'settings dump is disabled'}
-
-
-@shared_task(base=NotebookTask)
-def run_omegaml_job(nb_file, **kwargs):
-    """
-    runs omegaml job
-    """
-    om = get_omega_for_task(auth=kwargs.pop('auth', None))
-    result = om.jobs.run_notebook(nb_file)
-    return result
-
-
-@shared_task(base=NotebookTask)
-def schedule_omegaml_job(nb_file, **kwargs):
-    """
-    schedules the running of omegaml job
-    """
-    om = get_omega_for_task(auth=kwargs.pop('auth', None))
-    result = om.jobs.schedule(nb_file)
-    return result
-
-
-@shared_task(base=OmegamlTask)
-def execute_scripts(**kwargs):
-    """
-
-    will retrieve all scripts from the mongodb
-    (as per a respective OMEGAML_SCRIPTS_GRIDFS setting),
-    provided they are marked for execution at the time of execution
-    """
-    om = get_omega_for_task(auth=kwargs.pop('auth', None))
-    # Search tasks from mongo
-    job_list = om.jobs.list()
-    for nb_file in job_list:
-        try:
-            metadata = Metadata.objects.get(
-                name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
-            task_state = metadata.attributes.get('state')
-            if task_state == "RECEIVED":
-                pass
-            else:
-                om.jobs.schedule(nb_file)
-        except DoesNotExist:
-            om.jobs.schedule(nb_file)
 
 
 @worker_process_init.connect

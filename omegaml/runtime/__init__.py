@@ -1,2 +1,3 @@
 from .runtime import OmegaRuntime
-from .proxy import OmegaModelProxy
+from .modelproxy import OmegaModelProxy
+from .jobproxy import OmegaJobProxy
