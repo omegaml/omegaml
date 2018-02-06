@@ -8,6 +8,8 @@ from uuid import uuid4
 from croniter import croniter
 import gridfs
 from mongoengine.fields import GridFSProxy
+import nbconvert
+from nbconvert.exporters.html import HTMLExporter
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite
 from six import StringIO, BytesIO
@@ -174,6 +176,15 @@ class OmegaJobs(object):
         :return: the metadata of the job
         """
         return self.run_notebook(name)
+
+    def export(self, name, localpath):
+        # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
+        exporter = HTMLExporter()
+        #exporter.template_file = 'basic'
+        notebook = self.get(name)
+        (body, resources) = exporter.from_notebook_node(notebook)
+        with open(localpath, 'w') as fout:
+            fout.write(body)
 
     def run_notebook(self, name):
         """

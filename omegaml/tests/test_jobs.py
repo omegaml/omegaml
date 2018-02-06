@@ -1,12 +1,16 @@
 
 
 from __future__ import absolute_import
-from unittest import TestCase
-from omegaml import Omega
-from omegaml.documents import Metadata
+
+import os
 import tempfile
+from unittest import TestCase
+
 import gridfs
 from nbformat import write, v4
+
+from omegaml import Omega
+from omegaml.documents import Metadata
 from omegaml.util import settings as omegaml_settings
 
 
@@ -33,6 +37,9 @@ class JobTests(TestCase):
         return fs
 
     def test_job_put_get(self):
+        """
+        test job put and get
+        """
         om = self.om
         # create a notebook
         cells = []
@@ -47,6 +54,9 @@ class JobTests(TestCase):
         self.assertDictEqual(notebook2, notebook)
 
     def test_job_list(self):
+        """
+        test job listing
+        """
         fs = self.fs
         om = self.om
         # create a notebook
@@ -63,6 +73,9 @@ class JobTests(TestCase):
         self.assertIn(expected, job_list)
 
     def test_run_job_valid(self):
+        """
+        test running a valid job 
+        """
         om = self.om
         # create a notebook
         cells = []
@@ -84,6 +97,9 @@ class JobTests(TestCase):
         self.assertIn(list(runs.keys())[0], resultnb)
 
     def test_run_job_invalid(self):
+        """
+        test running an invalid job
+        """
         fs = self.fs
         om = self.om
         # create a notebook
@@ -99,6 +115,27 @@ class JobTests(TestCase):
         runs = meta_job.attributes['job_runs']
         self.assertEqual(len(runs), 1)
         self.assertIn('An error occurred', list(runs.values())[0])
+
+    def test_export_job(self):
+        """
+        test export a job
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        om.jobs.run('testjob')
+        # get results and output
+        meta = om.jobs.metadata('testjob')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.html'
+        om.jobs.export(resultnb_name, outpath)
+        self.assertTrue(os.path.exists(outpath))
 
     def old_test_job_run_valid(self):
         om = Omega()
@@ -130,4 +167,3 @@ class JobTests(TestCase):
         om = self.om
         self.assertRaises(
             gridfs.errors.NoFile, om.jobs.run_notebook, 'dummys.ipynb')
-
