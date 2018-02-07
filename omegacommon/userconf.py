@@ -21,6 +21,8 @@ def get_user_config_from_api(api_auth, api_url=None):
         server = TestApiClient()
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
+    else:
+        raise ValueError('invalid api_url {}'.format(api_url))
     # -- actual logic to get configs
     fail_msg = ("Not authenticated using userid {api_auth.username}"
                 " apikey {api_auth.apikey}, error was {resp.status_code}, "
