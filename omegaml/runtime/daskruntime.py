@@ -5,7 +5,6 @@ from importlib import import_module
 import os
 
 from omegacommon.auth import OmegaRuntimeAuthentication
-from omegaml import defaults
 from omegaml.util import settings
 
 
@@ -37,6 +36,11 @@ class DaskAsyncResult(object):
         self.future = future
 
     def get(self):
+        import dask
+
+        if os.environ.get('DASK_DEBUG'):
+            with dask.set_options(get=dask.threaded.get):
+                return self.future.result()
         return self.future.result()
 
 
@@ -49,6 +53,8 @@ class OmegaRuntimeDask(object):
 
     """
     omegaml compute cluster gateway to a dask distributed cluster
+
+    set environ DASK_DEBUG=1 to run dask tasks locally
     """
 
     def __init__(self, omega, dask_url=None, auth=None):
@@ -59,9 +65,14 @@ class OmegaRuntimeDask(object):
 
     @property
     def client(self):
+        from distributed import Client, LocalCluster
         if self._client is None:
-            from dask.distributed import Client
-            self._client = Client(self.dask_url)
+            if os.environ.get('DASK_DEBUG'):
+                # http://dask.pydata.org/en/latest/setup/single-distributed.html?highlight=single-threaded#localcluster
+                single_threaded = LocalCluster(processes=False)
+                self._client = Client(single_threaded)
+            else:
+                self._client = Client(self.dask_url)
         return self._client
 
     def model(self, modelname):
@@ -111,6 +122,7 @@ class OmegaRuntimeDask(object):
         """
         return the current client authentication or None if not configured
         """
+        from omegaml import defaults
         if self._auth is None:
             try:
                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),

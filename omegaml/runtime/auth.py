@@ -11,7 +11,6 @@ def get_omega_for_task(auth=None):
     :param auth: the OmegaRuntimeAuthentication object
     :return: the Omega instance configured for the user
     """
-    import omegaml as omdefault
     is_auth_not_provided = lambda auth: (auth is not None
                                          and (None, None) != auth)
     if is_auth_not_provided(auth):
@@ -21,5 +20,6 @@ def get_omega_for_task(auth=None):
             userid, apikey = auth
             om = get_omega_from_apikey(userid, apikey)
     else:
-        om = omdefault
+        from omegaml import Omega
+        om = Omega()
     return om

@@ -1,13 +1,14 @@
 import sys
 
 from omegacommon.auth import OmegaRuntimeAuthentication, OmegaRestApiAuth
+from omegacommon.util import cached
 
 
 def get_user_config_from_api(api_auth, api_url=None):
     from omegaml import defaults
     # safe way to talk to either the remote API or the in-process test server
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
-    api_url += '/api/v1/config/'
+    api_url += '/api/v1/config/'.replace('//', '/')
     # -- setup appropriate client API
     if defaults.OMEGA_RESTAPI_URL.startswith('http'):
         import requests
@@ -33,6 +34,7 @@ def get_user_config_from_api(api_auth, api_url=None):
     return configs
 
 
+@cached(seconds=3600)
 def get_omega_from_apikey(userid, apikey, api_url=None):
     """
     setup an Omega instance from userid and apikey

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from celery import Celery
 
 from omegacommon.auth import OmegaRuntimeAuthentication
-from omegaml import defaults
 from omegaml.util import settings
 
 
@@ -69,6 +68,7 @@ class OmegaRuntime(object):
         """
         return the current client authentication or None if not configured
         """
+        from omegaml import defaults
         if self._auth is None:
             try:
                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),

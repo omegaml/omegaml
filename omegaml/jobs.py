@@ -110,7 +110,11 @@ class OmegaJobs(object):
                 raise e
             # nbwrite wants a string, outf is bytes
             sbuf = StringIO()
-            sbuf.write(outf.read().decode('utf8'))
+            data = outf.read()
+            if data is None:
+                msg = 'Expected content in {name}, got None'.format(**locals())
+                raise ValueError(msg)
+            sbuf.write(data.decode('utf8'))
             sbuf.seek(0)
             nb = nbread(sbuf, as_version=4)
             return nb

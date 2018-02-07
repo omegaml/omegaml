@@ -32,7 +32,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'Django>=1.7,<1.8',
+        'Django>=1.8,<1.9',
         'celery>=3.1.20,<3.1.24',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
