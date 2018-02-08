@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import time
 from unittest import TestCase
 
 from sklearn.exceptions import NotFittedError
@@ -14,12 +15,10 @@ import numpy as np
 from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import Omega
 import omegaml
+from omegaml.runtime.daskruntime import OmegaRuntimeDask
 from omegaml.util import delete_database, reshaped
 import pandas as pd
 from six.moves import range
-from omegaml.runtime.daskruntime import OmegaRuntimeDask
-
-
 class DaskRuntimeTests(TestCase):
 
     @classmethod
@@ -64,6 +63,7 @@ class DaskRuntimeTests(TestCase):
         self.assertIn('amodel', om.models.list('*'))
         # have Omega predict it
         # -- using data already in Omega
+        import pdb; pdb.set_trace()
         result = om.runtime.model('amodel').predict('datax')
         pred1 = result.get()
         # -- using data provided locally
