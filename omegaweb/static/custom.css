@@ -42,3 +42,37 @@
   height: 100% !important;
   background-color: white !important;
 }
+
+/* dataset search field */
+
+.search-form {
+	width: 80%;
+}
+
+.btn-toolbar:before {
+   content: none;
+   display: inline;
+}
+
+.btn-toolbar:after {
+   clear: none;
+}
+
+@media only screen and (min-width: 1200px) {
+  .search-form {
+     width: 85%;
+  }
+}
+
+@media only screen and (min-width: 1560px) {
+  .search-form {
+     width: 92%;
+  }
+}
+
+
+@media only screen and (max-width: 700px) {
+	.search-form {
+	   width: 50%;
+	}
+}

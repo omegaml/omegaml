@@ -1,17 +1,19 @@
 
+from urllib import unquote
+
 from mongoengine.errors import DoesNotExist
 from six import iteritems
-from six.moves import builtins
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
+import numpy as np
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
-import numpy as np
+from six.moves import builtins
 
 from .util import BundleObj
 
@@ -35,7 +37,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         """
         # -- get filters as specified on request query args
         fltkwargs = {k: v for k, v in iteritems(bundle.request.GET)
-                     if k not in ['orient']}
+                     if k not in ['orient', 'limit', 'skip', 'page']}
         # -- get dtypes of dataframe and convert filter values
         om = self.get_omega(bundle)
         metadata = om.datasets.metadata(name)
@@ -49,21 +51,32 @@ class DatasetResource(OmegaResourceMixin, Resource):
         for k, v in iteritems(fltkwargs):
             # -- get column name without operator (e.g. x__gt => x)
             col = k.split('__')[0]
-            dtype = dtypes.get(col)
-            # -- get dtyped value and convert to python type
-            v = np_typemap.get(getattr(np, dtype, str), str)(v)
-            fltkwargs[k] = v
+            dtype = dtypes.get(str(col))
+            if dtype:
+                # -- get dtyped value and convert to python type
+                v = np_typemap.get(getattr(np, dtype, str), str)(v)
+                fltkwargs[k] = v
         return fltkwargs
 
     def obj_get(self, bundle, **kwargs):
         """
         Get a dataset
         """
-        name = kwargs.get('pk')
+        name = unquote(kwargs.get('pk'))
         orient = bundle.request.GET.get('orient', 'dict')
+        limit = int(bundle.request.GET.get('limit', '50'))
+        skip = int(bundle.request.GET.get('skip', '0'))
+        page = int(bundle.request.GET.get('page', '-1'))
         fltkwargs = self.restore_filter(bundle, name)
         om = self.get_omega(bundle)
-        obj = om.datasets.get(name, filter=fltkwargs)
+        if page > -1:
+            skip = limit * page
+        obj = om.datasets.getl(name, filter=fltkwargs)
+        if hasattr(obj, 'skip'):
+            obj = (obj
+                   .skip(skip)
+                   .head(limit)
+                   .value)
         if isinstance(obj, (pd.DataFrame, pd.Series)):
             df = obj
             # get index values as python types to support Py3
@@ -72,7 +85,9 @@ class DatasetResource(OmegaResourceMixin, Resource):
             # get data set values as python types to support Py3
             df = df.reset_index(drop=True)
             df.index = df.index.astype('O')
-            data = df.astype('O').to_dict(orient)
+            # convert nan to None
+            # https://stackoverflow.com/a/34467382
+            data = df.where(pd.notnull(df), None).astype('O').to_dict(orient)
             # build bundle
             if isinstance(data, dict):
                 bundle.data = data
@@ -137,7 +152,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
                 'name': None,
                 'index': None,
                 'orient': None,
-            }) for item in om.datasets.list(raw=True) 
-                       if not item.name.startswith('_temp')
+            }) for item in om.datasets.list(raw=True)
+            if not item.name.startswith('_temp')
         ]
         return bundle.objs
