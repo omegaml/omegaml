@@ -1,3 +1,6 @@
+"""
+REST API to models
+"""
 import json
 
 from sklearn.exceptions import NotFittedError
@@ -14,16 +17,53 @@ from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+    """
+    ModelResource implements the REST API to omegaml.models
+    """
     datax = CharField(attribute='datax', blank=True, null=True,
                       help_text='The name of X dataset')
+    """ the name of the X dataset
+    
+    The dataset must exist 
+    """
     datay = CharField(attribute='datay', blank=True, null=True,
                       help_text='The name of Y dataset')
+    """ the name of the Y dataset
+    
+    The dataset must exist
+    """
     result = ListField(attribute='result', readonly=True, blank=True,
                        null=True, help_text='the list of results')
+    """ the result 
+    
+    result is a list of result values 
+    """
     model = DictField(attribute='model', readonly=True, blank=True,
                       null=True, help_text='Dictionary of model details')
+    """
+    Metadata on the model
+    
+    dictionary of the model 
+    
+    { name => name of the model,
+      kind => kind of model,
+      created => date of creation
+    }
+    """
     pipeline = ListField(attribute='model', blank=True,
                          null=True, help_text='List of pipeline steps')
+    """
+    Pipeline steps (on POST only)
+    
+    list of steps in the pipeline, as :code:`[ step, ... ]` 
+    
+    * :code:`step` is a list of :code:`[ type, kwargs ]`.
+    * :code:`type` is the type of the model. the type must be loadable
+      by Python, e.g. `sklearn.linear_model.LinearRegression`
+    * :code:`kwargs` is a dictionary of keyword arguments used
+      to initialize the model class
+    
+    """
 
     class Meta:
         list_allowed_methods = ['get', 'post']
@@ -35,18 +75,24 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def predict(self, request, *args, **kwargs):
         """
         predict from model
+
+        HTTP GET :code:`/model/<name>/predict/?datax=dataset-name`
+
+        where 
+
+        * :code:`datax` is the name of the features dataset
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
+        datax = request.GET.get('datax')
         try:
             result = om.runtime.model(name).predict(datax)
             data = result.get()
         except NotFittedError as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
         else:
-            if data.shape[1] == 1:
+            # if we have a single column, get as a list
+            if len(data.shape) > 1 and data.shape[1] == 1:
                 data = data[:, 0]
             data = data.tolist()
             result = {
@@ -60,6 +106,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def fit(self, request, *args, **kwargs):
         """
         fit a model
+
+        HTTP PUT :code:`/model/<name>/fit/?datax=dataset-name&datay=dataset-name`
+
+        where 
+
+        * :code:`datax` is the name of the features dataset
+        * :code:`datay` is the name of the target dataset (if required by
+          the algorithm)
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -79,6 +133,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def partial_fit(self, request, *args, **kwargs):
         """
         partially fit a model
+
+        HTTP PUT :code:`/model/<name>/partial_fit/?datax=dataset-name&datay=dataset-name`
+
+        where 
+
+        * :code:`datax` is the name of the features dataset
+        * :code:`datay` is the name of the target dataset (if required by
+          the algorithm)
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -97,6 +159,13 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def score(self, request, *args, **kwargs):
         """
         score a model
+
+        HTTP GET :code:`/model/<name>/score/?datax=dataset-name&datay=dataset-name`
+
+        where 
+
+        * :code:`datax` is the name of the features test dataset
+        * :code:`datay` are the true labels of the test dataset
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -115,6 +184,12 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def transform(self, request, *args, **kwargs):
         """
         transform a model
+
+        HTTP GET :code:`/model/<name>/transfer/?datax=dataset-name`
+
+        where 
+
+        * :code:`datax` is the name of the features test dataset
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -132,6 +207,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def get_detail(self, request, **kwargs):
         """
         get model information
+
+        HTTP GET :code:`/model/<name>/
         """
         name = kwargs.get('pk')
         data = self._getmodel_detail(request, name)
@@ -153,6 +230,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def get_list(self, request, **kwargs):
         """
         list all models
+
+        HTTP GET :code:`/model/<name>/
         """
         om = self.get_omega(request)
         objs = [{
@@ -179,6 +258,16 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def post_list(self, request, **kwargs):
         """
         create a model
+
+        HTTP POST :code:`/model/<name>/`
+
+        Pass the model specification as the dictionary of 
+
+        * :code:`name` - see name field<
+        * :code: `pipeline` - see pipeline field
+
+        Note the method attempts to create a scikit-learn pipeline from
+        your specification. 
         """
         om = self.get_omega(request)
         data = json.loads(request.body.decode('latin1'))
@@ -192,7 +281,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         # TODO setup a pipeline instead of singular models
         for step in pipeline:
             modelkind, kwargs = step
-            model_cls = MODEL_MAP.get(modelkind)
+            model_cls = MODEL_MAP.get(modelkind, modelkind)
             if model_cls:
                 model_cls = load_class(model_cls)
             model = model_cls(**kwargs)

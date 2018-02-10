@@ -18,6 +18,41 @@ The API reference is accessible online from your omegaml instance at:
 * :code:`/api/redoc` - ReDoc UI, based on Swagger specs
 
 
+API Semantics
+-------------
+
+The omegaml REST API resources are all of the form 
+:code:`/api/version/resource-name/resource-key/?param=value`.
+
+The valid resource names are:
+
+* dataset - provides access to data 
+* model - provides access to models
+* job - provides access to jobs
+* config - provides access to the user-specific omegaml configuration
+
+The resource-key and query parameters are optional. If a resource-key
+is not provided, a list of existing resources is returned. If a resource-key
+is provided the API will look up the respective specific resource for this
+key and return its content.
+
+Note that the dataset and job resources will return dataset and job contents,
+respectively. The model resource will only provide meta data, but not the
+actual contents of the model.  
+
+All resources support a set of HTTP GET, PUT, POST or DELETE methods.
+
+* successful GET => HTTP 200 OK
+* successful POST => HTTP 201 created
+* successful PUT => HTTP 202 accepted
+* error due to bad input parameters => HTTP 400 Bad Request
+* error due to authentication => HTTP 401 Unauthorized
+* error due to wrong authorization => HTTP 403 Forbidden
+* error due to non existing resource => HTTP 404 Not found
+* error due to not allowed method => HTTP 405 Method not allowed
+* severe server errors => HTTP 500 Internal Server error 
+
+
 Setting up authorization
 ------------------------
 

@@ -1,6 +1,9 @@
 Public API
 ==========
 
+Python
+------
+
 .. autosummary::
 
      omegaml.datasets
@@ -18,6 +21,17 @@ Public API
      omegaml.mdataframe.MGrouper
      omegaml.mdataframe.MLocIndexer
 
+REST API
+--------
+
+.. autosummary::
+
+     omegaweb.resources.dataset 
+     omegaweb.resources.model
+     omegaweb.resources.jobs
+
+Python API
+----------
 
 omegaml
 +++++++ 
@@ -83,3 +97,46 @@ omegaml.mdataframe
 .. autoclass:: omegaml.mdataframe.MLocIndexer
    :special-members: __getitem__ 
 
+REST API
+--------
+
+  
+omegaweb.resources.dataset
+++++++++++++++++++++++++++
+ 
+.. autoclass:: omegaweb.resources.dataset.DatasetResource
+   :members:
+   :exclude-members: restore_filter
+
+omegaweb.resources.model
+++++++++++++++++++++++++
+
+   
+.. autoclass:: omegaweb.resources.model.ModelResource
+   :members:
+ 
+omegaweb.resources.jobs
++++++++++++++++++++++++  
+
+.. autoclass:: omegaweb.resources.jobs.JobResource
+   :members:
+   
+             
+              
+              
+              
+              
+             
+                
+                
+                
+                
+                
+                 
+                  
+                  
+                  
+                  
+                   
+                   
+                   
