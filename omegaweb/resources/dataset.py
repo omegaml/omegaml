@@ -107,11 +107,12 @@ class DatasetResource(OmegaResourceMixin, Resource):
         for k, v in iteritems(fltkwargs):
             # -- get column name without operator (e.g. x__gt => x)
             col = k.split('__')[0]
+            value = unquote(v)
             dtype = dtypes.get(str(col))
             if dtype:
                 # -- get dtyped value and convert to python type
-                v = np_typemap.get(getattr(np, dtype, str), str)(v)
-                fltkwargs[k] = unquote(v)
+                value = np_typemap.get(getattr(np, dtype, str), str)(value)
+                fltkwargs[k] = value
         return fltkwargs
 
     def obj_get(self, bundle, **kwargs):
@@ -215,7 +216,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         """
         pk = kwargs.get('pk')
         om = self.get_omega(bundle)
-        if 'append' in bundle.requeset.GET:
+        if 'append' in bundle.request.GET:
             append = isTrue(bundle.request.GET['append'])
         else:
             append = isTrue(bundle.data.get('append', 'true'))
