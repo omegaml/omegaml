@@ -290,7 +290,10 @@ def cursor_to_dataframe(cursor, chunk_size=10000):
         chunk_size = max(chunk_size, int(count * .1))
         for chunk in grouper(chunk_size, cursor):
             frames.append(pd.DataFrame.from_records(chunk))
-        df = pd.concat(frames)
+        if frames:
+            df = pd.concat(frames)
+        else:
+            df = pd.DataFrame()
     else:
         df = pd.DataFrame()
     return df

@@ -1,3 +1,5 @@
+from urllib import unquote
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
@@ -12,3 +14,12 @@ def dashboard(request):
         'datasets': datasets,
     }
     return render(request, 'omegaweb/dashboard.html', context)
+
+
+@login_required
+def dataview(request, name):
+    name = unquote(name)
+    context = {
+        'name': name,
+    }
+    return render(request, 'omegaweb/dataset.html', context)

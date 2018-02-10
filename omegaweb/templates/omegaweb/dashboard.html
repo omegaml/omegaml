@@ -87,31 +87,28 @@ $(function() {
             var coldef = {
                 name : name,
                 label : label,
-                cell : cell || 'string',
+                cell : cell || 'fixed-width',
                 width: 80,
+                editable: true,
+                btnClassName: 'btn-default',
+                btnText: '',
+                icon: 'fa fa-table',
             };
             return _.defaults(coldef, options);
         };;
        var tableOptions = {
-          columns: [column('name', 'Name'), column('kind', 'Kind')],
+          columns: [column('name', 'Name'), column('kind', 'Kind'),
+                    column('view', 'View', 'button')],
        };
        /* fetch datasets */
        var datasets = new Dataset.objects({
        });
-       datasets.reset([{
-           name: 'foo',
-           kind: 'dataframe'
-       }]);
        datasets.fetch({
            reset: true,
        });
        /* fetch models */
        var models = new Model.objects({
        });
-       models.reset([{
-           name: 'foo',
-           kind: 'dataframe'
-       }]);
        models.fetch({
            reset: true,
        });
@@ -142,6 +139,10 @@ $(function() {
            tableOptions: tableOptions,
            collection: datasets,
        }); 
+       datasetsView.on('row:edit', function(model) {
+           var dsName = encodeURIComponent(model.datasetName);
+           window.open('/dataset/{0}/'.format([dsName]));
+       });
        datasetsView.render();
        var modelsView = new GenericTableView({
            el: '.panel.models',
