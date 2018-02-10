@@ -7,11 +7,13 @@ from tastypie.test import ResourceTestCase
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
 from tastypiex.requesttrace import ClientRequestTracer
+
+
 class JobResourceTests(ResourceTestCase):
 
     def setUp(self):
         super(JobResourceTests, self).setUp()
-        self.api_client = ClientRequestTracer(self.api_client, response=False)
+        #self.api_client = ClientRequestTracer(self.api_client, response=False)
         # setup django user
         self.username = username = 'test'
         self.email = email = 'test@omegaml.io'
@@ -72,7 +74,6 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('job_results', data)
         self.assertIn('job_runs', data)
         self.assertIn('name', data)
-        print(data)
         self.assertEqual(data['name'], 'testjob.ipynb')
         # run the job locally and see if we get results ok
         om.jobs.run('testjob')
@@ -169,4 +170,3 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('content', data)
         self.assertIn('name', data)
         self.assertIn('<html>', data['content'])
-        

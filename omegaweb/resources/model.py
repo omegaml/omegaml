@@ -34,7 +34,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     @cqrsapi(allowed_methods=['get'])
     def predict(self, request, *args, **kwargs):
         """
-        foo
+        predict from model
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -59,7 +59,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     @cqrsapi(allowed_methods=['put'])
     def fit(self, request, *args, **kwargs):
         """
-        foo
+        fit a model
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -78,7 +78,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     @cqrsapi(allowed_methods=['put'])
     def partial_fit(self, request, *args, **kwargs):
         """
-        foo
+        partially fit a model
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -96,7 +96,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     @cqrsapi(allowed_methods=['get'])
     def score(self, request, *args, **kwargs):
         """
-        foo
+        score a model
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -114,7 +114,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     @cqrsapi(allowed_methods=['get'])
     def transform(self, request, *args, **kwargs):
         """
-        foo
+        transform a model
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -151,6 +151,9 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         return data
 
     def get_list(self, request, **kwargs):
+        """
+        list all models
+        """
         om = self.get_omega(request)
         objs = [{
                 'model': {
@@ -159,20 +162,20 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
                     'created': '{}'.format(meta.created),
                     'bucket': meta.bucket,
                 }
-            } for meta in om.models.list(raw=True)
-        ]
+                } for meta in om.models.list(raw=True)
+                ]
         data = {
-          'meta': {
-             'limit': 20,
-             'next': None,
-             'offset': 0,
-             'previous': None,
-             'total_count': len(objs),
-          },
-          'objects': objs,
+            'meta': {
+                'limit': 20,
+                'next': None,
+                'offset': 0,
+                'previous': None,
+                'total_count': len(objs),
+            },
+            'objects': objs,
         }
         return self.create_response(request, data)
-        
+
     def post_list(self, request, **kwargs):
         """
         create a model

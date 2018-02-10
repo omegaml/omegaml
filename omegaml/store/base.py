@@ -78,6 +78,7 @@ from fnmatch import fnmatch
 import os
 import re
 import tempfile
+from uuid import uuid4
 
 import gridfs
 import mongoengine
@@ -145,6 +146,10 @@ class OmegaStore(object):
         # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
         # this defers connecting until the first access
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
+        # FIXME use an instance specific alias. requires that every access
+        #       to Metadata is configured correctly. this to avoid sharing
+        #       inadevertedly between threads and processes. 
+        #alias = 'omega-{}'.format(uuid4().hex)
         alias = 'omega'
         # always disconnect before registering a new connection because
         # connect forgets all connection settings upon disconnect WTF?!

@@ -128,10 +128,10 @@ class JobTests(TestCase):
         cells.append(v4.new_code_cell(source=code))
         notebook = v4.new_notebook(cells=cells)
         # put and run the notebook
-        meta = om.jobs.put(notebook, 'testjob')
-        om.jobs.run('testjob')
+        meta = om.jobs.put(notebook, 'testjob-html')
+        om.jobs.run('testjob-html')
         # get results and output
-        meta = om.jobs.metadata('testjob')
+        meta = om.jobs.metadata('testjob-html')
         resultnb_name = meta.attributes['job_results'][0]
         outpath = '/tmp/test.html'
         om.jobs.export(resultnb_name, outpath)
@@ -149,10 +149,10 @@ class JobTests(TestCase):
         cells.append(v4.new_code_cell(source=code))
         notebook = v4.new_notebook(cells=cells)
         # put and run the notebook
-        meta = om.jobs.put(notebook, 'testjob')
-        om.jobs.run('testjob')
+        meta = om.jobs.put(notebook, 'testjobx')
+        om.jobs.run('testjobx')
         # get results and output
-        meta = om.jobs.metadata('testjob')
+        meta = om.jobs.metadata('testjobx')
         resultnb_name = meta.attributes['job_results'][0]
         outpath = '/tmp/test.pdf'
         om.jobs.export(resultnb_name, outpath, 'pdf')

@@ -36,7 +36,8 @@ OMEGA_BACKENDS = {
 }
 
 #: the omegaweb url
-OMEGA_RESTAPI_URL = 'http://omegaml.dokku.me/'
+OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
+                     'http://omegaml.dokku.me/')
 #: omega user id
 OMEGA_USERID = None
 #: omega apikey

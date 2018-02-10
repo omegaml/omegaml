@@ -8,11 +8,10 @@ from uuid import uuid4
 from croniter import croniter
 import gridfs
 from mongoengine.fields import GridFSProxy
-import nbconvert
 from nbconvert.exporters.html import HTMLExporter
 from nbconvert.exporters.pdf import PDFExporter
 from nbconvert.preprocessors.execute import ExecutePreprocessor
-from nbformat import read as nbread, write as nbwrite
+from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
 import yaml
 
@@ -111,7 +110,11 @@ class OmegaJobs(object):
                 raise e
             # nbwrite wants a string, outf is bytes
             sbuf = StringIO()
-            sbuf.write(outf.read().decode('utf8'))
+            data = outf.read()
+            if data is None:
+                msg = 'Expected content in {name}, got None'.format(**locals())
+                raise ValueError(msg)
+            sbuf.write(data.decode('utf8'))
             sbuf.seek(0)
             nb = nbread(sbuf, as_version=4)
             return nb
@@ -120,10 +123,23 @@ class OmegaJobs(object):
                 ">{0}< does not exist in jobs bucket '{1}'".format(
                     name, self.store.bucket))
 
+    def create(self, code, name):
+        """
+        create a notebook from code
+
+        :param code: the code as a string
+        :param name: the name of the job to create
+        :return: the metadata object created
+        """
+        cells = []
+        cells.append(nbv4.new_code_cell(source=code))
+        notebook = nbv4.new_notebook(cells=cells)
+        # put the notebook
+        meta = self.put(notebook, 'testjob')
+        return meta
+
     def get_fs(self, collection=None):
-        """
-        get gridfs instance using url and collection provided
-        """
+        # legacy support
         return self._fs
 
     def get_collection(self, collection):
