@@ -1,5 +1,5 @@
 Local setup using Vagrant
-===========
+=========================
 
 OmegaML comes with a Vagrant resourcefile that can be used to spin off a
 local machine that has spark, omegaml and hadoop all configured, integrated and ready to use.
@@ -33,7 +33,7 @@ This will take a while and spin off a virtualbox with spark & omegaml on
 it.
 
 Using the vagrant machine
------------------------
+-------------------------
 
 -  Open a web browser and browse http://localhost:18888 . This is the
    ipython notebook server.
@@ -56,7 +56,7 @@ Using the vagrant machine
    -  all job configurations should be valid yaml files.
    -  all lines must start with # .
    -  the first line should always be omegaml.script.
-   -  run-at: “\ */1 * \* \* \*" defines the time interval in ‘cron’
+   -  run-at: `\ */1 * \* \* \*` defines the time interval in ‘cron’
       like schedule, this is scheduled to run every minute
    -  results-store: gridfs , results-store can either be s3 or gridfs
 

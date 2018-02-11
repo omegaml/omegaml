@@ -56,7 +56,7 @@ class OmegaModelProxy(object):
         """
         fit the model
 
-        Calls .fit(X, Y, **kwargs). If instead of dataset names actual data
+        Calls :code:`.fit(X, Y, **kwargs)`. If instead of dataset names actual data
         is given, the data is stored using _fitX/fitY prefixes and a unique
         name.
 
@@ -80,7 +80,7 @@ class OmegaModelProxy(object):
         """
         update the model
 
-        Calls .partial_fit(X, Y, **kwargs). If instead of dataset names actual 
+        Calls :code:`.partial_fit(X, Y, **kwargs)`. If instead of dataset names actual 
         data  is given, the data is stored using _fitX/fitY prefixes and 
         a unique name. 
 
@@ -104,13 +104,13 @@ class OmegaModelProxy(object):
         """
         transform X
 
-        Calls .transform(X, **kwargs). If rName is given the result is
+        Calls :code:`.transform(X, **kwargs)`. If rName is given the result is
         stored as object rName
 
         :param Xname: name of the X dataset
         :param rName: name of the resulting dataset (optional)
         :return: the data returned by .transform, or the metadata of the rName
-        dataset if rName was given
+            dataset if rName was given
         """
         omega_transform = self.runtime.task('omegaml.tasks.omega_transform')
         Xname = self._ensure_data_is_stored(Xname)
@@ -123,14 +123,14 @@ class OmegaModelProxy(object):
         """
         fit & transform X
 
-        Calls .fit_transform(X, Y, **kwargs). If rName is given the result is
+        Calls :code:`.fit_transform(X, Y, **kwargs)`. If rName is given the result is
         stored as object rName
 
         :param Xname: name of the X dataset
         :param Yname: name of the Y dataset
         :param rName: name of the resulting dataset (optional)
         :return: the data returned by .fit_transform, or the metadata of the rName
-        dataset if rName was given
+           dataset if rName was given
         """
 
         omega_fit_transform = self.runtime.task(
@@ -147,13 +147,13 @@ class OmegaModelProxy(object):
         """
         predict
 
-        Calls .predict(X). If rName is given the result is
+        Calls :code:`.predict(X)`. If rName is given the result is
         stored as object rName
 
         :param Xname: name of the X dataset
         :param rName: name of the resulting dataset (optional)
         :return: the data returned by .predict, or the metadata of the rName
-        dataset if rName was given
+            dataset if rName was given
         """
         omega_predict = self.runtime.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
@@ -165,13 +165,13 @@ class OmegaModelProxy(object):
         """
         predict probabilities
 
-        Calls .predict_proba(X). If rName is given the result is
+        Calls :code:`.predict_proba(X)`. If rName is given the result is
         stored as object rName
 
         :param Xname: name of the X dataset
         :param rName: name of the resulting dataset (optional)
         :return: the data returned by .predict_proba, or the metadata of the rName
-        dataset if rName was given
+           dataset if rName was given
         """
         omega_predict_proba = self.runtime.task(
             'omegaml.tasks.omega_predict_proba')
@@ -184,14 +184,14 @@ class OmegaModelProxy(object):
         """
         calculate score
 
-        Calls .score(X, y, **kwargs). If rName is given the result is
+        Calls :code:`.score(X, y, **kwargs)`. If rName is given the result is
         stored as object rName
 
         :param Xname: name of the X dataset
         :param yName: name of the y dataset
         :param rName: name of the resulting dataset (optional)
         :return: the data returned by .score, or the metadata of the rName
-        dataset if rName was given
+           dataset if rName was given
         """
         omega_score = self.runtime.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
@@ -227,5 +227,3 @@ class OmegaModelProxy(object):
             return True
         else:
             return False
-
-

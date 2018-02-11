@@ -145,7 +145,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
           :code:`column__eq=value` is the same as :code:`column=value`. If the
           name of the column is any of the above default parameters you have
           to use the :code:`eq` operator to distinguish the filter from the
-          paramter.
+          parameter.
         * :code:`lt` less 
         * :code:`gt` greater
         * :code:`le` less or equal
@@ -204,15 +204,17 @@ class DatasetResource(OmegaResourceMixin, Resource):
         Update a dataset 
 
         HTTP PUT :code:`/data/<name>/?append=0|1`
-        .. code::
-            { data: ...,
+
+        :Example:
+
+           > { data: ...,
               dtypes: ...,
-              index: ...,
-            }
+              index: ..., }
+
 
         :code:`append` is optional and defaults to 1 (true). If true,
-        the provided data will be appended to the dataset. If false,
-        any existing data will be replaced.
+           the provided data will be appended to the dataset. If false,
+           any existing data will be replaced.
         """
         pk = kwargs.get('pk')
         om = self.get_omega(bundle)

@@ -12,32 +12,36 @@ from tastypie.resources import Resource
 
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
-from omegaweb.resources.util import BundleObj
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+
     """
     ModelResource implements the REST API to omegaml.models
     """
+    
     datax = CharField(attribute='datax', blank=True, null=True,
                       help_text='The name of X dataset')
     """ the name of the X dataset
     
     The dataset must exist 
     """
+
     datay = CharField(attribute='datay', blank=True, null=True,
                       help_text='The name of Y dataset')
     """ the name of the Y dataset
     
     The dataset must exist
     """
+
     result = ListField(attribute='result', readonly=True, blank=True,
                        null=True, help_text='the list of results')
     """ the result 
     
     result is a list of result values 
     """
+
     model = DictField(attribute='model', readonly=True, blank=True,
                       null=True, help_text='Dictionary of model details')
     """
@@ -45,11 +49,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     
     dictionary of the model 
     
-    { name => name of the model,
-      kind => kind of model,
-      created => date of creation
-    }
+    :Example:
+    
+       > { name => name of the model,
+           kind => kind of model,
+           created => date of creation }
+
     """
+    
     pipeline = ListField(attribute='model', blank=True,
                          null=True, help_text='List of pipeline steps')
     """
@@ -208,7 +215,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         get model information
 
-        HTTP GET :code:`/model/<name>/
+        HTTP GET :code:`/model/<name>/`
         """
         name = kwargs.get('pk')
         data = self._getmodel_detail(request, name)
@@ -231,7 +238,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         list all models
 
-        HTTP GET :code:`/model/<name>/
+        HTTP GET :code:`/model/<name>/`
         """
         om = self.get_omega(request)
         objs = [{

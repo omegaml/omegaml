@@ -69,7 +69,7 @@ class BaseModelBackend(object):
         :param Xname: the name of the X data set
         :param rName: the name of the result data object or None
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+            a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's predict method
         :return: return the predicted outcome   
         """
@@ -84,7 +84,7 @@ class BaseModelBackend(object):
         :param Xname: the name of the X data set
         :param rName: the name of the result data object or None
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+            a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's predict method
         :return: return the predicted outcome   
         """
@@ -98,7 +98,7 @@ class BaseModelBackend(object):
         :param Xname: the name of the X data set
         :param Yname: the name of the Y data set
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+           a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's predict method
         :return: return the meta data object of the model   
         """
@@ -113,7 +113,7 @@ class BaseModelBackend(object):
         :param Xname: the name of the X data set
         :param Yname: the name of the Y data set
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+           a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's predict method
         :return: return the meta data object of the model   
         """
@@ -131,7 +131,7 @@ class BaseModelBackend(object):
         :param Yname: the name of the Y data set
         :param rName: the name of the transforms's result data object or None
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+           a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's transform method
         :return: return the meta data object of the model   
         """
@@ -160,7 +160,7 @@ class BaseModelBackend(object):
         :param Yname: the name of the Y data set
         :param rName: the name of the transforms's result data object or None
         :param pure_python: if True return a python object. If False return
-        a dataframe. Defaults to True to support any client.
+           a dataframe. Defaults to True to support any client.
         :param kwargs: kwargs passed to the model's predict method
         :return: return the score result   
         """

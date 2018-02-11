@@ -202,11 +202,11 @@ class OmegaJobs(object):
 
         :param name: the name of the job, as in jobs.get
         :param localpath: the path of the local file to write. If you
-        specify an empty path or 'memory' a tuple of (body, resource) 
-        is returned instead
-        :param format: the output format. currently only 'html' is supported
+           specify an empty path or 'memory' a tuple of (body, resource) 
+           is returned instead
+        :param format: the output format. currently only :code:`'html'` is supported
         :return: the (data, resources) tuple as returned by nbconvert. For
-        format html data is the HTML's body, for PDF it is the pdf file contents
+           format html data is the HTML's body, for PDF it is the pdf file contents
         """
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
         # (exporter class, filemode

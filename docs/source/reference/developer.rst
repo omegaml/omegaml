@@ -5,7 +5,7 @@ omegaml
 -------
 
 .. automodule:: omegaml
-   :members: 
+   :members: Omega
 
 
 omegaml.store

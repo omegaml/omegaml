@@ -16,8 +16,35 @@ logger = logging.getLogger(__file__)
 
 class Omega(object):
 
+    """
+    Client API to omegaml
+
+    Provides the following APIs:
+
+    * :code:`datasets` - access to datasets stored in the cluster
+    * :code:`models` - access to models stored in the cluster
+    * :code:`runtime` - access to the cluster compute resources
+    * :code:`jobs` - access to jobs stored and executed in the cluster
+
+    """
+
     def __init__(self, mongo_url=None, backend=None, broker=None,
                  celeryconf=None, celerykwargs=None, auth=None):
+        """
+        Initialize the client API
+
+        Without arguments create the client API according to the user's
+        configuration in :code:`~/omegaml/config.yml`. 
+
+        Arguments override the user's configuration.
+
+        :param mongo_url: the fully qualified URI to the mongo database,
+        of format :code:`mongodb://user:password@host:port/database`
+        :param broker: the celery broker URI
+        :param backend: the celery result backend URI
+        :param celeryconf: the celery configuration dictionary
+        :param celerykwargs: kwargs to create the Celery instance
+        """
         self.defaults = settings()
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
@@ -29,14 +56,6 @@ class Omega(object):
                                     broker=broker, celeryconf=celeryconf,
                                     celerykwargs=None)
         self.jobs = OmegaJobs(store=self._jobdata)
-
-    def get_data(self, name):
-        data = self.datasets.get(name)
-        meta = self.datasets.metadata(name)
-        if meta.kind == Metadata.PYTHON_DATA:
-            # we can only use one python object at a time
-            return data[0], meta
-        return data, meta
 
 
 class OmegaDeferredInstance():

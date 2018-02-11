@@ -5,8 +5,8 @@ Python
 ------
 
 .. autosummary::
-
-     omegaml.datasets
+     
+     omegaml.datasets 
      omegaml.models
      omegaml.runtime
      omegaml.jobs
@@ -54,6 +54,7 @@ omegaml.store
 
 .. autoclass:: omegaml.store.base.OmegaStore
    :members: list,get,getl,put,drop
+   :noindex:
    
 
 omegaml.runtime
