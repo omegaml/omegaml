@@ -3,11 +3,9 @@ import os
 from stackable.stackable import StackableSettings
 import sys
 
-import sys
-
-tracef = open('trace.log', 'w')
 
 if '--trace' in ' '.join(sys.argv):
+    tracef = open('trace.log', 'w')
     def trace(frame, event, arg):
         tracef.write("%s, %s:%d\n" %
                      (event, frame.f_code.co_filename, frame.f_lineno))
