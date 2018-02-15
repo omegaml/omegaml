@@ -89,6 +89,7 @@ from mongoengine.fields import GridFSProxy
 from six import iteritems
 import six
 
+from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
@@ -97,6 +98,8 @@ from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
+
+
 class OmegaStore(object):
 
     """
@@ -121,6 +124,10 @@ class OmegaStore(object):
         # otherwise Metadata will already have a connection and not use
         # the one provided in override_settings
         self._db = None
+        # add backends and mixins
+        self.apply_mixins()
+        # register backends
+        self.register_backends()
 
     @property
     def mongodb(self):
@@ -148,7 +155,7 @@ class OmegaStore(object):
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
         # FIXME use an instance specific alias. requires that every access
         #       to Metadata is configured correctly. this to avoid sharing
-        #       inadevertedly between threads and processes. 
+        #       inadevertedly between threads and processes.
         #alias = 'omega-{}'.format(uuid4().hex)
         alias = 'omega'
         # always disconnect before registering a new connection because
@@ -210,7 +217,7 @@ class OmegaStore(object):
 
         * attributes=None, the existing attributes are left as is
         * attributes={}, the attributes value on an existing metadata object
-        is reset to the empty dict
+          is reset to the empty dict
         * attributes={ some : value }, the existing attributes are updated
 
         For new metadata objects, attributes defaults to {} if not specified,
@@ -219,6 +226,7 @@ class OmegaStore(object):
         :param name: the object name
         :param bucket: the bucket, optional, defaults to self.bucket 
         :param prefix: the prefix, optional, defaults to self.prefix
+
         """
         # TODO kept _make_metadata for backwards compatibility.
         return self._make_metadata(name, bucket=bucket, prefix=prefix,
@@ -291,8 +299,22 @@ class OmegaStore(object):
             raise e
         return datastore
 
+    def apply_mixins(self):
+        """
+        apply mixins in defaults.OMEGA_STORE_MIXINS
+        """
+        for mixin in self.defaults.OMEGA_STORE_MIXINS:
+            extend_instance(self, mixin)
+
+    def register_backends(self):
+        """
+        register backends in defaults.OMEGA_STORE_BACKENDS
+        """
+        for kind, backend in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+            self.register_backend(kind, backend)
+
     def register_backend(self, kind, backend):
-        self.defaults.OMEGA_BACKENDS[kind] = backend
+        self.defaults.OMEGA_STORE_BACKENDS[kind] = backend
         if kind not in Metadata.KINDS:
             Metadata.KINDS.append(kind)
         return self
@@ -303,7 +325,7 @@ class OmegaStore(object):
         pandas dataframes
         """
         # TODO implement an extensible backend plugin architecture
-        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_BACKENDS):
+        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
             if backend_cls.supports(obj, attributes=attributes, **kwargs):
                 backend = self.get_backend_bykind(kind)
                 return backend.put(obj, name, attributes=attributes, **kwargs)
@@ -356,16 +378,16 @@ class OmegaStore(object):
         :param obj: the dataframe to store
         :param name: the name of the item in the store
         :param append: if False collection will be dropped before inserting,
-        if True existing documents will persist. Defaults to True. If not
-        specified and rows have been previously inserted, will issue a
-        warning.
+           if True existing documents will persist. Defaults to True. If not
+           specified and rows have been previously inserted, will issue a
+           warning.
         :param index: list of columns, using +, -, @ as a column prefix to
-        specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the
-        column has to represent a valid GeoJSON object.
+           specify ASCENDING, DESCENDING, GEOSPHERE respectively. For @ the
+           column has to represent a valid GeoJSON object.
         :param timestamp: if True or a field name adds a timestamp. If the
-        value is a boolean or datetime, uses _created as the field name.
-        The timestamp is always datetime.datetime.utcnow(). May be overriden
-        by specifying the tuple (col, datetime).
+           value is a boolean or datetime, uses _created as the field name.
+           The timestamp is always datetime.datetime.utcnow(). May be overriden
+           by specifying the tuple (col, datetime).
         :return: the Metadata object created
         """
         from .queryops import MongoQueryOps
@@ -447,15 +469,17 @@ class OmegaStore(object):
         """ 
         store a dataframe grouped by columns in a mongo document 
 
-        # each group
-        {
-           #group keys
-           key: val,
-           _data: [
-              # only data keys
-              { key: val, ... }
-           ]
-        }
+        :Example:
+
+          > # each group
+          >  {
+          >     #group keys
+          >     key: val,
+          >     _data: [
+          >      # only data keys
+          >        { key: val, ... }
+          >     ]}
+
         """
         def row_to_doc(obj):
             for gval, gdf in obj.groupby(groupby):
@@ -575,7 +599,7 @@ class OmegaStore(object):
         :param kwargs: the kwargs passed to the backend initialization
         :return: the backend 
         """
-        backend_cls = self.defaults.OMEGA_BACKENDS[kind]
+        backend_cls = self.defaults.OMEGA_STORE_BACKENDS[kind]
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,
@@ -594,7 +618,7 @@ class OmegaStore(object):
         """
         meta = self.metadata(name)
         if meta is not None:
-            backend_cls = self.defaults.OMEGA_BACKENDS.get(meta.kind)
+            backend_cls = self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind)
             if backend_cls:
                 model_store = model_store or self
                 data_store = data_store or self
@@ -661,13 +685,14 @@ class OmegaStore(object):
         :param name: the name of the object (str)
         :param columns: the column projection as a list of column names
         :param lazy: if True returns a lazy representation as an MDataFrame. 
-        If False retrieves all data and returns a DataFrame (default) 
+           If False retrieves all data and returns a DataFrame (default) 
         :param filter: the filter to be applied as a column__op=value dict 
         :param version: the version to retrieve (not supported)
         :param is_series: if True retruns a Series instead of a DataFrame
         :param kwargs: remaining kwargs are used a filter. The filter kwarg
-        overrides other kwargs.
-        :return: the retrieved object (DataFrame, Series or MDataFrame) 
+           overrides other kwargs.
+        :return: the retrieved object (DataFrame, Series or MDataFrame)
+
         """
         collection = self.collection(name)
         if lazy:
@@ -678,7 +703,7 @@ class OmegaStore(object):
                 df = df[0]
         else:
             # TODO ensure the same processing is applied in MDataFrame
-            # TODO this method should always use a MDataFrame disregarding lazy 
+            # TODO this method should always use a MDataFrame disregarding lazy
             filter = filter or kwargs
             if filter:
                 from .query import Filter
@@ -748,7 +773,8 @@ class OmegaStore(object):
         :param name: the name of the object
         :param version: not supported
         :param kwargs: mongo db query arguments to be passed to 
-        collection.find() as a filter. 
+               collection.find() as a filter.
+
         """
         import pandas as pd
         def convert_doc_to_row(cursor):
@@ -825,14 +851,14 @@ class OmegaStore(object):
         """
         List all files in store
 
-        specify pattern as a unix pattern (e.g. 'models/*',
+        specify pattern as a unix pattern (e.g. :code:`models/*`,
         or specify regexp)
 
         :param pattern: the unix file pattern or None for all
         :param regexp: the regexp. takes precedence over pattern
         :param raw: if True return the meta data objects
-
         :return: List of files in store
+
         """
         db = self.mongodb
         searchkeys = dict(bucket=self.bucket,

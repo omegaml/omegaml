@@ -1,5 +1,5 @@
 Install and Deploy MongoDB and RabbitMQ
-===============================
+=======================================
 
 Instructions for installing required packages are below
 

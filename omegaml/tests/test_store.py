@@ -199,6 +199,20 @@ class StoreTests(unittest.TestCase):
         df = df[['a']]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
 
+    def test_get_dataframe_projected_mixin(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # filter in mongodb
+        df2 = store.get('mydata[a]')
+        # filter local dataframe
+        df = df[['a']]
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
     def test_put_dataframe_with_index(self):
         # create some dataframe
         df = pd.DataFrame({

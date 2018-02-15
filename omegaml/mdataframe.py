@@ -51,7 +51,7 @@ class MGrouper(object):
         https://docs.mongodb.com/manual/reference/operator/aggregation/group/
 
         :param specs: a dictionary of { column : function | list[functions] } 
-        pairs. 
+           pairs. 
         """
         def add_stats(specs, column, stat):
             specs['%s_%s' % (column, stat)] = {
@@ -435,15 +435,15 @@ class MDataFrame(object):
         :param on: the list of key columns to merge by
         :param left_on: the list of the key columns to merge on this dataframe
         :param right_on: the list of the key columns to merge on the other 
-        dataframe
+           dataframe
         :param how: the method to merge. supported are left, inner, right. 
-        Defaults to inner
+           Defaults to inner
         :param target: the name of the collection to store the merge results
-        in. If not provided a temporary name will be created.
+           in. If not provided a temporary name will be created.
         :param suffixes: the suffixes to apply to identical left and right 
-        columns
+           columns
         :param sort: if True the merge results will be sorted. If False the
-        MongoDB natural order is implied.
+           MongoDB natural order is implied.
         :returns: the MDataFrame to the target MDataFrame
         """
         # validate input
@@ -535,7 +535,7 @@ class MDataFrame(object):
         this uses a Filter to produce the query from the kwargs.
 
         :param args: a Q object or logical combination of Q objects
-        (optional)
+           (optional)
         :param kwargs: all AND filter criteria 
         """
         if len(args) > 0:
@@ -552,7 +552,7 @@ class MDataFrame(object):
         applied. To reset the filter call .reset() without arguments.
 
         :param args: a Q object or logical combination of Q objects
-        (optional)
+           (optional)
         :param kwargs: all AND filter criteria 
         :return: self
         """
@@ -571,7 +571,7 @@ class MDataFrame(object):
         on the same collection as the original DataFrame
 
         :param args: a Q object or logical combination of Q objects
-        (optional)
+           (optional)
         :param kwargs: all AND filter criteria 
         :return: a new MDataFrame with the filter applied
         """

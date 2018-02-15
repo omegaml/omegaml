@@ -342,7 +342,7 @@ Working with jobs
 The jobs api supports creating, executing and status-checking jobs on 
 the cluster. 
 
-.. warnings:: 
+.. warning:: 
 
     Creating jobs via the API assumes that the user creating the job 
     is trusted. Any code can be inserted and could potentially compromise

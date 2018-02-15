@@ -1,4 +1,4 @@
-from urllib import unquote
+from six.moves import urllib
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -18,7 +18,7 @@ def dashboard(request):
 
 @login_required
 def dataview(request, name):
-    name = unquote(name)
+    name = urllib.parse.unquote(name)
     context = {
         'name': name,
     }
