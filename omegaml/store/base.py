@@ -677,7 +677,8 @@ class OmegaStore(object):
             if is_series:
                 df = df[0]
         else:
-            import pandas as pd
+            # TODO ensure the same processing is applied in MDataFrame
+            # TODO this method should always use a MDataFrame disregarding lazy 
             filter = filter or kwargs
             if filter:
                 from .query import Filter

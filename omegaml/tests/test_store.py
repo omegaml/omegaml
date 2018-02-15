@@ -8,6 +8,7 @@ from zipfile import ZipFile
 import gridfs
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
+from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 from six import StringIO
 from sklearn.datasets import load_iris
@@ -539,8 +540,39 @@ class StoreTests(unittest.TestCase):
         assert_series_equal(series, series2)
 
     def test_store_irregular_column_names(self):
+        """ test storing irregular column names """
         df = pd.DataFrame({'x_1': range(10)})
         store = OmegaStore()
         store.put(df, 'foo', append=False)
         df2 = store.get('foo')
         self.assertEqual(df.columns, df2.columns)
+
+    def test_store_datetime(self):
+        """ test storing naive datetimes """
+        df = pd.DataFrame({
+            'x': pd.date_range(pd.datetime(2016, 1, 1),
+                               pd.datetime(2016, 1, 10))
+        })
+        store = OmegaStore()
+        store.put(df, 'test-date', append=False)
+        df2 = store.get('test-date')
+        testing.assert_frame_equal(df, df2)
+
+    def test_store_tz_datetime(self):
+        """ test storing timezoned datetimes """
+        df = pd.DataFrame({
+            'y': pd.date_range('now', periods=10, tz='US/Eastern')
+        })
+        store = OmegaStore()
+        store.put(df, 'test-date', append=False)
+        df2 = store.get('test-date')
+        testing.assert_frame_equal(df, df2)
+
+    def test_store_dict_in_df(self):
+        df = pd.DataFrame({
+            'x': [{'foo': 'bar '}],
+        })
+        store = OmegaStore()
+        store.put(df, 'test-dict', append=False)
+        df2 = store.get('test-dict')
+        testing.assert_frame_equal(df, df2)

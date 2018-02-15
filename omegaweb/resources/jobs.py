@@ -1,3 +1,6 @@
+"""
+REST API to jobs
+"""
 import json
 
 from nbformat import v4
@@ -13,8 +16,15 @@ from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
 
 class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+
+    """
+    Job resource implements the REST API to omegaml.jobs
+    """
     content = DictField(attribute='content', readonly=False, blank=True,
-                        null=True, help_text='Notebook content')
+                        null=True, help_text='Notebook content or report body')
+    """
+    the contents of the job's notebook, or the body of a report
+    """
 
     class Meta:
         list_allowed_methods = ['get']
@@ -26,6 +36,8 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def run(self, request, *args, **kwargs):
         """
         Run a job
+
+        HTTP POST :code:`/job/<name>/run/`
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
@@ -42,6 +54,14 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def get_detail(self, request, **kwargs):
         """
         get job information
+
+        HTTP GET :code:`/job/<name>/`
+
+        Result is a dictionary of 
+
+        { content => notebook JSON }
+
+        For notebook JSON details, see https://nbformat.readthedocs.io/en/latest/
         """
         name = kwargs.get('pk')
         om = self.get_omega(request)
@@ -54,6 +74,20 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def get_list(self, request, **kwargs):
         """
         get list of jobs
+
+        HTTP GET :code:`/job/`
+
+        Result is a dictionary of { meta => meta data, objects => list of 
+        objects }
+
+        :code:`objects` is a list of 
+
+          >>> {
+            'name': name of object
+            'job_results': dictionary of results as { status => dataset }
+            'job_runs': list of run time timestamps  
+            'created': meta.created,
+          }
         """
         om = self.get_omega(request)
         jobs = om.jobs.list(raw=True)
@@ -73,6 +107,13 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def post_detail(self, request, **kwargs):
         """
         create a new job
+
+        HTTP POST :code:`/job/name/`
+
+        Pass the verbatim Python source code text as the :code:`code` body
+        element.
+
+        This creates a new job as a IPython notebook
         """
         name = kwargs.get('pk')
         om = self.get_omega(request)
@@ -94,6 +135,12 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
     def report(self, request, **kwargs):
         """
         get a html report of results
+
+        HTTP GET :code:`/job/name/report/`
+
+        This returns an HTML representation of a notebook. Note that this
+        does not run the notebook. To get the results of a notebook 
+        execution in HTML format, get it's result.  
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
