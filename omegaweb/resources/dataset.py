@@ -2,7 +2,6 @@
 REST API to datasets
 """
 
-from urllib import unquote
 
 from mongoengine.errors import DoesNotExist
 from six import iteritems
@@ -17,6 +16,7 @@ from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
 from six.moves import builtins
+from six.moves import urllib 
 
 from .util import BundleObj
 
@@ -107,7 +107,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         for k, v in iteritems(fltkwargs):
             # -- get column name without operator (e.g. x__gt => x)
             col = k.split('__')[0]
-            value = unquote(v)
+            value = urllib.parse.unquote(v)
             dtype = dtypes.get(str(col))
             if dtype:
                 # -- get dtyped value and convert to python type
@@ -154,7 +154,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         Note that the :code:`in` operator is currently not supported via the
         REST API yet. 
         """
-        name = unquote(kwargs.get('pk'))
+        name = urllib.parse.unquote(kwargs.get('pk'))
         orient = bundle.request.GET.get('orient', 'dict')
         limit = int(bundle.request.GET.get('limit', '50'))
         skip = int(bundle.request.GET.get('skip', '0'))
