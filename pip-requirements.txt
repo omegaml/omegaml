@@ -9,3 +9,4 @@ PyYAML==3.11
 nbformat==4.0.1
 git+https://github.com/miraculixx/pycloudfs@v0.1.0#egg=pycloudfs-0.1.0
 django-extensions==1.7.7
+s3fs==0.1.3

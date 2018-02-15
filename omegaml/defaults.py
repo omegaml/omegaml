@@ -32,7 +32,8 @@ OMEGA_CELERY_CONFIG = {
 
 OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend'),
-    'spark.mllib': load_class('omegaml.backends.SparkBackend')
+    'spark.mllib': load_class('omegaml.backends.SparkBackend'),
+    'pandas.csv': load_class('omegaml.backends.PandasExternalData')
 }
 
 OMEGA_STORE_MIXINS = [

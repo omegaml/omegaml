@@ -123,8 +123,10 @@ class OmegaStore(object):
         # otherwise Metadata will already have a connection and not use
         # the one provided in override_settings
         self._db = None
-        for mixin in self.defaults.OMEGA_STORE_MIXINS:
-            extend_instance(self, mixin)
+        # add backends and mixins
+        self.apply_mixins()
+        # register backends
+        self.register_backends()
 
     @property
     def mongodb(self):
@@ -295,6 +297,20 @@ class OmegaStore(object):
         except Exception as e:
             raise e
         return datastore
+
+    def apply_mixins(self):
+        """
+        apply mixins in defaults.OMEGA_STORE_MIXINS
+        """
+        for mixin in self.defaults.OMEGA_STORE_MIXINS:
+            extend_instance(self, mixin)
+
+    def register_backends(self):
+        """
+        register backends in defaults.OMEGA_STORE_BACKENDS
+        """
+        for kind, backend in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+            self.register_backend(kind, backend)
 
     def register_backend(self, kind, backend):
         self.defaults.OMEGA_STORE_BACKENDS[kind] = backend

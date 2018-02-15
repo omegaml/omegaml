@@ -29,3 +29,4 @@ coverage==4.4.2
 pyminifier==2.1
 Werkzeug==0.14.1
 django-debug-toolbar==1.9.1
+honcho==1.0.1

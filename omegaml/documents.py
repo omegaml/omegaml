@@ -50,7 +50,7 @@ class Metadata(Document):
     attributes = DictField()
     #: s3file attributes
     s3file = DictField()
-    #: spark uri
+    #: location URI
     uri = StringField()
     #: created datetime
     created = DateTimeField(default=datetime.datetime.now)
