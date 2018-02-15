@@ -17,8 +17,8 @@ class CustomBackendTests(TestCase):
     def tearDown(self):
         # remove custom backend from implementation not to disturb other tests
         try:
-            del om.defaults.OMEGA_BACKENDS['custom.foo']
-            del om.defaults.OMEGA_BACKENDS['custom.bar']
+            del om.defaults.OMEGA_STORE_BACKENDS['custom.foo']
+            del om.defaults.OMEGA_STORE_BACKENDS['custom.bar']
             Metadata.KINDS.remove('custom.foo')
             Metadata.KINDS.remove('custom.bar')
         except:

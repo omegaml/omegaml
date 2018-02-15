@@ -32,7 +32,7 @@ class BaseDataBackend(object):
         """
         raise NotImplementedError
 
-    def get(self, name, version=-1, force_python=False, **kwargs):
+    def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         """
         get an obj 
 

@@ -30,10 +30,15 @@ OMEGA_CELERY_CONFIG = {
     },
 }
 
-OMEGA_BACKENDS = {
+OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend'),
     'spark.mllib': load_class('omegaml.backends.SparkBackend')
 }
+
+OMEGA_STORE_MIXINS = [
+    load_class('omegaml.backends.mixins.ProjectedMixin'),
+]
+
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or

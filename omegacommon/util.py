@@ -25,3 +25,11 @@ class cached(object):
                 cached = self.data[func]
             return cached['data']
         return inner
+
+
+def extend_instance(obj, cls):
+    """Apply mixins to a class instance after creation"""
+    # source https://stackoverflow.com/a/31075641
+    base_cls = obj.__class__
+    base_cls_name = obj.__class__.__name__
+    obj.__class__ = type(base_cls_name, (cls, base_cls),{})

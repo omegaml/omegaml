@@ -89,6 +89,7 @@ from mongoengine.fields import GridFSProxy
 from six import iteritems
 import six
 
+from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
     cursor_to_dataframe
@@ -122,6 +123,8 @@ class OmegaStore(object):
         # otherwise Metadata will already have a connection and not use
         # the one provided in override_settings
         self._db = None
+        for mixin in self.defaults.OMEGA_STORE_MIXINS:
+            extend_instance(self, mixin)
 
     @property
     def mongodb(self):
@@ -294,7 +297,7 @@ class OmegaStore(object):
         return datastore
 
     def register_backend(self, kind, backend):
-        self.defaults.OMEGA_BACKENDS[kind] = backend
+        self.defaults.OMEGA_STORE_BACKENDS[kind] = backend
         if kind not in Metadata.KINDS:
             Metadata.KINDS.append(kind)
         return self
@@ -305,7 +308,7 @@ class OmegaStore(object):
         pandas dataframes
         """
         # TODO implement an extensible backend plugin architecture
-        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_BACKENDS):
+        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
             if backend_cls.supports(obj, attributes=attributes, **kwargs):
                 backend = self.get_backend_bykind(kind)
                 return backend.put(obj, name, attributes=attributes, **kwargs)
@@ -578,7 +581,7 @@ class OmegaStore(object):
         :param kwargs: the kwargs passed to the backend initialization
         :return: the backend 
         """
-        backend_cls = self.defaults.OMEGA_BACKENDS[kind]
+        backend_cls = self.defaults.OMEGA_STORE_BACKENDS[kind]
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,
@@ -597,7 +600,7 @@ class OmegaStore(object):
         """
         meta = self.metadata(name)
         if meta is not None:
-            backend_cls = self.defaults.OMEGA_BACKENDS.get(meta.kind)
+            backend_cls = self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind)
             if backend_cls:
                 model_store = model_store or self
                 data_store = data_store or self
