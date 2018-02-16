@@ -11,4 +11,5 @@ Administration
    putget
    examples
    design
+   configuration
    
