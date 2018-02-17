@@ -28,7 +28,7 @@ mkdir -p $distdir
 rm -rf $distdir/*.zip
 rm -rf $distdir/*.whl
 rm -rf $distdir/build
-rm -rf $distdir/docker-stgaging
+rm -rf $distdir/docker-staging
 
 # build
 $release --source ../omegaml
