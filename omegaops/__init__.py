@@ -6,7 +6,6 @@ from constance import config
 from django.conf import settings
 from pymongo.mongo_client import MongoClient
 
-
 def add_user(dbname, username, password):
     """
     add a user to omegaml giving readWrite access rights
@@ -52,6 +51,7 @@ def get_client_config(user):
     """
     return the full client configuration
     """
+    import omegaml as om
     user_settings = user.services.get(offering__name='omegaml').settings
     user_settings['user'] = user_settings.get(
         'username') or user_settings.get('user')
@@ -72,7 +72,7 @@ def get_client_config(user):
             ]
         },
         "OMEGA_MONGO_URL": mongo_url,
-        "OMEGA_NOTEBOOK_COLLECTION": defaults.OMEGA_NOTEBOOK_COLLECTION,
+        "OMEGA_NOTEBOOK_COLLECTION": om.defaults.OMEGA_NOTEBOOK_COLLECTION,
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
     }
