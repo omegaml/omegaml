@@ -8,5 +8,7 @@ Omegaml is a API based service for ......
 
    admin/index
    guide/index
+   devguide/index
    reference/index
    screenshots
+   admin/architecture

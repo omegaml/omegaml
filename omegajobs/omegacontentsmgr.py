@@ -9,6 +9,14 @@ from omegajobs.omegacheckpoints import OmegaStoreContentsCheckpoints
 
 class OmegaStoreContentsManager(ContentsManager):
 
+    """
+    Jupyter notebook storage manager for omegaml
+
+    This requires a properly configured omegaml instance.
+
+    see http://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
+    """
+
     def __init__(self, **kwargs):
         super(OmegaStoreContentsManager, self).__init__(**kwargs)
 
@@ -17,13 +25,25 @@ class OmegaStoreContentsManager(ContentsManager):
 
     @property
     def omega(self):
+        """
+        return the omega instance used by the contents manager
+        """
         return om
 
     @property
     def store(self):
+        """
+        return the OmageStore for jobs (notebooks)
+        """
         return self.omega.jobs.store
 
     def get(self, path, content=True, type=None, format=None):
+        """
+        get an entry in the store
+
+        this is called by the contents engine to get the contents of the jobs
+        store.
+        """
         path = path.strip('/')
         if not self.exists(path):
             raise web.HTTPError(404, u'No such file or directorys: %s' % path)
@@ -41,6 +61,11 @@ class OmegaStoreContentsManager(ContentsManager):
         return model
 
     def save(self, model, path):
+        """
+        save an entry in the store
+
+        this is called by the contents engine to store a notebook
+        """
         path = path.strip('/')
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
@@ -77,11 +102,21 @@ class OmegaStoreContentsManager(ContentsManager):
         return model
 
     def delete_file(self, path):
+        """
+        delete an entry
+
+        this is called by the contents engine to delete an entry
+        """
         path = path.strip('/')
         om = self.omega
         om.jobs.drop(path)
 
     def rename_file(self, old_path, new_path):
+        """
+        rename a file 
+
+        this is called by the contents engine to rename an entry
+        """
         old_path = old_path.strip('/')
         new_path = new_path.strip('/')
         if self.file_exists(new_path):
