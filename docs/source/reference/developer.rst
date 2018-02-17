@@ -31,11 +31,11 @@ omegaml.runtime
 
 .. autoclass:: omegaml.runtime.OmegaRuntime
 
-.. autoclass:: omegaml.runtime.OmegaModelProxcy
+.. autoclass:: omegaml.runtime.OmegaModelProxy
 
 .. autoclass:: omegaml.runtime.OmegaJobProxy
 
-.. autoclass:: omegaml.rumtime.OmegaRuntimeDask
+.. autoclass:: omegaml.runtime.OmegaRuntimeDask
 
 
 omegaml.documents

@@ -130,14 +130,10 @@ class OmegaStoreContentsManager(ContentsManager):
         """
         Does a file or dir exist at the given collection in gridFS?
         We do not have dir so dir_exists returns true.
-        Parameters
-        ----------
-        path : string
-            The relative path to the file's directory (with '/' as separator)
-        Returns
-        -------
-        exists : bool
-            Whether the target exists.
+
+        :param path: (str) The relative path to the file's directory 
+          (with '/' as separator)
+        :returns exists: (boo) The relative path to the file's directory (with '/' as separator)
         """
         path = path.strip('/')
         return self.file_exists(path) or self.dir_exists(path)

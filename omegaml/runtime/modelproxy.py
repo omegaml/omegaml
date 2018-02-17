@@ -38,7 +38,7 @@ class OmegaModelProxy(object):
 #     Implementation note:
 #
 #     We decided to implement each method call explicitely in both
-#     this class and the celery tasks. While it would be possible to
+#     this class (mixins) and the celery tasks. While it would be possible to
 #     implement a generic method and task that passes the method and
 #     arguments to be called, maintainability would suffer and the
 #     documentation would become very unspecific. We think it is much

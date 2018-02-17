@@ -13,7 +13,7 @@ class PandasExternalData(BaseDataBackend):
     KIND = 'pandas.csv'
 
     @classmethod
-    def supports(cls, obj, **kwargs):
+    def supports(cls, obj, name, **kwargs):
         supported_scheme = _is_supported_scheme(obj, **kwargs)
         supported_type = _is_supported_type(obj, **kwargs)
         return supported_scheme | supported_type

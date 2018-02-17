@@ -313,9 +313,25 @@ class OmegaStore(object):
             self.register_backend(kind, backend)
 
     def register_backend(self, kind, backend):
+        """
+        register a backend class
+
+        :param kind: (str) the backend kind
+        :param backend: (class) the backend class 
+        """
         self.defaults.OMEGA_STORE_BACKENDS[kind] = backend
         if kind not in Metadata.KINDS:
             Metadata.KINDS.append(kind)
+        return self
+
+    def register_mixin(self, mixincls):
+        """
+        register a mixin class
+
+        :param mixincls: (class) the mixin class 
+        """
+        self.defaults.OMEGA_STORE_MIXINS.append(mixincls)
+        extend_instance(self, mixincls)
         return self
 
     def put(self, obj, name, attributes=None, **kwargs):
@@ -323,9 +339,8 @@ class OmegaStore(object):
         Stores an objecs, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
-        # TODO implement an extensible backend plugin architecture
         for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
-            if backend_cls.supports(obj, attributes=attributes, **kwargs):
+            if backend_cls.supports(obj, name, attributes=attributes, **kwargs):
                 backend = self.get_backend_bykind(kind)
                 return backend.put(obj, name, attributes=attributes, **kwargs)
         if is_estimator(obj):
@@ -886,7 +901,7 @@ class OmegaStore(object):
                 files = [f for f in files if not f.startswith('_temp')]
         return files
 
-    def _get_obj_store_key(self, name, ext):
+    def object_store_key(self, name, ext):
         """
         Returns the store key
 
@@ -895,6 +910,10 @@ class OmegaStore(object):
 
         :return: A filename with relative bucket, prefix and name
         """
+        return self._get_obj_store_key(name, ext)
+
+    def _get_obj_store_key(self, name, ext):
+        # backwards compatilibity implementation of object_store_key()
         name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
         filename = '{bucket}.{prefix}.{name}'.format(
             bucket=self.bucket,

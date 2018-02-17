@@ -15,6 +15,12 @@ class DaskTask(object):
     """
 
     def __init__(self, fn, client, pure=True):
+        """
+        :param fn: (function) the function to be called
+        :param client: (dask client) the dask client to use
+        :param pure: (bool) whether this is a dask pure function (will
+            be cached or not). Defaults to True.
+        """
         self.client = client
         self.fn = fn
         self.pure = pure

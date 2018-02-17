@@ -70,8 +70,8 @@ Enterprise components
 Enterprise components provide a full-fledged multi-user environment for
 distributed data science. Several   
 
-* :code:`OmegaRuntime` - the celer runtime cluster to train and execute models and jobs
-* :code:`OmegaRuntimeDask` - the dask runtime cluster to execute models and jobs
+* :code:`OmegaRuntime` - the celery runtime cluster to train and execute models and jobs
+* :code:`OmegaRuntimeDask` - the dask distributed runtime cluster to execute models and jobs
 * :code:`SparkBackend` - the Apache Spark mllib backend implementation 
 * :code:`omegaweb` - the REST API, web interface and dashboard
 * :code:`omegaops` - the operations API
