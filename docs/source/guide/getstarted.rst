@@ -24,7 +24,7 @@ Once loaded :code:`om` provides 3 environments that are immediately usable:
 * :code:`om.runtime` - the omega|ml remote execution environment 
 
 
-Loading omegaml from python
+Loading omega|ml from python
 ---------------------------
 
 .. code:: python

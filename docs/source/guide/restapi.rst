@@ -11,7 +11,7 @@ third-party system to omegaml.
 API Reference
 -------------
 
-The API reference is accessible online from your omegaml instance at:
+The API reference is accessible online from your omega|ml instance at:
 
 * :code:`/api/doc/v1`- Swagger UI
 * :code:`/api/doc/v1/specs/swagger.json` - the Swagger specs (JSON)
@@ -21,7 +21,7 @@ The API reference is accessible online from your omegaml instance at:
 API Semantics
 -------------
 
-The omegaml REST API resources are all of the form 
+The omega|ml REST API resources are all of the form 
 :code:`/api/version/resource-name/resource-key/?param=value`.
 
 The valid resource names are:
@@ -29,7 +29,7 @@ The valid resource names are:
 * dataset - provides access to data 
 * model - provides access to models
 * job - provides access to jobs
-* config - provides access to the user-specific omegaml configuration
+* config - provides access to the user-specific omega|ml configuration
 
 The resource-key and query parameters are optional. If a resource-key
 is not provided, a list of existing resources is returned. If a resource-key
@@ -56,7 +56,7 @@ All resources support a set of HTTP GET, PUT, POST or DELETE methods.
 Setting up authorization
 ------------------------
 
-From your omegaml portal, get the userid and api key.
+From your omega|ml portal, get the userid and api key.
 
 .. code::
 

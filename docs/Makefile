@@ -221,10 +221,22 @@ pseudoxml:
 .PHONY: dummy
 dummy:
 	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy
-	@echo
+	@echofind . -name "*rst" | xargs sed 's/\ omegaml\ /\ omega\|ml\ /'
 	@echo "Build finished. Dummy builder generates no files."
 
 # https://pypi.python.org/pypi/sphinx-autobuild
 livehtml:
 	sphinx-autobuild -p 8001 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
+# fix brand naming 
+fix:
+	find . -name "*rst" | xargs sed -i 's/ omegaml / omega\|ml /'
+	find . -name "*rst" | xargs sed -i 's/OmegaML/omega\|ml/'
+	find . -name "*rst" | xargs sed -i 's/^omegaml /omega\|ml /'
+	find . -name "*rst" | xargs sed -i 's/omegaml$$/omega\|ml/'
+	find . -name "*rst" | xargs sed -i 's/import omega.ml as om/import omegaml as om/'
+	find . -name "*rst" | xargs sed -i "s/from omega.ml import /from omegaml import /"
+	
+    
+  
+	

@@ -1,35 +1,35 @@
 Out of core DataFrames
 ======================
 
-omegaml supports working with pandas DataFrames that are larger than
+omega|ml supports working with pandas DataFrames that are larger than
 available memory by leveraging mongodb as its datastore. This documents
 the available features supported by omegaml's MDataFrame. 
 
 .. note::
 
-    omegaml takes a different approach to other frameworks like dask. While
+    omega|ml takes a different approach to other frameworks like dask. While
     dask is focused on distributed processing of a compute-graph and strives
     for data-locality, omemgal's focus is on scalable data-persistence, 
     data-sharing and collaboration in teams of data scientists and 
     to provide a distributed API to micro-services that require analytical
     services but do not themselves have the required compute power. This said,
-    the power of dask and omegaml can be combined.
+    the power of dask and omega|ml can be combined.
     
 Features
 --------
 
-omegaml supports efficient persistency of and distributed access to the 
+omega|ml supports efficient persistency of and distributed access to the 
 following Pandas objects:
 
 * DataFrames
 * Series
 * HDFStores
 
-omegaml provides a functional API to MongoDB's aggregation and map/reduce
+omega|ml provides a functional API to MongoDB's aggregation and map/reduce
 framework, as well as storing geocoded data with geospatial search semantics 
 (e.g. near, within).
 
-In addition omegaml supports the storage and distributed access to 
+In addition omega|ml supports the storage and distributed access to 
 
 * scikit-learn models
 * Apache Spark models
@@ -43,10 +43,10 @@ Concepts
   Python/Pandas and Mongodb. There are three types of stores: data store,
   model store and jobs (code) store. 
 * *Bucket* - a bucket is a namespace within a Mongo database. All objects stored
-  by omegaml reside within a bucket
+  by omega|ml reside within a bucket
 * *Prefix* - the prefix is the multi/level/path prefix to an object stored 
   in a bucket. Think of this as a hierarchical file system within a bucket
-* *Metadata* - omegaml manages its objects in the bucket's metadata collection
+* *Metadata* - omega|ml manages its objects in the bucket's metadata collection
 
    
 Access an MDataFrame

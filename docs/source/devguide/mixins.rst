@@ -54,7 +54,7 @@ To enable this mixin, call :code:`om.datasets.register_mixin`:
 
    Celery clusters require that the module providing YamlDaskMixin is available on
    both the client and the worker instance. This limitation is planned
-   to be removed in future versions of omegaml using ccbackend, which provides
+   to be removed in future versions of omega|ml using ccbackend, which provides
    for arbitrary functions to be executed on a celery cluster. Dask Distributed
    clusters do not have this limitation.
    
@@ -105,6 +105,6 @@ To enable this mixin, add the class to :code:`om.defaults.OMEGA_RUNTIME_MIXINS`:
 
    Celery clusters require that the custom.tasks module is available on
    both the client and the worker instance. This limitation is planned
-   to be removed in future versions of omegaml using ccbackend, which provides
+   to be removed in future versions of omega|ml using ccbackend, which provides
    for arbitrary functions to be executed on a celery cluster. Dask Distributed
    clusters do not have this limitation.

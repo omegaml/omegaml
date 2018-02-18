@@ -33,7 +33,7 @@ REST API (overview)
 Python API
 ----------
 
-omegaml
+omega|ml
 +++++++ 
 
 .. autodata:: omegaml.datasets

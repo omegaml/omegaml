@@ -1,10 +1,10 @@
 Developer API
 =============
 
-omegaml
+omega|ml
 -------
 
-.. automodule:: omegaml
+.. automodule:: omega|ml
    :members: Omega
 
 

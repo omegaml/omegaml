@@ -37,7 +37,7 @@ is one of the following:
 In general :code:`get` returns a Pandas :code:`DataFrame`. See the Pandas
 documentation for ways to work with DataFrames.
 
-However, unlike Pandas omegaml provides methods to work with data that is
+However, unlike Pandas omega|ml provides methods to work with data that is
 larger than memory. This is covered in the next section.  
 
 Large, Out of Core-sized DataFrames
@@ -207,7 +207,7 @@ are executed by MongoDB. The result of the :code:`merge()` method is a new
 .. code::
 
     import pandas as pd
-    # create two dataframes and store in omegaml
+    # create two dataframes and store in omega|ml
     dfl = pd.DataFrame({'x': range(3)})
     dfr = pd.DataFrame({'x': range(3), 'y': range(3)})
     om.datasets.put(dfl, 'dfxl', append=False)

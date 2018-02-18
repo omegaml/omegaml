@@ -3,7 +3,7 @@ Architecture
 
 .. contents::
 
-Why omegaml
+Why omega|ml
 -----------
 
 A typical data science workflow consists of the following core steps:
@@ -18,17 +18,17 @@ In any production scenario, each step requires a scalable storage to store
 raw and cleaned data, models and APIs to execute models. You will also need
 a compute cluster that is easy to access and provides all the required packages.
 
-omegaml provides
+omega|ml provides
 
 * the central storage for data and models
 * an integrated compute cluster runtime to train and execute models 
 * a sophisticated REST API 
 
 In addition, omemgal provides interfaces to existing compute clusters like 
-Anaconda's Distributed and Apache Spark. omegaml also provides an extensible
+Anaconda's Distributed and Apache Spark. omega|ml also provides an extensible
 framework to add custom backends and compute clusters through a common API.
   
-How omegaml works
+How omega|ml works
 -----------------
 
 * data is stored via the :code:`datasets.put` API. :code:`datasets.put` 
@@ -51,7 +51,7 @@ How omegaml works
   the need to transfer the data to the worker instance first.   
     
 
-omegaml is composed of the following main components:
+omega|ml is composed of the following main components:
 
 Core components
 ---------------
@@ -60,7 +60,7 @@ The core components provide the storage for data and models. Models can
 be trained locally and stored in the cluster for prediction via the REST 
 API.
 
-* :code:`Omega` - the main API and programming interface to omegaml
+* :code:`Omega` - the main API and programming interface to omega|ml
 * :code:`OmegaStore` - the storage for data and models
 * :code:`omegacli` - client components to the REST API  
 
@@ -94,7 +94,7 @@ Third-party dependencies
 .. _Anaconda: https://www.anaconda.com/what-is-anaconda/
 .. _MySQL: https://dev.mysql.com/
 
-omegaml depends on the following third-party products (all open source):
+omega|ml depends on the following third-party products (all open source):
 
 * MongoDB_ - the highly scalable NoSQL database, ideal for data science workloads
 * RabbitMQ_ - the most-widely used open source message broker
@@ -103,20 +103,20 @@ omegaml depends on the following third-party products (all open source):
 * MySQL_ - the world's most popular open source database, backed by Oracle
 
 Note that omegaml's license does not include the above products. However, 
-omegaml provides the required docker build instructions to download, 
+omega|ml provides the required docker build instructions to download, 
 install and configure these applications for use with omegaml.   
 
 A number of smaller third-party components in the Python ecosystem are used
 in omegaml. Refer to the LICENSES file for details.
 
 
-Positioning omegaml
+Positioning omega|ml
 -------------------
 
-The core focus of omegaml is to enable enterprise-grade application integration 
+The core focus of omega|ml is to enable enterprise-grade application integration 
 of data science workflows, at scale. While the following products provide specific elements
 for application integration and integrate directly with omegaml, none of 
-them provide the simplicity of the omegaml API and the versatility of backends.
+them provide the simplicity of the omega|ml API and the versatility of backends.
 
 * *Apache Spark* - Spark is a JVM-based distributed compute cluster based on 
   a in-memory data layer spread across the cluster. Spark is great if you 
@@ -124,7 +124,7 @@ them provide the simplicity of the omegaml API and the versatility of backends.
   to store data in a native format. While there is a Python API, PySpark, it
   is relatively cumbersome and complex to use. Most importantly, Spark does
   not have support for scikit-learn models nor does it provide an enterprise-
-  ready REST API. omegaml provides the :code:`SparkBackend` to integate with
+  ready REST API. omega|ml provides the :code:`SparkBackend` to integate with
   an existing Spark Cluster, providing the same easy API to Spark, shielding
   users from the complexities and pitfalls of the PySpark API.  
   
@@ -135,7 +135,7 @@ them provide the simplicity of the omegaml API and the versatility of backends.
   is a great additition to any Python-based data science workflow. However, 
   very much like Apache Spark, Dask Distributed also does not provide an
   integration API nor does it provide persistent storage, neither for data
-  nor for models. omegaml provides a runtime implementation that integrates
+  nor for models. omega|ml provides a runtime implementation that integrates
   directly with a Dask Distributed cluster, making it easy and straight forward
   to use its power while keeping the advantage of omegaml's API and flexibility.
 

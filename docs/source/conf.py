@@ -64,7 +64,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'omegaml'
+project = u'omega|ml'
 copyright = u'2016, omegaml.io'
 author = u'omegaml.io'
 

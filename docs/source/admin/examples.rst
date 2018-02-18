@@ -1,7 +1,7 @@
 Testing your installation
 =========================
 
-After omegaml is setup and is ready to function, you can test to see if
+After omega|ml is setup and is ready to function, you can test to see if
 the setup is configured well using few example scripts we have shipped
 with omegaml. Example scripts are located in
 ``<libdir>/omegaml/omegaml/examples/`` As of now we have included two

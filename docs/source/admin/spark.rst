@@ -1,9 +1,9 @@
-Using OmegaML on private Spark Clusters
+Using omega|ml on private Spark Clusters
 ---------------------------------------
 
-OmegaML can be installed on any machine of your preference following below steps:
+omega|ml can be installed on any machine of your preference following below steps:
 
-* install omegaml using pip
+* install omega|ml using pip
 * set env variables for mongodb and rabbitmq
 * start celery worker
-* import omegaml on start of pyspark
+* import omega|ml on start of pyspark

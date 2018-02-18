@@ -6,14 +6,14 @@ Configuration
 Configuration hooks
 -------------------
 
-omegaml is configured by constants defined in the :code:`omegaml.defaults` module.
+omega|ml is configured by constants defined in the :code:`omegaml.defaults` module.
 Since this module is usually not directly changeable by the user or
 administrator, the following hooks are provided:
 
 configuration file (:code:`$HOME/.omegaml/config.yml`)
 ++++++++++++++++++
 
-  The configuration file in Yaml format is read automatically on omegaml
+  The configuration file in Yaml format is read automatically on omega|ml
   startup, if available. A user-specific configuration file can be obtained by
   any authorized user by running the :code:`python -m omegacli init` command.
   To override defaults, specify the corresponding variable in Yaml format.
@@ -32,12 +32,12 @@ system environment variables
 admin UI (:code:`constance` parameters) 
 ++++++++
 
-  Some parameters are exposed in the omegaml Admin interface.   
+  Some parameters are exposed in the omega|ml Admin interface.   
   
 in-code update
 ++++++++++++++
 
-  If you integrate omegaml into your application, the 
+  If you integrate omega|ml into your application, the 
   :code:`omegaml.defaults.update_from_obj` provides a direct way to update
   the defaults from any object. The object needs to support :code:`getattr` 
   on the corresponding defaults parameter.

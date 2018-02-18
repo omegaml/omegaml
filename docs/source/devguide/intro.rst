@@ -1,7 +1,7 @@
 Introduction
 ------------
 
-Custom development for omegaml is available for the following extensions:
+Custom development for omega|ml is available for the following extensions:
 
 * storage backend & mixins - process and store new data types
 * model backend - integrate other machine learning frameworks or custom algorithms

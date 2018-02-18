@@ -2,7 +2,7 @@ Metadata
 ++++++++
 
 Before we go in to the technical details of each type of backend we need
-to understand how omegaml keeps track of the objects it stores. For every
+to understand how omega|ml keeps track of the objects it stores. For every
 object stored in omegaml, :code:`OmegaStore` creates a `Metadata` object.
 
 A :code:`Metadata` object is returned to the caller on every call to 
