@@ -441,9 +441,9 @@ class OmegaStore(object):
         # store dataframe indicies
         obj, idx_meta = unravel_index(obj)
         stored_columns = [jsonescape(col) for col in obj.columns]
-        column_map = dict(zip(obj.columns, stored_columns))
+        column_map = list(zip(obj.columns, stored_columns))
         dtypes = {
-            column_map.get(k): v.name
+            dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
         }
         kind_meta = {
@@ -730,7 +730,7 @@ class OmegaStore(object):
                 del df['_id']
             meta = self.metadata(name)
             # -- restore columns
-            meta_columns = meta.kind_meta.get('columns')
+            meta_columns = dict(meta.kind_meta.get('columns'))
             if meta_columns:
                 # apply projection, if any
                 if columns:

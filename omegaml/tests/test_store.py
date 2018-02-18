@@ -203,15 +203,30 @@ class StoreTests(unittest.TestCase):
         # create some dataframe
         df = pd.DataFrame({
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
+            'c': list(range(1, 10)),
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
-        df2 = store.get('mydata[a]')
-        # filter local dataframe
-        df = df[['a']]
-        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+        specs = ['a', ':b', ':', 'b:', '^c']
+        for spec in specs:
+            name_spec = 'mydata[{}]'.format(spec)
+            df2 = store.get(name_spec)
+            # filter local dataframe
+            if spec == ':':
+                dfx = df.loc[:, :]
+            elif ':' in spec:
+                from_col, to_col = spec.split(':')
+                slice_ = slice(from_col or None, to_col or None)
+                dfx = df.loc[:, slice_]
+            elif spec.startswith('^'):
+                spec_cols = spec[1:].split(',')
+                cols = [col for col in df.columns if col not in spec_cols]
+                dfx = df[cols]
+            else:
+                dfx = df[[spec]]
+            self.assertTrue(dfx.equals(df2), "expected dataframes to be equal")
 
     def test_put_dataframe_with_index(self):
         # create some dataframe
