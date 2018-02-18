@@ -11,7 +11,6 @@ setup(
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
-    package_data={'omegaml': ['example/*.py']},
     license='commercial',  # example license
     description='online machine learning environment for scikit-learn',
     long_description=README,

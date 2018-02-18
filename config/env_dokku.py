@@ -9,7 +9,7 @@ class EnvSettings_dokku(Config_Dokku,
                         Config_ApiKeys,
                         Config_DjangoWhitenoise,
                         EnvSettings_Local):
-    ALLOWED_HOSTS = ['omegaml.dokku.me']
+    ALLOWED_HOSTS = ['omegaml.dokku.me', 'localhost']
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('localhost:27019', 'mongo db host name'),

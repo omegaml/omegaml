@@ -36,6 +36,7 @@ $release --source ../landingpage
 $release --source ../stackable
 $release --source ../django-tastypie-swagger
 $release --source ../ccbackend
+$release --source ../tastypiex
 
 # repackage into one zip file
 pushd $distdir
@@ -43,6 +44,7 @@ unzip landingpage.zip "*whl"
 unzip stackable.zip "*whl"
 unzip django-tastypie-swagger.zip "*whl"
 unzip ccbackend.zip "*whl"
+unzip tastypiex.zip "*whl"
 unzip omegaml.zip "*whl"
 zip $releasezip *whl
 popd 
@@ -54,7 +56,8 @@ cp $sourcedir/pip-requirements.txt ./requirements.txt
 cp $sourcedir/Procfile .
 cp $sourcedir/README.rst .
 cp $sourcedir/manage.py .
-zip $releasezip conda-requirements.txt requirements.txt Procfile README.rst manage.py
+cp -r $sourcedir/scripts .
+zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts
 popd
 
 # add distribution files

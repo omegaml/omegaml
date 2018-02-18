@@ -1,4 +1,8 @@
 include README.rst
 include LICENSE
 recursive-include omegaml/example *
-prune app
+recursive-include omegaml/resources *
+recursive-include omegaweb/static *
+recursive-include omegaweb/templates *
+recursive-include tastypiex/static *
+recursive-include tastypiex/templates *
