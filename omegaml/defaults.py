@@ -41,7 +41,7 @@ OMEGA_STORE_BACKENDS = {
 }
 #: storage mixins
 OMEGA_STORE_MIXINS = [
-    load_class('omegaml.backends.mixins.ProjectedMixin'),
+    load_class('omegaml.mixins.ProjectedMixin'),
 ]
 #: runtime mixins
 OMEGA_RUNTIME_MIXINS = [
