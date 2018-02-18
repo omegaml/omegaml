@@ -1,8 +1,8 @@
 Public API
 ==========
 
-Python
-------
+Python API (overview)
+---------------------
 
 .. autosummary::
      
@@ -21,8 +21,8 @@ Python
      omegaml.mdataframe.MGrouper
      omegaml.mdataframe.MLocIndexer
 
-REST API
---------
+REST API (overview)
+-------------------
 
 .. autosummary::
 

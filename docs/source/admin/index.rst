@@ -6,10 +6,7 @@ Administration
 
 
    kickstart
-   mongorabbit
-   omegamlvagrant
-   putget
-   examples
-   design
    configuration
+   spark
+   putget
    

@@ -192,11 +192,7 @@ in the `om.models` and `om.datasets` stores, respectively.
    *without* prior loading of the model nor the data. The worker uses
    `om.models.get_backend()` to retrieve the model's backend, then calls
    the requested method. Thus it is the responsibility of the backend to 
-   retrieve the model and any data required. The advantage of this design is
-   that a model backend is free to implement its own data caching mechanism
-   (unlike Spark or Anaconda's Distributed, where caching is automagically 
-   done by the scheduler).
-   
+   retrieve the model and any data required.
 
 .. currentmodule:: omegaml.backends.basemodel
 

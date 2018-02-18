@@ -1,5 +1,8 @@
-Welcome to OmegaML!
-===================
+omega|ml
+========
+
+*omega|ml is the enterprise-scale production and integration 
+platform for data science.*
 
 .. toctree::
    :maxdepth: 2

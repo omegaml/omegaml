@@ -1,38 +1,138 @@
-Getting Started with OmegaML
+Getting Started with omegaml
 ============================
 
-OmegaML is an API service that consists of a worker connected to a
-broker (rabbitmq) and a mongo database. It enables an end user do
-offload all the heavylifting involved with running analytics.
+omegaml is the data science integration platform that consists of a compute 
+cluster, a highly scalable distributed NoSQL database and a web app providing
+a dashboard and REST API. omegaml enables data scientists to offload all the 
+heavy-lifting involved with machine learning and analytics
+workflows, while enabling third-party apps to use machine learning models
+in production. 
+
+Deployment layout
+-----------------
+
+.. image:: /images/deployment.jpg
+
+* *app client* - some third party app that uses the omegaml REST API
+* *data science client* - a fully fledged data science workstation that
+  directly talks to the omegaml compute & data cluster
+* *omegaweb* - the REST API and omegaml web application
+* *mysql* - the MySQL database used by omegaweb
+* *rabbitmq* - the integration broker between omegaweb/compute cluster and
+  data science clients/compute cluster
+* *runtime* - the compute cluster, consisting of a central scheduler (runtime),
+  at least 1 and at least 1 mongodb master. workers and mongodbs can be 
+  scaled horizontally as required to meet performance requirements.
+  
+.. note:: 
+
+   A single-node deployment is possible and does not require rabbitmq nor
+   omegaweb/mysql. Similarly if the runtime is a Dask Distributed cluster 
+   zeroMQ instead of rabbitmq is used. Workers can be deployed to
+   a Apache Spark Master node in which case a Spark cluster is presumed;
+   details see below. 
+  
 
 Installation
 ------------
 
-OmegaML can be easily installed with pip using
+.. _kompose.io: http://kompose.io/getting-started/
 
-``sudo pip install omegaml``
+We provide the omegaml Dockerfile and docker-compose configuration to
+run omegaml on a single node, a docker swarm cluster or kubernetes. This
+guide assumes a docker-compose single-node deployment.
 
-Configuration
--------------
+.. note::
 
-OmegaML takes much of its configuration parameters from
-``omegaml.defaults``. For any customization all you need to do is export
-an environment variable with the same name. For e.g, say if you want to
-change the mongo url to some destination other than the default on your
-shell all you need to do is
+   To go from docker-compose to kubernetes, you may create our kubernetes
+   deployment using kompose.io_ 
+   
+1. make sure you have the sources to build the omegaml docker image
+   (or a source to acquire the docker image directly)
+   
+2. build the docker image::
 
-::
+   $ mkdir -p /path/to/release/docker-staging
+   $ cd /path/to/release/docker-staging
+   $ unzip omegaml-release-<version>.zip
+   $ docker build -t omegaml .
+   
+3. run docker-compose::
 
-    # export OMEGA_MONGO_URL='user@host:port/db
+   $ docker-compose up
+   
+4. access dashboard and Jupyter notebook::
 
-and omegaml reconfigure itself. See ``omegaml.defaults`` for more.
+   # dashboard 
+   open http://localhost:5000/
+   
+   # notebook
+   open http://localhost:8888/
+   
 
-Using OmegaML on private Spark Cluters
---------------------------------------
+Client Configuration
+--------------------
 
-OmegaML can be installed on any machine of your preference following below steps:
+omegaml supports two types of clients:
 
-* install omegaml using pip
-* set env variables for mongodb and rabbitmq
-* start celery worker
-* import omegaml on start of pyspark
+1. Data Science workstation - a local workstation / PC / laptop with a 
+   full-scale data science setup, ready for a Data Scientist to work locally.
+   When ready she will deploy data and models onto the runtime (the omegaml 
+   compute and data cluster), run models and jobs on the cluster or provide
+   datasets for access by her colleagues. This configuration requires a
+   local installation of omegaml, including machine learning libraries and
+   client-side distribution components.
+   
+2. Application clients - some third-party application that access omegaml
+   datasets, models or jobs using omegaml's REST API. This configuration 
+   has no specific requirements other than access to the REST API and the
+   ability to send and receive JSON documents via HTTP.
+    
+
+Data Science workstation
+++++++++++++++++++++++++
+
+1. Setup a conda environment including omegaml::
+
+   $ conda create -n myomegaml python=3.6
+   $ source activate myomegaml
+   $ conda install --file conda-requirements.txt
+   $ pip install -r requirements.txt
+   $ pip install omegaml.whl
+   
+2. Create an account with omegaml::
+
+   1. open http://omegamlhost:port
+   2. sign up
+   3. on your account profile get the userid and apikey
+   
+3. Create a configuration file:: 
+
+   $ python -m omegacli init --userid <userid> --apikey <key> --url http://omegamlhost:port
+   
+   This will create the $HOME/.omegaml/config.yml file set up for omegaml
+   to work with your omegaml account created above.  
+   
+3. Launch Jupyter notebook
+
+   1. create a notebook
+   2. load omegaml::
+   
+      import omegaml as om
+      om.datasets.list() 
+
+
+Application client
+++++++++++++++++++
+
+1. Create an account with omegaml::
+
+   1. open http://omegamlhost:port
+   2. sign up
+   3. on your account profile get the userid and apikey
+
+2. On the request to omegaml's REST API, provide the userid and apikey as 
+   the :code:`Authorization` header follows::
+   
+   Authorization: userid:apikey
+ 

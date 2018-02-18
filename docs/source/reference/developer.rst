@@ -26,6 +26,12 @@ omegaml.backends
 .. autoclass:: omegaml.documents.Metadata
 
 
+omegaml.backends.mixins
+-----------------------
+
+.. autoclass:: omegaml.backends.mixins.projected.ProjectedMixin
+
+
 omegaml.runtime
 ---------------
 
