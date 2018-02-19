@@ -11,6 +11,10 @@ in production.
 Deployment layout
 -----------------
 
+The following setup is provided in :code:`docker-compose.yml` with all
+services directed via a nginx reverse proxy (the nginx service is not shown
+as it is not a required component):  
+
 .. image:: /images/deployment.jpg
 
 * *app client* - some third party app that uses the omega|ml REST API
@@ -27,10 +31,12 @@ Deployment layout
 .. note:: 
 
    A single-node deployment is possible and does not require rabbitmq nor
-   omegaweb/mysql. Similarly if the runtime is a Dask Distributed cluster 
-   zeroMQ instead of rabbitmq is used. Workers can be deployed to
-   an Apache Spark Master node in which case a Spark cluster is presumed;
-   details see below. 
+   omegaweb/mysql. 
+   
+   If the runtime is Dask Distributed, zeroMQ instead of rabbitmq is used. 
+   
+   Both Dask Distributed and Celery Workers can be deployed to an Apache Spark 
+   Master node in which case a Spark cluster is presumed; details see below. 
   
 
 Installation
@@ -44,15 +50,16 @@ guide assumes a docker-compose single-node deployment.
 
 .. note::
 
-   To go from docker-compose to kubernetes, you may create our kubernetes
-   deployment using kompose.io_ 
+   To go from docker-compose to kubernetes, consider adopting 
+   the kubernetes deployments from the omega|ml :code:`docker-compose.yml`
+   file using kompose.io_ 
    
-1. make sure you have the sources to build the omega|ml docker image
-   (or a source to acquire the docker image directly)
+1. make sure you have the sources to build the omega|ml docker image,   
+   typically provided as a release file, e.g. :code:`omegaml-release-0.1.zip`
    
 2. build the docker image::
 
-   $ mkdir -p /path/to/release/docker-staging
+   $ mkdir -p /path/to/omegaml-release-0.1.zip
    $ cd /path/to/release/docker-staging
    $ unzip omegaml-release-<version>.zip
    $ docker build -t omega|ml .
@@ -69,6 +76,18 @@ guide assumes a docker-compose single-node deployment.
    * mongodb - the omega|ml data cluster
    * mysql - the webserver's database
    * rabbitmq - the communication bus between web server, worker and clients 
+   * nginx - the front-end proxy to expose omegaml, rabbitmq and mongodb
+|   
+
+   .. note::
+   
+     nginx is not technically required. It is included as a demonstration
+     of one approach to exposing rabbitmq and mongodb to data sicence clients 
+     hosted outside of the omega|ml compute & data cluster. 
+     
+     Exposure of rabbitmq and mongodb is not a pre-requiste to using omega|ml
+     as data scientists can work on the cluster directly using the notebook
+     service.   
      
 4. secure mongodb::
 
@@ -82,10 +101,10 @@ guide assumes a docker-compose single-node deployment.
    
    .. note:: 
    
-      You can verify this was successful by running it again. It should respond
-      with code 13, *unauthorized* 
+      You can verify this was successful by running the same command again. 
+      It will respond with code 13, *unauthorized* 
    
-5. initialize omegaweb
+5. initialize & secure omegaweb
 
    .. code:: 
 
@@ -104,7 +123,44 @@ guide assumes a docker-compose single-node deployment.
    http://localhost:5000/admin/
 |
    
-6. access dashboard and Jupyter notebook
+6. set data science client configuration (optional)
+
+   Data science clients need direct access to rabbitmq and mongodb. To this
+   end omega|ml needs to know the externally accessible host name so that it
+   can provide to clients the client-specific, password-protected URLs 
+   (see `Client Configuration`_).
+   
+   The parameters to be set are in the admin UI at 
+   http://localhost:5000/admin/constance/config:
+   
+   * :code:`BROKER_URL` - this is the rabbitmq broker used by the Celery cluster.
+     Set as :code:`ampq://public-omegaml-hostname:port/<vhost>/`.
+     Set vhost depending on your rabbitmq configuration. By default the vhost 
+     is an empty string
+   * :code:`MONGO_HOST` - set as :code:`public-mongodb-hostname:port` 
+|
+
+   .. note::
+   
+      If you run the omega|ml docker image using docker-compose locally, set
+      :code:`BROKER_URL=ampq://localhost//` and :code:`MONGO_HOST=localhost`.
+      The docker-compose configuration already exposes the rabbitmq and mongodb 
+      containers at their default ports, served through nginx.
+      
+   .. warning::
+   
+      The default configuration does not provide network-level security 
+      as it exposes omegaweb, mongodb and rabbitmq over their native, 
+      non-encrypted tcp transports and thus is not fit for enterprise 
+      production deployment.
+      
+      However, mongodb, mysql and omegaweb as well as tasks executed on 
+      the Celery cluster are protected via userid/password and userid/apikey 
+      authentication thus there is no unauthorized exposure of data or models 
+      even in the default configuration.         
+   
+   
+7. access dashboard and Jupyter notebook
 
    .. code::
 
@@ -147,7 +203,7 @@ Data Science workstation
    
 2. Create an account with omegaml::
 
-   1. open http://omegamlhost:port
+   1. open http://public-omegaml-hostname:port
    2. sign up
    3. on your account profile get the userid and apikey
    
@@ -155,16 +211,18 @@ Data Science workstation
 
    $ python -m omegacli init --userid <userid> --apikey <key> --url http://omegamlhost:port
    
-   This will create the $HOME/.omegaml/config.yml file set up for omega|ml
+   This will create the :code:`$HOME/.omegaml/config.yml` file set up 
    to work with your omega|ml account created above.  
    
 3. Launch Jupyter notebook
 
    1. create a notebook
-   2. load omegaml::
+   2. load omegaml
    
-      import omegaml as om
-      om.datasets.list() 
+      .. code::
+   
+        import omegaml as om
+        om.datasets.list() 
 
 
 Application client
@@ -176,8 +234,11 @@ Application client
    2. sign up
    3. on your account profile get the userid and apikey
 
-2. On the request to omegaml's REST API, provide the userid and apikey as 
-   the :code:`Authorization` header follows::
+2. On every request to omegaml's REST API, provide the userid and apikey as 
+   the :code:`Authorization` header, as follows
    
-   Authorization: userid:apikey
+   
+   .. code::
+    
+      Authorization: userid:apikey
  

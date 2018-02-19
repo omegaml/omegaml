@@ -45,8 +45,8 @@ in-code update
 The hooks are applied in the above order, that is the defaults are overriden
 by configuration file, then operating system environment variables, then
 constance parameters and finally your own code. Note that parameter values
-specified in constance cannote be override by our own code except by changing
-the value in the constance table directly.
+specified in constance cannote be overridden by our own code except by changing
+the value in the constance Django table directly.
       
 
 Basic configuration
@@ -70,7 +70,7 @@ Storage configuration
 
 .. autodata:: omegaml.defaults.OMEGA_STORE_BACKENDS
 
-   Dictionary of pairs :code: `{ 'kind': class }, where
+   Dictionary of pairs :code:`{ 'kind': class }`, where
    *kind* is the Metadata.kind of the stored object, and 
    class is the python loadable name of the class that implements 
    handling of this kind. The storage backends listed in this variable are 
@@ -112,3 +112,20 @@ Celery Cluster configuration
    that the configuration must be the same for both client and cluster
    worker.
 
+
+Client-side configuration (constance) 
+-------------------------------------
+
+These parameters are in the admin UI at 
+http://localhost:5000/admin/constance/config:
+
+* :code:`BROKER_URL` - this is the rabbitmq broker used by the Celery cluster.
+  Set as :code:`ampq://public-omegaml-hostname:port/<vhost>/`.
+  Set vhost depending on your rabbitmq configuration. By default the vhost 
+  is an empty string
+     
+* :code:`MONGO_HOST` - set as :code:`public-mongodb-hostname:port` 
+
+* :code:`CELERY_ALWAYS_EAGER` - if this :code:`True`, all calls to the
+  runtime are in fact executed locally on the calling machine. Note this
+  also means that the REST API will not submit any tasks to the cluster. 
