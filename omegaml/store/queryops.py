@@ -75,8 +75,7 @@ class GeoJSON(dict):
 
 
 class MongoQueryOps(object):
-    UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN'
-             'EXISTS,TYPE,REGEX,EQ').split(',')
+
     """
     A Pythonic API to build Mongo query statements 
 
@@ -93,6 +92,10 @@ class MongoQueryOps(object):
     result = coll.find(query)
     result = coll.aggregate([query, groupby])
     """
+
+    UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN'
+             'EXISTS,TYPE,REGEX,EQ').split(',')
+
     def __getattr__(self, k):
         if k.upper().replace('_', '') in MongoQueryOps.UNARY:
             return self.__unary(k.lower())

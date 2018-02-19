@@ -11,6 +11,8 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
 pushd $script_dir/..
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput --no-post-process
+echo  "waiting for mysql & mongo db to be up and running..."
+sleep 10
 python manage.py migrate
 honcho start web

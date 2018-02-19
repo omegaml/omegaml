@@ -4,5 +4,6 @@ recursive-include omegaml/example *
 recursive-include omegaml/resources *
 recursive-include omegaweb/static *
 recursive-include omegaweb/templates *
+recursive-include omegaweb/fixtures *
 recursive-include tastypiex/static *
 recursive-include tastypiex/templates *

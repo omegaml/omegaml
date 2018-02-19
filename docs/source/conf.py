@@ -65,7 +65,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'omega|ml'
-copyright = u'2016, omegaml.io'
+copyright = u'2016, omegaml.io by one2seven GmbH'
 author = u'omegaml.io'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -21,7 +21,7 @@ Deployment layout
 * *rabbitmq* - the integration broker between omegaweb/compute cluster and
   data science clients/compute cluster
 * *runtime* - the compute cluster, consisting of a central scheduler (runtime),
-  at least 1 and at least 1 mongodb master. workers and mongodbs can be 
+  at least 1 worker and at least 1 mongodb master. workers and mongodbs can be 
   scaled horizontally as required to meet performance requirements.
   
 .. note:: 
@@ -29,7 +29,7 @@ Deployment layout
    A single-node deployment is possible and does not require rabbitmq nor
    omegaweb/mysql. Similarly if the runtime is a Dask Distributed cluster 
    zeroMQ instead of rabbitmq is used. Workers can be deployed to
-   a Apache Spark Master node in which case a Spark cluster is presumed;
+   an Apache Spark Master node in which case a Spark cluster is presumed;
    details see below. 
   
 
@@ -61,13 +61,58 @@ guide assumes a docker-compose single-node deployment.
 
    $ docker-compose up
    
-4. access dashboard and Jupyter notebook::
-
-   # dashboard 
-   open http://localhost:5000/
+   This will start a series of docker containers, the microservices needed
+   to run omega|ml:
    
-   # notebook
-   open http://localhost:8888/
+   * omegaml - the omega|ml web server 
+   * worker - the omega|ml compute cluster
+   * mongodb - the omega|ml data cluster
+   * mysql - the webserver's database
+   * rabbitmq - the communication bus between web server, worker and clients 
+     
+4. secure mongodb::
+
+     $ cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
+     MongoDB shell version v3.4.5
+     connecting to: mongodb://127.0.0.1:27017
+     MongoDB server version: 3.4.5
+     { "ok" : 1 }
+     bye
+
+   
+   .. note:: 
+   
+      You can verify this was successful by running it again. It should respond
+      with code 13, *unauthorized* 
+   
+5. initialize omegaweb
+
+   .. code:: 
+
+      $ docker exec -i build_omegaml_1 python manage.py loaddata landingpage.json
+      Installed 1 object(s) from 1 fixture(s)
+      
+      $ docker exec -ti build_omegaml_1 python manage.py createsuperuser
+        Username (leave blank to use 'root'): admin
+        Email address: admin@example.com
+        Password: 
+        Password (again): 
+        Superuser created successfully.
+
+      
+   You will need the admin user to access the admin UI at 
+   http://localhost:5000/admin/
+|
+   
+6. access dashboard and Jupyter notebook
+
+   .. code::
+
+     # dashboard 
+     open http://localhost:5000/
+     
+     # notebook
+     open http://localhost:8888/
    
 
 Client Configuration

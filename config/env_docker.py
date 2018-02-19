@@ -10,7 +10,8 @@ class EnvSettings_docker(Config_Dokku,
                          Config_ApiKeys,
                          Config_DjangoWhitenoise,
                          EnvSettings_Local):
-    ALLOWED_HOSTS = ['localhost']
+    # must match docker-compose configuration
+    ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('mongodb', 'mongo db host name'),
@@ -23,9 +24,9 @@ class EnvSettings_docker(Config_Dokku,
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.mysql',
-                'NAME': 'omegaml',
-                'USER': os.environ.get('MYSQL_ROOT_USER'),
-                'PASSWORD': os.environ.get('MYSQL_ROOT_PASSWORD'),
+                'NAME': os.environ.get('MYSQL_DATABASE'),
+                'USER': os.environ.get('MYSQL_USER'),
+                'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
                 'HOST': 'mysql',
                 'PORT': 3306,
             }
@@ -33,3 +34,9 @@ class EnvSettings_docker(Config_Dokku,
     else:
         # default to whatever default is configured (usually sqlite database)
         pass
+
+    # do not require account email verification
+    ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+    # set mongo admin url
+    MONGO_ADMIN_URL = os.environ.get('MONGO_ADMIN_URL')
