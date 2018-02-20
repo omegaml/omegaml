@@ -11,7 +11,6 @@ setup(
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
-    package_data={'omegaml': ['example/*.py']},
     license='commercial',  # example license
     description='online machine learning environment for scikit-learn',
     long_description=README,
@@ -47,10 +46,7 @@ setup(
         'croniter>=0.3.12',
         'PyYAML>=3.11',
         'nbformat>=4.0.1',
-        #'pycloudfs==0.1',
     ],
     dependency_links=[
-        'git+https://github.com/miraculixx/pycloudfs.git@v0.1#egg=pycloudfs-0.1',
-        'git+https://github.com/miraculixx/ipynbstore-gridfs'
     ]
 )

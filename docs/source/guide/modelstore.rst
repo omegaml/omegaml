@@ -1,7 +1,7 @@
 Working with Machine Learning Models
 ====================================
 
-omegaml currently implements two backends to store models. More backends can
+omega|ml currently implements two backends to store models. More backends can
 be implemented using the model backend-API.
 
 * scikit-learn models
@@ -69,7 +69,7 @@ to predict using new data:
 Using the compute cluster
 -------------------------
 
-omegaml provides a state-of-the art compute cluster, called the *runtime*. Using
+omega|ml provides a state-of-the art compute cluster, called the *runtime*. Using
 the runtime you can delegate model tasks to the cluster:
 
 .. code::

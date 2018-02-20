@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import logging
 import os
 
-from django.utils import six, importlib
+from django.utils import six
 from mongoengine.connection import connect
 from six import string_types
 try:
@@ -146,6 +146,7 @@ def load_class(requested_class):
     Check if requested_class is a string, if so attempt to load
     class from module, otherwise return requested_class as is
     """
+    import importlib
     if isinstance(requested_class, six.string_types):
         module_name, class_name = requested_class.rsplit(".", 1)
         try:

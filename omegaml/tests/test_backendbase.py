@@ -62,7 +62,7 @@ class CustomModelBackend(BaseModelBackend):
     """
 
     @classmethod
-    def supports(self, obj, **kwargs):
+    def supports(self, obj, name, **kwargs):
         return isinstance(obj, dict) and 'foo' in obj
 
     def put_model(self, obj, name, attributes=None):
@@ -79,7 +79,7 @@ class CustomDataBackend(BaseDataBackend):
     """
 
     @classmethod
-    def supports(self, obj, **kwargs):
+    def supports(self, obj, name, **kwargs):
         return isinstance(obj, dict) and 'bar' in obj
 
     def put(self, obj, name, attributes=None):

@@ -8,6 +8,7 @@
 ##      --release=VALUE      the release name
 ##      --header=VALUE       the path to the header inserted into python files
 ##      --source=VALUE       the path to the source, defaults to the current directory
+##      --nominify           if set no code obfuscation is applied
 ##
 
 # script setup to parse options
@@ -15,31 +16,38 @@ script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
+# setup basic directories
+mkdir -p dist
+mkdir -p build
+
 # script configuration
 sourcedir=${source:=.}
 sourcedir=$(realpath $source)
-release=${distname:=$(basename $(realpath $sourcedir))}
+release=${release:=$(basename $sourcedir)}
 releasefilesdir=$script_dir/../release/
 headerfqn=${header:=$releasefilesdir/source/COPYRIGHT}
 headerfqn=$(realpath $headerfqn)
 distdir=$script_dir/../dist
 distdir=$(realpath $distdir)
 
-
 # execute
 setup() {
     rm -rf $distdir/releasezip
+    rm -rf $distdir/$release
+    rm -rf $distdir/releasezip/docs
     mkdir -p $distdir/releasezip
+    mkdir -p $distdir/$release
+    mkdir -p $distdir/releasezip/docs
 }
 
 build_sdist () {
     # -- build a source distribution as the basis for obfuscation
-    PYTHONPATH=$script_dir/..:$PYTHONPATH python setup.py sdist
+    pushd $sourcedir
+    PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py sdist
     # -- obfuscate all python code
     # 1. copy all code into a safe place
-    rm -rf $distdir/$release
-    mkdir -p $distdir/$release
     tar -czf $distdir/$release.tgz .
+    popd
 }
 
 
@@ -55,8 +63,8 @@ obfuscate () {
 
 build_wheel () {
     # 3. build actual package
-    pushd $distdir/$release
-    PYTHONPATH=$script_dir/..:$PYTHONPATH python setup.py bdist_wheel
+    pushd $sourcedir
+    PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py bdist_wheel
     cp dist/*whl $distdir
     popd
 }
@@ -67,21 +75,30 @@ build_docs() {
    pushd docs
    make html
    popd
-   pushd docs/build/html
-   mkdir -p $distdir/releasezip/docs
-   cp -r * $distdir/releasezip/docs
-   popd
+   for d in docs/build/html docs/_build/html
+   do
+      if [[ -d $d ]]; then
+        pushd $d
+        cp -r * $distdir/releasezip/docs
+        popd
+      fi
+   done
 }
 
 
 build_release() {
     # 4. build release zip
-    pushd $releasefilesdir/dist
-    cp -r * $distdir/releasezip/.
+    for d in _global_ $release
+    do
+      if [[ -d $releasefilesdir/dist/$d ]]; then
+        pushd $releasefilesdir/dist/$d
+        cp -r * $distdir/releasezip/.
+        popd
+      fi
+    done
     pushd $distdir/releasezip
     mv ../*whl .
     zip -r $release.zip *
-    popd
     popd
 }
 
@@ -99,7 +116,9 @@ clean () {
 pushd $sourcedir
 setup
 build_sdist
-obfuscate
+if [[ -z $nominify ]]; then
+  obfuscate
+fi
 build_wheel
 if [[ -d $sourcedir/docs ]]; then
   build_docs

@@ -64,8 +64,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'omegaml'
-copyright = u'2016, omegaml.io'
+project = u'omega|ml'
+copyright = u'2016, omegaml.io by one2seven GmbH'
 author = u'omegaml.io'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -358,3 +358,7 @@ import os
 sys.path.insert(0, os.path.join(os.getcwd(), '..', '..'))
 print(sys.path)
 import omegaml
+
+def setup(app):
+    app.add_stylesheet('custom.css')
+    

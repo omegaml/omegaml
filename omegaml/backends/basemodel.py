@@ -14,7 +14,7 @@ class BaseModelBackend(object):
         self.data_store = data_store
 
     @classmethod
-    def supports(self, obj, **kwargs):
+    def supports(self, obj, name, **kwargs):
         """
         test if this backend supports this obj
         """

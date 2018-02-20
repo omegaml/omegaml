@@ -52,6 +52,7 @@ def get_client_config(user):
     """
     return the full client configuration
     """
+    import omegaml as om
     user_settings = user.services.get(offering__name='omegaml').settings
     user_settings['user'] = user_settings.get(
         'username') or user_settings.get('user')
@@ -72,7 +73,7 @@ def get_client_config(user):
             ]
         },
         "OMEGA_MONGO_URL": mongo_url,
-        "OMEGA_NOTEBOOK_COLLECTION": "ipynb",
+        "OMEGA_NOTEBOOK_COLLECTION": om.defaults.OMEGA_NOTEBOOK_COLLECTION,
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
     }

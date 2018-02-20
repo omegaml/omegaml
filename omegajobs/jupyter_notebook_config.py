@@ -616,4 +616,4 @@ c.NotebookApp.password_required = False
 
 # omegaml setup
 sys.path.insert(0, os.path.join(os.getcwd(), '..'))
-c.NotebookApp.contents_manager_class = 'omegajobs.OmegaStoreContentsManager'
+c.NotebookApp.contents_manager_class = 'omegajobs.omegacontentsmgr.OmegaStoreContentsManager'

@@ -1,7 +1,7 @@
 Implementing a Custom Backend
 ==============================
 
-omegaml currently provides two types of extensible backends:
+omega|ml currently provides two types of extensible backends:
 
 1. :code:`CustomDataBackend` - to store and retrieve data objects
 2. :code:`CustomModelBackend` - to store, retrieve and execute model objects

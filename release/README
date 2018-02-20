@@ -1,0 +1,13 @@
+this directory contains files used in release building
+specifically by scripts/release.sh and scripts/distrelease.sh
+
+./dist - files included in a distribution build
+    _global_/ files here are included in any package
+    <package>/ files here are only included in the specific package
+     
+./source - files used in a package build
+
+
+
+
+ 

@@ -1,14 +1,14 @@
 Local setup using Vagrant
 =========================
 
-OmegaML comes with a Vagrant resourcefile that can be used to spin off a
-local machine that has spark, omegaml and hadoop all configured, integrated and ready to use.
+omega|ml comes with a Vagrant resourcefile that can be used to spin off a
+local machine that has spark, omega|ml and hadoop all configured, integrated and ready to use.
 
 Pre-requisites
 --------------
 
 Before you spin up the Vagrant machine, please make sure that you have a
-working rabbitmq and mongodb installations and map the relative omegaml
+working rabbitmq and mongodb installations and map the relative omega|ml
 variables to the same, which can be easily done using.
 
 ::
@@ -29,7 +29,7 @@ would be the location where you installed omegaml.
     # cd <libdir>/omegaml/omegaml/resources/spark_vagrant
     # vagrant up
 
-This will take a while and spin off a virtualbox with spark & omegaml on
+This will take a while and spin off a virtualbox with spark & omega|ml on
 it.
 
 Using the vagrant machine
@@ -39,7 +39,7 @@ Using the vagrant machine
    ipython notebook server.
 -  Start a python notebook.
 -  Run your code snippets.
--  To have omegaml run periodic jobs, create a notebook prefixing job\_
+-  To have omega|ml run periodic jobs, create a notebook prefixing job\_
    to its name and the first cell with job parameters. Which should look
    something like below
 
@@ -69,7 +69,7 @@ Using the vagrant machine
 Debugging
 ---------
 
-To see omegaml and ipython logs
+To see omega|ml and ipython logs
 
 ::
 

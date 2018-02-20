@@ -28,11 +28,10 @@ class OmegaJobs(object):
     Omega Jobs API
     """
 
-    # TODO this class is in serious need for refactoring
+    # TODO this class should be a proper backend class
 
     def __init__(self, prefix=None, store=None):
         self.defaults = omega_settings()
-        # FIXME should be 'jobs' prefix
         prefix = prefix or 'jobs'
         self.store = store or OmegaStore(prefix=prefix)
         self.kind = Metadata.OMEGAML_JOBS

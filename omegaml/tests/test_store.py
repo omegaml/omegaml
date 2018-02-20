@@ -144,21 +144,21 @@ class StoreTests(unittest.TestCase):
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp=True)
         df2 = store.get('mydata')
-        _created = df2['_created'].astype(datetime).unique()[0].to_datetime()
+        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, default value
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp='CREATED')
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_datetime()
+        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, value as tuple
         now = datetime.utcnow() - timedelta(days=1)
         store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_datetime()
+        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # set a day in the past to avoid accidentally creating the current
@@ -167,7 +167,7 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata', timestamp=now, append=False)
         df2 = store.get('mydata')
         # compare the data
-        _created = df2['_created'].astype(datetime).unique()[0].to_datetime()
+        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
         self.assertEqual(_created.replace(microsecond=0),
                          now.replace(microsecond=0))
 
@@ -203,15 +203,30 @@ class StoreTests(unittest.TestCase):
         # create some dataframe
         df = pd.DataFrame({
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
+            'c': list(range(1, 10)),
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
-        df2 = store.get('mydata[a]')
-        # filter local dataframe
-        df = df[['a']]
-        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+        specs = ['a', ':b', ':', 'b:', '^c']
+        for spec in specs:
+            name_spec = 'mydata[{}]'.format(spec)
+            df2 = store.get(name_spec)
+            # filter local dataframe
+            if spec == ':':
+                dfx = df.loc[:, :]
+            elif ':' in spec:
+                from_col, to_col = spec.split(':')
+                slice_ = slice(from_col or None, to_col or None)
+                dfx = df.loc[:, slice_]
+            elif spec.startswith('^'):
+                spec_cols = spec[1:].split(',')
+                cols = [col for col in df.columns if col not in spec_cols]
+                dfx = df[cols]
+            else:
+                dfx = df[[spec]]
+            self.assertTrue(dfx.equals(df2), "expected dataframes to be equal")
 
     def test_put_dataframe_with_index(self):
         # create some dataframe

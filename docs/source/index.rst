@@ -1,19 +1,15 @@
-Welcome to OmegaML!
-===================
+omega|ml
+========
 
-Omegaml is a API based service for ......
+*omega|ml is the enterprise-scale production and integration 
+platform for data science.*
 
 .. toctree::
    :maxdepth: 2
 
    admin/index
    guide/index
+   devguide/index
    reference/index
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   screenshots
+   admin/architecture

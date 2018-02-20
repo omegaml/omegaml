@@ -1,4 +1,4 @@
-* cat mongoinit.js | docker exec -i omegaml_mongo_1 mongo; 
+/* cat mongoinit.js | docker exec -i omegaml_mongo_1 mongo */
 db.adminCommand({
     createUser: 'admin',
     pwd : 'foobar',
