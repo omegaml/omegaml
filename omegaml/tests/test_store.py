@@ -132,6 +132,18 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
 
+    def test_put_dataframe_xtra_large(self):
+        # create some dataframe
+        # force fast insert
+        df = pd.DataFrame({
+            'a': list(range(0, int(1e4 + 1))),
+            'b': list(range(0, int(1e4 + 1)))
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        df2 = store.get('mydata')
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
     def test_put_dataframe_timestamp(self):
         # create some dataframe
         from datetime import datetime

@@ -440,7 +440,9 @@ class OmegaStore(object):
                 col, dt = timestamp
             obj[col] = dt
         # store dataframe indicies
-        obj, idx_meta = unravel_index(obj)
+        # FIXME this may be a performance issue, use size stored on stats or metadata
+        row_count = self.collection(name).count()
+        obj, idx_meta = unravel_index(obj, row_count=row_count)
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
         dtypes = {
@@ -464,8 +466,6 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        #collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
-        # collection.insert_many(obj.to_dict(orient='records'))
         fast_insert(obj, self, name)
         signals.dataset_put.send(sender=None, name=name)
         kind = (Metadata.PANDAS_SEROWS
@@ -748,6 +748,7 @@ class OmegaStore(object):
             idx_meta = meta.kind_meta.get('idx_meta')
             if idx_meta:
                 df = restore_index(df, idx_meta)
+            # -- restore row order
             if is_series:
                 index = df.index
                 name = df.columns[0]

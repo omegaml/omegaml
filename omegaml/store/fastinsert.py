@@ -17,11 +17,13 @@ def insert_chunk(job):
                 from the default database of the connection.
     """
     sdf, mongo_url, collection_name = job
-    collection = MongoClient(mongo_url).get_database()[collection_name]
-    collection.insert_many(sdf.to_dict(orient='records'))
+    db = MongoClient(mongo_url).get_database()
+    collection = db[collection_name]
+    result = collection.insert_many(sdf.to_dict(orient='records'))
+    return mongo_url, db.name, collection_name, len(result.inserted_ids)
 
 
-def fast_insert(df, omstore, name):
+def fast_insert(df, omstore, name, chunk_size=int(1e4)):
     """
     fast insert of dataframe to mongodb
 
@@ -37,14 +39,14 @@ def fast_insert(df, omstore, name):
     :param name: the dataset name in OmegaStore to use. will be used to get the 
     collection name from the omstore
     """
-    mongo_url = omstore.mongo_url
-    collection_name = omstore.collection(name).full_name
-    if len(df) * len(df.columns) > 10000:
+    if len(df) * len(df.columns) > chunk_size:
+        mongo_url = omstore.mongo_url
+        collection_name = omstore.collection(name).name
         # we crossed upper limits of single threaded processing, use a Pool
         pool = Pool()
-        jobs = zip(dfchunker(df), repeat(mongo_url), repeat(collection_name))
+        jobs = zip(dfchunker(df, size=chunk_size),
+                   repeat(mongo_url), repeat(collection_name))
         pool.map(insert_chunk, (job for job in jobs))
     else:
         # still within bounds for single threaded inserts
-        collection = MongoClient(mongo_url).get_database()[collection_name]
-        collection.insert_many(df.to_dict(orient='records'))
+        omstore.collection(name).insert_many(df.to_dict(orient='records'))

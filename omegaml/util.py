@@ -203,7 +203,7 @@ def get_labeled_points_from_rdd(rdd):
     return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
 
 
-def unravel_index(df):
+def unravel_index(df, row_count=0):
     """ 
     convert index columns into dataframe columns
 
@@ -214,6 +214,8 @@ def unravel_index(df):
     in sequence.
 
     :param df: the dataframe
+    :param row_count: the row_count base, ensures subsequent stores
+      get differnt row ids
     :return: the unravelled dataframe, meta
     """
     # remember original names
@@ -224,10 +226,12 @@ def unravel_index(df):
     store_idxnames = ['_idx#{}_{}'.format(i, name or i)
                       for i, name in enumerate(idx_meta['names'])]
     df.index.names = store_idxnames
-    unravelled = df.reset_index(), idx_meta
+    unravelled_df, idx_meta = df.reset_index(), idx_meta
+    # store row ids
+    unravelled_df['_om#rowid'] = unravelled_df.index.values + row_count
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
-    return unravelled
+    return unravelled_df, idx_meta
 
 
 def restore_index_columns_order(columns):
@@ -248,12 +252,20 @@ def restore_index_columns_order(columns):
     return index_cols
 
 
-def restore_index(df, idx_meta):
+def restore_index(df, idx_meta, rowid_sort=True):
     """
     restore index proper
 
-    :parm
+    :param df: the dataframe
+    :param idx_meta: index metadata
+    :param rowid_sort: whether to sort by row id. defaults to True
+           If your query is already sorted in some specific way,
+           specify False to keep the sort order.
     """
+    # -- establish row order proper
+    if rowid_sort and '_om#rowid' in df:
+        df.sort_values('_om#rowid', inplace=True)
+        del df['_om#rowid']
     # -- get index columns
     index_cols = restore_index_columns_order(df.columns)
     # -- set index columns
