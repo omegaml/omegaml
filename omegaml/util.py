@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-import os
 
 from django.utils import six
 from mongoengine.connection import connect

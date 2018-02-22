@@ -25,3 +25,4 @@ honcho==1.0.1
 requests==2.18.4
 dill==0.2.6
 utf8forgood==0.1.4
+nosexcover==1.0.11

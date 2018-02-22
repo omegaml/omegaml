@@ -1,19 +1,30 @@
+language: python
+
+python:
+ - 3.4
+ 
+services:
+ - mysql
+ - mongodb
+ 
 build:
-  pre_ci_boot:
-    image_name: continuumio/miniconda3
-    image_tag: latest
   ci:
-  - apt-get update -y
-  - apt-get install -y mysql-server libmysqlclient-dev
-  - apt-get install -y --fix-missing mysql-client
-  - apt-get install -y libmysqlclient-dev python-dev build-essential
+  - env
+  - sudo apt-get -y update
+  - sudo apt-get -y install build-essential libssl-dev libffi-dev python-dev
+  - wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  - chmod +x ./Miniconda3-latest-Linux-x86_64.sh && ./Miniconda3-latest-Linux-x86_64.sh -bfp /usr/local
   - conda install -y conda=4.3 
-  - conda update -y python
+  - conda install python=3.6
   - conda install -y --file conda-requirements.txt
-  - pip install -q -r pip-requirements.txt
-  - pip install -q -r pip-requirements.extra
-  - PATH=$HOME/.omegaml/miniconda/bin:$PATH nosetests -v
-    --with-xunit --xunit-file=shippable/testresults/nosetests.xml 
-    --with-xcoverage --cover-package=omegaml
-    --cover-tests  --xcoverage-file=shippable/codecoverage/coverage.xml
+  - pip install -U setuptools
+  - pip install -r pip-requirements.txt
+  - pip install -r pip-requirements.extra
+  - >
+    PATH=$HOME/.omegaml/miniconda/bin:$PATH DJANGO_SETTINGS_MODULE=app.settings 
+     nosetests -v 
+    --with-xunit --xunit-file=shippable/testresults/nosetests.xml  
+    --with-xcoverage --cover-package=omegaml 
+    --cover-tests  --xcoverage-file=shippable/codecoverage/coverage.xml 
+
 
