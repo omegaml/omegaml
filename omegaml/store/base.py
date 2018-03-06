@@ -166,13 +166,15 @@ class OmegaStore(object):
                              username=username,
                              password=password,
                              connect=False,
+                             authentication_source='admin',
                              serverSelectionTimeoutMS=2500)
         self._db = getattr(connection, self.database_name)
         # mongoengine 0.15.0 connection setup is seriously broken -- it does
         # not remember username/password on authenticated connections
         # so we reauthenticate here
         if username and password:
-            self._db.authenticate(username, password)
+            self._db.logout()
+            self._db.authenticate(username, password, source='admin')
         return self._db
 
     @property

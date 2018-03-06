@@ -49,7 +49,12 @@ class EnvSettings_Local(Config_DjangoNoseTests,
                                             mongohost='localhost:27019',
                                             password='foobar',
                                             dbname='admin')
-    MONGO_URL = os.environ.get('MONGO_URL')
+
+    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
+                       BASE_MONGO_URL.format(user='admin',
+                                             mongohost='localhost:27019',
+                                             password='foobar',
+                                             dbname='userdb'))
 
     SITE_ID = 1
 

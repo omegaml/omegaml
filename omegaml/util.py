@@ -5,6 +5,7 @@ import logging
 from django.utils import six
 from mongoengine.connection import connect
 from six import string_types
+from uuid import uuid4
 try:
     import urlparse
 except:
@@ -107,11 +108,15 @@ def override_settings(**kwargs):
 
 def delete_database():
     """ test support """
-    host = settings().OMEGA_MONGO_URL
-    parsed_url = urlparse.urlparse(host)
+    from pymongo import MongoClient
+
+    mongo_url = settings().OMEGA_MONGO_URL
+    parsed_url = urlparse.urlparse(mongo_url)
     database_name = parsed_url.path[1:]
-    client = connect(database_name, host=parsed_url.netloc)
-    client.drop_database(database_name)
+    # authenticate via admin db
+    # see https://stackoverflow.com/a/20554285
+    c = MongoClient(mongo_url, authSource='admin')
+    c.drop_database(database_name)
 
 
 def make_tuple(arg):

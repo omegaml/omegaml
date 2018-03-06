@@ -9,12 +9,15 @@ services:
 build:
   ci:
   - env
-  - > 
+  - >
+    apt-get update --fix-missing &&
+    apt-get install apt-transport-https &&
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5 &&
     echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list &&
-    apt-get update && 
-    apt-get install -y mongodb-org=3.6.3 mongodb-org-server=3.6.3 mongodb-org-shell=3.6.3 mongodb-org-mongos=3.6.3 mongodb-org-tools=3.6.3 &&
-  - service mongod start     
+    apt-get update &&
+    apt-get install -y mongodb-org=3.6.3 mongodb-org-server=3.6.3 mongodb-org-shell=3.6.3 mongodb-org-mongos=3.6.3 mongodb-org-tools=3.6.3 
+  - /usr/bin/mongod --auth > /dev/null &
+  - sleep 5 && cat scripts/mongoinit.js | /usr/bin/mongo
   - wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
   - chmod +x ./Miniconda3-latest-Linux-x86_64.sh && ./Miniconda3-latest-Linux-x86_64.sh -bfp /usr/local
   - conda install -y conda=4.3 
@@ -26,9 +29,9 @@ build:
   - PATH=/usr/local/bin:$PATH pip install -r pip-requirements.txt
   - PATH=/usr/local/bin:$PATH pip install -r pip-requirements.extra
   - >
-    PATH=/usr/local/bin:$PATH DJANGO_SETTINGS_MODULE=app.settings 
-    DJANGO_CONFIGURATION=EnvSettings_Shippable
-     python manage.py test --debug-config 
+     PATH=/usr/local/bin:$PATH DJANGO_SETTINGS_MODULE=app.settings 
+     python manage.py test --debug-config --verbosity=2 -s
+     --config EnvSettings_Shippable 
      --with-xunit --xunit-file=shippable/testresults/nosetests.xml  
      --with-xcoverage --cover-package=omegaml 
      --cover-tests  --xcoverage-file=shippable/codecoverage/coverage.xml 

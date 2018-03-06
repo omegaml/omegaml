@@ -17,7 +17,7 @@ def insert_chunk(job):
                 from the default database of the connection.
     """
     sdf, mongo_url, collection_name = job
-    db = MongoClient(mongo_url).get_database()
+    db = MongoClient(mongo_url, authSource='admin').get_database()
     collection = db[collection_name]
     result = collection.insert_many(sdf.to_dict(orient='records'))
     return mongo_url, db.name, collection_name, len(result.inserted_ids)
