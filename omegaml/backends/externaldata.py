@@ -127,3 +127,4 @@ def _is_supported_type(obj, **kwargs):
     supported_type = isinstance(obj, (pd.Series, pd.DataFrame))
     supported_scheme = _is_supported_scheme(uri)
     return supported_type & supported_scheme
+

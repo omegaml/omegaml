@@ -98,8 +98,6 @@ from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
-
-
 class OmegaStore(object):
 
     """
