@@ -44,7 +44,6 @@ build_sdist () {
     # -- build a source distribution as the basis for obfuscation
     pushd $sourcedir
     PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py sdist
-    # -- obfuscate all python code
     # 1. copy all code into a safe place
     tar -czf $distdir/$release.tgz .
     popd
@@ -54,7 +53,7 @@ build_sdist () {
 obfuscate () {
     # 2. obfuscate and prepend header file on each file
     pushd $distdir/$release
-    tar -xzf ../$release.tgz 
+    tar -xzf $distdir/$release.tgz
     # -- build a script, then execute
     find . -name "*py" | xargs -L1 -I{} echo "echo Minify {} && pyminifier -o {}_pym --gzip {} && cat $headerfqn {}_pym > {} && rm {}_pym"  > obfuscate.sh
     chmod +x obfuscate.sh && obfuscate.sh
@@ -63,7 +62,7 @@ obfuscate () {
 
 build_wheel () {
     # 3. build actual package
-    pushd $sourcedir
+    pushd $distdir/$release
     PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py bdist_wheel
     cp dist/*whl $distdir
     popd

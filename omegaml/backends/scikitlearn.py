@@ -157,7 +157,7 @@ class ScikitLearnBackend(BaseModelBackend):
         return meta
 
     def score(
-            self, modelname, Xname, Yname, rName=True, pure_python=True,
+            self, modelname, Xname, Yname, rName=None, pure_python=True,
             **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
