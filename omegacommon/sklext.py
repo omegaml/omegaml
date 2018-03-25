@@ -29,11 +29,13 @@ class OnlinePipeline(Pipeline):
         """
         for i, step in enumerate(self.steps):
             name, est = step
-            if  self.safe and not hasattr(est, 'partial_fit'):
+            if self.safe and not hasattr(est, 'partial_fit'):
                 # we allow to be safe on all but the last step
                 # i.e. only transformers are ok to not have a partial_fit
-
                 if i < len(self.steps) - 1:
                     continue
             est.partial_fit(X, y)
+            if i < len(self.steps) - 1:
+                # pass on results to next step
+                X = est.transform(X)
         return self

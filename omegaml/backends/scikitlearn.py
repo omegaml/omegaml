@@ -189,15 +189,19 @@ class ScikitLearnBackend(BaseModelBackend):
         except:
             model_attrs['scikit-learn'] = 'unknown'
         meta = self.model_store.put(model, modelname, attributes=model_attrs)
+        if pure_python:
+            result = result.tolist()
         if rName:
             meta = self.data_store.put(result, rName)
         result = meta
         return result
 
-    def transform(self, modelname, Xname, rName=None, **kwargs):
+    def transform(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         result = model.transform(reshaped(X), **kwargs)
+        if pure_python:
+            result = result.tolist()
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta

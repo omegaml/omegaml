@@ -2,6 +2,7 @@ from multiprocessing import Pool
 from itertools import repeat
 from pymongo import MongoClient
 
+pool = None
 
 def dfchunker(df, size=10000):
     """ chunk a dataframe as in iterator """
@@ -39,11 +40,13 @@ def fast_insert(df, omstore, name, chunk_size=int(1e4)):
     :param name: the dataset name in OmegaStore to use. will be used to get the 
     collection name from the omstore
     """
+    global pool
     if len(df) * len(df.columns) > chunk_size:
         mongo_url = omstore.mongo_url
         collection_name = omstore.collection(name).name
         # we crossed upper limits of single threaded processing, use a Pool
-        pool = Pool()
+        # use the cached pool
+        pool = pool or Pool()
         jobs = zip(dfchunker(df, size=chunk_size),
                    repeat(mongo_url), repeat(collection_name))
         pool.map(insert_chunk, (job for job in jobs))

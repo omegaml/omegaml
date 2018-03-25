@@ -93,7 +93,7 @@ from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
-    cursor_to_dataframe
+    cursor_to_dataframe, convert_dtypes
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -731,6 +731,8 @@ class OmegaStore(object):
             if '_id' in df.columns:
                 del df['_id']
             meta = self.metadata(name)
+            if hasattr(meta, 'kind_meta'):
+                df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
             # -- restore columns
             meta_columns = dict(meta.kind_meta.get('columns'))
             if meta_columns:

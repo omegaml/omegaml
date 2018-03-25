@@ -179,11 +179,15 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         query = request.GET
         datax = query.get('datax')
         datay = query.get('datay')
-        result = om.runtime.model(name).score(datax, datay)
+        try:
+            result = om.runtime.model(name).score(datax, datay)
+            result_data = result.get()
+        except NotFittedError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
         data = {
             'datax': datax,
             'datay': datay,
-            'result': [result.get()]
+            'result': [result_data]
         }
         return self.create_response(request, data)
 
@@ -203,11 +207,15 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         query = request.GET
         datax = query.get('datax')
         datay = query.get('datay')
-        result = om.runtime.model(name).transform(datax, datay)
+        try:
+            result = om.runtime.model(name).transform(datax, datay)
+            result_data = result.get()
+        except NotFittedError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
         data = {
             'datax': datax,
             'datay': datay,
-            'result': [result.get()]
+            'result': result_data.tolist()
         }
         return self.create_response(request, data)
 

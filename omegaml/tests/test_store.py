@@ -335,7 +335,9 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata', force_python=True)
         df2 = pd.DataFrame(df2)
         real_cols = [col for col in df2.columns
-                     if col != '_id' and not col.startswith('_idx')]
+                     if (col != '_id'
+                         and not col.startswith('_idx')
+                         and not col.startswith('_om'))]
         df2 = df2[real_cols]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
         # model
@@ -602,7 +604,7 @@ class StoreTests(unittest.TestCase):
     def test_store_tz_datetime(self):
         """ test storing timezoned datetimes """
         df = pd.DataFrame({
-            'y': pd.date_range('now', periods=10, tz='US/Eastern')
+            'y': pd.date_range('now', periods=10, tz='US/Eastern', normalize=True)
         })
         store = OmegaStore()
         store.put(df, 'test-date', append=False)

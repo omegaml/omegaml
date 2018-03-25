@@ -6,11 +6,12 @@ from django.utils import six
 from mongoengine.connection import connect
 from six import string_types
 from uuid import uuid4
+import re
+
 try:
     import urlparse
 except:
     from urllib import parse as urlparse
-
 
 __settings = None
 
@@ -245,12 +246,14 @@ def restore_index_columns_order(columns):
     index columns are named '_idx#<n>_<name>' where n is the sequence
     of the original index column and name is the name
     """
+
     def get_index_order(col):
         if '_idx#' in col:
             n = col.split('_')[1].split('#')[1]
         else:
             n = 0
         return n
+
     index_cols = (col for col in columns if col and col.startswith('_idx'))
     index_cols = sorted(index_cols, key=get_index_order)
     return index_cols
@@ -333,3 +336,28 @@ def reshaped(data):
         if len(data.shape) == 1:
             data = data.reshape(-1, 1)
     return data
+
+
+def convert_dtypes(df, dtypes):
+    """
+    get back original dtypes
+
+    :param df: the dataframe to apply conversion to
+    :param dtypes: the dict mapping column to dtype (use kind_meta['dtypes'])
+    """
+    # tz pattern used in convert_dtypes
+    tzinfo_pattern = re.compile('datetime64\[ns, (.*)\]')
+    for col, dtype in six.iteritems(dtypes):
+        if dtype.startswith('datetime'):
+            if not hasattr(df, 'dtypes'):
+                continue
+            try:
+                match = tzinfo_pattern.match(dtype)
+                if match:
+                    tzname = match.groups()[0]
+                    df[col] = df[col].dt.tz_localize('UTC').dt.tz_convert(tzname)
+            except:
+                # TODO ignore errors, issue warning
+                pass
+
+    return df
