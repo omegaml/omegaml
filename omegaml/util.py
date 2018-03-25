@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
 import logging
-
-from django.utils import six
-from mongoengine.connection import connect
-from six import string_types
-from uuid import uuid4
 import re
+
+import six
+from six import string_types
 
 try:
     import urlparse
@@ -68,12 +66,16 @@ def settings():
         return __settings
     try:
         # see if we're running as a django app
-        # DEBUG will probably always be as a djangon setting configuraiton
+        from django.utils import six
+        from django.utils.functional import empty
         from django.conf import settings as djsettings  # @UnresolvedImport
         defaults = djsettings
         # this is to test if django was initialized. if not revert
         # to using omdefaults
         try:
+            if defaults._wrapped is empty:
+                # django is not initialized, use omega defaults
+                raise
             getattr(defaults, 'SECRET_KEY')
         except:
             from warnings import warn

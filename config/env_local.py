@@ -65,3 +65,7 @@ class EnvSettings_Local(Config_DjangoNoseTests,
     }
 
     DEBUG = True
+
+    ALLOWED_HOSTS = ['localhost', 'testserver']
+
+

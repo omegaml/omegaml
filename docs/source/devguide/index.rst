@@ -1,14 +1,11 @@
 Development Guide
 =================
 
-.. contents::
+.. toctree::
+   :maxdepth: 2
 
-.. include:: intro.rst
-.. include:: metadata.rst
-.. include:: storage.rst
-.. include:: mixins.rst
-
-
-
-
-
+   architecture
+   custom
+   metadata
+   storage
+   mixins

@@ -10,7 +10,7 @@ be implemented using the model backend-API.
 Storing models
 --------------
 
-Storing models is as straight forward as storing Pandas DataFrames and Series.
+Storing models (and Pipeline) is as straight forward as storing Pandas DataFrames and Series.
 Simply create the model, then use :code:`om.models.put()` to store:
 
 .. code::
@@ -69,6 +69,9 @@ to predict using new data:
 Using the compute cluster
 -------------------------
 
+Prediction
+++++++++++
+
 omega|ml provides a state-of-the art compute cluster, called the *runtime*. Using
 the runtime you can delegate model tasks to the cluster:
 
@@ -104,4 +107,33 @@ in omegaml:
     result = om.runtime.model('lrmodel').predict('testlrmodel')
     result.get()    
     
-    
+Model Fitting
++++++++++++++
+
+To train a model using the runtime, use the :code:`fit` method on the runtime's model, as you would
+on a local model:
+
+.. code::
+
+   # create a dataframe and store it
+   df = pd.DataFrame(dict(x=range(10), y=range(20,30)))
+   om.datasets.put(df, 'testlrmodel')
+   # use it to fit the model
+   result = om.runtime.model('lrmodel').fit('testlrmodel[x]', 'testlrmodel[y]')
+   result.get()
+
+
+Other Model tasks
++++++++++++++++++
+
+The runtime provides more than just model training and prediction. The runtime implements
+a common API to all supported backends that follows the scikit-learn estimator model. That is the
+runtime supports the following methods on a model:
+
+* :code:`fit`
+* :code:`partial_fit`
+* :code:`transform`
+* :code:`score`
+
+For details refer to the API reference.
+

@@ -1,21 +1,17 @@
 from __future__ import absolute_import
 
 import logging
-from uuid import uuid4
-
-from celery import Celery
-import six
 
 from omegaml.documents import Metadata
 from omegaml.jobs import OmegaJobs
-from omegaml.store import OmegaStore
 from omegaml.runtime import OmegaRuntime
+from omegaml.store import OmegaStore
 from omegaml.util import is_dataframe, settings, is_ndarray
+
 logger = logging.getLogger(__file__)
 
 
 class Omega(object):
-
     """
     Client API to omegaml
 
@@ -59,7 +55,6 @@ class Omega(object):
 
 
 class OmegaDeferredInstance():
-
     """
     A deferred instance of Omega() that is only instantiated on access
 
@@ -79,6 +74,7 @@ class OmegaDeferredInstance():
         if self.omega is None:
             self.omega = Omega()
         return getattr(self.omega, name)
+
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance

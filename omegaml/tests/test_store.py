@@ -10,7 +10,7 @@ from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import StringIO
+from six import StringIO, BytesIO
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
@@ -350,7 +350,8 @@ class StoreTests(unittest.TestCase):
         store.put(lr, 'foo')
         # get it back as a zipfile
         lr2file = store.get('foo', force_python=True)
-        with ZipFile(StringIO(lr2file.read())) as zipf:
+        contents = lr2file.read()
+        with ZipFile(BytesIO(contents)) as zipf:
             self.assertIn('foo', zipf.namelist())
 
     def test_store_with_metadata(self):

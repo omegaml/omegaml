@@ -15,7 +15,7 @@ def get_user_config_from_api(api_auth, api_url=None):
         server = requests
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()
-    elif 'test' in ' '.join(sys.argv):
+    elif 'test' in sys.argv:
         # test support
         import json
         from tastypie.test import TestApiClient
@@ -44,10 +44,16 @@ def get_omega_from_apikey(userid, apikey, api_url=None):
     :param aip_url: the api URL
     :returns: the Omega instance configured for the given user
     """
-    from omegaml import Omega
-    api_auth = OmegaRestApiAuth(userid, apikey)
-    configs = get_user_config_from_api(api_auth, api_url=api_url)
-    config = configs['objects'][0]['data']
+    from omegaml import Omega, defaults
+    api_url = api_url or defaults.OMEGA_RESTAPI_URL
+    if api_url.startswith('http') or 'test' in sys.argv:
+        api_auth = OmegaRestApiAuth(userid, apikey)
+        configs = get_user_config_from_api(api_auth, api_url=api_url)
+        config = configs['objects'][0]['data']
+    elif api_url == 'local':
+        config = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
+    else:
+        raise ValueError('invalid api_url {}'.format(api_url))
     mongo_url = config['OMEGA_MONGO_URL']
     om = Omega(mongo_url=mongo_url)
     return om
