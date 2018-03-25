@@ -93,13 +93,11 @@ from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
-    cursor_to_dataframe
+    cursor_to_dataframe, convert_dtypes
 
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
-
-
 class OmegaStore(object):
 
     """
@@ -166,13 +164,15 @@ class OmegaStore(object):
                              username=username,
                              password=password,
                              connect=False,
+                             authentication_source='admin',
                              serverSelectionTimeoutMS=2500)
         self._db = getattr(connection, self.database_name)
         # mongoengine 0.15.0 connection setup is seriously broken -- it does
         # not remember username/password on authenticated connections
         # so we reauthenticate here
         if username and password:
-            self._db.authenticate(username, password)
+            self._db.logout()
+            self._db.authenticate(username, password, source='admin')
         return self._db
 
     @property
@@ -440,7 +440,9 @@ class OmegaStore(object):
                 col, dt = timestamp
             obj[col] = dt
         # store dataframe indicies
-        obj, idx_meta = unravel_index(obj)
+        # FIXME this may be a performance issue, use size stored on stats or metadata
+        row_count = self.collection(name).count()
+        obj, idx_meta = unravel_index(obj, row_count=row_count)
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
         dtypes = {
@@ -464,8 +466,6 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        #collection.insert_many((row.to_dict() for i, row in obj.iterrows()))
-        # collection.insert_many(obj.to_dict(orient='records'))
         fast_insert(obj, self, name)
         signals.dataset_put.send(sender=None, name=name)
         kind = (Metadata.PANDAS_SEROWS
@@ -731,6 +731,8 @@ class OmegaStore(object):
             if '_id' in df.columns:
                 del df['_id']
             meta = self.metadata(name)
+            if hasattr(meta, 'kind_meta'):
+                df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
             # -- restore columns
             meta_columns = dict(meta.kind_meta.get('columns'))
             if meta_columns:
@@ -748,6 +750,7 @@ class OmegaStore(object):
             idx_meta = meta.kind_meta.get('idx_meta')
             if idx_meta:
                 df = restore_index(df, idx_meta)
+            # -- restore row order
             if is_series:
                 index = df.index
                 name = df.columns[0]

@@ -9,6 +9,10 @@ class ProjectedMixin(object):
     """
     colspec_pattern = re.compile(r"(?P<name>.*)\[(?P<colspec>.*)\]$")
 
+    def metadata(self, name, *args, **kwargs):
+        name = name.split('[')[0]
+        return super(ProjectedMixin, self).metadata(name, *args, **kwargs)
+
     def get(self, name, *args, **kwargs):
         """
         Return a projected dataset given a name of form name[colspec]

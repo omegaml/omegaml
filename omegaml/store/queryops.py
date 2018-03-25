@@ -312,6 +312,23 @@ class MongoQueryOps(object):
         sort_key, _ = self.make_index(columns)
         return sort_key
 
+
+def flatten_keys(d, keys=None):
+    """
+    get all keys from a dictionary and nested dicts, as a flattened list
+
+    :param d: a dictionary
+    :param keys: previously found keys. internal use.
+    :returns: list of flattened keys 
+    """
+    keys = keys or []
+    keys.extend(list(d.keys()))
+    for sd in d.values():
+        if isinstance(sd, dict):
+            flatten_keys(sd, keys=keys)
+    return keys
+
+
 # convenience accessors
 x = MongoQueryOps()
 d = dict

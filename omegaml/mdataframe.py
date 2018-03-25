@@ -90,7 +90,8 @@ class MGrouper(object):
         """ get all columns in mdataframe that is not in columns """
         return [col for col in self.mdataframe.columns
                 if col not in self.columns and col != '_id'
-                and not col.startswith('_idx')]
+                and not col.startswith('_idx')
+                and not col.startswith('_om#')]
     def _count(self):
         count_columns = self._non_group_columns()
         if len(count_columns) == 0:
@@ -318,7 +319,9 @@ class MDataFrame(object):
             result = []
         else:
             result = [col for col in doc.keys()
-                      if col != '_id' and not col.startswith('_idx')]
+                      if col != '_id'
+                      and not col.startswith('_idx')
+                      and not col.startswith('_om#')]
         return result
     def _get_frame_index(self):
         """ return the dataframe's index columns """
@@ -327,6 +330,14 @@ class MDataFrame(object):
             result = []
         else:
             result = restore_index_columns_order(doc.keys())
+        return result
+    def _get_frame_om_fields(self):
+        """ return the dataframe's omega special fields columns """
+        doc = self.collection.find_one()
+        if doc is None:
+            result = []
+        else:
+            result = [k for k in list(doc.keys()) if k.startswith('_om#')]
         return result
     def _as_mseries(self, column):
         kwargs = self.__getcopy_kwargs()
@@ -385,6 +396,9 @@ class MDataFrame(object):
     def _get_cursor(self):
         projection = make_tuple(self.columns)
         projection += make_tuple(self._get_frame_index())
+        if not self.sort_order:
+            # implicit sort
+            projection += make_tuple(self._get_frame_om_fields())
         cursor = self.collection.find(projection=projection)
         if self.sort_order:
             cursor.sort(qops.make_sortkey(make_tuple(self.sort_order)))
@@ -483,6 +497,8 @@ class MDataFrame(object):
                 continue
             if left_col.startswith('_idx'):
                 continue
+            if left_col.startswith('_om#'):
+                continue
             if left_col != (on or left_on) and left_col in right.columns:
                 left_col = '%s%s' % (left_col, suffixes[0])
             project[left_col] = "$%s" % source_left_col
@@ -490,6 +506,8 @@ class MDataFrame(object):
             if right_col == '_id':
                 continue
             if right_col.startswith('_idx'):
+                continue
+            if right_col.startswith('_om#'):
                 continue
             if right_col == (on or right_on) and right_col == (on or left_on):
                 # if the merge field is the same in both frames, we already

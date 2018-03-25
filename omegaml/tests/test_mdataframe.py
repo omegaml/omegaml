@@ -91,6 +91,19 @@ class MDataFrameTests(TestCase):
                          set(list(df.columns)))
         self.assertTrue(result.equals(df))
 
+    def test_mdataframe_xlarge(self):
+        df = pd.DataFrame({
+            'a': list(range(0, int(1e4 + 1))),
+            'b': list(range(0, int(1e4 + 1)))
+        })
+        store = self.om.datasets
+        store.put(df, 'mydata-xlarge', append=False)
+        coll = store.collection('mydata-xlarge')
+        result = MDataFrame(coll).value
+        self.assertEqual(set(MDataFrame(coll).columns),
+                         set(list(df.columns)))
+        self.assertTrue(result.equals(df))
+
     def test_mdataframe_column_attribute(self):
         coll = self.coll
         df = self.df

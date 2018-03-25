@@ -2,7 +2,7 @@ import copy
 
 import six
 
-from omegaml.store.queryops import MongoQueryOps
+from omegaml.store.queryops import MongoQueryOps, flatten_keys
 from omegaml.util import restore_index
 
 
@@ -50,6 +50,8 @@ class MongoQ(object):
         self.qlist = [('', self)]
         # should we return ~(conditions)
         self._inv = False
+        # is sorting implied by some operator
+        self.sorted = False
 
     def __repr__(self):
         r = []
@@ -87,6 +89,9 @@ class MongoQ(object):
         :param query: the query dictionary applicable to collection.find()
         :return: the result of collection.find()  
         """
+        operators = flatten_keys(query)
+        if '$near' in operators:
+            self.sorted = True
         return collection.find(query)
 
     def build_filters(self):
@@ -371,7 +376,8 @@ class Filter(object):
             result = pd.DataFrame.from_records(result)
             if '_id' in result.columns:
                 del result['_id']
-            result = restore_index(result, dict())
+            result = restore_index(result, dict(),
+                                   rowid_sort=not self.q.sorted)
         except ImportError:
             result = list(result)
         return result

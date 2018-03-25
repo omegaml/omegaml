@@ -4,7 +4,7 @@ Developer API
 omega|ml
 -------
 
-.. automodule:: omega|ml
+.. automodule:: omegaml
    :members: Omega
 
 

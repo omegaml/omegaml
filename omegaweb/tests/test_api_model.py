@@ -2,11 +2,15 @@ from landingpage.models import ServicePlan
 
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_almost_equal
+from sklearn.linear_model import SGDRegressor
 from sklearn.linear_model.base import LinearRegression
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from tastypie.test import ResourceTestCase
 
 import numpy as np
+
+from omegacommon.sklext import OnlinePipeline
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
 import pandas as pd
@@ -179,20 +183,25 @@ class ModelResourceTests(ResourceTestCase):
         om.datasets.put(X, 'X', append=False)
         om.datasets.put(Y, 'Y', append=False)
         # create a pipeline without fitting yet
-        p = Pipeline([
-            ('lr', LinearRegression()),
+        # -- see SDGRegressor guide for explanation for n_iter size
+        n_iter = 100
+        p = OnlinePipeline([
+            ('scale', StandardScaler()),
+            ('sgdr', SGDRegressor(random_state=42, learning_rate='optimal',
+                                  penalty='none', n_iter=n_iter)),
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
         resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpBadRequest(resp)
-        # fit remotely
-        resp = self.api_client.put(self.url('mymodel', 'partial_fit',
-                                            'datax=X&datay=Y'),
-                                   data={},
-                                   authentication=self.get_credentials())
-        self.assertHttpAccepted(resp)
+        # fit remotely, not since we partial_fit we have to n_iter ourselves
+        for i in range(n_iter):
+            resp = self.api_client.put(self.url('mymodel', 'partial_fit',
+                                                'datax=X&datay=Y'),
+                                       data={},
+                                       authentication=self.get_credentials())
+            self.assertHttpAccepted(resp)
         # predict
         resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
@@ -248,7 +257,7 @@ class ModelResourceTests(ResourceTestCase):
         om.datasets.put(Y, 'Y', append=False)
         # create a pipeline without fitting yet
         p = Pipeline([
-            ('lr', LinearRegression()),
+            ('lr', StandardScaler()),
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
@@ -267,4 +276,7 @@ class ModelResourceTests(ResourceTestCase):
                                    authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
-        assert_almost_equal(data.get('result'), [score])
+        # do the same locally
+        p.fit(X, Y)
+        transformed = p.transform(X)
+        assert_almost_equal(data.get('result'), list(transformed))

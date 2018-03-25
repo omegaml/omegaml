@@ -10,7 +10,7 @@ from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import StringIO
+from six import StringIO, BytesIO
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
@@ -126,6 +126,18 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame({
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        df2 = store.get('mydata')
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
+    def test_put_dataframe_xtra_large(self):
+        # create some dataframe
+        # force fast insert
+        df = pd.DataFrame({
+            'a': list(range(0, int(1e4 + 1))),
+            'b': list(range(0, int(1e4 + 1)))
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata')
@@ -323,7 +335,9 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata', force_python=True)
         df2 = pd.DataFrame(df2)
         real_cols = [col for col in df2.columns
-                     if col != '_id' and not col.startswith('_idx')]
+                     if (col != '_id'
+                         and not col.startswith('_idx')
+                         and not col.startswith('_om'))]
         df2 = df2[real_cols]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
         # model
@@ -336,7 +350,8 @@ class StoreTests(unittest.TestCase):
         store.put(lr, 'foo')
         # get it back as a zipfile
         lr2file = store.get('foo', force_python=True)
-        with ZipFile(StringIO(lr2file.read())) as zipf:
+        contents = lr2file.read()
+        with ZipFile(BytesIO(contents)) as zipf:
             self.assertIn('foo', zipf.namelist())
 
     def test_store_with_metadata(self):
@@ -590,7 +605,7 @@ class StoreTests(unittest.TestCase):
     def test_store_tz_datetime(self):
         """ test storing timezoned datetimes """
         df = pd.DataFrame({
-            'y': pd.date_range('now', periods=10, tz='US/Eastern')
+            'y': pd.date_range('now', periods=10, tz='US/Eastern', normalize=True)
         })
         store = OmegaStore()
         store.put(df, 'test-date', append=False)

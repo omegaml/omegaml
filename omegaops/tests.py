@@ -27,20 +27,26 @@ class OmegaOpsTest(TestCase):
         db, url = add_user(dbname, username, password)
         self.assertIsNotNone(db)
         # check we can authenticate and insert
-        db.authenticate(username, password)
+        db.logout()
+        db.authenticate(username, password, source='admin')
         coll = db['data']
         coll.insert({'foo': 'bar'})
         # check no other user can authenticate
         with self.assertRaises(PyMongoError) as ex:
-            db.authenticate('sillyuser', 'norealpassword')
+            db.logout()
+            db.authenticate('sillyuser', 'norealpassword', source='admin')
+        # check a new user for another db cannot access old db
         dbname2 = 'testdbops2'
         username2 = 'testuserops2'
         password2 = 'foobar2'
         db2, url = add_user(dbname2, username2, password2)
         with self.assertRaises(PyMongoError) as ex:
-            db.authenticate(username2, password2)
+            db.logout()
+            db.authenticate(username2, password2, source='admin')
+            db.create_collection('test')
         # check a valid user cannot get access to another db
-        db2.authenticate(username2, password2)
+        db2.logout()
+        db2.authenticate(username2, password2, source='admin')
         otherdb = db2.client[dbname]
         with self.assertRaises(OperationFailure) as ex:
             otherdb.collection_names()

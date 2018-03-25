@@ -1,16 +1,15 @@
 from __future__ import absolute_import
 
 import logging
-import os
+import re
 
-from django.utils import six
-from mongoengine.connection import connect
+import six
 from six import string_types
+
 try:
     import urlparse
 except:
     from urllib import parse as urlparse
-
 
 __settings = None
 
@@ -67,12 +66,16 @@ def settings():
         return __settings
     try:
         # see if we're running as a django app
-        # DEBUG will probably always be as a djangon setting configuraiton
+        from django.utils import six
+        from django.utils.functional import empty
         from django.conf import settings as djsettings  # @UnresolvedImport
         defaults = djsettings
         # this is to test if django was initialized. if not revert
         # to using omdefaults
         try:
+            if defaults._wrapped is empty:
+                # django is not initialized, use omega defaults
+                raise
             getattr(defaults, 'SECRET_KEY')
         except:
             from warnings import warn
@@ -108,11 +111,15 @@ def override_settings(**kwargs):
 
 def delete_database():
     """ test support """
-    host = settings().OMEGA_MONGO_URL
-    parsed_url = urlparse.urlparse(host)
+    from pymongo import MongoClient
+
+    mongo_url = settings().OMEGA_MONGO_URL
+    parsed_url = urlparse.urlparse(mongo_url)
     database_name = parsed_url.path[1:]
-    client = connect(database_name, host=parsed_url.netloc)
-    client.drop_database(database_name)
+    # authenticate via admin db
+    # see https://stackoverflow.com/a/20554285
+    c = MongoClient(mongo_url, authSource='admin')
+    c.drop_database(database_name)
 
 
 def make_tuple(arg):
@@ -203,7 +210,7 @@ def get_labeled_points_from_rdd(rdd):
     return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
 
 
-def unravel_index(df):
+def unravel_index(df, row_count=0):
     """ 
     convert index columns into dataframe columns
 
@@ -214,6 +221,8 @@ def unravel_index(df):
     in sequence.
 
     :param df: the dataframe
+    :param row_count: the row_count base, ensures subsequent stores
+      get differnt row ids
     :return: the unravelled dataframe, meta
     """
     # remember original names
@@ -224,10 +233,12 @@ def unravel_index(df):
     store_idxnames = ['_idx#{}_{}'.format(i, name or i)
                       for i, name in enumerate(idx_meta['names'])]
     df.index.names = store_idxnames
-    unravelled = df.reset_index(), idx_meta
+    unravelled_df, idx_meta = df.reset_index(), idx_meta
+    # store row ids
+    unravelled_df['_om#rowid'] = unravelled_df.index.values + row_count
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
-    return unravelled
+    return unravelled_df, idx_meta
 
 
 def restore_index_columns_order(columns):
@@ -237,23 +248,33 @@ def restore_index_columns_order(columns):
     index columns are named '_idx#<n>_<name>' where n is the sequence
     of the original index column and name is the name
     """
+
     def get_index_order(col):
         if '_idx#' in col:
             n = col.split('_')[1].split('#')[1]
         else:
             n = 0
         return n
+
     index_cols = (col for col in columns if col and col.startswith('_idx'))
     index_cols = sorted(index_cols, key=get_index_order)
     return index_cols
 
 
-def restore_index(df, idx_meta):
+def restore_index(df, idx_meta, rowid_sort=True):
     """
     restore index proper
 
-    :parm
+    :param df: the dataframe
+    :param idx_meta: index metadata
+    :param rowid_sort: whether to sort by row id. defaults to True
+           If your query is already sorted in some specific way,
+           specify False to keep the sort order.
     """
+    # -- establish row order proper
+    if rowid_sort and '_om#rowid' in df:
+        df.sort_values('_om#rowid', inplace=True)
+        del df['_om#rowid']
     # -- get index columns
     index_cols = restore_index_columns_order(df.columns)
     # -- set index columns
@@ -317,3 +338,28 @@ def reshaped(data):
         if len(data.shape) == 1:
             data = data.reshape(-1, 1)
     return data
+
+
+def convert_dtypes(df, dtypes):
+    """
+    get back original dtypes
+
+    :param df: the dataframe to apply conversion to
+    :param dtypes: the dict mapping column to dtype (use kind_meta['dtypes'])
+    """
+    # tz pattern used in convert_dtypes
+    tzinfo_pattern = re.compile('datetime64\[ns, (.*)\]')
+    for col, dtype in six.iteritems(dtypes):
+        if dtype.startswith('datetime'):
+            if not hasattr(df, 'dtypes'):
+                continue
+            try:
+                match = tzinfo_pattern.match(dtype)
+                if match:
+                    tzname = match.groups()[0]
+                    df[col] = df[col].dt.tz_localize('UTC').dt.tz_convert(tzname)
+            except:
+                # TODO ignore errors, issue warning
+                pass
+
+    return df

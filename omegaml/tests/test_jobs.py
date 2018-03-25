@@ -161,8 +161,6 @@ class JobTests(TestCase):
     def old_test_job_run_valid(self):
         om = Omega()
         defaults = omegaml_settings()
-        fs = om.jobs.get_fs(defaults.OMEGA_NOTEBOOK_COLLECTION)
-        dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []
         conf = """
         # omegaml.script:
@@ -176,11 +174,7 @@ class JobTests(TestCase):
         cells.append(v4.new_code_cell(source=conf))
         cells.append(v4.new_code_cell(source=cmd))
         nb = v4.new_notebook(cells=cells)
-        with open(dummy_nb_file, 'w') as f:
-            write(nb, f, version=4)
-        # upload job notebook
-        with open(dummy_nb_file, 'rb') as f:
-            fs.put(f.read(), filename=nb_file)
+        om.jobs.put(nb, nb_file)
         result = om.jobs.run_notebook(nb_file)
         self.assertIsInstance(result, Metadata)
 

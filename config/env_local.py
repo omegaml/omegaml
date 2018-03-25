@@ -6,6 +6,7 @@ from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
 from stackable.contrib.config.conf_debugtoolbar import Config_DebugToolbar
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
+from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
 from stackable.contrib.config.conf_sekizai import Config_DjangoSekizai
@@ -15,12 +16,13 @@ from stackable.stackable import StackableSettings
 from config.env_global import EnvSettingsGlobal
 
 
-class EnvSettings_Local(Config_DjangoSekizai,
+class EnvSettings_Local(Config_DjangoNoseTests,
+                        Config_DjangoSekizai,
                         Config_Bootstrap3,
                         Config_DjangoPayments,
                         Config_DjangoConstance,
                         Config_FileEmail,
-                        #Config_DebugToolbar,
+                        # Config_DebugToolbar,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
@@ -47,7 +49,12 @@ class EnvSettings_Local(Config_DjangoSekizai,
                                             mongohost='localhost:27019',
                                             password='foobar',
                                             dbname='admin')
-    MONGO_URL = os.environ.get('MONGO_URL')
+
+    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
+                       BASE_MONGO_URL.format(user='admin',
+                                             mongohost='localhost:27019',
+                                             password='foobar',
+                                             dbname='userdb'))
 
     SITE_ID = 1
 
@@ -58,3 +65,7 @@ class EnvSettings_Local(Config_DjangoSekizai,
     }
 
     DEBUG = True
+
+    ALLOWED_HOSTS = ['localhost', 'testserver']
+
+
