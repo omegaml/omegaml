@@ -4,4 +4,4 @@ if [[ -f pip-reinstall.txt ]]; then
    pip install -r pip-requirements.extra --exists-action=w --allow-all-external
 fi
 
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput --no-post-process

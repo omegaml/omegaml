@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Backgrid.js Core",
+    "groups": [{
+      "name": "Others",
+      "classes": [
+        "Backgrid.Grid"
+      ]
+    }]
+  },
+  {
+    "name": "Backgrid.js Extensions",
+    "groups": [
+      {
+        "name": "SelectAll",
+        "classes": [
+          "Backgrid.Extension.SelectAllHeaderCell",
+          "Backgrid.Extension.SelectRowCell"
+        ]
+      }
+    ]
+  }
+]

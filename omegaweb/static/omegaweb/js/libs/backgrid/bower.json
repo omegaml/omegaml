@@ -1,0 +1,29 @@
+{
+  "name": "backgrid",
+  "homepage": "https://github.com/wyuenho/backgrid",
+  "description": "Backgrid.js is a set of components for building semantic and easily stylable data grid widgets with Backbone.",
+  "authors": [
+    "Cloudflare, Inc. <jwong@cloudflare.com>"
+  ],
+  "keywords": [
+    "backgrid",
+    "backbone"
+  ],
+  "main": [
+    "lib/backgrid.js",
+    "lib/backgrid.css"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "api"
+  ],
+  "dependencies": {
+    "backbone": "1.1.2 || 1.2.3 || ~1.3.2",
+    "underscore": "^1.8.0"
+  }
+}
