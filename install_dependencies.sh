@@ -10,3 +10,8 @@ if [ -f requirements.txt ]; then
     puts-step "Installing dependencies using Pip"
     pip install -r requirements.txt  --exists-action=w --allow-all-external | indent
 fi
+
+if [ -f pip-requirements.extra ]; then
+    puts-step "Installing extra requirements using Pip"
+    pip install -r pip-requirements.extra --exists-action=w --allow-all-external | indent
+fi

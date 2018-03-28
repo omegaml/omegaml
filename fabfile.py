@@ -68,5 +68,5 @@ def setupomega():
 def setenv():
     cmd = ('python -m stackable.encryptkeys '
            '--keysfile $HOME/.stackable/omegaml.keys '
-           '--envclass EnvSettings_dokku')
+           '--envclass EnvSettings_omegamlio')
     local(cmd)
