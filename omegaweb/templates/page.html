@@ -3,5 +3,13 @@
 {% block head %}
 {% addtoblock "pagejs" %}
 <script type="text/javascript" src="{% static 'omegaweb/js/main.js' %}"></script>
+<script type="text/javascript">
+    $(function() {
+       require(['backbone'], function($B) {
+           $B.Tastypie.apiKey.username = "{{request.user}}";
+           $B.Tastypie.apiKey.password = '{{request.user.api_key.key}}';
+       });
+    });
+</script>
 {% endaddtoblock "pagejs" %}
 {% endblock head %}
