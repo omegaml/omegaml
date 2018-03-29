@@ -279,8 +279,86 @@ class RuntimeTests(TestCase):
         self.assertEquals(om.runtime.auth, auth)
         # set auth indirectly
         defaults = omegaml.defaults
+        _userid = defaults.OMEGA_USERID
+        _apikey = defaults.OMEGA_APIKEY
         defaults.OMEGA_USERID = 'foo'
         defaults.OMEGA_APIKEY = 'bar'
         om = Omega()
         self.assertEquals(om.runtime.auth.userid, defaults.OMEGA_USERID)
         self.assertEquals(om.runtime.auth.apikey, defaults.OMEGA_APIKEY)
+        defaults.OMEGA_USERID = _userid
+        defaults.OMEGA_APIKEY = _apikey
+
+    def test_score(self):
+        # create some data
+        x = np.array(list(range(0, 10)))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']]
+        Y = df[['y']]
+        # put into Omega
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(X, 'datax')
+        om.datasets.put(Y, 'datay')
+        om.datasets.get('datax')
+        om.datasets.get('datay')
+        # create a model locally, fit it, store in Omega
+        lr = LinearRegression()
+        lr.fit(X, Y)
+        scores = lr.score(X, Y)
+        om.models.put(lr, 'mymodel')
+        self.assertIn('mymodel', om.models.list('*'))
+        # have Omega predict it
+        # -- using data already in Omega
+        result = om.runtime.model('mymodel').score('datax', 'datay')
+        scores1 = result.get()
+        # -- using data provided locally
+        #    note this is the same as
+        #        om.datasets.put(X, 'foo')
+        #        om.runtime.model('mymodel').predict('foo')
+        result = om.runtime.model('mymodel').score(X, Y)
+        scores2 = result.get()
+        self.assertTrue(
+            (scores == scores1).all(), "runtime scores are different(1)")
+        self.assertTrue(
+            (scores == scores2).all(), "runtime scores are different(2)")
+
+    def test_decision_function(self):
+        # create some data
+        x = np.array(list(range(0, 10)))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']]
+        Y = df[['y']]
+        # put into Omega
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        om.datasets.put(X, 'datax')
+        om.datasets.put(Y, 'datay')
+        om.datasets.get('datax')
+        om.datasets.get('datay')
+        # create a model locally, fit it, store in Omega
+        lr = LinearRegression()
+        lr.fit(X, Y)
+        scores = lr.decision_function(X)
+        om.models.put(lr, 'mymodel')
+        self.assertIn('mymodel', om.models.list('*'))
+        # have Omega predict it
+        # -- using data already in Omega
+        result = om.runtime.model('mymodel').decision_function('datax')
+        scores1 = result.get()
+        # -- using data provided locally
+        #    note this is the same as
+        #        om.datasets.put(X, 'foo')
+        #        om.runtime.model('mymodel').predict('foo')
+        result = om.runtime.model('mymodel').decision_function(X)
+        scores2 = result.get()
+        self.assertTrue(
+            (scores == scores1).all(), "runtime scores are different(1)")
+        self.assertTrue(
+            (scores == scores2).all(), "runtime scores are different(2)")

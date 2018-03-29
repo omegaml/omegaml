@@ -1,5 +1,3 @@
-
-
 from __future__ import absolute_import
 
 import glob
@@ -16,10 +14,10 @@ from omegaml.backends.basemodel import BaseModelBackend
 
 
 class ScikitLearnBackend(BaseModelBackend):
-
     """
     OmegaML backend to use with ScikitLearn
     """
+
     def _package_model(self, model, filename):
         """
         Dumps a model using joblib and packages all of joblib files into a zip
@@ -200,6 +198,17 @@ class ScikitLearnBackend(BaseModelBackend):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         result = model.transform(reshaped(X), **kwargs)
+        if pure_python:
+            result = result.tolist()
+        if rName:
+            meta = self.data_store.put(result, rName)
+            result = meta
+        return result
+
+    def decision_function(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+        model = self.model_store.get(modelname)
+        X = self.data_store.get(Xname)
+        result = model.decision_function(reshaped(X), **kwargs)
         if pure_python:
             result = result.tolist()
         if rName:

@@ -119,6 +119,16 @@ def omega_transform(modelname, Xname, rName=None, **kwargs):
         args=get_dataset_representations(locals()))
     return result
 
+@shared_task(base=OmegamlTask)
+def omega_decision_function(modelname, Xname, rName=None, **kwargs):
+    om = get_omega_for_task(auth=kwargs.pop('auth', None))
+    backend = om.models.get_backend(modelname, data_store=om.datasets)
+    result = backend.decision_function(modelname, Xname, rName, **kwargs)
+    signals.mltask_start.send(
+        sender=None, name='omega_decision_function',
+        args=get_dataset_representations(locals()))
+    return result
+
 
 @shared_task(base=OmegamlTask)
 def omega_settings():
