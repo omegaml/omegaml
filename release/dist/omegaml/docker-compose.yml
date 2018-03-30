@@ -1,0 +1,58 @@
+version: '3'
+services:
+   nginx:
+       image: nginx
+       ports:
+         - 5000:5000
+         - 5672:5672
+         - 27017:27017
+       links:
+          - omegaml
+          - rabbitmq
+          - mongodb
+       volumes:
+          - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+          - ./etc/nginx/http.conf:/etc/nginx/conf.d/http.conf:ro
+          - ./etc/nginx/stream.conf:/etc/nginx/conf.d/stream.conf:ro
+   omegaml:
+       image: omegaml:latest
+       hostname: central
+       links:
+          - rabbitmq
+          - mongodb
+          - mysql
+       working_dir: /app
+       command: scripts/startweb.sh
+       environment:
+         - DJANGO_CONFIGURATION=EnvSettings_docker
+         - MYSQL_DATABASE=omegaml
+         - MYSQL_USER=omegaml
+         - MYSQL_PASSWORD=mysql
+         - OMEGA_MONGO_URL=mongodb
+         - MONGO_ADMIN_URL=mongodb://admin:foobar@mongodb/admin
+   worker:
+       image: omegaml:latest
+       hostname: worker
+       links:
+          - rabbitmq
+          - mongodb
+       working_dir: /app
+       command: honcho start worker
+       environment:
+         - OMEGA_BROKER=rabbitmq
+         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - C_FORCE_ROOT=yes
+   rabbitmq:
+       image: rabbitmq
+   mongodb:
+       # initialize by running cat scripts/mongoinit.js | docker exec -i mongodb_1 mongo
+       image: mongo
+       command: --auth
+   mysql:
+       image: mysql
+       environment:
+          - MYSQL_ROOT_PASSWORD=rootadmin
+          - MYSQL_DATABASE=omegaml
+          - MYSQL_USER=omegaml
+          - MYSQL_PASSWORD=mysql
+
