@@ -31,3 +31,6 @@ class EnvSettings_omegamlio(Config_Dokku,
 
     _addl_apps = ('anymail',)
     StackableSettings.patch_apps(_addl_apps)
+
+    DEBUG = False
+
