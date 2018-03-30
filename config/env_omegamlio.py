@@ -8,7 +8,6 @@ from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 
 class EnvSettings_omegamlio(Config_Dokku,
                             Config_ApiKeys,
-                            Config_DjangoWhitenoise,
                             EnvSettings_Local):
     ALLOWED_HOSTS = ['omegaml.omegaml.io']
 
@@ -33,4 +32,5 @@ class EnvSettings_omegamlio(Config_Dokku,
     StackableSettings.patch_apps(_addl_apps)
 
     DEBUG = False
+
 
