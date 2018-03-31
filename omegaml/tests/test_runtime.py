@@ -3,7 +3,9 @@ from __future__ import absolute_import
 import os
 from unittest import TestCase
 
+from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.metrics.regression import mean_squared_error
@@ -328,12 +330,8 @@ class RuntimeTests(TestCase):
 
     def test_decision_function(self):
         # create some data
-        x = np.array(list(range(0, 10)))
-        y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']]
-        Y = df[['y']]
+
+        X, Y = make_classification()
         # put into Omega
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
         om = Omega()
@@ -343,7 +341,7 @@ class RuntimeTests(TestCase):
         om.datasets.get('datax')
         om.datasets.get('datay')
         # create a model locally, fit it, store in Omega
-        lr = LinearRegression()
+        lr = LogisticRegression()
         lr.fit(X, Y)
         scores = lr.decision_function(X)
         om.models.put(lr, 'mymodel')
