@@ -330,6 +330,9 @@ def reshaped(data):
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 1:
             data = data.values.reshape(-1, 1)
+        else:
+            if len(data.shape) == 2 and data.shape[1] == 1:
+                data = data.values.reshape(-1, 1)
     elif isinstance(data, np.ndarray):
         if len(data.shape) == 1:
             data = data.reshape(-1, 1)
@@ -339,6 +342,22 @@ def reshaped(data):
             data = data.reshape(-1, 1)
     return data
 
+
+def gsreshaped(data):
+    """
+    gridsearch reshape values according to GridSearchCV.fit
+
+    see https://stackoverflow.com/a/49241326
+    """
+    import pandas as pd
+    import numpy as np
+    if isinstance(data, (pd.Series, pd.DataFrame)):
+        if len(data.shape) == 2 and data.shape[1] == 1:
+            data = data.values.reshape(-1)
+    elif isinstance(data, np.ndarray):
+        if len(data.shape) == 2 and data.shape[1] == 1:
+            data = data.reshape(-1)
+    return data
 
 def convert_dtypes(df, dtypes):
     """

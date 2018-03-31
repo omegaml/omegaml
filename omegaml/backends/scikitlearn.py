@@ -6,9 +6,11 @@ from shutil import rmtree
 import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import datetime
 from mongoengine.fields import GridFSProxy
+from sklearn.model_selection import GridSearchCV
 
-from omegaml.util import reshaped
+from omegaml.util import reshaped, gsreshaped
 
 from omegaml.backends.basemodel import BaseModelBackend
 
@@ -215,3 +217,31 @@ class ScikitLearnBackend(BaseModelBackend):
             meta = self.data_store.put(result, rName)
             result = meta
         return result
+
+    def gridsearch(self, modelname, Xname, Yname, rName=None,
+                   parameters=None, pure_python=True, **kwargs):
+        model, meta = self.model_store.get(modelname), self.model_store.metadata(modelname)
+        X = self.data_store.get(Xname)
+        if Yname:
+            y = self.data_store.get(Yname)
+        else:
+            y = None
+        gs_model = GridSearchCV(cv=None, estimator=model, param_grid=parameters, **kwargs)
+        gs_model.fit(X, gsreshaped(y))
+        nowdt = datetime.datetime.now()
+        if rName:
+            gs_modelname = rName
+        else:
+            gs_modelname = '{}.{}.gs'.format(modelname, nowdt.isoformat())
+        gs_meta = self.model_store.put(gs_model, gs_modelname)
+        attributes = meta.attributes
+        if not 'gridsearch' in attributes:
+            attributes['gridsearch'] = []
+        attributes['gridsearch'].append({
+            'datetime': nowdt,
+            'Xname': Xname,
+            'Yname': Yname,
+            'gsModel': gs_modelname,
+        })
+        meta.save()
+        return meta
