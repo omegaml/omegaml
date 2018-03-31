@@ -123,6 +123,42 @@ on a local model:
    result.get()
 
 
+GridSearch
+++++++++++
+
+**currently supported for sckit-learn**
+
+To use cross validated grid search on a model, use the :code:`gridsearch` method on the runtime's model. This
+creates, fits and stores a :code:`GridSearchCV` instance and automatically links it to the model. Use the
+GridSearchCV model to evaluate the performance of multiple parameter settings.
+
+.. note::
+
+    Instead of using this default implementation of :code:`GridSearchCV` you may create your
+    own :code:`GridSearchCV` instance locally and then fit it using the runtime. In this case
+    be sure to link the model used for grid searching and the original model by changing the
+    attributes on the model's metadata.
+
+.. code::
+
+        X, y = make_classification()
+        logreg = LogisticRegression()
+        om.models.put(logreg, 'logreg')
+        params = {
+            'C': [0.1, 0.5, 1.0]
+        }
+        # gridsearch on runtime
+        om.runtime.model('logreg').gridsearch(X, y, parameters=params)
+        meta = om.models.metadata('logreg')
+        # check gridsearch was saved
+        self.assertIn('gridsearch', meta.attributes)
+        self.assertEqual(len(meta.attributes['gridsearch']), 1)
+        self.assertIn('gsModel', meta.attributes['gridsearch'][0])
+        # check we can get back the gridsearch model
+        gs_model = om.models.get(meta.attributes['gridsearch'][0]['gsModel'])
+        self.assertIsInstance(gs_model, GridSearchCV)
+
+
 Other Model tasks
 +++++++++++++++++
 

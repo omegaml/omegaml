@@ -9,6 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.metrics.regression import mean_squared_error
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
@@ -312,51 +313,26 @@ class RuntimeTests(TestCase):
         lr.fit(X, Y)
         scores = lr.score(X, Y)
         om.models.put(lr, 'mymodel')
-        self.assertIn('mymodel', om.models.list('*'))
-        # have Omega predict it
-        # -- using data already in Omega
-        result = om.runtime.model('mymodel').score('datax', 'datay')
-        scores1 = result.get()
-        # -- using data provided locally
-        #    note this is the same as
-        #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('mymodel').predict('foo')
-        result = om.runtime.model('mymodel').score(X, Y)
-        scores2 = result.get()
-        self.assertTrue(
-            (scores == scores1).all(), "runtime scores are different(1)")
-        self.assertTrue(
-            (scores == scores2).all(), "runtime scores are different(2)")
 
-    def test_decision_function(self):
-        # create some data
-
-        X, Y = make_classification()
-        # put into Omega
+    def test_gridsearch(self):
+        X, y = make_classification()
+        logreg = LogisticRegression()
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
-        # create a model locally, fit it, store in Omega
-        lr = LogisticRegression()
-        lr.fit(X, Y)
-        scores = lr.decision_function(X)
-        om.models.put(lr, 'mymodel')
-        self.assertIn('mymodel', om.models.list('*'))
-        # have Omega predict it
-        # -- using data already in Omega
-        result = om.runtime.model('mymodel').decision_function('datax')
-        scores1 = result.get()
-        # -- using data provided locally
-        #    note this is the same as
-        #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('mymodel').predict('foo')
-        result = om.runtime.model('mymodel').decision_function(X)
-        scores2 = result.get()
-        self.assertTrue(
-            (scores == scores1).all(), "runtime scores are different(1)")
-        self.assertTrue(
-            (scores == scores2).all(), "runtime scores are different(2)")
+        om.models.put(logreg, 'logreg')
+        params = {
+            'C': [0.1, 0.5, 1.0]
+        }
+        # gridsearch on runtime
+        om.runtime.model('logreg').gridsearch(X, y, parameters=params)
+        meta = om.models.metadata('logreg')
+        # check gridsearch was saved
+        self.assertIn('gridsearch', meta.attributes)
+        self.assertEqual(len(meta.attributes['gridsearch']), 1)
+        self.assertIn('gsModel', meta.attributes['gridsearch'][0])
+        # check we can get back the gridsearch model
+        gs_model = om.models.get(meta.attributes['gridsearch'][0]['gsModel'])
+        self.assertIsInstance(gs_model, GridSearchCV)
+
+

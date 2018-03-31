@@ -46,6 +46,7 @@ OMEGA_STORE_MIXINS = [
 #: runtime mixins
 OMEGA_RUNTIME_MIXINS = [
     load_class('omegaml.runtime.mixins.ModelMixin'),
+    load_class('omegaml.runtime.mixins.GridSearchMixin'),
 ]
 
 #: the omegaweb url
@@ -97,7 +98,7 @@ def update_from_obj(obj):
             setattr(obj, k, value)
 
 # -- test
-if any(m in sys.argv for m in ('unittest', 'test')):
+if any(m in ' '.join(sys.argv) for m in ('unittest', 'test', 'nosetest', 'noserunner')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
     OMEGA_RESTAPI_URL = ''
