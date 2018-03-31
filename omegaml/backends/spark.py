@@ -1,5 +1,3 @@
-
-
 from __future__ import absolute_import
 from omegaml.backends.basemodel import BaseModelBackend
 from mongoengine.fields import GridFSProxy
@@ -13,9 +11,9 @@ class SparkBackend(BaseModelBackend):
 
     def __init__(self, model_store=None, data_store=None, **kwargs):
         self.SPARK_MLLIB_TRAINERS = {
-            'pyspark.mllib.clustering.KMeans': 'train_kmeans',
+            'pyspark.mllib.clustering.KMeans': 'train_unsupervised',
             'pyspark.mllib.classification.LogisticRegressionWithLBFGS':
-            'train_logisticregressionwithlbfgs',
+                'train_supervised',
         }
         # FIXME adapt to model_store and data_store attributes
         self.model_store = model_store
@@ -128,14 +126,14 @@ class SparkBackend(BaseModelBackend):
         result = model.predict(spark_df.rdd.map(list))
         temp_name = rName if rName else '%s_%s' % (Xname, uuid4().hex)
         meta = self.data_store.put(
-            result.map(lambda x: (x, )).toDF().toPandas(), temp_name)
+            result.map(lambda x: (x,)).toDF().toPandas(), temp_name)
         sc.stop()
         result = self.data_store.get(temp_name)
         if rName:
             result = meta
         return result
 
-    def train_kmeans(self, model, rdd, params):
+    def train_unsupervised(self, model, rdd, params):
         """
         Trains a model using KMeans
         """
@@ -147,11 +145,12 @@ class SparkBackend(BaseModelBackend):
         except Exception as e:
             from warnings import warn
             warn("Please make sure necessary parameters are provided!")
-            warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
+            warn(
+                "Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
             raise e
         return result
 
-    def train_logisticregressionwithlbfgs(self, model, rdd, params):
+    def train_supervised(self, model, rdd, params):
         """
         Trains a model using logistic regression
         """
@@ -165,6 +164,7 @@ class SparkBackend(BaseModelBackend):
         except Exception as e:
             from warnings import warn
             warn("Please make sure necessary parameters are provided!")
-            warn("Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
+            warn(
+                "Consult http://spark.apache.org/docs/latest/api/python/pyspark.mllib.html for more information on parameters!")
             raise e
         return result

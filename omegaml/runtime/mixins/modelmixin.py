@@ -7,11 +7,11 @@ import six
 
 from omegaml.util import is_dataframe, settings, is_ndarray
 from omegacommon.util import extend_instance
+
 logger = logging.getLogger(__file__)
 
 
 class ModelMixin(object):
-
     def fit(self, Xname, Yname=None, **kwargs):
         """
         fit the model
@@ -160,6 +160,24 @@ class ModelMixin(object):
                                  auth=self.runtime.auth_tuple,
                                  pure_python=self.pure_python, **kwargs)
 
+    def decision_function(self, Xname, rName=None, **kwargs):
+        """
+        calculate score
+
+        Calls :code:`.decision_function(X, y, **kwargs)`. If rName is given the result is
+        stored as object rName
+
+        :param Xname: name of the X dataset
+        :param rName: name of the resulting dataset (optional)
+        :return: the data returned by .score, or the metadata of the rName
+           dataset if rName was given
+        """
+        omega_decision_function = self.runtime.task('omegaml.tasks.omega_decision_function')
+        Xname = self._ensure_data_is_stored(Xname)
+        return omega_decision_function.delay(self.modelname, Xname, rName=rName,
+                                             auth=self.runtime.auth_tuple,
+                                             pure_python=self.pure_python, **kwargs)
+
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
         if is_dataframe(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
@@ -176,5 +194,3 @@ class ModelMixin(object):
             raise TypeError(
                 'invalid type for Xpath_or_data', type(name_or_data))
         return name
-
-    

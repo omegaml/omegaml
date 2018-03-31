@@ -28,7 +28,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
-            'task': 'omegaml.tasks.execute_scripts',
+            'task': 'omegajobs.tasks.execute_scripts',
             'schedule': 60,
         },
     },

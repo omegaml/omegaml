@@ -16,11 +16,10 @@ from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
-
     """
     ModelResource implements the REST API to omegaml.models
     """
-    
+
     datax = CharField(attribute='datax', blank=True, null=True,
                       help_text='The name of X dataset')
     """ the name of the X dataset
@@ -56,7 +55,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
            created => date of creation }
 
     """
-    
+
     pipeline = ListField(attribute='model', blank=True,
                          null=True, help_text='List of pipeline steps')
     """
@@ -192,6 +191,32 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         return self.create_response(request, data)
 
     @cqrsapi(allowed_methods=['get'])
+    def decision_function(self, request, *args, **kwargs):
+        """
+        call the decision function of a model
+
+        HTTP GET :code:`/model/<name>/score/?datax=dataset-name&datay=dataset-name`
+
+        where
+
+        * :code:`datax` is the name of the features test dataset
+        """
+        om = self.get_omega(request)
+        name = kwargs.get('pk')
+        query = request.GET
+        datax = query.get('datax')
+        try:
+            result = om.runtime.model(name).decision_function(datax)
+            result_data = result.get()
+        except NotFittedError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        data = {
+            'datax': datax,
+            'result': [result_data]
+        }
+        return self.create_response(request, data)
+
+    @cqrsapi(allowed_methods=['get'])
     def transform(self, request, *args, **kwargs):
         """
         transform a model
@@ -250,12 +275,12 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         om = self.get_omega(request)
         objs = [{
-                'model': {
-                    'name': meta.name,
-                    'kind': meta.kind,
-                    'created': '{}'.format(meta.created),
-                    'bucket': meta.bucket,
-                }
+                    'model': {
+                        'name': meta.name,
+                        'kind': meta.kind,
+                        'created': '{}'.format(meta.created),
+                        'bucket': meta.bucket,
+                    }
                 } for meta in om.models.list(raw=True)
                 ]
         data = {
