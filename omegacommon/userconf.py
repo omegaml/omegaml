@@ -35,17 +35,21 @@ def get_user_config_from_api(api_auth, api_url=None):
 
 
 @cached(seconds=3600)
-def get_omega_from_apikey(userid, apikey, api_url=None):
+def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None):
     """
     setup an Omega instance from userid and apikey
 
     :param userid: the userid
     :param apikey: the apikey
-    :param aip_url: the api URL
+    :param api_url: the api URL
+    :param requested_userid: the userid to request config for. in this case userid
+      and apikey must for a staff user for the request to succeed
     :returns: the Omega instance configured for the given user
     """
     from omegaml import Omega, defaults
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
+    if requested_userid:
+        api_url += '?user={}'.format(requested_userid)
     if api_url.startswith('http') or 'test' in sys.argv:
         api_auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(api_auth, api_url=api_url)

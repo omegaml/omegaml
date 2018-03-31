@@ -33,6 +33,9 @@ class OmegaRuntime(object):
         self.celeryapp.conf.update(celeryconf)
         self.celeryapp.finalize()
 
+    def __repr__(self):
+        return 'OmegaRuntime({}, auth={})'.format(self.omega.__repr__(), self.auth.__repr__())
+
     def model(self, modelname):
         """
         return a model for remote execution

@@ -2,11 +2,12 @@ from __future__ import absolute_import
 
 import logging
 
-from omegaml.documents import Metadata
+import sys
+
 from omegaml.jobs import OmegaJobs
 from omegaml.runtime import OmegaRuntime
 from omegaml.store import OmegaStore
-from omegaml.util import is_dataframe, settings, is_ndarray
+from omegaml.util import load_class
 
 logger = logging.getLogger(__file__)
 
@@ -41,7 +42,11 @@ class Omega(object):
         :param celeryconf: the celery configuration dictionary
         :param celerykwargs: kwargs to create the Celery instance
         """
+        from omegaml.documents import Metadata
+        from omegaml.util import settings
+
         self.defaults = settings()
+        self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
@@ -53,34 +58,51 @@ class Omega(object):
                                     celerykwargs=None)
         self.jobs = OmegaJobs(store=self._jobdata)
 
+    def __repr__(self):
+        return 'Omega(mongo_url={})'.format(self.mongo_url)
+
 
 class OmegaDeferredInstance():
     """
     A deferred instance of Omega() that is only instantiated on access
 
     This is to ensure that module-level imports don't trigger instantiation
-    of Omega. 
+    of Omega.
     """
 
     def __init__(self, base=None, attribute=None):
-        self.omega = None
+        self.omega = 'not initialized -- call .setup() or access an attribute'
+        self.initialized = False
         self.base = base
         self.attribute = attribute
+
+    def setup(self):
+        if not self.initialized:
+            self.omega = Omega()
+            self.initialized = True
+        return self
 
     def __getattr__(self, name):
         if self.base:
             base = getattr(self.base, self.attribute)
             return getattr(base, name)
-        if self.omega is None:
-            self.omega = Omega()
+        self.setup()
         return getattr(self.omega, name)
 
+def __repr__():
+    return getattr(_om, 'omega').__repr__()
+
+def repr():
+    return __repr__()
+
+def setup():
+    return _om.setup().omega
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance
 #    is only created on actual attribute access
 _om = OmegaDeferredInstance()
-#: the OmegaStore for data
+
 datasets = OmegaDeferredInstance(_om, 'datasets')
 #: the OmegaStore for models
 models = OmegaDeferredInstance(_om, 'models')
@@ -88,3 +110,4 @@ models = OmegaDeferredInstance(_om, 'models')
 jobs = OmegaDeferredInstance(_om, 'jobs')
 #: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')
+

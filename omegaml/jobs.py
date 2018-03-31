@@ -36,6 +36,9 @@ class OmegaJobs(object):
         self.store = store or OmegaStore(prefix=prefix)
         self.kind = Metadata.OMEGAML_JOBS
 
+    def __repr__(self):
+        return 'OmegaJobs(store={})'.format(self.store.__repr__())
+
     @property
     def _db(self):
         return self.store.mongodb
