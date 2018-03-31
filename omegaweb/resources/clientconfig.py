@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from tastypie.fields import DictField
 from tastypie.resources import Resource
 from tastypie.authentication import ApiKeyAuthentication
@@ -17,7 +18,14 @@ class ClientConfigResource(Resource):
         """
         get the configuration
         """
-        config = get_client_config(bundle.request.user)
+        # by default return current user's config
+        requested_user = bundle.request.user
+        # allow admin users to request some other user's config
+        if bundle.request.user.is_superuser:
+            username = bundle.request.GET.get('user')
+            if username:
+                requested_user = User.objects.get(username=username)
+        config = get_client_config(requested_user)
         bundle.data = config or {}
         bundle.pk = config.get('user')
         return [bundle]
