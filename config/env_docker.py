@@ -8,7 +8,6 @@ from .env_local import EnvSettings_Local
 
 class EnvSettings_docker(Config_Dokku,
                          Config_ApiKeys,
-                         Config_DjangoWhitenoise,
                          EnvSettings_Local):
     # must match docker-compose configuration
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']

@@ -7,7 +7,7 @@
     $(function() {
        require(['backbone'], function($B) {
            $B.Tastypie.apiKey.username = "{{request.user}}";
-           $B.Tastypie.apiKey.password = '{{request.user.api_key.key}}';
+           $B.Tastypie.apiKey.key = '{{request.user.api_key.key}}';
        });
     });
 </script>

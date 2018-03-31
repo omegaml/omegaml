@@ -10,13 +10,15 @@ from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
 from stackable.contrib.config.conf_sekizai import Config_DjangoSekizai
+from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 from stackable.contrib.config.email.filebased import Config_FileEmail
 from stackable.stackable import StackableSettings
 
 from config.env_global import EnvSettingsGlobal
 
 
-class EnvSettings_Local(Config_DjangoNoseTests,
+class EnvSettings_Local(Config_DjangoWhitenoise,
+                        Config_DjangoNoseTests,
                         Config_DjangoSekizai,
                         Config_Bootstrap3,
                         Config_DjangoPayments,
@@ -67,5 +69,7 @@ class EnvSettings_Local(Config_DjangoNoseTests,
     DEBUG = True
 
     ALLOWED_HOSTS = ['localhost', 'testserver']
+
+    STATICFILES_STORAGE = 'omegaweb.util.FailsafeCompressedManifestStaticFilesStorage'
 
 

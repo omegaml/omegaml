@@ -19,14 +19,31 @@ class UserSignupTests(TestCase):
         check that a new user sign up will create a new omegaml deployment
         """
         data = {
-            'email': 'testing@shrebo.com',
+            'email': 'testing@omegaml.io',
             'first_name': 'John',
             'last_name': 'Doe',
             'password1': 'CrazyHorse'
         }
         resp = self.client.post('/accounts/signup/', data)
-        user = User.objects.get(email='testing@shrebo.com')
-        self.assertEqual(user.username, 'testing')
+        user = User.objects.get(email=data['email'])
+        self.assertEqual(user.username, data['email'].split('@')[0])
+        service = user.services.first()
+        self.assertEqual(service.offering.name, 'omegaml')
+        self.assertIn('dbname', service.settings)
+
+    def test_usersignup_complex(self):
+        """
+        check that a new user sign up with dot in email will create a new omegaml deployment
+        """
+        data = {
+            'email': 'testing.user@omegaml.io',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password1': 'CrazyHorse'
+        }
+        resp = self.client.post('/accounts/signup/', data)
+        user = User.objects.get(email=data['email'])
+        self.assertEqual(user.username, data['email'].split('@')[0])
         service = user.services.first()
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('dbname', service.settings)

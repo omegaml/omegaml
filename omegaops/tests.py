@@ -12,8 +12,8 @@ class OmegaOpsTest(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.username = username = 'test@omegaml.io'
-        self.email = email = 'test@omegaml.io'
+        self.username = username = 'testuser@omegaml.io'
+        self.email = email = 'testuser@omegaml.io'
         self.password = password = 'password'
         self.user = User.objects.create_user(username, email, password)
 
@@ -67,3 +67,4 @@ class OmegaOpsTest(TestCase):
         self.assertEqual(plan, 'omegaml')
         service_config = service.settings
         self.assertDictEqual(service_config, config)
+

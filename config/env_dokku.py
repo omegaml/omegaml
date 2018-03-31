@@ -7,7 +7,6 @@ from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 
 class EnvSettings_dokku(Config_Dokku,
                         Config_ApiKeys,
-                        Config_DjangoWhitenoise,
                         EnvSettings_Local):
     ALLOWED_HOSTS = ['omegaml.dokku.me', 'localhost']
 
