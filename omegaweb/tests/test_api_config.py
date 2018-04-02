@@ -85,5 +85,5 @@ class ClientConfigResourceTests(ResourceTestCase):
         self.assertIn('objects', data)
         service_config = data['objects'][0]['data']
         # get expected config from omegaops and compare
-        actual_config = get_client_config(self.admin_user)
+        actual_config = get_client_config(self.user)
         self.assertDictEqual(service_config, actual_config)

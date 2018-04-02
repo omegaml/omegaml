@@ -64,7 +64,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None):
         raise ValueError('invalid api_url {}'.format(api_url))
     defaults.update_from_dict(config)
     settings(reload=True)
-    om = Omega()
+    om = Omega(defaults=defaults)
     return om
 
 
@@ -75,7 +75,7 @@ def get_omega_from_config(configfile):
         config = yaml.load(fconfig)
     defaults.update_from_dict(config)
     settings(reload=True)
-    om = Omega()
+    om = Omega(defaults=defaults)
     return om
 
 

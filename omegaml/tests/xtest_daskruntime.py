@@ -63,7 +63,6 @@ class DaskRuntimeTests(TestCase):
         self.assertIn('amodel', om.models.list('*'))
         # have Omega predict it
         # -- using data already in Omega
-        import pdb; pdb.set_trace()
         result = om.runtime.model('amodel').predict('datax')
         pred1 = result.get()
         # -- using data provided locally

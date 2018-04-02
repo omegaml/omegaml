@@ -25,7 +25,7 @@ class Omega(object):
     """
 
     def __init__(self, mongo_url=None, backend=None, broker=None,
-                 celeryconf=None, celerykwargs=None, auth=None):
+                 celeryconf=None, celerykwargs=None, auth=None, defaults=None):
         """
         Initialize the client API
 
@@ -44,17 +44,17 @@ class Omega(object):
         from omegaml.documents import Metadata
         from omegaml.util import settings
 
-        self.defaults = settings()
+        self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.broker = broker or self.defaults.OMEGA_BROKER
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
-        self.models = OmegaStore(mongo_url=mongo_url, prefix='models/')
-        self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/')
-        self._jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobs/')
+        self.models = OmegaStore(mongo_url=mongo_url, prefix='models/', defaults=self.defaults)
+        self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/', defaults=self.defaults)
+        self._jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobs/', defaults=self.defaults)
         self.runtime = OmegaRuntime(self, backend=backend,
                                     auth=auth,
                                     broker=broker, celeryconf=celeryconf,
-                                    celerykwargs=None)
+                                    celerykwargs=None, defaults=self.defaults)
         self.jobs = OmegaJobs(store=self._jobdata)
 
     def __repr__(self):

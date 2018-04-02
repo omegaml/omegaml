@@ -30,8 +30,8 @@ class OmegaJobs(object):
 
     # TODO this class should be a proper backend class
 
-    def __init__(self, prefix=None, store=None):
-        self.defaults = omega_settings()
+    def __init__(self, prefix=None, store=None, defaults=None):
+        self.defaults = defaults or omega_settings()
         prefix = prefix or 'jobs'
         self.store = store or OmegaStore(prefix=prefix)
         self.kind = Metadata.OMEGAML_JOBS

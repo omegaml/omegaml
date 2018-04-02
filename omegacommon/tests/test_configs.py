@@ -68,6 +68,7 @@ class ConfigurationTests(TestCase):
                     }
                 ]
             }
+            get_omega_from_apikey.data = {}
             om = get_omega_from_apikey('foo', 'bar')
             self.assertEqual(om.datasets.mongo_url, 'updated-foo')
 

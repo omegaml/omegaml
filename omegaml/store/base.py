@@ -102,14 +102,14 @@ class OmegaStore(object):
     The storage backend for models and data
     """
 
-    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None):
+    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None, defaults=None):
         """
         :param mongo_url: the mongourl to use for the gridfs
         :param bucket: the mongo collection to use for gridfs
         :param prefix: the path prefix for files. defaults to blank
         :param kind: the kind or list of kinds to limit this store to 
         """
-        self.defaults = omega_settings()
+        self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         self._fs = None

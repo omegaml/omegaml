@@ -8,7 +8,7 @@ from pymongo.mongo_client import MongoClient
 from omegajobs.hubapi import JupyterHub
 
 
-def add_user(username, password):
+def add_user(username, password, dbname=None):
     """
     add a user to omegaml giving readWrite access rights
 
@@ -16,7 +16,7 @@ def add_user(username, password):
     """
     from omegaml import defaults
 
-    dbname = hashlib.md5(username.encode('utf-8')).hexdigest()
+    dbname = dbname or hashlib.md5(username.encode('utf-8')).hexdigest()
     add_userdb(dbname, username, password)
     nb_url = add_usernotebook(username, password)
     config = {
