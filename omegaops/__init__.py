@@ -5,7 +5,7 @@ from django.conf import settings
 from landingpage.models import ServicePlan
 from pymongo.mongo_client import MongoClient
 
-from omegajobs.hubapi import JupyterHub
+
 
 
 def add_user(username, password, dbname=None):
@@ -33,6 +33,7 @@ def add_usernotebook(username, password):
     Add a user on jupyterhub
     """
     from omegaml.util import settings as om_settings
+    from omegajobs.hubapi import JupyterHub
     defaults = om_settings()
     hub_user = defaults.OMEGA_JYHUB_USER
     hub_token = defaults.OMEGA_JYHUB_TOKEN
@@ -122,6 +123,7 @@ def stop_usernotebook(username):
     :return:
     """
     from omegaml.util import settings as om_settings
+    from omegajobs.hubapi import JupyterHub
     defaults = om_settings()
     hub_user = defaults.OMEGA_JYHUB_USER
     hub_token = defaults.OMEGA_JYHUB_TOKEN
@@ -138,6 +140,7 @@ def start_usernotebook(username):
     :return:
     """
     from omegaml.util import settings as om_settings
+    from omegajobs.hubapi import JupyterHub
     defaults = om_settings()
     hub_user = defaults.OMEGA_JYHUB_USER
     hub_token = defaults.OMEGA_JYHUB_TOKEN
