@@ -1,18 +1,49 @@
-import json
-from landingpage.models import ServiceDeployment, ServicePlan
-import os
+import hashlib
 
 from constance import config
 from django.conf import settings
+from landingpage.models import ServicePlan
 from pymongo.mongo_client import MongoClient
 
+from omegajobs.hubapi import JupyterHub
 
-def add_user(dbname, username, password):
+
+def add_user(username, password):
     """
     add a user to omegaml giving readWrite access rights
 
     only this user will have access r/w rights to the database.
     """
+    from omegaml import defaults
+
+    dbname = hashlib.md5(username.encode('utf-8')).hexdigest()
+    add_userdb(dbname, username, password)
+    nb_url = add_usernotebook(username, password)
+    config = {
+        'dbname': dbname,
+        'user': username,
+        'password': password,
+        'notebook_url': nb_url,
+    }
+    return config
+
+
+def add_usernotebook(username, password):
+    """
+    Add a user on jupyterhub
+    """
+    from omegaml.util import settings as om_settings
+    defaults = om_settings()
+    hub_user = defaults.OMEGA_JYHUB_USER
+    hub_token = defaults.OMEGA_JYHUB_TOKEN
+    hub_url = defaults.OMEGA_JYHUB_URL
+    hub = JupyterHub(hub_user, hub_token, hub_url)
+    hub.create_user(username)
+    nb_url = hub.notebook_url(username)
+    return nb_url
+
+
+def add_userdb(dbname, username, password):
     roles = [{
         'role': 'readWrite',
         'db': dbname,
@@ -42,6 +73,7 @@ def add_service_deployment(user, config):
     plan = ServicePlan.objects.get(name='omegaml')
     text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
         **locals())
+    user.services.all().delete()
     user.services.create(user=user,
                          text=text,
                          offering=plan,
@@ -80,3 +112,35 @@ def get_client_config(user):
     if config.CELERY_ALWAYS_EAGER:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
     return client_config
+
+
+def stop_usernotebook(username):
+    """
+    Stop a user's notebook
+
+    :param username: the username
+    :return:
+    """
+    from omegaml.util import settings as om_settings
+    defaults = om_settings()
+    hub_user = defaults.OMEGA_JYHUB_USER
+    hub_token = defaults.OMEGA_JYHUB_TOKEN
+    hub_url = defaults.OMEGA_JYHUB_URL
+    hub = JupyterHub(hub_user, hub_token, hub_url)
+    hub.stop_notebook(username)
+
+
+def start_usernotebook(username):
+    """
+    Start a user's notebook
+
+    :param username: the username
+    :return:
+    """
+    from omegaml.util import settings as om_settings
+    defaults = om_settings()
+    hub_user = defaults.OMEGA_JYHUB_USER
+    hub_token = defaults.OMEGA_JYHUB_TOKEN
+    hub_url = defaults.OMEGA_JYHUB_URL
+    hub = JupyterHub(hub_user, hub_token, hub_url)
+    hub.start_notebook(username)

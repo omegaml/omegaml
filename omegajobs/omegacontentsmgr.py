@@ -8,7 +8,6 @@ from tornado import web
 from omegacommon.userconf import get_omega_from_apikey
 from omegajobs.omegacheckpoints import OmegaStoreContentsCheckpoints
 
-
 class OmegaStoreContentsManager(ContentsManager):
     """
     Jupyter notebook storage manager for omegaml
@@ -31,8 +30,9 @@ class OmegaStoreContentsManager(ContentsManager):
         return the omega instance used by the contents manager
         """
         if self._omega is None:
-            userid = os.environ.get('USER')
-            apikey = os.environ.get('OMEGA_ADMIN_APIKEY')
+            # if started from jupyter hub environ will be set
+            userid = os.environ.get('JUPYTERHUB_USER')
+            apikey = os.environ.get('OMEGA_APIKEY')
             if userid and apikey:
                 self._omega = get_omega_from_apikey(userid, apikey)
             else:

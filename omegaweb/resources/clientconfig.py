@@ -21,9 +21,9 @@ class ClientConfigResource(Resource):
         # by default return current user's config
         requested_user = bundle.request.user
         # allow admin users to request some other user's config
-        if bundle.request.user.is_superuser:
-            username = bundle.request.GET.get('user')
-            if username:
+        if bundle.request.user.is_staff:
+            if 'user' in bundle.request.GET:
+                username = bundle.request.GET.get('user')
                 requested_user = User.objects.get(username=username)
         config = get_client_config(requested_user)
         bundle.data = config or {}

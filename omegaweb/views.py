@@ -1,3 +1,4 @@
+from django.conf import settings
 from six.moves import urllib
 
 from django.contrib.auth.decorators import login_required
@@ -12,6 +13,7 @@ def dashboard(request):
     datasets = om.datasets.list()
     context = {
         'datasets': datasets,
+        'nbhost': settings.OMEGA_JYHUB_URL,
     }
     return render(request, 'omegaweb/dashboard.html', context)
 

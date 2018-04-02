@@ -5,6 +5,10 @@ from .util import load_class
 import six
 import yaml
 
+user_homedir = os.path.expanduser('~')
+
+#: configuration file, defaults to $HOME/.omegaml/config.yml
+OMEGA_CONFIG_FILE = os.path.join(user_homedir, '.omegaml', 'config.yml')
 #: the temp directory used by omegaml processes
 OMEGA_TMP = '/tmp'
 #: the fully qualified mongodb database URL, including the database name
@@ -51,24 +55,44 @@ OMEGA_RUNTIME_MIXINS = [
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
-                     'http://omegaml.dokku.me/')
+                     'http://localhost:8002')
 #: omega user id
 OMEGA_USERID = None
 #: omega apikey
 OMEGA_APIKEY = None
 
+#: jupyterhub admin user (equals omegajobs.jupyter_config:c.JupyterHub.api_tokens)
+OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
+#: jupyterhub admin token (equals omegajobs.jupyter_config:c.JupyterHub.api_tokens)
+OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
+#: jupyterhub url (port equals omegajobs.jupyter_config:c.JupyterHub.hub_port)
+OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://localhost:8000')
+#: omegaweb's API key user by JYHUB user to get another users config. Use omsetupuser to retrieve this key
+OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'ce61e621210c31b38009cae223449672019975b4')
 
-def update_from_config(vars=vars):
+def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
+    """
+    update omegaml.defaults from configuration file
+
+    :param vars: the variables to update
+    :param config_file: the path to config.yml or a file object
+    :return:
+    """
     # override from configuration file
-    if os.path.exists(config_file):
-        with open(config_file, 'r') as fin:
-            userconfig = yaml.load(fin)
-        if userconfig:
-            for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
-                vars[k] = userconfig.get(k, None) or vars[k]
+    userconfig = {}
+    if isinstance(config_file, six.string_types):
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as fin:
+                userconfig = yaml.load(fin)
+    else:
+        userconfig = yaml.load(config_file)
+    if userconfig:
+        for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
+            vars[k] = userconfig.get(k, None) or vars[k]
+    return vars
 
 
-def update_from_env(vars=vars):
+def update_from_env(vars=globals()):
     # simple override from env vars
     # -- top-level OMEGA_*
     for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
@@ -82,9 +106,10 @@ def update_from_env(vars=vars):
         from pprint import pprint
         vars = {k: v for k, v in six.iteritems(vars) if k.startswith('OMEGA')}
         pprint(vars)
+    return vars
 
 
-def update_from_obj(obj):
+def update_from_obj(obj, vars=globals()):
     """
     helper function to update omegaml.defaults from arbitrary module
 
@@ -95,7 +120,21 @@ def update_from_obj(obj):
     for k in [k for k in globals() if k.startswith('OMEGA')]:
         if hasattr(obj, k):
             value = getattr(obj, k)
-            setattr(obj, k, value)
+            vars[k] = value
+
+
+def update_from_dict(d, vars=globals()):
+    """
+    helper function to update omegaml.defaults from arbitrary dictionary
+
+    :param d: the source dict (must support [] lookup). Any
+       variable starting with OMEGA is set in omegaml.defaults, provided
+       it exists there already.
+    """
+    for k, v in six.iteritems(d):
+        if k.startswith('OMEGA'):
+            vars[k] = v
+
 
 # -- test
 if any(m in ' '.join(sys.argv) for m in ('unittest', 'test', 'nosetest', 'noserunner')):
@@ -105,7 +144,5 @@ if any(m in ' '.join(sys.argv) for m in ('unittest', 'test', 'nosetest', 'noseru
 else:
     # overrides in actual operations
     # this is to avoid using production settings during test
-    user_homedir = os.path.expanduser('~')
-    config_file = os.path.join(user_homedir, '.omegaml', 'config.yml')
     update_from_config(globals())
     update_from_env(globals())

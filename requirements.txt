@@ -2,3 +2,4 @@
 -r pip-requirements.txt
 
 django-nose==1.4.5
+jupyterhub-simplespawner==0.1

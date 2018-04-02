@@ -2,12 +2,11 @@ from __future__ import absolute_import
 
 import logging
 
-import sys
-
+from omegacommon.userconf import get_omega_from_apikey
 from omegaml.jobs import OmegaJobs
 from omegaml.runtime import OmegaRuntime
 from omegaml.store import OmegaStore
-from omegaml.util import load_class
+from omegaml.util import load_class, settings
 
 logger = logging.getLogger(__file__)
 
@@ -76,10 +75,13 @@ class OmegaDeferredInstance():
         self.base = base
         self.attribute = attribute
 
-    def setup(self):
-        if not self.initialized:
-            self.omega = Omega()
+    def setup(self, username=None, apikey=None, api_url=None):
+        settings()
+        if not self.initialized and username and apikey:
+            self.omega = get_omega_from_apikey(username, apikey, api_url=api_url)
             self.initialized = True
+        else:
+            self.omega = Omega()
         return self
 
     def __getattr__(self, name):
@@ -95,8 +97,8 @@ def __repr__():
 def repr():
     return __repr__()
 
-def setup():
-    return _om.setup().omega
+def setup(username=None, apikey=None, api_url=None):
+    return _om.setup(username=username, apikey=apikey, api_url=api_url).omega
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance

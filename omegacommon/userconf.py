@@ -1,21 +1,26 @@
 import sys
 
+import yaml
+
 from omegacommon.auth import OmegaRuntimeAuthentication, OmegaRestApiAuth
 from omegacommon.util import cached
 
 
-def get_user_config_from_api(api_auth, api_url=None):
+def get_user_config_from_api(api_auth, api_url=None, requested_userid=None):
     from omegaml import defaults
     # safe way to talk to either the remote API or the in-process test server
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
-    api_url += '/api/v1/config/'.replace('//', '/')
+    api_url += '/api/v1/config/'
+    api_url = api_url.replace('//api', '/api')
+    if requested_userid:
+        api_url += '?user={}'.format(requested_userid)
     # -- setup appropriate client API
     if defaults.OMEGA_RESTAPI_URL.startswith('http'):
         import requests
         server = requests
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()
-    elif 'test' in sys.argv:
+    elif any('test' in v for v in sys.argv):
         # test support
         import json
         from tastypie.test import TestApiClient
@@ -26,8 +31,8 @@ def get_user_config_from_api(api_auth, api_url=None):
         raise ValueError('invalid api_url {}'.format(api_url))
     # -- actual logic to get configs
     fail_msg = ("Not authenticated using userid {api_auth.username}"
-                " apikey {api_auth.apikey}, error was {resp.status_code}, "
-                "{resp.content}")
+                " apikey {api_auth.apikey}, error was {resp.status_code} "
+                "using {api_url}\n{resp.content}")
     resp = server.get(api_url, **server_kwargs)
     assert resp.status_code == 200, fail_msg.format(**locals())
     configs = deserialize(resp)
@@ -47,17 +52,40 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None):
     :returns: the Omega instance configured for the given user
     """
     from omegaml import Omega, defaults
+    from omegaml.util import settings
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
-    if requested_userid:
-        api_url += '?user={}'.format(requested_userid)
-    if api_url.startswith('http') or 'test' in sys.argv:
+    if api_url.startswith('http') or any('test' in v for v in sys.argv):
         api_auth = OmegaRestApiAuth(userid, apikey)
-        configs = get_user_config_from_api(api_auth, api_url=api_url)
+        configs = get_user_config_from_api(api_auth, api_url=api_url, requested_userid=requested_userid)
         config = configs['objects'][0]['data']
     elif api_url == 'local':
         config = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
         raise ValueError('invalid api_url {}'.format(api_url))
-    mongo_url = config['OMEGA_MONGO_URL']
-    om = Omega(mongo_url=mongo_url)
+    defaults.update_from_dict(config)
+    settings(reload=True)
+    om = Omega()
     return om
+
+
+def get_omega_from_config(configfile):
+    from omegaml import Omega, defaults
+    from omegaml.util import settings
+    with open(configfile, 'r') as fconfig:
+        config = yaml.load(fconfig)
+    defaults.update_from_dict(config)
+    settings(reload=True)
+    om = Omega()
+    return om
+
+
+def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None):
+    from omegaml import defaults
+    api_url = api_url or defaults.OMEGA_RESTAPI_URL
+    with open(configfile, 'w') as fconfig:
+        auth = OmegaRestApiAuth(userid, apikey)
+        configs = get_user_config_from_api(auth, api_url=api_url, requested_userid=requested_userid)
+        config = configs['objects'][0]['data']
+        config['OMEGA_USERID'] = requested_userid or userid
+        yaml.safe_dump(config, fconfig, default_flow_style=False)
+        print("Config is in {defaults.OMEGA_CONFIG_FILE}".format(**locals()))

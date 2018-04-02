@@ -126,7 +126,7 @@ class OmegaStore(object):
         self.register_backends()
 
     def __repr__(self):
-        return 'OmegaStore(mongo_url={})'.format(self.mongo_url)
+        return 'OmegaStore(mongo_url={}, bucket={}, prefix={})'.format(self.mongo_url, self.bucket, self.prefix)
 
     @property
     def mongodb(self):
@@ -869,7 +869,7 @@ class OmegaStore(object):
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def list(self, pattern=None, regexp=None, kind=None, raw=False,
-             include_temp=False):
+             include_temp=False, bucket=None, prefix=None):
         """
         List all files in store
 
@@ -883,8 +883,8 @@ class OmegaStore(object):
 
         """
         db = self.mongodb
-        searchkeys = dict(bucket=self.bucket,
-                          prefix=self.prefix)
+        searchkeys = dict(bucket=bucket or self.bucket,
+                          prefix=prefix or self.prefix)
         if kind or self.force_kind:
             kind = kind or self.force_kind
             if isinstance(kind, (tuple, list)):

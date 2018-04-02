@@ -58,11 +58,11 @@ def is_spark_mllib(obj):
     return False
 
 
-def settings():
+def settings(reload=False):
     """ wrapper to get omega settings from either django or omegamldefaults """
     import omegaml.defaults as omdefaults
     global __settings
-    if __settings is not None:
+    if not reload and __settings is not None:
         return __settings
     try:
         # see if we're running as a django app

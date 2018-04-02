@@ -1,15 +1,12 @@
-import json
-from landingpage.models import ServicePlan
-
 from django.contrib.auth.models import User
 from django.test.testcases import TestCase
+from landingpage.models import ServicePlan
 from pymongo.errors import PyMongoError, OperationFailure
 
-from omegaops import add_user, add_service_deployment
+from omegaops import add_service_deployment, add_userdb
 
 
 class OmegaOpsTest(TestCase):
-
     def setUp(self):
         TestCase.setUp(self)
         self.username = username = 'testuser@omegaml.io'
@@ -20,11 +17,11 @@ class OmegaOpsTest(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-    def test_adduser(self):
+    def test_adduserdb(self):
         dbname = 'testdbops'
         username = 'testuserops'
         password = 'foobar'
-        db, url = add_user(dbname, username, password)
+        db, url = add_userdb(dbname, username, password)
         self.assertIsNotNone(db)
         # check we can authenticate and insert
         db.logout()
@@ -39,7 +36,7 @@ class OmegaOpsTest(TestCase):
         dbname2 = 'testdbops2'
         username2 = 'testuserops2'
         password2 = 'foobar2'
-        db2, url = add_user(dbname2, username2, password2)
+        db2, url = add_userdb(dbname2, username2, password2)
         with self.assertRaises(PyMongoError) as ex:
             db.logout()
             db.authenticate(username2, password2, source='admin')
@@ -67,4 +64,3 @@ class OmegaOpsTest(TestCase):
         self.assertEqual(plan, 'omegaml')
         service_config = service.settings
         self.assertDictEqual(service_config, config)
-

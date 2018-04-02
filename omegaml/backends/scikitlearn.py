@@ -207,7 +207,7 @@ class ScikitLearnBackend(BaseModelBackend):
             result = meta
         return result
 
-	def decision_function(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def decision_function(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         result = model.decision_function(reshaped(X), **kwargs)
@@ -217,7 +217,6 @@ class ScikitLearnBackend(BaseModelBackend):
             meta = self.data_store.put(result, rName)
             result = meta
         return result
-
 
     def gridsearch(self, modelname, Xname, Yname, rName=None,
                    parameters=None, pure_python=True, **kwargs):
