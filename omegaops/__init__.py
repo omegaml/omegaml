@@ -18,7 +18,10 @@ def add_user(username, password, dbname=None):
 
     dbname = dbname or hashlib.md5(username.encode('utf-8')).hexdigest()
     add_userdb(dbname, username, password)
-    nb_url = add_usernotebook(username, password)
+    try:
+        nb_url = add_usernotebook(username, password)
+    except:
+        nb_url = 'jupyterhub is not supported'
     config = {
         'dbname': dbname,
         'user': username,

@@ -21,7 +21,9 @@ Once loaded :code:`om` provides 3 environments that are immediately usable:
 
 * :code:`om.datasets` - the omega|ml database for Python and Pandas objects
 * :code:`om.models` - the omega|ml database for models
-* :code:`om.runtime` - the omega|ml remote execution environment 
+* :code:`om.scripts` - the omega|ml database for custom modules (a.k.a. lambda modules)
+* :code:`om.runtime` - the omega|ml remote execution environment
+
 
 
 Loading omega|ml from python
@@ -29,7 +31,8 @@ Loading omega|ml from python
 
 .. code:: python
 
-   from omegacommon.userconf import get_omega_from_apikey
-   
-   om = get_omega_from_apikey(username, apikey, api_url=url)
+   import omegaml as om
+   om.setup(username, apikey, api_url=url)
+
+Typically, the URL will be set by your default configuration. 
     

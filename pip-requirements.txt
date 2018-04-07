@@ -28,3 +28,7 @@ dill==0.2.6
 utf8forgood==0.1.4
 nosexcover==1.0.11
 django-anymail[mailgun]==2.0
+django-nose==1.4.5
+jupyterhub; python_version > '3.2'
+jupyterhub-simplespawner==0.1
+mock==2.0.0

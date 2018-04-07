@@ -16,4 +16,5 @@ os.environ['DJANGO_SETTINGS_MODULE'] = ''
 app = Celery('omegaml')
 app.config_from_object(defaults.OMEGA_CELERY_CONFIG)
 app.autodiscover_tasks(['omegaml.tasks',
+                        'omegapkg.tasks',
                         'omegajobs.tasks'], related_name='tasks')

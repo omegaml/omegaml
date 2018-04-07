@@ -32,7 +32,7 @@ the specific backend implementation to handle this object type.
     # code snippet from OmegaStore 
     def get_backend(...):
       ...
-      backend_cls = self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind)
+      backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind))
       if backend_cls:
           backend = backend_cls(**kwargs)
           return backend

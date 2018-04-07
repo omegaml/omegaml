@@ -21,6 +21,7 @@ class Omega(object):
     * :code:`models` - access to models stored in the cluster
     * :code:`runtime` - access to the cluster compute resources
     * :code:`jobs` - access to jobs stored and executed in the cluster
+    * :code:`scripts` - access to lambda modules stored and executed in the cluster
 
     """
 
@@ -50,6 +51,7 @@ class Omega(object):
         self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
         self.models = OmegaStore(mongo_url=mongo_url, prefix='models/', defaults=self.defaults)
         self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/', defaults=self.defaults)
+        self.scripts = OmegaStore(mongo_url=mongo_url, prefix='scripts/', defaults=self.defaults)
         self._jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobs/', defaults=self.defaults)
         self.runtime = OmegaRuntime(self, backend=backend,
                                     auth=auth,
@@ -110,6 +112,8 @@ datasets = OmegaDeferredInstance(_om, 'datasets')
 models = OmegaDeferredInstance(_om, 'models')
 #: the jobs API
 jobs = OmegaDeferredInstance(_om, 'jobs')
+#: the OmegaStore for lambda scripts
+scripts = OmegaDeferredInstance(_om, 'scripts')
 #: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')
 
