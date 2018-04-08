@@ -237,6 +237,14 @@ fix:
 	find . -name "*rst" | xargs sed -i 's/import omega.ml as om/import omegaml as om/'
 	find . -name "*rst" | xargs sed -i "s/from omega.ml import /from omegaml import /"
 	
-    
+publish:
+	make clean html    
+	cd build/html && tar -czf /tmp/omegamldocs.tgz . 
+	git checkout gh-pages
+	cd ../ && find . -name "*pyc" | xargs rm
+	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "updates ghpages" 
+	echo "Done. Go back to your original branch"
+
+        
   
 	
