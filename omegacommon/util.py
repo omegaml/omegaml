@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import sys
 
@@ -31,6 +32,14 @@ class cached(object):
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
     # source https://stackoverflow.com/a/31075641
+    from omegaml import load_class
+    cls = load_class(cls)
     base_cls = obj.__class__
     base_cls_name = obj.__class__.__name__
     obj.__class__ = type(base_cls_name, (cls, base_cls),{})
+
+def mkdirs(path):
+    """ save os.makedirs for python 2 & 3
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)

@@ -9,6 +9,7 @@ User Guide
    store_retrieve
    filterdf
    modelstore
+   lambda
    restapi
    custombackends
    runtimes

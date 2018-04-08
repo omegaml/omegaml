@@ -148,6 +148,8 @@ def flatten_columns(col, sep='_'):
         return new_col
 
 
+CLASS_CACHE = {}
+
 def load_class(requested_class):
     """
     Check if requested_class is a string, if so attempt to load
@@ -155,10 +157,14 @@ def load_class(requested_class):
     """
     import importlib
     if isinstance(requested_class, six.string_types):
+        if requested_class in CLASS_CACHE:
+            return CLASS_CACHE.get(requested_class)
         module_name, class_name = requested_class.rsplit(".", 1)
         try:
             m = importlib.import_module(module_name)
-            return getattr(m, class_name)
+            cls = getattr(m, class_name)
+            CLASS_CACHE[requested_class] = cls
+            return cls
         except:
             logging.debug(
                 'could not load module %s for class %s' % (

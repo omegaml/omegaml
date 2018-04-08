@@ -7,7 +7,6 @@ from omegaml.util import settings
 
 
 class OmegaRuntime(object):
-
     """
     omegaml compute cluster gateway 
     """
@@ -21,12 +20,13 @@ class OmegaRuntime(object):
         self._auth = auth
         # initialize celery as a runtime
         # needed to get it to actually load the tasks (???)
-        from omegaml import tasks 
+        from omegaml import tasks
         from omegajobs import tasks
+        from omegapkg import tasks
         celerykwargs = celerykwargs or {}
         celerykwargs.update({'backend': self.backend,
                              'broker': self.broker,
-                             'include': ['omega.tasks', 'omegajobs.tasks']
+                             'include': ['omega.tasks', 'omegajobs.tasks', 'omegapkg.tasks']
                              })
         defaults = defaults or settings()
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
@@ -51,6 +51,13 @@ class OmegaRuntime(object):
         from omegaml.runtime.jobproxy import OmegaJobProxy
         return OmegaJobProxy(jobname, runtime=self)
 
+    def script(self, scriptname):
+        """
+        return a script for remote execution
+        """
+        from omegaml.runtime.scriptproxy import OmegaScriptProxy
+        return OmegaScriptProxy(scriptname, runtime=self)
+
     def task(self, name):
         """
         retrieve the task function from the celery instance
@@ -59,6 +66,7 @@ class OmegaRuntime(object):
         celery configurations (as opposed to using the default app's
         import, which seems to confuse celery)
         """
+        import omegapkg.tasks
         return self.celeryapp.tasks.get(name)
 
     def settings(self):

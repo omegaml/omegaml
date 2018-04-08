@@ -1,8 +1,7 @@
-from io import StringIO
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
 
-import omegaml
+import six
+from mock import patch
 from omegacommon.userconf import get_omega_from_apikey
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
 
@@ -25,7 +24,7 @@ class ConfigurationTests(TestCase):
         OMEGA_MONGO_URL: updated-foo
         NOTOMEGA_VALUE: some other value
         """
-        cfgfile = StringIO(data)
+        cfgfile = six.StringIO(data)
         cfgfile.seek(0)
         update_from_config(self.defaults, cfgfile)
         self.assertIn('OMEGA_MONGO_URL', self.defaults)

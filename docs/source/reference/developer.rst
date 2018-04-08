@@ -66,11 +66,3 @@ omegacli
 --------
 
 .. automodule:: omegacli
-
-
- 
-
-
-
-
-

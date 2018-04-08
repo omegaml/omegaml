@@ -1,3 +1,4 @@
+from omegaweb.resources.scripts import ScriptResource
 from tastypie.api import Api
 
 from omegaweb.resources import DatasetResource, ModelResource
@@ -9,3 +10,4 @@ v1_api.register(DatasetResource())
 v1_api.register(ModelResource())
 v1_api.register(ClientConfigResource())
 v1_api.register(JobResource())
+v1_api.register(ScriptResource())

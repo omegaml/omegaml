@@ -97,7 +97,7 @@ To enable this mixin, add the class to :code:`om.defaults.OMEGA_RUNTIME_MIXINS`:
 .. code::
 
   OMEGA_STORE_MIXINS = [
-    load_class('crossvalidate.CrossValidationMixin'),
+    'crossvalidate.CrossValidationMixin',
   ]
   
   

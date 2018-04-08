@@ -78,6 +78,7 @@ import re
 import tempfile
 from datetime import datetime
 from fnmatch import fnmatch
+from uuid import uuid4
 
 import gridfs
 import six
@@ -91,7 +92,7 @@ from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes
+    cursor_to_dataframe, convert_dtypes, load_class
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
@@ -113,7 +114,7 @@ class OmegaStore(object):
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         self._fs = None
-        self.tmppath = self.defaults.OMEGA_TMP
+        self._tmppath = None
         self.prefix = prefix or ''
         self.force_kind = kind
         # don't initialize db here to avoid using the default settings
@@ -127,6 +128,17 @@ class OmegaStore(object):
 
     def __repr__(self):
         return 'OmegaStore(mongo_url={}, bucket={}, prefix={})'.format(self.mongo_url, self.bucket, self.prefix)
+
+    @property
+    def tmppath(self):
+        """
+        return an instance-specific temporary path
+        """
+        if self._tmppath is not None:
+            return self._tmppath
+        self._tmppath = os.path.join(self.defaults.OMEGA_TMP, uuid4().hex)
+        os.makedirs(self._tmppath)
+        return self._tmppath
 
     @property
     def mongodb(self):
@@ -321,7 +333,7 @@ class OmegaStore(object):
         :param kind: (str) the backend kind
         :param backend: (class) the backend class 
         """
-        self.defaults.OMEGA_STORE_BACKENDS[kind] = backend
+        self.defaults.OMEGA_STORE_BACKENDS[kind] = load_class(backend)
         if kind not in Metadata.KINDS:
             Metadata.KINDS.append(kind)
         return self
@@ -342,6 +354,7 @@ class OmegaStore(object):
         pandas dataframes
         """
         for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+            backend_cls = load_class(backend_cls)
             if backend_cls.supports(obj, name, attributes=attributes, **kwargs):
                 backend = self.get_backend_bykind(kind)
                 return backend.put(obj, name, attributes=attributes, **kwargs)
@@ -617,7 +630,7 @@ class OmegaStore(object):
         :param kwargs: the kwargs passed to the backend initialization
         :return: the backend 
         """
-        backend_cls = self.defaults.OMEGA_STORE_BACKENDS[kind]
+        backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,
@@ -636,7 +649,7 @@ class OmegaStore(object):
         """
         meta = self.metadata(name)
         if meta is not None:
-            backend_cls = self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind)
+            backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind))
             if backend_cls:
                 model_store = model_store or self
                 data_store = data_store or self

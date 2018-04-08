@@ -10,12 +10,14 @@ Python API (overview)
      omegaml.models
      omegaml.runtime
      omegaml.jobs
+     omegaml.scripts
 
      omegaml.store.base.OmegaStore
      omegaml.runtime.OmegaRuntime
      omegaml.runtime.OmegaRuntimeDask
      omegaml.runtime.OmegaModelProxy
-     omegaml.runtime.OmegaJobProxy  
+     omegaml.runtime.OmegaJobProxy
+     omegaml.runtime.OmegaScriptsProxy
      omegaml.jobs.OmegaJobs 
      omegaml.mdataframe.MDataFrame
      omegaml.mdataframe.MGrouper
@@ -29,6 +31,7 @@ REST API (overview)
      omegaweb.resources.dataset 
      omegaweb.resources.model
      omegaweb.resources.jobs
+     omegaweb.resources.scripts
 
 Python API
 ----------
@@ -121,8 +124,12 @@ omegaweb.resources.jobs
 
 .. autoclass:: omegaweb.resources.jobs.JobResource
    :members:
-   
-             
+
+omegaweb.resources.scripts
+++++++++++++++++++++++++++
+
+.. autoclass:: omegaweb.resources.scripts.ScriptResource
+   :members:
               
               
               

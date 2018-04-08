@@ -13,6 +13,7 @@ The Celery runtime is the default implementation, provided as
 
 * :code:`.model()` - to get a model proxy to a remote model, :code:`OmegaModelProxy` 
 * :code:`.job()` - to get a job proxy to a remote job, :code:`OmegaJobProxy`
+* :code:`.script()` - to get a script proxy to a remote script (lambda module), :code:`OmegaScriptProxy`
 
 The model proxy supports most methods of scikit-learn models, e.g. 
 

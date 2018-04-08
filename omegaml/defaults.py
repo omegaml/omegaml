@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 import os
 import sys
-from .util import load_class
 import six
 import yaml
 
@@ -39,18 +38,20 @@ OMEGA_CELERY_CONFIG = {
 }
 #: storage backends
 OMEGA_STORE_BACKENDS = {
-    'sklearn.joblib': load_class('omegaml.backends.ScikitLearnBackend'),
-    'spark.mllib': load_class('omegaml.backends.SparkBackend'),
-    'pandas.csv': load_class('omegaml.backends.PandasExternalData')
+    'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+    'spark.mllib': 'omegaml.backends.SparkBackend',
+    'pandas.csv': 'omegaml.backends.PandasExternalData',
+    'python.package': 'omegapkg.PythonPackageData',
 }
 #: storage mixins
 OMEGA_STORE_MIXINS = [
-    load_class('omegaml.mixins.ProjectedMixin'),
+    'omegaml.mixins.ProjectedMixin',
+    'omegapkg.PythonPackageMixin',
 ]
 #: runtime mixins
 OMEGA_RUNTIME_MIXINS = [
-    load_class('omegaml.runtime.mixins.ModelMixin'),
-    load_class('omegaml.runtime.mixins.GridSearchMixin'),
+    'omegaml.runtime.mixins.ModelMixin',
+    'omegaml.runtime.mixins.GridSearchMixin',
 ]
 
 #: the omegaweb url
