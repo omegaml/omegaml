@@ -12,11 +12,12 @@ class cached(object):
 
     def __call__(self, func):
         def inner(*args, **kwargs):
+            test_mode = any('test' in v for v in sys.argv)
             cached = self.data.get(func)
             if cached is not None:
                 age = datetime.now() - cached['fetch_time']
                 refetch = (age > self.max_age)
-            if (cached is None or refetch):
+            if test_mode or cached is None or refetch:
                 resp = func(*args, **kwargs)
                 self.data[func] = {
                     'data': resp,

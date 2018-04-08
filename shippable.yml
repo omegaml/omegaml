@@ -24,11 +24,13 @@ build:
   - conda install -y conda=4.3 
   - conda install python=3.6
   - conda install -y --file conda-requirements.txt
+  - conda install -y -c conda-forge jupyterhub
   - PATH=/usr/local/bin:$PATH sudo apt-get -y update
   - PATH=/usr/local/bin:$PATH sudo apt-get -y install build-essential libssl-dev libffi-dev python-dev
   - PATH=/usr/local/bin:$PATH pip install -U setuptools  
   - PATH=/usr/local/bin:$PATH pip install -r pip-requirements.txt
   - PATH=/usr/local/bin:$PATH pip install -r pip-requirements.extra
+  - PATH=/usr/local/bin:$PATH scripts/omegajobs.sh &
   - >
      PATH=/usr/local/bin:$PATH DJANGO_SETTINGS_MODULE=app.settings 
      python manage.py test --debug-config --verbosity=2 -s

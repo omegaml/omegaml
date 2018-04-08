@@ -7,4 +7,4 @@ c = get_config()
 c.InteractiveShellApp.exec_files = [
     'ipystart.py'
 ]
-print("omegaml: ipython initialized")
+print("omegaml: ipython initialized from {}".format(__file__))

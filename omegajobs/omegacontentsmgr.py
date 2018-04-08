@@ -1,14 +1,14 @@
+import os
+
 from IPython.utils import tz
 import nbformat
 from notebook.services.contents.manager import ContentsManager
 from tornado import web
 
-import omegaml as om
+from omegacommon.userconf import get_omega_from_apikey
 from omegajobs.omegacheckpoints import OmegaStoreContentsCheckpoints
 
-
 class OmegaStoreContentsManager(ContentsManager):
-
     """
     Jupyter notebook storage manager for omegaml
 
@@ -19,6 +19,7 @@ class OmegaStoreContentsManager(ContentsManager):
 
     def __init__(self, **kwargs):
         super(OmegaStoreContentsManager, self).__init__(**kwargs)
+        self._omega = None
 
     def _checkpoints_class_default(self):
         return OmegaStoreContentsCheckpoints
@@ -28,7 +29,16 @@ class OmegaStoreContentsManager(ContentsManager):
         """
         return the omega instance used by the contents manager
         """
-        return om
+        if self._omega is None:
+            # if started from jupyter hub environ will be set
+            userid = os.environ.get('JUPYTERHUB_USER')
+            apikey = os.environ.get('OMEGA_APIKEY')
+            if userid and apikey:
+                self._omega = get_omega_from_apikey(userid, apikey)
+            else:
+                import omegaml as om
+                self._omega = om
+        return self._omega
 
     @property
     def store(self):
@@ -79,7 +89,7 @@ class OmegaStoreContentsManager(ContentsManager):
             if model['type'] == 'notebook':
                 nb = nbformat.from_dict(model['content'])
                 self.check_and_sign(nb, path)
-                om.jobs.put(nb, path)
+                self.omega.jobs.put(nb, path)
             else:
                 raise web.HTTPError(
                     400, "Unhandled contents type: %s" % model['type'])
@@ -91,6 +101,7 @@ class OmegaStoreContentsManager(ContentsManager):
             raise web.HTTPError(
                 500, u'Unexpected error while saving file: %s %s' % (path, e))
 
+        validation_message = None
         if model['type'] == 'notebook':
             self.validate_notebook_model(model)
             validation_message = model.get('message', None)
@@ -108,8 +119,7 @@ class OmegaStoreContentsManager(ContentsManager):
         this is called by the contents engine to delete an entry
         """
         path = path.strip('/')
-        om = self.omega
-        om.jobs.drop(path)
+        self.omega.jobs.drop(path)
 
     def rename_file(self, old_path, new_path):
         """
@@ -122,7 +132,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if self.file_exists(new_path):
             raise web.HTTPError(409, u'Notebook already exists: %s' % new_path)
         # rename on metadata. Note the gridfile instance stays the same
-        meta = om.jobs.metadata(old_path)
+        meta = self.omega.jobs.metadata(old_path)
         meta.name = new_path
         meta.save()
 
@@ -140,23 +150,20 @@ class OmegaStoreContentsManager(ContentsManager):
 
     def dir_exists(self, path=''):
         path = path.strip('/')
-        om = self.omega
         if path == '':
             return True
-        return len(om.jobs.list('{path}.*'.format(path=path))) > 0
+        return len(self.omega.jobs.list('{path}.*'.format(path=path))) > 0
 
     def file_exists(self, path):
         path = path.strip('/')
-        om = self.omega
-        return path in om.jobs.list(path)
+        return path in self.omega.jobs.list(path)
 
     def is_hidden(self, path):
         return False
 
     def _read_notebook(self, path, as_version=None):
         path = path.strip('/')
-        om = self.omega
-        return om.jobs.get(path)
+        return self.omega.jobs.get(path)
 
     def _notebook_model(self, path, content=True):
         """
@@ -207,8 +214,7 @@ class OmegaStoreContentsManager(ContentsManager):
         model = self._base_model(path)
         model['type'] = 'directory'
         model['content'] = contents = []
-        om = self.omega
-        entries = om.jobs.list('{path}.*'.format(path=path), raw=True)
+        entries = self.omega.jobs.list('{path}.*'.format(path=path), raw=True)
         for meta in entries:
             try:
                 entry = self.get(meta.name, content=content)

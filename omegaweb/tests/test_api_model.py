@@ -37,8 +37,8 @@ class ModelResourceTests(ResourceTestCase):
             'username': self.user.username,
             'password': 'foobar',
         }
-        add_user(self.config['dbname'], self.config['username'],
-                 self.config['password'])
+        add_user(self.config['username'],
+                 self.config['password'], dbname=self.config['dbname'])
         add_service_deployment(self.user, self.config)
         # setup test data
         config = get_client_config(self.user)

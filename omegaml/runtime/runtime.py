@@ -13,7 +13,8 @@ class OmegaRuntime(object):
     """
 
     def __init__(self, omega, backend=None,
-                 broker=None, celerykwargs=None, celeryconf=None, auth=None):
+                 broker=None, celerykwargs=None, celeryconf=None, auth=None,
+                 defaults=None):
         self.backend = backend or 'amqp'
         self.broker = broker or 'amqp://guest@localhost//'
         self.omega = omega
@@ -27,11 +28,14 @@ class OmegaRuntime(object):
                              'broker': self.broker,
                              'include': ['omega.tasks', 'omegajobs.tasks']
                              })
-        defaults = settings()
+        defaults = defaults or settings()
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
         self.celeryapp = Celery('omegaml', **celerykwargs)
         self.celeryapp.conf.update(celeryconf)
         self.celeryapp.finalize()
+
+    def __repr__(self):
+        return 'OmegaRuntime({}, auth={})'.format(self.omega.__repr__(), self.auth.__repr__())
 
     def model(self, modelname):
         """

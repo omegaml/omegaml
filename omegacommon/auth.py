@@ -24,6 +24,9 @@ class OmegaRestApiAuth(AuthBase):
         r.headers['Authorization'] = self.get_credentials()
         return r
 
+    def __repr__(self):
+        return 'OmegaRestApiAuth(username={}, password="*****")'.format(self.username)
+
 
 class OmegaRuntimeAuthentication:
 
@@ -34,3 +37,7 @@ class OmegaRuntimeAuthentication:
     def __init__(self, userid, apikey):
         self.userid = userid
         self.apikey = apikey
+
+
+    def __repr__(self):
+        return 'OmegaRuntimeAuthentication(userid={}, apikey="*****")'.format(self.userid)

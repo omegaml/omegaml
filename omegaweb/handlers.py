@@ -12,13 +12,7 @@ def handle_usersignup(sender, request=None, user=None, **kwargs):
     """
     handle user sign up
     """
-    dbname = hashlib.md5(user.username.encode('utf-8')).hexdigest()
     username = User.objects.make_random_password(length=36)
     password = User.objects.make_random_password(length=36)
-    omops.add_user(dbname, username, password)
-    config = {
-        'dbname': dbname,
-        'user': username,
-        'password': password,
-    }
+    config = omops.add_user(username, password)
     omops.add_service_deployment(user, config)

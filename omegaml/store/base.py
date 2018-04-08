@@ -73,45 +73,43 @@ as follows:
 """
 from __future__ import absolute_import
 
-from datetime import datetime
-from fnmatch import fnmatch
 import os
 import re
 import tempfile
-from uuid import uuid4
+from datetime import datetime
+from fnmatch import fnmatch
 
 import gridfs
-import mongoengine
-from mongoengine.connection import register_connection, disconnect,\
-    get_connection, connect
+import six
+from mongoengine.connection import disconnect, \
+    connect
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
-import six
 
 from omegacommon.util import extend_instance
 from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
-from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape,\
+from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes
-
 from ..documents import Metadata
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
-class OmegaStore(object):
 
+
+class OmegaStore(object):
     """
     The storage backend for models and data
     """
 
-    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None):
+    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None, defaults=None):
         """
         :param mongo_url: the mongourl to use for the gridfs
         :param bucket: the mongo collection to use for gridfs
         :param prefix: the path prefix for files. defaults to blank
         :param kind: the kind or list of kinds to limit this store to 
         """
-        self.defaults = omega_settings()
+        self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         self._fs = None
@@ -126,6 +124,9 @@ class OmegaStore(object):
         self.apply_mixins()
         # register backends
         self.register_backends()
+
+    def __repr__(self):
+        return 'OmegaStore(mongo_url={}, bucket={}, prefix={})'.format(self.mongo_url, self.bucket, self.prefix)
 
     @property
     def mongodb(self):
@@ -154,7 +155,7 @@ class OmegaStore(object):
         # FIXME use an instance specific alias. requires that every access
         #       to Metadata is configured correctly. this to avoid sharing
         #       inadevertedly between threads and processes.
-        #alias = 'omega-{}'.format(uuid4().hex)
+        # alias = 'omega-{}'.format(uuid4().hex)
         alias = 'omega'
         # always disconnect before registering a new connection because
         # connect forgets all connection settings upon disconnect WTF?!
@@ -448,7 +449,7 @@ class OmegaStore(object):
         dtypes = {
             dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
-        }
+            }
         kind_meta = {
             'columns': column_map,
             'dtypes': dtypes,
@@ -496,6 +497,7 @@ class OmegaStore(object):
           >     ]}
 
         """
+
         def row_to_doc(obj):
             for gval, gdf in obj.groupby(groupby):
                 gval = make_tuple(gval.astype('O'))
@@ -503,6 +505,7 @@ class OmegaStore(object):
                 datacols = list(set(gdf.columns) - set(groupby))
                 doc['_data'] = gdf[datacols].astype('O').to_dict('records')
                 yield doc
+
         datastore = self.collection(name)
         datastore.drop()
         datastore.insert_many(row_to_doc(obj))
@@ -801,6 +804,7 @@ class OmegaStore(object):
                 for row in data:
                     doc.update(row)
                     yield doc
+
         datastore = self.collection(name)
         kwargs = kwargs if kwargs else {}
         params = self.rebuild_params(kwargs, datastore)
@@ -865,7 +869,7 @@ class OmegaStore(object):
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def list(self, pattern=None, regexp=None, kind=None, raw=False,
-             include_temp=False):
+             include_temp=False, bucket=None, prefix=None):
         """
         List all files in store
 
@@ -879,8 +883,8 @@ class OmegaStore(object):
 
         """
         db = self.mongodb
-        searchkeys = dict(bucket=self.bucket,
-                          prefix=self.prefix)
+        searchkeys = dict(bucket=bucket or self.bucket,
+                          prefix=prefix or self.prefix)
         if kind or self.force_kind:
             kind = kind or self.force_kind
             if isinstance(kind, (tuple, list)):
