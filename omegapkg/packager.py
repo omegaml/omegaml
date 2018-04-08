@@ -4,6 +4,7 @@ import sys
 import threading
 
 import pip
+import tee
 
 sync_lock = threading.Lock()
 
@@ -14,9 +15,12 @@ def build_sdist(src, distdir):
     # save argv. distutils run_setup changes argv and fails at restoring properly
     save_argv = list(sys.argv)
     # block any other thread from executing since we're changing cwd and sys.argv
-    with sync_lock:
+    with sync_lock, tee.StdoutTee('build_sdist.out', 'w', 2), \
+         tee.StderrTee('build_sdist.err', 'w', 2):
         # make sure no other processing is executing while we change the working directory for setup.py
         cwd = os.getcwd()
+        sys.stdout.errors = None
+        sys.stderr.errors = None
         try:
             os.chdir(src)
             setup_path = os.path.join(src, 'setup.py')
