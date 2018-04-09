@@ -17,7 +17,7 @@ import numpy as np
 from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import Omega
 import omegaml
-from omegaml.util import delete_database, reshaped
+from omegaml.util import delete_database, reshaped, settings
 import pandas as pd
 from six.moves import range
 
@@ -281,7 +281,7 @@ class RuntimeTests(TestCase):
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
         self.assertEquals(om.runtime.auth, auth)
         # set auth indirectly
-        defaults = omegaml.defaults
+        defaults = settings()
         _userid = defaults.OMEGA_USERID
         _apikey = defaults.OMEGA_APIKEY
         defaults.OMEGA_USERID = 'foo'

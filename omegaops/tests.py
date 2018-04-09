@@ -1,23 +1,37 @@
+import hashlib
+
+from constance import config as constance_config
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test.testcases import TestCase
 from landingpage.models import ServicePlan
+from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user
+from pymongo import MongoClient
 from pymongo.errors import PyMongoError, OperationFailure
-
-from omegaops import add_service_deployment, add_userdb
 
 
 class OmegaOpsTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
+        # first user
         self.username = username = 'testuser@omegaml.io'
         self.email = email = 'testuser@omegaml.io'
         self.password = password = 'password'
         self.user = User.objects.create_user(username, email, password)
+        # second user
+        self.username2 = username2 = 'testuser2@omegaml.io'
+        self.email2 = email2 = 'testuser2@omegaml.io'
+        self.password2 = password2 = 'password2'
+        self.user2 = User.objects.create_user(username2, email2, password2)
+
 
     def tearDown(self):
         TestCase.tearDown(self)
 
     def test_adduserdb(self):
+        """
+        test new users and mongo databases can be added with authentication
+        """
         dbname = 'testdbops'
         username = 'testuserops'
         password = 'foobar'
@@ -49,6 +63,9 @@ class OmegaOpsTest(TestCase):
             otherdb.collection_names()
 
     def test_addservice(self):
+        """
+        test adding a new service deployment works
+        """
         # our new user should not have a plan deployment yet
         ServicePlan.objects.create(name='omegaml')
         self.assertIsNone(self.user.services.first())
@@ -64,3 +81,59 @@ class OmegaOpsTest(TestCase):
         self.assertEqual(plan, 'omegaml')
         service_config = service.settings
         self.assertDictEqual(service_config, config)
+
+    def test_adduser_authorize_user(self):
+        """
+        test users can authorize each other
+        """
+        # setup service deployments
+        ServicePlan.objects.create(name='omegaml')
+        # create first user
+        username = hashlib.md5(self.username.encode('utf-8')).hexdigest()
+        password = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+        config = add_user(username, password)
+        add_service_deployment(self.user, config)
+        # check we can authenticate and insert
+        dbname = config.get('default', config).get('dbname')
+        mongo_url = settings.BASE_MONGO_URL.format(user=username,
+                                                   password=password,
+                                                   mongohost=constance_config.MONGO_HOST,
+                                                   dbname=dbname)
+        client = MongoClient(mongo_url, authSource='admin')
+        db = client.get_database()
+        coll = db['data']
+        coll.remove()
+        coll.insert({'foo': 'bar-user1'})
+        # add a second user
+        username2 = hashlib.md5(self.username2.encode('utf-8')).hexdigest()
+        password2 = hashlib.md5(self.password2.encode('utf-8')).hexdigest()
+        config2 = add_user(username2, password2)
+        add_service_deployment(self.user2, config2)
+        dbname2 = config2.get('default', config2).get('dbname')
+        mongo_url = settings.BASE_MONGO_URL.format(user=username2,
+                                                   password=password2,
+                                                   mongohost=constance_config.MONGO_HOST,
+                                                   dbname=dbname2)
+        client2 = MongoClient(mongo_url, authSource='admin')
+        db2 = client2.get_database()
+        coll2 = db2['data']
+        coll2.insert({'foo': 'bar-user2'})
+        # authorize second user to first user's db
+        config3 = authorize_userdb(self.user, self.user2, username2, password2)
+        # see if we can access first user's db using second user's credentials
+        qualified_config = config3.get(self.user.username)
+        username3 = qualified_config.get('user')
+        password3 = qualified_config.get('password')
+        dbname3 = qualified_config.get('dbname')
+        mongo_url = settings.BASE_MONGO_URL.format(user=username3,
+                                                   password=password3,
+                                                   mongohost=constance_config.MONGO_HOST,
+                                                   dbname=dbname3)
+        client3 = MongoClient(mongo_url, authSource='admin')
+        db3 = client3.get_database()
+        coll3 = db3['data']
+        data = coll3.find_one()
+        self.assertEqual(data['foo'], 'bar-user1')
+        coll3.insert({'foobar': 'bar-user2'})
+        data = coll.find_one({'foobar': 'bar-user2'})
+        self.assertEqual(data['foobar'], 'bar-user2')

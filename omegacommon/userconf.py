@@ -40,7 +40,8 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None):
 
 
 @cached(seconds=3600)
-def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None):
+def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
+                          qualifier=None):
     """
     setup an Omega instance from userid and apikey
 
@@ -49,30 +50,41 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None):
     :param api_url: the api URL
     :param requested_userid: the userid to request config for. in this case userid
       and apikey must for a staff user for the request to succeed
+    :param qualifier: the database qualifier requested. defaults to 'default'
     :returns: the Omega instance configured for the given user
     """
     from omegaml import Omega, defaults
     from omegaml.util import settings
+    qualifier = qualifier or 'default'
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
         api_auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(api_auth, api_url=api_url, requested_userid=requested_userid)
-        config = configs['objects'][0]['data']
+        configs = configs['objects'][0]['data']
     elif api_url == 'local':
-        config = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
+        configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
         raise ValueError('invalid api_url {}'.format(api_url))
+    if qualifier == 'default':
+        config = configs.get(qualifier, configs)
+    else:
+        config = configs[qualifier]
     defaults.update_from_dict(config)
     settings(reload=True)
     om = Omega(defaults=defaults)
     return om
 
 
-def get_omega_from_config(configfile):
+def get_omega_from_config(configfile, qualifier=None):
     from omegaml import Omega, defaults
     from omegaml.util import settings
     with open(configfile, 'r') as fconfig:
-        config = yaml.load(fconfig)
+        configs = yaml.load(fconfig)
+    qualifier = qualifier or 'default'
+    if qualifier == 'default':
+        config = configs.get(qualifier, configs)
+    else:
+        config = configs[qualifier]
     defaults.update_from_dict(config)
     settings(reload=True)
     om = Omega(defaults=defaults)

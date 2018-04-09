@@ -6,16 +6,12 @@ from landingpage.models import ServicePlan
 from pymongo.mongo_client import MongoClient
 
 
-
-
 def add_user(username, password, dbname=None):
     """
     add a user to omegaml giving readWrite access rights
 
     only this user will have access r/w rights to the database.
     """
-    from omegaml import defaults
-
     dbname = dbname or hashlib.md5(username.encode('utf-8')).hexdigest()
     add_userdb(dbname, username, password)
     try:
@@ -23,10 +19,12 @@ def add_user(username, password, dbname=None):
     except:
         nb_url = 'jupyterhub is not supported'
     config = {
-        'dbname': dbname,
-        'user': username,
-        'password': password,
-        'notebook_url': nb_url,
+        'default': {
+            'dbname': dbname,
+            'user': username,
+            'password': password,
+            'notebook_url': nb_url,
+        }
     }
     return config
 
@@ -48,6 +46,15 @@ def add_usernotebook(username, password):
 
 
 def add_userdb(dbname, username, password):
+    """
+    add a new user to the mongo db
+
+    :param dbname: the name of the database
+    :param username: the name of the user
+    :param password: the password
+    :return: (newdb, client_mongo_url) the tuple of the new db instance and
+      the mongo_url
+    """
     roles = [{
         'role': 'readWrite',
         'db': dbname,
@@ -56,8 +63,9 @@ def add_userdb(dbname, username, password):
     client = MongoClient(settings.MONGO_ADMIN_URL)
     _admin_newdb = client['admin']
     # add user and reset password in case the user was there already
-    _admin_newdb.add_user(username, password, roles=roles)
-    _admin_newdb.command("updateUser", username, pwd=password)
+    _admin_newdb.add_user(username, password)
+    result = _admin_newdb.command("updateUser", username, pwd=password, roles=roles)
+    assert 'ok' in result
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
     mongohost = config.MONGO_HOST
@@ -68,6 +76,37 @@ def add_userdb(dbname, username, password):
     client = MongoClient(client_mongo_url)
     newdb = client[dbname]
     return newdb, client_mongo_url
+
+
+def authorize_userdb(grant_user, grantee_user, username, password):
+    """
+    authorize a user to access an existing database
+
+    once granted the grantee_user will be able to access the other user's db
+    using the other user's username as the qualifier argument.
+
+    :param dbname:
+    :param username:
+    :param password:
+    :return:
+    """
+    # get settings from both users
+    grant_settings = grant_user.services.get(offering__name='omegaml').settings
+    grantee_service = grantee_user.services.get(offering__name='omegaml')
+    dbname = grant_settings.get('default', grant_settings).get('dbname')
+    # add user to other db
+    add_userdb(dbname, username, password)
+    otherdb_config = {
+        grant_user.username: {
+            'dbname': dbname,
+            'user': username,
+            'password': password,
+        }
+    }
+    # update grantee's user settings
+    grantee_service.settings.update(otherdb_config)
+    grantee_service.save()
+    return grantee_service.settings
 
 
 def add_service_deployment(user, config):
@@ -90,8 +129,7 @@ def get_client_config(user):
     """
     import omegaml as om
     user_settings = user.services.get(offering__name='omegaml').settings
-    user_settings['user'] = user_settings.get(
-        'username') or user_settings.get('user')
+    user_settings['user'] = user_settings.get('username') or user_settings.get('user')
 
     mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
                                                **user_settings)
