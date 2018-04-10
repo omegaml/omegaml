@@ -77,10 +77,11 @@ class OmegaDeferredInstance():
         self.base = base
         self.attribute = attribute
 
-    def setup(self, username=None, apikey=None, api_url=None):
+    def setup(self, username=None, apikey=None, api_url=None, qualifier=None):
+        qualifier = qualifier or 'default'
         settings()
         if not self.initialized and username and apikey:
-            self.omega = get_omega_from_apikey(username, apikey, api_url=api_url)
+            self.omega = get_omega_from_apikey(username, apikey, api_url=api_url, qualifier=qualifier)
             self.initialized = True
         else:
             self.omega = Omega()
@@ -93,14 +94,51 @@ class OmegaDeferredInstance():
         self.setup()
         return getattr(self.omega, name)
 
+
 def __repr__():
     return getattr(_om, 'omega').__repr__()
+
 
 def repr():
     return __repr__()
 
-def setup(username=None, apikey=None, api_url=None):
-    return _om.setup(username=username, apikey=apikey, api_url=api_url).omega
+
+def setup(username=None, apikey=None, api_url=None, qualifier=None):
+    """
+    configure and return the omega client instance
+
+    Usage:
+        # example 1
+        om.setup(...)
+        om.datasets.list()
+
+        # example 2
+        myomega = om.setup(...)
+        myomega.list()
+
+    Notes:
+        Username and apikey are provided, request the user's configuration from the
+        configuration site (api_url). If qualifier is provided and the user has been
+        authorized for this qualifier the respective configuration is used.
+
+        If username and apikey are not provided the default configuration as per local
+        configuration will be returned. Note that the default configuration depends on
+        the configuration file in $HOME/.omegaml/config.yml (if present), or the
+        system-wide defaults. Typically the system-wide defaults return an instance
+        for all-local use, i.e. local database and a single-threaded local runtime.
+
+        If api_url is not provided, it will default to the system-wide defaults (typically
+        http://localhost in test, http://omegaml.omegaml.io for omegaml SaaS provision or
+        your on-premise omegaml deployment URL.
+
+    :param username: the username
+    :param apikey: the apikey
+    :param api_url: the api_url
+    :param qualifier: the qualifier. defaults to 'default'
+    :return: the Omega instance
+    """
+    return _om.setup(username=username, apikey=apikey, api_url=api_url, qualifier=qualifier).omega
+
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance
@@ -116,4 +154,3 @@ jobs = OmegaDeferredInstance(_om, 'jobs')
 scripts = OmegaDeferredInstance(_om, 'scripts')
 #: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')
-

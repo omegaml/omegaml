@@ -80,11 +80,12 @@ class OmegaRuntime(object):
         """
         return the current client authentication or None if not configured
         """
-        from omegaml import defaults
+        defaults = self.omega.defaults
         if self._auth is None:
             try:
                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
-                              apikey=getattr(defaults, 'OMEGA_APIKEY'))
+                              apikey=getattr(defaults, 'OMEGA_APIKEY'),
+                              qualifier=getattr(defaults, 'OMEGA_QUALIFIER', 'default'))
                 self._auth = OmegaRuntimeAuthentication(**kwargs)
             except:
                 # we don't set authentication if not provided
@@ -94,4 +95,4 @@ class OmegaRuntime(object):
     @property
     def auth_tuple(self):
         auth = self.auth
-        return auth.userid, auth.apikey
+        return auth.userid, auth.apikey, auth.qualifier

@@ -18,8 +18,4 @@ class EnvSettings_LocalTest(EnvSettings_Local):
                                              password='foobar',
                                              dbname='testdb'))
 
-    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
-                       BASE_MONGO_URL.format(user='admin',
-                                             mongohost='localhost:27019',
-                                             password='foobar',
-                                             dbname='userdb'))
+    OMEGA_RESTAPI_URL = ''

@@ -13,19 +13,22 @@ class OmegaRestApiAuth(AuthBase):
                          '25fdd0d9d210acb78b5b845fe8284a3c93630252')
         response = requests.get('http://api.foo.bar/v1/spam/', auth=auth)
     """
-    def __init__(self, username, apikey):
+    def __init__(self, username, apikey, qualifier='default'):
         self.username = username
         self.apikey = apikey
+        self.qualifer = qualifier
 
     def get_credentials(self):
         return 'ApiKey %s:%s' % (self.username, self.apikey)
 
     def __call__(self, r):
         r.headers['Authorization'] = self.get_credentials()
+        r.headers['Qualifier'] = self.qualifier
         return r
 
     def __repr__(self):
-        return 'OmegaRestApiAuth(username={}, password="*****")'.format(self.username)
+        return ('OmegaRestApiAuth(username={}, apikey="*****",'
+                'qualifier={})').format(self.username, self.qualifer)
 
 
 class OmegaRuntimeAuthentication:
@@ -34,10 +37,11 @@ class OmegaRuntimeAuthentication:
     The runtime authentication
     """
 
-    def __init__(self, userid, apikey):
+    def __init__(self, userid, apikey, qualifier='default'):
         self.userid = userid
         self.apikey = apikey
-
+        self.qualifier = qualifier
 
     def __repr__(self):
-        return 'OmegaRuntimeAuthentication(userid={}, apikey="*****")'.format(self.userid)
+        return ('OmegaRuntimeAuthentication(userid={}, '
+                'apikey="*****", qualifier={})').format(self.userid, self.qualifier)

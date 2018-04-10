@@ -25,6 +25,7 @@ sourcedir=$(realpath $sourcedir)
 distname=${distname:=$(basename $sourcedir)}
 dockertag=${dockertag:=$(basename $sourcedir)}
 distdir=$script_dir/../dist
+mkdir -p $distdir
 distdir=$(realpath $distdir)
 version=${version:=0.1}
 releasezip=$distdir/omegaml-release-$version.zip
@@ -37,7 +38,6 @@ msgfile=$distdir/.messages
 echo "[INFO] Starting build of $distname (version=$version nominify=$nominify nodocker=$nodocker)" > $msgfile
 
 # prepare
-mkdir -p $distdir
 find . -name "*zip" | xargs rm -rf
 find . -name "*whl" | xargs rm -rf
 find . -name "*tgz" | xargs rm -rf
