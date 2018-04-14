@@ -130,12 +130,15 @@ def add_service_deployment(user, config):
                          settings=config)
 
 
-def get_client_config(user):
+def get_client_config(user, qualifier=None):
     """
     return the full client configuration
     """
     import omegaml as om
+
+    qualifier = qualifier or 'default'
     user_settings = user.services.get(offering__name='omegaml').settings
+    user_settings = user_settings.get(qualifier, user_settings)
     user_settings['user'] = user_settings.get('username') or user_settings.get('user')
 
     mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
