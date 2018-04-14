@@ -12,7 +12,6 @@ def handle_usersignup(sender, request=None, user=None, **kwargs):
     """
     handle user sign up
     """
-    username = User.objects.make_random_password(length=36)
     password = User.objects.make_random_password(length=36)
-    config = omops.add_user(username, password)
+    config = omops.add_user(user, password)
     omops.add_service_deployment(user, config)

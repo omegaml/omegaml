@@ -2,18 +2,24 @@ import hashlib
 
 from constance import config
 from django.conf import settings
+from django.contrib.auth.models import User
 from landingpage.models import ServicePlan
 from pymongo.mongo_client import MongoClient
 
 
-def add_user(username, password, dbname=None):
+def add_user(user, password, dbname=None):
     """
     add a user to omegaml giving readWrite access rights
 
     only this user will have access r/w rights to the database.
     """
-    dbname = dbname or hashlib.md5(username.encode('utf-8')).hexdigest()
-    add_userdb(dbname, username, password)
+    dbuser = User.objects.make_random_password(length=36)
+    dbname = dbname or User.objects.make_random_password(length=36)
+    if isinstance(user, User):
+        username = user.username
+    else:
+        username = user
+    add_userdb(dbname, dbuser, password)
     try:
         nb_url = add_usernotebook(username, password)
     except:
@@ -21,7 +27,7 @@ def add_user(username, password, dbname=None):
     config = {
         'default': {
             'dbname': dbname,
-            'user': username,
+            'user': dbuser,
             'password': password,
             'notebook_url': nb_url,
         }
@@ -93,13 +99,14 @@ def authorize_userdb(grant_user, grantee_user, username, password):
     # get settings from both users
     grant_settings = grant_user.services.get(offering__name='omegaml').settings
     grantee_service = grantee_user.services.get(offering__name='omegaml')
+    dbuser = User.objects.make_random_password(length=36)
     dbname = grant_settings.get('default', grant_settings).get('dbname')
     # add user to other db
     add_userdb(dbname, username, password)
     otherdb_config = {
         grant_user.username: {
             'dbname': dbname,
-            'user': username,
+            'user': dbuser,
             'password': password,
         }
     }

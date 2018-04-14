@@ -14,7 +14,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         username = options['username']
-        dbuser = User.objects.make_random_password(length=36)
         dbpassword = User.objects.make_random_password(length=36)
         # create/update django user
         try:
@@ -29,6 +28,6 @@ class Command(BaseCommand):
             user.is_staff = True
             user.save()
         # add/update omega user
-        config = omegaops.add_user(dbuser, dbpassword)
+        config = omegaops.add_user(user, dbpassword)
         omegaops.add_service_deployment(user, config)
         print("User {} added. Apikey {}".format(user, user.api_key.key))
