@@ -65,8 +65,10 @@ def setupomega():
 
 
 @task
-def setenv():
+def setenv(app=None):
     cmd = ('python -m stackable.encryptkeys '
            '--keysfile $HOME/.stackable/omegaml.keys '
            '--envclass EnvSettings_omegamlio')
     local(cmd)
+    if app:
+        print("export APP={}".format(app))

@@ -21,7 +21,7 @@ class JupyterHub(object):
         self.url = url
 
     def geturl(self, path, query=None):
-        apiuri = '/hub/api/'
+        apiuri = '/api/'
         url = '{}{}{}'.format(self.url, apiuri, path)
         if query:
             url += '?{}'.format(query)
