@@ -160,6 +160,8 @@ def get_client_config(user, qualifier=None):
         "OMEGA_NOTEBOOK_COLLECTION": om.defaults.OMEGA_NOTEBOOK_COLLECTION,
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
+        "OMEGA_USERID": user.username,
+        "OMEGA_APIKEY": user.api_key.key,
     }
     if config.CELERY_ALWAYS_EAGER:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True

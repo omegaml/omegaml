@@ -96,8 +96,9 @@ def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, reques
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     with open(configfile, 'w') as fconfig:
         auth = OmegaRestApiAuth(userid, apikey)
-        configs = get_user_config_from_api(auth, api_url=api_url, requested_userid=requested_userid)
+        configs = get_user_config_from_api(auth,
+                                           api_url=api_url,
+                                           requested_userid=requested_userid)
         config = configs['objects'][0]['data']
-        config['OMEGA_USERID'] = requested_userid or userid
         yaml.safe_dump(config, fconfig, default_flow_style=False)
-        print("Config is in {defaults.OMEGA_CONFIG_FILE}".format(**locals()))
+        print("Config is in {configfile}".format(**locals()))

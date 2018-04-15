@@ -63,12 +63,14 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
                 os.makedirs(os.path.join(home, '.omegaml'))
                 os.chdir(home)
                 import omegajobs
-                for fn in ['ipystart.py', 'ipython_config.py', 'jupyter_notebook_config.py']:
+                for fn in ['ipystart.py', 'ipython_config.py',
+                           'jupyter_notebook_config.py']:
                     src = os.path.join(os.path.dirname(omegajobs.__file__), fn)
                     dst = os.path.join(home, fn)
                     shutil.copy(src, dst)
             except Exception as e:
                 print(e)
+                raise
 
         return preexec
 

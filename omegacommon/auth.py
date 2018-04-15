@@ -15,7 +15,8 @@ class OmegaRestApiAuth(AuthBase):
     """
     def __init__(self, username, apikey, qualifier=None):
         self.username = username
-        self.apikey = apikey
+        self.\
+            apikey = apikey
         self.qualifier = qualifier or 'default'
 
     def get_credentials(self):
@@ -28,7 +29,7 @@ class OmegaRestApiAuth(AuthBase):
 
     def __repr__(self):
         return ('OmegaRestApiAuth(username={}, apikey="*****",'
-                'qualifier={})').format(self.username, self.qualifer)
+                'qualifier={})').format(self.username, self.qualifier)
 
 
 class OmegaRuntimeAuthentication:

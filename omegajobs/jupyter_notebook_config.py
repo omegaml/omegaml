@@ -624,3 +624,5 @@ import logging
 logger = logging.getLogger(c.NotebookApp.__class__.__name__)
 handler = logging.FileHandler('/tmp/jupyter.log')
 logger.addHandler(handler)
+
+sys.path.insert(0, '/app')
