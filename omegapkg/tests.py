@@ -94,7 +94,7 @@ class PythonPackageDataTests(TestCase):
         result = om.runtime.script('helloworld').run(text='foo')
         data = result.get()
         self.assertIn('runtime', data)
-        self.assertEqual(data['result'], {'text': 'foo'})
+        self.assertEqual(data['result'], ('hello from helloworld', {'text': 'foo'}))
 
     def test_sysargv_stability(self):
         """

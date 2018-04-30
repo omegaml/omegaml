@@ -18,10 +18,9 @@ from tastypiex.requesttrace import ClientRequestTracer
 
 
 class ModelResourceTests(ResourceTestCase):
-
     def setUp(self):
         super(ModelResourceTests, self).setUp()
-        #self.api_client = ClientRequestTracer(self.api_client)
+        # self.api_client = ClientRequestTracer(self.api_client)
         # setup django user
         self.username = username = 'test'
         self.email = email = 'test@omegaml.io'
@@ -32,13 +31,13 @@ class ModelResourceTests(ResourceTestCase):
         # FIXME refactor to remove dependency to landingpage (omegaweb should
         # have an injectable config module of sorts)
         ServicePlan.objects.create(name='omegaml')
-        self.config = {
+        init_config = {
             'dbname': 'testdb',
             'username': self.user.username,
             'password': 'foobar',
         }
-        add_user(self.config['username'],
-                 self.config['password'], dbname=self.config['dbname'])
+        self.config = add_user(init_config['username'],
+                               init_config['password'], dbname=init_config['dbname'])
         add_service_deployment(self.user, self.config)
         # setup test data
         config = get_client_config(self.user)
@@ -85,8 +84,8 @@ class ModelResourceTests(ResourceTestCase):
         data = {
             'name': 'mymodel',
             'pipeline': [
-                    # step name, model class, kwargs
-                    ['LinearRegression', dict()],
+                # step name, model class, kwargs
+                ['LinearRegression', dict()],
             ],
         }
         resp = self.api_client.post(self.url(),
