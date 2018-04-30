@@ -25,6 +25,7 @@ class ClientConfigResource(Resource):
             if 'user' in bundle.request.GET:
                 username = bundle.request.GET.get('user')
                 requested_user = User.objects.get(username=username)
+        # TODO enable getting config by qualifier
         config = get_client_config(requested_user)
         bundle.data = config or {}
         bundle.pk = config.get('user')

@@ -13,7 +13,6 @@ import pandas as pd
 
 
 class DatasetResourceTests(ResourceTestCase):
-
     def setUp(self):
         from omegaml import Omega
 
@@ -28,13 +27,13 @@ class DatasetResourceTests(ResourceTestCase):
         # FIXME refactor to remove dependency to landingpage (omegaweb should
         # have an injectable config module of sorts)
         ServicePlan.objects.create(name='omegaml')
-        self.config = {
+        init_config = {
             'dbname': 'testdb',
             'username': self.user.username,
             'password': 'foobar',
         }
-        add_user(self.config['username'],
-                 self.config['password'], dbname=self.config['dbname'])
+        self.config = add_user(init_config['username'],
+                               init_config['password'], dbname=init_config['dbname'])
         add_service_deployment(self.user, self.config)
         # setup test data
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),

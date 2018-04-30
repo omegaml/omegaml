@@ -94,11 +94,8 @@ class OmegaOpsTest(TestCase):
         config = add_user(username, password)
         add_service_deployment(self.user, config)
         # check we can authenticate and insert
-        dbname = config.get('default', config).get('dbname')
-        mongo_url = settings.BASE_MONGO_URL.format(user=username,
-                                                   password=password,
-                                                   mongohost=constance_config.MONGO_HOST,
-                                                   dbname=dbname)
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
+                                                   **config['default'])
         client = MongoClient(mongo_url, authSource='admin')
         db = client.get_database()
         coll = db['data']
@@ -109,11 +106,8 @@ class OmegaOpsTest(TestCase):
         password2 = hashlib.md5(self.password2.encode('utf-8')).hexdigest()
         config2 = add_user(username2, password2)
         add_service_deployment(self.user2, config2)
-        dbname2 = config2.get('default', config2).get('dbname')
-        mongo_url = settings.BASE_MONGO_URL.format(user=username2,
-                                                   password=password2,
-                                                   mongohost=constance_config.MONGO_HOST,
-                                                   dbname=dbname2)
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
+                                                   **config['default'])
         client2 = MongoClient(mongo_url, authSource='admin')
         db2 = client2.get_database()
         coll2 = db2['data']
@@ -125,10 +119,8 @@ class OmegaOpsTest(TestCase):
         username3 = qualified_config.get('user')
         password3 = qualified_config.get('password')
         dbname3 = qualified_config.get('dbname')
-        mongo_url = settings.BASE_MONGO_URL.format(user=username3,
-                                                   password=password3,
-                                                   mongohost=constance_config.MONGO_HOST,
-                                                   dbname=dbname3)
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
+                                                   **config['default'])
         client3 = MongoClient(mongo_url, authSource='admin')
         db3 = client3.get_database()
         coll3 = db3['data']

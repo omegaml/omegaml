@@ -6,7 +6,6 @@ from omegaops import add_service_deployment, get_client_config
 
 
 class ClientConfigResourceTests(ResourceTestCase):
-
     def setUp(self):
         ResourceTestCase.setUp(self)
         ServicePlan.objects.create(name='omegaml')
@@ -20,9 +19,11 @@ class ClientConfigResourceTests(ResourceTestCase):
         self.password = password = 'password'
         self.user = User.objects.create_user(username, email, password)
         self.config = {
-            'dbname': 'testdb',
-            'username': self.user.username,
-            'password': 'foobar',
+            'default': {
+                'dbname': 'testdb',
+                'username': self.user.username,
+                'password': 'foobar',
+            }
         }
         add_service_deployment(self.user, self.config)
 
@@ -35,9 +36,11 @@ class ClientConfigResourceTests(ResourceTestCase):
         self.admin_user.is_staff = True
         self.admin_user.save()
         self.admin_config = {
-            'dbname': 'admintestdb',
-            'username': self.admin_username,
-            'password': 'foobar',
+            'default': {
+                'dbname': 'admintestdb',
+                'username': self.admin_username,
+                'password': 'foobar',
+            }
         }
         add_service_deployment(self.admin_user, self.admin_config)
 
