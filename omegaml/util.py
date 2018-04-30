@@ -150,6 +150,7 @@ def flatten_columns(col, sep='_'):
 
 CLASS_CACHE = {}
 
+
 def load_class(requested_class):
     """
     Check if requested_class is a string, if so attempt to load
@@ -365,6 +366,7 @@ def gsreshaped(data):
             data = data.reshape(-1)
     return data
 
+
 def convert_dtypes(df, dtypes):
     """
     get back original dtypes
@@ -388,3 +390,42 @@ def convert_dtypes(df, dtypes):
                 pass
 
     return df
+
+
+class PickableCollection(object):
+    def __init__(self, collection):
+        super(PickableCollection, self).__setattr__('collection', collection)
+
+    def __getattr__(self, k):
+        return getattr(self.collection, k)
+
+    def __setattr__(self, k, v):
+        return setattr(self.collection, k, v)
+
+    def __getitem__(self, k):
+        return self.collection[k]
+
+    def __setitem__(self, k, v):
+        self.collection[k] = v
+
+    def __getstate__(self):
+        client = self.collection._Collection__database._Database__client
+        host, port = list(client.nodes)[0]
+        return {
+            'name': self.name,
+            'database': self.database.name,
+            'host': host,
+            'port': port,
+            'credentials': self.database.client._MongoClient__all_credentials[self.database.name],
+        }
+
+    def __setstate__(self, state):
+        from pymongo import MongoClient
+        url = 'mongodb://{credentials.username}:{credentials.password}@{host}:{port}/{database}'.format(**state)
+        client = MongoClient(url, authSource=state['credentials'].source)
+        db = client.get_database()
+        collection = db[state['name']]
+        super(PickableCollection, self).__setattr__('collection', collection)
+
+    def __repr__(self):
+        return 'PickableCollection({})'.format(repr(self.collection))

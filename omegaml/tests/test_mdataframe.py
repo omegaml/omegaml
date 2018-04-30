@@ -3,17 +3,15 @@ from __future__ import absolute_import
 import os
 import random
 import string
-import time
 from unittest.case import TestCase
 
-from pandas.util.testing import assert_frame_equal, assert_series_equal
-
+import numpy as np
+import pandas as pd
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
 from omegaml.util import flatten_columns
-import pandas as pd
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 from six.moves import range
-
 
 class MDataFrameTests(TestCase):
 
@@ -86,10 +84,12 @@ class MDataFrameTests(TestCase):
     def test_mdataframe(self):
         coll = self.coll
         df = self.df
-        result = MDataFrame(coll).value
+        mdf = MDataFrame(coll)
+        result = mdf.value
         self.assertEqual(set(MDataFrame(coll).columns),
                          set(list(df.columns)))
         self.assertTrue(result.equals(df))
+        self.assertEqual(mdf.shape, df.shape)
 
     def test_mdataframe_xlarge(self):
         df = pd.DataFrame({
@@ -264,6 +264,10 @@ class MDataFrameTests(TestCase):
         # by list
         dfx = om.datasets.getl('foo').loc[[2, 4]].value
         assert_frame_equal(df.loc[[2, 4]], dfx)
+        # by ndarray
+        sel = np.array([1, 2])
+        dfx = om.datasets.getl('foo').loc[sel, :].value
+        assert_frame_equal(df.loc[sel, :], dfx, check_names=False)
 
     def test_locindexer_character_index(self):
         om = self.om
@@ -331,3 +335,91 @@ class MDataFrameTests(TestCase):
         daterange = pd.datetime(2016, 1, 5)
         series2 = om.datasets.getl('fooseries').loc[daterange].value
         self.assertEqual(series2, series.loc[daterange])
+
+    def test_ilocindexer(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        idx = string.ascii_lowercase[0:9]
+        df = pd.DataFrame(data, index=(c for c in idx))
+        om.datasets.put(df, 'foo', append=False)
+        # by single location
+        dfx = om.datasets.getl('foo').iloc[0].value
+        assert_series_equal(df.iloc[0], dfx)
+        # by slice
+        dfx = om.datasets.getl('foo').iloc[0:1].value
+        assert_frame_equal(df.iloc[0:1], dfx)
+        # by list
+        dfx = om.datasets.getl('foo').iloc[[1, 2]].value
+        assert_frame_equal(df.iloc[[1, 2]], dfx)
+
+
+    def test_ilocindexer_single_column(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        idx = string.ascii_lowercase[0:9]
+        df = pd.DataFrame(data, index=(c for c in idx))
+        om.datasets.put(df, 'foo', append=False)
+        # by single location
+        dfx = om.datasets.getl('foo').iloc[0, 1].value
+        self.assertEqual(df.iloc[0, 1], dfx)
+        # by slice
+        # FIXME column access by iloc is not guaranteed to return in order
+        dfx = om.datasets.getl('foo').iloc[0:2, 1].value
+        assert_series_equal(df.iloc[0:2, 1], dfx, check_names=False)
+        # by list
+        dfx = om.datasets.getl('foo').iloc[[1, 2], 1].value
+        assert_series_equal(df.iloc[[1, 2], 1], dfx, check_names=False)
+
+    def test_ilocindexer_columns(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        idx = string.ascii_lowercase[0:9]
+        df = pd.DataFrame(data, index=(c for c in idx))
+        om.datasets.put(df, 'foo', append=False)
+        # by single location
+        dfx = om.datasets.getl('foo').iloc[0, :].value
+        assert_series_equal(df.iloc[0, :], dfx)
+        # by slice
+        # FIXME column access by iloc is not guaranteed to return in order
+        dfx = om.datasets.getl('foo').iloc[0:2, :].value
+        assert_frame_equal(df.iloc[0:2, :], dfx, check_names=False)
+        # by list
+        dfx = om.datasets.getl('foo').iloc[[1, 2], :].value
+        assert_frame_equal(df.iloc[[1, 2], :], dfx, check_names=False)
+        # by ndarray
+        sel = np.array([1,2])
+        dfx = om.datasets.getl('foo').iloc[sel, :].value
+        assert_frame_equal(df.iloc[sel, :], dfx, check_names=False)
+
+    def test_ilocindexer_array(self):
+        om = self.om
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        idx = string.ascii_lowercase[0:9]
+        df = pd.DataFrame(data, index=(c for c in idx))
+        om.datasets.put(df, 'foo', append=False)
+        # by ndarray with immediate loc
+        sel = np.array([1,2])
+        dfx = om.datasets.getl('foo')
+        dfx.immediate_loc = True
+        dfx = dfx[['a']].iloc[sel]
+        assert_frame_equal(df[['a']].iloc[sel], dfx, check_names=False)
+        # by ndarray with delayed loc
+        sel = np.array([1, 2])
+        dfx = om.datasets.getl('foo')
+        dfx.immediate_loc = False
+        dfx = dfx[['a']].iloc[sel].value
+        assert_frame_equal(df[['a']].iloc[sel], dfx, check_names=False)
+
+
