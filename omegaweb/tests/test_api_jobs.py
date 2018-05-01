@@ -169,3 +169,23 @@ class JobResourceTests(ResourceTestCase):
         self.assertIn('content', data)
         self.assertIn('name', data)
         self.assertIn('<html>', data['content'])
+
+    def test_job_report_slides(self):
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        # see what we get
+        resp = self.api_client.get(self.url('testjob', action='report'),
+                                   data=dict(format='slides'),
+                                   authentication=self.get_credentials())
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        self.assertIn('content', data)
+        self.assertIn('name', data)
+        self.assertIn('<html>', data['content'])
+        self.assertIn('Reveal.initialize', data['content'])

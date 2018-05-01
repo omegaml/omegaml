@@ -354,6 +354,15 @@ class MDataFrame(object):
         self.auto_inspect = auto_inspect
         self._inspect_cache = INSPECT_CACHE
 
+    def __getstate__(self):
+        # pickle support. note that the hard work is done in PickableCollection
+        data = dict(self.__dict__)
+        data.update(_evaluated=None)
+        data.update(_inspect_cache=None)
+        data.update(auto_inspect=None)
+        data.update(collection=self.collection)
+        return data
+
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
         self.__dict__.update(**state)
@@ -564,6 +573,7 @@ class MDataFrame(object):
                         ascending.
         :return: the MDataFrame
         """
+        self._evaluated = None
         self.sort_order = make_tuple(columns)
         return self
 
@@ -574,6 +584,7 @@ class MDataFrame(object):
         :param limit: the number of rows to return. Defaults to 10
         :return: the MDataFrame
         """
+        self._evaluated = None
         self.head_limit = limit
         return self
 
@@ -584,6 +595,7 @@ class MDataFrame(object):
         :param limit:
         :return:
         """
+        self._evaluated = None
         self.skip(len(self) - limit)
         return self
 
@@ -594,6 +606,7 @@ class MDataFrame(object):
         :param topn: the number of rows to skip.
         :return: the MDataFrame 
         """
+        self._evaluated = None
         self.skip_topn = topn
         return self
 
@@ -784,6 +797,7 @@ class MDataFrame(object):
         :param kwargs: all AND filter criteria 
         :return: self
         """
+        self._evaluated = None
         self.filter_criteria = self._get_filter_criteria(*args, **kwargs)
         self.collection = FilteredCollection(
             self.collection, query=self.filter_criteria)
@@ -806,7 +820,10 @@ class MDataFrame(object):
         """
         effective_filter = dict(self.filter_criteria)
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
-        effective_filter.update(filter_criteria)
+        if '$and' in effective_filter:
+            effective_filter['$and'].extend(filter_criteria.get('$and'))
+        else:
+            effective_filter.update(filter_criteria)
         coll = FilteredCollection(self.collection, query=effective_filter)
         return self.__class__(coll, query=effective_filter,
                               **self.__getcopy_kwargs(without='query'))
@@ -834,11 +851,13 @@ class MDataFrame(object):
 
         :return: MLocIndexer
         """
+        self._evaluated = None
         indexer = MLocIndexer(self)
         return indexer
 
     @property
     def iloc(self):
+        self._evaluated = None
         indexer = MPosIndexer(self)
         return indexer
 

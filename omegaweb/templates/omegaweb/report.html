@@ -1,0 +1,27 @@
+{% extends "page.html" %}
+
+{% block content %}
+{% block subcontent %}
+<div id="report-div"></div>
+{% endblock %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+
+{% load sekizai_tags staticfiles %}
+{% block custom %} {% addtoblock "pagejs" %}
+<script type="text/javascript">
+/* context retrieved from django view */
+var context = {
+        name : "{{name}}",
+};
+
+</script>
+<script type="text/javascript" src="{% static 'omegaweb/js/pages/report.js' %}"></script>
+{% endaddtoblock "pagejs" %}
+{% endblock %}

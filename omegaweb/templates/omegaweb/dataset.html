@@ -1,115 +1,46 @@
 {% extends "landingpage/base.html" %}
-{% load sekizai_tags staticfiles %} 
+{% load sekizai_tags staticfiles %}
 {% block subcontent %}
 {% addtoblock "css" %}
 <link href="{% static 'omegaweb/js/libs/backgrid/libs/backgrid.css' %}" rel="stylesheet">
 {% endaddtoblock "css" %}
 <div class="col-md-12>">
-	<div class="well panel app open datasets">
-		<h4>{{name}}</h4>
-		<nav aria-label="...">
-			<ul class="pager pull-right">
-				<li><div class="btn-toolbar form-inline search-form"
-						role="toolbar" aria-label="Toolbar with button groups">
-						<div class="input-group">
-							<input type="text" class="form-control filterkw"
-								placeholder="Search for..."> <span
-								class="input-group-btn">
+    <div class="well panel app open datasets">
+        <h4>{{name}}</h4>
+        <nav aria-label="...">
+            <ul class="pager pull-right">
+                <li>
+                    <div class="btn-toolbar form-inline search-form"
+                         role="toolbar" aria-label="Toolbar with button groups">
+                        <div class="input-group">
+                            <input type="text" class="form-control filterkw"
+                                   placeholder="Search for..."> <span
+                                class="input-group-btn">
 								<button class="btn btn-default search" type="button">
 									<i class="fa fa-filter"></i>
 								</button>
 							</span>
-						</div>
-					</div></li>
-				<li><a href="#" class="prevpage"><i
-						class="fa fa-chevron-left"></i></a></li>
-				<li><a href="#" class="pageno">1</a></li>
-				<li><a href="#" class="nextpage"><i
-						class="fa fa-chevron-right"></i></a></li>
-			</ul>
-		</nav>
-		<div class="table-responsive backgrid-container"></div>
-	</div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#" class="prevpage"><i
+                        class="fa fa-chevron-left"></i></a></li>
+                <li><a href="#" class="pageno">1</a></li>
+                <li><a href="#" class="nextpage"><i
+                        class="fa fa-chevron-right"></i></a></li>
+            </ul>
+        </nav>
+        <div class="table-responsive backgrid-container"></div>
+    </div>
 </div>
 {% endblock %} {% block custom %} {% addtoblock "pagejs" %}
-<script>
-    var context = {
+<script type="text/javascript">
+/* context retrieved from django view */
+var context = {
         name : "{{name}}",
-    };
-    $(function() {
-        require(['omegaweb/js/views/generictable',
-            'omegaweb/js/models/dataset', 'omegaweb/js/models/model',
-            'backbone'], function(GenericTableView, Dataset, Model, $B) {
-            function column(name, label, cell, options) {
-                options = options || {};
-                var coldef = {
-                    name : name,
-                    label : label,
-                    cell : cell || 'fixed-width',
-                    width : 1,
-                    editable : true,
-                    btnClassName : 'btn-info',
-                    btnText: '',
-                    icon: 'far fa-table',
-                };
-                return _.defaults(options, coldef);
-            };;
-            var dataset = new Dataset({
-                name : context.name,
-            });
-            /* display  */
-            dataset.fetch({
-                reset : true,
-            }).done(function() {
-                console.info('fetched dataset {0}, rendering..'
-                    .format([context.name]));
-                var dataColumns = _.map(_.keys(dataset.attributes.dtypes), function(k) {
-                    return column(k, k, 'fixed-width', { editable: false });
-                });
-                var indexColumn = [column('index', 'Index')];
-                var tableOptions = {
-                    columns : indexColumn.concat(dataColumns),
-                };
-                var datasetView = new GenericTableView({
-                    el : '.panel.datasets',
-                    tableOptions : tableOptions,
-                    collection : dataset.asCollection(),
-                });
-                datasetView.render();
-                $('.search').on('click', function() {
-                    dataset.filterSpec = $('.filterkw').val();
-                    dataset.fetch({reset:true}).done(function() {
-                        dataset.page = 0;
-                        datasetView.update(dataset.asCollection());    
-                    })
-                });
-                $('.search-form').keypress(function(e){
-                    if(e.which == 13){//Enter key pressed
-                        $('.search').click();//Trigger search button click event
-                    }
-                });
-                $('.nextpage').on('click', function() {
-                    dataset.nextPage();
-                    $('a.pageno').text(dataset.page + 1);
-                    dataset.filterSpec = $('.filterkw').val();
-                    dataset.fetch({reset:true}).done(function() {
-                        datasetView.update(dataset.asCollection());    
-                    })
-                });
-                $('.prevpage').on('click', function() {
-                    dataset.previousPage();
-                    $('a.pageno').text(dataset.page + 1);
-                    dataset.fetch({reset:true}).done(function() {
-                        datasetView.update(dataset.asCollection());    
-                    })
-                });
-            }).error(function() {
-                alert("there was an error");
-            });
-            
-            
-        });
-    });
+};
+
 </script>
+<script type="text/javascript" src="{% static 'omegaweb/js/pages/dataset.js' %}"></script>
 {% endaddtoblock "pagejs" %}
 {% endblock %}
