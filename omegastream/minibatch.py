@@ -20,7 +20,7 @@ class Window(Document):
     """
     stream = StringField(required=True)
     created = DateTimeField(default=datetime.datetime.now)
-    data = ListField(required=True)
+    data = ListField(default=[])
     processed = BooleanField(default=False)
     meta = {
         'db_alias': 'omega',
@@ -227,9 +227,12 @@ class WindowEmitter(object):
                         window = self.emit(qs)
                     except Exception as e:
                         self.undo(qs)
+                        print(str(e))
                     else:
-                        self.timestamp(*query_args)
                         self.commit(qs, window)
+                    finally:
+                        self.timestamp(*query_args)
+
             self.sleep()
                 
         
@@ -254,7 +257,7 @@ class FixedTimeWindow(WindowEmitter):
     def __init__(self, *args, **kwargs):
         super(FixedTimeWindow, self).__init__(*args, **kwargs)
         self.emit_empty = True
-        
+
     def window_ready(self):
         stream = self.stream
         last_read = stream.last_read
@@ -264,20 +267,24 @@ class FixedTimeWindow(WindowEmitter):
     
     def query(self, *args):
         last_read, max_read = args
-        fltkwargs = dict(created__gt=last_read, created__lte=max_read)
+        fltkwargs = dict(created__gte=last_read, created__lte=max_read)
         return Buffer.objects.no_cache().filter(**fltkwargs)
     
     def timestamp(self, *args):
         last_read, max_read = args
-        self.stream.modify(last_read=max_read)
+        self.stream.modify(query=dict(last_read__gte=last_read), last_read=max_read)
+        self.stream.reload()
+
         
     def sleep(self):
         import time
-        # sleep slightly longer to make sure the interval is complete
-        # and all data had a chance to accumulate. if we don't do
-        # this we might get empty windows on accident, resulting in
-        # lost data
-        time.sleep(self.interval + 0.25)
+        # we have strict time windows, only sleep if we are up to date
+        if self.stream.last_read > datetime.datetime.now() - datetime.timedelta(seconds=self.interval):
+            # sleep slightly longer to make sure the interval is complete
+            # and all data had a chance to accumulate. if we don't do
+            # this we might get empty windows on accident, resulting in
+            # lost data
+            time.sleep(self.interval + 0.25)
         
 
 class RelaxedTimeWindow(WindowEmitter):
@@ -310,7 +317,8 @@ class RelaxedTimeWindow(WindowEmitter):
     
     def timestamp(self, *args):
         last_read, max_read = args
-        self.stream.modify(last_read=max_read)
+        self.stream.modify(query=dict(last_read=last_read), last_read=max_read)
+        self.stream.reload()
         
         
 class CountWindow(WindowEmitter):
@@ -323,7 +331,7 @@ class CountWindow(WindowEmitter):
         return self._data
         
     def timestamp(self, *args):
-        self.stream.modify(last_read=datetime.datetime.now())
+        self.stream.modify(query={}, last_read=datetime.datetime.now())
         
     def sleep(self):
         import time
