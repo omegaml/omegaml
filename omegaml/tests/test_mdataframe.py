@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import random
 import string
+import unittest
 from unittest.case import TestCase
 
 import numpy as np
@@ -169,6 +170,21 @@ class MDataFrameTests(TestCase):
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
         testdf = df.merge(other, on='x', how='left')
+        testdf = testdf[result.columns]
+        self.assertTrue(result.equals(testdf))
+
+    @unittest.skip("fails due to error in MDataFrame.append which is very slow")
+    def test_mdataframe_merge_append(self):
+        coll = self.coll
+        df = self.df
+        om = self.om
+        other = pd.DataFrame({'x': list(range(50, 55)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
+        om.datasets.put(other, 'samplez', append=False)
+        coll2 = om.datasets.collection('samplez')
+        result = MDataFrame(coll).merge(coll2, on='x', how='left', suffixes=('','')).value
+        testdf = df.append(other, ignore_index=True)
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
 

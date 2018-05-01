@@ -68,7 +68,7 @@ class Metadata(Document):
 
     def __unicode__(self):
         kwargs = ('%s=%s' % (k, getattr(self, k))
-                  for k in self._fields.keys())
+                  for k in self._fields.keys() if k in ('bucket', 'prefix', 'created', 'kind'))
         return u"Metadata(%s)" % ','.join(kwargs)
 
     

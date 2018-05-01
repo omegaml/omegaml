@@ -182,6 +182,11 @@ class MongoQueryOps(object):
         fout = fout or sys.stdout
         fout.write(df.to_latex())
         return fout
+    def PROJECT(self, fields, include=True):
+        fields = make_tuple(fields)
+        return {
+            '$project': { key: 1 if include else 0 for key in fields}
+        }
     def LOOKUP(self, other, key=None, left_key=None, right_key=None,
                target=None):
         """
@@ -201,22 +206,30 @@ class MongoQueryOps(object):
                 "as": target or ("%s_%s" % (other, key or right_key))
             }
         }
-    def UNWIND(self, field, preserve=True):
+    def UNWIND(self, field, preserve=True, index=None):
         """
         returns $unwind for the given array field. the index in the
         array will be output as _index_<field>. 
 
         :param field: the array field to unwind from
         :param preserve: if True, the document is output even if the
-        array field is empty.  
+           array field is empty.
+        :param index: if given the index field is taken from this field
         """
-        return {
+        op = {
             "$unwind": {
-                "path": "$%s" % field,
-                "includeArrayIndex": "%s_%s" % ('_index_', field),
-                "preserveNullAndEmptyArrays": preserve
+                "path": "${}".format(field)
             }
         }
+        if preserve is not None:
+            op['$unwind'].update({
+                "preserveNullAndEmptyArrays": preserve
+            })
+        if index is not None:
+            op['$unwind'].update({
+                "includeArrayIndex": "%s_%s" % ('_index_', index),
+            })
+        return op
     def OUT(self, name):
         return {"$out": name}
     def SET(self, column, value):
@@ -265,6 +278,12 @@ class MongoQueryOps(object):
         if mind:
             nearq['$near']['$minDistance'] = mind
         return nearq
+    def REPLACEROOT(self, field):
+        return {
+            '$replaceRoot': {
+                'newRoot': "${}".format(field)
+            }
+        }
     def make_index(self, columns, **kwargs):
         """
         return an index specification suitable for collection.create_index()

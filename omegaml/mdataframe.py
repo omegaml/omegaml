@@ -5,6 +5,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 import six
+from bson import Code
 from numpy import isscalar
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
@@ -13,6 +14,8 @@ from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index, \
     cursor_to_dataframe, restore_index_columns_order, PickableCollection
 from pymongo.collection import Collection
+
+INSPECT_CACHE = []
 
 
 class MGrouper(object):
@@ -198,8 +201,8 @@ class MLocIndexer(object):
             if (self.positional and isinstance(specs, tuple) and len(specs) == 2
                 and all(isscalar(v) for v in specs)):
                 # iloc[int, int] is a cell access
-               flt_kwargs[idx_cols[0]] = specs[0]
-               projection.extend(self._get_projection(specs[1]))
+                flt_kwargs[idx_cols[0]] = specs[0]
+                projection.extend(self._get_projection(specs[1]))
             else:
                 flt_kwargs['{}__in'.format(idx_cols[0])] = specs
                 self._from_range = True
@@ -319,7 +322,8 @@ class MDataFrame(object):
 
     def __init__(self, collection, columns=None, query=None,
                  limit=None, skip=None, sort_order=None,
-                 force_columns=None, immediate_loc=False, **kwargs):
+                 force_columns=None, immediate_loc=False, auto_inspect=False,
+                 **kwargs):
         self.collection = PickableCollection(collection)
         # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields()
@@ -346,6 +350,9 @@ class MDataFrame(object):
         self.immediate_loc = immediate_loc
         # __array__ will return this value if it is set, set it otherwise
         self._evaluated = None
+        # set true to automatically capture inspects on .value. retrieve using .inspect(cached=True)
+        self.auto_inspect = auto_inspect
+        self._inspect_cache = INSPECT_CACHE
 
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
@@ -359,14 +366,14 @@ class MDataFrame(object):
                       skip=self.skip_topn,
                       from_loc_indexer=self.from_loc_indexer,
                       immediate_loc=self.immediate_loc,
-                      query=self.filter_criteria)
+                      query=self.filter_criteria,
+                      auto_inspect=self.auto_inspect)
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
 
     def __array__(self):
         # FIXME inefficient. make MDataFrame a drop-in replacement for any numpy ndarray
         # this evaluates every single time
-        return self.value.as_matrix()
         if self._evaluated is None:
             self._evaluated = array = self.value.as_matrix()
         else:
@@ -452,23 +459,30 @@ class MDataFrame(object):
         kwargs.update(columns=make_tuple(column))
         return MSeries(self.collection, **kwargs)
 
-    def inspect(self, explain=False):
+    def inspect(self, explain=False, cached=False, cursor=None, raw=False):
         """
         inspect this dataframe's actual mongodb query
 
         :param explain: if True explains access path
         """
-        if isinstance(self.collection, FilteredCollection):
-            query = self.collection.query
+        if not cached:
+            if isinstance(self.collection, FilteredCollection):
+                query = self.collection.query
+            else:
+                query = '*',
+            if explain:
+                cursor = cursor or self._get_cursor()
+                explain = cursor.explain()
+            data = {
+                'projection': self.columns,
+                'query': query,
+                'explain': explain or 'specify explain=True'
+            }
         else:
-            query = '*',
-        if explain:
-            explain = self._get_cursor().explain()
-        return {
-            'projection': self.columns,
-            'query': query,
-            'explain': explain or 'specify explain=True'
-        }
+            data = self._inspect_cache
+        if not raw:
+            data = pd.DataFrame(pd.io.json.json_normalize(data))
+        return data
 
     def __len__(self):
         """
@@ -496,6 +510,8 @@ class MDataFrame(object):
         """
         cursor = self._get_cursor()
         df = self._get_dataframe_from_cursor(cursor)
+        if self.auto_inspect:
+            self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
         # this ensures the equiv. of pandas df.loc[n] is a Series
         if self.from_loc_indexer:
             if len(df) == 1 and not self.from_loc_range:
@@ -561,6 +577,16 @@ class MDataFrame(object):
         self.head_limit = limit
         return self
 
+    def tail(self, limit=10):
+        """
+        return up to limit number of rows from last inserted values
+
+        :param limit:
+        :return:
+        """
+        self.skip(len(self) - limit)
+        return self
+
     def skip(self, topn):
         """
         skip the topn number of rows
@@ -573,7 +599,7 @@ class MDataFrame(object):
 
     def merge(self, right, on=None, left_on=None, right_on=None,
               how='inner', target=None, suffixes=('_x', '_y'),
-              sort=False):
+              sort=False, inspect=False):
         """
         merge this dataframe with another dataframe. only left outer joins
         are currently supported. the output is saved as a new collection,
@@ -610,6 +636,7 @@ class MDataFrame(object):
             return right.merge(self, on=on, left_on=right_on, right_on=left_on,
                                how='left', target=target, suffixes=suffixes)
         # generate lookup parameters
+        on = on or '_id'
         right_name = self._get_collection_name_of(right, right)
         target_name = self._get_collection_name_of(
             target, '_temp.merge.%s' % uuid4().hex)
@@ -663,9 +690,55 @@ class MDataFrame(object):
             sort = qops.SORT(**dict(sort_key))
             pipeline.append(sort)
         pipeline.append(out)
-        result = self.collection.aggregate(pipeline)
-        return MDataFrame(self.collection.database[target_name],
-                          force_columns=expected_columns)
+        if inspect:
+            result = pipeline
+        else:
+            result = self.collection.aggregate(pipeline)
+            result = MDataFrame(self.collection.database[target_name],
+                                force_columns=expected_columns)
+        return result
+
+    def append(self, other):
+        if isinstance(other, Collection):
+            right = MDataFrame(other)
+        assert isinstance(
+            other, MDataFrame), "both must be MDataFrames, got other={}".format(type(other))
+        outname = self.collection.name
+        mrout = {
+            'merge': outname,
+            'nonAtomic': True,
+        }
+        mapfn = Code("""
+        function() {
+           this._id = ObjectId();
+           if(this['_om#rowid']) {
+              this['_om#rowid'] += %s;
+           }
+           emit(this._id, this);
+        }
+        """ % len(self))
+        reducefn = Code("""
+        function(key, value) {
+           return value;
+        }
+        """)
+        finfn = Code("""
+        function(key, value) {
+           return value;
+        }
+        """)
+        other.collection.map_reduce(mapfn, reducefn, mrout, finalize=finfn, jsMode=True)
+        unwind = {
+            "$replaceRoot": {
+                "newRoot": {
+                    "$ifNull": ["$value", "$$CURRENT"],
+                }
+            }
+        }
+        output = qops.OUT(outname)
+        pipeline = [unwind, output]
+        self.collection.aggregate(pipeline)
+        return self
 
     def _get_collection_name_of(self, some, default=None):
         """
@@ -746,6 +819,12 @@ class MDataFrame(object):
         result = self.collection.create_index(keys, **kwargs)
         return result
 
+    def list_indexes(self):
+        """
+        list all indices in database
+        """
+        return cursor_to_dataframe(self.collection.list_indexes())
+
     @property
     def loc(self):
         """
@@ -820,4 +899,6 @@ class MSeries(MDataFrame):
             val = val[column]
             if len(val) == 1 and self.from_loc_indexer:
                 val = val.iloc[0]
+        if self.auto_inspect:
+            self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
         return val
