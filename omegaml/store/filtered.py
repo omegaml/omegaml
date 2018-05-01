@@ -1,5 +1,7 @@
 
 from __future__ import absolute_import
+
+from omegaml.util import PickableCollection
 from pymongo.collection import Collection
 
 from omegaml.store import qops
@@ -51,7 +53,7 @@ class FilteredCollection(Collection):
     """
 
     def __init__(self, collection, query=None, projection=None, **kwargs):
-        if isinstance(collection, Collection):
+        if isinstance(collection, (Collection, PickableCollection)):
             database = collection.database
             name = collection.name
         else:

@@ -39,7 +39,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None):
     return configs
 
 
-@cached(seconds=3600)
+#FIXME enable cache by arguments (mnemonic) @cached(seconds=3600)
 def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
                           qualifier=None):
     """
