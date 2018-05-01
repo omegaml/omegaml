@@ -11,22 +11,35 @@ A typical data science workflow consists of the following core steps:
 1. acquire data & store for subsequent processes
 2. clean data & publish for uses
 3. train & evaluate models
-4. publish models
-5. execute prediction models
+4. publish models & reports
+5. execute prediction using previously trained models
 
-In any production scenario, each step requires a scalable storage to store
-raw and cleaned data, models and APIs to execute models. You will also need
-a compute cluster that is easy to access and provides all the required packages.
+In any production scenario, each step requires a scalable storage to store raw and cleaned data, models and
+APIs to execute models. You will also need a compute cluster that is easy to access and provides all the
+required packages. Engineering such a system from scratch is hard, takes considerable time and skills. omega|ml
+provides all of this in an integrated, scalable fashion.
 
 omega|ml provides
 
-* the central storage for data and models
-* an integrated compute cluster runtime to train and execute models 
-* a sophisticated REST API 
+* the central storage for data and models, using MongoDB as the highly-scalable storage provider
+* a client API to out-of-core data processing that follows Pandas semantics
+* a client API to models that follows scikit-learn semantics, integrating scikit-learn and Apache Spark models
+* an integrated compute cluster runtime to train and execute models, as well as to execute arbitrary scripts and
+  automatically publish reports
+* a sophisticated REST API to data, models, scripts and runtime
+* a user interface to access information on all of the above
 
-In addition, omemgal provides interfaces to existing compute clusters like 
-Anaconda's Distributed and Apache Spark. omega|ml also provides an extensible
-framework to add custom backends and compute clusters through a common API.
+Extensibility
+-------------
+
+With the exception of the REST API, all of the above are easily extensible using mixins.
+
+In addition, omemgal provides interfaces to existing compute clusters like Anaconda's Distributed and
+Apache Spark. omega|ml also provides an extensible framework to add custom backends and compute clusters
+through a common API.
+
+Thanks to extensibility at the core of the architecture, omega|ml can easily accommodate any third-party storage
+or machine learning backend, or add new types of operations on data and models.
   
 How omega|ml works
 ------------------
@@ -111,7 +124,7 @@ in omegaml. Refer to the LICENSES file for details.
 
 
 Positioning omega|ml
--------------------
+--------------------
 
 The core focus of omega|ml is to enable enterprise-grade application integration 
 of data science workflows, at scale. While the following products provide specific elements
@@ -127,8 +140,6 @@ them provide the simplicity of the omega|ml API and the versatility of backends.
   ready REST API. omega|ml provides the :code:`SparkBackend` to integate with
   an existing Spark Cluster, providing the same easy API to Spark, shielding
   users from the complexities and pitfalls of the PySpark API.  
-  
-| 
 
 * *Anaconda Dask Distributed* - Dask Distributed is Anaconda's answer to 
   Spark in the Python ecosystem. Fully implemented in Python, Dask Distributed

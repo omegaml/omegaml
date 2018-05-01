@@ -1,8 +1,8 @@
 Filtering Data
 ==============
 
-Introduction
-++++++++++++
+Query filtering
++++++++++++++++
 
 The :code:`.get` method when operating on a Pandas DataFrame provides 
 keyword-style filtering and an optional lazy evaluation mode. Filters are 
@@ -50,9 +50,15 @@ operations, however, are executed by the database and thus support out-of-core
 sized DataFrames, that is DataFrames of arbitrary size.                
 
 .. code::
-   
+
+   # ask for a reference to the dfx dataset with lazy evaluation
    om.datasets.get('dfx', lazy=True)
    => 
+   <omegaml.mdataframe.MDataFrame at 0x7fa3e991ee48>
+
+   # same thing, getl is convenience method that automatically specifies lazy=True
+   om.datasets.getl('dfx')
+   =>
    <omegaml.mdataframe.MDataFrame at 0x7fa3e991ee48>
    
 :code:`MDataFrame` in many ways behaves like a normal dataframe, however the
@@ -88,14 +94,37 @@ Specify the list of columns to be accessed:
     2  2  2
     3  3  3
     4  4  4
+
+Masked-style selection
+----------------------
+
+As with Pandas DataFrames, omega|ml MDataFrames can be subset using filter masks:
+
+.. code::
+
+   mdf = om.datasets.getl('dfx')
+   flt = (mdf['x'] > 2) & (mdf['x] < 4)
+   mdf[flt].value
+   =>
+       x  y
+    3  3  3
+
+.. note::
+
+    MDataFrame masks are not series of True/False as they are in Pandas. Instead a
+    MDataFrame filter mask translates into a query filter that is applied on accessing
+    the :code:`.value` property. Consider MDataFrame a syntactical convenience that makes
+    it easy to transform code for a Pandas DataFrame to an MDataFrame.
+
   
-Row projection
---------------
+Index-Row selection
+-------------------
 
 Specify the index of the rows to be accessed:
 
 .. code::
 
+   # numeric index
    om.datasets.get('dfx', lazy=True).loc[2:5].value
    => 
        x  y
@@ -103,6 +132,39 @@ Specify the index of the rows to be accessed:
     3  3  3
     4  4  4
     5  5  5
+
+   # alphanumeric index
+   om.datasets.get('dfx', lazy=True).loc['abc'].value
+   =>
+         x  y
+    abc  2  2
+
+
+Numeric row selection
+---------------------
+
+Specify the numeric row id. Note this requires that the dataset was created with a continuous row id
+(automatically created when using :code:`datasets.put`)
+
+.. code::
+
+   # numeric index
+   om.datasets.get('dfx', lazy=True).iloc[2:5].value
+   =>
+       x  y
+    2  2  2
+    3  3  3
+    4  4  4
+    5  5  5
+
+.. note::
+
+    The :code:`.iloc` accessor is also used by scikit-learn's KFold and grid search features. Since
+    MDataFrame's are very efficiently serializable (only specifications are serialized, not actual data)
+    this feature makes MDataFrames an attractive choice for gridsearch in a compute cluster. Actually
+    MDataFrame instances can be used directly with gridsearch, whereas for example Dask's DataFrame implementation
+    cannot.
+
     
 Filter data
 -----------

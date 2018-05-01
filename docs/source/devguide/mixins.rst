@@ -1,10 +1,12 @@
 Mixins
 ------
 
-Mixins come in two flavors:
+Mixins come in several flavors:
 
 * :code:`OmegaStore` mixins, enabling data pre-/post processing
 * :code:`OmegaModelProxy` mixins, enabling tasks to run on the compute cluster
+* :code:`MDataFrame, MSeries` mixins, enabling custom operations on MDataFrame and MSeries objects
+* :code:`ApplyContext` mixins, enabling custom operations in :code:`apply()` contexts
 
 
 Storage mixins
