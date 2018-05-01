@@ -34,9 +34,10 @@ def extend_instance(obj, cls):
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
     cls = load_class(cls)
-    base_cls = obj.__class__
-    base_cls_name = obj.__class__.__name__
-    obj.__class__ = type(base_cls_name, (cls, base_cls),{})
+    if cls not in obj.__class__.mro():
+        base_cls = obj.__class__
+        base_cls_name = 'Extended{}'.format(obj.__class__.__name__.split('.')[0])
+        obj.__class__ = type(base_cls_name, (cls, base_cls), {})
 
 def mkdirs(path):
     """ save os.makedirs for python 2 & 3

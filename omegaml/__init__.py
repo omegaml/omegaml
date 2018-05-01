@@ -95,13 +95,12 @@ class OmegaDeferredInstance():
             self.setup()
         return getattr(self.omega, name)
 
+    def __repr__(self):
+        if self.base:
+            return repr(getattr(self.base, self.attribute))
+        self.setup()
+        return repr(self.omega)
 
-def __repr__():
-    return getattr(_om, 'omega').__repr__()
-
-
-def repr():
-    return __repr__()
 
 
 def setup(username=None, apikey=None, api_url=None, qualifier=None):

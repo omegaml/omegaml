@@ -4,7 +4,7 @@ import os
 import random
 import string
 import unittest
-from unittest.case import TestCase
+from unittest.case import TestCase, skip
 
 import numpy as np
 import pandas as pd
@@ -173,20 +173,23 @@ class MDataFrameTests(TestCase):
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
 
-    @unittest.skip("fails due to error in MDataFrame.append which is very slow")
+    @unittest.skip("disalbed because MDataFrame.append fails and is very slow")
     def test_mdataframe_merge_append(self):
+        ## FIXME this does not work
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(50, 55)),
+        other = pd.DataFrame({'x': list(range(0, 5)),
                               'y': list(range(0, 5)),
                               'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
+        mdf = om.datasets.getl('samplez')
+        mdf.append(mdf)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left', suffixes=('','')).value
         testdf = df.append(other, ignore_index=True)
         testdf = testdf[result.columns]
-        self.assertTrue(result.equals(testdf))
+        assert_frame_equal(result, testdf)
 
     def test_mdataframe_merge_partial_match(self):
         coll = self.coll

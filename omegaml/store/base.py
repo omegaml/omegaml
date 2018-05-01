@@ -122,7 +122,7 @@ class OmegaStore(object):
         # the one provided in override_settings
         self._db = None
         # add backends and mixins
-        self.apply_mixins()
+        self._apply_mixins()
         # register backends
         self.register_backends()
 
@@ -312,7 +312,7 @@ class OmegaStore(object):
             raise e
         return datastore
 
-    def apply_mixins(self):
+    def _apply_mixins(self):
         """
         apply mixins in defaults.OMEGA_STORE_MIXINS
         """

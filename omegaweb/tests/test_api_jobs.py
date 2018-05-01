@@ -174,14 +174,20 @@ class JobResourceTests(ResourceTestCase):
         om = self.om
         # create a notebook
         cells = []
-        code = "print('hello')"
+        code = "print('slide 1')"
+        cells.append(v4.new_markdown_cell('Slide 1', metadata=dict(slide_start=True)))
         cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
+        code = "print('slide 2')"
+        cells.append(v4.new_markdown_cell('Slide 2', metadata=dict(slide_start=True)))
+        cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
         notebook = v4.new_notebook(cells=cells)
         # put notebook
         meta = om.jobs.put(notebook, 'testjob')
         # see what we get
         resp = self.api_client.get(self.url('testjob', action='report'),
-                                   data=dict(format='slides'),
+                                   data=dict(fmt='slides'),
                                    authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)

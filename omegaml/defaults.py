@@ -45,13 +45,18 @@ OMEGA_STORE_BACKENDS = {
 }
 #: storage mixins
 OMEGA_STORE_MIXINS = [
-    'omegaml.mixins.ProjectedMixin',
+    'omegaml.mixins.store.ProjectedMixin',
     'omegapkg.PythonPackageMixin',
 ]
 #: runtime mixins
 OMEGA_RUNTIME_MIXINS = [
     'omegaml.runtime.mixins.ModelMixin',
     'omegaml.runtime.mixins.GridSearchMixin',
+]
+#: mdataframe mixins
+OMEGA_MDF_MIXINS = [
+    ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.FilterOpsMixin', 'MDataFrame,MSeries'),
 ]
 
 #: the omegaweb url
