@@ -8,6 +8,7 @@ User Guide
    getstarted
    store_retrieve
    filterdf
+   mdfapply
    modelstore
    lambda
    restapi

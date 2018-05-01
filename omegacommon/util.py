@@ -29,7 +29,7 @@ class cached(object):
         return inner
 
 
-def extend_instance(obj, cls):
+def extend_instance(obj, cls, *args, **kwargs):
     """Apply mixins to a class instance after creation"""
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
@@ -38,6 +38,8 @@ def extend_instance(obj, cls):
         base_cls = obj.__class__
         base_cls_name = 'Extended{}'.format(obj.__class__.__name__.split('.')[0])
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
+    if hasattr(obj, '_init_mixin'):
+        obj._init_mixin(*args, **kwargs)
 
 def mkdirs(path):
     """ save os.makedirs for python 2 & 3
