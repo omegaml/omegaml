@@ -314,9 +314,13 @@ def cursor_to_dataframe(cursor, chunk_size=10000):
     # consumption. Note chunks are of size max. chunk_size.
     import pandas as pd
     frames = []
-    count = cursor.count()
-    if count > 0:
+    if hasattr(cursor, 'count'):
+        count = cursor.count()
         chunk_size = max(chunk_size, int(count * .1))
+    else:
+        # CommandCursors don't have .count, go as long as we can
+        count = None
+    if count is None or count > 0:
         for chunk in grouper(chunk_size, cursor):
             frames.append(pd.DataFrame.from_records(chunk))
         if frames:

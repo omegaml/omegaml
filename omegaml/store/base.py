@@ -475,6 +475,9 @@ class OmegaStore(object):
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             collection.create_index(keys, **idx_kwargs)
+        # create index on row id
+        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
+        collection.create_index(keys, **idx_kwargs)
         # bulk insert
         # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
