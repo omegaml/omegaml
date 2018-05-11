@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 
 import datetime
@@ -8,6 +7,7 @@ from uuid import uuid4
 from croniter import croniter
 import gridfs
 from mongoengine.fields import GridFSProxy
+from nbconvert import SlidesExporter
 from nbconvert.exporters.html import HTMLExporter
 from nbconvert.exporters.pdf import PDFExporter
 from nbconvert.preprocessors.execute import ExecutePreprocessor
@@ -20,10 +20,10 @@ from omegaml import signals
 from omegaml.documents import Metadata
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings
+from traitlets.config import Config, six
 
 
 class OmegaJobs(object):
-
     """
     Omega Jobs API
     """
@@ -211,15 +211,26 @@ class OmegaJobs(object):
            format html data is the HTML's body, for PDF it is the pdf file contents
         """
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
-        # (exporter class, filemode
+        # (exporter class, filemode, config-values
         EXPORTERS = {
-            'html': (HTMLExporter, ''),
-            'htmlbody': (HTMLExporter, ''),
-            'pdf': (PDFExporter, 'b')
+            'html': (HTMLExporter, '', {}),
+            'htmlbody': (HTMLExporter, '', {}),
+            'pdf': (PDFExporter, 'b', {}),
+            'slides': (SlidesExporter, '', {'RevealHelpPreprocessor.url_prefix':
+                                                'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/'}),
         }
         # get exporter according to format
-        exporter_cls, fmode = EXPORTERS[format]
-        exporter = exporter_cls()
+        if format not in EXPORTERS:
+            raise ValueError('format {} is invalid. Choose one of {}'.format(format, EXPORTERS.keys()))
+        exporter_cls, fmode, configkw = EXPORTERS[format]
+        # prepare config
+        # http://nbconvert.readthedocs.io/en/latest/nbconvert_library.html#Using-different-preprocessors
+        c = Config()
+        for k, v in six.iteritems(configkw):
+            context, key = k.split('.')
+            setattr(c[context], key, v)
+        # get configured exporter
+        exporter = exporter_cls(config=c)
         # get notebook, convert and store in file if requested
         notebook = self.get(name)
         (data, resources) = exporter.from_notebook_node(notebook)

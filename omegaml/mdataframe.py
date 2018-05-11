@@ -7,6 +7,8 @@ import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
+from omegacommon.util import extend_instance
+from omegaml import defaults
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
@@ -345,7 +347,12 @@ class MDataFrame(object):
         # setup query for filter criteries, if provided
         if self.filter_criteria:
             # make sure we have a filtered collection with the criteria given
-            self.query_inplace(**self.filter_criteria)
+            if isinstance(self.filter_criteria, dict):
+                self.query_inplace(**self.filter_criteria)
+            elif isinstance(self.filter_criteria, Filter):
+                self.query_inplace(self.filter_criteria)
+            else:
+                raise ValueError('Invalid query specification of type {}'.format(type(self.filter_criteria)))
         # if immediate_loc is True, .loc and .iloc always evaluate
         self.immediate_loc = immediate_loc
         # __array__ will return this value if it is set, set it otherwise
@@ -353,12 +360,32 @@ class MDataFrame(object):
         # set true to automatically capture inspects on .value. retrieve using .inspect(cached=True)
         self.auto_inspect = auto_inspect
         self._inspect_cache = INSPECT_CACHE
+        # apply mixins
+        self._applyto = str(self.__class__)
+        self._apply_mixins()
+
+    def _apply_mixins(self):
+        """
+        apply mixins in defaults.OMEGA_STORE_MIXINS
+        """
+        for mixin, applyto in defaults.OMEGA_MDF_MIXINS:
+            if any(v in self._applyto for v in applyto.split(',')):
+                extend_instance(self, mixin)
+
+    def __getstate__(self):
+        # pickle support. note that the hard work is done in PickableCollection
+        data = dict(self.__dict__)
+        data.update(_evaluated=None)
+        data.update(_inspect_cache=None)
+        data.update(auto_inspect=None)
+        data.update(collection=self.collection)
+        return data
 
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
         self.__dict__.update(**state)
 
-    def __getcopy_kwargs(self, without=None):
+    def _getcopy_kwargs(self, without=None):
         """ return all parameters required on a copy of this MDataFrame """
         kwargs = dict(columns=self.columns,
                       sort_order=self.sort_order,
@@ -384,23 +411,45 @@ class MDataFrame(object):
         if attr in MDataFrame.STATFUNCS:
             return self.statfunc(attr)
         if attr in self.columns:
-            kwargs = self.__getcopy_kwargs()
+            kwargs = self._getcopy_kwargs()
             kwargs.update(columns=attr)
             return MSeries(self.collection, **kwargs)
         raise AttributeError(attr)
 
     def __getitem__(self, cols_or_slice):
+        """
+        select and project by column, columns, slice, masked-style filter
+
+        Masked-style filters work similar to pd.DataFrame/Series masks
+        but do not actually return masks but an instance of Filter. A
+        Filter is a delayed evaluation on the data frame.
+
+            # select all rows where any column is == 5
+            mdf = MDataFrame(coll)
+            flt = mdf == 5
+            mdf[flt]
+            =>
+
+        :param cols_or_slice: single column (str), multi-columns (list),
+          slice to select columns or a masked-style
+        :return: filtered MDataFrame or MSeries
+        """
         if isinstance(cols_or_slice, six.string_types):
+            # column name => MSeries
             return self._as_mseries(cols_or_slice)
         elif isinstance(cols_or_slice, int):
+            # column number => MSeries
             column = self.columns[cols_or_slice]
             return self._as_mseries(column)
         elif isinstance(cols_or_slice, (tuple, list)):
-            kwargs = self.__getcopy_kwargs()
+            # list of column names => MDataFrame subset on columns
+            kwargs = self._getcopy_kwargs()
             kwargs.update(columns=cols_or_slice)
             return MDataFrame(self.collection, **kwargs)
+        elif isinstance(cols_or_slice, Filter):
+            return MDataFrame(self.collection, query=cols_or_slice.query)
         elif isinstance(cols_or_slice, np.ndarray):
-            pass
+            raise NotImplemented
         raise ValueError('unknown accessor type %s' % type(cols_or_slice))
 
     def __setitem__(self, column, value):
@@ -455,7 +504,7 @@ class MDataFrame(object):
         return result
 
     def _as_mseries(self, column):
-        kwargs = self.__getcopy_kwargs()
+        kwargs = self._getcopy_kwargs()
         kwargs.update(columns=make_tuple(column))
         return MSeries(self.collection, **kwargs)
 
@@ -564,6 +613,7 @@ class MDataFrame(object):
                         ascending.
         :return: the MDataFrame
         """
+        self._evaluated = None
         self.sort_order = make_tuple(columns)
         return self
 
@@ -574,6 +624,7 @@ class MDataFrame(object):
         :param limit: the number of rows to return. Defaults to 10
         :return: the MDataFrame
         """
+        self._evaluated = None
         self.head_limit = limit
         return self
 
@@ -584,6 +635,7 @@ class MDataFrame(object):
         :param limit:
         :return:
         """
+        self._evaluated = None
         self.skip(len(self) - limit)
         return self
 
@@ -594,6 +646,7 @@ class MDataFrame(object):
         :param topn: the number of rows to skip.
         :return: the MDataFrame 
         """
+        self._evaluated = None
         self.skip_topn = topn
         return self
 
@@ -767,7 +820,10 @@ class MDataFrame(object):
         """
         if len(args) > 0:
             q = args[0]
-            filter_criteria = Filter(self.collection, q).query
+            if isinstance(q, MongoQ):
+                filter_criteria = Filter(self.collection, q).query
+            elif isinstance(q, Filter):
+                filter_criteria = Filter(self.collection, q.q).query
         else:
             filter_criteria = Filter(self.collection, **kwargs).query
         return filter_criteria
@@ -784,6 +840,7 @@ class MDataFrame(object):
         :param kwargs: all AND filter criteria 
         :return: self
         """
+        self._evaluated = None
         self.filter_criteria = self._get_filter_criteria(*args, **kwargs)
         self.collection = FilteredCollection(
             self.collection, query=self.filter_criteria)
@@ -806,10 +863,13 @@ class MDataFrame(object):
         """
         effective_filter = dict(self.filter_criteria)
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
-        effective_filter.update(filter_criteria)
+        if '$and' in effective_filter:
+            effective_filter['$and'].extend(filter_criteria.get('$and'))
+        else:
+            effective_filter.update(filter_criteria)
         coll = FilteredCollection(self.collection, query=effective_filter)
         return self.__class__(coll, query=effective_filter,
-                              **self.__getcopy_kwargs(without='query'))
+                              **self._getcopy_kwargs(without='query'))
 
     def create_index(self, keys, **kwargs):
         """
@@ -834,19 +894,20 @@ class MDataFrame(object):
 
         :return: MLocIndexer
         """
+        self._evaluated = None
         indexer = MLocIndexer(self)
         return indexer
 
     @property
     def iloc(self):
+        self._evaluated = None
         indexer = MPosIndexer(self)
         return indexer
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self.__getcopy_kwargs()))
-        return "{}(collection={collection.name}, {kwargs})".format(self.__class__.__name__,
-                                                                   collection=self.collection,
-                                                                   kwargs=kwargs)
+        kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
+        return "MDataFrame(collection={collection.name}, {kwargs})".format(collection=self.collection,
+                                                                           kwargs=kwargs)
 
 
 class MSeries(MDataFrame):
@@ -858,7 +919,21 @@ class MSeries(MDataFrame):
 
     def __init__(self, *args, **kwargs):
         super(MSeries, self).__init__(*args, **kwargs)
+        # true if only unique values apply
         self.is_unique = False
+        # apply mixins
+        self._applyto = str(self.__class__)
+        self._apply_mixins()
+
+    def __getitem__(self, cols_or_slice):
+        if isinstance(cols_or_slice, Filter):
+            return MSeries(self.collection, columns=self.columns,
+                           query=cols_or_slice.query)
+        return super(MSeries, self).__getitem__(cols_or_slice)
+
+    @property
+    def name(self):
+        return self.columns[0]
 
     def unique(self):
         """
@@ -897,8 +972,14 @@ class MSeries(MDataFrame):
         else:
             val = self._get_dataframe_from_cursor(cursor)
             val = val[column]
+            val.name = self.name
             if len(val) == 1 and self.from_loc_indexer:
                 val = val.iloc[0]
         if self.auto_inspect:
             self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
         return val
+
+    def __repr__(self):
+        kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
+        return "MSeries(collection={collection.name}, {kwargs})".format(collection=self.collection,
+                                                                        kwargs=kwargs)

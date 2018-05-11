@@ -72,4 +72,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     STATICFILES_STORAGE = 'omegaweb.util.FailsafeCompressedManifestStaticFilesStorage'
 
+    OMEGA_JYHUB_URL = 'http://localhost:5000'
+    OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
+    OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
+    OMEGA_RESTAPI_URL = 'http://localhost:8000'
 

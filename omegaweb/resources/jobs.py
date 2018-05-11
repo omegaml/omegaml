@@ -144,7 +144,8 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
-        body, resources = om.jobs.export(name, 'memory', format='html')
+        format = request.GET.get('fmt', 'html')
+        body, resources = om.jobs.export(name, 'memory', format=format)
         data = {
             'name': name,
             'content': body,

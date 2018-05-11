@@ -137,6 +137,34 @@ class JobTests(TestCase):
         om.jobs.export(resultnb_name, outpath)
         self.assertTrue(os.path.exists(outpath))
 
+    def test_export_job_slides(self):
+        """
+        test export a job to slides HTML (reveal.js)
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook with slides
+        # see https://github.com/jupyter/nbconvert/blob/master/nbconvert/templates/html/slides_reveal.tpl#L1:14
+        cells = []
+        code = "print('slide 1')"
+        cells.append(v4.new_markdown_cell('Slide 1', metadata=dict(slide_start=True)))
+        cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
+        code = "print('slide 2')"
+        cells.append(v4.new_markdown_cell('Slide 2', metadata=dict(slide_start=True)))
+        cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjob-html')
+        om.jobs.run('testjob-html')
+        # get results and output
+        meta = om.jobs.metadata('testjob-html')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.html'
+        om.jobs.export(resultnb_name, outpath, format='slides')
+        self.assertTrue(os.path.exists(outpath))
+
     def test_export_job_pdf(self):
         """
         test export a job to PDF

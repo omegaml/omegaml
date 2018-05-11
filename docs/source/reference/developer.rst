@@ -29,7 +29,7 @@ omegaml.backends
 omegaml.mixins
 -----------------------
 
-.. autoclass:: omegaml.mixins.projected.ProjectedMixin
+.. autoclass:: omegaml.mixins.projected.store.ProjectedMixin
 
 
 omegaml.runtime

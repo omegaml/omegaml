@@ -25,3 +25,12 @@ def dataview(request, name):
         'name': name,
     }
     return render(request, 'omegaweb/dataset.html', context)
+
+@login_required
+def report(request, name):
+    name = urllib.parse.unquote(name)
+    context = {
+        'name': name,
+    }
+    return render(request, 'omegaweb/report.html', context)
+

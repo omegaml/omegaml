@@ -76,3 +76,16 @@
 	   width: 50%;
 	}
 }
+
+/* reports */
+
+/* hide numbered prompts on slides */
+div.slides .prompt {
+  display: none;
+}
+
+div.slides section {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

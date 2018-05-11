@@ -119,6 +119,8 @@ class MongoQ(object):
                 else:
                     query.setdefault("$or", [])
                 query["$or"].append(fn())
+        if self._inv:
+            query = {"$nor": [query]}
         return query
 
     def build_conditions(self):
@@ -195,14 +197,6 @@ class MongoQ(object):
                 # an attribute name and apply the eq operator
                 # e.g. Q(key__subkey=value)
                 addq('%s.%s' % (k, op), v)
-        if self._inv:
-            _query = {}
-            for k, v in six.iteritems(query):
-                if not isinstance(v, (six.string_types, float, int)):
-                    _query[k] = qops.NOT(v)
-                else:
-                    _query[k] = qops.NOT(qops.EQ(v))
-            return _query
         return query
 
     def negate(self):
@@ -232,7 +226,7 @@ class MongoQ(object):
         """
         return an inverted version of this object
         """
-        notq = MongoQ(**self.conditions).negate()
+        notq = copy.deepcopy(self).negate()
         return notq
 
 
@@ -364,6 +358,15 @@ class Filter(object):
         self.q &= ~self.build_query(query, **kwargs)
         return self
 
+    def __invert__(self):
+        return Filter(self.coll, ~self.q)
+
+    def __and__(self, other):
+        return Filter(self.coll, self.q & other.q)
+
+    def __or__(self, other):
+        return Filter(self.coll, self.q | other.q)
+
     def evaluate(self):
         """
         evaluate the query
@@ -381,6 +384,16 @@ class Filter(object):
         except ImportError:
             result = list(result)
         return result
+
+    def as_mask(self):
+        """
+        return the True mask of this filter
+
+        note this does not actually return a mask but applies the filter
+             to the real data. makes more sense even though the results
+             are somewhat different this way, but match better semantically
+        """
+        return self.value == self.value
 
     def _repr_html_(self):
         return self.value._repr_html_()

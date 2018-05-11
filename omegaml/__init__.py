@@ -82,25 +82,25 @@ class OmegaDeferredInstance():
         settings()
         if not self.initialized and username and apikey:
             self.omega = get_omega_from_apikey(username, apikey, api_url=api_url, qualifier=qualifier)
-            self.initialized = True
         else:
             self.omega = Omega()
+        self.initialized = True
         return self
 
     def __getattr__(self, name):
         if self.base:
             base = getattr(self.base, self.attribute)
             return getattr(base, name)
-        self.setup()
+        if not self.initialized:
+            self.setup()
         return getattr(self.omega, name)
 
+    def __repr__(self):
+        if self.base:
+            return repr(getattr(self.base, self.attribute))
+        self.setup()
+        return repr(self.omega)
 
-def __repr__():
-    return getattr(_om, 'omega').__repr__()
-
-
-def repr():
-    return __repr__()
 
 
 def setup(username=None, apikey=None, api_url=None, qualifier=None):
