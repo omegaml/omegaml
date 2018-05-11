@@ -381,6 +381,15 @@ class MDataFrame(object):
         data.update(collection=self.collection)
         return data
 
+    def __getstate__(self):
+        # pickle support. note that the hard work is done in PickableCollection
+        data = dict(self.__dict__)
+        data.update(_evaluated=None)
+        data.update(_inspect_cache=None)
+        data.update(auto_inspect=None)
+        data.update(collection=self.collection)
+        return data
+
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
         self.__dict__.update(**state)
