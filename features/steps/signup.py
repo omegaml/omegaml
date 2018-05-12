@@ -1,10 +1,11 @@
 import os
 import re
-from time import sleep
 from uuid import uuid4
 
 import yaml
 from behave import *
+
+import omegaml
 
 
 def uri(browser, uri):
@@ -90,3 +91,42 @@ def site_shows_dashboard(ctx):
     br = ctx.browser
     assert br.is_text_present('Your apps', wait_time=2)
     assert br.is_text_present('omegaml')
+    br.visit(uri(br, '/accounts/logout'))
+    for el in br.find_by_text('Sign Out'):
+        el.click()
+    assert br.is_text_present('sign in', wait_time=5)
+
+
+@then('we can get an omega instance')
+def get_omgega_instance(ctx):
+    br = ctx.browser
+    br.visit(uri(br, '/accounts/login'))
+    br.fill('login', ctx.feature.username)
+    br.fill('password', ctx.feature.password)
+    br.click_link_by_text('Login ')
+
+    def find_user_apikey():
+        for el in br.find_by_css('p'):
+            if 'userid' in el.text:
+                userid, apikey = el.text.split('\n')
+                userid = userid.split(' ')[1]
+                apikey = apikey.split(' ')[1]
+        return userid, apikey
+
+    # check we can get a new omegaml instance
+    userid, apikey = find_user_apikey()
+    om = omegaml.setup(userid, apikey, api_url='https://omegaml.omegaml.io')
+    assert om.datasets.mongodb is not None
+    # check it actually works
+    assert len(om.datasets.list()) == 0
+    om.datasets.put({'foo': 'bar'}, 'test')
+    assert len(om.datasets.list()) == 1
+    data = om.datasets.get('test')
+    assert data[0] == {'foo': 'bar'}
+    # logout
+    br.visit(uri(br, '/accounts/logout'))
+    for el in br.find_by_text('Sign Out'):
+        el.click()
+    assert br.is_text_present('sign in', wait_time=5)
+
+
