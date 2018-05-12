@@ -243,7 +243,7 @@ publish:
 	git checkout gh-pages
 	cd ../ && find . -name "*pyc" | xargs rm
 	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "updates ghpages" 
-	echo "Done. Go back to your original branch"
+	echo "Done. git push and go back to your original branch"
 
         
   

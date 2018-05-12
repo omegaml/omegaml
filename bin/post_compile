@@ -1,11 +1,15 @@
 if [[ -f pip-reinstall.txt ]]; then
    pip uninstall -y -r pip-reinstall.txt 
-   pip install -r requirements.txt  --exists-action=w --allow-all-external
-   pip install -r pip-requirements.extra --exists-action=w --allow-all-external
+   pip install -r requirements.txt  --exists-action=w
+   pip install -r pip-requirements.extra --exists-action=w
 fi
 
 if [[ -z "$APP" ]] || [[ $APP == "omegaml" ]]; then
-   pip install jupyterhub==0.8.1
+   pip install -U jupyterhub==0.8.1 "tornado<5" "pip<10"
    python manage.py collectstatic --noinput
+fi
+
+if [[ $APP == "omjobs" ]]; then
+   pip install -U "tornado<5" "pip<10"
 fi
 
