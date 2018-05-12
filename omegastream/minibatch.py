@@ -169,7 +169,7 @@ class WindowEmitter(object):
         raise NotImplemented()
         
     def timestamp(self, query_args):
-        pass
+        self.stream.modify(query={}, last_read=datetime.datetime.now())
         
     @property
     def stream(self):

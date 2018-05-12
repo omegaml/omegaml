@@ -14,3 +14,4 @@ User Guide
    restapi
    custombackends
    runtimes
+   streaming

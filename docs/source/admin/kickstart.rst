@@ -1,5 +1,5 @@
 Getting Started with omega|ml
-============================
+=============================
 
 omega|ml is the data science integration platform that consists of a compute 
 cluster, a highly scalable distributed NoSQL database and a web app providing
