@@ -62,7 +62,7 @@ c.JupyterHub.admin_access = True
 import os
 # must match omegaml.defaults
 jyuser = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
-jytoken = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
+jytoken = os.environ.get('OMEGA_JYHUB_TOKEN', '2a67924fa4a9782abe3dd23826a01401833a10f1')
 c.JupyterHub.api_tokens = {
     jytoken: jyuser,
 }
