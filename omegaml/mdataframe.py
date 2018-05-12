@@ -364,13 +364,13 @@ class MDataFrame(object):
         self._applyto = str(self.__class__)
         self._apply_mixins()
 
-    def _apply_mixins(self):
+    def _apply_mixins(self, *args, **kwargs):
         """
-        apply mixins in defaults.OMEGA_STORE_MIXINS
+        apply mixins in defaults.OMEGA_MDF_MIXINS
         """
         for mixin, applyto in defaults.OMEGA_MDF_MIXINS:
             if any(v in self._applyto for v in applyto.split(',')):
-                extend_instance(self, mixin)
+                extend_instance(self, mixin, *args, **kwargs)
 
     def __getstate__(self):
         # pickle support. note that the hard work is done in PickableCollection
@@ -456,7 +456,9 @@ class MDataFrame(object):
             kwargs.update(columns=cols_or_slice)
             return MDataFrame(self.collection, **kwargs)
         elif isinstance(cols_or_slice, Filter):
-            return MDataFrame(self.collection, query=cols_or_slice.query)
+            kwargs = self._getcopy_kwargs()
+            kwargs.update(query=cols_or_slice.query)
+            return MDataFrame(self.collection, **kwargs)
         elif isinstance(cols_or_slice, np.ndarray):
             raise NotImplemented
         raise ValueError('unknown accessor type %s' % type(cols_or_slice))
@@ -588,6 +590,10 @@ class MDataFrame(object):
         from the given cursor return a DataFrame
         """
         df = cursor_to_dataframe(cursor)
+        df = self._restore_dataframe_proper(df)
+        return df
+
+    def _restore_dataframe_proper(self, df):
         df = restore_index(df, dict())
         if '_id' in df.columns:
             df.drop('_id', axis=1, inplace=True)
@@ -932,7 +938,7 @@ class MSeries(MDataFrame):
         self.is_unique = False
         # apply mixins
         self._applyto = str(self.__class__)
-        self._apply_mixins()
+        self._apply_mixins(*args, **kwargs)
 
     def __getitem__(self, cols_or_slice):
         if isinstance(cols_or_slice, Filter):

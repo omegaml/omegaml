@@ -71,4 +71,14 @@ class Metadata(Document):
                   for k in self._fields.keys() if k in ('bucket', 'prefix', 'created', 'kind'))
         return u"Metadata(%s)" % ','.join(kwargs)
 
-    
+
+class QueryCache(Document):
+    collection = StringField()
+    key = StringField()
+    value = DictField()
+    meta = {
+        'db_alias': 'omega',
+        'indexes': [
+            'key',
+        ]
+    }

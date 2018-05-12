@@ -58,6 +58,13 @@ OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.FilterOpsMixin', 'MDataFrame,MSeries'),
 ]
+#: mdataframe apply context mixins
+OMEGA_MDF_APPLY_MIXINS = [
+    ('omegaml.mixins.mdf.ApplyArithmetics', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.ApplyDateTime', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.ApplyString', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
+]
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
