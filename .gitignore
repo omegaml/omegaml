@@ -5,6 +5,7 @@ omegaweb/node_modules/*
 omegaweb/package-lock.json
 jupyterhub_cookie_secret
 jupyterhub.sqlite
+ybdata
 
 # Created by https://www.gitignore.io/api/eclipse
 
