@@ -4,6 +4,7 @@ Mixins
 Mixins come in two flavors:
 
 * :code:`OmegaStore` mixins, enabling data pre-/post processing
+* :code:`MDataFrame` mixins, enabling custom operations on lazy-evaluation dataframes
 * :code:`OmegaModelProxy` mixins, enabling tasks to run on the compute cluster
 
 
