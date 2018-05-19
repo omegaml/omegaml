@@ -71,7 +71,8 @@ guide assumes a docker-compose single-node deployment.
    This will start a series of docker containers, the microservices needed
    to run omega|ml:
    
-   * omegaml - the omega|ml web server 
+   * omegaml - the omega|ml web server
+   * omjobs - the omega|ml notebook hub server
    * worker - the omega|ml compute cluster
    * mongodb - the omega|ml data cluster
    * mysql - the webserver's database
@@ -82,7 +83,7 @@ guide assumes a docker-compose single-node deployment.
    .. note::
    
      nginx is not technically required. It is included as a demonstration
-     of one approach to exposing rabbitmq and mongodb to data sicence clients 
+     of one approach to exposing rabbitmq and mongodb to data science clients
      hosted outside of the omega|ml compute & data cluster. 
      
      Exposure of rabbitmq and mongodb is not a pre-requiste to using omega|ml

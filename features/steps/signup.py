@@ -19,7 +19,7 @@ def uri(browser, uri):
 
 @given("we have the site deployed")
 def site_deployed(ctx):
-    url = 'https://omegaml.omegaml.io'
+    url = os.environ.get('OMEGA_URL', 'https://omegaml.omegaml.io')
     br = ctx.browser
     br.visit(url)
     assert br.is_text_present('sign in'), "expected landing page with <sign in> link"
