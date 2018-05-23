@@ -1,5 +1,3 @@
 from __future__ import absolute_import
-from omegaml.backends.basemodel import BaseModelBackend
-from .scikitlearn import ScikitLearnBackend
 from .spark import SparkBackend
 from .externaldata import PandasExternalData
