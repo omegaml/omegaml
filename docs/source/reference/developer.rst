@@ -2,7 +2,7 @@ Developer API
 =============
 
 omega|ml
--------
+--------
 
 .. automodule:: omegaml
    :members: Omega
@@ -29,7 +29,16 @@ omegaml.backends
 omegaml.mixins
 -----------------------
 
-.. autoclass:: omegaml.mixins.projected.store.ProjectedMixin
+.. autoclass:: omegaml.mixins.store.ProjectedMixin
+.. autoclass:: omegaml.mixins.mdf.FilterOpsMixin
+.. autoclass:: omegaml.mixins.mdf.ApplyMixin
+.. autoclass:: omegaml.mixins.mdf.ApplyArithmetics
+   :special-members: __mul__
+   :private-members: __mul__
+
+.. autoclass:: omegaml.mixins.mdf.ApplyDateTime
+.. autoclass:: omegaml.mixins.mdf.ApplyString
+.. autoclass:: omegaml.mixins.mdf.ApplyAccumulators
 
 
 omegaml.runtime

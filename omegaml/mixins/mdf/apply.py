@@ -434,6 +434,19 @@ class ApplyContext(object):
 class ApplyArithmetics(object):
     """
     Math operators for ApplyContext
+
+    * :code:`__mul__` (*)
+    * :code:`__add__` (+)
+    * :code:`__sub__` (-)
+    * :code:`__div__` (/)
+    * :code:`__floordiv__` (//)
+    * :code:`__mod__` (%)
+    * :code:`__pow__` (pow)
+    * :code:`__ceil__` (ceil)
+    * :code:`__floor__` (floor)
+    * :code:`__trunc__` (trunc)
+    * :code:`__abs__` (abs)
+    * :code:`sqrt` (math.sqrt)
     """
 
     def __arithmop__(op, wrap_op=None):
@@ -476,18 +489,30 @@ class ApplyArithmetics(object):
 
         return inner
 
+    #: multiply
     __mul__ = __arithmop__('$multiply')
+    #: add
     __add__ = __arithmop__('$add')
+    #: subtract
     __sub__ = __arithmop__('$subtract')
+    #: divide
     __div__ = __arithmop__('$divide')
     __truediv__ = __arithmop__('$divide')
+    #: divide integer
     __floordiv__ = __arithmop__('$divide', wrap_op='$floor')
+    #: modulo (%)
     __mod__ = __arithmop__('$mod')
-    __pow__ = __arithmop__('$pow')
+    #: pow
+    __pow_ = __arithmop__('$pow')
+    #: ceil
     __ceil__ = __arithmop__('$ceil')
+    #: floor
     __floor__ = __arithmop__('$floor')
+    #: truncate
     __trunc__ = __arithmop__('$trunc')
+    #: absolute
     __abs__ = __arithmop__('$abs')
+    #: square root
     sqrt = __arithmop__('sqrt')
 
 
