@@ -1,3 +1,5 @@
+from itertools import product
+
 import hashlib
 import json
 from uuid import uuid4
@@ -73,11 +75,16 @@ class ApplyMixin(object):
                       apply_fn=self.apply_fn)
         return kwargs
 
-    def apply(self, fn, inplace=False):
+    def noapply(self):
+        self.apply_fn = None
+        return self
+
+    def apply(self, fn, inplace=False, preparefn=None):
         if inplace:
             obj = self
         else:
             kwargs = self._getcopy_kwargs()
+            kwargs.update(preparefn=preparefn)
             if isinstance(self, MSeries):
                 obj = MSeries(self.collection, **kwargs)
             else:
@@ -352,7 +359,7 @@ class ApplyContext(object):
             # if a different groupby criteria, add a new one
             stage = None
         if stage is None and by == '$$last':
-            raise SyntaxError('no groupby is open to apply operation')
+            by = None
         if stage is None or append:
             stage = {
                 '$group': {
@@ -715,7 +722,7 @@ class ApplyAccumulators(object):
     def __statop__(op, opname=None):
         opname = opname or op.replace('$', '')
 
-        def inner(self, columns):
+        def inner(self, columns=None):
             columns = make_tuple(columns or self.columns)
             stage = self._getGroupBy(by='$$last')
             groupby = stage['$group']
@@ -754,3 +761,236 @@ class ApplyCache(object):
         except:
             result = None
         return result
+
+
+class ApplyStatistics(object):
+    def quantile(self, q=.5):
+        def preparefn(val):
+            return val.pivot('percentile', 'var', 'value')
+        return self.apply(self._percentile(q), preparefn=preparefn)
+
+    def cov(self):
+        def preparefn(val):
+            val = val.pivot('x', 'y', 'cov')
+            val.index.name = None
+            val.columns.name = None
+            return val
+        return self.apply(self._covariance, preparefn=preparefn)
+
+    def corr(self):
+        def preparefn(val):
+            val = val.pivot('x', 'y', 'rho')
+            val.index.name = None
+            val.columns.name = None
+            return val
+        return self.apply(self._pearson, preparefn=preparefn)
+
+    def _covariance(self, ctx):
+        # this works
+        # source http://ci.columbia.edu/ci/premba_test/c0331/s7/s7_5.html
+        facets = {}
+        means = {}
+        unwinds = []
+        count = len(ctx.caller.noapply()) - 1
+        for x, y in product(ctx.columns, ctx.columns):
+            xcol = '$' + x
+            ycol = '$' + y
+            # only calculate the same column's mean once
+            if xcol not in means:
+                means[xcol] = ctx.caller[x].noapply().mean().values[0, 0]
+            if ycol not in means:
+                means[ycol] = ctx.caller[y].noapply().mean().values[0, 0]
+            sumands = {
+                xcol: {
+                    '$subtract': [xcol, means[xcol]]
+                },
+                ycol: {
+                    '$subtract': [ycol, means[ycol]]
+                }
+            }
+            multiply = {
+                '$multiply': [sumands[xcol], sumands[ycol]]
+            }
+            agg = {
+                '$group': {
+                    '_id': None,
+                    'value': {
+                        '$sum': multiply
+                    }
+                }
+            }
+            project = {
+                '$project': {
+                    'cov': {
+                        '$divide': ['$value', count],
+                    },
+                    'x': x,
+                    'y': y,
+                }
+            }
+            pipeline = [agg, project]
+            outcol = '{}_{}'.format(x, y)
+            facets[outcol] = pipeline
+            unwinds.append({'$unwind': '$' + outcol})
+        facet = {
+            '$facet': facets,
+        }
+        expand = [{
+            '$project': {
+                'value': {
+                    '$objectToArray': '$$CURRENT',
+                }
+            }
+        }, {
+            '$unwind': '$value'
+        }, {
+            '$replaceRoot': {
+                'newRoot': '$value.v'
+            }
+        }]
+        return [facet, *unwinds, *expand]
+
+    def _pearson(self, ctx):
+        # this works
+        # source http://ilearnasigoalong.blogspot.ch/2017/10/calculating-correlation-inside-mongodb.html
+        facets = {}
+        unwinds = []
+        for x, y in product(ctx.columns, ctx.columns):
+            xcol = '$' + x
+            ycol = '$' + y
+            sumcolumns = {'$group': {'_id': None,
+                                     'count': {'$sum': 1},
+                                     'sumx': {'$sum': xcol},
+                                     'sumy': {'$sum': ycol},
+                                     'sumxsquared': {'$sum': {'$multiply': [xcol, xcol]}},
+                                     'sumysquared': {'$sum': {'$multiply': [ycol, ycol]}},
+                                     'sumxy': {'$sum': {'$multiply': [xcol, ycol]}}
+                                     }}
+
+            multiply_sumx_sumy = {'$multiply': ["$sumx", "$sumy"]}
+            multiply_sumxy_count = {'$multiply': ["$sumxy", "$count"]}
+            partone = {'$subtract': [multiply_sumxy_count, multiply_sumx_sumy]}
+
+            multiply_sumxsquared_count = {'$multiply': ["$sumxsquared", "$count"]}
+            sumx_squared = {'$multiply': ["$sumx", "$sumx"]}
+            subparttwo = {'$subtract': [multiply_sumxsquared_count, sumx_squared]}
+
+            multiply_sumysquared_count = {'$multiply': ["$sumysquared", "$count"]}
+            sumy_squared = {'$multiply': ["$sumy", "$sumy"]}
+            subpartthree = {'$subtract': [multiply_sumysquared_count, sumy_squared]}
+
+            parttwo = {'$sqrt': {'$multiply': [subparttwo, subpartthree]}}
+
+            rho = {'$project': {
+                'rho': {
+                    '$divide': [partone, parttwo]
+                },
+                'x': x,
+                'y': y
+            }}
+            pipeline = [sumcolumns, rho]
+            outcol = '{}_{}'.format(x, y)
+            facets[outcol] = pipeline
+            unwinds.append({'$unwind': '$' + outcol})
+        facet = {
+            '$facet': facets,
+        }
+        expand = [{
+            '$project': {
+                'value': {
+                    '$objectToArray': '$$CURRENT',
+                }
+            }
+        }, {
+            '$unwind': '$value'
+        }, {
+            '$replaceRoot': {
+                'newRoot': '$value.v'
+            }
+        }]
+        return [facet, *unwinds, *expand]
+
+    def _percentile(self, pctls=None):
+        """
+        calculate percentiles for all columns
+        """
+        pctls = pctls or [.25, .5, .75]
+        if not isinstance(pctls, (list, tuple)):
+                pctls = [pctls]
+
+        def calc(col, p, outcol):
+            # sort values
+            sort = {
+                '$sort': {
+                    col: 1,
+                }
+            }
+            # group/push to get an array of all values
+            group = {
+                '$group': {
+                    '_id': col,
+                    'values': {
+                        '$push': "$" + col
+                    },
+                }
+            }
+            # find value at requested percentile
+            perc = {
+                '$arrayElemAt': [
+                    '$values', {
+                        '$floor': {
+                        '$multiply': [{
+                            '$size': '$values'
+                        }, p]
+                    }}
+                ]
+            }
+            # map percentile value to output column
+            project = {
+                '$project': {
+                    'var': col,
+                    'percentile': 'p{}'.format(p),
+                    'value': perc,
+                }
+            }
+            return [sort, group, project]
+
+        def inner(ctx):
+            # for each column and requested percentile, build a pipeline
+            # all pipelines will be combined into a $facet stage to
+            # calculate every column/percentile tuple in parallel
+            facets = {}
+            unwind = []
+            # for each column build a pipeline to calculate the percentiles
+            for col in ctx.columns:
+                for p in pctls:
+                    # e.g. outcol for perc .25 of column abc => abcp25
+                    outcol = '{}_p{}'.format(col, p).replace('0.', '')
+                    facets[outcol] = calc(col, p, outcol)
+                    unwind.append({'$unwind': '$'+ outcol})
+            # process per-column pipelines in parallel, resulting in one
+            # document for each variable + percentile combination
+            facet = {
+                '$facet': facets
+            }
+            # expand single document into one document per variable + percentile combo
+            # the resulting set of documents contains var/percentile/value
+            expand = [{
+                '$project': {
+                    'value': {
+                        '$objectToArray': '$$CURRENT',
+                    }
+                }
+            }, {
+                '$unwind': '$value'
+            }, {
+                '$replaceRoot': {
+                    'newRoot': '$value.v'
+                }
+            }]
+            pipeline = [facet, *unwind, *expand]
+            return pipeline
+
+        return inner
+
+

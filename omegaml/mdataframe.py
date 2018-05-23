@@ -325,7 +325,7 @@ class MDataFrame(object):
     def __init__(self, collection, columns=None, query=None,
                  limit=None, skip=None, sort_order=None,
                  force_columns=None, immediate_loc=False, auto_inspect=False,
-                 **kwargs):
+                 preparefn=None, **kwargs):
         self.collection = PickableCollection(collection)
         # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields()
@@ -363,6 +363,8 @@ class MDataFrame(object):
         # apply mixins
         self._applyto = str(self.__class__)
         self._apply_mixins()
+        # prepare function to be applied just before returning from .value
+        self._preparefn = preparefn
 
     def _apply_mixins(self, *args, **kwargs):
         """
@@ -378,15 +380,7 @@ class MDataFrame(object):
         data.update(_evaluated=None)
         data.update(_inspect_cache=None)
         data.update(auto_inspect=None)
-        data.update(collection=self.collection)
-        return data
-
-    def __getstate__(self):
-        # pickle support. note that the hard work is done in PickableCollection
-        data = dict(self.__dict__)
-        data.update(_evaluated=None)
-        data.update(_inspect_cache=None)
-        data.update(auto_inspect=None)
+        data.update(_preparefn=None)
         data.update(collection=self.collection)
         return data
 
@@ -403,7 +397,8 @@ class MDataFrame(object):
                       from_loc_indexer=self.from_loc_indexer,
                       immediate_loc=self.immediate_loc,
                       query=self.filter_criteria,
-                      auto_inspect=self.auto_inspect)
+                      auto_inspect=self.auto_inspect,
+                      preparefn=self._preparefn)
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
 
@@ -583,6 +578,8 @@ class MDataFrame(object):
                     df = df.iloc[0]
             elif (df.ndim == 1 or df.shape[1] == 1) and not self.from_loc_range:
                 df = df[df.columns[0]]
+        if self._preparefn:
+            df = self._preparefn(df)
         return df
 
     def _get_dataframe_from_cursor(self, cursor):
@@ -992,6 +989,8 @@ class MSeries(MDataFrame):
                 val = val.iloc[0]
         if self.auto_inspect:
             self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
+        if self._preparefn:
+            df = self._preparefn(val)
         return val
 
     def __repr__(self):

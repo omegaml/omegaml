@@ -57,6 +57,7 @@ OMEGA_RUNTIME_MIXINS = [
 OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.FilterOpsMixin', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.apply.ApplyStatistics', 'MDataFrame,MSeries'),
 ]
 #: mdataframe apply context mixins
 OMEGA_MDF_APPLY_MIXINS = [

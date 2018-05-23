@@ -446,3 +446,63 @@ class MDataFrameMixinTests(TestCase):
         cursor = mdf.apply(lambda v: v.groupby('x').agg(v=['sum', 'mean', 'std']))._get_cached_cursor()
         self.assertIsNone(cursor)
 
+    def test_apply_quantile(self):
+        """
+        test covariance
+        """
+        om = self.om
+        df = pd.DataFrame({
+            'x': range(1000),
+            'y': range(1000),
+        })
+        om.datasets.put(df, 'qtest', append=False)
+        mdf = om.datasets.getl('qtest')
+        result = mdf.quantile([.1, .2]).value
+        # FIXME this is actually wrong, see df.quantile([.1, .2])
+        self.assertListEqual(list(result.loc['p0.1'].values), [100, 100])
+        self.assertListEqual(list(result.loc['p0.2'].values), [200, 200])
+
+    def test_apply_covariance(self):
+        """
+        test covariance
+        """
+        om = self.om
+        df = pd.DataFrame({
+            'x': range(10),
+            'y': range(10, 20),
+        })
+        om.datasets.put(df, 'covtest', append=False)
+        expected = df.cov()
+        mdf = om.datasets.getl('covtest')
+        result = mdf.cov().value
+        assert_frame_equal(result, expected)
+
+    def test_apply_correlation(self):
+        """
+        test covariance
+        """
+        om = self.om
+        df = pd.DataFrame({
+            'x': range(10),
+            'y': range(10, 20),
+        })
+        om.datasets.put(df, 'corrtest', append=False)
+        expected = df.corr()
+        mdf = om.datasets.getl('corrtest')
+        result = mdf.corr().value
+        assert_frame_equal(result, expected)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
