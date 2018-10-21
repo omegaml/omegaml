@@ -3,7 +3,7 @@ import os
 import sys
 import threading
 
-import pip
+import callable_pip as cpip
 import tee
 
 sync_lock = threading.Lock()
@@ -37,10 +37,10 @@ def build_sdist(src, distdir):
 
 
 def install_package(src, dst):
-    pip.main(['install',
+    cpip.main('install',
               src,
               '--upgrade',
-              '--target', dst])
+              '--target', dst)
 
 
 def load_from_path(name, path):
