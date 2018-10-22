@@ -284,7 +284,39 @@ are executed by MongoDB. The result of the :code:`merge()` method is a new
     1  1  1
     2  2  2
 
-    
+
+Statistics
+----------
+
+The following statistics can be computed on pairs of numeric columns of a :code:`MDataFrame` and on :code:`MSeries`:
+
+* :code:`correlation` - returns the pearson correlation matrix
+* :code:`covariance` - returns the covariance matrix
+
+.. code::
+
+    mdf = om.datasets.getl('foo')
+    mdf['x', 'y].correlation().value
+    mdf['x', 'y].covariance().value
+
+
+The following statisics can be computed on all numeric columns:
+
+* :code:`mean`
+* :code:`min`
+* :code:`max`
+* :code:`std`
+* :code:`quantile` - by defaults calculates the .5 quantile, specify a list of percentiles
+
+
+.. code::
+
+    mdf = om.datasets.getl('foo')
+    mdf['x', 'y].mean()
+    mdf['x', 'y].min()
+    ...
+
+
 Aggregation
 -----------
 

@@ -4,3 +4,5 @@
 -e ../ccbackend
 -e ../django-tastypie-swagger
 -e ../tastypiex
+-e ../omegaml-ce
+
