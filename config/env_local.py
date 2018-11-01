@@ -77,3 +77,18 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
     OMEGA_RESTAPI_URL = 'http://localhost:8000'
 
+    OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaee.tasks', 'omegajobs.tasks', 'omegapkg.tasks']
+
+    #: storage backends
+    OMEGA_STORE_BACKENDS = {
+        'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+        'spark.mllib': 'omegaee.backends.SparkBackend',
+        'pandas.csv': 'omegaee.backends.PandasExternalData',
+        'python.package': 'omegapkg.PythonPackageData',
+    }
+    #: storage mixins
+    OMEGA_STORE_MIXINS = [
+        'omegaml.mixins.store.ProjectedMixin',
+        'omegapkg.PythonPackageMixin',
+    ]
+
