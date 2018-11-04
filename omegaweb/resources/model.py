@@ -77,7 +77,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         resource_name = 'model'
         authentication = ApiKeyAuthentication()
 
-    @cqrsapi(allowed_methods=['get'])
+    @cqrsapi(allowed_methods=['get', 'put'])
     def predict(self, request, *args, **kwargs):
         """
         predict from model
