@@ -30,7 +30,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
                         EnvSettingsGlobal):
-    _prefix_apps = ('omegaweb', 'landingpage', 'orders')
+    _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
     _addl_apps = ('tastypie',
                   'tastypie_swagger',
                   'tastypiex',
