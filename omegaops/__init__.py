@@ -124,10 +124,15 @@ def add_service_deployment(user, config):
     text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
         **locals())
     user.services.all().delete()
-    user.services.create(user=user,
-                         text=text,
-                         offering=plan,
-                         settings=config)
+    deployment = user.services.create(user=user,
+                                      text=text,
+                                      offering=plan,
+                                      settings=config)
+    return deployment
+
+def complete_service_deployment(deployment, status):
+    deployment.status = status
+    deployment.save()
 
 
 def get_client_config(user, qualifier=None):

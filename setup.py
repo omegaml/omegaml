@@ -42,7 +42,6 @@ setup(
         'scipy>=0.17.0',
         'scikit-learn>=0.17.1',
         'tables>=3.2.2',
-        'runipy>=0.1.5',
         'croniter>=0.3.12',
         'PyYAML>=3.11',
         'nbformat>=4.0.1',
