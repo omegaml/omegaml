@@ -33,5 +33,5 @@ mock==2.0.0
 tee==0.0.2
 behave==1.2.6
 splinter==0.8.0
-splinter==0.8.0
 callable-pip==1.0.0
+kubernetes==8.0.0

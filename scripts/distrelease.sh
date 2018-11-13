@@ -52,6 +52,7 @@ $release $use_nominify --source ../stackable
 $release $use_nominify --source ../django-tastypie-swagger
 $release $use_nominify --source ../ccbackend
 $release $use_nominify --source ../tastypiex
+$release $use_nominify --source ../omegaml-ce
 
 # repackage into one zip file
 pushd $distdir
@@ -61,6 +62,7 @@ unzip django-tastypie-swagger.zip "*whl"
 unzip ccbackend.zip "*whl"
 unzip tastypiex.zip "*whl"
 unzip omegaml.zip "*whl"
+unzip omegaml-ce.zip "*whl"
 rm -rf ./docs
 unzip omegaml.zip "docs/*"
 zip -r $releasezip *whl docs

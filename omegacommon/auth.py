@@ -1,6 +1,8 @@
 # source https://djangosnippets.org/snippets/2727/
 from requests.auth import AuthBase
 
+from omegaml.runtime.auth import AuthenticationEnv
+
 
 class OmegaRestApiAuth(AuthBase):
 
@@ -46,3 +48,11 @@ class OmegaRuntimeAuthentication:
     def __repr__(self):
         return ('OmegaRuntimeAuthentication(userid={}, '
                 'apikey="*****", qualifier={})').format(self.userid, self.qualifier)
+
+
+class OmegaSecureAuthenticationEnv(AuthenticationEnv):
+    @classmethod
+    def get_omega_from_apikey(cls, *args, **kwargs):
+        from omegacommon.userconf import get_omega_from_apikey
+        return get_omega_from_apikey(*args, **kwargs)
+

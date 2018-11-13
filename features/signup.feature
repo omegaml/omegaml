@@ -5,9 +5,15 @@ Feature: signup a new user
        When we signup a new user
        Then the site sends out a registration email
 
-
     Scenario: login the new user
         Given we have a new user
         When we log in
         Then the site shows the dashboard
         Then we can get an omega instance
+
+    Scenario: login to the notebook
+        Given we have a new user
+        When we log in
+        Then the site shows the dashboard
+        Then we can load the jupyter notebook
+

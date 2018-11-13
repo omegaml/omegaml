@@ -92,7 +92,7 @@ guide assumes a docker-compose single-node deployment.
      
 4. secure mongodb::
 
-     $ cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
+     $ cat scripts/mongoinit.js | docker exec -i build_mongodb_1 mongo
      MongoDB shell version v3.4.5
      connecting to: mongodb://127.0.0.1:27017
      MongoDB server version: 3.4.5

@@ -91,4 +91,6 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         'omegaml.mixins.store.ProjectedMixin',
         'omegapkg.PythonPackageMixin',
     ]
+    #: authentication environment
+    OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
 
