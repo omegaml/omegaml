@@ -20,3 +20,5 @@ def before_all(context):
     context.debug = os.environ.get('DEBUG', False)
     defaults = settings()
     defaults.OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
+    context.browser.visit(context.web_url)
+

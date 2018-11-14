@@ -1,5 +1,5 @@
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/stackable
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage#egg=landingpage[paasdeploy]
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/ccbackend
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex

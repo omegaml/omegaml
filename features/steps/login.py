@@ -9,6 +9,7 @@ from features.util import uri, find_user_apikey
 @given('we have a new user')
 def given_new_user(ctx):
     br = ctx.browser
+    br.visit(uri(br, '/admin/post_office/email/'))
     # select email
     el = br.find_by_text(ctx.feature.username)
     el.find_by_xpath('../th[@class="field-id"]/a').click()
@@ -28,6 +29,7 @@ def given_new_user(ctx):
 @when('we log in')
 def login_new_user(ctx):
     br = ctx.browser
+    br.visit(uri(br, '/accounts/login'))
     br.fill('login', ctx.feature.username)
     br.fill('password', ctx.feature.password)
     br.click_link_by_text('Login ')
@@ -38,6 +40,10 @@ def site_shows_dashboard(ctx):
     br = ctx.browser
     assert br.is_text_present('Your apps', wait_time=2)
     assert br.is_text_present('omegaml')
+
+@then('we log out')
+def log_out(ctx):
+    br = ctx.browser
     br.visit(uri(br, '/accounts/logout'))
     for el in br.find_by_text('Sign Out'):
         el.click()
@@ -47,10 +53,6 @@ def site_shows_dashboard(ctx):
 @then('we can get an omega instance')
 def get_omgega_instance(ctx):
     br = ctx.browser
-    br.visit(uri(br, '/accounts/login'))
-    br.fill('login', ctx.feature.username)
-    br.fill('password', ctx.feature.password)
-    br.click_link_by_text('Login ')
     # check we can get a new omegaml instance
     userid, apikey = find_user_apikey(br)
     om = omegaml.setup(userid, apikey, api_url=ctx.web_url)
@@ -68,13 +70,26 @@ def get_omgega_instance(ctx):
     assert br.is_text_present('sign in', wait_time=5)
 
 
+@given('we are not logged in')
+def not_logged_in(ctx):
+    br = ctx.browser
+    br.visit(uri(br, '/accounts/logout'))
+    for el in br.find_by_text('Sign Out'):
+        el.click()
+    assert br.is_text_present('sign in', wait_time=5)
+
+
 @then('we can load the jupyter notebook')
 def load_jupyter_notebook(ctx):
     br = ctx.browser
+    assert br.is_element_present_by_text('Profile', wait_time=5)
     br.click_link_by_text('Profile')
     userid, apikey = find_user_apikey(br)
-    br.click_link_by_text('Notebook')
-    br.fill('username_input', userid)
-    br.fill('password_input', apikey)
-
-
+    br.click_link_by_text('Dashboard')
+    el = br.find_by_text('Notebook').first
+    br.visit(el['href'])
+    assert br.is_element_present_by_id('username_input', wait_time=5)
+    br.find_by_id('username_input').first.fill(userid)
+    br.find_by_id('password_input').first.fill(apikey)
+    br.click_link_by_id('login_submit')
+    assert br.is_element_present_by_id('ipython-main-app', wait_time=5)
