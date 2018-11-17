@@ -31,3 +31,14 @@ Test locally
 Use behave
 
     $ OMEGA_URL=http://localhost:8000 behave -D BEHAVE_DEBUG_ON_ERROR
+
+
+Local Kubernetes Deployment
+---------------------------
+
+1. install microk8s
+2. enable the private docker repo:
+
+    # see https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-in-the-cluster-that-holds-your-authorization-token
+    $ kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
+
