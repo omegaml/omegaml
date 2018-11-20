@@ -34,8 +34,10 @@ class EnvSettings_docker(Config_Dokku,
         # default to whatever default is configured (usually sqlite database)
         pass
 
-    # do not require account email verification
-    ACCOUNT_EMAIL_VERIFICATION = 'optional'
+    # optional = do not require account email verification
+    # mandatory = verification email will be sent out
+    # see https://django-allauth.readthedocs.io/en/latest/configuration.html
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
     # set mongo admin url
     MONGO_ADMIN_URL = os.environ.get('MONGO_ADMIN_URL')

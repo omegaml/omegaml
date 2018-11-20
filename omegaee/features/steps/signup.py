@@ -4,7 +4,7 @@ from uuid import uuid4
 import yaml
 from behave import *
 
-from features.util import uri
+from omegaee.features.util import uri
 
 
 @given("we have the site deployed")

@@ -36,7 +36,7 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         om = self.get_omega(request)
         name = kwargs.pop('pk')
         try:
-            result = om.runtime.script(name).run(**request.GET.dict())
+            result = om.runtime.script(name).run(om, **request.GET.dict())
             data = result.get()
         except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))

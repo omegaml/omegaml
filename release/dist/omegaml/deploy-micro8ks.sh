@@ -10,6 +10,18 @@ script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
+# configuration
+if [[ ! -f $HOME/.omegaml/docker.creds ]]; then
+  echo "Create $HOME/.omegaml/docker.creds as"
+  echo "--"
+  echo "EMAIL=email@example.com"
+  echo "USER=dockerhub user"
+  echo "PASSWORD=dockerhub password"
+  echo "--"
+  echo "Note the dockerhub user must be authorized to access the omegaml/omegaml image."
+  exit 1
+fi
+
 DOCKER_SERVER=https://index.docker.io/v1/
 DOCKER_USER=`cat $HOME/.omegaml/docker.creds | grep PASSWORD | cut -f 2`
 DOCKER_PASSWORD=`cat $HOME/.omegaml/docker.creds | grep PASSWORD | cut -f 2`
@@ -45,3 +57,6 @@ nohup microk8s.kubectl port-forward service/nginx 5000:5000 8888:8888 > server.l
 podssh omegaml python manage.py loaddata landingpage.json
 podssh omegaml python manage.py createsuperuser
 cat scripts/mongoinit.js | podssh mongodb mongo
+
+# finish with a nice message
+echo "Installation complete. Access at http://localhost:5000"

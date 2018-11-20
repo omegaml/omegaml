@@ -3,7 +3,7 @@ import re
 from behave import *
 
 import omegaml
-from features.util import uri, find_user_apikey
+from omegaee.features.util import uri, find_user_apikey
 
 
 @given('we have a new user')
