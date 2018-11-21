@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function podssh() {
+  pod=`kubectl get pods -o name | grep $1 | cut -d / -f 2 | head -n1`
+  shift 1
+  cmd=${@:-bash}
+  kubectl exec -it $pod -- $cmd
+}
+
+function countdown() {
+    count=0
+    sleep=$1
+    while [ $count -lt $1 ]; do
+        echo -ne "another $((sleep - count)) seconds...\r"
+        sleep 1
+        count=$((count +1))
+    done
+}
+
+function compose_exec() {
+  # Like `docker-compose exec` but forwarding stdin to the container
+  # See https://github.com/docker/compose/issues/3352
+  # https://stackoverflow.com/a/47591157/890242
+  local service="$1"; shift
+  docker exec -i $(docker-compose ps -q $service) $@
+}

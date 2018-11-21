@@ -30,7 +30,7 @@ As a convenience to users, we provide this conversion in a storage mixin:
       def put(obj, name, attributes=None, **kwargs):
           attributes = attributes or {}
           try:
-             obj = yaml.loads(obj)
+             obj = yaml.safe_loads(obj)
           except:
              pass # assume obj was some other valid type
           else:

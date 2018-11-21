@@ -1,5 +1,6 @@
 import os
 
+from config.conf_anymail import Config_Anymail
 from stackable.contrib.config.conf_api import Config_ApiKeys
 from stackable.contrib.config.conf_dokku import Config_Dokku
 from .env_local import EnvSettings_Local
@@ -7,8 +8,10 @@ from .env_local import EnvSettings_Local
 
 class EnvSettings_kubernetes(Config_Dokku,
                              Config_ApiKeys,
+                             Config_Anymail,
                              EnvSettings_Local):
-    ALLOWED_HOSTS = ['omegaml.me', 'localhost', 'omegaml']
+    _allowed_hosts = 'omegaml.me,localhost,omegaml'
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', _allowed_hosts).split(',')
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('localhost:27017', 'mongo db public host name'),

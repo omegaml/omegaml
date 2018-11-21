@@ -1,29 +1,80 @@
-import shutil
+import os
 
-from traitlets import Unicode
+from jupyterhub.traitlets import Command, Unicode
+from kubespawner import KubeSpawner
 
-from jupyterhub.spawner import LocalProcessSpawner
-
+import omegaml
 from omegacommon.auth import OmegaRestApiAuth
-from omegacommon.userconf import save_userconfig_from_apikey, get_user_config_from_api
+from omegacommon.userconf import get_user_config_from_api
 
 
-class SimpleLocalProcessSpawner(LocalProcessSpawner):
-    """
-    Adopted from jupyterhub-simplespawner
+class OmegaKubeSpawner(KubeSpawner):
+    image = Unicode(
+        'omegaml/omegaml-ee:latest',
+        config=True,
+        help="""
+            Docker image spec to use for spawning user's containers.
+            By default uses the omegaml enterprise edition image
+            """
+    )
 
-    A version of LocalProcessSpawner that doesn't require users to exist on
-    the system beforehand.
+    image_pull_policy = Unicode(
+        'Always',
+        config=True,
+        help="""
+            The image pull policy of the docker container specified in
+            `image`.
 
-    Note: DO NOT USE THIS FOR PRODUCTION USE CASES! It is very insecure, and
-    provides absolutely no isolation between different users!
-    """
+            Defaults to `IfNotPresent` which causes the Kubelet to NOT pull the image
+            specified in KubeSpawner.image if it already exists, except if the tag
+            is `:latest`. For more information on image pull policy,
+            refer to `the Kubernetes documentation <https://kubernetes.io/docs/concepts/containers/images/>`__.
+
+
+            This configuration is primarily used in development if you are
+            actively changing the `image_spec` and would like to pull the image
+            whenever a user container is spawned.
+            """
+    )
+
+    image_pull_secrets = Unicode(
+        'regcred',
+        allow_none=True,
+        config=True,
+        help="""
+            The kubernetes secret to use for pulling images from private repository.
+
+            Set this to the name of a Kubernetes secret containing the docker configuration
+            required to pull the image.
+
+            See `the Kubernetes documentation <https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod>`__
+            for more information on when and why this might need to be set, and what
+            it should be set to.
+            """
+    )
 
     home_path_template = Unicode(
-        '/tmp/{userid}',
+        '/tmp/{username}',
         config=True,
         help='Template to expand to set the user home. {userid} and {username} are expanded'
     )
+
+    cmd = Command(['/app/scripts/omegajobs.sh'],
+                  allow_none=True,
+                  help="""
+            The command used for starting the single-user server.
+        """
+    ).tag(config=False)
+
+    def get_args(self):
+        args = super().get_args()
+        args.append('--singleuser')
+        return args
+
+    def start(self):
+        self.log.info("***image_spec is {} cmd is {}".format(self.image_spec, self.cmd))
+        self.log.info("starting stopped")
+        return super().start()
 
     @property
     def home_path(self):
@@ -32,81 +83,31 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
             username=self.user.name
         )
 
-    def make_preexec_fn(self, name):
-        home = self.home_path
 
-        def preexec():
-            # setup paths and get omegaml config
-            self.log.info('SimpleLocalProcessSpawner: exec_fn:preexec started')
-            create_path()
-            get_config()
-
-        def get_config():
-            self.log.info('SimpleLocalProcessSpawner: exec_fn:get_config started')
-            # get user's omegaml configuration
-            try:
-                from omegaml import defaults
-                import os
-                config_file = os.path.join(self.home_path, '.omegaml', 'config.yml')
-                # must be an admin user to get back actual user's config
-                self.log.info(os.environ)
-                self.log.info("within get_config {}".format(os.getpid()))
-                user = self.__config_env.pop('OMEGA_USERID')
-                apikey = self.__config_env.pop('OMEGA_APIKEY')
-                save_userconfig_from_apikey(config_file, user, apikey)
-            except Exception as e:
-                self.log.error('SimpleLocalProcessSpawner: exec_fn:get_config error {}'.format(str(e)))
-                raise
-
-        def create_path():
-            self.log.info('SimpleLocalProcessSpawner: exec_fn:create_path started')
-            # create local paths as required by omegaml
-            try:
-                import os
-                if os.path.exists(home):
-                    shutil.rmtree(home)
-                os.makedirs(home, 0o755)
-                os.makedirs(os.path.join(home, 'notebooks'))
-                os.makedirs(os.path.join(home, '.omegaml'))
-                os.chdir(home)
-                from omegaml.notebook import jupyter
-                for fn in ['ipystart.py', 'ipython_config.py',
-                           'jupyter_notebook_config.py']:
-                    src = os.path.join(os.path.dirname(jupyter.__file__), fn)
-                    dst = os.path.join(home, fn)
-                    self.log.info(('SimpleLocalProcessSpawner: exec_fn:create_path '
-                                   'copying {} to {}'.format(src, dst)))
-                    shutil.copy(src, dst)
-            except Exception as e:
-                self.log.error('SimpleLocalProcessSpawner: exec_fn:create_path error {}'.format(str(e)))
-                raise
-
-        return preexec
-
-    def user_env(self, env):
-        # we don't call super because super assumes a local OS user. we don't
-        import os
+    def _get_omega_config(self):
         from omegaml import defaults
-        import omegaee
-        self.log.info('SimpleLocalProcessSpawner: user environment created')
         admin_user = defaults.OMEGA_JYHUB_USER
         admin_apikey = defaults.OMEGA_JYHUB_APIKEY
         api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
         configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name)
         configs = configs['objects'][0]['data']
+        configs['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
+        return configs
+
+    def get_env(self):
+        env = super().get_env()
+        # delete all env_keeps as we want the pod to start clean
+        [env.pop(k, None) for k in self.env_keep]
+        self.log.info('OmegaKubeSpawner: user environment created')
+        configs = self._get_omega_config()
         env['USER'] = self.user.name
         env['HOME'] = self.home_path
         env['SHELL'] = '/bin/bash'
         env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
         env['JY_ALLOW_ROOT'] = 'yes'
-        import omegaml
         env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaml.__file__), '..')
+        env['OMEGA_USERID'] = configs['OMEGA_USERID']
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
-        env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
+        env['OMEGA_RESTAPI_URL'] = configs['OMEGA_RESTAPI_URL']
         self.log.info("***within user_env {}".format(os.getpid()))
-        # pass user configuration to preexecfn
-        self.__config_env = {
-            'OMEGA_USERID': configs['OMEGA_USERID'],
-            'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
-        }
         return env

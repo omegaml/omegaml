@@ -55,7 +55,8 @@ def get_omgega_instance(ctx):
     br = ctx.browser
     # check we can get a new omegaml instance
     userid, apikey = find_user_apikey(br)
-    om = omegaml.setup(userid, apikey, api_url=ctx.web_url)
+    # view = False => get a setup with public URLs
+    om = omegaml.setup(userid, apikey, api_url=ctx.web_url, view=False)
     assert om.datasets.mongodb is not None
     # check it actually works
     assert len(om.datasets.list()) == 0

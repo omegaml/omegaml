@@ -30,3 +30,7 @@ def before_all(context):
     defaults.OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
     context.browser.visit(context.web_url)
 
+def after_step(context, step):
+    context.screenshotfn = os.path.join('/tmp', step.name + '.png')
+    context.browser.screenshot(context.screenshotfn)
+

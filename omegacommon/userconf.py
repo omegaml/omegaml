@@ -87,7 +87,7 @@ def get_omega_from_config(configfile, qualifier=None):
     from omegaml import defaults
     from omegaml.util import settings
     with open(configfile, 'r') as fconfig:
-        configs = yaml.load(fconfig)
+        configs = yaml.safe_load(fconfig)
     qualifier = qualifier or 'default'
     if qualifier == 'default':
         config = configs.get(qualifier, configs)

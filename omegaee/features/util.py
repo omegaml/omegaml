@@ -24,7 +24,6 @@ def find_user_apikey(br):
 def get_admin_secrets(url=None):
     secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
     with open(secrets) as fin:
-        secrets = yaml.load(fin)
-    if url:
+        secrets = yaml.safe_load(fin)
         secrets = secrets.get(url) or secrets
     return secrets['admin_user'], secrets['admin_password']

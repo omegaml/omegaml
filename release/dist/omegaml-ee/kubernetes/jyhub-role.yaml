@@ -1,0 +1,8 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jupyterhub
+rules:
+- apiGroups: [""] # core API group
+  resources: ["pods", "events"]
+  verbs: ["get", "create", "delete", "watch", "list"]

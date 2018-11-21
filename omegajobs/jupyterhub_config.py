@@ -296,8 +296,17 @@ SPAWNER_MAP = {
     'local': 'omegajobs.spawner.SimpleLocalProcessSpawner',
     'secure': 'omegajobs.kubespawner.OmegaKubeSpawner',
 }
-c.JupyterHub.spawner_class = SPAWNER_MAP.get(os.environ.get('JYHUB_SPAWNER_TYPE', 'default'))
+SPAWNER_CMD = {
+    'default': ['jupyterhub-singleuser'],
+    'local': ['jupyterhub-singleuser'],
+    'secure': None, # provided by the spawner
+}
+spawner_type = os.environ.get('JYHUB_SPAWNER_TYPE', 'default')
+c.JupyterHub.spawner_class = SPAWNER_MAP.get(spawner_type)
 c.JupyertHub.SimpleLocalProcessSpawner.home_path_template = '/tmp/{userid}'
+if spawner_type:
+    # only set if we actually have a command. if spawner provides command, do not set
+    c.Spawner.cmd = SPAWNER_CMD.get(spawner_type)
 
 ## Path to SSL certificate file for the public facing interface of the proxy
 #  

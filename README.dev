@@ -8,14 +8,21 @@ MongoDB
 To use behave
 https://sites.google.com/a/chromium.org/chromedriver/downloads
 
-Setup
------
+Dependencies
+------------
 
-1. Install all the software required
+* conda - we use version < 4.6 due to a nasty bug in conda 4.6.x
+  https://github.com/conda/conda/issues/7918
+
+
+* install all the software required
 
    $ conda install --file conda-requirements.txt
    $ pip insatll --file pip-requirements.txt
    $ pip install --file requirements.dev
+
+Setup
+-----
 
 Configure jupyter hub user. This must match the OMEGA_JYHUB_USER and OMEGA_JYHUB_APIKEY env variables
 on web and omjobs.
@@ -66,3 +73,17 @@ Local Kubernetes Deployment
     $ kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
 
 3. set the kubernetes configuration
+
+    # see https://microk8s.io/docs/  "Accessing kubernetes"
+    # -- be sure to use microk8s.kubectl and not kubectl, even if aliased
+    #    as kubectl.config does not output the actual microk8s config
+    # $ microk8s.kubectl config view --raw > $HOME/.kube/config
+
+
+Build a release
+---------------
+
+$ scripts/distrelease.sh --nominify
+
+Remove the --nominify option to build a release that has scrambled source code and
+a copyright notice.

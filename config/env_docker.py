@@ -13,9 +13,9 @@ class EnvSettings_docker(Config_Dokku,
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('mongodb', 'mongo db host name'),
-        'JYHUB_HOST': ('omjobs', 'jupyter hub public host name'),
-        'BROKER_URL': ('amqp://rabbitmq//', 'rabbitmq broker url'),
+        'MONGO_HOST': ('localhost:27017', 'mongo db host name'),
+        'JYHUB_HOST': ('localhost:8899', 'jupyter hub public host name'),
+        'BROKER_URL': ('amqp://localhost:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
     }
 
