@@ -39,6 +39,8 @@
 ## Grant admin users permission to access single-user servers.
 #  
 #  Users should be properly informed if this is enabled.
+import socket
+
 c.JupyterHub.admin_access = True
 
 ## DEPRECATED since version 0.7.2, use Authenticator.admin_users instead.
@@ -194,6 +196,14 @@ c.JupyterHub.authenticator_class = 'omegajobs.hubauth.OmegaAuthenticator'
 #  See `hub_connect_ip` for cases where the bind and connect address should
 #  differ.
 #c.JupyterHub.hub_ip = '127.0.0.1'
+# for docker/k8s deployments we bind to the host IP, otherwise localhost
+# -- rationale: the hub must be reachable by spawned containers
+IP_MAP = {
+    'omjobs': '0.0.0.0',
+    'default': '127.0.0.1'
+}
+default_ip = IP_MAP.get('default')
+c.JupyterHub.hub_ip = IP_MAP.get(socket.gethostname(), default_ip)
 
 ## The port for the Hub process
 c.JupyterHub.hub_port = 8081
@@ -280,7 +290,13 @@ c.JupyterHub.hub_port = 8081
 #  
 #  Should be a subclass of Spawner.
 #c.JupyterHub.spawner_class = 'jupyterhub.spawner.LocalProcessSpawner'
-c.JupyterHub.spawner_class = 'omegajobs.spawner.SimpleLocalProcessSpawner'
+# local process spawner
+SPAWNER_MAP = {
+    'default': 'omegajobs.spawner.SimpleLocalProcessSpawner',
+    'local': 'omegajobs.spawner.SimpleLocalProcessSpawner',
+    'secure': 'omegajobs.kubespawner.OmegaKubeSpawner',
+}
+c.JupyterHub.spawner_class = SPAWNER_MAP.get(os.environ.get('JYHUB_SPAWNER_TYPE', 'default'))
 c.JupyertHub.SimpleLocalProcessSpawner.home_path_template = '/tmp/{userid}'
 
 ## Path to SSL certificate file for the public facing interface of the proxy
@@ -463,7 +479,7 @@ c.Spawner.env_keep = ['PATH', 'PYTHONPATH', 'CONDA_ROOT',
 #  
 #  Once a server has successfully been spawned, this is the amount of time we
 #  wait before assuming that the server is unable to accept connections.
-#c.Spawner.http_timeout = 30
+c.Spawner.http_timeout = 300
 
 ## The IP address (or hostname) the single-user server should listen on.
 #  

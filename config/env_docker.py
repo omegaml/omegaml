@@ -6,7 +6,8 @@ from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 from .env_local import EnvSettings_Local
 
 
-class EnvSettings_docker(Config_ApiKeys,
+class EnvSettings_docker(Config_Dokku,
+                         Config_ApiKeys,
                          EnvSettings_Local):
     # must match docker-compose configuration
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']

@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from nbconvert import SlidesExporter
 from nbconvert.exporters.html import HTMLExporter
 from nbconvert.exporters.pdf import PDFExporter
-from traitlets.config import Config, six
 
 from omegaml.notebook.jobs import OmegaJobs
+from traitlets.config import Config, six
 
 
 class OmegaEnterpriseJobs(OmegaJobs):

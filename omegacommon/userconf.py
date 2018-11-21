@@ -2,18 +2,22 @@ import sys
 
 import yaml
 
-from omegacommon.auth import OmegaRuntimeAuthentication, OmegaRestApiAuth
-from omegacommon.util import cached
+from omegacommon.auth import OmegaRestApiAuth
+from omegaml import settings
 
 
-def get_user_config_from_api(api_auth, api_url=None, requested_userid=None):
-    from omegaml import defaults
+def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
+    defaults = settings()
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     api_url += '/api/v1/config/'
     api_url = api_url.replace('//api', '/api')
+    query = []
     if requested_userid:
-        api_url += '?user={}'.format(requested_userid)
+        query.append('user={}'.format(requested_userid))
+    if view:
+        query.append('view={}'.format(int(view)))
+    api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
     if defaults.OMEGA_RESTAPI_URL.startswith('http'):
         import requests
@@ -41,7 +45,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None):
 
 #FIXME enable cache by arguments (mnemonic) @cached(seconds=3600)
 def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
-                          qualifier=None):
+                          qualifier=None, view=False):
     """
     setup an Omega instance from userid and apikey
 
@@ -60,7 +64,9 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
         api_auth = OmegaRestApiAuth(userid, apikey)
-        configs = get_user_config_from_api(api_auth, api_url=api_url, requested_userid=requested_userid)
+        configs = get_user_config_from_api(api_auth, api_url=api_url,
+                                           requested_userid=requested_userid,
+                                           view=view)
         configs = configs['objects'][0]['data']
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}

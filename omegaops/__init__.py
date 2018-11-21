@@ -151,11 +151,12 @@ def get_client_config(user, qualifier=None, view=False):
     user_settings['user'] = user_settings.get('username') or user_settings.get('user')
 
     if not view:
-        # provide cluster-external mongo host URL
+        # provide cluster-external mongo+rabbitmq hosts URL
         mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
                                                    **user_settings)
+        broker_url = config.BROKER_URL
     else:
-        # provide cluster-internal mongo host URL
+        # provide cluster-internal mongo+rabbitmq hosts URL
         # parse salient parts of mongourl, e.g.
         # mongodb://user:password@host/dbname
         parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
@@ -164,8 +165,9 @@ def get_client_config(user, qualifier=None, view=False):
             creds, host = host.split('@', 1)
         mongo_url = settings.BASE_MONGO_URL.format(mongohost=host,
                                                    **user_settings)
+        broker_url = settings.OMEGA_BROKER
+
     # FIXME permission user instead of standard
-    broker_url = config.BROKER_URL
     client_config = {
         "OMEGA_CELERY_CONFIG": {
             "BROKER_URL": broker_url,
