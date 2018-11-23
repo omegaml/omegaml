@@ -1,10 +1,10 @@
-from omegaml import settings, load_class
-from omegaml.jobs import OmegaJobs
-from omegaml.runtime import OmegaRuntime
-from omegaml.store import OmegaStore
+from omegaee.runtimes.runtime import OmegaAuthenticatedRuntime
+from omegajobs.jobs import OmegaEnterpriseJobs
+from omegaml.omega import Omega as CoreOmega, OmegaDeferredInstance as CoreOmegaDeferredInstance
+from ._version import version
 
 
-class Omega(object):
+class EnterpriseOmega(CoreOmega):
     """
     Client API to omegaml
 
@@ -12,14 +12,13 @@ class Omega(object):
 
     * :code:`datasets` - access to datasets stored in the cluster
     * :code:`models` - access to models stored in the cluster
-    * :code:`runtime` - access to the cluster compute resources
+    * :code:`runtimes` - access to the cluster compute resources
     * :code:`jobs` - access to jobs stored and executed in the cluster
     * :code:`scripts` - access to lambda modules stored and executed in the cluster
 
     """
 
-    def __init__(self, mongo_url=None, backend=None, broker=None,
-                 celeryconf=None, celerykwargs=None, auth=None, defaults=None):
+    def __init__(self, celerykwargs=None, auth=None, **kwargs):
         """
         Initialize the client API
 
@@ -35,30 +34,29 @@ class Omega(object):
         :param celeryconf: the celery configuration dictionary
         :param celerykwargs: kwargs to create the Celery instance
         """
-        from omegaml.documents import Metadata
-        from omegaml.util import settings
-        # celery and mongo configuration
-        self.defaults = defaults or settings()
-        self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
-        self.broker = broker or self.defaults.OMEGA_BROKER
-        self.backend = backend or self.defaults.OMEGA_RESULT_BACKEND
-        # setup api access
-        self.models = OmegaStore(mongo_url=mongo_url, prefix='models/', defaults=self.defaults)
-        self.datasets = OmegaStore(mongo_url=mongo_url, prefix='data/', defaults=self.defaults)
-        self.scripts = OmegaStore(mongo_url=mongo_url, prefix='scripts/', defaults=self.defaults)
-        self._jobdata = OmegaStore(mongo_url=mongo_url, prefix='jobs/', defaults=self.defaults)
-        # runtime environments
-        self.runtime = OmegaRuntime(self, backend=backend,
-                                    auth=auth,
-                                    broker=broker, celeryconf=celeryconf,
-                                    celerykwargs=None, defaults=self.defaults)
-        self.jobs = OmegaJobs(store=self._jobdata)
+        super(EnterpriseOmega, self).__init__(**kwargs)
+        # avoid circular imports
+        from omegaml.store import OmegaStore
+
+        # store inputs for reference
+        self.auth = auth
+        self.celerykwargs = kwargs
+
+        # enterprise extensions
+        self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
+        self.runtime = OmegaAuthenticatedRuntime(self, backend=self.backend,
+                                                 auth=self.auth,
+                                                 broker=self.broker,
+                                                 celeryconf=self.celeryconf,
+                                                 celerykwargs=self.celerykwargs,
+                                                 defaults=self.defaults)
+        self.jobs = OmegaEnterpriseJobs(store=self._jobdata)
 
     def __repr__(self):
-        return 'Omega(mongo_url={})'.format(self.mongo_url)
+        return 'OmegaEnterprise(mongo_url={})'.format(self.mongo_url)
 
 
-class OmegaDeferredInstance():
+class EnterpriseOmegaDeferredInstance(CoreOmegaDeferredInstance):
     """
     A deferred instance of Omega() that is only instantiated on access
 
@@ -66,14 +64,9 @@ class OmegaDeferredInstance():
     of Omega.
     """
 
-    def __init__(self, base=None, attribute=None):
-        self.omega = 'not initialized -- call .setup() or access an attribute'
-        self.initialized = False
-        self.base = base
-        self.attribute = attribute
-
     def setup(self, username=None, apikey=None, api_url=None, qualifier=None):
         qualifier = qualifier or 'default'
+        from omegaml.util import settings, load_class
         defaults = settings()
         auth = load_class(defaults.OMEGA_AUTH_ENV)
         if not self.initialized and username and apikey:
@@ -82,21 +75,6 @@ class OmegaDeferredInstance():
             self.omega = Omega()
         self.initialized = True
         return self
-
-    def __getattr__(self, name):
-        if self.base:
-            base = getattr(self.base, self.attribute)
-            return getattr(base, name)
-        if not self.initialized:
-            self.setup()
-        return getattr(self.omega, name)
-
-    def __repr__(self):
-        if self.base:
-            return repr(getattr(self.base, self.attribute))
-        self.setup()
-        return repr(self.omega)
-
 
 
 def setup(username=None, apikey=None, api_url=None, qualifier=None):
@@ -121,7 +99,7 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None):
         configuration will be returned. Note that the default configuration depends on
         the configuration file in $HOME/.omegaml/config.yml (if present), or the
         system-wide defaults. Typically the system-wide defaults return an instance
-        for all-local use, i.e. local database and a single-threaded local runtime.
+        for all-local use, i.e. local database and a single-threaded local runtimes.
 
         If api_url is not provided, it will default to the system-wide defaults (typically
         http://localhost in test, http://omegaml.omegaml.io for omegaml SaaS provision or
@@ -136,4 +114,18 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None):
     return _om.setup(username=username, apikey=apikey, api_url=api_url, qualifier=qualifier).omega
 
 
-_om = OmegaDeferredInstance()
+def get_omega_for_task(task):
+    # magic sauce to get authentication tuple without exposing the kwarg
+    from omegaml import settings, load_class
+    defaults = settings()
+    auth_env = load_class(defaults.OMEGA_AUTH_ENV)
+    task_kwargs = task.request.kwargs
+    auth = task_kwargs.pop('__auth', None)
+    return auth_env.get_omega_for_task(auth=auth)
+
+
+# exports
+Omega = EnterpriseOmega
+OmegaDeferredInstance = EnterpriseOmegaDeferredInstance
+_om = EnterpriseOmegaDeferredInstance()
+version = version  # ensure we keep imports

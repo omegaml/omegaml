@@ -63,12 +63,13 @@ def testOmegamlJobs(
     print("Job Status:")
     print(om.jobs.get_status(nb_file))
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--broker-url", action="store", help="celery broker url", required=True)
     parser.add_argument("--queue", action="store", help="celery queue", required=True)
     parser.add_argument("--exchange", action="store", help="celery exchange", required=True)
-    parser.add_argument("--mongo-url", action="store", help="Mongo url",  required=True)
+    parser.add_argument("--mongo-url", action="store", help="Mongo url", required=True)
     parser.add_argument("--collection", action="store", help="Mongo Notebook Collection", required=True)
     args = parser.parse_args()
     testOmegamlJobs(**vars(args))

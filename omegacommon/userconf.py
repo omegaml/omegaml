@@ -53,7 +53,8 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     :param qualifier: the database qualifier requested. defaults to 'default'
     :returns: the Omega instance configured for the given user
     """
-    from omegaml import Omega, defaults
+    from omegaml import Omega
+    from omegaml import defaults
     from omegaml.util import settings
     qualifier = qualifier or 'default'
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
@@ -76,7 +77,8 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
 
 
 def get_omega_from_config(configfile, qualifier=None):
-    from omegaml import Omega, defaults
+    from omegaml import Omega
+    from omegaml import defaults
     from omegaml.util import settings
     with open(configfile, 'r') as fconfig:
         configs = yaml.load(fconfig)

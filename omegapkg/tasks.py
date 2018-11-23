@@ -3,19 +3,18 @@ omega runtime script tasks
 """
 from __future__ import absolute_import
 
-import json
-
 import datetime
-from celery import Task
 from celery import shared_task
-from omegaml.runtime.auth import get_omega_for_task
+
+from omegaml.celery_util import OmegamlTask
 from omegapkg import PythonPackageData
 
-class NotebookTask(Task):
+
+class NotebookTask(OmegamlTask):
     abstract = True
 
     def on_success(self, retval, task_id, *args, **kwargs):
-        om = self.om 
+        om = self.om
         args, kwargs = args[0:2]
         scriptname = args[0]
         meta = om.scripts.metadata(scriptname)
@@ -53,28 +52,25 @@ class NotebookTask(Task):
         meta.save()
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=NotebookTask)
 def run_omega_script(self, scriptname, **kwargs):
     """
     runs omegaml job
     """
-    self.om = om = get_omega_for_task(auth=kwargs.pop('auth', None))
-    mod = om.scripts.get(scriptname)
+    mod = self.om.scripts.get(scriptname)
+    dtstart = datetime.datetime.now()
     try:
-        dtstart = datetime.datetime.now()
-        result = mod.run(om, **kwargs)
-        dtend = datetime.datetime.now()
-        duration = dtend - dtstart
+        result = mod.run(self.om, **self.delegate_kwargs)
     except Exception as e:
         result = str(e)
+    dtend = datetime.datetime.now()
+    duration = dtend - dtstart
 
     data = {
         'script': scriptname,
-        'kwargs': kwargs,
+        'kwargs': self.delegate_kwargs,
         'result': result,
-        'runtime': float(duration.seconds) + duration.microseconds / float(1e6),
+        'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
         'started': dtstart.isoformat(),
     }
     return data
-
-

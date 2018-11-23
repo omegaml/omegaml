@@ -1,4 +1,3 @@
-
 import os
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
@@ -93,4 +92,3 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     ]
     #: authentication environment
     OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
-

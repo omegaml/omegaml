@@ -64,7 +64,7 @@ class ScriptResourceTests(ResourceTestCase):
                                     authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
-        self.assertIn('runtime', data)
+        self.assertIn('runtimes', data)
         self.assertIn('result', data)
         expected = list(['hello from helloworld', {'text': 'foo'}])
         self.assertEqual(data['result'], expected)

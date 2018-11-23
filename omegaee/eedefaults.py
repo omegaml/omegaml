@@ -10,6 +10,11 @@ OMEGA_STORE_BACKENDS = {
     'pandas.csv': 'omegaee.backends.PandasExternalData',
     'python.package': 'omegapkg.PythonPackageData',
 }
+#: runtimes mixins
+OMEGA_RUNTIME_MIXINS = [
+    'omegaee.runtimes.mixins.AuthenticatedModelMixin',
+    'omegaee.runtimes.mixins.AuthenticatedGridSearchMixin',
+]
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
@@ -27,3 +32,6 @@ OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDD
 OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://localhost:8001')
 #: omegaweb's API key user by JYHUB_USER to get another users config. Use omsetupuser to set this key
 OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'f55750fff7d9ae6c20d5f46a41933f09ba5812a4')
+
+#: allow a task to use the local default configuration (potentially insecure)
+OMEGA_ALLOW_TASK_DEFAULT_AUTH=False

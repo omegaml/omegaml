@@ -19,7 +19,6 @@ def get_omega_for_user(user, qualifier=None):
     """
     from omegaml import Omega
     from omegaops import get_client_config
-
     config = get_client_config(user, qualifier=qualifier)
     mongo_url = config.get('OMEGA_MONGO_URL')
     auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)

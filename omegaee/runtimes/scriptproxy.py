@@ -15,7 +15,7 @@ class OmegaScriptProxy(object):
 
             om = Omega()
             # result is AsyncResult, use .get() to return it's result
-            result = om.runtime.script('foojob').run()
+            result = om.runtimes.script('foojob').run()
             result.get()
     """
 
@@ -23,13 +23,17 @@ class OmegaScriptProxy(object):
         self.scriptname = scriptname
         self.runtime = runtime
 
+    @property
+    def _common_kwargs(self):
+        return dict(__auth=self.runtime.auth_tuple)
+
     def run(self, **kwargs):
         """
         run the script
 
         Runs the script and returns its result as
 
-        {"runtime": 7.4e-05,
+        {"runtimes": 7.4e-05,
           "started": "2018-04-07T17:57:52.451012",
           "kwargs": {},
           "result": {},
@@ -39,5 +43,5 @@ class OmegaScriptProxy(object):
         :return: the result
         """
         script_run = self.runtime.task('omegapkg.tasks.run_omega_script')
-        return script_run.delay(self.scriptname, auth=self.runtime.auth_tuple,
+        return script_run.delay(self.scriptname, **self._common_kwargs,
                                 **kwargs)

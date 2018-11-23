@@ -16,7 +16,7 @@ build:
     echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list &&
     apt-get update &&
     apt-get install texlive-xetex texlive-fonts-recommended texlive-latex-recommended texlive-pictures texlive-latex-extra &&
-    apt-get install -y mongodb-org=3.6.3 mongodb-org-server=3.6.3 mongodb-org-shell=3.6.3 mongodb-org-mongos=3.6.3 mongodb-org-tools=3.6.3
+    apt-get install -y --allow-change-held-packages --allow-downgrades mongodb-org=3.6.8 mongodb-org-server=3.6.8 mongodb-org-shell=3.6.8 mongodb-org-mongos=3.6.8 mongodb-org-tools=3.6.8
   - /usr/bin/mongod --auth > /dev/null &
   - sleep 5 && cat scripts/mongoinit.js | /usr/bin/mongo
   - wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh

@@ -1,7 +1,6 @@
 import datetime
 import os
 import sys
-from distutils.dir_util import mkpath
 from shutil import rmtree
 from unittest import TestCase
 
@@ -93,7 +92,7 @@ class PythonPackageDataTests(TestCase):
         om.scripts.put(pkgsrc, 'helloworld')
         result = om.runtime.script('helloworld').run(text='foo')
         data = result.get()
-        self.assertIn('runtime', data)
+        self.assertIn('runtimes', data)
         expected = ('hello from helloworld', {'text': 'foo'})
         self.assertEqual(data['result'], expected)
 
