@@ -53,7 +53,7 @@ class NotebookTask(Task):
         meta.save()
 
 
-@shared_task(bind=True, base=NotebookTask)
+@shared_task(bind=True)
 def run_omega_script(self, scriptname, **kwargs):
     """
     runs omegaml job
@@ -62,7 +62,7 @@ def run_omega_script(self, scriptname, **kwargs):
     mod = om.scripts.get(scriptname)
     try:
         dtstart = datetime.datetime.now()
-        result = mod.run(**kwargs)
+        result = mod.run(om, **kwargs)
         dtend = datetime.datetime.now()
         duration = dtend - dtstart
     except Exception as e:
