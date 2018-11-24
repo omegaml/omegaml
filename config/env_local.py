@@ -76,7 +76,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
     OMEGA_RESTAPI_URL = 'http://localhost:8000'
 
-    OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaee.tasks', 'omegajobs.tasks', 'omegapkg.tasks']
+    OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']
 
     #: storage backends
     OMEGA_STORE_BACKENDS = {

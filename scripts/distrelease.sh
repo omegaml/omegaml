@@ -9,9 +9,12 @@
 ##    --distname=VALUE  the name of the distribution. defaults to basename 
 ##    --nominify        do not obfuscate code
 ##    --nodocker        do not build a docker image
-##    --dockertag       docker image tag. defaults to basename
+##    --dockertag       docker image tag. defaults to $dockertag
 ##
 ##
+
+# defaults
+dockertag=${dockertag:=omegamlee}
 
 # script setup to parse options
 script_dir=$(dirname "$0")
@@ -28,7 +31,7 @@ distdir=$script_dir/../dist
 mkdir -p $distdir
 distdir=$(realpath $distdir)
 version=${version:=0.1}
-releasezip=$distdir/omegaml-release-$version.zip
+releasezip=$distdir/omegaml-enterprise-release-$version.zip
 if ! [[ -z $nominify ]]; then
   use_nominify=--nominify
 fi
@@ -98,7 +101,7 @@ if [[ -z $nodocker ]]; then
   pushd $distdir/docker-staging
   unzip $releasezip -d build
   pushd build
-  docker images | grep omegaml | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
+  docker images | grep $dockertag | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
   docker build -f Dockerfile -t $dockertag .
   popd
   popd
