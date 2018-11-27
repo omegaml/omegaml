@@ -37,11 +37,8 @@ def site_registration_email(ctx):
     br.visit(uri(br, '/admin'))
     assert br.is_text_present('Django administration', wait_time=2)
     assert br.is_text_present('Password:')
-    secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
-    with open(secrets) as fin:
-        secrets = yaml.load(fin)
-    br.fill('username', secrets['admin_user'])
-    br.fill('password', secrets['admin_password'])
+    br.fill('username', ctx.admin_user)
+    br.fill('password', ctx.admin_password)
     br.find_by_value('Log in').first.click()
     # open emails sent
     assert br.is_text_present('Django administration', wait_time=2)

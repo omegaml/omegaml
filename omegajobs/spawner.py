@@ -97,6 +97,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         env['HOME'] = self.home_path
         env['SHELL'] = '/bin/bash'
         env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
+        env['JY_ALLOW_ROOT'] = 'yes'
         import omegaml
         env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaml.__file__), '..')
         self.log.info("***within user_env {}".format(os.getpid()))

@@ -1,3 +1,8 @@
+import os
+
+import yaml
+
+
 def uri(browser, uri):
     """ given a browser, replace the path with uri """
     from six.moves.urllib.parse import urlparse, urlunparse
@@ -14,3 +19,10 @@ def find_user_apikey(br):
             userid = userid.split(' ')[1]
             apikey = apikey.split(' ')[1]
     return userid, apikey
+
+
+def get_admin_secrets():
+    secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
+    with open(secrets) as fin:
+        secrets = yaml.load(fin)
+    return secrets['admin_user'], secrets['admin_password']

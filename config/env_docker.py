@@ -6,16 +6,15 @@ from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 from .env_local import EnvSettings_Local
 
 
-class EnvSettings_docker(Config_Dokku,
-                         Config_ApiKeys,
+class EnvSettings_docker(Config_ApiKeys,
                          EnvSettings_Local):
     # must match docker-compose configuration
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('mongodb', 'mongo db host name'),
-        'BROKER_URL': ('amqp://rabbitmq//',
-                       'rabbitmq broker url'),
+        'JYHUB_HOST': ('omjobs', 'jupyter hub public host name'),
+        'BROKER_URL': ('amqp://rabbitmq//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
     }
 

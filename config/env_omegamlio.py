@@ -16,8 +16,9 @@ class EnvSettings_omegamlio(Config_Dokku,
     # constance
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('omegaml.omegaml.io:27017', 'mongo db host name'),
+        'JYHUB_HOST': ('omjobs.omegaml.io', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@omegaml.omegaml.io:5672//',
-                       'rabbitmq broker url'),
+                       'rabbitmq public broker url'),
         'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
     }
     # mail gun email settings

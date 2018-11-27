@@ -14,7 +14,8 @@
 ##
 
 # defaults
-dockertag=${dockertag:=omegamlee}
+dockertag=${dockertag:=omegaml-ee}
+distname=${dockertag:=omegaml-ee}
 
 # script setup to parse options
 script_dir=$(dirname "$0")
@@ -77,6 +78,9 @@ cp $sourcedir/conda-requirements.txt .
 cp $sourcedir/pip-requirements.txt ./requirements.txt
 cp $sourcedir/Procfile .
 cp $sourcedir/README.rst .
+cp $sourcedir/LICENSE .
+cp $sourcedir/NOTICE .
+cp $sourcedir/THIRDPARTY .
 cp $sourcedir/manage.py .
 cp -r $sourcedir/scripts .
 zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts
@@ -101,7 +105,7 @@ if [[ -z $nodocker ]]; then
   pushd $distdir/docker-staging
   unzip $releasezip -d build
   pushd build
-  docker images | grep $dockertag | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
+  docker images | grep "$dockertag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
   docker build -f Dockerfile -t $dockertag .
   popd
   popd
