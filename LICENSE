@@ -1,7 +1,8 @@
 End-User License Agreement (EULA)
 =================================
 
-This End-User License Agreement ("EULA") is a legal agreement between you ("User") and one2seven GmbH trading as omegaml|ml and omegaml.io ("Supplier")
+This End-User License Agreement ("EULA") is a legal agreement between you ("User") and one2seven GmbH
+trading as omegaml|ml and omegaml.io ("Supplier")
 
 This EULA agreement governs your acquisition and use of our omegaml|ml software and services
 provided by omegaml.io ("Software") directly from Supplier or indirectly through a Supplier
@@ -44,7 +45,7 @@ expense.
 -----------------
 
 By downloading, installing or using the Software or any of the services provided by Supplier, independent of
-the source or installation location of Sofware and independent of place of delivery of services, you shall
+the source or installation location of Software and independent of place of delivery of services, you shall
 be required to pay all respective license and services fees as per the pricing plan you have selected.
 The payment is due within 30 days of the date of the invoice and is to be paid as per the instructions
 included in the invoice.
@@ -94,7 +95,36 @@ Supplier reserves the right to grant licences to use the Software to third parti
 Supplier does not grant permission to use trade names, trademarks, service marks or product names
 of Supplier except as required for reasonable and customary use of the Software.
 
-6. Limitation of Liability
+6. Your responsibilities
+------------------------
+
+Supplier shall only provide Software and related Services to you, including if so agreed providing
+the Software as an Internet-hosted service, in order to enable You to run the Software on the storage and compute
+capacities provided by You . Supplier does not store, possess, access, process, manipulate or
+otherwise interact ("process") with data or programs that You process using Software.
+
+It is Your responsibility to plan for, acquire, allocate, operate and maintain the storage and compute
+capacities from third party deemed viable by Supplier, and in line with the requirements of your
+data storage and processing needs, as determined entirely by You. Supplier shall provide the electronic
+means or instructions in the form of Software or services for you to use such capacities in relation
+with the Software, provided the capacities meet the requirements set forth in the Supplier
+provided documentation (e.g. cloud tools & platform APIs, hardware and software requirements).
+
+It is your responsibility to ensure that You are legally allowed to store and process the data in
+relation with and by Software. Your storing and processing such data shall not imply transfer to
+Supplier of ownership, access rights nor the transfer of any other responsibility in relation to
+the data or the storage and compute capacities.
+
+It is Your responsibility to ensure security and data privacy adequately meet the requirements
+in your country, by your Legal Entity, by your customers and by applicable industry regulation
+whether express or implied. You will interact with any respective governmental and non-governmental
+bodies that have an interest in your security and data privacy practices, at Your expense. Supplier
+shall participate in such interactions on Your request only, or by order of an authorized governmental
+body only on the basis of a legal order. A fee shall be charged to You according to the then-applicable
+service fees and in line with any request for interaction requested of Supplier in relation with
+Your use of the Software and services.
+
+7. Limitation of Liability
 --------------------------
 
 Unless required by applicable law or agreed to in writing, Supplier provides the Software and any related
@@ -104,13 +134,16 @@ or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining 
 using or redistributing the Software and any related services and assume any risks associated with
 your exercise of permissions under this EULA agreement.
 
-Any third party software or services are not covered by this EULA agreement and are not provided
-by Supplier. You shall ensure compliance with any terms set forth by the respective third party
-supplier at your risk, cost and expense. You shall indemnify Supplier harmless at your expense if
-any claims are asserted by third party against Supplier by reason of your misconduct or breach
-of terms or your obligation for warranty or liability whether expressed or implied.
+Any third party software or services, including compute and storage capacities, are not covered
+by this EULA agreement and are not provided by Supplier. You shall ensure compliance with any terms
+set forth by the respective third party supplier at your risk, cost and expense.
 
-7. Termination
+You shall indemnify Supplier harmless at your expense if any claims are asserted by third party
+against Supplier by reason of Your misconduct or breach of any terms or conditions in your obligation,
+including failed adherence by You with any applicable consumer and privacy laws, whether express or
+implied.
+
+8. Termination
 --------------
 
 This EULA agreement is effective from the date you first use the Software and shall continue until
@@ -121,18 +154,30 @@ such termination, the licenses granted by this EULA agreement will immediately t
 to stop all access and use of the Software. The provisions that by their nature continue and survive
 will survive any termination of this EULA agreement.
 
-8. Governing Law
+9. Governing Law
 ----------------
 
 This EULA agreement, and any dispute arising out of or in connection with this EULA agreement, shall
 be governed by and construed in accordance with the laws of Switzerland. The only place for arbitration
 shall be at the legal premises of one2seven GmbH trading as omegaml|ml and omegaml.io
 
-9. Closing remarks
-------------------
+10. Modifications to the Agreement
+----------------------------------
 
-This EULA was created by eulatemplate.com for one2seven GmbH trading as omegaml|ml and omegaml.io
-and adapted by Supplier.
+Supplier may modify this Agreement including any related Terms and Conditions at any time by posting
+a revised version on Supplier's web site or by otherwise notifying you with advance notice of at least
+30 days. Changes to the agreement shall take effect upon posting or as stated in our notification to you.
+By continuing to use Software or services provided by Supplier you agree to be bound by the modified
+Agreement.
 
-Current as of November 2018, one2seven GmbH, Hagenholzstrasse 83b, 8050 Zuerich,  Switzerland
+11. Miscellaneous
+-----------------
+
+This EULA was created by eulatemplate.com for one2seven GmbH and adapted by Supplier.
+
+Current as of November 2018.
+
+one2seven GmbH, Hagenholzstrasse 83b, 8050 Zuerich,  Switzerland
 (c) one2seven GmbH All rights reserved.
+
+
