@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Lambda Modules &mdash; omega|ml 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="REST API" href="restapi.html" />
+    <link rel="prev" title="Working with Machine Learning Models" href="modelstore.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> omega|ml
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="store_retrieve.html">Storing and retrieving data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filterdf.html">Filtering Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfapply.html">Aggregation Framework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelstore.html">Working with Machine Learning Models</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lambda Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#writing-a-lambda-module">Writing a Lambda Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deploying-a-module">Deploying a module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#executing-a-module">Executing a module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-the-rest-api">Using the REST API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-the-runtime-api">Using the runtime API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="restapi.html">REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custombackends.html">Implementing a Custom Backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">Runtime Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="streaming.html">Mini-Batch Streaming</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega|ml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">User Guide</a> &raquo;</li>
+        
+      <li>Lambda Modules</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/lambda.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lambda-modules">
+<h1>Lambda Modules<a class="headerlink" href="#lambda-modules" title="Permalink to this headline">¶</a></h1>
+<p><em>Enterprise Edition</em></p>
+<p>omega|ml supports execution of arbitrary modules packaged by pip on the runtime cluster. This
+is the equivalent of AWS Lambda with the added bonus of having the full set of omega|ml capabilities
+available to your modules.</p>
+<div class="section" id="writing-a-lambda-module">
+<h2>Writing a Lambda Module<a class="headerlink" href="#writing-a-lambda-module" title="Permalink to this headline">¶</a></h2>
+<p>Creating a Lambda Module is straight forward:</p>
+<ol class="arabic simple">
+<li>write your code</li>
+<li>add <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code></li>
+<li>use <code class="code docutils literal notranslate"><span class="pre">om.scripts.put()</span></code> to deploy the package</li>
+</ol>
+<p>To make your code executable through the REST API or in <code class="code docutils literal notranslate"><span class="pre">om.runtime.script</span></code> your
+code’s top-level package must contain a <code class="code docutils literal notranslate"><span class="pre">run()</span></code> method:</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+     <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="code docutils literal notranslate"><span class="pre">kwargs</span></code> will contain the key/value pair passed to the module on execution.</p>
+<p>The simplest <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code> is as simple as follows (:</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">distutils.core</span> <span class="k">import</span> <span class="n">setup</span>
+<span class="n">setup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;helloworld&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span>
+      <span class="n">description</span><span class="o">=</span><span class="s1">&#39;simple omegaml hello world script&#39;</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">&#39;omegaml&#39;</span><span class="p">,</span>
+      <span class="n">author_email</span><span class="o">=</span><span class="s1">&#39;info@omegaml.io&#39;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://omegaml.io&#39;</span><span class="p">,</span>
+      <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;helloworld&#39;</span><span class="p">],)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deploying-a-module">
+<h2>Deploying a module<a class="headerlink" href="#deploying-a-module" title="Permalink to this headline">¶</a></h2>
+<p>To deploy a Lambda module use <code class="code docutils literal notranslate"><span class="pre">om.scripts.put()</span></code>:</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pkg://path/to/helloworld`, &#39;</span><span class="n">helloworld</span><span class="s1">&#39;)</span>
+</pre></div>
+</div>
+<p>This will build the package and store it in omega|ml. It is automatically
+available for execution using the REST API or <code class="code docutils literal notranslate"><span class="pre">om.runtime.script()</span></code>.</p>
+</div>
+<div class="section" id="executing-a-module">
+<h2>Executing a module<a class="headerlink" href="#executing-a-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="using-the-rest-api">
+<h3>Using the REST API<a class="headerlink" href="#using-the-rest-api" title="Permalink to this headline">¶</a></h3>
+<p>Use the <code class="code docutils literal notranslate"><span class="pre">/api/script/</span></code> REST API to execute a module:</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span>POST /api/script/hellworld/?param=value
+=&gt;
+{
+    &#39;script&#39;: &#39;helloworld&#39;
+    &#39;kwargs&#39;: { &#39;param&#39;: value },
+    &#39;result&#39;: &lt;result&gt;,
+    &#39;runtime&#39;: &lt;microseconds&gt;,
+    &#39;started&#39;: &#39;datetime in iso 8601 format&#39;,
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-runtime-api">
+<h3>Using the runtime API<a class="headerlink" href="#using-the-runtime-api" title="Permalink to this headline">¶</a></h3>
+<p>Use the <code class="code docutils literal notranslate"><span class="pre">om.runtime.script(&lt;name&gt;)</span></code> API to run a module on the cluster:</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;helloworld&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span>
+    <span class="s1">&#39;script&#39;</span><span class="p">:</span> <span class="s1">&#39;helloworld&#39;</span>
+    <span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;foo&#39;</span><span class="p">:</span> <span class="s1">&#39;bar&#39;</span> <span class="p">},</span>
+    <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">result</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">microseconds</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="s1">&#39;datetime in iso 8601 format&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="restapi.html" class="btn btn-neutral float-right" title="REST API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modelstore.html" class="btn btn-neutral" title="Working with Machine Learning Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2018, omegaml.io by one2seven GmbH
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

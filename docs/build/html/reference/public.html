@@ -1,0 +1,1885 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Public API &mdash; omega|ml 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developer API" href="developer.html" />
+    <link rel="prev" title="Reference" href="index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> omega|ml
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Public API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python-api-overview">Python API (overview)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-api">Python API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omega-ml">omega|ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml-store">omegaml.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml-runtimes">omegaml.runtimes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml-jobs">omegaml.jobs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml-mdataframe">omegaml.mdataframe</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="developer.html">Developer API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega|ml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Reference</a> &raquo;</li>
+        
+      <li>Public API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/public.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="public-api">
+<h1>Public API<a class="headerlink" href="#public-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="python-api-overview">
+<h2>Python API (overview)<a class="headerlink" href="#python-api-overview" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.datasets" title="omegaml.datasets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.datasets</span></code></a></td>
+<td>the OmegaStore for datasets</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.models" title="omegaml.models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.models</span></code></a></td>
+<td>the OmegaStore for models</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.runtimes" title="omegaml.runtimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.jobs" title="omegaml.jobs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.jobs</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="developer.html#omegaml.scripts" title="omegaml.scripts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.scripts</span></code></a></td>
+<td>the OmegaStore for lambda scripts</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="developer.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a>([mongo_url,&nbsp;…])</td>
+<td>The storage backend for models and data</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime" title="omegaml.runtimes.OmegaRuntime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaRuntime</span></code></a>(omega[,&nbsp;…])</td>
+<td>omegaml compute cluster gateway</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.runtimes.OmegaRuntimeDask" title="omegaml.runtimes.OmegaRuntimeDask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaRuntimeDask</span></code></a>(omega[,&nbsp;…])</td>
+<td>omegaml compute cluster gateway to a dask distributed cluster</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.runtimes.OmegaModelProxy" title="omegaml.runtimes.OmegaModelProxy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaModelProxy</span></code></a>(modelname)</td>
+<td>proxy to a remote model in a celery worker</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.runtimes.OmegaJobProxy" title="omegaml.runtimes.OmegaJobProxy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaJobProxy</span></code></a>(jobname[,&nbsp;…])</td>
+<td>proxy to a remote job in a celery worker</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.jobs.OmegaJobs" title="omegaml.jobs.OmegaJobs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.jobs.OmegaJobs</span></code></a>([prefix,&nbsp;store,&nbsp;defaults])</td>
+<td>Omega Jobs API</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.mdataframe.MDataFrame" title="omegaml.mdataframe.MDataFrame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MDataFrame</span></code></a>(collection[,&nbsp;…])</td>
+<td>A DataFrame for mongodb</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.mdataframe.MGrouper" title="omegaml.mdataframe.MGrouper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MGrouper</span></code></a>(mdataframe,&nbsp;…)</td>
+<td>a Grouper for MDataFrames</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#omegaml.mdataframe.MLocIndexer" title="omegaml.mdataframe.MLocIndexer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MLocIndexer</span></code></a>(mdataframe[,&nbsp;…])</td>
+<td>implements the LocIndexer for MDataFrames</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#omegaml.mdataframe.MPosIndexer" title="omegaml.mdataframe.MPosIndexer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MPosIndexer</span></code></a>(mdataframe)</td>
+<td>implements the position-based indexer for MDataFrames</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="python-api">
+<h2>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="omega-ml">
+<h3>omega|ml<a class="headerlink" href="#omega-ml" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="omegaml.datasets">
+<code class="descclassname">omegaml.</code><code class="descname">datasets</code><em class="property"> - storage for data</em><a class="headerlink" href="#omegaml.datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>the OmegaStore for datasets</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="omegaml.models">
+<code class="descclassname">omegaml.</code><code class="descname">models</code><em class="property"> - storage for models</em><a class="headerlink" href="#omegaml.models" title="Permalink to this definition">¶</a></dt>
+<dd><p>the OmegaStore for models</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="omegaml.runtimes">
+<code class="descclassname">omegaml.</code><code class="descname">runtimes</code><em class="property"> - the cluster runtime API</em><a class="headerlink" href="#omegaml.runtimes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="omegaml.jobs">
+<code class="descclassname">omegaml.</code><code class="descname">jobs</code><em class="property"> - the lambda compute service</em><a class="headerlink" href="#omegaml.jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the jobs API</p>
+</dd></dl>
+
+</div>
+<div class="section" id="omegaml-store">
+<h3>omegaml.store<a class="headerlink" href="#omegaml-store" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">omegaml.store.base.</code><code class="descname">OmegaStore</code><span class="sig-paren">(</span><em>mongo_url=None</em>, <em>bucket=None</em>, <em>prefix=None</em>, <em>kind=None</em>, <em>defaults=None</em><span class="sig-paren">)</span></dt>
+<dd><p>The storage backend for models and data</p>
+<dl class="method">
+<dt>
+<code class="descname">collection</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a mongo db collection as a datastore</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – the collection to use. if none defaults to the
+collection name given on instantiation. the actual collection name
+used is always prefix + name + ‘.data’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">drop</code><span class="sig-paren">(</span><em>name</em>, <em>force=False</em>, <em>version=-1</em><span class="sig-paren">)</span></dt>
+<dd><p>Drop the object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The name of the object</li>
+<li><strong>force</strong> – If True ignores DoesNotExist exception, defaults to False
+meaning this raises a DoesNotExist exception of the name does not
+exist</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if object was deleted, False if not.
+If force is True and
+the object does not exist it will still return True</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">fs</code></dt>
+<dd><p>Retrieve a gridfs instance using url and collection provided</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a gridfs instance</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em>, <em>version=-1</em>, <em>force_python=False</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve an object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The name of the object</li>
+<li><strong>version</strong> – Version of the stored object (not supported)</li>
+<li><strong>force_python</strong> – Return as a python object</li>
+<li><strong>kwargs</strong> – kwargs depending on object kind</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">an object, estimator, pipelines, data array or pandas dataframe
+previously stored with put()</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_backend</code><span class="sig-paren">(</span><em>name</em>, <em>model_store=None</em>, <em>data_store=None</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>return the backend by a given object name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kind</strong> – The object kind</li>
+<li><strong>model_store</strong> – the OmegaStore instance used to store models</li>
+<li><strong>data_store</strong> – the OmegaStore instance used to store data</li>
+<li><strong>kwargs</strong> – the kwargs passed to the backend initialization</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the backend</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_backend_bykind</code><span class="sig-paren">(</span><em>kind</em>, <em>model_store=None</em>, <em>data_store=None</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>return the backend by a given object kind</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kind</strong> – The object kind</li>
+<li><strong>model_store</strong> – the OmegaStore instance used to store models</li>
+<li><strong>data_store</strong> – the OmegaStore instance used to store data</li>
+<li><strong>kwargs</strong> – the kwargs passed to the backend initialization</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the backend</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_dataframe_dfgroup</code><span class="sig-paren">(</span><em>name</em>, <em>version=-1</em>, <em>kwargs=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a grouped dataframe</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – the name of the object</li>
+<li><strong>version</strong> – not supported</li>
+<li><strong>kwargs</strong> – mongo db query arguments to be passed to 
+collection.find() as a filter.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_dataframe_documents</code><span class="sig-paren">(</span><em>name</em>, <em>columns=None</em>, <em>lazy=False</em>, <em>filter=None</em>, <em>version=-1</em>, <em>is_series=False</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Internal method to return DataFrame from documents</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – the name of the object (str)</li>
+<li><strong>columns</strong> – the column projection as a list of column names</li>
+<li><strong>lazy</strong> – if True returns a lazy representation as an MDataFrame. 
+If False retrieves all data and returns a DataFrame (default)</li>
+<li><strong>filter</strong> – the filter to be applied as a column__op=value dict</li>
+<li><strong>version</strong> – the version to retrieve (not supported)</li>
+<li><strong>is_series</strong> – if True retruns a Series instead of a DataFrame</li>
+<li><strong>kwargs</strong> – remaining kwargs are used a filter. The filter kwarg
+overrides other kwargs.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the retrieved object (DataFrame, Series or MDataFrame)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_dataframe_hdf</code><span class="sig-paren">(</span><em>name</em>, <em>version=-1</em><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve dataframe from hdf</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The name of object</li>
+<li><strong>version</strong> – The version of object (not supported)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns a python pandas dataframe</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">gridfs.errors.NoFile</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_object_as_python</code><span class="sig-paren">(</span><em>meta</em>, <em>version=-1</em><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve object as python object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>meta</strong> – The metadata object</li>
+<li><strong>version</strong> – The version of the object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Returns data as python object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_python_data</code><span class="sig-paren">(</span><em>name</em>, <em>version=-1</em><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve objects as python data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The name of object</li>
+<li><strong>version</strong> – The version of object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Returns the object as python list object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">getl</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>return a lazy MDataFrame for a given object</p>
+<p>Same as .get, but returns a MDataFrame</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">list</code><span class="sig-paren">(</span><em>pattern=None</em>, <em>regexp=None</em>, <em>kind=None</em>, <em>raw=False</em>, <em>include_temp=False</em>, <em>bucket=None</em>, <em>prefix=None</em><span class="sig-paren">)</span></dt>
+<dd><p>List all files in store</p>
+<p>specify pattern as a unix pattern (e.g. <code class="code docutils literal notranslate"><span class="pre">models/*</span></code>,
+or specify regexp)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pattern</strong> – the unix file pattern or None for all</li>
+<li><strong>regexp</strong> – the regexp. takes precedence over pattern</li>
+<li><strong>raw</strong> – if True return the meta data objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">List of files in store</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">make_metadata</code><span class="sig-paren">(</span><em>name</em>, <em>kind</em>, <em>bucket=None</em>, <em>prefix=None</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>create or update a metadata object</p>
+<p>this retrieves a Metadata object if it exists given the kwargs. Only
+the name, prefix and bucket arguments are considered</p>
+<p>for existing Metadata objects, the attributes kw is treated as follows:</p>
+<ul class="simple">
+<li>attributes=None, the existing attributes are left as is</li>
+<li>attributes={}, the attributes value on an existing metadata object
+is reset to the empty dict</li>
+<li>attributes={ some : value }, the existing attributes are updated</li>
+</ul>
+<p>For new metadata objects, attributes defaults to {} if not specified,
+else is set as provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – the object name</li>
+<li><strong>bucket</strong> – the bucket, optional, defaults to self.bucket</li>
+<li><strong>prefix</strong> – the prefix, optional, defaults to self.prefix</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">metadata</code><span class="sig-paren">(</span><em>name=None</em>, <em>bucket=None</em>, <em>prefix=None</em>, <em>version=-1</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a metadata document for the given entry name</p>
+<p>FIXME: version attribute does not do anything
+FIXME: metadata should be stored in a bucket-specific collection
+to enable access control, see <a class="reference external" href="https://docs.mongodb.com/manual/reference/method/db.createRole/#db.createRole">https://docs.mongodb.com/manual/reference/method/db.createRole/#db.createRole</a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">mongodb</code></dt>
+<dd><p>Returns a mongo database object</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">object_store_key</code><span class="sig-paren">(</span><em>name</em>, <em>ext</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns the store key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The name of object</li>
+<li><strong>ext</strong> – The extension of the filename</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A filename with relative bucket, prefix and name</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>attributes=None</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Stores an objecs, store estimators, pipelines, numpy arrays or
+pandas dataframes</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put_dataframe_as_dfgroup</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>groupby</em>, <em>attributes=None</em><span class="sig-paren">)</span></dt>
+<dd><p>store a dataframe grouped by columns in a mongo document</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body">&gt; # each group
+&gt;  {
+&gt;     #group keys
+&gt;     key: val,
+&gt;     _data: [
+&gt;      # only data keys
+&gt;        { key: val, … }
+&gt;     ]}</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put_dataframe_as_documents</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>append=None</em>, <em>attributes=None</em>, <em>index=None</em>, <em>timestamp=None</em><span class="sig-paren">)</span></dt>
+<dd><p>store a dataframe as a row-wise collection of documents</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – the dataframe to store</li>
+<li><strong>name</strong> – the name of the item in the store</li>
+<li><strong>append</strong> – if False collection will be dropped before inserting,
+if True existing documents will persist. Defaults to True. If not
+specified and rows have been previously inserted, will issue a
+warning.</li>
+<li><strong>index</strong> – list of columns, using +, -, &#64; as a column prefix to
+specify ASCENDING, DESCENDING, GEOSPHERE respectively. For &#64; the
+column has to represent a valid GeoJSON object.</li>
+<li><strong>timestamp</strong> – if True or a field name adds a timestamp. If the
+value is a boolean or datetime, uses _created as the field name.
+The timestamp is always datetime.datetime.utcnow(). May be overriden
+by specifying the tuple (col, datetime).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the Metadata object created</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put_ndarray_as_hdf</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>attributes=None</em><span class="sig-paren">)</span></dt>
+<dd><p>store numpy array as hdf</p>
+<p>this is hack, converting the array to a dataframe then storing
+it</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put_pyobj_as_document</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>attributes=None</em>, <em>append=True</em><span class="sig-paren">)</span></dt>
+<dd><p>store a dict as a document</p>
+<p>similar to put_dataframe_as_documents no data will be replaced by
+default. that is, obj is appended as new documents into the objects’
+mongo collection. to replace the data, specify append=False.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">put_pyobj_as_hdf</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>attributes=None</em><span class="sig-paren">)</span></dt>
+<dd><p>store list, tuple, dict as hdf</p>
+<p>this requires the list, tuple or dict to be convertible into
+a dataframe</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">rebuild_params</code><span class="sig-paren">(</span><em>kwargs</em>, <em>collection</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a modified set of parameters for querying mongodb
+based on how the mongo document is structured and the
+fields the document is grouped by.</p>
+<p><strong>Note: Explicitly to be used with get_grouped_data only</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kwargs</strong> – Mongo filter arguments</li>
+<li><strong>collection</strong> – The name of mongodb collection</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Returns a set of parameters as dictionary.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">register_backend</code><span class="sig-paren">(</span><em>kind</em>, <em>backend</em><span class="sig-paren">)</span></dt>
+<dd><p>register a backend class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kind</strong> – (str) the backend kind</li>
+<li><strong>backend</strong> – (class) the backend class</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">register_backends</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>register backends in defaults.OMEGA_STORE_BACKENDS</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">register_mixin</code><span class="sig-paren">(</span><em>mixincls</em><span class="sig-paren">)</span></dt>
+<dd><p>register a mixin class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mixincls</strong> – (class) the mixin class</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">tmppath</code></dt>
+<dd><p>return an instance-specific temporary path</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="omegaml-runtimes">
+<h3>omegaml.runtimes<a class="headerlink" href="#omegaml-runtimes" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="omegaml.runtimes.OmegaRuntime">
+<em class="property">class </em><code class="descclassname">omegaml.runtimes.</code><code class="descname">OmegaRuntime</code><span class="sig-paren">(</span><em>omega</em>, <em>backend=None</em>, <em>broker=None</em>, <em>celerykwargs=None</em>, <em>celeryconf=None</em>, <em>defaults=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>omegaml compute cluster gateway</p>
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntime.job">
+<code class="descname">job</code><span class="sig-paren">(</span><em>jobname</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.job" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a job for remote exeuction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntime.model">
+<code class="descname">model</code><span class="sig-paren">(</span><em>modelname</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a model for remote execution</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntime.ping">
+<code class="descname">ping</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.ping" title="Permalink to this definition">¶</a></dt>
+<dd><p>ping the runtimes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntime.settings">
+<code class="descname">settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the runtimes’s cluster settings</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntime.task">
+<code class="descname">task</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.task" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieve the task function from the celery instance</p>
+<p>we do it like this so we can per-OmegaRuntime instance
+celery configurations (as opposed to using the default app’s
+import, which seems to confuse celery)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.runtimes.OmegaRuntimeDask">
+<em class="property">class </em><code class="descclassname">omegaml.runtimes.</code><code class="descname">OmegaRuntimeDask</code><span class="sig-paren">(</span><em>omega</em>, <em>dask_url=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntimeDask" title="Permalink to this definition">¶</a></dt>
+<dd><p>omegaml compute cluster gateway to a dask distributed cluster</p>
+<p>set environ DASK_DEBUG=1 to run dask tasks locally</p>
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntimeDask.job">
+<code class="descname">job</code><span class="sig-paren">(</span><em>jobname</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntimeDask.job" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a job for remote exeuction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntimeDask.model">
+<code class="descname">model</code><span class="sig-paren">(</span><em>modelname</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntimeDask.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a model for remote execution</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntimeDask.settings">
+<code class="descname">settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntimeDask.settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the runtimes’s cluster settings</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaRuntimeDask.task">
+<code class="descname">task</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntimeDask.task" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieve the task function from the task module</p>
+<p>This retrieves the task function and wraps it into a 
+DaskTask. DaskTask mimicks a celery task and is 
+called on the cluster using .delay(), the same way we
+call a celery task. .delay() will return a DaskAsyncResult,
+supporting the celery .get() semantics. This way we can use
+the same proxy objects, as all they do is call .delay() and
+return an AsyncResult.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.runtimes.OmegaModelProxy">
+<em class="property">class </em><code class="descclassname">omegaml.runtimes.</code><code class="descname">OmegaModelProxy</code><span class="sig-paren">(</span><em>modelname</em>, <em>runtime=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaModelProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>proxy to a remote model in a celery worker</p>
+<p>The proxy provides the same methods as the model but will
+execute the methods using celery tasks and return celery
+AsyncResult objects</p>
+<p>Usage:</p>
+<blockquote>
+<div><div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span> <span class="o">=</span> <span class="n">Omega</span><span class="p">()</span>
+<span class="c1"># train a model</span>
+<span class="c1"># result is AsyncResult, use .get() to return it&#39;s result</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;datax&#39;</span><span class="p">,</span> <span class="s1">&#39;datay&#39;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+<span class="c1"># predict</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;datax&#39;</span><span class="p">)</span>
+<span class="c1"># result is AsyncResult, use .get() to return it&#39;s result</span>
+<span class="nb">print</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaModelProxy.apply_mixins">
+<code class="descname">apply_mixins</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaModelProxy.apply_mixins" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply mixins in defaults.OMEGA_RUNTIME_MIXINS</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.runtimes.OmegaJobProxy">
+<em class="property">class </em><code class="descclassname">omegaml.runtimes.</code><code class="descname">OmegaJobProxy</code><span class="sig-paren">(</span><em>jobname</em>, <em>runtime=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaJobProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>proxy to a remote job in a celery worker</p>
+<p>Usage:</p>
+<blockquote>
+<div><div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span> <span class="o">=</span> <span class="n">Omega</span><span class="p">()</span>
+<span class="c1"># result is AsyncResult, use .get() to return it&#39;s result</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;foojob&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+<span class="c1"># result is AsyncResult, use .get() to return it&#39;s result</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;foojob&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">schedule</span><span class="p">()</span>
+<span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaJobProxy.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaJobProxy.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run the job</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the result</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.runtimes.OmegaJobProxy.schedule">
+<code class="descname">schedule</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaJobProxy.schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>schedule the job</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="omegaml-jobs">
+<h3>omegaml.jobs<a class="headerlink" href="#omegaml-jobs" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="omegaml.jobs.OmegaJobs">
+<em class="property">class </em><code class="descclassname">omegaml.jobs.</code><code class="descname">OmegaJobs</code><span class="sig-paren">(</span><em>prefix=None</em>, <em>store=None</em>, <em>defaults=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Omega Jobs API</p>
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>code</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a notebook from code</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>code</strong> – the code as a string</li>
+<li><strong>name</strong> – the name of the job to create</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the metadata object created</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a notebook and return a NotebookNode</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.get_collection">
+<code class="descname">get_collection</code><span class="sig-paren">(</span><em>collection</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.get_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the collection object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.get_notebook_config">
+<code class="descname">get_notebook_config</code><span class="sig-paren">(</span><em>nb_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.get_notebook_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the omegaml script config on
+the notebook’s first cell</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.list">
+<code class="descname">list</code><span class="sig-paren">(</span><em>jobfilter='.*'</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>list all jobs matching filter.
+filter is a regex on the name of the ipynb entry.
+The default is all, i.e. <cite>.*</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a NotebookNode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – the NotebookNode to store</li>
+<li><strong>name</strong> – the name of the notebook</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a job immediately</p>
+<p>The job is run and the results are stored in the given filename</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – the name of the jobfile</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the metadata of the job</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.run_notebook">
+<code class="descname">run_notebook</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.run_notebook" title="Permalink to this definition">¶</a></dt>
+<dd><p>run a given notebook immediately.
+the job parameter is the name of the job script as in ipynb.
+Inserts and returns the Metadata document for the job.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.jobs.OmegaJobs.schedule">
+<code class="descname">schedule</code><span class="sig-paren">(</span><em>nb_file</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.jobs.OmegaJobs.schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Schedule a processing of a notebook as per the interval
+specified on the job script</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="omegaml-mdataframe">
+<h3>omegaml.mdataframe<a class="headerlink" href="#omegaml-mdataframe" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="omegaml.mdataframe.MDataFrame">
+<em class="property">class </em><code class="descclassname">omegaml.mdataframe.</code><code class="descname">MDataFrame</code><span class="sig-paren">(</span><em>collection</em>, <em>columns=None</em>, <em>query=None</em>, <em>limit=None</em>, <em>skip=None</em>, <em>sort_order=None</em>, <em>force_columns=None</em>, <em>immediate_loc=False</em>, <em>auto_inspect=False</em>, <em>preparefn=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A DataFrame for mongodb</p>
+<p>Performs out-of-core, lazy computation on a mongodb cluster.
+Behaves like a pandas DataFrame. Actual results are returned
+as pandas DataFrames.</p>
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>the projected number of rows when resolving</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>projected number of rows when resolving</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.create_index">
+<code class="descname">create_index</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.create_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>create and index the easy way</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.groupby">
+<code class="descname">groupby</code><span class="sig-paren">(</span><em>columns</em>, <em>sort=True</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.groupby" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group by a given set of columns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>columns</strong> – the list of columns</li>
+<li><strong>sort</strong> – if True sort by group key</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">MGrouper</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.head">
+<code class="descname">head</code><span class="sig-paren">(</span><em>limit=10</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.head" title="Permalink to this definition">¶</a></dt>
+<dd><p>return up to limit numbers of rows</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>limit</strong> – the number of rows to return. Defaults to 10</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.inspect">
+<code class="descname">inspect</code><span class="sig-paren">(</span><em>explain=False</em>, <em>cached=False</em>, <em>cursor=None</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.inspect" title="Permalink to this definition">¶</a></dt>
+<dd><p>inspect this dataframe’s actual mongodb query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>explain</strong> – if True explains access path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.list_indexes">
+<code class="descname">list_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.list_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>list all indices in database</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MDataFrame.loc">
+<code class="descname">loc</code><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.loc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access by index</p>
+<p>Use as mdf.loc[index_value]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">MLocIndexer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>right</em>, <em>on=None</em>, <em>left_on=None</em>, <em>right_on=None</em>, <em>how='inner'</em>, <em>target=None</em>, <em>suffixes=('_x'</em>, <em>'_y')</em>, <em>sort=False</em>, <em>inspect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>merge this dataframe with another dataframe. only left outer joins
+are currently supported. the output is saved as a new collection,
+target name (defaults to a generated name if not specified).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>right</strong> – the other MDataFrame</li>
+<li><strong>on</strong> – the list of key columns to merge by</li>
+<li><strong>left_on</strong> – the list of the key columns to merge on this dataframe</li>
+<li><strong>right_on</strong> – the list of the key columns to merge on the other 
+dataframe</li>
+<li><strong>how</strong> – the method to merge. supported are left, inner, right. 
+Defaults to inner</li>
+<li><strong>target</strong> – the name of the collection to store the merge results
+in. If not provided a temporary name will be created.</li>
+<li><strong>suffixes</strong> – the suffixes to apply to identical left and right 
+columns</li>
+<li><strong>sort</strong> – if True the merge results will be sorted. If False the
+MongoDB natural order is implied.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the MDataFrame to the target MDataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a new MDataFrame with a filter criteria</p>
+<p>Any subsequent operation on the new dataframe will have the filter
+applied. To reset the filter call .reset() without arguments.</p>
+<p>Note: Unlike pandas DataFrames, a filtered MDataFrame operates
+on the same collection as the original DataFrame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – a Q object or logical combination of Q objects
+(optional)</li>
+<li><strong>kwargs</strong> – all AND filter criteria</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a new MDataFrame with the filter applied</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.query_inplace">
+<code class="descname">query_inplace</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query_inplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters this MDataFrame and returns it.</p>
+<p>Any subsequent operation on the dataframe will have the filter
+applied. To reset the filter call .reset() without arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – a Q object or logical combination of Q objects
+(optional)</li>
+<li><strong>kwargs</strong> – all AND filter criteria</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">self</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MDataFrame.shape">
+<code class="descname">shape</code><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>return shape of dataframe</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.skip">
+<code class="descname">skip</code><span class="sig-paren">(</span><em>topn</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>skip the topn number of rows</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>topn</strong> – the number of rows to skip.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.sort">
+<code class="descname">sort</code><span class="sig-paren">(</span><em>columns</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort by specified columns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>columns</strong> – str of single column or a list of columns. Sort order
+is specified as the + (ascending) or - (descending)
+prefix to the column name. Default sort order is
+ascending.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MDataFrame.tail">
+<code class="descname">tail</code><span class="sig-paren">(</span><em>limit=10</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>return up to limit number of rows from last inserted values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>limit</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MDataFrame.value">
+<code class="descname">value</code><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>resolve the query and return a Pandas DataFrame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the result of the query as a pandas DataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mdataframe.MSeries">
+<em class="property">class </em><code class="descclassname">omegaml.mdataframe.</code><code class="descname">MSeries</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Series implementation for MDataFrames</p>
+<p>behaves like a DataFrame but limited to one column.</p>
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>the projected number of rows when resolving</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>projected number of rows when resolving</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.create_index">
+<code class="descname">create_index</code><span class="sig-paren">(</span><em>keys</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.create_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>create and index the easy way</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.groupby">
+<code class="descname">groupby</code><span class="sig-paren">(</span><em>columns</em>, <em>sort=True</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.groupby" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group by a given set of columns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>columns</strong> – the list of columns</li>
+<li><strong>sort</strong> – if True sort by group key</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">MGrouper</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.head">
+<code class="descname">head</code><span class="sig-paren">(</span><em>limit=10</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.head" title="Permalink to this definition">¶</a></dt>
+<dd><p>return up to limit numbers of rows</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>limit</strong> – the number of rows to return. Defaults to 10</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.inspect">
+<code class="descname">inspect</code><span class="sig-paren">(</span><em>explain=False</em>, <em>cached=False</em>, <em>cursor=None</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.inspect" title="Permalink to this definition">¶</a></dt>
+<dd><p>inspect this dataframe’s actual mongodb query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>explain</strong> – if True explains access path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.list_indexes">
+<code class="descname">list_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.list_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>list all indices in database</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MSeries.loc">
+<code class="descname">loc</code><a class="headerlink" href="#omegaml.mdataframe.MSeries.loc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access by index</p>
+<p>Use as mdf.loc[index_value]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">MLocIndexer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>right</em>, <em>on=None</em>, <em>left_on=None</em>, <em>right_on=None</em>, <em>how='inner'</em>, <em>target=None</em>, <em>suffixes=('_x'</em>, <em>'_y')</em>, <em>sort=False</em>, <em>inspect=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>merge this dataframe with another dataframe. only left outer joins
+are currently supported. the output is saved as a new collection,
+target name (defaults to a generated name if not specified).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>right</strong> – the other MDataFrame</li>
+<li><strong>on</strong> – the list of key columns to merge by</li>
+<li><strong>left_on</strong> – the list of the key columns to merge on this dataframe</li>
+<li><strong>right_on</strong> – the list of the key columns to merge on the other 
+dataframe</li>
+<li><strong>how</strong> – the method to merge. supported are left, inner, right. 
+Defaults to inner</li>
+<li><strong>target</strong> – the name of the collection to store the merge results
+in. If not provided a temporary name will be created.</li>
+<li><strong>suffixes</strong> – the suffixes to apply to identical left and right 
+columns</li>
+<li><strong>sort</strong> – if True the merge results will be sorted. If False the
+MongoDB natural order is implied.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the MDataFrame to the target MDataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a new MDataFrame with a filter criteria</p>
+<p>Any subsequent operation on the new dataframe will have the filter
+applied. To reset the filter call .reset() without arguments.</p>
+<p>Note: Unlike pandas DataFrames, a filtered MDataFrame operates
+on the same collection as the original DataFrame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – a Q object or logical combination of Q objects
+(optional)</li>
+<li><strong>kwargs</strong> – all AND filter criteria</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a new MDataFrame with the filter applied</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.query_inplace">
+<code class="descname">query_inplace</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.query_inplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters this MDataFrame and returns it.</p>
+<p>Any subsequent operation on the dataframe will have the filter
+applied. To reset the filter call .reset() without arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – a Q object or logical combination of Q objects
+(optional)</li>
+<li><strong>kwargs</strong> – all AND filter criteria</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">self</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MSeries.shape">
+<code class="descname">shape</code><a class="headerlink" href="#omegaml.mdataframe.MSeries.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>return shape of dataframe</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.skip">
+<code class="descname">skip</code><span class="sig-paren">(</span><em>topn</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>skip the topn number of rows</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>topn</strong> – the number of rows to skip.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.sort">
+<code class="descname">sort</code><span class="sig-paren">(</span><em>columns</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort by specified columns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>columns</strong> – str of single column or a list of columns. Sort order
+is specified as the + (ascending) or - (descending)
+prefix to the column name. Default sort order is
+ascending.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.tail">
+<code class="descname">tail</code><span class="sig-paren">(</span><em>limit=10</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>return up to limit number of rows from last inserted values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>limit</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MSeries.unique">
+<code class="descname">unique</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the unique set of values for the series</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">MSeries</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mdataframe.MSeries.value">
+<code class="descname">value</code><a class="headerlink" href="#omegaml.mdataframe.MSeries.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the value of the series</p>
+<p>this is a Series unless unique() was called. If unique()
+only distinct values are returned as an array, matching
+the behavior of a Series</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">pandas.Series</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mdataframe.MGrouper">
+<em class="property">class </em><code class="descclassname">omegaml.mdataframe.</code><code class="descname">MGrouper</code><span class="sig-paren">(</span><em>mdataframe</em>, <em>collection</em>, <em>columns</em>, <em>sort=True</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper" title="Permalink to this definition">¶</a></dt>
+<dd><p>a Grouper for MDataFrames</p>
+<dl class="method">
+<dt id="omegaml.mdataframe.MGrouper.agg">
+<code class="descname">agg</code><span class="sig-paren">(</span><em>specs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.agg" title="Permalink to this definition">¶</a></dt>
+<dd><p>shortcut for .aggregate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MGrouper.aggregate">
+<code class="descname">aggregate</code><span class="sig-paren">(</span><em>specs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>aggregate by given specs</p>
+<p>See the following link for a list of supported operations. 
+<a class="reference external" href="https://docs.mongodb.com/manual/reference/operator/aggregation/group/">https://docs.mongodb.com/manual/reference/operator/aggregation/group/</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>specs</strong> – a dictionary of { column : function | list[functions] } 
+pairs.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mdataframe.MGrouper.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>return counts by group columns</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mdataframe.MLocIndexer">
+<em class="property">class </em><code class="descclassname">omegaml.mdataframe.</code><code class="descname">MLocIndexer</code><span class="sig-paren">(</span><em>mdataframe</em>, <em>positional=False</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>implements the LocIndexer for MDataFrames</p>
+<dl class="method">
+<dt id="omegaml.mdataframe.MLocIndexer.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>specs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>access by index</p>
+<p>use as mdf.loc[specs] where specs is any of</p>
+<ul class="simple">
+<li>a list or tuple of scalar index values, e.g. .loc[(1,2,3)]</li>
+<li>a slice of values e.g. .loc[1:5]</li>
+<li>a list of slices, e.g. .loc[1:5, 2:3]</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the sliced part of the MDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mdataframe.MPosIndexer">
+<em class="property">class </em><code class="descclassname">omegaml.mdataframe.</code><code class="descname">MPosIndexer</code><span class="sig-paren">(</span><em>mdataframe</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MPosIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>implements the position-based indexer for MDataFrames</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mixins.mdf.ApplyContext">
+<em class="property">class </em><code class="descclassname">omegaml.mixins.mdf.</code><code class="descname">ApplyContext</code><span class="sig-paren">(</span><em>caller</em>, <em>columns=None</em>, <em>index=None</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable apply functions</p>
+<p>.apply(fn) will call fn(ctx) where ctx is an ApplyContext.
+The context supports methods to apply functions in a Pandas-style apply manner. ApplyContext is extensible
+by adding an extension class to defaults.OMEGA_MDF_APPLY_MIXINS.</p>
+<p>Note that unlike a Pandas DataFrame, ApplyContext does not itself contain any data.
+Rather it is part of an expression tree, i.e. the aggregation pipeline. Thus any
+expressions applied are translated into operations on the expression tree. The expression
+tree is evaluated on MDataFrame.value, at which point the ApplyContext nor the function
+that created it are active.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mdf.apply(lambda v: v * 5 ) =&gt; multiply every column in dataframe
+mdf.apply(lambda v: v[&#39;foo&#39;].dt.week) =&gt; get week of date for column foo
+mdf.apply(dict(a=v[&#39;foo&#39;].dt.week,
+               b=v[&#39;bar&#39;] * 5) =&gt; run multiple pipelines and get results
+
+The callable passed to apply can be any function. It can either return None,
+the context passed in or a list of pipeline stages.
+
+# apply any of the below functions
+mdf.apply(customfn)
+
+# same as lambda v: v.dt.week
+def customfn(ctx):
+    return ctx.dt.week
+
+# simple pipeline
+def customfn(ctx):
+    ctx.project(x={&#39;$multiply: [&#39;$x&#39;, 5]})
+    ctx.project(y={&#39;$divide: [&#39;$x&#39;, 2]})
+
+# complex pipeline
+def customfn(ctx):
+    return [
+        { &#39;$match&#39;: ... },
+        { &#39;$project&#39;: ... },
+    ]
+</pre></div>
+</div>
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyContext.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>stage</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a processing stage to the pipeline</p>
+<p>see <a class="reference external" href="https://docs.mongodb.com/manual/meta/aggregation-quick-reference/">https://docs.mongodb.com/manual/meta/aggregation-quick-reference/</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyContext.groupby">
+<code class="descname">groupby</code><span class="sig-paren">(</span><em>by</em>, <em>expr=None</em>, <em>append=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext.groupby" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a groupby accumulation using $group</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>by</strong> – the groupby columns, if provided as a list will be transformed</li>
+<li><strong>expr</strong> – </li>
+<li><strong>append</strong> – </li>
+<li><strong>kwargs</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyContext.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>expr=None</em>, <em>append=False</em>, <em>keep=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a projection using $project</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>expr</strong> – the column-operator mapping</li>
+<li><strong>append</strong> – if True add a $project stage, otherwise add to existing</li>
+<li><strong>kwargs</strong> – if expr is None, the column-operator mapping as kwargs</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">ApplyContext</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mixins.mdf.ApplyArithmetics">
+<em class="property">class </em><code class="descclassname">omegaml.mixins.mdf.</code><code class="descname">ApplyArithmetics</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyArithmetics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Math operators for ApplyContext</p>
+<ul class="simple">
+<li><code class="code docutils literal notranslate"><span class="pre">__mul__</span></code> (*)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__add__</span></code> (+)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__sub__</span></code> (-)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__div__</span></code> (/)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__floordiv__</span></code> (//)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__mod__</span></code> (%)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__pow__</span></code> (pow)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__ceil__</span></code> (ceil)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__floor__</span></code> (floor)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__trunc__</span></code> (trunc)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">__abs__</span></code> (abs)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">sqrt</span></code> (math.sqrt)</li>
+</ul>
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyArithmetics.sqrt">
+<code class="descname">sqrt</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyArithmetics.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>square root</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mixins.mdf.ApplyDateTime">
+<em class="property">class </em><code class="descclassname">omegaml.mixins.mdf.</code><code class="descname">ApplyDateTime</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datetime operators for ApplyContext</p>
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.day">
+<code class="descname">day</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.day" title="Permalink to this definition">¶</a></dt>
+<dd><p>dayOfMonth</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.dayofweek">
+<code class="descname">dayofweek</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.dayofweek" title="Permalink to this definition">¶</a></dt>
+<dd><p>dayOfWeek</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.dayofyear">
+<code class="descname">dayofyear</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.dayofyear" title="Permalink to this definition">¶</a></dt>
+<dd><p>dayOfYear</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.hour">
+<code class="descname">hour</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.hour" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.millisecond">
+<code class="descname">millisecond</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.millisecond" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.minute">
+<code class="descname">minute</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.minute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.month">
+<code class="descname">month</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.month" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.second">
+<code class="descname">second</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.second" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.week">
+<code class="descname">week</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.week" title="Permalink to this definition">¶</a></dt>
+<dd><p>isoWeek</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="omegaml.mixins.mdf.ApplyDateTime.year">
+<code class="descname">year</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime.year" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mixins.mdf.ApplyString">
+<em class="property">class </em><code class="descclassname">omegaml.mixins.mdf.</code><code class="descname">ApplyString</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString" title="Permalink to this definition">¶</a></dt>
+<dd><p>String operators</p>
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyString.concat">
+<code class="descname">concat</code><span class="sig-paren">(</span><em>other</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString.concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyString.index">
+<code class="descname">index</code><span class="sig-paren">(</span><em>other</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>indexOfBytes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyString.split">
+<code class="descname">split</code><span class="sig-paren">(</span><em>other</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString.split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyString.strcasecmp">
+<code class="descname">strcasecmp</code><span class="sig-paren">(</span><em>other</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString.strcasecmp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="omegaml.mixins.mdf.ApplyString.substr">
+<code class="descname">substr</code><span class="sig-paren">(</span><em>other</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString.substr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="omegaml.mixins.mdf.ApplyAccumulators">
+<em class="property">class </em><code class="descclassname">omegaml.mixins.mdf.</code><code class="descname">ApplyAccumulators</code><a class="headerlink" href="#omegaml.mixins.mdf.ApplyAccumulators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="developer.html" class="btn btn-neutral float-right" title="Developer API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2018, omegaml.io by one2seven GmbH
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

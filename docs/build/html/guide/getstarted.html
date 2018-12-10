@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting started &mdash; omega|ml 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Storing and retrieving data" href="store_retrieve.html" />
+    <link rel="prev" title="User Guide" href="index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> omega|ml
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#getting-user-credentials">Getting User Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-omega-ml">Loading omega|ml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-omega-ml-from-python">Loading omega|ml from python</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="store_retrieve.html">Storing and retrieving data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filterdf.html">Filtering Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfapply.html">Aggregation Framework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelstore.html">Working with Machine Learning Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lambda.html">Lambda Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restapi.html">REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custombackends.html">Implementing a Custom Backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">Runtime Clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="streaming.html">Mini-Batch Streaming</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega|ml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">User Guide</a> &raquo;</li>
+        
+      <li>Getting started</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/getstarted.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-user-credentials">
+<h2>Getting User Credentials<a class="headerlink" href="#getting-user-credentials" title="Permalink to this headline">¶</a></h2>
+<p>If you have secured MongoDB and RabbitMQ make sure to specify the
+user credentials in the respective environment variables or the
+omegaml configuration file.</p>
+<p><em>Enterprise Edition</em></p>
+<p>A configuration can be retrieved as follows</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">omegacli</span> <span class="n">init</span> <span class="o">--</span><span class="n">userid</span> <span class="n">test5</span> <span class="o">--</span><span class="n">apikey</span> <span class="n">APIKEY</span> <span class="o">--</span><span class="n">url</span> <span class="n">OMEGA_URL</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-omega-ml">
+<h2>Loading omega|ml<a class="headerlink" href="#loading-omega-ml" title="Permalink to this headline">¶</a></h2>
+<p>Start by loading omega|ml.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">omegaml</span> <span class="k">as</span> <span class="nn">om</span>
+</pre></div>
+</div>
+<p>Once loaded <code class="code docutils literal notranslate"><span class="pre">om</span></code> provides 3 environments that are immediately usable:</p>
+<ul class="simple">
+<li><code class="code docutils literal notranslate"><span class="pre">om.datasets</span></code> - the omega|ml database for Python and Pandas objects</li>
+<li><code class="code docutils literal notranslate"><span class="pre">om.models</span></code> - the omega|ml database for models</li>
+<li><code class="code docutils literal notranslate"><span class="pre">om.scripts</span></code> - the omega|ml database for custom modules (a.k.a. lambda modules)</li>
+<li><code class="code docutils literal notranslate"><span class="pre">om.runtime</span></code> - the omega|ml remote execution environment</li>
+</ul>
+</div>
+<div class="section" id="loading-omega-ml-from-python">
+<h2>Loading omega|ml from python<a class="headerlink" href="#loading-omega-ml-from-python" title="Permalink to this headline">¶</a></h2>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">omegaml</span> <span class="k">as</span> <span class="nn">om</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="store_retrieve.html" class="btn btn-neutral float-right" title="Storing and retrieving data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2018, omegaml.io by one2seven GmbH
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
