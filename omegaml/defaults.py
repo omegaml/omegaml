@@ -29,6 +29,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
     'BROKER_URL': OMEGA_BROKER,
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
+    'CELERY_ALWAYS_EAGER': False if 'OMEGA_BROKER' in os.environ else True,
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',

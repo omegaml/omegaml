@@ -1,0 +1,13 @@
+include docs
+recursive-include docs/source *.rst *.css *.py *.png *.gif *.svg *.jpg
+include scripts
+include LICENSE
+include NOTICE
+include THIRDPARTY
+include README.rst
+include omegaml/VERSION
+include Procfile
+include docker-compose.yml
+include Dockerfile
+include requirements.txt
+include conda-requirements.txt
