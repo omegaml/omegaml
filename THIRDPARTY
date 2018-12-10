@@ -1,0 +1,154 @@
+ Name                  Version     License                                                       URL                                                                 
+ Fabric                1.14.0      UNKNOWN                                                       http://fabfile.org                                                  
+ Flask                 1.0.2       BSD                                                           https://www.palletsprojects.com/p/flask/                            
+ Flask-Testing         0.7.1       BSD                                                           https://github.com/jarus/flask-testing                              
+ Jinja2                2.10        BSD                                                           http://jinja.pocoo.org/                                             
+ Mako                  1.0.7       MIT                                                           http://www.makotemplates.org/                                       
+ MarkupSafe            1.0         BSD                                                           http://github.com/pallets/markupsafe                                
+ PyJWT                 1.6.4       MIT                                                           http://github.com/jpadilla/pyjwt                                    
+ PyNaCl                1.2.1       Apache License 2.0                                            https://github.com/pyca/pynacl/                                     
+ PySocks               1.6.8       BSD                                                           https://github.com/Anorov/PySocks                                   
+ PyYAML                3.13        MIT                                                           http://pyyaml.org/wiki/PyYAML                                       
+ Pygments              2.2.0       BSD License                                                   http://pygments.org/                                                
+ SQLAlchemy            1.2.12      MIT License                                                   http://www.sqlalchemy.org                                           
+ Unidecode             1.0.22      GPL                                                           UNKNOWN                                                             
+ Werkzeug              0.14.1      BSD                                                           https://www.palletsprojects.org/p/werkzeug/                         
+ alembic               0.9.9       MIT                                                           http://bitbucket.org/zzzeek/alembic                                 
+ amqp                  1.4.9       LGPL                                                          http://github.com/celery/py-amqp                                    
+ aniso8601             4.0.1       UNKNOWN                                                       https://bitbucket.org/nielsenb/aniso8601                            
+ anyjson               0.3.3       BSD                                                           http://bitbucket.org/runeh/anyjson/                                 
+ argh                  0.26.2      GNU Lesser General Public License (LGPL), Version 3           http://github.com/neithere/argh/                                    
+ asn1crypto            0.24.0      MIT                                                           https://github.com/wbond/asn1crypto                                 
+ async-generator       1.10        MIT -or- Apache License 2.0                                   https://github.com/python-trio/async_generator                      
+ backcall              0.1.0       BSD                                                           https://github.com/takluyver/backcall                               
+ bcrypt                3.1.4       Apache License, Version 2.0                                   https://github.com/pyca/bcrypt/                                     
+ billiard              3.3.0.23    BSD                                                           http://github.com/celery/billiard                                   
+ bleach                2.1.3       Apache Software License                                       http://github.com/mozilla/bleach                                    
+ bokeh                 0.13.0      New BSD                                                       http://github.com/bokeh/bokeh                                       
+ boto3                 1.7.74      Apache License 2.0                                            https://github.com/boto/boto3                                       
+ botocore              1.10.74     Apache License 2.0                                            https://github.com/boto/botocore                                    
+ braintree             3.47.0      MIT                                                           https://developers.braintreepayments.com/python/sdk/server/overview 
+ callable-pip          1.0.0       UNKNOWN                                                       https://github.com/sirosen/callable-pip                             
+ celery                3.1.23      BSD                                                           http://celeryproject.org                                            
+ certifi               2018.10.15  MPL-2.0                                                       http://certifi.io/                                                  
+ cffi                  1.11.5      MIT                                                           http://cffi.readthedocs.org                                         
+ chardet               3.0.4       LGPL                                                          https://github.com/chardet/chardet                                  
+ click                 6.7         UNKNOWN                                                       http://github.com/mitsuhiko/click                                   
+ cloudpickle           0.5.3       BSD 3-Clause License                                          https://github.com/cloudpipe/cloudpickle                            
+ coverage              4.5.1       Apache 2.0                                                    https://bitbucket.org/ned/coveragepy                                
+ croniter              0.3.12      MIT License                                                   http://github.com/kiorky/croniter                                   
+ cryptography          2.3.1       BSD or Apache License, Version 2.0                            https://github.com/pyca/cryptography                                
+ cryptography-vectors  2.3.1       BSD or Apache License, Version 2.0                            https://github.com/pyca/cryptography                                
+ dask                  0.15.2      BSD                                                           http://github.com/dask/dask/                                        
+ decorator             4.3.0       new BSD License                                               https://github.com/micheles/decorator                               
+ defusedxml            0.5.0       PSFL                                                          https://github.com/tiran/defusedxml                                 
+ dill                  0.2.6       3-clause BSD                                                  http://www.cacr.caltech.edu/~mmckerns/dill.htm                      
+ distributed           1.18.1      BSD                                                           https://distributed.readthedocs.io/en/latest/                       
+ dj-database-url       0.4.2       BSD                                                           https://github.com/kennethreitz/dj-database-url                     
+ docutils              0.14        public domain, Python, 2-Clause BSD, GPL 3 (see COPYING.txt)  http://docutils.sourceforge.net/                                    
+ entrypoints           0.2.3       UNKNOWN                                                       https://github.com/takluyver/entrypoints                            
+ flask-restplus        0.12.1      BSD-3-Clause                                                  https://github.com/noirbizarre/flask-restplus                       
+ gunicorn              19.7.1      MIT                                                           http://gunicorn.org                                                 
+ heapdict              1.0.0       BSD                                                           http://stutzbachenterprises.com/                                    
+ honcho                1.0.1       MIT                                                           https://github.com/nickstenning/honcho                              
+ html5lib              1.0.1       MIT License                                                   https://github.com/html5lib/html5lib-python                         
+ idna                  2.7         BSD-like                                                      https://github.com/kjd/idna                                         
+ ipykernel             4.8.2       BSD                                                           http://ipython.org                                                  
+ ipython               6.5.0       BSD                                                           https://ipython.org                                                 
+ ipython-genutils      0.2.0       BSD                                                           http://ipython.org                                                  
+ ipywidgets            7.4.0       BSD                                                           http://ipython.org                                                  
+ itsdangerous          1.1.0       BSD                                                           https://palletsprojects.com/p/itsdangerous/                         
+ jedi                  0.12.1      MIT                                                           https://github.com/davidhalter/jedi                                 
+ jmespath              0.9.3       MIT                                                           https://github.com/jmespath/jmespath.py                             
+ joblib                0.9.4       UNKNOWN                                                       UNKNOWN                                                             
+ jsonfield             2.0.2       MIT                                                           https://github.com/dmkoch/django-jsonfield/                         
+ jsonschema            2.6.0       MIT                                                           http://github.com/Julian/jsonschema                                 
+ jupyter               1.0.0       BSD                                                           http://jupyter.org                                                  
+ jupyter-client        5.2.3       BSD                                                           https://jupyter.org                                                 
+ jupyter-console       5.2.0       BSD                                                           https://jupyter.org                                                 
+ jupyter-core          4.4.0       BSD                                                           https://jupyter.org                                                 
+ jupyterhub            0.8.1       BSD                                                           http://jupyter.org                                                  
+ kombu                 3.0.37      UNKNOWN                                                       https://kombu.readthedocs.io                                        
+ livereload            2.5.2       BSD                                                           https://github.com/lepture/python-livereload                        
+ locket                0.2.0       UNKNOWN                                                       http://github.com/mwilliamson/locket.py                             
+ mistune               0.8.3       BSD                                                           https://github.com/lepture/mistune                                  
+ mock                  2.0.0       UNKNOWN                                                       https://github.com/testing-cabal/mock                               
+ mongoengine           0.10.6      MIT                                                           http://mongoengine.org/                                             
+ msgpack               0.5.6       Apache 2.0                                                    http://msgpack.org/                                                 
+ msgpack-python        0.5.6       Apache 2.0                                                    http://msgpack.org/                                                 
+ mysqlclient           1.3.12      GPL                                                           https://github.com/PyMySQL/mysqlclient-python                       
+ nbconvert             5.3.1       BSD                                                           http://jupyter.org                                                  
+ nbformat              4.4.0       BSD                                                           http://jupyter.org                                                  
+ nose                  1.3.7       GNU LGPL                                                      http://readthedocs.org/docs/nose/                                   
+ nosexcover            1.0.11      BSD                                                           http://github.com/cmheisel/nose-xcover/                             
+ notebook              5.0.0       BSD                                                           http://jupyter.org                                                  
+ numexpr               2.6.6       MIT                                                           https://github.com/pydata/numexpr                                   
+ numpy                 1.13.1      BSD                                                           http://www.numpy.org                                                
+ oauthlib              2.1.0       BSD                                                           https://github.com/oauthlib/oauthlib                                
+ omegaml-ce            0.1         commercial                                                    http://www.shrebo.com/                                              
+ ordered-set           3.0.1       MIT-LICENSE                                                   http://github.com/LuminosoInsight/ordered-set                       
+ packaging             17.1        BSD or Apache License, Version 2.0                            https://github.com/pypa/packaging                                   
+ pamela                0.3.0       MIT                                                           http://github.com/minrk/pamela                                      
+ pandas                0.20.3      BSD                                                           http://pandas.pydata.org                                            
+ pandocfilters         1.4.2       UNKNOWN                                                       http://github.com/jgm/pandocfilters                                 
+ paramiko              2.4.1       LGPL                                                          https://github.com/paramiko/paramiko/                               
+ parso                 0.3.1       MIT                                                           https://github.com/davidhalter/parso                                
+ partd                 0.3.8       BSD                                                           http://github.com/dask/partd/                                       
+ pathtools             0.1.2       MIT License                                                   http://github.com/gorakhargosh/pathtools                            
+ pbr                   4.2.0       UNKNOWN                                                       https://docs.openstack.org/pbr/latest/                              
+ pexpect               4.6.0       ISC license                                                   https://pexpect.readthedocs.io/                                     
+ pickleshare           0.7.4       MIT                                                           https://github.com/pickleshare/pickleshare                          
+ port-for              0.3.1       MIT license                                                   https://github.com/kmike/port-for/                                  
+ progressbar2          3.38.0      BSD                                                           https://github.com/WoLpH/python-progressbar                         
+ prometheus-client     0.4.2       Apache Software License 2.0                                   https://github.com/prometheus/client_python                         
+ prompt-toolkit        1.0.15      UNKNOWN                                                       https://github.com/jonathanslenders/python-prompt-toolkit           
+ psutil                5.4.6       BSD                                                           https://github.com/giampaolo/psutil                                 
+ ptyprocess            0.6.0       UNKNOWN                                                       https://github.com/pexpect/ptyprocess                               
+ pyOpenSSL             18.0.0      Apache License, Version 2.0                                   https://pyopenssl.org/                                              
+ pyaes                 1.6.1       License :: OSI Approved :: MIT License                        https://github.com/ricmoo/pyaes                                     
+ pyasn1                0.4.4       BSD                                                           https://github.com/etingof/pyasn1                                   
+ pycparser             2.19        BSD                                                           https://github.com/eliben/pycparser                                 
+ pycurl                7.43.0.2    LGPL/MIT                                                      http://pycurl.io/                                                   
+ pyminifier            2.1         Proprietary                                                   https://github.com/liftoff/pyminifier                               
+ pymongo               3.5.1       Apache License, Version 2.0                                   http://github.com/mongodb/mongo-python-driver                       
+ pyparsing             2.2.0       MIT License                                                   http://pyparsing.wikispaces.com/                                    
+ python-dateutil       2.7.3       Dual License                                                  https://dateutil.readthedocs.io                                     
+ python-editor         1.0.3       Apache                                                        https://github.com/fmoo/python-editor                               
+ python-mimeparse      1.6.0       UNKNOWN                                                       https://github.com/dbtsai/python-mimeparse                          
+ python-oauth2         1.0.1       UNKNOWN                                                       https://github.com/wndhydrnt/python-oauth2                          
+ python-utils          2.3.0       BSD                                                           https://github.com/WoLpH/python-utils                               
+ python3-openid        3.1.0       UNKNOWN                                                       http://github.com/necaris/python3-openid                            
+ pytz                  2018.5      MIT                                                           http://pythonhosted.org/pytz                                        
+ pyzmq                 17.1.0      LGPL+BSD                                                      https://pyzmq.readthedocs.org                                       
+ qtconsole             4.3.1       BSD                                                           http://jupyter.org                                                  
+ requests              2.20.0      Apache 2.0                                                    http://python-requests.org                                          
+ requests-oauthlib     1.0.0       ISC                                                           https://github.com/requests/requests-oauthlib                       
+ runipy                0.1.5       BSD 2-Clause                                                  https://github.com/paulgb/runipy                                    
+ s3fs                  0.1.3       BSD                                                           http://github.com/dask/s3fs/                                        
+ s3transfer            0.1.13      Apache License 2.0                                            https://github.com/boto/s3transfer                                  
+ scikit-learn          0.19.0      new BSD                                                       http://scikit-learn.org                                             
+ scipy                 0.19.1      BSD                                                           https://www.scipy.org                                               
+ simplegeneric         0.8.1       ZPL 2.1                                                       http://cheeseshop.python.org/pypi/simplegeneric                     
+ six                   1.11.0      MIT                                                           http://pypi.python.org/pypi/six/                                    
+ sortedcontainers      2.0.4       Apache 2.0                                                    http://www.grantjenks.com/docs/sortedcontainers/                    
+ sphinx-autobuild      0.6.0       MIT                                                           https://github.com/GaretJax/sphinx-autobuild                        
+ sqlparse              0.2.4       BSD                                                           https://github.com/andialbrecht/sqlparse                            
+ stripe                2.4.0       MIT                                                           https://github.com/stripe/stripe-python                             
+ suds-jurko            0.6         (specified using classifiers)                                 http://bitbucket.org/jurko/suds                                     
+ tables                3.4.2       BSD 2-Clause                                                  http://www.pytables.org/                                            
+ tblib                 1.3.2       BSD                                                           https://github.com/ionelmc/python-tblib                             
+ tee                   0.0.2       MIT License                                                   https://github.com/algrebe/python-tee                               
+ terminado             0.8.1       UNKNOWN                                                       https://github.com/jupyter/terminado                                
+ testpath              0.3.1       UNKNOWN                                                       https://github.com/jupyter/testpath                                 
+ toolz                 0.9.0       BSD                                                           http://github.com/pytoolz/toolz/                                    
+ tornado               4.5.3       http://www.apache.org/licenses/LICENSE-2.0                    http://www.tornadoweb.org/                                          
+ traitlets             4.3.2       BSD                                                           http://ipython.org                                                  
+ urllib3               1.23        MIT                                                           https://urllib3.readthedocs.io/                                     
+ utf8forgood           0.1.4       BSD                                                           UNKNOWN                                                             
+ watchdog              0.8.3       Apache License 2.0                                            http://github.com/gorakhargosh/watchdog                             
+ wcwidth               0.1.7       MIT                                                           https://github.com/jquast/wcwidth                                   
+ webencodings          0.5.1       BSD                                                           https://github.com/SimonSapin/python-webencodings                   
+ whitenoise            3.3.1       MIT                                                           http://whitenoise.evans.io                                          
+ widgetsnbextension    3.4.0       BSD                                                           http://ipython.org                                                  
+ xmltodict             0.11.0      MIT                                                           https://github.com/martinblech/xmltodict                            
+ zict                  0.1.3       BSD                                                           http://zict.readthedocs.io/en/latest/                               
