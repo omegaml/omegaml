@@ -14,14 +14,14 @@ limitations under the License.
 Third Party Packages are used by this Work as listed in the THIRDPARTY
 file. By using this Work you agree to adhere to the respective license
 of any and all third party packages. Runtime Dependencies are listed
-below.
+below. The licenses as known to us at the time of writing are listed
+in THIRDPARTY-LICENSES along with the download URL for each package.
 
 Runtime Dependencies are not included in this Work and shall be obtained
 and used by You in agreement with the respective third party in the name
 of and at the risk and cost of You or your Legal Entity.
 
-
-Runtime Dependencies:
+Noteable runtime dependencies are:
 
 RabbitMQ - https://www.rabbitmq.com/ (Mozilla Public License)
 MongoDB - https://www.mongodb.com/ (Server Side Public License, GNU AGPL v3.0)

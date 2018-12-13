@@ -12,7 +12,7 @@ setup(
     version=version,
     packages=find_packages(),
     include_package_data=True,
-    license='http://www.apache.org/licenses/LICENSE-2.0',
+    license='Apache 2.0',
     description='data science platform that scales from laptop to teams to enterprise. Batteries included.',
     long_description=README,
     url='https://omegaml.io/',

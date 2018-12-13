@@ -4,3 +4,5 @@ Flask==1.0.2
 flask-restplus==0.12.1
 honcho==1.0.1
 croniter==0.3.12
+pickleshare==0.7.4
+sh==1.12.14

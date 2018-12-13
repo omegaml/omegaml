@@ -7,3 +7,6 @@ dist:
 release-test: dist
 	twine upload --repository testpypi dist/*
 
+thirdparty:
+    pip-licenses > THIRDPARTY
+    python -m pylicenses
