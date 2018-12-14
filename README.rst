@@ -49,10 +49,10 @@ Get started
     $ wget https://raw.githubusercontent.com/omegaml/omegaml/master/docker-compose.yml
     $ docker-compose up -d
 	  
-Next open your browser at http://localhost:8899 to open Jupyter Notebook. Any notebook
-you create will automatically be stored within the omega|ml database, thus making it
-easy to work with colleagues. The REST API is available at http://localhost:5000.
-
+Next open Jupyter Notebook in your browser at http://localhost:8899
+(use `omegamlisfun` to login). Any notebook you create will automatically
+be stored in the integrated omega|ml database, thus making it easy to work
+with colleagues. The REST API is available at http://localhost:5000.
 
 Examples
 ========

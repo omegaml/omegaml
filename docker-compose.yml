@@ -2,7 +2,7 @@ version: '3'
 services:
    omegaml:
        build: .
-       image: omegaml:latest
+       image: omegaml/omegaml:latest
        hostname: omegaml
        ports:
           - "8899:8888"
@@ -18,7 +18,7 @@ services:
          - OMEGA_BROKER=amqp://rabbitmq:5672//
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
    worker:
-       image: omegaml:latest
+       image: omegaml/omegaml:latest
        hostname: worker
        links:
           - rabbitmq
