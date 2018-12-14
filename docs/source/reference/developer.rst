@@ -41,16 +41,16 @@ omegaml.mixins
 .. autoclass:: omegaml.mixins.mdf.ApplyAccumulators
 
 
-omegaml.runtime
----------------
+omegaml.runtimes
+----------------
 
-.. autoclass:: omegaml.runtime.OmegaRuntime
+.. autoclass:: omegaml.runtimes.OmegaRuntime
 
-.. autoclass:: omegaml.runtime.OmegaModelProxy
+.. autoclass:: omegaml.runtimes.OmegaModelProxy
 
-.. autoclass:: omegaml.runtime.OmegaJobProxy
+.. autoclass:: omegaml.runtimes.OmegaJobProxy
 
-.. autoclass:: omegaml.runtime.OmegaRuntimeDask
+.. autoclass:: omegaml.runtimes.OmegaRuntimeDask
 
 
 omegaml.documents

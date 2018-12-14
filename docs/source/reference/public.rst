@@ -8,15 +8,15 @@ Python API (overview)
      
      omegaml.datasets 
      omegaml.models
-     omegaml.runtime
+     omegaml.runtimes
      omegaml.jobs
      omegaml.scripts
 
      omegaml.store.base.OmegaStore
-     omegaml.runtime.OmegaRuntime
-     omegaml.runtime.OmegaRuntimeDask
-     omegaml.runtime.OmegaModelProxy
-     omegaml.runtime.OmegaJobProxy
+     omegaml.runtimes.OmegaRuntime
+     omegaml.runtimes.OmegaRuntimeDask
+     omegaml.runtimes.OmegaModelProxy
+     omegaml.runtimes.OmegaJobProxy
      omegaml.jobs.OmegaJobs
 
      omegaml.mdataframe.MDataFrame
@@ -28,7 +28,7 @@ Python API
 ----------
 
 omega|ml
-+++++++ 
+++++++++
 
 .. autodata:: omegaml.datasets
    :annotation:  - storage for data
@@ -36,7 +36,7 @@ omega|ml
 .. autodata:: omegaml.models
    :annotation:  - storage for models
    
-.. autodata:: omegaml.runtime
+.. autodata:: omegaml.runtimes
    :annotation:  - the cluster runtime API
 
 .. autodata:: omegaml.jobs 
@@ -51,19 +51,19 @@ omegaml.store
    :noindex:
    
 
-omegaml.runtime
-+++++++++++++++
+omegaml.runtimes
+++++++++++++++++
 
-.. autoclass:: omegaml.runtime.OmegaRuntime
+.. autoclass:: omegaml.runtimes.OmegaRuntime
    :members: model
    
-.. autoclass:: omegaml.runtime.OmegaRuntimeDask
+.. autoclass:: omegaml.runtimes.OmegaRuntimeDask
    :members: model
 
-.. autoclass:: omegaml.runtime.OmegaModelProxy
+.. autoclass:: omegaml.runtimes.OmegaModelProxy
    :members:   
   
-.. autoclass:: omegaml.runtime.OmegaJobProxy
+.. autoclass:: omegaml.runtimes.OmegaJobProxy
    :members:   
 
   

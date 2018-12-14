@@ -12,7 +12,7 @@ setup(
     version=version,
     packages=find_packages(),
     include_package_data=True,
-    license='http://www.apache.org/licenses/LICENSE-2.0',
+    license='Apache 2.0',
     description='data science platform that scales from laptop to teams to enterprise. Batteries included.',
     long_description=README,
     url='https://omegaml.io/',
@@ -35,10 +35,18 @@ setup(
         'numpy>=1.10.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.17.1',
-        'tables>=3.2.2',
         'PyYAML>=3.11',
-        'flask-restplus==0.12.1',
+        'flask-restplus>=0.12.1',
+        'six>=1.11.0',
+        'croniter>=0.3.12',
+        'nbformat>=4.0.1',
+        'nbconvert==5.3.1'
     ],
+    extras_require={
+      'hdf': [
+          'tables>=3.2.2',
+      ]
+    },
     dependency_links=[
-    ]
+    ],
 )

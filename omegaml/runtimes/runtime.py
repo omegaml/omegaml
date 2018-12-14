@@ -19,7 +19,7 @@ class OmegaRuntime(object):
         defaults = defaults or settings()
         # initialize celery as a runtimes
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
-        celerykwargs = celerykwargs or {}
+        celerykwargs = celerykwargs or defaults.OMEGA_CELERY_CONFIG
         celerykwargs.update({'backend': self.backend,
                              'broker': self.broker,
                              'include': taskpkgs,

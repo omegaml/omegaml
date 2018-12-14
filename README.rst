@@ -46,7 +46,7 @@ Get started
 
 .. code::
 
-    $ wget https://github.com/omegaml/omegaml/blob/master/docker-compose.yml
+    $ wget https://raw.githubusercontent.com/omegaml/omegaml/master/docker-compose.yml
     $ docker-compose up -d
 	  
 Next open your browser at http://localhost:8899 to open Jupyter Notebook. Any notebook

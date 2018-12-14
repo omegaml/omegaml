@@ -226,8 +226,8 @@ class ApplyContext(object):
     """
     Enable apply functions
 
-    .apply(fn) will call fn(ctx) where ctx is an ApplyContext. The context supports
-    methods to apply functions in a Pandas-style apply manner. ApplyContext is extensible
+    .apply(fn) will call fn(ctx) where ctx is an ApplyContext.
+    The context supports methods to apply functions in a Pandas-style apply manner. ApplyContext is extensible
     by adding an extension class to defaults.OMEGA_MDF_APPLY_MIXINS.
 
     Note that unlike a Pandas DataFrame, ApplyContext does not itself contain any data.
@@ -236,7 +236,7 @@ class ApplyContext(object):
     tree is evaluated on MDataFrame.value, at which point the ApplyContext nor the function
     that created it are active.
 
-    Examples:
+    Examples::
 
         mdf.apply(lambda v: v * 5 ) => multiply every column in dataframe
         mdf.apply(lambda v: v['foo'].dt.week) => get week of date for column foo
@@ -379,6 +379,7 @@ class ApplyContext(object):
         :param append:
         :param kwargs:
         :return:
+
         """
         by = make_tuple(by)
         self.index_columns = self.index_columns + list(by)
@@ -417,6 +418,7 @@ class ApplyContext(object):
         :param append: if True add a $project stage, otherwise add to existing
         :param kwargs: if expr is None, the column-operator mapping as kwargs
         :return: ApplyContext
+
         """
         # get last $project stage in pipeline
         stage = self._getProjection(append=append)
@@ -455,6 +457,7 @@ class ApplyArithmetics(object):
     * :code:`__trunc__` (trunc)
     * :code:`__abs__` (abs)
     * :code:`sqrt` (math.sqrt)
+
     """
 
     def __arithmop__(op, wrap_op=None):
