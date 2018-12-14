@@ -34,7 +34,7 @@ class Omega(object):
         """
         from omegaml.util import settings
         # avoid circular imports
-        from omegaml.jobs import OmegaJobs
+        from omegaml.notebook.jobs import OmegaJobs
         from omegaml.runtimes import OmegaRuntime
         from omegaml.store import OmegaStore
         # celery and mongo configuration
