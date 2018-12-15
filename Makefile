@@ -12,7 +12,15 @@ image:
 
 release-test: dist
 	: "twine upload to pypi test"
+	# see https://packaging.python.org/tutorials/packaging-projects/
+	# config is in $HOME/.pypirc
 	twine upload --repository testpypi dist/*
+
+release-prod: dist
+	: "twine upload to pypi prod"
+	# see https://packaging.python.org/tutorials/packaging-projects/
+	# config is in $HOME/.pypirc
+	twine upload --repository pypi dist/*
 
 release-docker:
 	: "docker push image sto dockerhub"
