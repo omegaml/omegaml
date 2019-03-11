@@ -11,11 +11,18 @@ build:
   - env
   - >
     apt-get update --fix-missing &&
-    apt-get install apt-transport-https &&
+    apt-get install apt-transport-https
+  - >
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - &&
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list &&
+    apt-get update
+  - >
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5 &&
+    apt-get install texlive-xetex texlive-fonts-recommended texlive-latex-recommended texlive-pictures texlive-latex-extra &&
+    apt-get update
+  - >
     echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list &&
     apt-get update &&
-    apt-get install texlive-xetex texlive-fonts-recommended texlive-latex-recommended texlive-pictures texlive-latex-extra &&
     apt-get install -y --allow-change-held-packages --allow-downgrades mongodb-org=3.6.8 mongodb-org-server=3.6.8 mongodb-org-shell=3.6.8 mongodb-org-mongos=3.6.8 mongodb-org-tools=3.6.8
   - /usr/bin/mongod --auth > /dev/null &
   - sleep 5 && cat scripts/mongoinit.js | /usr/bin/mongo
@@ -33,7 +40,7 @@ build:
   - PATH=/usr/local/bin:$PATH scripts/omegajobs.sh &
   - >
      PATH=/usr/local/bin:$PATH DJANGO_SETTINGS_MODULE=app.settings 
-     python manage.py test --debug-config --verbosity=2 -s
+     python manage.py test --debug-config --verbosity=2 
      --config EnvSettings_Shippable 
      --with-xunit --xunit-file=shippable/testresults/nosetests.xml  
      --with-xcoverage --cover-package=omegaml,omegaops,omegastream,omegajobs,omegastream,omegaweb
