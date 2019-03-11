@@ -1,26 +1,11 @@
 from __future__ import absolute_import
 
-import datetime
-import re
-from uuid import uuid4
-
-from croniter import croniter
-import gridfs
-from mongoengine.fields import GridFSProxy
 from nbconvert import SlidesExporter
 from nbconvert.exporters.html import HTMLExporter
 from nbconvert.exporters.pdf import PDFExporter
-from nbconvert.preprocessors.execute import ExecutePreprocessor
-from nbformat import read as nbread, write as nbwrite, v4 as nbv4
-from six import StringIO, BytesIO
-import yaml
-
-from omegaml.jobs import OmegaJobs
-from omegaml.notebook.tasks import run_omegaml_job
-from omegaml.documents import Metadata
-from omegaml.store import OmegaStore
-from omegaml.util import settings as omega_settings
 from traitlets.config import Config, six
+
+from omegaml.notebook.jobs import OmegaJobs
 
 
 class OmegaEnterpriseJobs(OmegaJobs):
