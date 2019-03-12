@@ -90,6 +90,8 @@ class PythonPackageDataTests(TestCase):
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
         pkgsrc = 'pkg://{}'.format(pkgpath)
         om.scripts.put(pkgsrc, 'helloworld')
+        print("***omega test_runtime (om, om.runtime)", om, om.runtime)
+        om = Omega()
         result = om.runtime.script('helloworld').run(text='foo')
         data = result.get()
         self.assertIn('runtimes', data)
