@@ -156,21 +156,21 @@ class StoreTests(unittest.TestCase):
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp=True)
         df2 = store.get('mydata')
-        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
+        _created = df2['_created'].dt.to_pydatetime()[0]
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, default value
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp='CREATED')
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
+        _created = df2['CREATED'].dt.to_pydatetime()[0]
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, value as tuple
         now = datetime.utcnow() - timedelta(days=1)
         store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
+        _created = df2['CREATED'].dt.to_pydatetime()[0]
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # set a day in the past to avoid accidentally creating the current
@@ -179,7 +179,7 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata', timestamp=now, append=False)
         df2 = store.get('mydata')
         # compare the data
-        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
+        _created = df2['_created'].dt.to_pydatetime()[0]
         self.assertEqual(_created.replace(microsecond=0),
                          now.replace(microsecond=0))
 

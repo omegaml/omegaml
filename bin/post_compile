@@ -1,7 +1,7 @@
 if [[ -f pip-reinstall.txt ]]; then
    pip uninstall -y -r pip-reinstall.txt 
-   pip install -r requirements.txt  --exists-action=w --allow-all-external
-   pip install -r pip-requirements.extra --exists-action=w --allow-all-external
+   pip install -r requirements.txt  --exists-action=w
+   pip install -r pip-requirements.extra --exists-action=w
 fi
 
 if [[ -z "$APP" ]] || [[ $APP == "omegaml" ]]; then
@@ -9,7 +9,9 @@ if [[ -z "$APP" ]] || [[ $APP == "omegaml" ]]; then
    python manage.py collectstatic --noinput
 fi
 
+# this should no longer be required
+# pip install -U "tornado<5" "pip<10"
 if [[ $APP == "omjobs" ]]; then
-   pip install -U "tornado<5" "pip<10"
+   echo "omjobs installation finished. now starting up"
 fi
 
