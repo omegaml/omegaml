@@ -115,7 +115,24 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None):
 
 
 def get_omega_for_task(task):
-    # magic sauce to get authentication tuple without exposing the kwarg
+    """
+    magic sauce to get omegaml for this task without exposing the __auth kwarg
+
+    This links back to omegaml.get_omega_for_task which is
+    an injected dependency. This way we can have any authentication
+    environment we want. The way this works behind the scenes
+    is that the task is passed the __auth kwargs which must hold
+    serialized credentials that the get_omega_for_task implementation
+    can unwrap, verify the credentials and return an authenticated
+    Omega instance. This may seem a little contrived but it allows for
+    flexibility.
+
+    Note get_omega_for_task will pop the __auth kwarg so that client
+    code never gets to see what it was.
+
+    Returns:
+            authenticted Omega instance
+    """
     from omegaml import settings, load_class
     defaults = settings()
     auth_env = load_class(defaults.OMEGA_AUTH_ENV)

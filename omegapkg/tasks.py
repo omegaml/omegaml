@@ -33,6 +33,8 @@ class NotebookTask(OmegamlTask):
         meta.save()
 
     def on_failure(self, retval, task_id, *args, **kwargs):
+        print("*** NotebookTask.on_failure (retval, task_id, args, kwargs)",
+              retval, task_id, args, kwargs)
         om = self.om
         args, kwargs = args[0:2]
         scriptname = args[0]

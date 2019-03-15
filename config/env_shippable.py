@@ -1,9 +1,9 @@
 import os
 
-from config.env_local import EnvSettings_Local
+from config import EnvSettings_LocalTest
 
 
-class EnvSettings_Shippable(EnvSettings_Local):
+class EnvSettings_Shippable(EnvSettings_LocalTest):
     MONGO_PORT = os.environ.get('SHIPPABLE_MONGODB_PORT', '27017')
 
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
