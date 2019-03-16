@@ -1,7 +1,6 @@
 import datetime
 import os
 import sys
-from distutils.dir_util import mkpath
 from shutil import rmtree
 from unittest import TestCase
 
@@ -91,9 +90,10 @@ class PythonPackageDataTests(TestCase):
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
         pkgsrc = 'pkg://{}'.format(pkgpath)
         om.scripts.put(pkgsrc, 'helloworld')
+        print("***omega test_runtime (om, om.runtime)", om, om.runtime)
         result = om.runtime.script('helloworld').run(text='foo')
         data = result.get()
-        self.assertIn('runtime', data)
+        self.assertIn('runtimes', data)
         expected = ('hello from helloworld', {'text': 'foo'})
         self.assertEqual(data['result'], expected)
 

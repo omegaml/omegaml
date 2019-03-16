@@ -8,7 +8,7 @@ from omegapkg.packager import build_sdist, install_and_import, load_from_path
 
 class PythonPackageData(BaseDataBackend):
     """
-    Backend to support custom scripts deployment to runtime cluster
+    Backend to support custom scripts deployment to runtimes cluster
     """
     KIND = 'python.package'
 

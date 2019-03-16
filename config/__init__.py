@@ -5,3 +5,4 @@ from .env_dokku import EnvSettings_dokku
 from .env_docker import EnvSettings_docker
 from .env_shippable import EnvSettings_Shippable
 from .env_omegamlio import EnvSettings_omegamlio
+from .env_kubernetes import EnvSettings_kubernetes

@@ -45,11 +45,11 @@ build_sdist () {
     pushd $sourcedir
     PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py sdist
     # 1. copy all code into a safe place
-    tar -czf $distdir/$release.tgz .
+    tar --exclude-vcs -czf $distdir/$release.tgz .
     popd
     # -- unpack distbuild
     pushd $distdir/$release
-    tar -xzf $distdir/$release.tgz
+    tar --exclude-vcs -xzf $distdir/$release.tgz
     popd
 }
 

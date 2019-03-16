@@ -1,4 +1,3 @@
-
 import os
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
@@ -30,7 +29,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
                         EnvSettingsGlobal):
-    _prefix_apps = ('omegaweb', 'landingpage', 'orders')
+    _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
     _addl_apps = ('tastypie',
                   'tastypie_swagger',
                   'tastypiex',
@@ -61,7 +60,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     SITE_ID = 1
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost:27019', 'mongo db host name'),
+        'MONGO_HOST': ('localhost:27019', 'mongo db public host name'),
+        'JYHUB_HOST' : ('localhost:8888', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }
@@ -77,3 +77,19 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
     OMEGA_RESTAPI_URL = 'http://localhost:8000'
 
+    OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']
+
+    #: storage backends
+    OMEGA_STORE_BACKENDS = {
+        'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+        'spark.mllib': 'omegaee.backends.SparkBackend',
+        'pandas.csv': 'omegaee.backends.PandasExternalData',
+        'python.package': 'omegapkg.PythonPackageData',
+    }
+    #: storage mixins
+    OMEGA_STORE_MIXINS = [
+        'omegaml.mixins.store.ProjectedMixin',
+        'omegapkg.PythonPackageMixin',
+    ]
+    #: authentication environment
+    OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'

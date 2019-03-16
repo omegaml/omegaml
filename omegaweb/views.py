@@ -1,19 +1,18 @@
-from django.conf import settings
-from six.moves import urllib
-
+from constance import config
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from six.moves import urllib
 
 from omegaweb.resources.util import get_omega_for_user
 
 
 @login_required
 def dashboard(request):
-    om = get_omega_for_user(request.user)
+    om = get_omega_for_user(request.user, view=True)
     datasets = om.datasets.list()
     context = {
         'datasets': datasets,
-        'nbhost': settings.OMEGA_JYHUB_URL,
+        'nbhost': config.JYHUB_HOST,
     }
     return render(request, 'omegaweb/dashboard.html', context)
 
@@ -26,6 +25,7 @@ def dataview(request, name):
     }
     return render(request, 'omegaweb/dataset.html', context)
 
+
 @login_required
 def report(request, name):
     name = urllib.parse.unquote(name)
@@ -33,4 +33,3 @@ def report(request, name):
         'name': name,
     }
     return render(request, 'omegaweb/report.html', context)
-

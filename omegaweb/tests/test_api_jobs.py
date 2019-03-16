@@ -1,12 +1,10 @@
-from landingpage.models import ServicePlan
-
 from django.contrib.auth.models import User
 from nbformat import v4
 from tastypie.test import ResourceTestCase
 
+from landingpage.models import ServicePlan
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
-from tastypiex.requesttrace import ClientRequestTracer
 
 
 class JobResourceTests(ResourceTestCase):

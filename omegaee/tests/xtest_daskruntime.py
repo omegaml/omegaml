@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 import os
-import time
 from unittest import TestCase
 
+import numpy as np
+import pandas as pd
+from six.moves import range
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model.base import LinearRegression
 from sklearn.linear_model.stochastic_gradient import SGDRegressor
@@ -11,14 +13,14 @@ from sklearn.metrics.regression import mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
-import numpy as np
+import omegaml
 from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaml import Omega
-import omegaml
-from omegaml.runtime.daskruntime import OmegaRuntimeDask
+from omegaee.runtimes.daskruntime import OmegaAuthenticatedRuntimeDask
+from omegaml.runtimes.daskruntime import OmegaRuntimeDask
 from omegaml.util import delete_database, reshaped
-import pandas as pd
-from six.moves import range
+
+
 class DaskRuntimeTests(TestCase):
 
     @classmethod
@@ -68,13 +70,13 @@ class DaskRuntimeTests(TestCase):
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('amodel').predict('foo')
+        #        om.runtimes.model('amodel').predict('foo')
         result = om.runtime.model('amodel').predict(X)
         pred2 = result.get()
         self.assertTrue(
-            (pred == pred1).all(), "runtime prediction is different(1)")
+            (pred == pred1).all(), "runtimes prediction is different(1)")
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(2)")
+            (pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit(self):
         # create some data
@@ -115,7 +117,7 @@ class DaskRuntimeTests(TestCase):
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('amodel2').predict('foo')
+        #        om.runtimes.model('amodel2').predict('foo')
         result = om.runtime.model('amodel2').fit(X, Y)
         pred2 = result.get()
         result = om.runtime.model('amodel2').predict(X)
@@ -127,9 +129,9 @@ class DaskRuntimeTests(TestCase):
         self.assertIn('_fitX', meta.attributes.get('metaX').get('collection'))
         self.assertIn('_fitY', meta.attributes.get('metaY').get('collection'))
         self.assertTrue(
-            (pred == pred1).all(), "runtime prediction is different(1)")
+            (pred == pred1).all(), "runtimes prediction is different(1)")
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(2)")
+            (pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_partial_fit(self):
         # create some data
@@ -207,13 +209,13 @@ class DaskRuntimeTests(TestCase):
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('amodel2').predict('foo')
+        #        om.runtimes.model('amodel2').predict('foo')
         result = om.runtime.model('amodel2').predict(reshaped(X))
         pred2 = result.get()
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(1)")
+            (pred == pred2).all(), "runtimes prediction is different(1)")
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(2)")
+            (pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_predict_hdf_dataframe(self):
         # create some data
@@ -237,13 +239,13 @@ class DaskRuntimeTests(TestCase):
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
-        #        om.runtime.model('amodel2').predict('foo')
+        #        om.runtimes.model('amodel2').predict('foo')
         result = om.runtime.model('amodel2').predict('datax')
         pred2 = result.get()
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(1)")
+            (pred == pred2).all(), "runtimes prediction is different(1)")
         self.assertTrue(
-            (pred == pred2).all(), "runtime prediction is different(2)")
+            (pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit_pipeline(self):
         # create some data
@@ -275,13 +277,13 @@ class DaskRuntimeTests(TestCase):
         result = om.runtime.model('amodel2').predict('datax')
         pred1 = result.get()
         self.assertTrue(
-            (pred == pred1).all(), "runtime prediction is different(1)")
+            (pred == pred1).all(), "runtimes prediction is different(1)")
 
     def test_runtime_auth(self):
         # set auth explicitely
         auth = OmegaRuntimeAuthentication('foo', 'bar')
         om = Omega(auth=auth)
-        om.runtime = OmegaRuntimeDask(om, auth=auth)
+        om.runtime = OmegaAuthenticatedRuntimeDask(om, auth=auth)
         om.runtime.pure_python = True
         self.assertEquals(om.runtime.auth, auth)
         # set auth indirectly

@@ -1,4 +1,3 @@
 # keep shippable happy
 -r pip-requirements.txt
-
-
+splinter==0.9.0

@@ -12,4 +12,4 @@ class OmegaResourceMixin(object):
         Return an Omega instance configured to the request's user
         """
         request = getattr(bundle_or_request, 'request', bundle_or_request)
-        return get_omega_for_user(request.user)
+        return get_omega_for_user(request.user, view=True)

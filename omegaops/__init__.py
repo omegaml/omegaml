@@ -1,10 +1,10 @@
-import hashlib
-
 from constance import config
 from django.conf import settings
 from django.contrib.auth.models import User
-from landingpage.models import ServicePlan
 from pymongo.mongo_client import MongoClient
+
+from landingpage.models import ServicePlan
+from omegaml.util import urlparse
 
 
 def add_user(user, password, dbname=None):
@@ -124,15 +124,24 @@ def add_service_deployment(user, config):
     text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
         **locals())
     user.services.all().delete()
-    user.services.create(user=user,
-                         text=text,
-                         offering=plan,
-                         settings=config)
+    deployment = user.services.create(user=user,
+                                      text=text,
+                                      offering=plan,
+                                      settings=config)
+    return deployment
 
 
-def get_client_config(user, qualifier=None):
+def complete_service_deployment(deployment, status):
+    deployment.status = status
+    deployment.save()
+
+
+def get_client_config(user, qualifier=None, view=False):
     """
     return the full client configuration
+
+    :param view: if True return the internal mongo url, else external as defined in
+       constance.MONGO_HOST
     """
     import omegaml as om
 
@@ -141,8 +150,20 @@ def get_client_config(user, qualifier=None):
     user_settings = user_settings.get(qualifier, user_settings)
     user_settings['user'] = user_settings.get('username') or user_settings.get('user')
 
-    mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
-                                               **user_settings)
+    if not view:
+        # provide cluster-external mongo host URL
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
+                                                   **user_settings)
+    else:
+        # provide cluster-internal mongo host URL
+        # parse salient parts of mongourl, e.g.
+        # mongodb://user:password@host/dbname
+        parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
+        host = parsed_url.netloc
+        if '@' in host:
+            creds, host = host.split('@', 1)
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=host,
+                                                   **user_settings)
     # FIXME permission user instead of standard
     broker_url = config.BROKER_URL
     client_config = {

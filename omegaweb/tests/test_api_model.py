@@ -14,7 +14,6 @@ from omegacommon.sklext import OnlinePipeline
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
 import pandas as pd
-from tastypiex.requesttrace import ClientRequestTracer
 
 
 class ModelResourceTests(ResourceTestCase):

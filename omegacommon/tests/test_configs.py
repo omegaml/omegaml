@@ -48,26 +48,34 @@ class ConfigurationTests(TestCase):
         self.assertEqual(self.defaults['OMEGA_MONGO_URL'], 'updated-foo')
         self.assertNotIn('NOTOMEGA_VALUE', self.defaults)
 
-    @patch('omegaml.defaults.OMEGA_MONGO_URL')
-    def test_config_from_apikey(self, orig):
+    def test_config_from_apikey(self):
         """
         Test an Omega instance can be created from user specific configs
         """
-        from omegaml import defaults
-        defaults.OMEGA_MONGO_URL = 'foo'
+        import omegaml as om
+        from omegaml.util import settings
+        # check we get default without patching
+        defaults = settings()
+        with patch.object(defaults, 'OMEGA_MONGO_URL') as mock:
+            defaults.OMEGA_MONGO_URL = 'foo'
+            om.setup()
+            self.assertEqual(om.datasets.mongo_url, 'foo')
+        # reset om.datasets to restored defaults
+        om.setup()
+        self.assertNotEqual(om.datasets.mongo_url, 'foo')
+        # now test we can change the default through config
         # we patch the actual api call to avoid having to set up the user db
         # the objective here is to test get_omega_from_apikey
         with patch('omegacommon.userconf.get_user_config_from_api') as mock:
             mock.return_value = {
                 'objects': [
-                    {
+                   {
                         'data': {
                             'OMEGA_MONGO_URL': 'updated-foo'
                         }
                     }
                 ]
             }
-            get_omega_from_apikey.data = {}
             om = get_omega_from_apikey('foo', 'bar')
             self.assertEqual(om.datasets.mongo_url, 'updated-foo')
 
