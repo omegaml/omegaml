@@ -35,3 +35,6 @@ OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'f55750fff7d9ae6c20d5f
 
 #: allow a task to use the local default configuration (potentially insecure)
 OMEGA_ALLOW_TASK_DEFAULT_AUTH=False
+
+#: authentication environment
+OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'

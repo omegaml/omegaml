@@ -61,7 +61,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('localhost:27019', 'mongo db public host name'),
-        'JYHUB_HOST' : ('localhost:8888', 'jupyter hub public host name'),
+        'JYHUB_HOST' : ('localhost:5000', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }

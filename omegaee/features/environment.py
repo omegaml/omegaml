@@ -21,9 +21,9 @@ def before_all(context):
     use_fixture(splinter_browser, context)
     # set url and admin password
     context.web_url = os.environ.get('OMEGA_URL', 'https://omegaml.omegaml.io')
-    admin_user, admin_password = get_admin_secrets()
-    context.admin_user = os.environ.get('USER', admin_user)
-    context.admin_password = os.environ.get('PASSWORD', admin_password)
+    admin_user, admin_password = get_admin_secrets(context.web_url)
+    context.admin_user = os.environ.get('OMEGA_ADMIN_USER', admin_user)
+    context.admin_password = os.environ.get('OMEGA_ADMIN_PASSWORD', admin_password)
     # setup environment
     context.debug = os.environ.get('DEBUG', False)
     defaults = settings()
