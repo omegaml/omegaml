@@ -8,6 +8,7 @@
 ##      --build           if specified rebuilds the omegaml image
 ##      --local           if specified uses local dist package
 ##      --testpypi        if specified uses test pypi
+##      --tag=VALUE       tag for omegaml image (only with --build)
 ##
 
 # script setup to parse options
@@ -39,6 +40,9 @@ fi
 pushd $script_dir/..
 docker-compose down
 docker-compose up $buildopt -d
+if [ ! -z "$tag" ]; then
+  docker tag omegaml/omegaml:latest omegaml/omegaml:$tag
+fi
 docker rmi -f omegaml/livetest
 docker build --build-arg pypi=$pypi -f ./scripts/livetest/Dockerfile -t omegaml/livetest $script_dir/livetest
 docker run $docker_network $docker_env $docker_image behave $behave_features

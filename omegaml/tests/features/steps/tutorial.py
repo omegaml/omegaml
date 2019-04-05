@@ -5,7 +5,6 @@ from behave import given, when, then
 def connection(ctx):
     import omegaml as om
     ctx.om = om.setup()
-    print(ctx.om)
     assert ctx.om is not None
 
 @when('we ingest data')
@@ -17,7 +16,7 @@ def ingest(ctx):
     }
     df = pd.DataFrame(data)
     df['y'] = df['x'] * 2
-    om.datasets.put(df, 'sample')
+    om.datasets.put(df, 'sample', append=False)
     assert 'sample' in om.datasets.list()
 
 @when('we build a model')

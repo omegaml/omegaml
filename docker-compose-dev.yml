@@ -3,8 +3,8 @@ services:
   mongo:
     image: mongo:3.6.8-stretch
     ports:
-      - "27019:27017"
-      - "27020:28017"
+      - "27017:27017"
+      - "28017:28017"
     command: ["--auth"]
   rabbitmq:
     image: rabbitmq

@@ -12,6 +12,9 @@ dist:
 test: dist
 	scripts/livetest.sh --local
 
+devtest:
+	scripts/devtest.sh
+
 image:
 	: "run docker build"
 	docker build -t omegaml/omegaml:$(VERSION) -t omegaml/omegaml:latest .
@@ -24,7 +27,7 @@ release-test: dist
 	sleep 5
 	scripts/livetest.sh --testpypi
 
-release-prod: dist
+release-prod: test dist
 	: "twine upload to pypi prod"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -34,9 +37,10 @@ release-prod: dist
 
 release-docker: dist
 	: "docker push image sto dockerhub"
-	scripts/livetest.sh --local
+	scripts/livetest.sh --local --build --tag ${VERSION}
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
+
 
 thirdparty:
 	: "create THIRDPARTY & THIRDPARTY-LICENSES"

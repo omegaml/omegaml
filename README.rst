@@ -8,7 +8,7 @@ omega|ml takes just a single line of code to
 
 In addition you can
 
-* train model on the integrated compute cluster (or any other cluster using custom backends)
+* train models on the integrated compute cluster (or any other cluster using custom backends)
 * collaborate on data science projects easily (using Jupyter Notebook)
 * deploy beautiful dashboards right from your Jupyter Notebook (using dashserve)
 

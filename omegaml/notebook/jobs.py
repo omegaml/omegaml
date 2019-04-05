@@ -23,13 +23,17 @@ class OmegaJobs(object):
     Omega Jobs API
     """
 
-    # TODO this class should be a proper backend class
+    # TODO this class should be a proper backend class with a mixin for ipynb
+
+    _nb_config_magic = 'omega-ml'
+    _dir_placeholder = '_placeholder.ipynb'
 
     def __init__(self, prefix=None, store=None, defaults=None):
         self.defaults = defaults or omega_settings()
         prefix = prefix or 'jobs'
         self.store = store or OmegaStore(prefix=prefix)
         self.kind = Metadata.OMEGAML_JOBS
+        self._include_dir_placeholder = True
 
     def __repr__(self):
         return 'OmegaJobs(store={})'.format(self.store.__repr__())
@@ -47,20 +51,20 @@ class OmegaJobs(object):
             name += '.ipynb'
         return self.store.collection(name)
 
-    def drop(self, name):
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
-        return self.store.drop(name)
+    def drop(self, name, force=False):
+        meta = self.metadata(name)
+        name = meta.name # ensure we get the actual name
+        return self.store.drop(name, force=force)
 
     def metadata(self, name):
-        if not name.endswith('.ipynb'):
+        meta = self.store.metadata(name)
+        if meta is None and not name.endswith('.ipynb'):
             name += '.ipynb'
-        return self.store.metadata(name)
+            meta = self.store.metadata(name)
+        return meta
 
     def exists(self, name):
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
-        return len(self.store.list(name)) > 0
+        return len(self.store.list(name)) + len(self.store.list(name + '.ipynb')) > 0
 
     def put(self, obj, name, attributes=None):
         """
@@ -89,9 +93,23 @@ class OmegaJobs(object):
                                              kind=self.kind,
                                              attributes=attributes,
                                              gridfile=GridFSProxy(grid_id=fileid))
+            meta = meta.save()
         else:
-            meta.gridfile.replace(bbuf)
-        return meta.save()
+            filename = uuid4().hex
+            meta.gridfile.delete()
+            fileid = self._fs.put(bbuf, filename=filename)
+            meta.gridfile = GridFSProxy(grid_id=fileid)
+            meta = meta.save()
+        # set config
+        nb_config = self.get_notebook_config(name)
+        meta_config = meta.attributes.get('config', {})
+        if nb_config:
+            meta_config.update(dict(**nb_config))
+            meta.attributes['config'] = meta_config
+        meta = meta.save()
+        if 'run-at' in meta_config:
+            meta = self.schedule(name)
+        return meta
 
     def get(self, name):
         """
@@ -132,7 +150,7 @@ class OmegaJobs(object):
         cells.append(nbv4.new_code_cell(source=code))
         notebook = nbv4.new_notebook(cells=cells)
         # put the notebook
-        meta = self.put(notebook, 'testjob')
+        meta = self.put(notebook, name)
         return meta
 
     def get_fs(self, collection=None):
@@ -153,32 +171,37 @@ class OmegaJobs(object):
         The default is all, i.e. `.*`
         """
         job_list = self.store.list(regexp=jobfilter, raw=raw)
+        name = lambda v: v.name if raw else v
+        if not self._include_dir_placeholder:
+            job_list = [v for v in job_list if not name(v).endswith(self._dir_placeholder)]
         return job_list
 
     def get_notebook_config(self, nb_filename):
         """
         returns the omegaml script config on
         the notebook's first cell
+
+        If there is no config cell or the config cell is invalid raises
+        a ValueError
         """
         notebook = self.get(nb_filename)
-        config_cell = notebook.get('worksheets')[0].get('cells')[0]
+        config_cell = None
+        config_magic = '# {}'.format(self._nb_config_magic)
+        for cell in notebook.get('cells'):
+            if cell.source.startswith(config_magic):
+                config_cell = cell
+        if not config_cell:
+            return {}
         yaml_conf = '\n'.join(
             [re.sub('#', '', x, 1) for x in str(
-                config_cell.input).splitlines()])
+                config_cell.source).splitlines()])
         try:
             yaml_conf = yaml.safe_load(yaml_conf)
-            # even a comment qualifies as a valid yaml
-            # so testing to check if the yaml is exactly what we expect
-            if yaml_conf.get("omegaml.script") is not None:
-                pass
-            else:
-                raise ValueError(
-                    'Notebook configuration either not present or has errors!')
+            config = yaml_conf[self._nb_config_magic] # assert the key is in
         except Exception:
             raise ValueError(
-                'Notebook configuration either not present or has errors!')
-
-        return yaml_conf.get("omegaml.script")
+                'Notebook configuration cannot be parsed')
+        return config
 
     def run(self, name):
         """
@@ -191,7 +214,7 @@ class OmegaJobs(object):
         """
         return self.run_notebook(name)
 
-    def run_notebook(self, name):
+    def run_notebook(self, name, event=None):
         """
         run a given notebook immediately.
         the job parameter is the name of the job script as in ipynb.
@@ -199,15 +222,17 @@ class OmegaJobs(object):
         """
         notebook = self.get(name)
         meta_job = self.metadata(name)
-        ts = datetime.datetime.now().strftime('%s')
+        ts = datetime.datetime.now()
         # execute
         try:
             ep = ExecutePreprocessor()
             ep.preprocess(notebook, {'metadata': {'path': '/'}})
         except Exception as e:
-            status = str(e)
+            status = 'ERROR'
+            message = str(e)
         else:
             status = 'OK'
+            message = ''
             # record results
             meta_results = self.put(
                 notebook, 'results/{name}_{ts}'.format(**locals()))
@@ -217,50 +242,63 @@ class OmegaJobs(object):
             job_results.append(meta_results.name)
             meta_job.attributes['job_results'] = job_results
         # record final job status
-        job_runs = meta_job.attributes.get('job_runs', {})
-        job_runs[ts] = status
+        job_runs = meta_job.attributes.get('job_runs', [])
+        runstate = {
+            'status': status,
+            'ts': ts,
+            'message': message,
+            'results': meta_results.name if status == 'OK' else None
+        }
+        job_runs.append(runstate)
         meta_job.attributes['job_runs'] = job_runs
-        meta_job.save()
-        return meta_job
+        # set event run state if event was specified
+        if event:
+            attrs = meta_job.attributes
+            triggers = attrs['triggers'] = attrs.get('triggers', [])
+            scheduled = (trigger for trigger in triggers
+                         if trigger['event-kind'] == 'scheduled')
+            for trigger in scheduled:
+                if event == trigger['event']:
+                    trigger['status'] = status
+                    trigger['ts'] = ts
+        return meta_job.save()
 
-    def schedule(self, nb_file):
+    def schedule(self, nb_file, run_at=None, last_run=None):
         """
         Schedule a processing of a notebook as per the interval
         specified on the job script
         """
-        # FIXME this looks somewhat unstable. currently we schedule by
-        #       inserting metadata that sets the state of the job to
-        #       RECEIVED. Then the task execute_script which is
-        #       scheduled by celery gets all new jobs not yet in RECEIVED
-        #       state, and schedules for the next iteration. What happens
-        #       if a job was scheduled already how will it get reschduled?
-        attrs = {}
-        config = self.get_notebook_config(nb_file)
-        now = datetime.datetime.now()
-        interval = config.get('run-at')
-        iter_next = croniter(interval, now)
+        meta = self.metadata(nb_file)
+        attrs = meta.attributes
+        # get/set run-at spec
+        config = attrs.get('config')
+        # if we don't have any run-spec, stop
+        if not run_at:
+            interval = config.get('run-at')
+        else:
+            config['run-at'] = run_at
+            interval = run_at
+        if not interval:
+            # if we don't have a run-spec, return without scheduling
+            raise ValueError('no run-at specification provided, cannot schedule')
+        # get last time the job was run
+        if last_run is None:
+            job_runs = attrs.get('job_runs')
+            if job_runs:
+                last_run = job_runs[-1]['ts']
+            else:
+                last_run = datetime.datetime.now()
+        # calculate next run time
+        iter_next = croniter(interval, last_run)
         run_at = iter_next.get_next(datetime.datetime)
-        next_run_time = iter_next.get_next(datetime.datetime)
-        kwargs = dict(
-            config=config,
-            run_at=run_at,
-            next_run_time=next_run_time)
-        # check if this job was scheduled earlier
-        try:
-            metadata = Metadata.objects.get(
-                name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
-            if metadata.attributes.get('state') == "RECEIVED":
-                # FIXME return only at end of method.
-                return metadata.attributes.get('task_id')
-        except Metadata.DoesNotExist:
-            # set attributes
-            attrs['config'] = config
-            attrs['next_run_time'] = run_at
-            attrs['state'] = 'RECEIVED'
-            Metadata(
-                name=nb_file,
-                kind=Metadata.OMEGAML_RUNNING_JOBS,
-                attributes=attrs).save()
-        result = run_omegaml_job.apply_async(
-            args=[nb_file], eta=run_at, kwargs=kwargs)
-        return result
+        # store next scheduled run
+        triggers = attrs['triggers'] = attrs.get('triggers', [])
+        # set up a schedule event
+        scheduled_run = {
+            'event-kind': 'scheduled',
+            'event': run_at.isoformat(),
+            'run-at': run_at,
+            'status': 'PENDING'
+        }
+        triggers.append(scheduled_run)
+        return meta.save()

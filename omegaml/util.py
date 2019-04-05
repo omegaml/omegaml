@@ -446,3 +446,45 @@ def extend_instance(obj, cls, *args, **kwargs):
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
     if hasattr(obj, '_init_mixin'):
         obj._init_mixin(*args, **kwargs)
+
+
+def calltrace(obj):
+    """
+    trace calls on an object
+
+    Usage:
+        def __init__(self, *args, **kwargs):
+            calltrace(self)
+
+        This will print the method arguments and return values
+        for every call. Exceptions will be caught and printed,
+        then re-raised. Magic methods are not traced.
+
+    Args:
+        obj: the object to trace
+    """
+
+    def tracefn(el):
+        def methodcall(*args, **kwargs):
+            print("calling", el, args, kwargs)
+            try:
+                result = el(*args, **kwargs)
+            except (BaseException, Exception) as e:
+                print("=> ", str(e))
+                raise
+            except:
+                print("=> unknown exception")
+                raise
+            else:
+                print("=> ", result)
+            return result
+
+        return methodcall
+
+    for item in dir(obj):
+        if item.startswith('__'):
+            continue
+        el = getattr(obj, item)
+        if type(el).__name__ == 'method':
+            setattr(obj, item, tracefn(el))
+    return obj
