@@ -39,7 +39,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression()
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
@@ -57,7 +57,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression()
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
@@ -109,7 +109,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression()
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
@@ -156,21 +156,21 @@ class StoreTests(unittest.TestCase):
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp=True)
         df2 = store.get('mydata')
-        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
+        _created = pd.to_datetime(df2['_created'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, default value
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp='CREATED')
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
+        _created = pd.to_datetime(df2['CREATED'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, value as tuple
         now = datetime.utcnow() - timedelta(days=1)
         store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
         df2 = store.get('mydata')
-        _created = df2['CREATED'].astype(datetime).unique()[0].to_pydatetime()
+        _created = pd.to_datetime(df2['CREATED'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
                          now.replace(second=0, microsecond=0))
         # set a day in the past to avoid accidentally creating the current
@@ -179,7 +179,7 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata', timestamp=now, append=False)
         df2 = store.get('mydata')
         # compare the data
-        _created = df2['_created'].astype(datetime).unique()[0].to_pydatetime()
+        _created = pd.to_datetime(df2['_created'].unique()[0])
         self.assertEqual(_created.replace(microsecond=0),
                          now.replace(microsecond=0))
 
@@ -272,7 +272,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore(prefix='')
         midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
                                      [u'one', u'two']],
-                             labels=[
+                             codes=[
                                  [0, 0, 1, 1, 2, 2, 3, 3],
                                  [0, 1, 0, 1, 0, 1, 0, 1]],
                              names=[u'first', u'second'])
@@ -344,7 +344,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression()
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         # store it remote
         store.put(lr, 'foo')
@@ -375,7 +375,7 @@ class StoreTests(unittest.TestCase):
         df2 = om.get('datadf')
         assert_frame_equal(df, df2)
         # model
-        lr = LogisticRegression()
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
         meta = om.put(lr, 'mymodel', attributes=attributes)
         self.assertEqual(meta.kind, 'sklearn.joblib')
         self.assertEqual(meta.attributes, attributes)

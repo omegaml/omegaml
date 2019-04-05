@@ -511,7 +511,10 @@ class OmegaStore(object):
 
         def row_to_doc(obj):
             for gval, gdf in obj.groupby(groupby):
-                gval = make_tuple(gval.astype('O'))
+                if hasattr(gval,'astype'):
+                    gval = make_tuple(gval.astype('O'))
+                else:
+                    gval = make_tuple(gval)
                 doc = dict(zip(groupby, gval))
                 datacols = list(set(gdf.columns) - set(groupby))
                 doc['_data'] = gdf[datacols].astype('O').to_dict('records')

@@ -336,7 +336,7 @@ class MDataFrameTests(TestCase):
         om = self.om
         midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
                                      [u'one', u'two']],
-                             labels=[
+                             codes=[
                                  [0, 0, 1, 1, 2, 2, 3, 3],
                                  [0, 1, 0, 1, 0, 1, 0, 1]],
                              names=[u'first', u'second'])

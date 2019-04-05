@@ -629,5 +629,12 @@ import logging
 logger = logging.getLogger(c.NotebookApp.__class__.__name__)
 handler = logging.FileHandler('/tmp/jupyter.log')
 logger.addHandler(handler)
+logger.setLevel(os.environ.get('JY_DEBUG_LEVEL', 'INFO'))
 
-sys.path.insert(0, '/app')
+# if we're running inside a container, use /app
+if 'OMEGA_ROOT' in os.environ:
+    sys.path.insert(0, os.environ['OMEGA_ROOT'])
+else:
+    sys.path.insert(0, '/app')
+
+

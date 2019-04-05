@@ -40,13 +40,11 @@ setup(
         'six>=1.11.0',
         'croniter>=0.3.12',
         'nbformat>=4.0.1',
-        'nbconvert==5.3.1'
+        'nbconvert>=5.4.1'
     ],
     extras_require={
       'hdf': [
           'tables>=3.2.2',
       ]
     },
-    dependency_links=[
-    ],
 )
