@@ -226,7 +226,7 @@ class ScikitLearnBackend(BaseModelBackend):
             y = self.data_store.get(Yname)
         else:
             y = None
-        gs_model = GridSearchCV(cv=None, estimator=model, param_grid=parameters, **kwargs)
+        gs_model = GridSearchCV(cv=5, estimator=model, param_grid=parameters, **kwargs)
         gs_model.fit(X, gsreshaped(y))
         nowdt = datetime.datetime.now()
         if rName:

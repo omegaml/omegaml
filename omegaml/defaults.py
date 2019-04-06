@@ -145,7 +145,7 @@ except Exception as e:
     pass
 
 # -- test
-if any(m in ' '.join(sys.argv) for m in ('unittest', 'test', 'nosetest', 'noserunner')):
+if any(m in sys.argv for m in ('unittest', 'test', 'nosetest', 'noserunner')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
     OMEGA_RESTAPI_URL = ''
