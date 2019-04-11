@@ -5,11 +5,13 @@ if [[ -f pip-reinstall.txt ]]; then
 fi
 
 if [[ -z "$APP" ]] || [[ $APP == "omegaml" ]]; then
-   pip install -U jupyterhub==0.8.1 "tornado<5" "pip<10"
+   pip install -U jupyterhub==0.8.1 "tornado<5"
    python manage.py collectstatic --noinput
 fi
 
+# this should no longer be required
+# pip install -U "tornado<5" "pip<10"
 if [[ $APP == "omjobs" ]]; then
-   pip install -U "tornado<5" "pip<10"
+   echo "omjobs installation finished. now starting up"
 fi
 

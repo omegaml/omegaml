@@ -58,6 +58,28 @@
    clear: none;
 }
 
+/* footer */
+footer{
+    background-color: #E8E8E8;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 35px;
+    text-align: center;
+    color: black;
+}
+
+footer a {
+    color: #3f6096 !important;
+}
+
+footer p {
+    padding: 10.5px;
+    margin: 0px;
+    line-height: 100%;
+}
+
 @media only screen and (min-width: 1200px) {
   .search-form {
      width: 85%;

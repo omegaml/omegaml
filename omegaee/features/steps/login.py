@@ -93,3 +93,6 @@ def load_jupyter_notebook(ctx):
     br.find_by_id('password_input').first.fill(apikey)
     br.click_link_by_id('login_submit')
     assert br.is_element_present_by_id('ipython-main-app', wait_time=5)
+    # check that there is actually a connection
+    assert not br.is_text_present('Server error: Traceback', wait_time=5)
+    assert not br.is_text_present('Connection refuse', wait_time=5)

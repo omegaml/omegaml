@@ -1,6 +1,6 @@
 # keep shippable happy
 -e ../stackable
--e ../landingpage
+-e ../landingpage[paasdeploy]
 -e ../ccbackend
 -e ../django-tastypie-swagger
 -e ../tastypiex

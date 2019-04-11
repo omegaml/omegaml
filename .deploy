@@ -21,7 +21,7 @@ deploy_branch_remote=master;
 # git remote to deploy to, must be readable and writable.
 repo=dzom;
 # url of remote repo.
-repourl=dokku@omegaml.io:omegaml;
+repourl=dokku@omegaml.omegaml.io:omegaml;
 
 [omjobs]
 deploy_directory=.;
@@ -33,5 +33,7 @@ deploy_branch_remote=master;
 # git remote to deploy to, must be readable and writable.
 repo=dzomjobs;
 # url of remote repo.
-repourl=dokku@omegaml.io:omjobs;
+repourl=dokku@omegaml.omegaml.io:omjobs;
+
+
 

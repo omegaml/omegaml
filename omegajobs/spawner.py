@@ -88,6 +88,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         import os
         self.log.info('SimpleLocalProcessSpawner: user environment created')
         from omegaml import defaults
+        import omegaee
         admin_user = defaults.OMEGA_JYHUB_USER
         admin_apikey = defaults.OMEGA_JYHUB_APIKEY
         api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
@@ -99,7 +100,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
         env['JY_ALLOW_ROOT'] = 'yes'
         import omegaml
-        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaml.__file__), '..')
+        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
         self.log.info("***within user_env {}".format(os.getpid()))
         # pass user configuration to preexecfn
         self.__config_env = {

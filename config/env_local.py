@@ -61,7 +61,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     CONSTANCE_CONFIG = {
         'MONGO_HOST': ('localhost:27019', 'mongo db public host name'),
-        'JYHUB_HOST' : ('localhost:8888', 'jupyter hub public host name'),
+        'JYHUB_HOST' : ('localhost:5000', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }
@@ -74,7 +74,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     OMEGA_JYHUB_URL = 'http://localhost:5000'
     OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
-    OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
+    OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', '2a67924fa4a9782abe3dd23826a01401833a10f1')
     OMEGA_RESTAPI_URL = 'http://localhost:8000'
 
     OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']

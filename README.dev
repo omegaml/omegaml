@@ -11,10 +11,16 @@ https://sites.google.com/a/chromium.org/chromedriver/downloads
 Setup
 -----
 
+1. Install all the software required
+
+   $ conda install --file conda-requirements.txt
+   $ pip insatll --file pip-requirements.txt
+   $ pip install --file requirements.dev
+
 Configure jupyter hub user. This must match the OMEGA_JYHUB_USER and OMEGA_JYHUB_APIKEY env variables
 on web and omjobs.
 
-    $ manage.py omsetupuser --username jyadmin --apikey b7b034f57d442e605ab91f88a8936149e968e12e --staff
+    $ manage.py omsetupuser --username jyadmin --apikey f55750fff7d9ae6c20d5f46a41933f09ba5812a4 --staff
 
 Execute locally
 ---------------
@@ -30,7 +36,7 @@ Test locally
 
 Use behave
 
-    $ OMEGA_URL=http://localhost:8000 behave -D BEHAVE_DEBUG_ON_ERROR
+    $ OMEGA_URL=http://localhost:8000 behave -D BEHAVE_DEBUG_ON_ERROR omegaee/features
 
 
 Local Kubernetes Deployment
