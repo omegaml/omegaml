@@ -85,9 +85,9 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     if isinstance(config_file, six.string_types):
         if os.path.exists(config_file):
             with open(config_file, 'r') as fin:
-                userconfig = yaml.load(fin)
+                userconfig = yaml.safe_load(fin)
     else:
-        userconfig = yaml.load(config_file)
+        userconfig = yaml.safe_load(config_file)
     if userconfig:
         for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
             vars[k] = userconfig.get(k, None) or vars[k]

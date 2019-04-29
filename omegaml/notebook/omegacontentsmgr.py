@@ -1,7 +1,3 @@
-import os
-from logging import warning
-
-from IPython.utils import tz
 import nbformat
 from notebook.services.contents.manager import ContentsManager
 from tornado import web
@@ -178,6 +174,7 @@ class OmegaStoreContentsManager(ContentsManager):
         # if exists already fake last modified and created timestamps
         # otherwise jupyter notebook will claim a newer version "on disk"
         if self.exists(path):
+            from IPython.utils import tz
             model['last_modified'] = tz.datetime(1970, 1, 1)
             model['created'] = tz.datetime(1970, 1, 1)
         return model
@@ -185,6 +182,7 @@ class OmegaStoreContentsManager(ContentsManager):
     def _base_model(self, path):
         """Build the common base of a contents model"""
         # http://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
+        from IPython.utils import tz
         path = path.strip('/')
         last_modified = tz.utcnow()
         created = tz.utcnow()
