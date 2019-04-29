@@ -43,7 +43,7 @@ build:
      python manage.py test --debug-config --verbosity=2
      --config EnvSettings_Shippable 
      --with-xunit --xunit-file=shippable/testresults/nosetests.xml  
-     --with-xcoverage --cover-package=omegaml,omegaops,omegastream,omegajobs,omegastream,omegaweb
+     --with-xcoverage --cover-package=omegaee,omegaml,omegaops,omegastream,omegajobs,omegastream,omegaweb
      --cover-tests  --xcoverage-file=shippable/codecoverage/coverage.xml 
 
 
