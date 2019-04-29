@@ -34,7 +34,7 @@ class EnvSettings_kubernetes(Config_Dokku,
     OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://omjobs:5000')
     OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
     OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
-    OMEGA_RESTAPI_URL = os.environ.get('OMEGA_RESTAPI_URL', 'http://omegaweb:5000')
+    OMEGA_RESTAPI_URL = os.environ.get('OMEGA_RESTAPI_URL', 'http://omegaml:5000')
 
     DATABASES = {
         'default': {

@@ -1,183 +1,338 @@
+Copyright (c) 2018 one2seven GmbH. All Rights Reserved.
+
 End-User License Agreement (EULA)
 =================================
 
-This End-User License Agreement ("EULA") is a legal agreement between you ("User") and one2seven GmbH
-trading as omegaml|ml and omegaml.io ("Supplier")
+Effective date: 5 December, 2018
 
-This EULA agreement governs your acquisition and use of our omegaml|ml software and services
-provided by omegaml.io ("Software") directly from Supplier or indirectly through a Supplier
-designated download location or a Supplier authorized reseller or distributor (a "Reseller").
+This End-User License Agreement (the "EULA") is a legally binding
+agreement between an individual or a single entity (the "User", "you",
+and "your") and the company one2seven GmbH having a registered place of
+business at Hagenholzstrasse 83b, 8050 Zürich, Switzerland and trading
+as omega\|ml and omegaml.io (the "Supplier") (collectively, the
+"Parties"). The EULA governs User's acquisition and use of the software
+product omega\|ml and the related services provided by the Supplier
+(collectively, the "Software"). The Software can be accessed directly
+through Supplier's website \<omegaml.io\> or indirectly through download
+locations designated by the Supplier or operated by resellers and
+distributors authorized by the Supplier.
 
-Please read this EULA agreement carefully before completing the installation process and using
-the Software. It provides a license to use the Software and contains warranty information
-and liability disclaimers.
+Please read this EULA carefully before accessing, installing, and
+otherwise using the Software because it contains important information
+about your license to use of the Software, warranty information, and
+liability disclaimers.
 
-AGREEMENT
-=========
-
-1. User, Legal Entity
+1. About the Software
 ---------------------
 
-By clicking "accept" or installing and/or using the Software, you are confirming your acceptance of
-the Software and agreeing to become bound by the terms of this EULA agreement. If you register for
-a free trial of the Software, this EULA agreement will also govern that trial.
+-   1.1 The Software is intended to be used in the field of data
+    science. The Software is developed solely by the Supplier and the
+    Supplier holds all ownership rights, including the intellectual
+    property rights, to the Software.
 
-If you are entering into this EULA agreement on behalf of a company or other legal entity, you
-represent that you have the authority to bind such entity and its affiliates to these terms and
-conditions. If you do not have such authority or if you do not agree with the terms and conditions
-of this EULA agreement, you shall not install or use the Software, and you must not accept this
-EULA agreement.
+2. Acceptance of the EULA
+-------------------------
 
-2. Covered Software and Services
+-   2.1 By clicking on the button "accept" or accessing, installing,
+    copying and otherwise using the Software, you confirm that you have
+    read the EULA, accept the terms of the EULA, and agree to become
+    legally bound by it.
+-   2.2 If you are entering into the EULA on behalf of a company or
+    other legal entity, you represent that you have the authority and
+    the necessary capacity to bind such entity and its affiliates to the
+    terms of the EULA.
+-   2.3 If you do not have the authority specified in Section 2.3 above
+    or if you do not agree with one or more provisions of the EULA, you
+    are not allowed to access, install, or use the Software, and you
+    must not accept the EULA.
+
+3. Covered Software and services
 --------------------------------
 
-This EULA agreement shall apply only to the Software provided to you by Supplier regardless of
-whether other software is referred to or described herein. The terms also apply to any updates,
-supplements, Internet-based services, and support services for the Software, or any other services
-provided in relation to the Software, unless other terms accompany those items on delivery.
-If so, those terms apply.
+-   3.1 The EULA applies only to the Software provided to you by the
+    Supplier regardless of whether other software is referred to or
+    described herein. The EULA also applies to any updates, supplements,
+    Internet-based services, and support services related to the
+    Software, or any other services provided in relation to the
+    Software, unless other terms and conditions accompany those items on
+    delivery. If so, those terms and conditions shall apply.
+-   3.2 If you register for a free trial of the Software, this EULA will
+    also govern your use of the free trial of the Software.
+-   3.3 Any third-party software or services that are not provided by
+    the Supplier are not covered by this EULA. Such third-party software
+    and services are subject to the terms and conditions set by the
+    respective third party and you are solely responsible for obtaining,
+    agreeing to, and complying with the respective terms and conditions
+    at your own cost and expense.
+-   3.4 The Supplier reserves the right, but is not under any
+    obligation, to provide paid or free-of-charge updates and technical
+    support services with regard to the Software, including the
+    possibility to download new versions of the Software.
 
-Any third party software or services are not covered by this EULA agreement and are not provided
-by Supplier. You shall obtain respective terms and conditions from third party at your own cost and
-expense.
-
-3. Fees and Audit
+4. Fees and Audit
 -----------------
 
-By downloading, installing or using the Software or any of the services provided by Supplier, independent of
-the source or installation location of Software and independent of place of delivery of services, you shall
-be required to pay all respective license and services fees as per the pricing plan you have selected.
-The payment is due within 30 days of the date of the invoice and is to be paid as per the instructions
-included in the invoice.
+-   4.1 Upon downloading, installing or using the Software, independent
+    of the source or installation location of the Software and
+    independent of the place of delivery of other services provided by
+    the Supplier, the User shall be required to pay all respective
+    license and services fees indicated in the pricing plan the User has
+    selected (collectively, the "Fees"). Unless stated otherwise in an
+    invoice issued to the User by the Supplier, the payment of the Fees
+    is due within 30 days of the date of the invoice and the Fees are to
+    be paid as per the instructions included in the invoice.
+-   4.2 With or without a prior written notice to the User, the Supplier
+    may audit User's use of the Software to ensure that the User
+    complies with the terms of the EULA. If an audit reveals that the
+    User has underpaid the Fees to the Supplier, the User shall be
+    invoiced for the underpaid Fees based upon Supplier's price list in
+    effect at the time the audit is completed. The User shall pay the
+    Supplier an additional fee of 25% of the applicable unpaid Fees
+    disclosed by the audit. If the underpaid Fees exceed 5% of the Fees
+    previously paid by the User, the User shall also pay Supplier's
+    reasonable costs of conducting the audit.
 
-With or without prior written notice, supplier may audit User's use of the software to ensure that
-User is in compliance with the terms of this agreement. If an audit reveals the licensee has underpaid
-fees to supplier, User shall be invoiced for such underpaid fees based upon Supplier's price list
-in effect at the time the audit is completed. User shall pay Supplier an additional fee of 25% of
-the applicable unpaid fee disclosed by the audit. If the underpaid fees exceed 5% of the license
-fees previously paid by licensee, then licensee shall also pay supplier's reasonable cost of conducting
-the audit.
+5. Grant of the License
+-----------------------
 
-4. License Grant
-----------------
+-   5.1 The Supplier hereby grants the User a personal,
+    non-transferable, non-exclusive, revocable license to use the
+    Software on any Devices (as defined in Section 5.5) chosen by the
+    User and in accordance with the terms of this EULA (the "License").
+    The Software is licensed and not sold.
+-   5.2 The Software is licensed as a single product. Its component
+    parts may not be used separately.
+-   5.3 The Supplier reserves any rights not expressly granted to the
+    User under this EULA.
+-   5.4 The License is valid for the period of time for which the User
+    has access to the Software and the access to the Software is made
+    available by the Supplier, unless the License is terminated pursuant
+    to this EULA.
+-   5.5 The User is permitted to load and run the Software on any
+    device, network or cloud VMs under User's control (collectively, the
+    "Devices"). The User is solely responsible for assessing the
+    compatibility of the Devices and ensuring that the Devices meet the
+    minimum requirements for the use of the Software as set forth in the
+    documentation provided by the Supplier.
+-   5.6 It is User's sole responsibility to verify and assess the
+    suitability, validity and integrity of the Software prior to using
+    it and to decide whether or not the Software fits for the intended
+    use.
+-   5.7 You are not permitted to:
 
-Supplier hereby grants you a personal, non-transferable, non-exclusive licence to use the Software and
-the services provided by Supplier on any Device you choose in accordance with the terms of this
-EULA agreement.
+    -   Edit, alter, modify, adapt, translate or otherwise change the
+        whole or any part of the Software nor permit the whole or any
+        part of the Software to be combined with or become incorporated
+        wholly or in part into any other software, nor decompile,
+        disassemble or reverse engineer the Software or attempt to do
+        any such things, except as provided through respective APIs;
+    -   Reproduce, copy, distribute, resell, sublicense or otherwise use
+        the Software for any purpose other than granted to you in this
+        EULA;
+    -   Transfer your rights to the Software granted under the EULA;
+    -   Use the Software to provide a hosted or cloud services or remote
+        or network-based access of the Software to a third party;
+    -   Use the Software in any way which breaches any applicable local,
+        national or international laws;
+    -   Use the Software for any purpose that the Supplier may consider
+        is a breach of the EULA; and
+    -   Use the Software to develop and produce products and
+        technologies competing with the Software or other services
+        provided by the Supplier.
 
-You are permitted to load and run Software on any device, network or cloud VMs ("Device") under your control.
-You are responsible for ensuring your Device meets the minimum requirements of the Software as set forth
-in the documentation provided by Supplier.
-
-You are not permitted to:
-
-* Edit, alter, modify, adapt, translate or otherwise change the whole or any part of the Software
-  nor permit the whole or any part of the Software to be combined with or become incorporated wholly
-  or in part into any other software, nor decompile, disassemble or reverse engineer the Software or
-  attempt to do any such things, except as provided through respective APIs.
-* Reproduce, copy, distribute, resell, sublicense or otherwise use the Software for any purpose
-  other than granted to you in this Agreement
-* Use the Software to provide a hosted or cloud services or remote or network-based access of the
-  Software to third party.
-* Use the Software in any way which breaches any applicable local, national or international law
-* Use the Software for any purpose that Suppliers considers is a breach of this EULA agreement
-
-5. Intellectual Property and Ownership
+6. Intellectual property and ownership
 --------------------------------------
 
-Supplier shall at all times retain ownership of the Software as originally downloaded by you or provided
-by Supplier, including all subsequent downloads by you or provisions of the Software. The Software
-(and the copyright, and other intellectual property rights of whatever nature in the Software,
-including any modifications made thereto) are and shall remain the property of Supplier.
+-   6.1 All title and copyright in and to the Software (including, but
+    not limited to, any source code, images, photographs, animations,
+    video, audio, music, text, and applets, incorporated into the
+    Software) and any copies of the Software are owned by the Supplier.
+    The Software is protected by the copyright laws of Switzerland and
+    international treaty provisions.
+-   6.2 The Supplier shall at all times retain the ownership of the
+    Software as originally downloaded by the User or provided by the
+    Supplier, including all subsequent downloads or provisions of the
+    Software. The Software (and all intellectual property rights of
+    whatever nature in the Software, including any modifications made
+    thereto) are and shall remain the sole property of Supplier.
+-   6.3 The Supplier reserves the right to grant licenses to use the
+    Software to third parties.
+-   6.4 The User is not permitted to, without obtaining prior written
+    authorization from the Supplier, to use the trade names, trademarks,
+    service marks or product names of the Supplier, except as required
+    for reasonable and customary use of the Software.
+-   6.5 The Supplier has made all efforts possible to avoid the Software
+    being subject to the rights of third parties, in particular that its
+    use does not infringe patents, copyrights or other intellectual
+    property rights of third parties. However, the Supplier does not
+    guarantee that the Software is not subject to the rights of third
+    parties. The User shall notify the Supplier immediately and in
+    writing if any third party asserts an infringement claim against the
+    User in connection with the Software.
 
-Supplier reserves the right to grant licences to use the Software to third parties.
-
-Supplier does not grant permission to use trade names, trademarks, service marks or product names
-of Supplier except as required for reasonable and customary use of the Software.
-
-6. Your responsibilities
+7. Your responsibilities
 ------------------------
 
-Supplier shall only provide Software and related Services to you, including if so agreed providing
-the Software as an Internet-hosted service, in order to enable You to run the Software on the storage and compute
-capacities provided by You . Supplier does not store, possess, access, process, manipulate or
-otherwise interact ("process") with data or programs that You process using Software.
+-   7.1 The Supplier provides the Software to you as an Internet-hosted
+    service, in order to enable you to operate your storage and compute
+    capacities (collectively, the "Capacities") and run the Software on
+    the Capacities. The Supplier does not store, possess, access,
+    process, manipulate or otherwise interact with the data or programs
+    that you process while using the Software.
+-   7.2 It is your sole responsibility to plan for, acquire, allocate,
+    operate and maintain the Capacities obtained from third parties,
+    which are deemed viable by the Supplier, and in line with the
+    requirements of your data storage and processing needs, determined
+    entirely by you.
+-   7.3 The Supplier shall provide the electronic means or instructions
+    through the Software or otherwise for you to use the Capacities,
+    provided that the Capacities meet the requirements set forth in the
+    documentation provided by the Supplier (e.g., cloud tools, platform
+    APIs, hardware and software requirements).
+-   7.4 It is your responsibility to ensure that you have the legitimate
+    rights and necessary authorization to store and process data through
+    the Software (the "Data"). The storage and processing activities
+    carried by you through the Software shall, in no event, constitute a
+    transfer of ownership, access rights, and any other responsibilities
+    with regard to the Data and the Capacities.
+-   7.5 It is your responsibility to ensure the appropriate level of
+    security of the Data and your compliance with applicable laws,
+    including privacy and data protection laws, and industry
+    regulations, whether express or implied.
+-   7.6 Unless otherwise stated in the applicable law, you will interact
+    with any respective governmental and non-governmental bodies that
+    have interest in the security and data privacy practices implemented
+    by you, and cover all expenses related thereto. The Supplier shall
+    participate in such interactions explicitly upon (i) your written
+    request, (ii) an order of an authorized governmental body, or (iii)
+    a legal order. The Supplier reserves the right to charge a fee
+    according to the then-applicable Fees and in-line with any requests
+    for the said interactions in relation with the Software.
 
-It is Your responsibility to plan for, acquire, allocate, operate and maintain the storage and compute
-capacities from third party deemed viable by Supplier, and in line with the requirements of your
-data storage and processing needs, as determined entirely by You. Supplier shall provide the electronic
-means or instructions in the form of Software or services for you to use such capacities in relation
-with the Software, provided the capacities meet the requirements set forth in the Supplier
-provided documentation (e.g. cloud tools & platform APIs, hardware and software requirements).
+8. Limitation of liability and disclaimer of warranties
+-------------------------------------------------------
 
-It is your responsibility to ensure that You are legally allowed to store and process the data in
-relation with and by Software. Your storing and processing such data shall not imply transfer to
-Supplier of ownership, access rights nor the transfer of any other responsibility in relation to
-the data or the storage and compute capacities.
+-   8.1 To the extent permitted by the applicable law, the Supplier
+    expressly disclaims all warranties, express or implied, for the
+    Software. Unless agreed otherwise between the User and the Supplier
+    in writing, the Supplier provides the Software on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+    implied, including, without limitation, any warranties or conditions
+    of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+    PARTICULAR PURPOSE. The entire risk arising out of use or
+    performance of the Software remains with the User.
+-   8.2 In no event shall the Supplier be liable for any damages
+    whatsoever (including, without limitation, damages for loss of
+    business profits, business interruption, loss of business
+    information, or any other pecuniary loss) arising out of the use of
+    or inability to use the Software, even if the Supplier has been
+    advised of the possibility of such damages.
+-   8.3 You are solely responsible for determining the appropriateness
+    of the Software and assume any risks associated with your exercise
+    of permissions under the EULA.
+-   8.4 Third-party software or services, including the Capacities, are
+    not covered by this EULA and are not provided by the Supplier. You
+    shall ensure your compliance with any terms set forth by the
+    respective third-parties at your risk, cost and expense.
 
-It is Your responsibility to ensure security and data privacy adequately meet the requirements
-in your country, by your Legal Entity, by your customers and by applicable industry regulation
-whether express or implied. You will interact with any respective governmental and non-governmental
-bodies that have an interest in your security and data privacy practices, at Your expense. Supplier
-shall participate in such interactions on Your request only, or by order of an authorized governmental
-body only on the basis of a legal order. A fee shall be charged to You according to the then-applicable
-service fees and in line with any request for interaction requested of Supplier in relation with
-Your use of the Software and services.
+9. Indemnification
+------------------
 
-7. Limitation of Liability
---------------------------
+-   9.1 You shall indemnify the Supplier harmless at your expense if any
+    claims are asserted by a third party against the Supplier by reason
+    of your misconduct or breach of any terms of the EULA, including
+    failed adherence by you with any applicable laws, including, but not
+    limited to, consumer and data protection laws, whether express or
+    implied.
 
-Unless required by applicable law or agreed to in writing, Supplier provides the Software and any related
-services on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,
-including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY,
-or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of
-using or redistributing the Software and any related services and assume any risks associated with
-your exercise of permissions under this EULA agreement.
+10. Termination
+---------------
 
-Any third party software or services, including compute and storage capacities, are not covered
-by this EULA agreement and are not provided by Supplier. You shall ensure compliance with any terms
-set forth by the respective third party supplier at your risk, cost and expense.
+-   10.1 The EULA enters into force on the date you click on the button
+    "accept" or first access or use the Software and shall continue
+    until terminated. You may terminate the EULA at any time upon a
+    written 30-days prior notice to the Supplier.
+-   10.2 Without prejudice to any other rights, the Supplier may
+    terminate the EULA immediately if you fail to comply with any terms
+    of the EULA.
+-   10.3 The EULA will automatically terminate upon your cessation to
+    use the Software and erasure of the Software from the Devices.
+-   10.4 Upon termination of the EULA, the License granted to you under
+    the EULA will immediately terminate and you agree to (i) stop all
+    access and use of the Software and (ii) destroy all copies of the
+    Software and all its component parts.
+-   10.5 The provisions of the EULA that, by their nature, continue and
+    survive will survive any termination of the EULA.
 
-You shall indemnify Supplier harmless at your expense if any claims are asserted by third party
-against Supplier by reason of Your misconduct or breach of any terms or conditions in your obligation,
-including failed adherence by You with any applicable consumer and privacy laws, whether express or
-implied.
-
-8. Termination
---------------
-
-This EULA agreement is effective from the date you first use the Software and shall continue until
-terminated. You may terminate it at any time upon written notice to Supplier.
-
-It will also terminate immediately if you fail to comply with any term of this EULA agreement. Upon
-such termination, the licenses granted by this EULA agreement will immediately terminate and you agree
-to stop all access and use of the Software. The provisions that by their nature continue and survive
-will survive any termination of this EULA agreement.
-
-9. Governing Law
-----------------
-
-This EULA agreement, and any dispute arising out of or in connection with this EULA agreement, shall
-be governed by and construed in accordance with the laws of Switzerland. The only place for arbitration
-shall be at the legal premises of one2seven GmbH trading as omegaml|ml and omegaml.io
-
-10. Modifications to the Agreement
-----------------------------------
-
-Supplier may modify this Agreement including any related Terms and Conditions at any time by posting
-a revised version on Supplier's web site or by otherwise notifying you with advance notice of at least
-30 days. Changes to the agreement shall take effect upon posting or as stated in our notification to you.
-By continuing to use Software or services provided by Supplier you agree to be bound by the modified
-Agreement.
-
-11. Miscellaneous
+11. Governing Law
 -----------------
 
-This EULA was created by eulatemplate.com for one2seven GmbH and adapted by Supplier.
+-   11.1 This EULA and any dispute arising out of or in connection with
+    the EULA and the Software shall be governed by and construed in
+    accordance with the laws of Switzerland. Unless otherwise provided
+    by the applicable law, all disputes arising out of or in connection
+    with the EULA will be resolved by means of arbitration at the
+    premises of the Supplier.
+-   11.2 The exclusive place of jurisdiction is Zurich, Switzerland.
 
-Current as of November 2018.
+12. Modifications
+-----------------
 
-one2seven GmbH, Hagenholzstrasse 83b, 8050 Zuerich,  Switzerland
-(c) one2seven GmbH All rights reserved.
+-   12.1 The Supplier reserves the right, at its sole discretion, to
+    change or modify this EULA at any time by posting an amended version
+    of the EULA on \<omegaml.io\> and by sending a prior notification to
+    the User (if the contact details of the User are available to the
+    Supplier).
+-   12.2 Any modifications to the EULA shall become effective on the
+    date indicated at the top of the amended EULA. By continuing to use
+    the Software after the date on which the modifications were
+    communicated to you, you agree to be bound by the modified EULA.
 
+13. Severability
+----------------
 
+-   13.1 The unenforceability of any single provision of this EULA shall
+    not affect any other provision hereof. Where such a provision is
+    held to be unenforceable, the Supplier and the User shall use their
+    best endeavors to negotiate and agree upon an enforceable provision,
+    which achieves, to the greatest extent possible, the economic, legal
+    and commercial objectives of the unenforceable provision.
+
+14. Waiver
+----------
+
+-   14.1 A failure of either party to enforce strictly a provision of
+    this EULA shall in no event be considered a waiver of any part of
+    such provision. No waiver by either party of any breach or default
+    by the other party shall operate as a waiver of any succeeding
+    breach or other default or breach by such other party. No waiver
+    shall have any effect unless it is specific, irrevocable and in
+    writing.
+
+15. Entire agreement
+--------------------
+
+-   15.1 This EULA constitutes the entire understanding between the
+    Parties with respect to the subject matter thereof and supersedes
+    all prior agreements, negotiations and discussions between the
+    Parties relating thereto.
+
+16. Miscellaneous
+-----------------
+
+-   16.1 This EULA was created by \<eulatemplate.com\> and adapted by
+    the Supplier.
+
+17. Contact
+-----------
+
+-   17.1 Any questions about this EULA can be addressed and notices
+    under the EULA can be served to the Supplier by email at
+    <info@omegaml.io> or by post at:
+
+    one2seven GmbH, Hagenholzstrasse 83b, 8050 Zürich, Switzerland
+
+18. Last amendment
+------------------
+
+-   18.1 This EULA was last amended on 5th of December 2018.

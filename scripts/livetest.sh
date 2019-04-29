@@ -17,4 +17,4 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
 pushd $script_dir/..
-OMEGA_URL=$url USER=$user PASSWORD=$pass behave ./omegaee/features
+OMEGA_URL=$url USER=$user PASSWORD=$pass behave ./omegaee/features --no-capture --no-capture-stderr

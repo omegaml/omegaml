@@ -27,7 +27,7 @@ class OmegaStoreAuthenticatedContentsManager(OmegaStoreContentsManager):
             apikey = os.environ.get('OMEGA_APIKEY')
             if userid and apikey:
                 from omegacommon.userconf import get_omega_from_apikey
-                self._omega = get_omega_from_apikey(userid, apikey)
+                self._omega = get_omega_from_apikey(userid, apikey, view=True)
             else:
                 import omegaml as om
                 self._omega = om

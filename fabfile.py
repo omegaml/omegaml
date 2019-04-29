@@ -75,3 +75,4 @@ def setenv(app=None):
     local(cmd)
     if app:
         print("export APP={}".format(app))
+    
