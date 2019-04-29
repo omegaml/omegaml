@@ -166,7 +166,7 @@ class OmegaJobs(object):
             [re.sub('#', '', x, 1) for x in str(
                 config_cell.input).splitlines()])
         try:
-            yaml_conf = yaml.load(yaml_conf)
+            yaml_conf = yaml.safe_load(yaml_conf)
             # even a comment qualifies as a valid yaml
             # so testing to check if the yaml is exactly what we expect
             if yaml_conf.get("omegaml.script") is not None:

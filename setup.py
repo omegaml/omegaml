@@ -13,7 +13,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='Apache 2.0',
-    description='data science platform that scales from laptop to teams to enterprise. Batteries included.',
+    description='the fastest way to deploy machine learning models',
     long_description=README,
     url='https://omegaml.io/',
     author='Patrick Senti',

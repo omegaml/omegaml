@@ -1,58 +1,36 @@
-What is it?
-===========
+**omega|ml is the fastest way to deploy machine learning models**
 
-*omega|ml is the production and integration platform for data science
-that scales from laptop to teams to enterprise. Batteries included.*
+It takes just a single line of code to
+
+* deploy & embed machine learning models from a easy-to-use REST API
+* implement data pipelines quickly, without memory limitation, all from a Pandas-like API
+* enable scalable model training using the integrated pure-Python compute cluster
+* collaborate on data science projects easily
 
 Documentation: https://omegaml.github.io/omegaml/
-Commercial License: https://omegaml.io
 
+Get started in < 5 minutes
+==========================
 
-Features
-========
-
-*Community Edition*
-
-omega|ml is a great choice if you want to
-
-- get a fully integrated data science workplace within minutes [1]
-- easily share models, data, jupyter notebooks and reports with your collaborators
-- perform out-of-core computations on a pure-python or Apache Spark compute cluster [2]
-- have a shared NoSQL database, out of the box, that behaves like a Pandas dataframe [3]
-- deploy models to production with a single line of code
-- serve and use models or datasets from a REST API
-- use a compute cluster to train your models with no additional setup 
-- scale your data science work from your laptop to team to production with no code changes
-- integrate any machine learning framework or third party data science platform with a common API
-
-[1] supporting scikit-learn, Spark MLLib out of the box, Keras and
-Tensorflow available shortly. Note the Spark integration is currently only available with
-the enterprise edition.
-[2] using Celery, Dask Distributed or Spark
-[3] leveraging MongoDB's excellent aggregation framework
-
-In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
-compute cluster, database and data source.
-
-*Enterprise Edition*
-
-omega|ml enterprise provides security on every level and is ready made for Kubernetes
-deployment. It is licensed separately for on-premise, private or hybrid cloud.
-Sign up at https://omegaml.io
-
-
-Get started
-===========
+Start the omega|ml server right from your laptop or virtual machine
 
 .. code::
 
     $ wget https://raw.githubusercontent.com/omegaml/omegaml/master/docker-compose.yml
     $ docker-compose up -d
-	  
-Next open Jupyter Notebook in your browser at http://localhost:8899
-(use `omegamlisfun` to login). Any notebook you create will automatically
-be stored in the integrated omega|ml database, thus making it easy to work
-with colleagues. The REST API is available at http://localhost:5000.
+
+Jupyter Notebook is immediately available at http://localhost:8899 (`omegamlisfun` to login).
+Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+The REST API is available at http://localhost:5000.
+
+Already have a Python environment (e.g. Jupyter Notebook)?
+Leverage the power of omega|ml by installing as follows:
+
+.. code::
+
+    # assuming you have started the server as per above
+    $ pip install omegaml
+
 
 Examples
 ========
@@ -81,107 +59,54 @@ Get more information at https://omegaml.github.io/omegaml/
     requests.put('/v1/model/forecast', json={...})
 
 
-FAQ
-===
+Use Cases
+=========
 
-* How does omega|ml relate to other frameworks such as mlflow or kubeflow
+omega|ml currently supports scikit-learn out of the box. Need to deploy a model from another framework?
+Open an issue at https://github.com/omegaml/omegaml/issues or drop us a line at support@omegaml.io
 
-    omega|ml can readily integrate with mlflow and kubeflow by using the
-    extensions API. We are happy to accept any contributions or work with
-    you if you have a need.
+Machine Learning Deployment
+---------------------------
 
-    mlflow is a generic framework to package and integrate machine learning
-    models as a software asset. kubeflow provides the tooling for kuberentes
-    deployment mainly for Tensorflow although extensions are planned. Neither
-    package provides a standardized, out-of-the-box data science platform
-    comparable to omega|ml.
+- deploy models to production with a single line of code
+- serve and use models or datasets from a REST API
 
-* When should I choose omega|ml over other frameworks?
 
-    You should choose omega|ml if you want to start working right now -
-    omega|ml gets you from no data science to full-scale within just a
-    few minutes and using a single command (we also provide a hosted
-    service at https://omegaml.io).
+Data Science Collaboration
+--------------------------
 
-        $ docker-compose up
-        # access your notebook at http://localhost:8899
+- get a fully integrated data science workplace within minutes [1]
+- easily share models, data, jupyter notebooks and reports with your collaborators
 
-    omega|ml is a great choice if you want your team of data scientists
-    and application developers to start to collaborate efficiently and leverage
-    your investment in the PyData stack without being side tracked by the
-    high complexity of hard to integrate third party storage and compute
-    infrastructure.
+Centralized Data & Compute cluster
+----------------------------------
 
-    As an enterprise organization omega|ml provides a secure, managed central
-    place for all your data scientist to collaborate and provide models to
-    production applications. omega|ml thanks to its open scalable architecture
-    works either on premise, in your private cloud or as a hybrid cloud
-    leveraging all your compute and storage capabilities across data centers
-    and geographies.
+- perform out-of-core computations on a pure-python or Apache Spark compute cluster [2]
+- have a shared NoSQL database, out of the box, that behaves like a Pandas dataframe [3]
+- use a compute cluster to train your models with no additional setup
 
-    However you do not need to limit yourself from using mlflow or kubeflow
-    or any other framework as omega|ml by design can be readily integrated
-    with almost any third party systems.
+Scalability and Extensibility
+-----------------------------
 
-* Is it possible to use an existing data lake or datawarehouse in SQL or NoSQL
-  database? How can omega|ml access data stored in an object storage or
-  distributed filed system?
+- scale your data science work from your laptop to team to production with no code changes
+- integrate any machine learning framework or third party data science platform with a common API
 
-    Absolutely. omega|ml's extensions API provides a straight forward way
-    to implement access to any storage. In particular, implement a data backend
-    as follows. Please consider contributing your implementation.
+Towards Data Science recently published an article on omega|ml:
+https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
 
-        # register this class in defaults.OMEGA_STORE_BACKENDS
-        class MyStorageEngine(BaseDataBackend):
-            def supports(self, obj, name, **kwargs):
-                return True #if obj can be stored
+[1] supporting scikit-learn, Spark MLLib out of the box, Keras and
+Tensorflow available shortly. Note the Spark integration is currently only available with
+the enterprise edition.
+[2] using Celery, Dask Distributed or Spark
+[3] leveraging MongoDB's excellent aggregation framework
 
-            def put(self, obj, name, **kwargs):
-                # your code to store data
-                return Metadata(...)
+In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
+compute cluster, database and data source.
 
-            def get(self, name, **kwargs):
-                # your code to retrieve data
-                return data
+*Enterprise Edition*
 
-* Is it possible to use a NoSQL or SQL database completely replacing MongoDB?
+https://omegaml.io
 
-    The short answer is yes, the extensions API enable any storage backend
-    to be contributed transparently. However there are some caveats in terms of
-    performance and scalability if you do so:
-
-    omega|ml has been designed for high scalability from the ground up. Every
-    component (API, notebooks, storage, compute, message broker) can be scaled
-    independently and according to the specific needs. MongoDB follows this
-    scalability approach by providing out of the box replication and sharding
-    that enables data locality in every omega|ml compute node, if required.
-
-    In summary while principally supported, this scalability feature is not
-    easily achieved with every other database.
-
-* Is omega|ml open source software? Is it free of charge?
-
-    Yes and yes!
-
-    omega|ml is Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License
-    as per the included LICENSE file.
-
-    omega|ml is also available as an enterprise edition with full multi-user
-    security, user-separated notebooks, a notebook publishing and reporting API
-    and readily packaged for Kubernetes deployments.
-
-* I need security features and multi-user support.
-
-    The database can easily be protected, see scripts/mongoinit.js. Then add
-    `command: --auth` to the mongodb section in docker-compose.yml and
-    amend the OMEGA_MONGO_URL variable. The community edition does not currently
-    offer security beyond the database.
-
-    Your fastest option to get state of the art security and multi-user features
-    is to use our commercial license. It provides a multi-user security layer for
-    all parts of the software, including the database, the REST API, the Jupyter
-    Notebooks and all docker containers. It also provides additional deployment
-    options such as Spark clusters or easy use of GPUs, deployed on Kubernetes in
-    a private or hybrid cloud. We also offer additional support options in order
-    to meet your specific requirements.
+omega|ml Enterprise Edition provides security on every level and is ready made for Kubernetes
+deployment. It is licensed separately for on-premise, private or hybrid cloud.
+Sign up at https://omegaml.io
