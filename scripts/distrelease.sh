@@ -41,11 +41,11 @@ msgfile=$distdir/.messages
 # message container
 echo "[INFO] Starting build of $distname (version=$version nominify=$nominify nodocker=$nodocker)" > $msgfile
 
-# prepare
-find . -name "*zip" | xargs rm -rf
-find . -name "*whl" | xargs rm -rf
-find . -name "*tgz" | xargs rm -rf
-find . -name "*tar" | xargs rm -rf    
+# prepare, cleanup
+for fn in "*zip" "*whl" "*tgz" "*tar" "*tar.gz"
+do
+    find . -name $fn | xargs rm -rf
+done
 rm -rf $distdir/build
 rm -rf $distdir/docker-staging
 
@@ -118,7 +118,7 @@ fi
 pushd $distdir/docker-staging/build
 ./deploy-docker.sh --clean
 popd
-scripts/livetest.sh --url http://localhost:5000
+scripts/livetest.sh --url http://localhost:5000 --headless
 
 echo "*** Done. Captured messages follow"
 cat $msgfile

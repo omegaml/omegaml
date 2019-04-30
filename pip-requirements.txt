@@ -28,6 +28,7 @@ celery==3.1.25
 dill==0.2.6
 Fabric==1.14.0
 honcho==1.0.1
+gunicorn==19.7.1
 joblib==0.9.4
 jsonfield==2.0.2
 jupyterhub-simplespawner==0.1

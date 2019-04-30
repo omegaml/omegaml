@@ -10,9 +10,11 @@ from omegaweb.resources.util import get_omega_for_user
 def dashboard(request):
     om = get_omega_for_user(request.user, view=True)
     datasets = om.datasets.list()
+    protocol = 'https' if request.is_secure() else 'http'
+    nbhost_url = f'{protocol}://{config.JYHUB_HOST}'
     context = {
         'datasets': datasets,
-        'nbhost': config.JYHUB_HOST,
+        'nbhost': nbhost_url,
     }
     return render(request, 'omegaweb/dashboard.html', context)
 

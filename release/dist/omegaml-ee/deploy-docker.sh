@@ -19,7 +19,9 @@ pushd $script_dir
 if [[ ! -z $clean ]]; then
     echo "Removing services..."
     docker-compose down
+    echo "Services removed."
 fi
+echo "Starting services"
 docker-compose up -d
 echo "Waiting for services to have initialised"
 countdown 45

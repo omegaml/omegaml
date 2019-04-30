@@ -1,4 +1,5 @@
 import re
+from time import sleep
 
 from behave import *
 
@@ -89,6 +90,8 @@ def load_jupyter_notebook(ctx):
     br.click_link_by_text('Dashboard')
     el = br.find_by_text('Notebook').first
     br.visit(el['href'])
+    sleep(5)
+    br.windows.current = br.windows[-1]
     assert br.is_element_present_by_id('username_input', wait_time=5)
     br.find_by_id('username_input').first.fill(userid)
     br.find_by_id('password_input').first.fill(apikey)
