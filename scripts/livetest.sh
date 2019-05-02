@@ -1,11 +1,11 @@
 #!/bin/bash
 ## package
 ##
-## Test a deployed site
+## Test omegaml package from live omegaml image and omegaml pypi package
 ##    @script.name [option]
 ##
 ## Options:
-##      --build-omegaml   if specified rebuilds the omegaml image
+##      --build           if specified rebuilds the omegaml image
 ##      --local           if specified uses local dist package
 ##      --testpypi        if specified uses test pypi
 ##
@@ -27,7 +27,7 @@ else
    pypi="https://pypi.org/simple/"
 fi
 
-if [ "$buildomegaml" == "yes" ]; then
+if [ "$build" == "yes" ]; then
    buildopt="--build"
 fi
 
@@ -37,9 +37,10 @@ if [ "$local" == "yes" ]; then
 fi
 
 pushd $script_dir/..
+docker-compose down
 docker-compose up $buildopt -d
 docker rmi -f omegaml/livetest
 docker build --build-arg pypi=$pypi -f ./scripts/livetest/Dockerfile -t omegaml/livetest $script_dir/livetest
 docker run $docker_network $docker_env $docker_image behave $behave_features
-rm -rf $script_dir/livetest/packages
-
+rm -f $script_dir/livetest/packages/*whl
+docker-compose down
