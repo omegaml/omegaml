@@ -32,6 +32,7 @@ distdir=$(realpath $distdir)
 
 # execute
 setup() {
+    find $sourcedir/dist -name "*whl" | xargs rm -f
     rm -rf $distdir/releasezip
     rm -rf $distdir/$release
     rm -rf $distdir/releasezip/docs

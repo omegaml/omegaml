@@ -14,8 +14,8 @@
 ##
 
 # defaults
-dockertag=${dockertag:=omegaml-ee}
-distname=${dockertag:=omegaml-ee}
+dockertag=${dockertag:=omegaml/omegaml-ee}
+distname=${distname:=omegaml-ee}
 
 # script setup to parse options
 script_dir=$(dirname "$0")
@@ -41,11 +41,11 @@ msgfile=$distdir/.messages
 # message container
 echo "[INFO] Starting build of $distname (version=$version nominify=$nominify nodocker=$nodocker)" > $msgfile
 
-# prepare
-find . -name "*zip" | xargs rm -rf
-find . -name "*whl" | xargs rm -rf
-find . -name "*tgz" | xargs rm -rf
-find . -name "*tar" | xargs rm -rf    
+# prepare, cleanup
+for fn in "*zip" "*whl" "*tgz" "*tar" "*tar.gz"
+do
+    find . -name $fn | xargs rm -rf
+done
 rm -rf $distdir/build
 rm -rf $distdir/docker-staging
 
@@ -88,9 +88,10 @@ popd
 
 # add distribution files
 pushd $distdir
-for d in $sourcedir/release/dist/_global_ $releasezip $sourcedir/release/dist/$distname
+for d in $sourcedir/release/dist/_global_ $sourcedir/release/dist/$distname
 do
  if [[ -d $d ]]; then
+   echo "[INFO] Adding distribution files from $d" >> $msgfile
    pushd $d
    zip -r $releasezip *
    popd
@@ -105,6 +106,7 @@ if [[ -z $nodocker ]]; then
   pushd $distdir/docker-staging
   unzip $releasezip -d build
   pushd build
+  docker-compose down
   docker images | grep "$dockertag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
   docker build -f Dockerfile -t $dockertag .
   popd
@@ -112,4 +114,11 @@ if [[ -z $nodocker ]]; then
   echo "[INFO] Docker image $dockertag built. Source in $distdir/docker-staging/build" >> $msgfile
 fi
 
+# test release
+pushd $distdir/docker-staging/build
+./deploy-docker.sh --clean
+popd
+scripts/livetest.sh --url http://localhost:5000 --headless
+
+echo "*** Done. Captured messages follow"
 cat $msgfile

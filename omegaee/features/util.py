@@ -2,6 +2,11 @@ import os
 
 import yaml
 
+istrue = lambda v: (
+    (v.lower() in ('yes', '1', 'y', 'true', 't'))
+    if isinstance(v, str) else bool(v)
+)
+isfalse = lambda v: not istrue(v)
 
 def uri(browser, uri):
     """ given a browser, replace the path with uri """
@@ -24,7 +29,6 @@ def find_user_apikey(br):
 def get_admin_secrets(url=None):
     secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
     with open(secrets) as fin:
-        secrets = yaml.load(fin)
-    if url:
+        secrets = yaml.safe_load(fin)
         secrets = secrets.get(url) or secrets
     return secrets['admin_user'], secrets['admin_password']

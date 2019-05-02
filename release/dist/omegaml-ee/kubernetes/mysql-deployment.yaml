@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.16.0 (0c01309)
+  labels:
+    io.kompose.service: mysql
+  name: mysql
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: mysql
+    spec:
+      containers:
+       - image: mysql:5.7
+         name: mysql
+         ports:
+          - containerPort: 3306
+         env:
+          - name: MYSQL_DATABASE
+            value: omegaml
+          - name: MYSQL_USER
+            value: omegaml
+          - name: MYSQL_PASSWORD
+            value: foobar
+          - name: MYSQL_ROOT_PASSWORD
+            value: rootadmin
+      restartPolicy: Always
+status: {}

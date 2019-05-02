@@ -9,10 +9,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--username', type=str, help='username')
+        parser.add_argument('--password', type=str, help='password')
         parser.add_argument('--email', type=str, help='email')
-        parser.add_argument('--staff', action='store_true', help='is staff flag')
+        parser.add_argument('--staff', action='store_true', help='is staff flag', default=False)
+        parser.add_argument('--admin', action='store_true', help='is admin flag', default=False)
         parser.add_argument('--apikey', type=str, help='apikey')
-        parser.add_argument('--verbose', action='store_true', help='verbose')
+        parser.add_argument('--verbose', action='store_true', help='verbose', default=False)
+        parser.add_argument('--nodeploy', action='store_true', help='verbose', default=False)
 
     def handle(self, *args, **options):
         username = options['username']
@@ -23,20 +26,25 @@ class Command(BaseCommand):
         try:
             user = User.objects.get(username=username)
         except:
-            user_password = User.objects.make_random_password(length=36)
+            user_password = options.get('password') or User.objects.make_random_password(length=36)
             user = User.objects.create_user(username, email=email, password=user_password)
             user_signed_up.send(self, user=user)
             print('Password set', user_password)
         else:
             print("Warning: User exists already. Staff and apikey will be reset if specified.")
         # update staff and apikey
-        user.is_staff = options.get('staff')
+        user.is_superuser = options.get('admin') or False
+        user.is_staff = user.is_superuser or options.get('staff') or False
         user.api_key.key = options.get('apikey') or user.api_key.key
         user.api_key.save()
         user.save()
+        print("User {} created as superuser: {} staff: {}".format(user.username, user.is_superuser, user.is_staff))
         # add/update omega user
-        config = omegaops.add_user(user, dbpassword)
-        omegaops.add_service_deployment(user, config)
-        print("User {} added. Apikey {}. Is staff {}".format(user, user.api_key.key, user.is_staff))
-        if options.get('verbose'):
-            print("Config", config)
+        if options.get('nodeploy') is False:
+            config = omegaops.add_user(user, dbpassword)
+            omegaops.add_service_deployment(user, config)
+            print("Database {} deployed. Apikey {}. Is staff {}".format(user, user.api_key.key, user.is_staff))
+            if options.get('verbose'):
+                print("Config", config)
+        else:
+            print("No database deployed due to --nodeploy. Re-run without --nodeploy to create a database")

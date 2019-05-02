@@ -64,20 +64,26 @@ class EnterpriseOmegaDeferredInstance(CoreOmegaDeferredInstance):
     of Omega.
     """
 
-    def setup(self, username=None, apikey=None, api_url=None, qualifier=None):
+    def setup(self, username=None, apikey=None, api_url=None, qualifier=None, view=True):
         qualifier = qualifier or 'default'
         from omegaml.util import settings, load_class
+        # load defaults
         defaults = settings()
+        username = username or defaults.OMEGA_USERID
+        apikey = apikey or defaults.OMEGA_APIKEY
+        api_url = api_url or defaults.OMEGA_RESTAPI_URL
+        # enable auth and start
         auth = load_class(defaults.OMEGA_AUTH_ENV)
         if not self.initialized and username and apikey:
-            self.omega = auth.get_omega_from_apikey(username, apikey, api_url=api_url, qualifier=qualifier)
+            self.omega = auth.get_omega_from_apikey(username, apikey, api_url=api_url,
+                                                    qualifier=qualifier, view=view)
         else:
             self.omega = Omega()
         self.initialized = True
         return self
 
 
-def setup(username=None, apikey=None, api_url=None, qualifier=None):
+def setup(username=None, apikey=None, api_url=None, qualifier=None, view=True):
     """
     configure and return the omega client instance
 
@@ -109,9 +115,13 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None):
     :param apikey: the apikey
     :param api_url: the api_url
     :param qualifier: the qualifier. defaults to 'default'
+    :param view: if True returns cluster-internal URLs
     :return: the Omega instance
     """
-    return _om.setup(username=username, apikey=apikey, api_url=api_url, qualifier=qualifier).omega
+    return _om.setup(username=username,
+                     apikey=apikey,
+                     api_url=api_url,
+                     qualifier=qualifier, view=view).omega
 
 
 def get_omega_for_task(task):

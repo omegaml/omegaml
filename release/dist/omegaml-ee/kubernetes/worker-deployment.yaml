@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.16.0 (0c01309)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: worker
+  name: worker
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: worker
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+      - args:
+        - honcho
+        - start
+        - worker
+        env:
+        - name: C_FORCE_ROOT
+          value: "yes"
+        - name: OMEGA_BROKER
+          value: rabbitmq
+        - name: OMEGA_RESTAPI_URL
+          value: http://omegaml:5000/
+        image: omegaml/omegaml-ee:latest
+        name: worker
+        resources: {}
+        workingDir: /app
+      hostname: worker
+      restartPolicy: Always
+status: {}

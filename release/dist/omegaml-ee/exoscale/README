@@ -1,0 +1,55 @@
+How to set up
+=============
+
+This is an automated version of https://rancher.com/blog/2018/2018-09-17-rke-k8s-cluster-exoscale/
+
+1. create the cluster
+
+   $ ./create-clusters.sh
+
+   Be sure to create the key file in ~/.ssh/id_rke-k8s-key-exoscale. Note that
+   the BEGIN RSA... and END RSA header/trailers are required to make it work.
+
+2. load the key
+
+   $ ./ssh-add ~/.ssh/id_rke-k8s-key-exoscale
+
+   If you're prompted for a keyphrase you probably did not add the BEGIN/END RSA lines in
+   the key file
+
+3. start the cluster
+
+   Make sure the ./cluster.yml matches the hostname/IPs before you start the cluster
+
+   $ python $PWD/update-cluster.py
+
+   Then rake up the cluster
+
+   $ rke up
+
+   This will create $PWD/kube_config_cluster.yml
+
+4. Configure kubectl
+
+   $ export KUBECONFIG=$PWD/kube_config_cluster.yml
+   $ kubectl get nodes
+   NAME            STATUS   ROLES                      AGE   VERSION
+   185.19.29.20    Ready    controlplane,etcd,worker   13m   v1.13.5
+   185.19.30.100   Ready    worker                     13m   v1.13.5
+   185.19.30.148   Ready    worker                     13m   v1.13.5
+   185.19.30.235   Ready    worker                     13m   v1.13.5
+
+5. Install the dashboard
+
+   $ kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
+   $ nohup ./kubectl proxy
+   $ http://localhost:8001
+
+   To get the dashboard token
+
+   $ kubectl -n kube-system describe secrets \
+     `kubectl -n kube-system get secrets |awk '/clusterrole-aggregation-controller/ {print $1}'` \
+     |awk '/token:/ {print $2}'
+
+   Copy and paste the long string that is returned into the authentication prompt on the dashboard
+   webpage, and explore the details of your cluster.

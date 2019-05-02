@@ -45,7 +45,7 @@ setup(
         'croniter>=0.3.12',
         'PyYAML>=3.11',
         'nbformat>=4.0.1',
-        'nbconvert==5.3.1'
+        'nbconvert>=5.3.1'
     ],
     dependency_links=[
     ]
