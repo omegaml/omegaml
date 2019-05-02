@@ -1,10 +1,16 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 
+test:
+	unset DJANGO_SETTINGS_MODULE && nosetests
+
 dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
+
+test: dist
+	scripts/livetest.sh --local
 
 image:
 	: "run docker build"

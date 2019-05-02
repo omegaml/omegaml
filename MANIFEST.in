@@ -1,5 +1,6 @@
 include docs
 recursive-include docs/source *.rst *.css *.py *.png *.gif *.svg *.jpg
+recursive-include omegaml/tests/features *.feature
 include scripts
 include LICENSE
 include NOTICE
