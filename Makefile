@@ -1,13 +1,14 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 
-test:
-	unset DJANGO_SETTINGS_MODULE && nosetests
-
 dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
+
+test: dist
+	unset DJANGO_SETTINGS_MODULE && nosetests
+	scripts/livetest.sh --local
 
 livetest: dist
 	scripts/livetest.sh --local --build
@@ -41,7 +42,6 @@ release-docker: dist
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-
 
 thirdparty:
 	: "create THIRDPARTY & THIRDPARTY-LICENSES"
