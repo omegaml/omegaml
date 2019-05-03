@@ -13,7 +13,7 @@ OMEGA_TMP = '/tmp'
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    os.environ.get('MONGO_URL') or
-                   'mongodb://admin:foobar@localhost:27019/omega')
+                   'mongodb://admin:foobar@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
 #: the celery broker name or URL
@@ -146,7 +146,7 @@ except Exception as e:
 
 # -- test
 if any(m in sys.argv for m in ('unittest', 'test', 'nosetest', 'noserunner')):
-    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
+    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb').replace(':27017', ':27019')
     OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
     OMEGA_RESTAPI_URL = ''
 else:

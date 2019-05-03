@@ -1,10 +1,16 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 
+test:
+	unset DJANGO_SETTINGS_MODULE && nosetests
+
 dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
+
+test: dist
+	scripts/livetest.sh --local
 
 image:
 	: "run docker build"
@@ -15,18 +21,22 @@ release-test: dist
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
 	twine upload --repository testpypi dist/*
+	sleep 5
+	scripts/livetest.sh --testpypi
 
 release-prod: dist
 	: "twine upload to pypi prod"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
 	twine upload --repository pypi dist/*
+	sleep 5
+	scripts/livetest.sh
 
-release-docker:
+release-docker: dist
 	: "docker push image sto dockerhub"
+	scripts/livetest.sh --local
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-
 
 thirdparty:
 	: "create THIRDPARTY & THIRDPARTY-LICENSES"

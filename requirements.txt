@@ -9,3 +9,4 @@ sh==1.12.14
 pymongo==3.7.2
 mongoengine==0.17.0
 celery==4.3.0
+behave==1.2.6

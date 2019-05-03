@@ -1,11 +1,15 @@
 **omega|ml is the fastest way to deploy machine learning models**
 
-It takes just a single line of code to
+omega|ml takes just a single line of code to
 
 * deploy & embed machine learning models from a easy-to-use REST API
 * implement data pipelines quickly, without memory limitation, all from a Pandas-like API
 * enable scalable model training using the integrated pure-Python compute cluster
-* collaborate on data science projects easily
+
+In addition you can
+
+* collaborate on data science projects easily (using Jupyter Notebook)
+* deploy beautiful dashboards right from your Jupyter Notebook (using dashserve)
 
 Documentation: https://omegaml.github.io/omegaml/
 
