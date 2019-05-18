@@ -2,12 +2,13 @@
 
 omega|ml takes just a single line of code to
 
-* deploy & embed machine learning models from a easy-to-use REST API
+* deploy machine learning models straight from Jupyter Notebook (or any other code)
 * implement data pipelines quickly, without memory limitation, all from a Pandas-like API
-* enable scalable model training using the integrated pure-Python compute cluster
+* serve models and data from an easy to use REST API 
 
 In addition you can
 
+* train model on the integrated compute cluster (or any other cluster using custom backends)
 * collaborate on data science projects easily (using Jupyter Notebook)
 * deploy beautiful dashboards right from your Jupyter Notebook (using dashserve)
 
