@@ -9,15 +9,15 @@ dist:
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
 
-test: dist
-	scripts/livetest.sh --local
+livetest: dist
+	scripts/livetest.sh --local --build
 
 devtest:
 	scripts/devtest.sh
 
 image:
 	: "run docker build"
-	docker build -t omegaml/omegaml:$(VERSION) -t omegaml/omegaml:latest .
+	docker build -t omegaml/omegaml:$(VERSION) .
 
 release-test: dist
 	: "twine upload to pypi test"
@@ -38,6 +38,7 @@ release-prod: test dist
 release-docker: dist
 	: "docker push image sto dockerhub"
 	scripts/livetest.sh --local --build --tag ${VERSION}
+	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
 

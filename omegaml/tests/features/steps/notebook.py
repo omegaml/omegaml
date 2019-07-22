@@ -95,7 +95,7 @@ class Notebook:
 @when(u'we open jupyter')
 def open_jupyter(ctx):
     br = ctx.browser
-    br.visit('http://localhost:8888')
+    br.visit(ctx.jynb_url)
     nb = Notebook(br)
     login_required = br.is_text_present('Password', wait_time=2)
     login_required |= br.is_text_present('token', wait_time=2)
@@ -146,7 +146,7 @@ def step_impl(ctx):
 @then(u'we can add a notebook in the folder')
 def step_impl(ctx):
     br = ctx.browser
-    br.visit('http://localhost:8888')
+    br.visit(ctx.jynb_url)
     nb = Notebook(br)
     nb.jupyter_home
     nb.open_folder('Untitled Folder')
