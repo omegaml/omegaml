@@ -1,5 +1,3 @@
-
-
 from __future__ import absolute_import
 
 import os
@@ -94,7 +92,7 @@ class JobTests(TestCase):
         self.assertEqual(len(results), 1)
         resultnb = results[0]
         self.assertTrue(om.jobs.exists(resultnb))
-        self.assertIn(list(runs.keys())[0], resultnb)
+        self.assertEqual(runs[0]['results'], resultnb)
 
     def test_run_job_invalid(self):
         """
@@ -114,9 +112,70 @@ class JobTests(TestCase):
         meta_job = om.jobs.run('testjob')
         runs = meta_job.attributes['job_runs']
         self.assertEqual(len(runs), 1)
-        self.assertIn('An error occurred', list(runs.values())[0])
+        self.assertEqual('ERROR', runs[0]['status'])
 
     def test_run_nonexistent_job(self):
         om = self.om
         self.assertRaises(
             gridfs.errors.NoFile, om.jobs.run_notebook, 'dummys.ipynb')
+
+    def test_scheduled_job(self):
+        om = self.om
+        fs = om.jobs.get_fs()
+        dummy_nb_file = tempfile.NamedTemporaryFile().name
+        cells = []
+        conf = """
+        # omega-ml:
+        #   run-at: "*/5 * * * *"
+        """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        # check we have a valid configuration object
+        meta = om.jobs.put(notebook, 'testjob')
+        config = om.jobs.get_notebook_config('testjob')
+        self.assertIn('run-at', config)
+        self.assertIn('config', meta.attributes)
+        self.assertIn('run-at', meta.attributes['config'])
+        # check the job was scheduled
+        self.assertIn('triggers', meta.attributes)
+        trigger = meta.attributes['triggers'][-1]
+        self.assertEqual(trigger['status'], 'PENDING')
+
+        # run it as scheduled, check it is ok
+        def get_trigger(event=None):
+            # get last trigger or specified by event
+            meta = om.jobs.metadata('testjob')
+            triggers = meta.attributes['triggers']
+            if not event:
+                trigger = triggers[-1]
+            else:
+                trigger = [t for t in triggers if t['event'] == event][0]
+            return trigger
+
+        def assert_pending(event=None):
+            trigger = get_trigger(event)
+            self.assertEqual(trigger['status'], 'PENDING')
+
+        def assert_ok(event=None):
+            trigger = get_trigger(event)
+            self.assertEqual(trigger['status'], 'OK')
+
+        assert_pending()
+        # -- run by the periodic task. note we pass now= as to simulate a time
+        om.runtime.task('omegaml.notebook.tasks.execute_scripts').run(now=trigger['run-at'])
+        assert_ok(event=trigger['event'])
+        # -- it should be pending again
+        assert_pending()
+        # execute the scheduled job by event name
+        trigger = get_trigger()
+        om.runtime.job('testjob').run(event=trigger['event'])
+        # the last run should be ok, and there should not be a new pending event
+        # since we did not reschedule
+        assert_ok()
+        with self.assertRaises(AssertionError):
+            assert_pending()
+        # reschedule explicit and check we have a pending event
+        om.runtime.job('testjob').schedule().get()
+        assert_pending()

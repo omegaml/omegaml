@@ -874,7 +874,7 @@ class OmegaStore(object):
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def list(self, pattern=None, regexp=None, kind=None, raw=False,
-             include_temp=False, bucket=None, prefix=None):
+             include_temp=False, bucket=None, prefix=None, filter=None):
         """
         List all files in store
 
@@ -884,6 +884,7 @@ class OmegaStore(object):
         :param pattern: the unix file pattern or None for all
         :param regexp: the regexp. takes precedence over pattern
         :param raw: if True return the meta data objects
+        :param filter: specify additional filter criteria, optional
         :return: List of files in store
 
         """
@@ -896,6 +897,8 @@ class OmegaStore(object):
                 searchkeys.update(kind__in=kind)
             else:
                 searchkeys.update(kind=kind)
+        if filter:
+            searchkeys.update(filter)
         meta = Metadata.objects(**searchkeys)
         if raw:
             if regexp:

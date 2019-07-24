@@ -3,6 +3,8 @@ omega runtime job tasks
 """
 from __future__ import absolute_import
 
+import datetime
+
 from celery import shared_task
 from mongoengine.errors import DoesNotExist
 
@@ -53,11 +55,11 @@ class NotebookTask(OmegamlTask):
 
 
 @shared_task(bind=True, base=NotebookTask)
-def run_omegaml_job(self, nb_file, **kwargs):
+def run_omegaml_job(self, nb_file, event=None, **kwargs):
     """
     runs omegaml job
     """
-    result = self.om.jobs.run_notebook(nb_file)
+    result = self.om.jobs.run_notebook(nb_file, event=event)
     return result.to_json()
 
 
@@ -73,22 +75,23 @@ def schedule_omegaml_job(self, nb_file, **kwargs):
 @shared_task(base=OmegamlTask, bind=True)
 def execute_scripts(self, **kwargs):
     """
-
-    will retrieve all scripts from the mongodb
-    (as per a respective OMEGAML_SCRIPTS_GRIDFS setting),
-    provided they are marked for execution at the time of execution
+    run scheduled jobs
     """
     om = self.om
-    # Search tasks from mongo
-    job_list = om.jobs.list()
-    for nb_file in job_list:
-        try:
-            metadata = Metadata.objects.get(
-                name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
-            task_state = metadata.attributes.get('state')
-            if task_state == "RECEIVED":
-                pass
-            else:
-                om.jobs.schedule(nb_file)
-        except DoesNotExist:
-            om.jobs.schedule(nb_file)
+    now = kwargs.get('now') or datetime.datetime.now()
+    # get pending tasks, execute if time is right
+    for job_meta in om.jobs.list(raw=True):
+        triggers = job_meta.attributes.get('triggers', [])
+        # run pending jobs
+        pending = (trigger for trigger in triggers
+                   if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING')
+        for trigger in pending:
+            run_at = trigger['run-at']
+            if now >= run_at:
+                task = om.runtime.job(job_meta.name).run(event=trigger['event'])
+                trigger['taskid'] = task.id
+                job_meta.save()
+                # immediately schedule for next time
+                om.jobs.schedule(job_meta.name, last_run=now)
+                # ensure we execute at most one job at a time
+                break

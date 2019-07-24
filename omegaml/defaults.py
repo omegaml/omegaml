@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import os
 import sys
+from os.path import basename
+
 import six
 import yaml
 
@@ -65,8 +67,6 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyString', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
-
-
 
 
 # =========================================
@@ -145,8 +145,9 @@ except Exception as e:
     pass
 
 # -- test
-if any(m in sys.argv for m in ('unittest', 'test', 'nosetest', 'noserunner')):
-    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb').replace(':27017', ':27019')
+if any(m in [basename(arg) for arg in sys.argv]
+       for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py')):
+    OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
     OMEGA_RESTAPI_URL = ''
 else:

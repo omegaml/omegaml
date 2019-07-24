@@ -26,7 +26,7 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     install_requires=[
-        'celery>=3.1.20,<3.1.24',
+        'celery==4.2.1',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
