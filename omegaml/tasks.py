@@ -32,6 +32,12 @@ def get_dataset_representations(items):
     results['Yname'] = items.get('Yname')
     return results
 
+def sanitized(value):
+    # fix because local Metadata object cannot be pickled
+    if getattr(type(value), '__name__', None) == 'Metadata':
+        value = repr(value)
+    return value
+
 
 @shared_task(base=OmegamlTask)
 def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -41,7 +47,7 @@ def omega_predict(modelname, Xname, rName=None, pure_python=True, **kwargs):
     signals.mltask_start.send(
         sender=None, name='omega_predict',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -54,7 +60,7 @@ def omega_predict_proba(modelname, Xname, rName=None, pure_python=True,
     signals.mltask_start.send(
         sender=None, name='omega_predict_proba',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -66,7 +72,7 @@ def omega_fit(modelname, Xname, Yname=None, pure_python=True, **kwargs):
     signals.mltask_start.send(
         sender=None, name='omega_fit',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -79,7 +85,7 @@ def omega_partial_fit(
     signals.mltask_start.send(
         sender=None, name='omega_partial_fit',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -93,7 +99,7 @@ def omega_score(modelname, Xname, Yname, rName=True, pure_python=True,
     signals.mltask_start.send(
         sender=None, name='omega_score',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -106,7 +112,7 @@ def omega_fit_transform(modelname, Xname, Yname=None, rName=None,
     signals.mltask_start.send(
         sender=None, name='omega_fit_transform',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -117,7 +123,7 @@ def omega_transform(modelname, Xname, rName=None, **kwargs):
     signals.mltask_start.send(
         sender=None, name='omega_transform',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 @shared_task(base=OmegamlTask)
 def omega_decision_function(modelname, Xname, rName=None, **kwargs):
@@ -127,7 +133,7 @@ def omega_decision_function(modelname, Xname, rName=None, **kwargs):
     signals.mltask_start.send(
         sender=None, name='omega_decision_function',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)
@@ -139,7 +145,7 @@ def omega_gridsearch(modelname, Xname, Yname, parameters=None, **kwargs):
     signals.mltask_start.send(
         sender=None, name='omega_gridsearch',
         args=get_dataset_representations(locals()))
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask)

@@ -5,10 +5,12 @@ example program to run in ipython
 # demo the functionality of the jobs API
 from __future__ import absolute_import
 from __future__ import print_function
-from omegaml import Omega
-from omegaml.documents import Metadata
-from omegaml.util import override_settings
+
 import argparse
+
+from omegaml import Omega
+from omegaml.documents import make_Metadata
+from omegaml.util import override_settings
 
 
 def testOmegamlJobs(
@@ -38,6 +40,7 @@ def testOmegamlJobs(
     # run notebook
     result = om.jobs.run(nb_file)
     # retrieve result from metadata
+    Metadata = make_Metadata()
     metadata = Metadata.objects.get(created=result.created)
     print("\n")
     print("Result from metadata:")

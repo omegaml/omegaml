@@ -3,14 +3,12 @@
 from __future__ import absolute_import
 
 import os
-import tempfile
 from unittest import TestCase
 
 import gridfs
-from nbformat import write, v4
+from nbformat import v4
 
 from omegaml import Omega
-from omegaml.documents import Metadata
 from omegaml.util import settings as omegaml_settings
 
 
@@ -204,7 +202,7 @@ class JobTests(TestCase):
         nb = v4.new_notebook(cells=cells)
         om.jobs.put(nb, nb_file)
         result = om.jobs.run_notebook(nb_file)
-        self.assertIsInstance(result, Metadata)
+        self.assertIsInstance(result, om.jobs.store._Metadata)
 
     def test_run_nonexistent_job(self):
         om = self.om

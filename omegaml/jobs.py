@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
-import datetime
 import re
 from uuid import uuid4
 
-from croniter import croniter
+import datetime
 import gridfs
+import yaml
+from croniter import croniter
+from mongoengine import Document
 from mongoengine.fields import GridFSProxy
 from nbconvert import SlidesExporter
 from nbconvert.exporters.html import HTMLExporter
@@ -13,14 +15,13 @@ from nbconvert.exporters.pdf import PDFExporter
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
-import yaml
+from traitlets.config import Config, six
 
 from omegajobs.tasks import run_omegaml_job
 from omegaml import signals
-from omegaml.documents import Metadata
+from omegaml.documents import make_Metadata, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings
-from traitlets.config import Config, six
 
 
 class OmegaJobs(object):
@@ -34,7 +35,7 @@ class OmegaJobs(object):
         self.defaults = defaults or omega_settings()
         prefix = prefix or 'jobs'
         self.store = store or OmegaStore(prefix=prefix)
-        self.kind = Metadata.OMEGAML_JOBS
+        self.kind = OMEGAML_JOBS
 
     def __repr__(self):
         return 'OmegaJobs(store={})'.format(self.store.__repr__())
@@ -289,26 +290,26 @@ class OmegaJobs(object):
         iter_next = croniter(interval, now)
         run_at = iter_next.get_next(datetime.datetime)
         next_run_time = iter_next.get_next(datetime.datetime)
-        from omegajobs.tasks import schedule_omegaml_job
         kwargs = dict(
             config=config,
             run_at=run_at,
             next_run_time=next_run_time)
         # check if this job was scheduled earlier
         try:
+            Metadata = make_Metadata()
             metadata = Metadata.objects.get(
-                name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
+                name=nb_file, kind=OMEGAML_RUNNING_JOBS)
             if metadata.attributes.get('state') == "RECEIVED":
                 # FIXME return only at end of method.
                 return metadata.attributes.get('task_id')
-        except Metadata.DoesNotExist:
+        except Document.DoesNotExist:
             # set attributes
             attrs['config'] = config
             attrs['next_run_time'] = run_at
             attrs['state'] = 'RECEIVED'
             Metadata(
                 name=nb_file,
-                kind=Metadata.OMEGAML_RUNNING_JOBS,
+                kind=OMEGAML_RUNNING_JOBS,
                 attributes=attrs).save()
         result = run_omegaml_job.apply_async(
             args=[nb_file], eta=run_at, kwargs=kwargs)

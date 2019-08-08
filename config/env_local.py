@@ -48,20 +48,20 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
-                                            mongohost='localhost:27019',
+                                            mongohost='localhost:27017',
                                             password='foobar',
                                             dbname='admin')
 
     OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
                        BASE_MONGO_URL.format(user='admin',
-                                             mongohost='localhost:27019',
+                                             mongohost='localhost:27017',
                                              password='foobar',
                                              dbname='userdb'))
 
     SITE_ID = 1
 
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost:27019', 'mongo db host name'),
+        'MONGO_HOST': ('localhost:27017', 'mongo db host name'),
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
         'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
     }

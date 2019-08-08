@@ -42,7 +42,6 @@ class Omega(object):
         :param celeryconf: the celery configuration dictionary
         :param celerykwargs: kwargs to create the Celery instance
         """
-        from omegaml.documents import Metadata
         from omegaml.util import settings
 
         self.defaults = defaults or settings()
@@ -154,3 +153,5 @@ jobs = OmegaDeferredInstance(_om, 'jobs')
 scripts = OmegaDeferredInstance(_om, 'scripts')
 #: the OmegaRuntime for cluster execution
 runtime = OmegaDeferredInstance(_om, 'runtime')
+#: the omegea ml defaults
+defaults = OmegaDeferredInstance(_om, 'defaults')

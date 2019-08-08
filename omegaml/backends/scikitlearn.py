@@ -2,17 +2,17 @@ from __future__ import absolute_import
 
 import glob
 import os
-from shutil import rmtree
 import tempfile
+from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import datetime
 from mongoengine.fields import GridFSProxy
 from sklearn.model_selection import GridSearchCV
 
-from omegaml.util import reshaped, gsreshaped
-
 from omegaml.backends.basemodel import BaseModelBackend
+from omegaml.documents import SKLEARN_JOBLIB
+from omegaml.util import reshaped, gsreshaped
 
 
 class ScikitLearnBackend(BaseModelBackend):
@@ -73,7 +73,6 @@ class ScikitLearnBackend(BaseModelBackend):
         """
         Packages a model using joblib and stores in GridFS
         """
-        from ..documents import Metadata
         zipfname = self._package_model(obj, name)
         with open(zipfname, 'rb') as fzip:
             fileid = self.model_store.fs.put(
@@ -85,7 +84,7 @@ class ScikitLearnBackend(BaseModelBackend):
             name=name,
             prefix=self.model_store.prefix,
             bucket=self.model_store.bucket,
-            kind=Metadata.SKLEARN_JOBLIB,
+            kind=SKLEARN_JOBLIB,
             attributes=attributes,
             gridfile=gridfile).save()
 

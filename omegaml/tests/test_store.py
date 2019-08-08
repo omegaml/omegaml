@@ -1,25 +1,25 @@
 from __future__ import absolute_import
 
-from datetime import timedelta
 import unittest
 import uuid
 from zipfile import ZipFile
 
 import gridfs
+import pandas as pd
+from datetime import timedelta
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import StringIO, BytesIO
+from six import BytesIO
+from six.moves import range
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
 from omegaml import backends
-from omegaml.documents import Metadata
+from omegaml.documents import SKLEARN_JOBLIB, PANDAS_HDF, PANDAS_DFROWS
 from omegaml.store import OmegaStore
-from omegaml.util import override_settings, delete_database
-import pandas as pd
-from six.moves import range
+from omegaml.util import delete_database
 
 
 class StoreTests(unittest.TestCase):
@@ -78,7 +78,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         })
         datasets = OmegaStore(prefix='teststore')
-        models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
+        models = OmegaStore(prefix='models', kind=SKLEARN_JOBLIB)
         datasets.put(df, 'test')
         self.assertEqual(len(datasets.list()), 1)
         self.assertEqual(len(models.list()), 0)
@@ -92,7 +92,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         })
         datasets = OmegaStore(prefix='data')
-        models = OmegaStore(prefix='models', kind=Metadata.SKLEARN_JOBLIB)
+        models = OmegaStore(prefix='models', kind=SKLEARN_JOBLIB)
         # directory-like levels
         datasets.put(df, 'data/is/mypath/test')
         datasets.put(df, 'data/is/mypath/test2')
@@ -447,7 +447,7 @@ class StoreTests(unittest.TestCase):
         # and the old should be gone
         self.assertNotEqual(meta.pk, meta2.pk)
         # Meta is to silence lint on import error
-        Meta = Metadata
+        Meta = store._Metadata
         metas = Meta.objects(name='foo', prefix=store.prefix,
                              bucket=store.bucket).all()
         self.assertEqual(len(metas), 1)
@@ -521,23 +521,23 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'hdfdf', as_hdf=True)
         # list with pattern
         entries = store.list(pattern='hdf*', raw=True)
-        self.assertTrue(isinstance(entries[0], Metadata))
+        self.assertTrue(isinstance(entries[0], store._Metadata))
         self.assertEqual('hdfdf', entries[0].name)
         self.assertEqual(len(entries), 1)
         # list with regexp
         entries = store.list(regexp='hdf.*', raw=True)
-        self.assertTrue(isinstance(entries[0], Metadata))
+        self.assertTrue(isinstance(entries[0], store._Metadata))
         self.assertEqual('hdfdf', entries[0].name)
         self.assertEqual(len(entries), 1)
         # list without pattern nor regexp
-        entries = store.list('hdfdf', kind=Metadata.PANDAS_HDF, raw=True)
-        self.assertTrue(isinstance(entries[0], Metadata))
+        entries = store.list('hdfdf', kind=PANDAS_HDF, raw=True)
+        self.assertTrue(isinstance(entries[0], store._Metadata))
         self.assertEqual('hdfdf', entries[0].name)
         self.assertEqual(len(entries), 1)
         # subset kind
-        entries = store.list('hdfdf', raw=True, kind=Metadata.PANDAS_DFROWS)
+        entries = store.list('hdfdf', raw=True, kind=PANDAS_DFROWS)
         self.assertEqual(len(entries), 0)
-        entries = store.list('hdfdf', raw=True, kind=Metadata.PANDAS_HDF)
+        entries = store.list('hdfdf', raw=True, kind=PANDAS_HDF)
         self.assertEqual(len(entries), 1)
 
     def test_lazy_unique(self):

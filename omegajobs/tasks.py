@@ -7,7 +7,7 @@ from celery import Task
 from celery import shared_task
 from mongoengine.errors import DoesNotExist
 
-from omegaml.documents import Metadata
+from omegaml.documents import make_Metadata, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS
 from omegaml.runtime.auth import get_omega_for_task
 from omegaml.tasks import OmegamlTask
 
@@ -23,7 +23,7 @@ class NotebookTask(Task):
         attrs = meta.attributes
         attrs['state'] = 'SUCCESS'
         attrs['task_id'] = task_id
-        meta.kind = Metadata.OMEGAML_JOBS
+        meta.kind = OMEGAML_JOBS
 
         if not kwargs:
             pass
@@ -42,7 +42,7 @@ class NotebookTask(Task):
         attrs = meta.attributes
         attrs['state'] = 'FAILURE'
         attrs['task_id'] = task_id
-        meta.kind = Metadata.OMEGAML_JOBS
+        meta.kind = OMEGAML_JOBS
 
         if not kwargs:
             pass
@@ -87,8 +87,9 @@ def execute_scripts(**kwargs):
     job_list = om.jobs.list()
     for nb_file in job_list:
         try:
+            Metadata = make_Metadata()
             metadata = Metadata.objects.get(
-                name=nb_file, kind=Metadata.OMEGAML_RUNNING_JOBS)
+                name=nb_file, kind=OMEGAML_RUNNING_JOBS)
             task_state = metadata.attributes.get('state')
             if task_state == "RECEIVED":
                 pass

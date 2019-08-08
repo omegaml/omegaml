@@ -1,7 +1,11 @@
 from __future__ import absolute_import
-from omegaml.backends.basemodel import BaseModelBackend
-from mongoengine.fields import GridFSProxy
+
 from uuid import uuid4
+
+from mongoengine.fields import GridFSProxy
+
+from omegaml.backends.basemodel import BaseModelBackend
+from omegaml.documents import SPARK_MLLIB
 
 
 class SparkBackend(BaseModelBackend):
@@ -23,7 +27,6 @@ class SparkBackend(BaseModelBackend):
         """
         Creates a metadata object that is later used to submit spark jobs.
         """
-        from ..documents import Metadata
         params = kwargs.get('params')
         if isinstance(obj, str):
             uri = "spark://mllib/" + str(obj)
@@ -35,7 +38,7 @@ class SparkBackend(BaseModelBackend):
                 uri=uri,
                 attributes=attributes,
                 gridfile=None,
-                kind=Metadata.SPARK_MLLIB).save()
+                kind=SPARK_MLLIB).save()
         else:
             from pyspark import SparkContext
             filename = '%s_%s' % (name, uuid4().hex)
@@ -56,7 +59,7 @@ class SparkBackend(BaseModelBackend):
                 name=name,
                 prefix=self.model_store.prefix,
                 bucket=self.model_store.bucket,
-                kind=Metadata.SPARK_MLLIB,
+                kind=SPARK_MLLIB,
                 attributes=attrs,
                 gridfile=gridfile,
                 uri=uri).save()

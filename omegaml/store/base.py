@@ -76,12 +76,12 @@ from __future__ import absolute_import
 import os
 import re
 import tempfile
-from datetime import datetime
 from fnmatch import fnmatch
 from uuid import uuid4
 
 import gridfs
 import six
+from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect
 from mongoengine.errors import DoesNotExist
@@ -93,7 +93,8 @@ from omegaml import signals
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class
-from ..documents import Metadata
+from ..documents import make_Metadata, METADATA_KINDS, SKLEARN_JOBLIB, PANDAS_SEROWS, PANDAS_DFROWS, \
+    PANDAS_DFGROUP, PANDAS_HDF, PYTHON_DATA, SPARK_MLLIB
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
 
@@ -117,6 +118,7 @@ class OmegaStore(object):
         self._tmppath = None
         self.prefix = prefix or ''
         self.force_kind = kind
+        self._Metadata_cls = None
         # don't initialize db here to avoid using the default settings
         # otherwise Metadata will already have a connection and not use
         # the one provided in override_settings
@@ -189,6 +191,14 @@ class OmegaStore(object):
         return self._db
 
     @property
+    def _Metadata(self):
+        if self._Metadata_cls is None:
+            # hack to localize metadata
+            self.mongodb
+            self._Metadata_cls = make_Metadata()
+        return self._Metadata_cls
+
+    @property
     def fs(self):
         """
         Retrieve a gridfs instance using url and collection provided
@@ -216,7 +226,7 @@ class OmegaStore(object):
         prefix = prefix or self.prefix
         bucket = bucket or self.bucket
         # Meta is to silence lint on import error
-        Meta = Metadata
+        Meta = self._Metadata
         return Meta.objects(name=name, prefix=prefix, bucket=bucket).first()
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
@@ -286,8 +296,8 @@ class OmegaStore(object):
                     # by default set whatever attribute is provided
                     setattr(meta, k, v)
         else:
-            meta = Metadata(name=name, bucket=bucket, prefix=prefix,
-                            **kwargs)
+            meta = self._Metadata(name=name, bucket=bucket, prefix=prefix,
+                                  **kwargs)
         return meta
 
     def _drop_metadata(self, name=None, **kwargs):
@@ -334,8 +344,8 @@ class OmegaStore(object):
         :param backend: (class) the backend class 
         """
         self.defaults.OMEGA_STORE_BACKENDS[kind] = load_class(backend)
-        if kind not in Metadata.KINDS:
-            Metadata.KINDS.append(kind)
+        if kind not in METADATA_KINDS:
+            METADATA_KINDS.append(kind)
         return self
 
     def register_mixin(self, mixincls):
@@ -359,11 +369,11 @@ class OmegaStore(object):
                 backend = self.get_backend_bykind(kind)
                 return backend.put(obj, name, attributes=attributes, **kwargs)
         if is_estimator(obj):
-            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
+            backend = self.get_backend_bykind(SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes)
         elif is_spark_mllib(obj):
-            backend = self.get_backend_bykind(Metadata.SKLEARN_JOBLIB)
+            backend = self.get_backend_bykind(SKLEARN_JOBLIB)
             signals.dataset_put.send(sender=None, name=name)
             return backend.put_model(obj, name, attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
@@ -462,7 +472,7 @@ class OmegaStore(object):
         dtypes = {
             dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
-            }
+        }
         kind_meta = {
             'columns': column_map,
             'dtypes': dtypes,
@@ -485,9 +495,9 @@ class OmegaStore(object):
         obj = obj.astype('O')
         fast_insert(obj, self, name)
         signals.dataset_put.send(sender=None, name=name)
-        kind = (Metadata.PANDAS_SEROWS
+        kind = (PANDAS_SEROWS
                 if store_series
-                else Metadata.PANDAS_DFROWS)
+                else PANDAS_DFROWS)
         meta = self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -529,7 +539,7 @@ class OmegaStore(object):
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
-                                   kind=Metadata.PANDAS_DFGROUP,
+                                   kind=PANDAS_DFGROUP,
                                    attributes=attributes,
                                    collection=datastore.name).save()
 
@@ -542,7 +552,7 @@ class OmegaStore(object):
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
-                                   kind=Metadata.PANDAS_HDF,
+                                   kind=PANDAS_HDF,
                                    attributes=attributes,
                                    gridfile=GridFSProxy(grid_id=fileid)).save()
 
@@ -588,7 +598,7 @@ class OmegaStore(object):
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
-                                   kind=Metadata.PYTHON_DATA,
+                                   kind=PYTHON_DATA,
                                    collection=collection.name,
                                    attributes=attributes,
                                    objid=objid).save()
@@ -688,25 +698,25 @@ class OmegaStore(object):
             backend = self.get_backend(name)
             if backend is not None:
                 return backend.get(name, **kwargs)
-            if meta.kind == Metadata.SKLEARN_JOBLIB:
+            if meta.kind == SKLEARN_JOBLIB:
                 backend = self.get_backend(name)
                 return backend.get_model(name)
-            elif meta.kind == Metadata.SPARK_MLLIB:
+            elif meta.kind == SPARK_MLLIB:
                 backend = self.get_backend(name)
                 return backend.get_model(name, version)
-            elif meta.kind == Metadata.PANDAS_DFROWS:
+            elif meta.kind == PANDAS_DFROWS:
                 return self.get_dataframe_documents(name, version=version,
                                                     **kwargs)
-            elif meta.kind == Metadata.PANDAS_SEROWS:
+            elif meta.kind == PANDAS_SEROWS:
                 return self.get_dataframe_documents(name, version=version,
                                                     is_series=True,
                                                     **kwargs)
-            elif meta.kind == Metadata.PANDAS_DFGROUP:
+            elif meta.kind == PANDAS_DFGROUP:
                 return self.get_dataframe_dfgroup(
                     name, version=version, **kwargs)
-            elif meta.kind == Metadata.PYTHON_DATA:
+            elif meta.kind == PYTHON_DATA:
                 return self.get_python_data(name, version=version)
-            elif meta.kind == Metadata.PANDAS_HDF:
+            elif meta.kind == PANDAS_HDF:
                 return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
 
@@ -873,13 +883,13 @@ class OmegaStore(object):
 
         :return: Returns data as python object
         """
-        if meta.kind == Metadata.SKLEARN_JOBLIB:
+        if meta.kind == SKLEARN_JOBLIB:
             return meta.gridfile
-        if meta.kind == Metadata.PANDAS_HDF:
+        if meta.kind == PANDAS_HDF:
             return meta.gridfile
-        if meta.kind == Metadata.PANDAS_DFROWS:
+        if meta.kind == PANDAS_DFROWS:
             return list(getattr(self.mongodb, meta.collection).find())
-        if meta.kind == Metadata.PYTHON_DATA:
+        if meta.kind == PYTHON_DATA:
             col = getattr(self.mongodb, meta.collection)
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
@@ -897,6 +907,9 @@ class OmegaStore(object):
         :param raw: if True return the meta data objects
         :return: List of files in store
 
+        Returns:
+            object: 
+
         """
         db = self.mongodb
         searchkeys = dict(bucket=bucket or self.bucket,
@@ -907,7 +920,7 @@ class OmegaStore(object):
                 searchkeys.update(kind__in=kind)
             else:
                 searchkeys.update(kind=kind)
-        meta = Metadata.objects(**searchkeys)
+        meta = self._Metadata.objects(**searchkeys)
         if raw:
             if regexp:
                 files = [f for f in meta if re.match(regexp, f.name)]

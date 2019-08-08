@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import six
 from mock import patch
+
 from omegacommon.userconf import get_omega_from_apikey
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
 
@@ -70,4 +71,33 @@ class ConfigurationTests(TestCase):
             get_omega_from_apikey.data = {}
             om = get_omega_from_apikey('foo', 'bar')
             self.assertEqual(om.datasets.mongo_url, 'updated-foo')
+
+    def test_config_from_apikey_changes_metadata_db(self):
+        """
+        Test an Omega instance can be created from user specific configs
+        """
+        from omegaml import defaults
+        from omegaml import Omega
+        om = Omega()
+        db = om.datasets.mongodb
+        coll = om.datasets._Metadata._get_collection()
+        # we patch the actual api call to avoid having to set up the user db
+        # the objective here is to test get_omega_from_apikey
+        with patch('omegacommon.userconf.get_user_config_from_api') as mock:
+            mock.return_value = {
+                'objects': [
+                    {
+                        'data': {
+                            'OMEGA_MONGO_URL': defaults.OMEGA_MONGO_URL.replace('/testdb', '/testdbx')
+                        }
+                    }
+                ]
+            }
+            get_omega_from_apikey.data = {}
+            om = get_omega_from_apikey('foo', 'bar')
+            om.datasets.mongodb
+        self.assertIsNot(om.datasets._Metadata._collection, coll)
+
+
+
 
