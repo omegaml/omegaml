@@ -78,8 +78,6 @@ markupsafe=1.1.1
 matplotlib=3.0.2
 mistune=0.8.4
 mkl
-mkl_fft=1.0.1
-mkl_random=1.0.1
 msgpack-python=0.6.1
 nbconvert=5.4.1
 nbformat=4.4.0
