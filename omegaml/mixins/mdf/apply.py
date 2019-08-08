@@ -7,7 +7,7 @@ from uuid import uuid4
 import pandas as pd
 import six
 from omegaml import defaults
-from omegaml.documents import QueryCache
+from omegaml.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import qops
 from omegaml.util import make_tuple, extend_instance
@@ -49,6 +49,7 @@ class ApplyMixin(object):
             the cache for the specific .apply operations
         :return:
         """
+        QueryCache = make_QueryCache()
         if full:
             QueryCache.objects.filter(value__collection=self.collection.name).delete()
         else:
@@ -756,10 +757,12 @@ class ApplyCache(object):
 
     def set(self, key, value):
         # https://stackoverflow.com/a/22003440/890242
+        QueryCache = make_QueryCache()
         QueryCache.objects(key=key).update_one(set__key="{}".format(key),
                                                set__value=value, upsert=True)
 
     def get(self, key):
+        QueryCache = make_QueryCache()
         try:
             result = QueryCache.objects.get(key=key)
         except:

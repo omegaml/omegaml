@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
-import datetime
 import re
 from uuid import uuid4
 
+import datetime
 import gridfs
 import yaml
 from croniter import croniter
@@ -12,8 +12,7 @@ from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
 
-from omegaml.documents import Metadata
-from omegaml.notebook.tasks import run_omegaml_job
+from omegaml.documents import MDREGISTRY
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings
 
@@ -32,7 +31,7 @@ class OmegaJobs(object):
         self.defaults = defaults or omega_settings()
         prefix = prefix or 'jobs'
         self.store = store or OmegaStore(prefix=prefix)
-        self.kind = Metadata.OMEGAML_JOBS
+        self.kind = MDREGISTRY.OMEGAML_JOBS
         self._include_dir_placeholder = True
 
     def __repr__(self):

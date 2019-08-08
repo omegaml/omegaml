@@ -4,12 +4,10 @@ omega runtime job tasks
 from __future__ import absolute_import
 
 import datetime
-
 from celery import shared_task
-from mongoengine.errors import DoesNotExist
 
-from omegaml.documents import Metadata
-from omegaml.celery_util import OmegamlTask
+from omegaml.documents import MDREGISTRY
+from omegaml.tasks import OmegamlTask
 
 
 class NotebookTask(OmegamlTask):
@@ -23,7 +21,7 @@ class NotebookTask(OmegamlTask):
         attrs = meta.attributes
         attrs['state'] = 'SUCCESS'
         attrs['task_id'] = task_id
-        meta.kind = Metadata.OMEGAML_JOBS
+        meta.kind = MDREGISTRY.OMEGAML_JOBS
 
         if not kwargs:
             pass
@@ -42,7 +40,7 @@ class NotebookTask(OmegamlTask):
         attrs = meta.attributes
         attrs['state'] = 'FAILURE'
         attrs['task_id'] = task_id
-        meta.kind = Metadata.OMEGAML_JOBS
+        meta.kind = MDREGISTRY.OMEGAML_JOBS
 
         if not kwargs:
             pass

@@ -1,3 +1,5 @@
+
+
 from __future__ import absolute_import
 
 import os
@@ -8,7 +10,6 @@ import gridfs
 from nbformat import write, v4
 
 from omegaml import Omega
-from omegaml.documents import Metadata
 from omegaml.util import settings as omegaml_settings
 
 
