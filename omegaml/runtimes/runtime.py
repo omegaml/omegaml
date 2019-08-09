@@ -1,9 +1,13 @@
 from __future__ import absolute_import
 
+import logging
+
 from celery import Celery
 
 from omegaml.runtimes.jobproxy import OmegaJobProxy
 from omegaml.util import settings
+
+logger = logging.getLogger(__name__)
 
 
 class OmegaRuntime(object):
@@ -17,6 +21,8 @@ class OmegaRuntime(object):
         self.broker = broker or 'amqp://guest@localhost//'
         self.omega = omega
         defaults = defaults or settings()
+        self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
+        self.pure_python = self.pure_python or self._client_is_pure_python()
         # initialize celery as a runtimes
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
         celerykwargs = celerykwargs or defaults.OMEGA_CELERY_CONFIG
@@ -34,6 +40,21 @@ class OmegaRuntime(object):
 
     def __repr__(self):
         return 'OmegaRuntime({})'.format(self.omega.__repr__())
+
+    @property
+    def _common_kwargs(self):
+        return dict(pure_python=self.pure_python)
+
+    def _client_is_pure_python(self):
+        try:
+            import pandas as pd
+            import numpy as np
+            import sklearn
+        except Exception as e:
+            logging.getLogger().info(e)
+            return True
+        else:
+            return False
 
     def model(self, modelname):
         """
