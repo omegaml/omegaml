@@ -882,6 +882,10 @@ class OmegaStore(object):
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
+    def __iter__(self):
+        for f in self.list():
+            yield f
+
     def list(self, pattern=None, regexp=None, kind=None, raw=False,
              include_temp=False, bucket=None, prefix=None, filter=None):
         """

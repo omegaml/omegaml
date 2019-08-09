@@ -1,10 +1,14 @@
 from __future__ import absolute_import
+
+import logging
 import os
 import sys
 from os.path import basename
 
 import six
 import yaml
+
+from omegaml.util import tensorflow_available, keras_available
 
 user_homedir = os.path.expanduser('~')
 
@@ -18,6 +22,8 @@ OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    'mongodb://admin:foobar@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
+#: if set forces eager execution of runtime tasks
+OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME')
 #: the celery broker name or URL
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
@@ -28,12 +34,13 @@ OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 OMEGA_RESULT_BACKEND = 'amqp'
 #: the celery configurations
 OMEGA_CELERY_CONFIG = {
+    # FIXME should work with json (the default celery serializer)
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
     'BROKER_URL': OMEGA_BROKER,
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
-    'CELERY_ALWAYS_EAGER': False if 'OMEGA_BROKER' in os.environ else True,
+    'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',
@@ -46,10 +53,31 @@ OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks']
 #: storage backends
 OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+    'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
+    'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
 }
+
+#: tensorflow backend
+# https://stackoverflow.com/a/38645250
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+if tensorflow_available():
+    OMEGA_STORE_BACKENDS.update({
+        'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
+        'tfkeras.savedmodel': 'omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend',
+        'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
+        'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
+    })
+#: keras backend
+if keras_available():
+    OMEGA_STORE_BACKENDS.update({
+        'keras.h5': 'omegaml.backends.keras.KerasBackend',
+    })
+
 #: storage mixins
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
+    'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
 ]
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
@@ -69,7 +97,6 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyString', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
-
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
@@ -113,7 +140,7 @@ def update_from_env(vars=globals()):
     return vars
 
 
-def update_from_obj(obj, vars=globals()):
+def update_from_obj(obj, vars=globals(), attrs=None):
     """
     helper function to update omegaml.defaults from arbitrary module
 
@@ -123,10 +150,13 @@ def update_from_obj(obj, vars=globals()):
     for k in [k for k in dir(obj) if k.startswith('OMEGA')]:
         if hasattr(obj, k):
             value = getattr(obj, k)
-            vars[k] = value
+            if attrs:
+                setattr(attrs, k, value)
+            else:
+                vars[k] = value
 
 
-def update_from_dict(d, vars=globals()):
+def update_from_dict(d, vars=globals(), attrs=None):
     """
     helper function to update omegaml.defaults from arbitrary dictionary
 
@@ -135,23 +165,28 @@ def update_from_dict(d, vars=globals()):
     """
     for k, v in six.iteritems(d):
         if k.startswith('OMEGA'):
-            vars[k] = v
+            if attrs:
+                setattr(attrs, k, v)
+            else:
+                vars[k] = v
 
 
 # load Enterprise Edition if available
 try:
     from omegaee import eedefaults
 
-    update_from_obj(eedefaults)
+    update_from_obj(eedefaults, vars=globals())
 except Exception as e:
     pass
 
 # -- test
 if any(m in [basename(arg) for arg in sys.argv]
-       for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py')):
+       for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
+                 '_jb_nosetest_runner.py')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
     OMEGA_RESTAPI_URL = ''
+    logging.getLogger().setLevel(logging.ERROR)
 else:
     # overrides in actual operations
     # this is to avoid using production settings during test

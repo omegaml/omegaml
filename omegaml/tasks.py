@@ -9,59 +9,53 @@ import os
 from celery import shared_task
 from celery.signals import worker_process_init
 
-from omegaml.celery_util import OmegamlTask
-
-def sanitized(value):
-    # fix because local Metadata object cannot be pickled
-    if getattr(type(value), '__name__', None) == 'Metadata':
-        value = repr(value)
-    return value
+from omegaml.celery_util import OmegamlTask, sanitized
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).predict(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict_proba(self, modelname, Xname, rName=None, pure_python=True,
                         **kwargs):
     result = self.get_delegate(modelname).predict_proba(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).fit(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_partial_fit(self,
                       modelname, Xname, Yname=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).partial_fit(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_score(self, modelname, Xname, Yname, rName=True, pure_python=True,
                 **kwargs):
     result = self.get_delegate(modelname).score(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_fit_transform(self, modelname, Xname, Yname=None, rName=None,
                         pure_python=True, **kwargs):
     result = self.get_delegate(modelname).fit_transform(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_transform(self, modelname, Xname, rName=None, **kwargs):
     result = self.get_delegate(modelname).transform(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)

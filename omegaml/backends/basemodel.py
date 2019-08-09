@@ -28,7 +28,7 @@ class BaseModelBackend(object):
         :param version: the version of the object (not supported)
         """
         # support new backend architecture while keeping back compatibility
-        return self.get_model(name)
+        return self.get_model(name, **kwargs)
 
     def put(self, obj, name, **kwargs):
         """
@@ -41,7 +41,7 @@ class BaseModelBackend(object):
         # support new backend architecture while keeping back compatibility
         return self.put_model(obj, name, **kwargs)
 
-    def put_model(self, obj, name, attributes=None):
+    def put_model(self, obj, name, attributes=None, **kwargs):
         """
         store a model
 
@@ -51,7 +51,7 @@ class BaseModelBackend(object):
         """
         raise NotImplementedError
 
-    def get_model(self, name, version=-1):
+    def get_model(self, name, version=-1, **kwargs):
         """
         retrieve a model
 

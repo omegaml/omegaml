@@ -1,4 +1,5 @@
 import datetime
+import flask
 
 import pandas as pd
 import six
@@ -7,6 +8,7 @@ from flask_restplus import Resource, Model, fields
 from mongoengine import DoesNotExist
 
 import omegaml as om
+from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.restapi.util import strict
 from .app import api
 
@@ -19,11 +21,12 @@ isTrue = lambda v: v if isinstance(v, bool) else (
 PredictInput = strict(api).model('ModelInputSchema', {
     'columns': fields.List(fields.String),
     'data': fields.List(fields.Raw),
+    'shape': fields.List(fields.Integer),
 })
 
 PredictOutput = api.model('PredictOutput', {
     'model': fields.String,
-    'result': fields.List(fields.Raw),
+    'result': fields.Raw,
 })
 
 DatasetInput = api.model('DatasetInput', {
@@ -42,27 +45,24 @@ DatasetQueryOutput = api.model('DatasetQueryOutput', {
     'index': fields.Nested(DatasetIndex)
 })
 
-@api.route('/v1/ping')
+@api.route('/api/v1/ping')
 class PingResource(Resource):
     def get(self):
         dt = datetime.datetime.now()
         return {'ping': dt.isoformat()}
 
 
-@api.route('/v1/model/<string:model_id>/predict')
+@api.route('/api/v1/model/<string:model_id>/predict')
 class ModelResource(Resource):
-    @api.expect(PredictInput, validate=True)
+    @api.expect(PredictInput, validate=False)
     @api.marshal_with(PredictOutput)
     def put(self, model_id):
-        data = api.payload.get('data')
-        columns = api.payload.get('columns')
-        df = pd.DataFrame(data)[columns]
-        promise = om.runtime.model(model_id).predict(df)
-        result = promise.get()
-        return {'model': model_id, 'result': result.tolist()}
+        query = flask.request.args
+        payload = api.payload
+        return GenericModelResource(om).put(model_id, query, payload)
 
 
-@api.route('/v1/dataset/<string:dataset_id>')
+@api.route('/api/v1/dataset/<string:dataset_id>')
 class DatasetResource(Resource):
     def _restore_filter(self, om, fltparams, name):
         """

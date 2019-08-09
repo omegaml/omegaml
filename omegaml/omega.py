@@ -97,6 +97,7 @@ def setup():
     """
     return _om.setup().omega
 
+
 # dynamic lookup of Omega instance in a task context
 get_omega_for_task = lambda args: _om
 

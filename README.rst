@@ -6,11 +6,11 @@ omega|ml takes just a single line of code to
 * implement data pipelines quickly, without memory limitation, all from a Pandas-like API
 * serve models and data from an easy to use REST API 
 
-In addition you can
+Further, omega|ml is the fastest way to
 
-* train models on the integrated compute cluster (or any other cluster using custom backends)
-* collaborate on data science projects easily (using Jupyter Notebook)
-* deploy beautiful dashboards right from your Jupyter Notebook (using dashserve)
+* scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
+* collaborate on data science projects easily, sharing Jupyter Notebooks
+* deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
 
 Documentation: https://omegaml.github.io/omegaml/
 

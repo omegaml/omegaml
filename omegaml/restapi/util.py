@@ -1,3 +1,4 @@
+import six
 from flask_restplus import Model
 
 
@@ -24,3 +25,4 @@ class strict(object):
         smodel.__apidoc__.update(kwargs)
         self.api.models[smodel.name] = smodel
         return smodel
+

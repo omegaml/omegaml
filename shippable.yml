@@ -28,15 +28,14 @@ build:
   - sleep 5 && cat scripts/mongoinit.js | /usr/bin/mongo
   - wget -q https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -O miniconda-installer.sh
   - chmod +x miniconda-installer.sh && ./miniconda-installer.sh -bfp /usr/local
-  - conda install -y conda=4.3 
-  - conda install python=3.6
+  - conda install -y conda=4.5.13 
+  - conda install python=3.6.8
   - conda install -y --file conda-requirements.txt
   - conda install -y -c conda-forge jupyterhub
   - PATH=/usr/local/bin:$PATH sudo apt-get -y update
   - PATH=/usr/local/bin:$PATH sudo apt-get -y install build-essential libssl-dev libffi-dev python-dev
   - PATH=/usr/local/bin:$PATH pip install -U setuptools  
-  - PATH=/usr/local/bin:$PATH pip install -r requirements.txt
-  - PATH=/usr/local/bin:$PATH pip install -e .
+  - PATH=/usr/local/bin:$PATH pip install -U -r pip-requirements.txt
   - >
      PATH=/usr/local/bin:$PATH MONGO_URL=mongodb://admin:foobar@localhost:27017/omega
      nosetests

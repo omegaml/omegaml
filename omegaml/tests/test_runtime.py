@@ -314,10 +314,9 @@ class RuntimeTests(TestCase):
 
     def test_ping(self):
         om = Omega()
-        result = om.runtime.ping('foo', fox='bar')
+        result = om.runtime.ping(fox='bar')
         self.assertIn('message', result)
         self.assertIn('worker', result)
-        self.assertEqual(result['args'], ('foo',))
         self.assertEqual(result['kwargs'], dict(fox='bar'))
 
 

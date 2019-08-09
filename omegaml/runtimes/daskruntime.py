@@ -12,7 +12,7 @@ class DaskTask(object):
     A dask remote function wrapper mimicking a Celery task
     """
 
-    def __init__(self, fn, client, pure=True):
+    def __init__(self, fn, client, pure=True, **kwargs):
         """
         :param fn: (function) the function to be called
         :param client: (dask client) the dask client to use
@@ -22,12 +22,15 @@ class DaskTask(object):
         self.client = client
         self.fn = fn
         self.pure = pure
+        self.kwargs = kwargs
 
     def delay(self, *args, **kwargs):
         """
         submit the function and execute on cluster.  
         """
         kwargs['pure'] = kwargs.get('pure', self.pure)
+        if self.kwargs:
+            kwargs.update(self.kwargs)
         return DaskAsyncResult(self.client.submit(self.fn, *args, **kwargs))
 
 
@@ -90,7 +93,7 @@ class OmegaRuntimeDask(object):
         """
         return OmegaJobProxy(jobname, runtime=self)
 
-    def task(self, name):
+    def task(self, name, **kwargs):
         """
         retrieve the task function from the task module
 
@@ -107,7 +110,7 @@ class OmegaRuntimeDask(object):
         func = getattr(mod, funcname)
         # we pass pure=False to force dask to reevaluate the task
         # http://distributed.readthedocs.io/en/latest/client.html?highlight=pure#pure-functions-by-default
-        return DaskTask(func, self.client, pure=False)
+        return DaskTask(func, self.client, pure=False, **kwargs)
 
     def settings(self):
         """
