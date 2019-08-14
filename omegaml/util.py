@@ -10,6 +10,7 @@ from shutil import rmtree
 
 import numpy as np
 import six
+from pandas.io.json import json_normalize
 from six import string_types
 
 try:
@@ -269,7 +270,7 @@ def restore_index_columns_order(columns):
             n = 0
         return n
 
-    index_cols = (col for col in columns if col and col.startswith('_idx'))
+    index_cols = (col for col in columns if isinstance(col, six.string_types) and col.startswith('_idx'))
     index_cols = sorted(index_cols, key=get_index_order)
     return index_cols
 
@@ -314,7 +315,7 @@ def grouper(n, iterable):
         yield itertools.chain((first_el,), chunk_it)
 
 
-def cursor_to_dataframe(cursor, chunk_size=10000):
+def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     # a faster and less memory hungry variant of DataFrame.from_records
     # works by building a set of smaller dataframes to reduce memory
     # consumption. Note chunks are of size max. chunk_size.
@@ -328,7 +329,8 @@ def cursor_to_dataframe(cursor, chunk_size=10000):
         count = None
     if count is None or count > 0:
         for chunk in grouper(chunk_size, cursor):
-            frames.append(pd.DataFrame.from_records(chunk))
+            df = pd.DataFrame.from_records(chunk) if not parser else parser(r for r in chunk)
+            frames.append(df)
         if frames:
             df = pd.concat(frames)
         else:
