@@ -164,7 +164,8 @@ class JobTests(TestCase):
 
         assert_pending()
         # -- run by the periodic task. note we pass now= as to simulate a time
-        om.runtime.task('omegaml.notebook.tasks.execute_scripts').run(now=trigger['run-at'])
+        kwargs = dict(now=trigger['run-at'], **om.runtime._common_kwargs)
+        om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
         assert_ok(event=trigger['event'])
         # -- it should be pending again
         assert_pending()
