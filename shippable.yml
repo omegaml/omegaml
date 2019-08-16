@@ -26,8 +26,8 @@ build:
     apt-get install -y --allow-change-held-packages --allow-downgrades mongodb-org=3.6.8 mongodb-org-server=3.6.8 mongodb-org-shell=3.6.8 mongodb-org-mongos=3.6.8 mongodb-org-tools=3.6.8
   - /usr/bin/mongod --auth > /dev/null &
   - sleep 5 && cat scripts/mongoinit.js | /usr/bin/mongo
-  - wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  - chmod +x ./Miniconda3-latest-Linux-x86_64.sh && ./Miniconda3-latest-Linux-x86_64.sh -bfp /usr/local
+  - wget -q https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -O miniconda-installer.sh
+  - chmod +x miniconda-installer.sh && ./miniconda-installer.sh -bfp /usr/local
   - conda install -y conda=4.3 
   - conda install python=3.6
   - conda install -y --file conda-requirements.txt
