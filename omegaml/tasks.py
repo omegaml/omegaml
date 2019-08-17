@@ -11,6 +11,12 @@ from celery.signals import worker_process_init
 
 from omegaml.celery_util import OmegamlTask
 
+def sanitized(value):
+    # fix because local Metadata object cannot be pickled
+    if getattr(type(value), '__name__', None) == 'Metadata':
+        value = repr(value)
+    return value
+
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -61,13 +67,13 @@ def omega_transform(self, modelname, Xname, rName=None, **kwargs):
 @shared_task(base=OmegamlTask, bind=True)
 def omega_decision_function(self, modelname, Xname, rName=None, **kwargs):
     result = self.get_delegate(modelname).decision_function(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_gridsearch(self, modelname, Xname, Yname, parameters=None, **kwargs):
     result = self.get_delegate(modelname).gridsearch(*self.delegate_args, **self.delegate_kwargs)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)

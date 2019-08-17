@@ -2,7 +2,7 @@ from unittest.case import TestCase
 
 import omegaml as om
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.documents import Metadata
+from omegaml.documents import MDREGISTRY
 from omegaml.backends.basedata import BaseDataBackend
 
 
@@ -19,8 +19,8 @@ class CustomBackendTests(TestCase):
         try:
             del om.defaults.OMEGA_STORE_BACKENDS['custom.foo']
             del om.defaults.OMEGA_STORE_BACKENDS['custom.bar']
-            Metadata.KINDS.remove('custom.foo')
-            Metadata.KINDS.remove('custom.bar')
+            MDREGISTRY.KINDS.remove('custom.foo')
+            MDREGISTRY.KINDS.remove('custom.bar')
         except:
             pass
 
@@ -31,7 +31,7 @@ class CustomBackendTests(TestCase):
         om.models.register_backend('custom.foo', CustomModelBackend)
         foo = dict(foo='bar')
         meta = om.models.put(foo, 'footest')
-        self.assertIsInstance(meta, Metadata)
+        self.assertIsInstance(meta, om.models._Metadata)
         self.assertEqual(meta.kind, 'custom.foo')
         meta_stored = om.models.metadata('footest')
         self.assertIn('footest', om.models.list())
@@ -46,7 +46,7 @@ class CustomBackendTests(TestCase):
         om.datasets.register_backend('custom.bar', CustomDataBackend)
         foo = dict(bar='foo')
         meta = om.datasets.put(foo, 'bartest')
-        self.assertIsInstance(meta, Metadata)
+        self.assertIsInstance(meta, om.datasets._Metadata)
         self.assertEqual(meta.kind, 'custom.bar')
         meta_stored = om.datasets.metadata('bartest')
         self.assertIn('bartest', om.datasets.list())
