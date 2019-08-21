@@ -4,5 +4,6 @@
 -e ../ccbackend
 -e ../django-tastypie-swagger
 -e ../tastypiex
--e ../omegaml-ce
+-e ../omegaml-ce[all]
+jupyterhub-kubespawner==0.10.1
 
