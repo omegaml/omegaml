@@ -78,8 +78,6 @@ markupsafe=1.1.1
 matplotlib=3.0.2
 mistune=0.8.4
 mkl
-mkl_fft=1.0.1
-mkl_random=1.0.1
 msgpack-python=0.6.1
 nbconvert=5.4.1
 nbformat=4.4.0
@@ -90,7 +88,6 @@ nosexcover=1.0.11
 notebook=5.7.6
 numexpr=2.6.9
 numpy=1.16.2
-numpy-base=1.16.2
 olefile=0.46
 openssl=1.1.1b
 packaging=19.0
