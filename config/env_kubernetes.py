@@ -49,3 +49,5 @@ class EnvSettings_kubernetes(Config_Dokku,
             'PORT': '3306',
         }
     }
+
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

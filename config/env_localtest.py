@@ -21,3 +21,5 @@ class EnvSettings_LocalTest(EnvSettings_Local):
     OMEGA_RESTAPI_URL = ''
     # allow default task auth for testing
     OMEGA_ALLOW_TASK_DEFAULT_AUTH = True
+
+

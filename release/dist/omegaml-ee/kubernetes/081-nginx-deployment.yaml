@@ -23,6 +23,7 @@ spec:
         name: nginx
         ports:
         - containerPort: 5000
+        - containerPort: 5001
         - containerPort: 5672
         - containerPort: 27017
         - containerPort: 8888
@@ -37,6 +38,8 @@ spec:
         - mountPath: /etc/nginx/conf.d/stream.conf
           name: nginx-conf
           subPath: stream.conf
+        - mountPath: /var/letsencrypt/.well-known/acme-challenge
+          name: letsencrypt-conf
       restartPolicy: Always
       volumes:
       - name: nginx-conf
@@ -49,3 +52,6 @@ spec:
             path: http.conf
           - key: stream.conf
             path: stream.conf
+      - name: letsencrypt-conf
+        configMap:
+           name: letsencrypt-conf

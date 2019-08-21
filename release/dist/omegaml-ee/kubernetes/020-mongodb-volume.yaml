@@ -1,0 +1,43 @@
+# https://vocon-it.com/2018/12/20/kubernetes-local-persistent-volumes/
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-disk
+spec:
+  capacity:
+    storage: 2Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mongodb-disk
+  local:
+    path: /data/mongodb
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: omegaml.io/role
+          operator: In
+          values:
+          - dbmaster
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mongodb-disk
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-disk-claim
+spec:
+  storageClassName: mongodb-disk
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

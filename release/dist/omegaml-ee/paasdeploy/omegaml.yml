@@ -1,0 +1,4 @@
+- plan: omegaml
+  steps:
+    - task: paasdeploy.tasks.run
+      params: ls -lart

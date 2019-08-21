@@ -25,5 +25,12 @@ spec:
         resources: {}
         ports:
          - containerPort: 27017
+        volumeMounts:
+            - mountPath: "/data/db"
+              name: mongodb-data
       restartPolicy: Always
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb-disk-claim
 status: {}

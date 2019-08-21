@@ -16,6 +16,9 @@ OMEGA_RUNTIME_MIXINS = [
     'omegaee.runtimes.mixins.AuthenticatedGridSearchMixin',
 ]
 
+#: celery task packages
+OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks']
+
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
                      'http://localhost:8000')

@@ -18,3 +18,8 @@ nodes:
   user: ubuntu
 ssh_agent_auth: true
 ssh_key_path: ~/.ssh/id_rke-k8s-key-exoscale
+# https://github.com/rancher/rke/issues/500
+services:
+  kubelet:
+    extra_binds:
+       - /data:/data

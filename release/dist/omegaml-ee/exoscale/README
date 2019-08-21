@@ -53,3 +53,14 @@ This is an automated version of https://rancher.com/blog/2018/2018-09-17-rke-k8s
 
    Copy and paste the long string that is returned into the authentication prompt on the dashboard
    webpage, and explore the details of your cluster.
+
+6. Select dbmaster node and apply node label, create storage paths
+
+   $ kubectl label node 185.19.30.100 omegaml.io/role=dbmaster
+   $ ssh 185.19.30.100
+   (185.19.30.100)$ sudo mkdir -p /data/mongodb
+   (185.19.30.100)$ sudo mkdir -p /data/mysql
+   (185.19.30.100)$ sudo chmod -R 777 /data/mongodb
+   (185.19.30.100)$ sudo chmod -R 777 /data/mysql
+
+   This will be used by the mongodb and mysql PersistentVolumes.

@@ -20,14 +20,15 @@ spec:
          name: mysql
          ports:
           - containerPort: 3306
-         env:
-          - name: MYSQL_DATABASE
-            value: omegaml
-          - name: MYSQL_USER
-            value: omegaml
-          - name: MYSQL_PASSWORD
-            value: foobar
-          - name: MYSQL_ROOT_PASSWORD
-            value: rootadmin
+         volumeMounts:
+            - mountPath: "/var/lib/mysql"
+              name: mysql-data
+         envFrom:
+         - configMapRef:
+              name: omegaml-mysql
       restartPolicy: Always
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-disk-claim
 status: {}

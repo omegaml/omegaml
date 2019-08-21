@@ -27,3 +27,4 @@ for i in 1 2 3 4; do
     --keypair rke-k8s-key
 done
 exo vm list
+

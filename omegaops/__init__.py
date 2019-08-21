@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from pymongo.mongo_client import MongoClient
 
 from landingpage.models import ServicePlan
-from omegaml.util import urlparse
 
 
 def add_user(user, password, dbname=None):
@@ -145,6 +144,7 @@ def get_client_config(user, qualifier=None, view=False):
        constance.MONGO_HOST
     """
     import omegaml as om
+    from omegaml.util import urlparse
 
     qualifier = qualifier or 'default'
     user_settings = user.services.get(offering__name='omegaml').settings

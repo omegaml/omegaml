@@ -1,0 +1,27 @@
+# metallb
+METALLB_ADDRESS_RANGE: 172.31.0.15-172.31.0.15
+# omegaml-jobs
+OMEGA_JYHUB_APIKEY: b7b034f57d442e605ab91f88a8936149e968e12e
+OMEGA_RESTAPI_URL: http://omegaml:5000/
+JYHUB_SPAWNER_TYPE: secure
+OMEGA_RESTAPI_URL: http://omegaml:5000/
+# omegaml-mysql
+MYSQL_DATABASE: omegaml
+MYSQL_PASSWORD: foobar
+MYSQL_ROOT_PASSWORD: rootadmin
+MYSQL_USER: omegaml
+# omegaml-worker
+C_FORCE_ROOT: "yes"
+OMEGA_BROKER: rabbitmq
+# omegaml-web
+DJANGO_CONFIGURATION: EnvSettings_kubernetes
+OMEGA_JYHUB_TOKEN: PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL
+OMEGA_JYHUB_USER: jyadmin
+MONGO_ADMIN_URL: mongodb://admin:foobar@mongodb/admin
+OMEGA_MONGO_URL: mongodb://user:foobar@mongodb/admin
+ALLOWED_HOSTS: "*"
+MONGO_ADMIN_URL: mongodb://admin:6a695dacc1b60560510964772a2c6a0c@dokku-mongo-mongodb:27017/admin
+# mail integration
+MAILGUN_API_KEY: mailgunkey
+MAILGUND_SENDER_DOMAIN: mg.omegaml.io
+

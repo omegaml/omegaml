@@ -24,13 +24,9 @@ spec:
         - honcho
         - start
         - worker
-        env:
-        - name: C_FORCE_ROOT
-          value: "yes"
-        - name: OMEGA_BROKER
-          value: rabbitmq
-        - name: OMEGA_RESTAPI_URL
-          value: http://omegaml:5000/
+        envFrom:
+        - configMapRef:
+             name: omegaml-worker
         image: omegaml/omegaml-ee:latest
         name: worker
         resources: {}
