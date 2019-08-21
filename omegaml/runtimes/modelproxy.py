@@ -52,6 +52,7 @@ class OmegaModelProxy(object):
 
     def apply_require(self):
         meta = self.runtime.omega.models.metadata(self.modelname)
+        assert meta is not None, "model {self.modelname} does not exist".format(**locals())
         self.runtime.require(meta.attributes.get('require', {}))
 
     def apply_mixins(self):

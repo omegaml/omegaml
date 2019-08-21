@@ -48,23 +48,15 @@ class OmegaRuntime(object):
     omegaml compute cluster gateway 
     """
 
-    def __init__(self, omega, backend=None,
-                 broker=None, celerykwargs=None, celeryconf=None, defaults=None):
-        self.backend = backend or 'amqp'
-        self.broker = broker or defaults.OMEGA_BROKER
+    def __init__(self, omega, defaults=None, celeryconf=None):
         self.omega = omega
         defaults = defaults or settings()
         self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
         # initialize celery as a runtimes
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
-        celerykwargs = celerykwargs or defaults.OMEGA_CELERY_CONFIG
-        celerykwargs.update({'backend': self.backend,
-                             'broker': self.broker,
-                             'include': taskpkgs,
-                             })
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
-        self.celeryapp = Celery('omegaml', **celerykwargs)
+        self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
         # needed to get it to actually load the tasks (???)
         # https://stackoverflow.com/a/35735471

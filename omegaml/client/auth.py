@@ -34,7 +34,7 @@ class OmegaRestApiAuth(AuthBase):
 
     @classmethod
     def make_from(cls, om):
-        args = getattr(om.runtime, 'auth_tuple', ('user', 'pass', None))
+        args = getattr(om.runtime, 'auth_tuple', (None, None, 'default'))
         return OmegaRestApiAuth(*args)
 
     def get_credentials(self):

@@ -126,7 +126,7 @@ class OmegaStore(object):
         self.register_backends()
 
     def __repr__(self):
-        return 'OmegaStore(mongo_url={}, bucket={}, prefix={})'.format(self.mongo_url, self.bucket, self.prefix)
+        return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
 
     @property
     def tmppath(self):
