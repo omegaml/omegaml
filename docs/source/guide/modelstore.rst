@@ -1,16 +1,20 @@
 Working with Machine Learning Models
 ====================================
 
-omega|ml currently implements two backends to store models. More backends can
-be implemented using the model backend-API.
+omega|ml currently implements the following machine learning frameworks out of the box. More backends are planned.
+Any backend can be implemented using the backend API.
 
-* scikit-learn models
-* Apache Spark models
+* scikit-learn
+* Keras
+* Tensorflow (tf.keras, tf.estimator, tf.data, tf.SavedModel)
+* Apache Spark MLLib
+
+Note that support for Keras, Tensorflow and Apache Spark is experimental at this time.
 
 Storing models
 --------------
 
-Storing models (and Pipeline) is as straight forward as storing Pandas DataFrames and Series.
+Storing models and pipelines is as straight forward as storing Pandas DataFrames and Series.
 Simply create the model, then use :code:`om.models.put()` to store:
 
 .. code::
@@ -170,6 +174,12 @@ runtime supports the following methods on a model:
 * :code:`partial_fit`
 * :code:`transform`
 * :code:`score`
+* :code:`gridsearch`
 
 For details refer to the API reference.
 
+Specific frameworks
+-------------------
+
+.. include:: keras.rst
+.. include:: tensorflow.rst

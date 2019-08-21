@@ -16,7 +16,7 @@ def splinter_browser(context):
     screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp')
     options = None
     if headless:
-        print("Running headless")
+        print("Running headless, debug at http://localhost:9222")
         options = ChromeOptions()
         options.add_argument('--no-sandbox')
         options.add_argument('--headless')
@@ -38,15 +38,23 @@ def before_all(context):
     context.web_url = os.environ.get('OMEGA_URL', 'http://localhost:5000')
     context.jynb_url = os.environ.get('JUPYTER_URL', 'http://localhost:8888')
     # setup environment
-    context.debug = os.environ.get('DEBUG', False)
+    context.debug = os.environ.get('BEHAVE_DEBUG', False)
     defaults = settings()
     context.om = om.setup()
+    context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
 
+def before_scenario(context, scenario):
+    # FIXME we do this because context.feature is set dynamically in EE testing 
+    context.feature.jynb_url = context.jynb_url
 
 def after_step(context, step):
     context.screenshotfn = os.path.join(context.screenshot_path, step.name + '.png')
     context.browser.screenshot(context.screenshotfn)
-
+    if context.debug and step.status == "failed":
+        # -- ENTER DEBUGGER: Zoom in on failure location.
+        # NOTE: Use IPython debugger, same for pdb (basic python debugger).
+        import ipdb
+        ipdb.post_mortem(step.exc_traceback)
 
 def after_scenario(context, scenario):
     for omstore in (context.om.datasets, context.om.jobs):

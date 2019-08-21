@@ -1,8 +1,14 @@
 from __future__ import absolute_import
 
 import logging
+import os
 import re
+import tempfile
+import uuid
+import warnings
+from shutil import rmtree
 
+import numpy as np
 import six
 from six import string_types
 
@@ -60,7 +66,7 @@ def is_spark_mllib(obj):
 
 def settings(reload=False):
     """ wrapper to get omega settings from either django or omegamldefaults """
-    import omegaml.defaults as omdefaults
+    from omegaml import _base_config as omdefaults
     global __settings
     if not reload and __settings is not None:
         return __settings
@@ -88,9 +94,9 @@ def settings(reload=False):
     else:
         # get default omega settings into django settings if not set
         # there already
-        import omegaml.defaults as omdefaults
+        from omegaml import _base_config as omdefaults
         for k in dir(omdefaults):
-            if not hasattr(defaults, k):
+            if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
     __settings = defaults
     return __settings
@@ -448,6 +454,51 @@ def extend_instance(obj, cls, *args, **kwargs):
         obj._init_mixin(*args, **kwargs)
 
 
+def temp_filename(dir=None, ext='tmp'):
+    """ generate a temporary file name """
+    dir = dir or tempfile.mkdtemp()
+    return os.path.join(dir, uuid.uuid4().hex)
+
+
+def remove_temp_filename(fn, dir=True):
+    dirname = os.path.dirname(fn)
+    os.remove(fn)
+    if dir:
+        if dirname.startswith('/tmp/') and len(dirname.split('/')) > 1:
+            rmtree(dirname)
+        else:
+            warnings.warn('will not remove directory {} as it is outside of /tmp'.format(fn))
+
+
+def ensure_python_array(arr, dtype):
+    return np.array(arr).astype(dtype)
+
+
+def dict_update_if(condition, dict, other):
+    try:
+        condition()
+    except:
+        pass
+    else:
+        dict.update(other)
+
+
+def tensorflow_available():
+    try:
+        import tensorflow
+    except:
+        return False
+    return True
+
+
+def keras_available():
+    try:
+        import tensorflow
+    except:
+        return False
+    return True
+
+
 def calltrace(obj):
     """
     trace calls on an object
@@ -488,3 +539,26 @@ def calltrace(obj):
         if type(el).__name__ == 'method':
             setattr(obj, item, tracefn(el))
     return obj
+
+
+class DefaultsContext(object):
+    def __init__(self, source):
+        for k in dir(source):
+            if k.isupper():
+                setattr(self, k, getattr(source, k))
+
+
+def ensure_json_serializable(v):
+    import numpy as np
+    import pandas as  pd
+    if isinstance(v, np.ndarray):
+        return v.flatten().tolist()
+    if isinstance(v, pd.Series):
+        return ensure_json_serializable(v.to_dict())
+    elif isinstance(v, dict):
+        vv = {
+            k: ensure_json_serializable(v)
+            for k, v in six.iteritems(v)
+        }
+        return vv
+    return v

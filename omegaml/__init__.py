@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
+# FIXME this is a hack to enable get_client_config
+import omegaml.defaults as _base_config
 from omegaml.util import load_class, settings
 
 logger = logging.getLogger(__file__)
@@ -28,4 +30,4 @@ scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')
 #: the OmegaRuntime for cluster execution
 runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
 #: the settings object
-config = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
+defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')

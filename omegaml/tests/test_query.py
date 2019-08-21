@@ -45,6 +45,13 @@ class FilterQueryTests(TestCase):
         testdf = df[df.x == 0]
         self.assertTrue(result.equals(testdf))
 
+    def test_filter_in(self):
+        coll = self.coll
+        df = self.df
+        result = Filter(coll, x__in=[1, 2, 3]).value
+        testdf = df[df.x.isin([1, 2, 3])]
+        self.assertTrue(result.equals(testdf))
+
     def test_filter_and(self):
         coll = self.coll
         df = self.df

@@ -280,6 +280,8 @@ class ApplyContext(object):
         """
         apply mixins in defaults.OMEGA_MDF_APPLY_MIXINS
         """
+        from omegaml import settings
+        defaults = settings()
         for mixin, applyto in defaults.OMEGA_MDF_APPLY_MIXINS:
             if any(v in self.caller._applyto for v in applyto.split(',')):
                 extend_instance(self, mixin)

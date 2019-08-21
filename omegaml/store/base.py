@@ -126,7 +126,7 @@ class OmegaStore(object):
         self.register_backends()
 
     def __repr__(self):
-        return 'OmegaStore(mongo_url={}, bucket={}, prefix={})'.format(self.mongo_url, self.bucket, self.prefix)
+        return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
 
     @property
     def tmppath(self):
@@ -881,6 +881,10 @@ class OmegaStore(object):
             col = getattr(self.mongodb, meta.collection)
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
+
+    def __iter__(self):
+        for f in self.list():
+            yield f
 
     def list(self, pattern=None, regexp=None, kind=None, raw=False,
              include_temp=False, bucket=None, prefix=None, filter=None):

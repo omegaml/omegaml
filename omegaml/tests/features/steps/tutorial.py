@@ -4,13 +4,13 @@ from behave import given, when, then
 @given('we have a connection to omegaml')
 def connection(ctx):
     import omegaml as om
-    ctx.om = om.setup()
-    assert ctx.om is not None
+    ctx.feature.om = om.setup()
+    assert ctx.feature.om is not None
 
 @when('we ingest data')
 def ingest(ctx):
     import pandas as pd
-    om = ctx.om
+    om = ctx.feature.om
     data = {
         'x': range(10),
     }
@@ -22,15 +22,16 @@ def ingest(ctx):
 @when('we build a model')
 def model(ctx):
     from sklearn.linear_model import LinearRegression
-    om = ctx.om
+    om = ctx.feature.om
     reg = LinearRegression()
     om.models.put(reg, 'regmodel')
-    om.runtime.model('regmodel').fit('sample[x]', 'sample[y]')
+    resp = om.runtime.model('regmodel').fit('sample[x]', 'sample[y]')
+    resp.get()
 
 @then('we can predict a result')
 def predict(ctx):
     import numpy as np
-    om = ctx.om
+    om = ctx.feature.om
     resp= om.runtime.model('regmodel').predict([1])
     result = resp.get()
     assert np.isclose(result[0], 2), "expected approx. 2, got {}".format(result[0])

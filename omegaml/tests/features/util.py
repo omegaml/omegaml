@@ -84,9 +84,15 @@ class Notebook:
         self.last_notebook
         return self
 
-    def open_notebook(self, name):
+    def open_notebook(self, name, retry=5):
         self.jupyter_home
         br = self.browser
+        retry = 5
+        # FIXME sometimes it takes long for the nb to appear why?
+        while retry:
+            br.reload()
+            found = br.is_text_present(name, wait_time=60)
+            retry = 0 if found else retry
         item = br.find_link_by_partial_text(name)
         item.click()
         sleep(2)
@@ -97,6 +103,7 @@ class Notebook:
         br = self.browser
         assert br.is_element_present_by_text('Cell', wait_time=5)
         br.find_link_by_text('Cell', )[0].click()
+        sleep(1)
         br.find_link_by_text('Run All')[0].click()
         if wait:
             busy = True

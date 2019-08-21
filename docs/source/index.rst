@@ -11,4 +11,5 @@ that scales from laptop to teams to enterprise. Batteries included.*
    guide/index
    devguide/index
    reference/index
+   nb/index
    screenshots

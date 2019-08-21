@@ -189,10 +189,12 @@ class OmegaStoreContentsManager(ContentsManager):
             self.mark_trusted_cells(nb, path)
             model['content'] = nb
             model['format'] = 'json'
+            self.validate_notebook_model(model)
         # if exists already fake last modified and created timestamps
         # otherwise jupyter notebook will claim a newer version "on disk"
         if self.exists(path):
             from IPython.utils import tz
+            # FIXME get actual datetime
             model['last_modified'] = tz.datetime(1970, 1, 1)
             model['created'] = tz.datetime(1970, 1, 1)
         return model
@@ -230,14 +232,17 @@ class OmegaStoreContentsManager(ContentsManager):
         model['format'] = 'json'
         contents = model['content']
         # get existing entries from a pattern that matches either
-        #    top-level files: ([\w ]+\.[\w]*)
+        #    top-level files: ([\w -]+\.[\w -]*)
         #    directories (files in): ([\w ]+/([\w ]+\.[\w]*))
         # does not work:
         #    pattern = r'([\w ]+/_placeholder\.[\w]*)|([\w ]+\.[\w]*)$'
         #    it is too restrictive as entries can be generated without a placeholder
         # so we get all, which may include sub/sub/file
         # and we need to include them because we need to find sub/sub directories
-        pattern = r'([\w ]+/)?([\w ]+\.[\w]*)$'
+        # note \w is any word character (letter, digit, underscore)
+        #      \s is any white space
+        #      -  is the dash, literally
+        pattern = r'([\w\s-]+\/)?([\w\s-]+\.[\w]*)$'
         # if we're looking in an existing directory, prepend that
         if path:
             pattern = '{path}/{pattern}'.format(path=path, pattern=pattern)

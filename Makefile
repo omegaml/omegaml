@@ -13,11 +13,11 @@ livetest: dist
 	scripts/livetest.sh --local --build
 
 devtest:
-	scripts/devtest.sh
+	scripts/devtest.sh --headless
 
 image:
 	: "run docker build"
-	docker build -t omegaml/omegaml:$(VERSION) .
+	scripts/livetest.sh --build
 
 release-test: dist
 	: "twine upload to pypi test"
@@ -41,7 +41,6 @@ release-docker: dist
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-
 
 thirdparty:
 	: "create THIRDPARTY & THIRDPARTY-LICENSES"

@@ -27,7 +27,7 @@ class ModelMixin(object):
         :param Yname: name of Y dataset or data
         :return: the model (self) or the string representation (python clients)
         """
-        omega_fit = self.runtime.task('omegaml.tasks.omega_fit')
+        omega_fit = self.task('omegaml.tasks.omega_fit')
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
@@ -50,7 +50,7 @@ class ModelMixin(object):
         :param Yname: name of Y dataset or data
         :return: the model (self) or the string representation (python clients) 
         """
-        omega_fit = self.runtime.task('omegaml.tasks.omega_partial_fit')
+        omega_fit = self.task('omegaml.tasks.omega_partial_fit')
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
@@ -69,7 +69,7 @@ class ModelMixin(object):
         :return: the data returned by .transform, or the metadata of the rName
             dataset if rName was given
         """
-        omega_transform = self.runtime.task('omegaml.tasks.omega_transform')
+        omega_transform = self.task('omegaml.tasks.omega_transform')
         Xname = self._ensure_data_is_stored(Xname)
         return omega_transform.delay(self.modelname, Xname,
                                      rName=rName,
@@ -89,7 +89,7 @@ class ModelMixin(object):
            dataset if rName was given
         """
 
-        omega_fit_transform = self.runtime.task(
+        omega_fit_transform = self.task(
             'omegaml.tasks.omega_fit_transform')
         Xname = self._ensure_data_is_stored(Xname)
         if Yname is not None:
@@ -110,7 +110,7 @@ class ModelMixin(object):
         :return: the data returned by .predict, or the metadata of the rName
             dataset if rName was given
         """
-        omega_predict = self.runtime.task('omegaml.tasks.omega_predict')
+        omega_predict = self.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName,
                                    **self.runtime._common_kwargs, **kwargs)
@@ -127,7 +127,7 @@ class ModelMixin(object):
         :return: the data returned by .predict_proba, or the metadata of the rName
            dataset if rName was given
         """
-        omega_predict_proba = self.runtime.task(
+        omega_predict_proba = self.task(
             'omegaml.tasks.omega_predict_proba')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName,
@@ -146,7 +146,7 @@ class ModelMixin(object):
         :return: the data returned by .score, or the metadata of the rName
            dataset if rName was given
         """
-        omega_score = self.runtime.task('omegaml.tasks.omega_score')
+        omega_score = self.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
         yName = self._ensure_data_is_stored(yName)
         return omega_score.delay(self.modelname, Xname, yName, rName=rName,
@@ -164,7 +164,7 @@ class ModelMixin(object):
         :return: the data returned by .score, or the metadata of the rName
            dataset if rName was given
         """
-        omega_decision_function = self.runtime.task('omegaml.tasks.omega_decision_function')
+        omega_decision_function = self.task('omegaml.tasks.omega_decision_function')
         Xname = self._ensure_data_is_stored(Xname)
         return omega_decision_function.delay(self.modelname, Xname, rName=rName,
                                              **self.runtime._common_kwargs, **kwargs)

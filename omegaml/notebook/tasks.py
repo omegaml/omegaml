@@ -6,8 +6,8 @@ from __future__ import absolute_import
 import datetime
 from celery import shared_task
 
+from omegaml.celery_util import OmegamlTask, sanitized
 from omegaml.documents import MDREGISTRY
-from omegaml.tasks import OmegamlTask
 
 
 class NotebookTask(OmegamlTask):
@@ -67,7 +67,7 @@ def schedule_omegaml_job(self, nb_file, **kwargs):
     schedules the running of omegaml job
     """
     result = self.om.jobs.schedule(nb_file)
-    return result
+    return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)

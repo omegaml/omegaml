@@ -30,7 +30,7 @@ services:
          - OMEGA_BROKER=amqp://rabbitmq:5672//
          - C_FORCE_ROOT=yes
    rabbitmq:
-       image: rabbitmq
+       image: rabbitmq:3.7.17
        hostname: rabbitmq
    mongodb:
        image: mongo:3.6.8-stretch

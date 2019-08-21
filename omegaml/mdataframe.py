@@ -7,14 +7,14 @@ import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
-from omegaml import defaults
+from pymongo.collection import Collection
+
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index, \
     cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance
-from pymongo.collection import Collection
 
 INSPECT_CACHE = []
 
@@ -369,6 +369,8 @@ class MDataFrame(object):
         """
         apply mixins in defaults.OMEGA_MDF_MIXINS
         """
+        from omegaml import settings
+        defaults = settings()
         for mixin, applyto in defaults.OMEGA_MDF_MIXINS:
             if any(v in self._applyto for v in applyto.split(',')):
                 extend_instance(self, mixin, *args, **kwargs)
