@@ -1,0 +1,104 @@
+What you need
+-------------
+
+Docker
+Docker-compose
+RabbitMq (docker image)
+MongoDB (docker image
+
+To use behave
+https://sites.google.com/a/chromium.org/chromedriver/downloads
+
+Dependencies
+------------
+
+* conda - we use version < 4.6 due to a nasty bug in conda 4.6.x
+  https://github.com/conda/conda/issues/7918
+
+
+* install all the software required
+
+   $ conda install --file conda-requirements.txt
+   $ pip install --file pip-requirements.txt
+   $ pip install --file requirements.dev
+
+Execute locally
+---------------
+
+Start mongo db & rabbitmq for dev purpose. Will be served on port 27019
+
+    $ docker-compose -f docker-compose-dev.yml up -d
+    $ scripts/initlocal.sh
+
+Start services using honcho::
+
+    $ honcho start worker notebook restapi
+
+Test locally
+------------
+
+There are different options:
+
+1. Run the unit tests in place
+
+   $ make test
+
+2. Run everything from local sources so you can interact with it
+
+   $ scripts/rundev.sh
+
+3. Run everything from local sources then run the livetest against it (headless)
+
+   $ make devtest
+
+4. Build omegaml docker image and run livetest locally
+
+   $ make image
+
+
+Build a release for testing
+---------------------------
+
+$ make livetest
+
+1. Builds the pip package
+2. Runs livetest against it
+
+If you just want to build the pip package without livetest, run make dist
+
+Build a release for test-distribution (test pypi)
+-------------------------------------------------
+
+$ make release-test
+
+1. runs make test, dist
+2. uploads to pypi
+3. runs livetest (which downloads from testpypi first)
+
+Build a release for prod pypi
+-----------------------------
+
+$ make release-prod
+
+1. runs make test, dist
+2. uploads to pypi
+3. runs livetest (which downloads from pypi first)
+
+Build the docker image for release
+----------------------------------
+
+$ make release-docker
+
+1. runs a local livetest, building the omegaml image
+2. pushes the omegaml image to :version and :latest
+
+Note since we already run the livetest against the newly built image,
+then push the very same, we do not run livetest again. It would just
+execute the very same livetest again, against the same image, assuming
+that the docker push was successful.
+
+
+Update THIRDPARTY license file
+------------------------------
+
+$ make thirdparty
