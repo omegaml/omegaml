@@ -68,6 +68,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def om(self):
+        # TODO do some more intelligent caching, i.e. by client/auth
         if self._om is None:
             from omegaml import get_omega_for_task
             self._om = get_omega_for_task(self)
@@ -85,6 +86,22 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def delegate_kwargs(self):
         return {k: v for k, v in six.iteritems(self.request.kwargs) if not k.startswith('__')}
 
+    def reset(self):
+        # ensure next call will start over and get a new om instance
+        self._om = None
+
+    def on_failure(self, *args, **kwargs):
+        self.reset()
+        return super().on_failure(*args, **kwargs)
+
+    def on_retry(self, *args, **kwargs):
+        self.reset()
+        return super().on_retry(*args, **kwargs)
+
+    def on_success(self, *args, **kwargs):
+        self.reset()
+        return super().on_success(*args, **kwargs)
+
 
 def get_dataset_representations(items):
     """
@@ -101,4 +118,3 @@ def sanitized(value):
     if getattr(type(value), '__name__', None) == 'Metadata':
         value = repr(value)
     return value
-

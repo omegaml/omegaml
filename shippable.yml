@@ -7,6 +7,10 @@ services:
  - mysql
  
 build:
+  pre_ci_boot:
+    image_name: continuumio/miniconda3
+    image_tag: latest
+    pull: true
   ci:
   - env
   - >
