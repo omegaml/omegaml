@@ -14,6 +14,8 @@ Further, omega|ml is the fastest way to
 
 Documentation: https://omegaml.github.io/omegaml/
 
+Contributions: https://github.com/omegaml/omegaml/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature%3Anew+request%22
+
 Get started in < 5 minutes
 ==========================
 
