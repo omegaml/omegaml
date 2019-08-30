@@ -1,9 +1,11 @@
 What you need
 -------------
 
-MySql
-RabbitMq
-MongoDB
+Docker
+Docker-compose
+RabbitMq (docker image)
+MongoDB (docker image)
+MySQL (docker image)
 
 To use behave
 https://sites.google.com/a/chromium.org/chromedriver/downloads
@@ -32,7 +34,7 @@ on web and omjobs.
 Execute locally
 ---------------
 
-    Start mongo db for dev purpose. Will be served on port 27019
+Start mongo db & rabbitmq for dev purpose. Will be served on port 27017
 
     $ docker-compose -f docker-compose-dev.yml up -d
     $ rm db.sqlite3 # optional
