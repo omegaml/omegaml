@@ -690,17 +690,19 @@ class StoreTests(unittest.TestCase):
                 'bax': 'fox'}
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        # create the collection
         foo_coll = store.mongodb['foo']
         foo_coll.insert(data)
+        # store the collection as is
         store.put(foo_coll, 'myfoo').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
         data_ = store.get('myfoo', raw=True)
-        assert_frame_equal(json_normalize(data), data_)
+        assert_frame_equal(data_, json_normalize(data))
         # test we get just the data column
         data_ = store.get('myfoo', raw=False)
         cols = ['foo', 'bax']
-        assert_frame_equal(json_normalize(data)[cols], data_[cols])
+        assert_frame_equal(data_[cols], json_normalize(data)[cols])
 
     def test_raw_files(self):
         store = OmegaStore()
