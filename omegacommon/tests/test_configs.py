@@ -53,15 +53,17 @@ class ConfigurationTests(TestCase):
         Test an Omega instance can be created from user specific configs
         """
         import omegaml as om
-        from omegaml.util import settings
+        from omegaml import settings
         # check we get default without patching
         defaults = settings()
+        # ensure the default omegaml
+        om.initialized = False
+        om.setup()
         with patch.object(defaults, 'OMEGA_MONGO_URL') as mock:
             defaults.OMEGA_MONGO_URL = 'foo'
-            om.setup()
-            self.assertEqual(om.datasets.mongo_url, 'foo')
+            omx = om.setup()
+            self.assertEqual(omx.datasets.mongo_url, 'foo')
         # reset om.datasets to restored defaults
-        om.setup()
         self.assertNotEqual(om.datasets.mongo_url, 'foo')
         # now test we can change the default through config
         # we patch the actual api call to avoid having to set up the user db
@@ -76,6 +78,7 @@ class ConfigurationTests(TestCase):
                     }
                 ]
             }
-            om = get_omega_from_apikey('foo', 'bar')
-            self.assertEqual(om.datasets.mongo_url, 'updated-foo')
+            omx = get_omega_from_apikey('foo', 'bar')
+            self.assertEqual(omx.datasets.mongo_url, 'updated-foo')
+        self.assertNotEqual(om.datasets.mongo_url, 'updated-foo')
 

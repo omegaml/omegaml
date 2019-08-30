@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: default
-  name: omegaml-worker
-data:
-  C_FORCE_ROOT: "{{C_FORCE_ROOT}}"
-  OMEGA_BROKER: {{OMEGA_BROKER}}
-  OMEGA_RESTAPI_URL: {{OMEGA_RESTAPI_URL}}

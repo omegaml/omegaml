@@ -1,7 +1,8 @@
 include README.rst
 include LICENSE
-recursive-include omegaml/example *
-recursive-include omegaml/resources *
+include omegaee/RELEASE
+include omegaee/VERSION
+recursive-include omdash/demo *
 recursive-include omegaweb/static *
 recursive-include omegaweb/templates *
 recursive-include omegaweb/fixtures *

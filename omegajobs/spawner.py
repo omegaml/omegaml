@@ -45,15 +45,16 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
             self.log.info('SimpleLocalProcessSpawner: exec_fn:get_config started')
             # get user's omegaml configuration
             try:
-                from omegaml import defaults
+                from omegaml import settings
                 import os
+                defaults = settings()
                 config_file = os.path.join(self.home_path, '.omegaml', 'config.yml')
                 # must be an admin user to get back actual user's config
                 self.log.info(os.environ)
                 self.log.info("within get_config {}".format(os.getpid()))
                 user = self.__config_env.pop('OMEGA_USERID')
                 apikey = self.__config_env.pop('OMEGA_APIKEY')
-                save_userconfig_from_apikey(config_file, user, apikey)
+                save_userconfig_from_apikey(config_file, user, apikey, view=True)
             except Exception as e:
                 self.log.error('SimpleLocalProcessSpawner: exec_fn:get_config error {}'.format(str(e)))
                 raise
@@ -86,21 +87,22 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
     def user_env(self, env):
         # we don't call super because super assumes a local OS user. we don't
         import os
-        from omegaml import defaults
-        import omegaee
+        from omegaml import settings
+        defaults = settings()
         self.log.info('SimpleLocalProcessSpawner: user environment created')
         admin_user = defaults.OMEGA_JYHUB_USER
         admin_apikey = defaults.OMEGA_JYHUB_APIKEY
         api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name)
+        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
+                                           view=True)
         configs = configs['objects'][0]['data']
         env['USER'] = self.user.name
         env['HOME'] = self.home_path
         env['SHELL'] = '/bin/bash'
         env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
         env['JY_ALLOW_ROOT'] = 'yes'
-        import omegaml
-        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaml.__file__), '..')
+        import omegaee
+        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
         env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
         self.log.info("***within user_env {}".format(os.getpid()))

@@ -6,7 +6,7 @@ example program to run in ipython
 from __future__ import absolute_import
 from __future__ import print_function
 from omegaml import Omega
-from omegaml.documents import Metadata
+from omegaml.documents import make_Metadata
 from omegaml.util import override_settings
 import argparse
 
@@ -38,7 +38,7 @@ def testOmegamlJobs(
     # run notebook
     result = om.jobs.run(nb_file)
     # retrieve result from metadata
-    metadata = Metadata.objects.get(created=result.created)
+    metadata = make_Metadata().objects.get(created=result.created)
     print("\n")
     print("Result from metadata:")
     file = om.jobs.get_result(metadata)

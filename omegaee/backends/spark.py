@@ -3,6 +3,8 @@ from omegaml.backends.basemodel import BaseModelBackend
 from mongoengine.fields import GridFSProxy
 from uuid import uuid4
 
+from omegaml.documents import MDREGISTRY
+
 
 class SparkBackend(BaseModelBackend):
     """
@@ -23,7 +25,6 @@ class SparkBackend(BaseModelBackend):
         """
         Creates a metadata object that is later used to submit spark jobs.
         """
-        from ..documents import Metadata
         params = kwargs.get('params')
         if isinstance(obj, str):
             uri = "spark://mllib/" + str(obj)
@@ -35,7 +36,7 @@ class SparkBackend(BaseModelBackend):
                 uri=uri,
                 attributes=attributes,
                 gridfile=None,
-                kind=Metadata.SPARK_MLLIB).save()
+                kind=MDREGISTRY.SPARK_MLLIB).save()
         else:
             from pyspark import SparkContext
             filename = '%s_%s' % (name, uuid4().hex)
@@ -56,7 +57,7 @@ class SparkBackend(BaseModelBackend):
                 name=name,
                 prefix=self.model_store.prefix,
                 bucket=self.model_store.bucket,
-                kind=Metadata.SPARK_MLLIB,
+                kind=MDREGISTRY.SPARK_MLLIB,
                 attributes=attrs,
                 gridfile=gridfile,
                 uri=uri).save()
@@ -66,10 +67,11 @@ class SparkBackend(BaseModelBackend):
         Returns a pre-stored model or a spark ml library class dependent on the
         content and type of metadata stored
         """
-        from ..util import load_class
+        from omegaml import load_class
+        from pyspark import SparkContext
+
         meta = self.model_store.metadata(name, version=-1)
         if meta.gridfile.grid_id is not None:
-            from pyspark import SparkContext
             sc = SparkContext.getOrCreate()
             spark_cls = meta.uri.split('/')[-1]
             model = load_class(spark_cls).load(

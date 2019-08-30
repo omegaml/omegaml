@@ -1,10 +1,10 @@
 import sys
+from copy import deepcopy
 
 import yaml
 
 from omegacommon.auth import OmegaRestApiAuth
 from omegaml import settings
-
 
 def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
@@ -19,7 +19,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
         query.append('view={}'.format(int(view)))
     api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
-    if defaults.OMEGA_RESTAPI_URL.startswith('http'):
+    if api_url.startswith('http'):
         import requests
         server = requests
         server_kwargs = dict(auth=api_auth)
@@ -58,8 +58,10 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     :returns: the Omega instance configured for the given user
     """
     from omegaml import Omega
-    from omegaml import defaults
-    from omegaml.util import settings
+    from omegaml import settings, _base_config
+    from omegaml.util import DefaultsContext
+
+    defaults = DefaultsContext(settings())
     qualifier = qualifier or 'default'
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
@@ -76,16 +78,15 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
         config = configs.get(qualifier, configs)
     else:
         config = configs[qualifier]
-    defaults.update_from_dict(config)
-    settings(reload=True)
+    _base_config.update_from_dict(config, attrs=defaults)
     om = Omega(defaults=defaults)
     return om
 
 
 def get_omega_from_config(configfile, qualifier=None):
     from omegaml import Omega
-    from omegaml import defaults
-    from omegaml.util import settings
+    from omegaml import settings, _base_config
+    defaults = settings()
     with open(configfile, 'r') as fconfig:
         configs = yaml.safe_load(fconfig)
     qualifier = qualifier or 'default'
@@ -93,20 +94,23 @@ def get_omega_from_config(configfile, qualifier=None):
         config = configs.get(qualifier, configs)
     else:
         config = configs[qualifier]
-    defaults.update_from_dict(config)
+    _base_config.update_from_dict(config, attrs=defaults)
     settings(reload=True)
     om = Omega(defaults=defaults)
     return om
 
 
-def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None):
-    from omegaml import defaults
+def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
+                                view=False):
+    from omegaml import settings
+    defaults = settings()
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     with open(configfile, 'w') as fconfig:
         auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(auth,
                                            api_url=api_url,
-                                           requested_userid=requested_userid)
+                                           requested_userid=requested_userid,
+                                           view=view)
         config = configs['objects'][0]['data']
         yaml.safe_dump(config, fconfig, default_flow_style=False)
         print("Config is in {configfile}".format(**locals()))

@@ -1,6 +1,7 @@
 import os
 
 from config.env_local import EnvSettings_Local
+from stackable import stackable, StackableSettings
 
 
 class EnvSettings_LocalTest(EnvSettings_Local):
@@ -8,13 +9,13 @@ class EnvSettings_LocalTest(EnvSettings_Local):
 
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
-                                            mongohost='localhost:27019',
+                                            mongohost='localhost:27017',
                                             password='foobar',
                                             dbname='admin')
 
     OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
                        BASE_MONGO_URL.format(user='admin',
-                                             mongohost='localhost:27019',
+                                             mongohost='localhost:27017',
                                              password='foobar',
                                              dbname='testdb'))
 

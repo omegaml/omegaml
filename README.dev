@@ -18,7 +18,7 @@ Dependencies
 * install all the software required
 
    $ conda install --file conda-requirements.txt
-   $ pip insatll --file pip-requirements.txt
+   $ pip install --file pip-requirements.txt
    $ pip install --file requirements.dev
 
 Setup
@@ -32,17 +32,11 @@ on web and omjobs.
 Execute locally
 ---------------
 
-Automated:
+    Start mongo db for dev purpose. Will be served on port 27019
 
-    $ rm db.sqlite3
+    $ docker-compose -f docker-compose-dev.yml up -d
+    $ rm db.sqlite3 # optional
     $ scripts/initlocal.sh
-
-Manually:
-
-Start mongo db for dev purpose. Will be served on port 27019
-
-    $ docker-compose -f docker-compose-mongo.yml up -d
-    $ cat scripts/mongoinit.js | docker exec -i omegaml_mongo_1 mongo
 
 Start services using honcho::
 
@@ -54,14 +48,19 @@ Start services using honcho::
 Test locally
 ------------
 
-1. Run the cluster
+There are different options:
 
-   $ honcho start web worker notebook
+1. Run the unit tests in place
 
-2. Use behave
+   $ make test
 
-    $ scripts/livetest.sh --url http://localhost:8000
+2. Run everything from local sources so you can interact with it
 
+   $ scripts/rundev.sh
+
+2. Run everything from local sources then run the livetest against it (headless)
+
+   $ make devtest
 
 Local Kubernetes Deployment
 ---------------------------
@@ -80,10 +79,27 @@ Local Kubernetes Deployment
     # $ microk8s.kubectl config view --raw > $HOME/.kube/config
 
 
-Build a release
----------------
+Build a release for testing
+---------------------------
 
-$ scripts/distrelease.sh --nominify
+$ make dist
 
-Remove the --nominify option to build a release that has scrambled source code and
-a copyright notice.
+This
+1. builds all packages from local sources
+2. builds the omegaee docker images
+3. runs livetest against this docker imgae
+
+
+Build a release for distribution
+--------------------------------
+
+$ make dist-prod
+
+Same thing as building for test, but minifies all sources first.
+
+Push final release to dockerhub
+-------------------------------
+
+$ make releae-docker
+
+Runs make dist-prod then pushes omegaee image to dockerhub tagged as release and latest

@@ -1,10 +1,9 @@
-import os
 from constance import config
-from django.conf import settings
 from django.contrib.auth.models import User
 from pymongo.mongo_client import MongoClient
 
 from landingpage.models import ServicePlan
+from omegaml.util import urlparse, settings as get_settings
 
 
 def add_user(user, password, dbname=None):
@@ -61,6 +60,8 @@ def add_userdb(dbname, username, password):
     :return: (newdb, client_mongo_url) the tuple of the new db instance and
       the mongo_url
     """
+    settings = get_settings()
+
     roles = [{
         'role': 'readWrite',
         'db': dbname,
@@ -143,8 +144,7 @@ def get_client_config(user, qualifier=None, view=False):
     :param view: if True return the internal mongo url, else external as defined in
        constance.MONGO_HOST
     """
-    import omegaml as om
-    from omegaml.util import urlparse
+    settings = get_settings()
 
     qualifier = qualifier or 'default'
     user_settings = user.services.get(offering__name='omegaml').settings
@@ -176,18 +176,17 @@ def get_client_config(user, qualifier=None, view=False):
             "CELERY_ACCEPT_CONTENT": [
                 "pickle",
                 "json",
-                "msgpack",
-                "yaml"
-            ]
+            ],
+            "CELERY_TASK_SERIALIZER": 'pickle',
         },
         "OMEGA_MONGO_URL": mongo_url,
-        "OMEGA_NOTEBOOK_COLLECTION": om.defaults.OMEGA_NOTEBOOK_COLLECTION,
+        "OMEGA_NOTEBOOK_COLLECTION": settings.OMEGA_NOTEBOOK_COLLECTION,
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_USERID": user.username,
         "OMEGA_APIKEY": user.api_key.key,
     }
-    if config.CELERY_ALWAYS_EAGER:
+    if settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER']:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
     return client_config
 

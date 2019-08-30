@@ -23,10 +23,6 @@ class OmegaScriptProxy(object):
         self.scriptname = scriptname
         self.runtime = runtime
 
-    @property
-    def _common_kwargs(self):
-        return dict(__auth=self.runtime.auth_tuple)
-
     def run(self, **kwargs):
         """
         run the script
@@ -43,5 +39,5 @@ class OmegaScriptProxy(object):
         :return: the result
         """
         script_run = self.runtime.task('omegapkg.tasks.run_omega_script')
-        return script_run.delay(self.scriptname, **self._common_kwargs,
+        return script_run.delay(self.scriptname, **self.runtime._common_kwargs,
                                 **kwargs)

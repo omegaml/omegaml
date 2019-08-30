@@ -14,9 +14,9 @@ setup(
     license='commercial',  # example license
     description='online machine learning environment for scikit-learn',
     long_description=README,
-    url='http://www.shrebo.com/',
+    url='https://omegaml.io',
     author='Patrick Senti',
-    author_email='patrick.senti@shrebo.ch',
+    author_email='patrick.senti@omegaml.io',
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
@@ -32,7 +32,7 @@ setup(
     ],
     install_requires=[
         'Django>=1.8,<1.9',
-        'celery>=3.1.20,<3.1.24',
+        'celery==4.2.1',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',

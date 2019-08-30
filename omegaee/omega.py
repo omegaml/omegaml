@@ -18,7 +18,7 @@ class EnterpriseOmega(CoreOmega):
 
     """
 
-    def __init__(self, celerykwargs=None, auth=None, **kwargs):
+    def __init__(self, auth=None, **kwargs):
         """
         Initialize the client API
 
@@ -40,16 +40,10 @@ class EnterpriseOmega(CoreOmega):
 
         # store inputs for reference
         self.auth = auth
-        self.celerykwargs = kwargs
 
         # enterprise extensions
         self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
-        self.runtime = OmegaAuthenticatedRuntime(self, backend=self.backend,
-                                                 auth=self.auth,
-                                                 broker=self.broker,
-                                                 celeryconf=self.celeryconf,
-                                                 celerykwargs=self.celerykwargs,
-                                                 defaults=self.defaults)
+        self.runtime = OmegaAuthenticatedRuntime(self, auth=self.auth, defaults=self.defaults)
         self.jobs = OmegaEnterpriseJobs(store=self._jobdata)
 
     def __repr__(self):
@@ -69,17 +63,27 @@ class EnterpriseOmegaDeferredInstance(CoreOmegaDeferredInstance):
         from omegaml.util import settings, load_class
         # load defaults
         defaults = settings()
+        # get userid, apikey and api url
         username = username or defaults.OMEGA_USERID
         apikey = apikey or defaults.OMEGA_APIKEY
         api_url = api_url or defaults.OMEGA_RESTAPI_URL
+        # get authentication options
+        auth_set_in_config = all(getattr(defaults, k, False) for k in ('OMEGA_USERID', 'OMEGA_APIKEY'))
+        auth_default_allowed = defaults.OMEGA_ALLOW_TASK_DEFAULT_AUTH
         # enable auth and start
         auth = load_class(defaults.OMEGA_AUTH_ENV)
-        if not self.initialized and username and apikey:
-            self.omega = auth.get_omega_from_apikey(username, apikey, api_url=api_url,
-                                                    qualifier=qualifier, view=view)
-        else:
-            self.omega = Omega()
-        self.initialized = True
+        if not self.initialized:
+            if username and apikey:
+                # we have a username and apikey and this is the first time we initialize
+                self.omega = auth.get_omega_from_apikey(username, apikey, api_url=api_url,
+                                                        qualifier=qualifier, view=view)
+            elif auth_default_allowed or auth_set_in_config:
+                # if valid userid and apikey set in config, or default config allowed (e.g. testing)
+                self.omega = Omega(defaults=defaults)
+            else:
+                # not allowed if we don't have a userid nor allow the default config
+                raise ValueError('EnterpriseOmegaDeferredInstance: unauthenticated omega is not supported')
+            self.initialized = True
         return self
 
 
@@ -118,11 +122,17 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None, view=True):
     :param view: if True returns cluster-internal URLs
     :return: the Omega instance
     """
-    return _om.setup(username=username,
-                     apikey=apikey,
-                     api_url=api_url,
-                     qualifier=qualifier, view=view).omega
-
+    kwargs = dict(username=username,
+                  apikey=apikey,
+                  api_url=api_url,
+                  qualifier=qualifier, view=view)
+    # if we don't have a global instance yet, initialize it
+    if not _om.initialized:
+        return _om.setup(**kwargs).omega
+    # otherwise return a new instance. use this to open a second instance for
+    # another user/apikey or qualifier
+    om = EnterpriseOmegaDeferredInstance()
+    return om.setup(**kwargs).omega
 
 def get_omega_for_task(task):
     """
@@ -144,10 +154,10 @@ def get_omega_for_task(task):
             authenticted Omega instance
     """
     from omegaml import settings, load_class
-    defaults = settings()
-    auth_env = load_class(defaults.OMEGA_AUTH_ENV)
     task_kwargs = task.request.kwargs
     auth = task_kwargs.pop('__auth', None)
+    defaults = settings()
+    auth_env = load_class(defaults.OMEGA_AUTH_ENV)
     return auth_env.get_omega_for_task(auth=auth)
 
 

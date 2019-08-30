@@ -13,14 +13,6 @@ class EnvSettings_kubernetes(Config_Dokku,
     _allowed_hosts = 'omegaml.me,localhost,omegaml'
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', _allowed_hosts).split(',')
 
-    CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost:27017', 'mongo db public host name'),
-        'JYHUB_HOST': ('localhost:8888', 'jupyter hub public host name'),
-        'BROKER_URL': ('amqp://rabbitmq:5672//',
-                       'rabbitmq broker url'),
-        'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
-    }
-
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(user='admin',

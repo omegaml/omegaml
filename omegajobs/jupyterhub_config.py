@@ -301,8 +301,8 @@ SPAWNER_CMD = {
     'local': ['jupyterhub-singleuser'],
     'secure': None, # provided by the spawner
 }
-spawner_type = os.environ.get('JYHUB_SPAWNER_TYPE', 'default')
-c.JupyterHub.spawner_class = SPAWNER_MAP.get(spawner_type)
+spawner_type = os.environ.get('JYHUB_SPAWNER_TYPE') or 'default'
+c.JupyterHub.spawner_class = SPAWNER_MAP.get(spawner_type) or 'spawner.class.not.specified'
 c.JupyertHub.SimpleLocalProcessSpawner.home_path_template = '/tmp/{userid}'
 if spawner_type:
     # only set if we actually have a command. if spawner provides command, do not set
@@ -788,3 +788,4 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import omegaml as om
+

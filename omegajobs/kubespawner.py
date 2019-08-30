@@ -1,22 +1,32 @@
 import os
 
 from jupyterhub.traitlets import Command, Unicode
+from kubernetes.client import V1NodeSelectorTerm, V1NodeSelectorRequirement
 from kubespawner import KubeSpawner
 
-import omegaml
 from omegacommon.auth import OmegaRestApiAuth
 from omegacommon.userconf import get_user_config_from_api
 
 
 class OmegaKubeSpawner(KubeSpawner):
     image = Unicode(
-        'omegaml/omegaml-ee:latest',
+        os.environ.get('JUPYTER_IMAGE', 'omegaml/omegaml-ee:latest'),
         config=True,
         help="""
             Docker image spec to use for spawning user's containers.
             By default uses the omegaml enterprise edition image
             """
     )
+
+    node_affinity_required = [
+        # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1NodeSelectorTerm.md
+        V1NodeSelectorTerm(
+            match_expressions=[
+                V1NodeSelectorRequirement(key='omegaml.io/role',
+                                          values=os.environ.get('JUPYTER_AFFINITY_ROLE', 'worker').split(','),
+                                          operator='In')
+            ])
+    ]
 
     image_pull_policy = Unicode(
         'Always',
@@ -64,7 +74,7 @@ class OmegaKubeSpawner(KubeSpawner):
                   help="""
             The command used for starting the single-user server.
         """
-    ).tag(config=False)
+                  ).tag(config=False)
 
     def get_args(self):
         args = super().get_args()
@@ -72,7 +82,7 @@ class OmegaKubeSpawner(KubeSpawner):
         return args
 
     def start(self):
-        self.log.info("***image_spec is {} cmd is {}".format(self.image_spec, self.cmd))
+        self.log.info("***image_spec is {} cmd is {}".format(self.image, self.cmd))
         self.log.info("starting stopped")
         return super().start()
 
@@ -83,13 +93,14 @@ class OmegaKubeSpawner(KubeSpawner):
             username=self.user.name
         )
 
-
     def _get_omega_config(self):
-        from omegaml import defaults
+        from omegaml import settings
+        defaults = settings()
         admin_user = defaults.OMEGA_JYHUB_USER
         admin_apikey = defaults.OMEGA_JYHUB_APIKEY
         api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name)
+        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
+                                           view=True)
         configs = configs['objects'][0]['data']
         configs['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
         return configs
@@ -105,7 +116,8 @@ class OmegaKubeSpawner(KubeSpawner):
         env['SHELL'] = '/bin/bash'
         env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
         env['JY_ALLOW_ROOT'] = 'yes'
-        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaml.__file__), '..')
+        import omegaee
+        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
         env['OMEGA_USERID'] = configs['OMEGA_USERID']
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
         env['OMEGA_RESTAPI_URL'] = configs['OMEGA_RESTAPI_URL']

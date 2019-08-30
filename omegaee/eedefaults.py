@@ -3,22 +3,37 @@ Enterprise Edition defaults
 """
 import os
 
+from omegaml.util import tensorflow_available, keras_available
+
 #: storage backends
 OMEGA_STORE_BACKENDS = {
-    'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
     'spark.mllib': 'omegaee.backends.SparkBackend',
     'pandas.csv': 'omegaee.backends.PandasExternalData',
     'python.package': 'omegapkg.PythonPackageData',
+    'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+    'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
+    'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
 }
+
+#: tensorflow backend
+if tensorflow_available():
+    OMEGA_STORE_BACKENDS.update({
+        'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
+        'tfkeras.savedmodel': 'omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend',
+        'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
+        'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
+    })
+#: keras backend
+if keras_available():
+    OMEGA_STORE_BACKENDS.update({
+        'keras.h5': 'omegaml.backends.keras.KerasBackend',
+    })
+
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
-    'omegaee.runtimes.mixins.AuthenticatedModelMixin',
-    'omegaee.runtimes.mixins.AuthenticatedGridSearchMixin',
+    'omegaml.runtimes.mixins.ModelMixin',
+    'omegaml.runtimes.mixins.GridSearchMixin',
 ]
-
-#: celery task packages
-OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks']
-
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
                      'http://localhost:8000')
@@ -38,7 +53,7 @@ OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://localhost:8001')
 #: omegaweb's API key user by JYHUB_USER to get another users config. Use omsetupuser to set this key
 OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'b7b034f57d442e605ab91f88a8936149e968e12e')
 #: allow a task to use the local default configuration (potentially insecure)
-OMEGA_ALLOW_TASK_DEFAULT_AUTH=False
+OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', False)
 
 #: authentication environment
 OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'

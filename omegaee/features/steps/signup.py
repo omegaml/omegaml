@@ -18,6 +18,7 @@ def site_deployed(ctx):
 @when("we signup a new user")
 def signup_user(ctx):
     br = ctx.browser
+    br.visit(ctx.web_url)
     br.click_link_by_text('sign in')
     assert br.is_text_present('Sign up here', wait_time=2), "Expecting link to <Sign up here>"
     br.visit(uri(br, '/accounts/signup'))

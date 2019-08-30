@@ -66,5 +66,5 @@ class ScriptResourceTests(ResourceTestCase):
         data = self.deserialize(resp)
         self.assertIn('runtimes', data)
         self.assertIn('result', data)
-        expected = list(['hello from helloworld', {'text': 'foo'}])
+        expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
         self.assertEqual(data['result'], expected)

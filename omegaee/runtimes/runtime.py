@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 
-from omegaee.runtimes.jobproxy import OmegaAuthenticatedJobProxy
 from omegaee.runtimes.scriptproxy import OmegaScriptProxy
-from omegaml.runtimes import OmegaRuntime
+from omegaml.runtimes import OmegaRuntime, OmegaJobProxy
 
 
 class OmegaAuthenticatedRuntime(OmegaRuntime):
@@ -17,6 +16,10 @@ class OmegaAuthenticatedRuntime(OmegaRuntime):
     def __repr__(self):
         return 'OmegaRuntime({}, auth={})'.format(self.omega.__repr__(), self.auth.__repr__())
 
+    @property
+    def _common_kwargs(self):
+        return dict(__auth=self.auth_tuple, pure_python=self.pure_python)
+
     def script(self, scriptname):
         """
         return a script for remote execution
@@ -27,7 +30,7 @@ class OmegaAuthenticatedRuntime(OmegaRuntime):
         """
         return a job for remote exeuction
         """
-        return OmegaAuthenticatedJobProxy(jobname, runtime=self)
+        return OmegaJobProxy(jobname, runtime=self)
 
     @property
     def auth(self):

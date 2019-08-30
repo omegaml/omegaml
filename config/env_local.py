@@ -47,26 +47,30 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(user='admin',
-                                            mongohost='localhost:27019',
+                                            mongohost='localhost:27017',
                                             password='foobar',
                                             dbname='admin'))
 
-    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
+    OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
+                       os.environ.get('MONGO_URL') or
                        BASE_MONGO_URL.format(user='admin',
-                                             mongohost='localhost:27019',
+                                             mongohost='localhost:27017',
                                              password='foobar',
                                              dbname='userdb'))
 
     SITE_ID = 1
 
+    mongo_host = os.environ.get('MONGO_HOST', 'localhost:27017')
+    jyhub_host = os.environ.get('JYHUB_HOST', 'localhost:5000')
+    broker_url = os.environ.get('BROKER_URL', 'amqp://localhost:5672//')
+
     CONSTANCE_CONFIG = {
-        'MONGO_HOST': ('localhost:27019', 'mongo db public host name'),
-        'JYHUB_HOST' : ('localhost:5000', 'jupyter hub public host name'),
-        'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
-        'CELERY_ALWAYS_EAGER': (True, 'if True celery tasks are processed locally'),
+        'MONGO_HOST': (mongo_host, 'mongo db host name'),
+        'JYHUB_HOST': (jyhub_host, 'jupyter hub public host name'),
+        'BROKER_URL': (broker_url, 'rabbitmq broker url'),
     }
 
-    DEBUG = True
+    DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
     ALLOWED_HOSTS = ['localhost', 'testserver']
 
@@ -78,18 +82,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     OMEGA_RESTAPI_URL = 'http://localhost:8000'
 
     OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']
-
-    #: storage backends
-    OMEGA_STORE_BACKENDS = {
-        'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
-        'spark.mllib': 'omegaee.backends.SparkBackend',
-        'pandas.csv': 'omegaee.backends.PandasExternalData',
-        'python.package': 'omegapkg.PythonPackageData',
-    }
-    #: storage mixins
-    OMEGA_STORE_MIXINS = [
-        'omegaml.mixins.store.ProjectedMixin',
-        'omegapkg.PythonPackageMixin',
-    ]
     #: authentication environment
     OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
+
+    # be compatible with omegaml-core flask API which does not allow trailing slash
+    TASTYPIE_ALLOW_MISSING_SLASH = True

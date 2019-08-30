@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from omegacommon.auth import OmegaRuntimeAuthentication
 from omegaee.runtimes.jobproxy import OmegaAuthenticatedJobProxy
 from omegaee.runtimes.scriptproxy import OmegaScriptProxy
-from omegaml.runtimes import OmegaRuntimeDask
+from omegaml.runtimes import OmegaRuntimeDask, OmegaJobProxy
 
 
 class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):
@@ -17,17 +17,15 @@ class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):
         super().__init__(omega, **kwargs)
         self._auth = auth
 
+    @property
+    def _common_kwargs(self):
+        return dict(__auth=self.runtime.auth_tuple, pure_python=self.pure_python)
+
     def script(self, scriptname):
         """
         return a script for remote execution
         """
         return OmegaScriptProxy(scriptname, runtime=self)
-
-    def job(self, jobname):
-        """
-        return a job for remote exeuction
-        """
-        return OmegaAuthenticatedJobProxy(jobname, runtime=self)
 
     @property
     def auth(self):

@@ -5,5 +5,8 @@ services:
     ports:
       - "27017:27017"
       - "28017:28017"
-    command: ["--auth"]
-  
+    command: ["--auth", "--oplogSize", "100"]
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "5672:5672"

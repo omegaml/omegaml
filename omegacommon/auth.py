@@ -1,4 +1,5 @@
 # source https://djangosnippets.org/snippets/2727/
+import os
 from requests.auth import AuthBase
 
 
@@ -86,7 +87,10 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
                 # we get a serialized tuple, recreate auth object
                 # -- this is a hack to easily support python 2/3 client/server mix
                 userid, apikey, qualifier = auth
-                om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier)
+                # by default assume worker is in cluster
+                # TODO refactor this setting to eedefaults
+                view = isTrue(os.environ.get('OMEGA_WORKER_INCLUSTER', True))
+                om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier, view=view)
             else:
                 raise ValueError(
                     'cannot parse authentication as {}'.format(auth))
@@ -107,3 +111,6 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
     def get_omega_from_apikey(cls, *args, **kwargs):
         from omegacommon.userconf import get_omega_from_apikey
         return get_omega_from_apikey(*args, **kwargs)
+
+isTrue = lambda v: v if isinstance(v, bool) else (
+    v.lower() in ['yes', 'y', 't', 'true', '1'])

@@ -6,10 +6,10 @@ import gridfs
 from nbformat import v4
 
 from omegaml import Omega
-from omegaml.documents import Metadata
 from omegaml.tests.test_jobs import JobTests
 from omegaml.util import settings as omegaml_settings
 
+__all__ = ['EnterpriseJobTests']
 
 class EnterpriseJobTests(JobTests):
     @property
@@ -105,7 +105,7 @@ class EnterpriseJobTests(JobTests):
         nb = v4.new_notebook(cells=cells)
         om.jobs.put(nb, nb_file)
         result = om.jobs.run_notebook(nb_file)
-        self.assertIsInstance(result, Metadata)
+        self.assertIsInstance(result, om.jobs.store._Metadata)
 
     def test_run_nonexistent_job(self):
         om = self.om

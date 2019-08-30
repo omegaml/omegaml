@@ -9,7 +9,7 @@
 ##    @script.name [option]
 ##
 ##    --sshkey=VALUE         ssh key file
-##    --config=VALUE         configuration file, defaults to ./config/config.yaml
+##    --config=VALUE         configuration file, defaults to ./k8sconfig/config.yaml
 ##    --admin-email=VALUE    admin email address for omega web
 ##    --admin-password=VALUE admin password for omega web
 ##    --admin-apikey=VALUE   jupyter hub apikey
@@ -35,7 +35,7 @@ MONGODB_PORT=27017
 RABBITMQ_PORT=5672
 
 # kube specifics
-K8S_CONFIG=${config:=./config/config.yaml}
+K8S_CONFIG=${config:=./k8sconfig/config.yaml}
 SSH_KEY=${sshkey:=/.ssh/id_rancher}
 METALLB_CONFIG=${metallb:=}
 ACME_CHALLENGE=$(acme:=./.omegaml/letsencrypt/challenge)
@@ -89,7 +89,7 @@ kubectl create secret docker-registry regcred --docker-server=$DOCKER_SERVER --d
 
 # generate config maps
 echo "Generating k8s configmaps using $K8S_CONFIG into ./kubernetes/config"
-configfiles=$(find ./config -name "*configmap*" | xargs)
+configfiles=$(find ./k8sconfig -name "*configmap*" | xargs)
 for cf in $configfiles; do
   tpl --yaml $K8S_CONFIG $cf > ./kubernetes/$cf
 done

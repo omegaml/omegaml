@@ -10,6 +10,7 @@ from tastypie.fields import CharField, ListField, DictField
 from tastypie.http import HttpBadRequest, HttpCreated, HttpAccepted
 from tastypie.resources import Resource
 
+from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
@@ -77,7 +78,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         resource_name = 'model'
         authentication = ApiKeyAuthentication()
 
-    @cqrsapi(allowed_methods=['get', 'put'])
+    @cqrsapi(allowed_methods=['put'])
     def predict(self, request, *args, **kwargs):
         """
         predict from model
@@ -90,22 +91,12 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')
-        datax = request.GET.get('datax')
+        query = request.GET
+        payload = self.deserialize(request, request.body) if request.body else None
         try:
-            result = om.runtime.model(name).predict(datax)
-            data = result.get()
+            result = GenericModelResource(om).put(name, query, payload)
         except NotFittedError as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        else:
-            # if we have a single column, get as a list
-            if len(data.shape) > 1 and data.shape[1] == 1:
-                data = data[:, 0]
-            data = data.tolist()
-            result = {
-                'datax': datax,
-                'datay': None,
-                'result': data
-            }
         return self.create_response(request, result)
 
     @cqrsapi(allowed_methods=['put'])
@@ -275,14 +266,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         """
         om = self.get_omega(request)
         objs = [{
-                    'model': {
-                        'name': meta.name,
-                        'kind': meta.kind,
-                        'created': '{}'.format(meta.created),
-                        'bucket': meta.bucket,
-                    }
-                } for meta in om.models.list(raw=True)
-                ]
+            'model': {
+                'name': meta.name,
+                'kind': meta.kind,
+                'created': '{}'.format(meta.created),
+                'bucket': meta.bucket,
+            }
+        } for meta in om.models.list(raw=True)
+        ]
         data = {
             'meta': {
                 'limit': 20,

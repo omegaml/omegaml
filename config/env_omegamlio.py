@@ -21,7 +21,6 @@ class EnvSettings_omegamlio(Config_Dokku,
         'JYHUB_HOST': ('omjobs.omegaml.io', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@omegaml.omegaml.io:5672//',
                        'rabbitmq public broker url'),
-        'CELERY_ALWAYS_EAGER': (False, 'if True celery tasks are processed locally'),
     }
     # jupyerhub settings
     OMEGA_JYHUB_URL = 'http://omjobs.omegaml.io'

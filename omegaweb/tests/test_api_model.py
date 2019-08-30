@@ -110,13 +110,13 @@ class ModelResourceTests(ResourceTestCase):
                                    authentication=self.get_credentials())
         self.assertHttpAccepted(resp)
         # predict
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         assert_almost_equal(data.get('result'), list(df['y'].astype(float)))
 
-    def test_predict(self):
+    def test_predict_from_dataset(self):
         om = self.om
         x = np.array(list(range(1, 100)))
         y = x * 2
@@ -133,8 +133,38 @@ class ModelResourceTests(ResourceTestCase):
         p.fit(X, Y)
         # execute pipeline via API and get results
         om.models.put(p, 'mymodel')
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 200)
+        data = self.deserialize(resp)
+        assert_almost_equal(data.get('result'), list(df['y'].astype(float)))
+
+    def test_predict_from_data(self):
+        om = self.om
+        x = np.array(list(range(1, 100)))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']]
+        Y = df[['y']]
+        om.datasets.put(X, 'X', append=False)
+        om.datasets.put(Y, 'Y', append=False)
+        # create a pipeline, fit, store
+        p = Pipeline([
+            ('lr', LinearRegression()),
+        ])
+        p.fit(X, Y)
+        # execute pipeline via API and get results
+        om.models.put(p, 'mymodel')
+        data = {
+            'columns': ['x'],
+            'data': {'x': df['x'].values.tolist()},
+            #'shape': [1, len(df)],  # not needed here
+        }
+        resp = self.api_client.put(self.url('mymodel', 'predict'),
+                                   data=data,
+                                   authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 200)
         data = self.deserialize(resp)
         assert_almost_equal(data.get('result'), list(df['y'].astype(float)))
 
@@ -154,7 +184,7 @@ class ModelResourceTests(ResourceTestCase):
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpBadRequest(resp)
         # fit remotely
@@ -164,7 +194,7 @@ class ModelResourceTests(ResourceTestCase):
                                    authentication=self.get_credentials())
         self.assertHttpAccepted(resp)
         # predict
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
@@ -190,7 +220,7 @@ class ModelResourceTests(ResourceTestCase):
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpBadRequest(resp)
         # fit remotely, not since we partial_fit we have to n_iter ourselves
@@ -201,7 +231,7 @@ class ModelResourceTests(ResourceTestCase):
                                        authentication=self.get_credentials())
             self.assertHttpAccepted(resp)
         # predict
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
@@ -223,7 +253,7 @@ class ModelResourceTests(ResourceTestCase):
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
-        resp = self.api_client.get(self.url('mymodel', 'predict', 'datax=X'),
+        resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpBadRequest(resp)
         # fit remotely

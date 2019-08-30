@@ -5,16 +5,18 @@
 ##    @script.name [option]
 ##
 ## Options:
-##    --version=VALUE   the version to build. defaults to 0.1
+##    --version=VALUE   the version to build. defaults to omegaee/RELEASE
 ##    --distname=VALUE  the name of the distribution. defaults to basename 
 ##    --nominify        do not obfuscate code
 ##    --nodocker        do not build a docker image
 ##    --dockertag       docker image tag. defaults to $dockertag
+##    --makebase        re-create the base image
 ##
 ##
 
 # defaults
 dockertag=${dockertag:=omegaml/omegaml-ee}
+dockerbasetag=${dockerbasetag:=omegaml/omegaml-base}
 distname=${distname:=omegaml-ee}
 
 # script setup to parse options
@@ -26,13 +28,15 @@ source $script_dir/easyoptions || exit
 release=$script_dir/release.sh
 sourcedir=$script_dir/..
 sourcedir=$(realpath $sourcedir)
-distname=${distname:=$(basename $sourcedir)}
-dockertag=${dockertag:=$(basename $sourcedir)}
+
+# distdir is where we stage the release files
 distdir=$script_dir/../dist
 mkdir -p $distdir
 distdir=$(realpath $distdir)
-version=${version:=0.1}
+version=${version:=$(cat $sourcedir/omegaee/RELEASE)}
+# release zip is the zip file of the full release
 releasezip=$distdir/omegaml-enterprise-release-$version.zip
+# minify means to scramble the source code
 if ! [[ -z $nominify ]]; then
   use_nominify=--nominify
 fi
@@ -48,6 +52,9 @@ do
 done
 rm -rf $distdir/build
 rm -rf $distdir/docker-staging
+
+# clean requirements
+$script_dir/consolidate-requirements.py -w pip-requirements.txt
 
 # build
 $release $use_nominify --source .
@@ -108,17 +115,28 @@ if [[ -z $nodocker ]]; then
   pushd build
   docker-compose down
   docker images | grep "$dockertag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
-  docker build -f Dockerfile -t $dockertag .
+
+  if [[ ! -z $makebase ]]; then
+     docker images | grep "$dockerbasetag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
+     docker build -f Dockerfile.base -t $dockerbasetag .
+  fi
+
+  docker build -f Dockerfile -t $dockertag:$version .
+  docker tag $dockertag:$version $dockertag:latest
   popd
   popd
-  echo "[INFO] Docker image $dockertag built. Source in $distdir/docker-staging/build" >> $msgfile
+  echo "[INFO] Docker image $dockertag:$version built. Source in $distdir/docker-staging/build" >> $msgfile
 fi
 
 # test release
 pushd $distdir/docker-staging/build
 ./deploy-docker.sh --clean
 popd
+
 scripts/livetest.sh --url http://localhost:5000 --headless
+
+echo "Stopping docker services from $distdir/docker-staging/build"
+docker-compose -f $distdir/docker-staging/build/docker-compose.yml
 
 echo "*** Done. Captured messages follow"
 cat $msgfile

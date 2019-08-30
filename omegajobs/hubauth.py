@@ -12,7 +12,8 @@ class OmegaAuthenticator(Authenticator):
         username = data['username']
         password = data['password']
         APIKEYS[username] = password
-        from omegaml import defaults
+        from omegaml import settings
+        defaults = settings()
         api_url = defaults.OMEGA_RESTAPI_URL
         api_auth = OmegaRestApiAuth(username, password)
         try:

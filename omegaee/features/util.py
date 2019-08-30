@@ -32,3 +32,15 @@ def get_admin_secrets(url=None):
         secrets = yaml.safe_load(fin)
         secrets = secrets.get(url) or secrets
     return secrets['admin_user'], secrets['admin_password']
+
+def handle_alert(br):
+    try:
+        alert = br.get_alert()
+        if alert:
+            alert.accept()
+    except:
+        pass
+
+def clear_om(om):
+    for omstore in (om.datasets, om.jobs, om.models):
+        [omstore.drop(name) for name in omstore.list()]
