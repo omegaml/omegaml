@@ -39,7 +39,8 @@ class VirtualObjectMixin(object):
             name = real_name
         return name, kwargs
 
-    def get(self, name, raw=False, *args, **kwargs):
+    def get(self, name, **kwargs):
+        raw = kwargs.get('raw', False)
         name, kwargs = self._resolve_realname(name, kwargs)
         if not raw and self._isvirtual(name):
             handler = self._getvirtualobjfn(name)

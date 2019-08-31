@@ -12,4 +12,4 @@ script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
-cat scripts/mongoinit.js | docker exec -i omegaml_mongo_1 mongo
+cat scripts/mongoinit.js | docker exec -i omegaml-ce_mongo_1 mongo

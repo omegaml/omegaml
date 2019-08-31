@@ -9,15 +9,20 @@ import pandas as pd
 from datetime import timedelta
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist
+from pandas.io.json import json_normalize
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import BytesIO
+from six import BytesIO, StringIO
 from six.moves import range
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
 from omegaml import backends
 from omegaml.documents import MDREGISTRY
+from omegaml.backends.rawdict import PandasRawDictBackend
+from omegaml.backends.rawfiles import PythonRawFileBackend
+from omegaml.mdataframe import MDataFrame
+
 from omegaml.store import OmegaStore
 from omegaml.util import delete_database
 
@@ -620,3 +625,101 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'test-dict', append=False)
         df2 = store.get('test-dict')
         testing.assert_frame_equal(df, df2)
+
+    def test_existing_arbitrary_collection_flat(self):
+        data = {'foo': 'bar',
+                'bax': 'fox'}
+        store = OmegaStore()
+        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        foo_coll = store.mongodb['foo']
+        foo_coll.insert(data)
+        store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
+        self.assertIn('myfoo', store.list())
+        # test we get back _id column if raw=True
+        data_ = store.get('myfoo', raw=True)
+        assert_frame_equal(json_normalize(data), data_)
+        # test we get just the data column
+        data_ = store.get('myfoo', raw=False)
+        cols = ['foo', 'bax']
+        assert_frame_equal(json_normalize(data)[cols], data_[cols])
+
+    def test_existing_arbitrary_collection_nested(self):
+        data = {'foo': 'bar',
+                'bax': {
+                    'fox': 'fax',
+                }}
+        store = OmegaStore()
+        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        foo_coll = store.mongodb['foo']
+        foo_coll.insert(data)
+        store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
+        self.assertIn('myfoo', store.list())
+        # test we get back _id column if raw=True
+        data_ = store.get('myfoo', raw=True)
+        assert_frame_equal(json_normalize(data), data_)
+        # test we get just the data column
+        data_ = store.get('myfoo', raw=False)
+        cols = ['foo', 'bax.fox']
+        assert_frame_equal(json_normalize(data)[cols], data_[cols])
+
+    def test_existing_arbitrary_collection_mdataframe(self):
+        data = {'foo': 'bar',
+                'bax': {
+                    'fox': 'fax',
+                }}
+        store = OmegaStore()
+        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        foo_coll = store.mongodb['foo']
+        foo_coll.insert(data)
+        store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
+        self.assertIn('myfoo', store.list())
+        # test we get back _id column if raw=True
+        mdf = store.getl('myfoo', raw=True)
+        self.assertIsInstance(mdf, MDataFrame)
+        data_ = mdf.value
+        assert_frame_equal(json_normalize(data), data_)
+        # test we get just the data column
+        mdf = store.getl('myfoo', raw=False)
+        self.assertIsInstance(mdf, MDataFrame)
+        data_ = mdf.value
+        cols = ['foo', 'bax.fox']
+        assert_frame_equal(json_normalize(data)[cols], data_[cols])
+
+    def test_arbitrary_collection_new(self):
+        data = {'foo': 'bar',
+                'bax': 'fox'}
+        store = OmegaStore()
+        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        # create the collection
+        foo_coll = store.mongodb['foo']
+        foo_coll.insert(data)
+        # store the collection as is
+        store.put(foo_coll, 'myfoo').save()
+        self.assertIn('myfoo', store.list())
+        # test we get back _id column if raw=True
+        data_ = store.get('myfoo', raw=True)
+        assert_frame_equal(data_, json_normalize(data))
+        # test we get just the data column
+        data_ = store.get('myfoo', raw=False)
+        cols = ['foo', 'bax']
+        assert_frame_equal(data_[cols], json_normalize(data)[cols])
+
+    def test_raw_files(self):
+        store = OmegaStore()
+        store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
+        # test we can write from a file-like object
+        data = "some data"
+        file_like = BytesIO(data.encode('utf-8'))
+        store.put(file_like, 'myfile')
+        self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        # test we can write from an actual file
+        data = "some other data"
+        file_like = BytesIO(data.encode('utf-8'))
+        with open('/tmp/testfile.txt', 'wb') as fout:
+            fout.write(file_like.read())
+        store.put('/tmp/testfile.txt', 'myfile')
+        self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+
+
+
+
