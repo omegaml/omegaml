@@ -54,8 +54,10 @@ def list_datasets(ctx):
     om.datasets.list('sample')
     """.strip()
     nb.new_cell_exec(code)
-    sleep(3)
-    assert nb.current_cell_output() == "['sample']"
+    sleep(10)
+    current = nb.current_cell_output()
+    expected = "['sample']"
+    assert current == expected, "Expected {expected}, got {current}".format(**locals)
 
 
 @then(u'we can add a notebook in the folder')
