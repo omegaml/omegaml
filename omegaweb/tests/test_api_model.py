@@ -211,19 +211,18 @@ class ModelResourceTests(ResourceTestCase):
         om.datasets.put(X, 'X', append=False)
         om.datasets.put(Y, 'Y', append=False)
         # create a pipeline without fitting yet
-        # -- see SDGRegressor guide for explanation for n_iter size
-        n_iter = 100
         p = OnlinePipeline([
             ('scale', StandardScaler()),
             ('sgdr', SGDRegressor(random_state=42, learning_rate='optimal',
-                                  penalty='none', n_iter=n_iter)),
+                                  penalty='none')),
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
         resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
         self.assertHttpBadRequest(resp)
-        # fit remotely, not since we partial_fit we have to n_iter ourselves
+        # fit remotely, note since we partial_fit we have to n_iter ourselves
+        n_iter = 100
         for i in range(n_iter):
             resp = self.api_client.put(self.url('mymodel', 'partial_fit',
                                                 'datax=X&datay=Y'),

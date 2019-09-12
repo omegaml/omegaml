@@ -16,12 +16,14 @@ Dependencies
 * conda - we use version < 4.6 due to a nasty bug in conda 4.6.x
   https://github.com/conda/conda/issues/7918
 
+  $ conda create -n omegamlee python=3
 
 * install all the software required
 
    $ conda install --file conda-requirements.txt
-   $ pip install --file pip-requirements.txt
-   $ pip install --file requirements.dev
+   $ pip install --ignore-installed pip-requirements.txt
+   $ pip install --ignore-installed requirements.extra
+
 
 Setup
 -----
