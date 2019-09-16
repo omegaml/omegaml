@@ -1,0 +1,61 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: continuumio/miniconda3:4.5.12
+    - image: mongo:3.6.8-stretch
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: foobar
+      command:
+      - --auth
+      - --oplogSize
+      - '100'
+#    - image: rabbitmq
+    steps:
+    - checkout
+    - run:
+        name: Install system packages
+        command: |
+          apt-get -q update
+          apt-get -q -y install make
+    - restore_cache:
+        key: v1-omegaml-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
+          "pip-requirements.txt" }}
+    - run:
+        name: Create Python environment
+        command: |
+          if [ ! -d /opt/conda/envs/omenv ]
+          then
+            conda create --offline -q -y -n omenv
+            conda activate omenv
+            conda install -q -y --file conda-requirements.txt
+            pip install -q -r pip-requirements.txt
+          fi
+        shell: /bin/bash -l -eo pipefail
+    - save_cache:
+        key: v1-omegaml-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
+          "pip-requirements.txt" }}
+        paths:
+        - /opt/conda/envs/omenv
+        - /root/.conda
+#    - run:
+#        name: Start processes
+#        command: |
+#          conda activate omenv
+#          honcho start worker notebook restapi
+#        shell: /bin/bash -l -eo pipefail
+#        background: true
+#        environment:
+#          C_FORCE_ROOT: true
+    - run:
+        name: Run unit tests
+        command: |
+          conda activate omenv
+          make test
+        shell: /bin/bash -l -eo pipefail
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
