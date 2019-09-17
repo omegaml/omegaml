@@ -71,7 +71,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         # TODO do some more intelligent caching, i.e. by client/auth
         if self._om is None:
             from omegaml import get_omega_for_task
-            self._om = get_omega_for_task(self)
+            bucket = self.request.kwargs.get('__bucket')
+            self._om = get_omega_for_task(self)[bucket]
         return self._om
 
     def get_delegate(self, name, kind='models'):

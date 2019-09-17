@@ -7,11 +7,14 @@ import os
 
 
 class OmegaTestMixin(object):
-    def clean(self):
-        drop = self.om.models.drop
-        [drop(m, force=True) for m in self.om.models]
-        drop = self.om.datasets.drop
-        [drop(m, force=True) for m in self.om.datasets]
+    def clean(self, bucket=None):
+        om = self.om[bucket] if bucket is not None else self.om
+        drop = om.models.drop
+        [drop(m, force=True) for m in om.models]
+        drop = om.datasets.drop
+        [drop(m, force=True) for m in om.datasets]
+        self.assertListEqual(om.datasets.list(), [])
+        self.assertListEqual(om.models.list(), [])
 
 
 def tf_in_eager_execution():

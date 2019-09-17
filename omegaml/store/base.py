@@ -676,8 +676,9 @@ class OmegaStore(object):
         """
         if kind:
             backend = self.get_backend_bykind(kind)
-            if not backend.supports(obj):
-                warnings.warn('')
+            if not backend.supports(obj, name, attributes=attributes, **kwargs):
+                objtype = str(type(obj))
+                warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
             return backend
         for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
             backend = self.get_backend_bykind(kind)
@@ -693,7 +694,7 @@ class OmegaStore(object):
         """
         return self.get(*args, lazy=True, **kwargs)
 
-    def get(self, name, bucket=None, prefix=None, version=-1, force_python=False,
+    def get(self, name, version=-1, force_python=False,
             kind=None, **kwargs):
         """
         Retrieve an object
@@ -705,7 +706,7 @@ class OmegaStore(object):
         :return: an object, estimator, pipelines, data array or pandas dataframe
             previously stored with put()
         """
-        meta = self.metadata(name, bucket=None, prefix=None, version=version)
+        meta = self.metadata(name, version=version)
         if meta is None:
             return None
         if not force_python:
