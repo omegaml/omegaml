@@ -148,7 +148,6 @@ class OmegaRuntime(object):
         celery configurations (as opposed to using the default app's
         import, which seems to confuse celery)
         """
-        # import omegapkg.tasks
         kwargs.update(self._common_kwargs)
         taskfn = self.celeryapp.tasks.get(name)
         assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())

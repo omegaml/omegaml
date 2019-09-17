@@ -51,6 +51,11 @@ class Omega(object):
     def __repr__(self):
         return 'Omega()'.format()
 
+    def _clone(self, **kwargs):
+        return self.__class__(defaults=self.defaults,
+                              mongo_url=self.mongo_url,
+                              **kwargs)
+
     def __getitem__(self, bucket):
         """
         return Omega instance configured for the given bucket
@@ -60,14 +65,20 @@ class Omega(object):
                   it gets created on first storage of an object.
                   If bucket=None returns self.
 
+        Usage:
+            import omegaml as om
+
+            # om is configured on the default bucket
+            # om_mybucket will use the same settings, but configured for mybucket
+            om_mybucket = om['mybucket']
+
         Returns:
             Omega instance configured for the given bucket
         """
         if bucket is None or self.bucket == bucket:
             return self
-        return Omega(defaults=self.defaults,
-                     mongo_url=self.mongo_url,
-                     bucket=bucket)
+        return self._clone(bucket=bucket)
+
 
 
 class OmegaDeferredInstance(object):
