@@ -21,9 +21,8 @@ Dependencies
 * install all the software required
 
    $ conda install --file conda-requirements.txt
-   $ pip install --ignore-installed pip-requirements.txt
-   $ pip install --ignore-installed requirements.extra
-
+   $ pip install --ignore-installed -r pip-requirements.txt
+   $ pip install --ignore-installed -r requirements.extra
 
 Setup
 -----
