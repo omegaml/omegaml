@@ -136,7 +136,7 @@ popd
 scripts/livetest.sh --url http://localhost:5000 --headless
 
 echo "Stopping docker services from $distdir/docker-staging/build"
-docker-compose -f $distdir/docker-staging/build/docker-compose.yml
+docker-compose -f $distdir/docker-staging/build/docker-compose.yml stop
 
 echo "*** Done. Captured messages follow"
 cat $msgfile

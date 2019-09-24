@@ -18,7 +18,7 @@ pushd $script_dir
 # launch and wait for services to start
 if [[ ! -z $clean ]]; then
     echo "Removing services..."
-    docker-compose down
+    docker-compose down --remove-orphans
     echo "Services removed."
 fi
 echo "Starting services"
