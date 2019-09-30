@@ -12,7 +12,11 @@ script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
+rm db.sqlite3
+rm jupyterhub.sqlite
+
 cat scripts/mongoinit.js | docker exec -i omegaml_mongo_1 mongo
+
 python manage.py migrate
 python manage.py loaddata landingpage.json
 python manage.py omsetupuser --username admin --email admin@omegaml.io --password test --admin --nodeploy

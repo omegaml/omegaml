@@ -8,16 +8,19 @@ class EnvSettings_LocalTest(EnvSettings_Local):
     NOSE_ARGS = ['--nologcapture', '-s']
 
     BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
-    MONGO_ADMIN_URL = BASE_MONGO_URL.format(user='admin',
-                                            mongohost='localhost:27017',
-                                            password='foobar',
-                                            dbname='admin')
-
-    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
+    mongo_host = os.environ.get('MONGO_HOST', 'localhost:27017')
+    MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(user='admin',
-                                             mongohost='localhost:27017',
+                                             mongohost=mongo_host,
                                              password='foobar',
-                                             dbname='testdb'))
+                                             dbname='admin'))
+
+    OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
+                       os.environ.get('MONGO_URL') or
+                       BASE_MONGO_URL.format(user='admin',
+                                             mongohost=mongo_host,
+                                             password='foobar',
+                                             dbname='userdb'))
 
     OMEGA_RESTAPI_URL = ''
     # allow default task auth for testing

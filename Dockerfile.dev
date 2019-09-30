@@ -1,0 +1,34 @@
+# this builds the local development image
+FROM continuumio/miniconda3:4.5.12
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+
+RUN apt-get update --fix-missing && \
+    apt-get install -y wget bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git && \
+    apt-get install -y build-essential psmisc && \
+    apt-get install -y texlive-xetex && \
+    apt-get install -y default-libmysqlclient-dev gcc
+
+# https://jpmelos.com/articles/how-use-chrome-selenium-inside-docker-container-running-python/
+RUN curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /chrome.deb && \
+    dpkg -i /chrome.deb || apt-get install -yf && \
+    rm /chrome.deb && \
+    curl https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_linux64.zip -o /tmp/chromedriver.zip && \
+    unzip -o /tmp/chromedriver.zip -d /usr/local/bin && chmod +x /usr/local/bin/chromedriver
+
+COPY conda-requirements.txt ./
+COPY pip-requirements.txt ./
+COPY pip-requirements.extra ./
+COPY .bashrc /root
+COPY behave.yml /root/.omegaml/behave.yml
+
+RUN conda create -n omegamlee python=3.6.8
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate omegamlee && \
+    conda install --file conda-requirements.txt
+
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate omegamlee && \
+    pip install --ignore-installed -r pip-requirements.txt && \
+    pip install --ignore-installed -r pip-requirements.extra

@@ -51,6 +51,7 @@ Fabric3==1.14.post1
 Flask==1.1.1
 Flask-Compress==1.4.0
 flask-restplus==0.12.1
+gast==0.2.2
 google-auth==1.6.3
 gunicorn==19.7.1
 honcho==1.0.1

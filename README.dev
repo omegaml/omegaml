@@ -8,10 +8,72 @@ MongoDB (docker image)
 MySQL (docker image)
 
 To use behave
-https://sites.google.com/a/chromium.org/chromedriver/downloads
+- see https://sites.google.com/a/chromium.org/chromedriver/downloads
+- make sure chromedriver is in /usr/local/bin
 
-Dependencies
-------------
+On MacOS you also need
+    brew
+
+MacOS developers:
+    You need to install gnu-sed and grealpath from core-utils for
+    rundev.sh to work:
+
+    $ brew install gnu-sed coreutils
+    $ ln -fs /usr/local/bin/gsed /usr/local/bin/sed
+    $ ln -fs /usr/local/bin/grealpath /usr/local/bin/realpath
+
+Clone the repositories
+----------------------
+
+This is the README for the commercial version, omegaml-enterprise. However
+we also need omegaml core (open source) to be able to work effectively.
+
+    $ git clone git@github.com:omegaml/omegaml-enterprise.git omegaml
+    $ git clone git@github.com:omegaml/omegaml.git omegaml-ce
+
+How to build your development environment
+-----------------------------------------
+
+Credit where credit is due:
+
+    Thanks to the foresight of contributor ackarapazar we have a fully
+    dockerized development environment that work's across platforms,
+    so you don't need to install any local software (other then above
+    dependencies).
+
+In general you should be able to follow these steps:
+
+1. Run the development docker image shell as your development shell (
+
+    $ scripts/rundev.sh --docker --clean --shell
+
+    Note you only need the --clean parameter on your first start.
+    It initialises all containers and sets up the environment.
+
+2. Check everything is running fine
+
+    $ scripts/rundev.sh --docker --shell
+    (omegaml-dev)$ make test
+
+3. Edit files in your local directory (where you cloned the repos)
+
+    The omegaml-dev image links your local directories as follows.
+    See docker-compose.dev.yml:omegaml-dev:volumes
+
+    # local => container
+    ../omegaml => ./omegaml
+    ../omegaml-ce => ./omegaml-ce
+
+In rare cases only you may need to re-build the development docker
+image, such as when you need to introduce additional requirements:
+
+Build the development docker image and start from a clean state
+(this is one-time only lest new dependencies, can take up to 20 minutes)
+
+    $ scripts/rundev.sh --build --clean
+
+Other Dependencies
+------------------
 
 * conda - we use version < 4.6 due to a nasty bug in conda 4.6.x
   https://github.com/conda/conda/issues/7918
@@ -35,18 +97,27 @@ on web and omjobs.
 Execute locally
 ---------------
 
-Start mongo db & rabbitmq for dev purpose. Will be served on port 27017
+Start omegaml-dev, mongo db & rabbitmq services and their dependencies using
+Docker. This will start a shell:
 
-    $ docker-compose -f docker-compose-dev.yml up -d
-    $ rm db.sqlite3 # optional
-    $ scripts/initlocal.sh
+    $ scripts/rundev.sh --docker --shell
 
-Start services using honcho::
+Run unit tests
 
-    # PORT=8000 sets the web apps server in conf_gunicorn
-    $ PORT=8000 honcho start web notebook worker
+    omegaml-dev $ make test
 
-* PORT=8000 sets the web apps server in conf_gunicorn
+Run services
+
+    omegaml-dev $ scripts/rundev.sh
+
+Run livetests
+
+    omegaml-dev $ scripts/devtest.sh --headless
+
+Start services manually using honcho::
+
+   omegaml-dev $ PORT=8000 honcho start web notebook worker
+   # PORT=8000 sets the web apps server in conf_gunicorn
 
 Test locally
 ------------
@@ -55,15 +126,15 @@ There are different options:
 
 1. Run the unit tests in place
 
-   $ make test
+   omgeml-dev $ make test
 
 2. Run everything from local sources so you can interact with it
 
-   $ scripts/rundev.sh
+   omgeml-dev $ scripts/rundev.sh
 
 2. Run everything from local sources then run the livetest against it (headless)
 
-   $ make devtest
+   omgeml-dev $ make devtest
 
 Local Kubernetes Deployment
 ---------------------------
