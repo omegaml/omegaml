@@ -1,0 +1,12 @@
+FROM continuumio/miniconda3
+
+ADD *requirements.txt /app/
+RUN apt-get update -y && \
+    apt-get install -y --fix-missing mysql-client && \
+    apt-get install -y default-libmysqlclient-dev python-dev build-essential  && \
+    apt-get clean
+RUN conda install -y conda=4.3 && \
+    conda update -y python 
+RUN conda install -y --file /app/conda-requirements.txt && \
+    conda clean --all
+RUN pip install --ignore-installed --no-cache-dir --no-warn-conflicts -r /app/requirements.txt

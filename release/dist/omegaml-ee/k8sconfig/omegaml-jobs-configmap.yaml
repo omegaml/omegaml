@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: omegaml-jobs
+data:
+  APP: omjobs
+  OMEGA_JYHUB_APIKEY: {{OMEGA_JYHUB_APIKEY}}
+  OMEGA_RESTAPI_URL: {{OMEGA_RESTAPI_URL}}
+  JYHUB_SPAWNER_TYPE: {{JYHUB_SPAWNER_TYPE}}
+
