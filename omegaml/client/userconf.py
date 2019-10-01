@@ -19,7 +19,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
         query.append('view={}'.format(int(view)))
     api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
-    if defaults.OMEGA_RESTAPI_URL.startswith('http'):
+    if api_url.startswith('http'):
         import requests
         server = requests
         server_kwargs = dict(auth=api_auth)

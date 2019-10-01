@@ -6,5 +6,5 @@ ENV  pypi=$pypi
 WORKDIR /root
 COPY ./packages /var/packages
 RUN  pip install --upgrade pip -q
-RUN  pip install --ignore-installed six -f /var/packages -i $pypi --extra-index-url https://pypi.org/simple/ omegaml[all] && \
+RUN  pip install --ignore-installed six -f /var/packages -i $pypi --extra-index-url https://pypi.org/simple/ --pre omegaml[all] && \
      pip install behave splinter

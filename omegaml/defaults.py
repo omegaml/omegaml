@@ -55,6 +55,8 @@ OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
+    'pandas.rawdict': 'omegaml.backends.rawdict.PandasRawDictBackend',
+    'python.file': 'omegaml.backends.rawfiles.PythonRawFileBackend',
 }
 
 #: tensorflow backend
@@ -119,7 +121,11 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
         userconfig = yaml.safe_load(config_file)
     if userconfig:
         for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
-            vars[k] = userconfig.get(k, None) or vars[k]
+            value = userconfig.get(k, None) or vars[k]
+            if isinstance(vars[k], dict):
+                vars[k].update(value)
+            else:
+                vars[k] = value
     return vars
 
 

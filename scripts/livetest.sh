@@ -16,6 +16,8 @@
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
+source $script_dir/omutils || exit
+
 # configuration specific to the environment
 mongourl="mongodb://mongodb:27017/omega"
 omegaurl="http://omegaml:5000"
@@ -60,6 +62,8 @@ docker-compose up $buildopt -d
 if [ ! -z "$tag" ]; then
   docker tag omegaml/omegaml:latest omegaml/omegaml:$docker_tag
 fi
+echo "giving the services time to spin up"
+countdown 30
 # actually run the livetest
 docker run -p $chrome_debug_port -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features
 rm -f $script_dir/livetest/packages/*whl

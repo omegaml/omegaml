@@ -7,8 +7,10 @@ import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
+from pandas.io.json import json_normalize
 from pymongo.collection import Collection
 
+from omegaml import defaults
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
@@ -324,10 +326,12 @@ class MDataFrame(object):
     def __init__(self, collection, columns=None, query=None,
                  limit=None, skip=None, sort_order=None,
                  force_columns=None, immediate_loc=False, auto_inspect=False,
+                 normalize=False, raw=False,
+                 parser=None,
                  preparefn=None, **kwargs):
         self.collection = PickableCollection(collection)
         # columns in frame
-        self.columns = make_tuple(columns) if columns else self._get_fields()
+        self.columns = make_tuple(columns) if columns else self._get_fields(raw=raw)
         self.columns = [str(col) for col in self.columns]
         # columns to sort by, defaults to not sorted
         self.sort_order = sort_order
@@ -362,8 +366,12 @@ class MDataFrame(object):
         # apply mixins
         self._applyto = str(self.__class__)
         self._apply_mixins()
+        # parser to parse documents to dataframe
+        self._parser = json_normalize if normalize else parser
         # prepare function to be applied just before returning from .value
         self._preparefn = preparefn
+        # keep technical fields like _id, _idx etc
+        self._raw = raw
 
     def _apply_mixins(self, *args, **kwargs):
         """
@@ -481,15 +489,17 @@ class MDataFrame(object):
         """
         return MGrouper(self, self.collection, columns, sort=sort)
 
-    def _get_fields(self):
+    def _get_fields(self, raw=False):
+        result = []
         doc = self.collection.find_one()
-        if doc is None:
-            result = []
-        else:
-            result = [col for col in doc.keys()
-                      if col != '_id'
-                      and not col.startswith('_idx')
-                      and not col.startswith('_om#')]
+        if doc is not None:
+            if raw:
+                result = list(doc.keys())
+            else:
+                result = [str(col) for col in doc.keys()
+                              if col != '_id'
+                              and not col.startswith('_idx')
+                              and not col.startswith('_om#')]
         return result
 
     def _get_frame_index(self):
@@ -596,13 +606,13 @@ class MDataFrame(object):
         """ 
         from the given cursor return a DataFrame
         """
-        df = cursor_to_dataframe(cursor)
+        df = cursor_to_dataframe(cursor, parser=self._parser)
         df = self._restore_dataframe_proper(df)
         return df
 
     def _restore_dataframe_proper(self, df):
         df = restore_index(df, dict())
-        if '_id' in df.columns:
+        if '_id' in df.columns and not self._raw:
             df.drop('_id', axis=1, inplace=True)
         if self.force_columns:
             missing = set(self.force_columns) - set(self.columns)

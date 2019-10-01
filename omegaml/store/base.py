@@ -76,6 +76,7 @@ from __future__ import absolute_import
 import os
 import re
 import tempfile
+import warnings
 from fnmatch import fnmatch
 from uuid import uuid4
 
@@ -303,16 +304,25 @@ class OmegaStore(object):
         if meta is not None:
             meta.delete()
 
-    def collection(self, name=None):
+    def collection(self, name=None, bucket=None, prefix=None):
         """
         Returns a mongo db collection as a datastore
+
+        If there is an existing object of name, will return the .collection
+        of the object. Otherwise returns the collection according to naming
+        convention {bucket}.{prefix}.{name}.datastore
 
         :param name: the collection to use. if none defaults to the
             collection name given on instantiation. the actual collection name
             used is always prefix + name + '.data'
         """
-        collection = self._get_obj_store_key(name, '.datastore')
-        collection = collection.replace('..', '.')
+        # see if we have a known object and a collection for that, if not define it
+        meta = self.metadata(name, bucket=bucket, prefix=prefix)
+        collection = meta.collection if meta else None
+        if not collection:
+            collection = self._get_obj_store_key(name, '.datastore')
+            collection = collection.replace('..', '.')
+        # return the collection
         try:
             datastore = getattr(self.mongodb, collection)
         except Exception as e:
@@ -355,16 +365,15 @@ class OmegaStore(object):
         extend_instance(self, mixincls)
         return self
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, attributes=None, kind=None, **kwargs):
         """
-        Stores an objecs, store estimators, pipelines, numpy arrays or
+        Stores an object, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
-        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
-            backend_cls = load_class(backend_cls)
-            if backend_cls.supports(obj, name, attributes=attributes, **kwargs):
-                backend = self.get_backend_bykind(kind)
-                return backend.put(obj, name, attributes=attributes, **kwargs)
+        backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind, **kwargs)
+        if backend:
+            return backend.put(obj, name, attributes=attributes, **kwargs)
+        # TODO move all of the specifics to backend implementations
         if is_estimator(obj):
             backend = self.get_backend_bykind(MDREGISTRY.SKLEARN_JOBLIB)
             return backend.put_model(obj, name, attributes)
@@ -653,13 +662,26 @@ class OmegaStore(object):
         :return: the backend 
         """
         meta = self.metadata(name)
-        if meta is not None:
-            backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS.get(meta.kind))
-            if backend_cls:
-                model_store = model_store or self
-                data_store = data_store or self
-                backend = backend_cls(model_store=model_store,
-                                      data_store=data_store, **kwargs)
+        if meta is not None and meta.kind in self.defaults.OMEGA_STORE_BACKENDS:
+            return self.get_backend_bykind(meta.kind,
+                                           model_store=model_store,
+                                           data_store=data_store)
+        return None
+
+    def get_backend_byobj(self, obj, name, kind=None, attributes=None, **kwargs):
+        """
+        return the matching backend for the given obj
+        Returns:
+            the first backend that supports the given parameters or None
+        """
+        if kind:
+            backend = self.get_backend_bykind(kind)
+            if not backend.supports(obj):
+                warnings.warn('')
+            return backend
+        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+            backend = self.get_backend_bykind(kind)
+            if backend.supports(obj, name, attributes=attributes, **kwargs):
                 return backend
         return None
 
@@ -671,8 +693,8 @@ class OmegaStore(object):
         """
         return self.get(*args, lazy=True, **kwargs)
 
-    def get(self, name, version=-1, force_python=False,
-            **kwargs):
+    def get(self, name, bucket=None, prefix=None, version=-1, force_python=False,
+            kind=None, **kwargs):
         """
         Retrieve an object
 
@@ -683,11 +705,11 @@ class OmegaStore(object):
         :return: an object, estimator, pipelines, data array or pandas dataframe
             previously stored with put()
         """
-        meta = self.metadata(name, version=version)
+        meta = self.metadata(name, bucket=None, prefix=None, version=version)
         if meta is None:
             return None
         if not force_python:
-            backend = self.get_backend(name)
+            backend = self.get_backend(name) if not kind else self.get_backend_bykind(kind)
             if backend is not None:
                 return backend.get(name, **kwargs)
             if meta.kind == MDREGISTRY.SKLEARN_JOBLIB:
@@ -942,12 +964,12 @@ class OmegaStore(object):
         """
         return self._get_obj_store_key(name, ext)
 
-    def _get_obj_store_key(self, name, ext):
+    def _get_obj_store_key(self, name, ext, prefix=None, bucket=None):
         # backwards compatilibity implementation of object_store_key()
         name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
         filename = '{bucket}.{prefix}.{name}'.format(
-            bucket=self.bucket,
-            prefix=self.prefix,
+            bucket=bucket or self.bucket,
+            prefix=prefix or self.prefix,
             name=name,
             ext=ext).replace('/', '_').replace('..', '.')
         return filename

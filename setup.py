@@ -44,7 +44,7 @@ setup(
         'pandas>=0.17.1',
         'numpy>=1.10.4',
         'scipy>=0.17.0',
-        'scikit-learn>=0.17.1',
+        'scikit-learn>=0.20',
         'PyYAML>=3.11',
         'flask-restplus>=0.12.1',
         'six>=1.11.0',
