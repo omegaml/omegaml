@@ -66,5 +66,7 @@ echo "giving the services time to spin up"
 countdown 30
 # actually run the livetest
 docker run -p $chrome_debug_port -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features
+success=$?
 rm -f $script_dir/livetest/packages/*whl
 docker-compose stop
+exit $success
