@@ -564,3 +564,9 @@ def ensure_json_serializable(v):
         }
         return vv
     return v
+
+def mkdirs(path):
+    """ safe os.makedirs for python 2 & 3
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
