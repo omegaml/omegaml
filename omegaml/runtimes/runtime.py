@@ -48,9 +48,10 @@ class OmegaRuntime(object):
     omegaml compute cluster gateway 
     """
 
-    def __init__(self, omega, defaults=None, celeryconf=None):
+    def __init__(self, omega, bucket=None, defaults=None, celeryconf=None):
         self.omega = omega
         defaults = defaults or settings()
+        self.bucket = bucket
         self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
         # initialize celery as a runtimes
@@ -72,7 +73,8 @@ class OmegaRuntime(object):
 
     @property
     def _common_kwargs(self):
-        common = dict(pure_python=self.pure_python)
+        common = dict(pure_python=self.pure_python,
+                      __bucket=self.bucket)
         common.update(self._task_default_kwargs)
         common.update(self._require_kwargs)
         return common

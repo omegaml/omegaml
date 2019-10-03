@@ -4,13 +4,13 @@ class RequestsLikeTestClient(object):
         self.client = app.test_client()
         self.headers = None
 
-    def make_client_kwargs(self, json=None, auth=None, **kwargs):
-        self.headers = headers = {}
+    def make_client_kwargs(self, json=None, auth=None, headers=None, **kwargs):
+        self.headers = headers or {}
         if auth:
             auth(self)
         if json:
             from json import dumps
-            headers.update({
+            self.headers.update({
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             })
