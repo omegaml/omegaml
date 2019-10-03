@@ -1,70 +1,86 @@
 version: 2
 jobs:
   build:
-    docker:
-    - image: continuumio/miniconda3:4.5.12
-    - image: mongo:3.6.8-stretch
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: foobar
-      command:
-      - --auth
-      - --oplogSize
-      - '100'
-#    - image: rabbitmq
+    working_directory: /home/circleci
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
-    - checkout
     - run:
         name: Install system packages
         command: |
-          apt-get -q update
-          apt-get -q -y install make gcc libmariadb-dev-compat texlive texlive-xetex
-    - restore_cache:
-        key: v1-omegaml-enterprise-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
-          "pip-requirements.txt" }}-{{ checksum "pip-requirements.extra" }}
+          sudo apt-get -q update
+          sudo apt-get -q -y install libmysqlclient-dev texlive-xetex texlive-generic-extra
+    - checkout:
+        path: /home/circleci/omegaml
+    - run:
+        name: Install Miniconda
+        command: |
+          curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+          sh Miniconda3-4.5.12-Linux-x86_64.sh -b
     - run:
         name: Create Python environment
         command: |
-          if [ ! -d /opt/conda/envs/omenv ]
-          then
-            conda create --offline -q -y -n omenv
-            conda activate omenv
-            conda install -q -y --file conda-requirements.txt
-            pip install --ignore-installed -q -r pip-requirements.txt
-            pip install --ignore-installed -q -r pip-requirements.extra
-          fi
+          source miniconda3/etc/profile.d/conda.sh
+          conda create --offline -q -y -n omenv
+          conda activate omenv
+          cd omegaml
+          conda install -q -y --file conda-requirements.txt
+          pip install --ignore-installed -q -r pip-requirements.txt
+          pip install --ignore-installed -q -r pip-requirements.extra
+          pip install --ignore-installed -q -r docs/requirements.txt
         shell: /bin/bash -l -eo pipefail
-    - save_cache:
-        key: v1-omegaml-enterprise-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
-          "pip-requirements.txt" }}-{{ checksum "pip-requirements.extra" }}
-        paths:
-        - /opt/conda/envs/omenv
-        - /root/.conda
-#    - run:
-#        name: Setup data
-#        command: |
-#          conda activate omenv
-#          rm -f db.sqlite3
-#          python manage.py migrate --noinput
-#          python manage.py loaddata landingpage.json
-#          python manage.py omsetupuser --username admin --email admin@omegaml.io --password test --admin --nodeploy
-#          python manage.py omsetupuser --username jyadmin --staff --apikey b7b034f57d442e605ab91f88a8936149e968e12e
-#        shell: /bin/bash -l -eo pipefail
-#    - run:
-#        name: Start processes
-#        command: |
-#          conda activate omenv
-#          honcho start web notebook worker
-#        shell: /bin/bash -l -eo pipefail
-#        background: true
-#        environment:
-#          PORT: '8000'
-#          C_FORCE_ROOT: true
     - run:
         name: Run unit tests
         command: |
+          source miniconda3/etc/profile.d/conda.sh
           conda activate omenv
+          cd omegaml
+          docker-compose up -d
+          echo "Waiting..."
+          sleep 10
+          docker exec -i $(docker ps -q) mongo < scripts/mongoinit.js
           make test
+          docker-compose down
+        shell: /bin/bash -l -eo pipefail
+    - run:
+        name: Update Chrome
+        command: |
+          curl --silent --show-error --location --fail --retry 3 --output /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          (sudo dpkg -i /tmp/google-chrome-stable_current_amd64.deb || sudo apt-get -fy install)
+          sudo sed -i 's|HERE/chrome"|HERE/chrome" --disable-setuid-sandbox --no-sandbox|g' "/opt/google/chrome/google-chrome"
+          google-chrome --version
+    - run:
+        name: Update Chromedriver
+        command: |
+          CHROME_VERSION="$(google-chrome --version)"
+          export CHROMEDRIVER_RELEASE="$(echo $CHROME_VERSION | sed 's/^Google Chrome //')"
+          export CHROMEDRIVER_RELEASE=${CHROMEDRIVER_RELEASE%%.*}
+          CHROMEDRIVER_VERSION=$(curl --silent --show-error --location --fail --retry 4 --retry-delay 5 http://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROMEDRIVER_RELEASE})
+          curl --silent --show-error --location --fail --retry 4 --retry-delay 5 --output /tmp/chromedriver_linux64.zip "http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          cd /tmp
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          chromedriver --version
+    - run:
+        name: Checkout sibling repos
+        command: |
+          git clone --depth 1 https://github.com/omegaml/omegaml omegaml-ce
+          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/stackable
+          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage
+          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/ccbackend
+          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
+          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex
+          ls
+    - run:
+        name: Run live tests
+        command: |
+          source miniconda3/etc/profile.d/conda.sh
+          conda activate omenv
+          mkdir -p .omegaml
+          printf "admin_user: admin@omegaml.io\nadmin_password: test" > .omegaml/behave.yml
+          cd omegaml
+          LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make dist
         shell: /bin/bash -l -eo pipefail
 workflows:
   version: 2

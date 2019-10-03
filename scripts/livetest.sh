@@ -43,5 +43,5 @@ fi
 
 # FIXME build a container as in core in order to test a known release
 # start livetest
-behave ./omegaee/features --no-capture $behave_options
+behave ./omegaee/features --no-capture $behave_options $LIVETEST_BEHAVE_EXTRA_OPTS
 
