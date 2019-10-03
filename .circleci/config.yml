@@ -41,7 +41,7 @@ jobs:
           source miniconda3/etc/profile.d/conda.sh
           conda activate omenv
           cd omegaml-ce
-          make livetest
+          LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
         shell: /bin/bash -l -eo pipefail
 workflows:
   version: 2
