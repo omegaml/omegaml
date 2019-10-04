@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from celery import Celery
 
 from omegaml.runtimes.jobproxy import OmegaJobProxy
+from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 from omegaml.util import settings
 import logging
 
@@ -133,6 +134,12 @@ class OmegaRuntime(object):
         self.require(require) if require else None
         return OmegaJobProxy(jobname, runtime=self)
 
+    def script(self, scriptname):
+        """
+        return a script for remote execution
+        """
+        return OmegaScriptProxy(scriptname, runtime=self)
+
     def task(self, name, **kwargs):
         """
         retrieve the task function from the celery instance
@@ -144,7 +151,7 @@ class OmegaRuntime(object):
         # import omegapkg.tasks
         kwargs.update(self._common_kwargs)
         taskfn = self.celeryapp.tasks.get(name)
-        assert taskfn is not None, "cannot find task {name} in Celery runtime"
+        assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
         task = CeleryTask(taskfn, **kwargs)
         self._require_kwargs = {}
         return task

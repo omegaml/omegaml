@@ -52,6 +52,8 @@ setup(
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
         'dill==0.2.9',
+        'tee==0.0.3',
+        'callable-pip==1.0.0',
     ],
     extras_require={
         'graph': graph_deps,

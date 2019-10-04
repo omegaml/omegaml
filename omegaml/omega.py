@@ -43,6 +43,7 @@ class Omega(object):
         self.models = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='models/', defaults=self.defaults)
         self.datasets = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='data/', defaults=self.defaults)
         self._jobdata = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='jobs/', defaults=self.defaults)
+        self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
         # runtimes environments
         self.runtime = OmegaRuntime(self, bucket=bucket, defaults=self.defaults, celeryconf=celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
