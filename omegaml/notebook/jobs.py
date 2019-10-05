@@ -13,6 +13,7 @@ from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
 
 from omegaml.documents import MDREGISTRY
+from omegaml.notebook.jobschedule import JobSchedule
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings
 
@@ -24,7 +25,7 @@ class OmegaJobs(object):
 
     # TODO this class should be a proper backend class with a mixin for ipynb
 
-    _nb_config_magic = 'omega-ml'
+    _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
     _dir_placeholder = '_placeholder.ipynb'
 
     def __init__(self, prefix=None, store=None, defaults=None):
@@ -33,6 +34,8 @@ class OmegaJobs(object):
         self.store = store or OmegaStore(prefix=prefix)
         self.kind = MDREGISTRY.OMEGAML_JOBS
         self._include_dir_placeholder = True
+        # convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))
+        self.Schedule = JobSchedule
 
     def __repr__(self):
         return 'OmegaJobs(store={})'.format(self.store.__repr__())
@@ -52,7 +55,7 @@ class OmegaJobs(object):
 
     def drop(self, name, force=False):
         meta = self.metadata(name)
-        name = meta.name # ensure we get the actual name
+        name = meta.name  # ensure we get the actual name
         return self.store.drop(name, force=force)
 
     def metadata(self, name):
@@ -185,9 +188,9 @@ class OmegaJobs(object):
         """
         notebook = self.get(nb_filename)
         config_cell = None
-        config_magic = '# {}'.format(self._nb_config_magic)
+        config_magic = ['# {}'.format(kw) for kw in self._nb_config_magic]
         for cell in notebook.get('cells'):
-            if cell.source.startswith(config_magic):
+            if any(cell.source.startswith(kw) for kw in config_magic):
                 config_cell = cell
         if not config_cell:
             return {}
@@ -196,10 +199,18 @@ class OmegaJobs(object):
                 config_cell.source).splitlines()])
         try:
             yaml_conf = yaml.safe_load(yaml_conf)
-            config = yaml_conf[self._nb_config_magic] # assert the key is in
+            config = yaml_conf.get(self._nb_config_magic[0], yaml_conf)
         except Exception:
             raise ValueError(
                 'Notebook configuration cannot be parsed')
+        # translate config to canonical form
+        # TODO refactor to seperate method / mapped translation functions
+        if 'schedule' in config:
+            config['run-at'] = JobSchedule(text=config.get('schedule', '')).cron
+        if 'cron' in config:
+            config['run-at'] = JobSchedule.from_cron(config.get('cron')).cron
+        if 'run-at' in config:
+            config['run-at'] = JobSchedule.from_cron(config.get('run-at')).cron
         return config
 
     def run(self, name):
@@ -270,11 +281,19 @@ class OmegaJobs(object):
         meta = self.metadata(nb_file)
         attrs = meta.attributes
         # get/set run-at spec
-        config = attrs.get('config')
-        # if we don't have any run-spec, stop
+        config = attrs.get('config', {})
+        # see what we have as a schedule
+        # -- a dictionary of JobSchedule
+        if isinstance(run_at, dict):
+            run_at = self.Schedule(**run_at).cron
+        # -- a JobSchedule
+        if isinstance(run_at, self.Schedule):
+            run_at = run_at.cron
+        # -- nothing, may we have it on the job's config already
         if not run_at:
             interval = config.get('run-at')
         else:
+            # store the new schedule
             config['run-at'] = run_at
             interval = run_at
         if not interval:
@@ -300,4 +319,57 @@ class OmegaJobs(object):
             'status': 'PENDING'
         }
         triggers.append(scheduled_run)
+        attrs['config'] = config
         return meta.save()
+
+    def get_schedule(self, name, only_pending=False):
+        """
+        return the cron schedule and corresponding triggers
+
+        Args:
+            name (str): the name of the job
+
+        Returns:
+            tuple of (run_at, triggers)
+
+            run_at (str): the cron spec, None if not scheduled
+            triggers (list): the list of triggers
+        """
+        meta = self.metadata(name)
+        attrs = meta.attributes
+        config = attrs.get('config')
+        triggers = attrs.get('triggers', [])
+        if only_pending:
+            triggers = [trigger for trigger in triggers
+                        if  trigger['status'] == 'PENDING']
+        if config and 'run-at' in config:
+            run_at = config.get('run-at')
+        else:
+            run_at = None
+        return run_at, triggers
+
+    def drop_schedule(self, name):
+        """
+        Drop an existing schedule, if any
+
+        This will drop any existing schedule and any pending triggers of
+        event-kind 'scheduled'.
+
+        Args:
+            name (str): the name of the job
+
+        Returns:
+            Metadata
+        """
+        meta = self.metadata(name)
+        attrs = meta.attributes
+        config = attrs.get('config')
+        triggers = attrs.get('triggers')
+        if 'run-at' in config:
+            del config['run-at']
+        for trigger in triggers:
+            if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING':
+                trigger['status'] = 'CANCELLED'
+        return meta.save()
+
+

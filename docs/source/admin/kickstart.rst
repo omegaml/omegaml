@@ -18,7 +18,7 @@ In command line mode run
 .. code::
 
    $ docker run mongodb
-   $ pip install omegaml
+   $ pip install omega|ml
    $ python -m omegaml.webapi
    $ curl http://localhost/v1/api/ping
 

@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import datetime
 from celery import shared_task
+from celery.utils.log import get_task_logger
 
 from omegaml.celery_util import OmegamlTask, sanitized
 from omegaml.documents import MDREGISTRY
@@ -75,21 +76,21 @@ def execute_scripts(self, **kwargs):
     """
     run scheduled jobs
     """
+    logger = get_task_logger(self.name)
     om = self.om
     now = kwargs.get('now') or datetime.datetime.now()
     # get pending tasks, execute if time is right
     for job_meta in om.jobs.list(raw=True):
+        logger.info("***** {}".format(job_meta))
         triggers = job_meta.attributes.get('triggers', [])
         # run pending jobs
         pending = (trigger for trigger in triggers
                    if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING')
+        logger.info("***** {}".format(pending))
         for trigger in pending:
             run_at = trigger['run-at']
+            logger.info("***** {} {}".format(now, run_at))
             if now >= run_at:
-                task = om.runtime.job(job_meta.name).run(event=trigger['event'])
-                trigger['taskid'] = task.id
-                job_meta.save()
+                om.runtime.job(job_meta.name).run(event=trigger['event'])
                 # immediately schedule for next time
                 om.jobs.schedule(job_meta.name, last_run=now)
-                # ensure we execute at most one job at a time
-                break

@@ -8,6 +8,7 @@ dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
+	twine check dist/omegaml-0.11.3rc1-py3-none-any.whl
 
 livetest: dist
 	scripts/livetest.sh --local --build

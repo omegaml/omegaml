@@ -10,6 +10,12 @@ import yaml
 
 from omegaml.util import tensorflow_available, keras_available
 
+# determine how we're run
+is_cli_run = os.path.basename(sys.argv[0]) == 'om'
+is_test_run = any(m in [basename(arg) for arg in sys.argv]
+                  for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
+                            '_jb_nosetest_runner.py'))
+
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 #: the temp directory used by omegaml processes
@@ -64,29 +70,27 @@ OMEGA_STORE_BACKENDS = {
     'python.file': 'omegaml.backends.rawfiles.PythonRawFileBackend',
     'python.package': 'omegaml.backends.package.PythonPackageData',
 }
-
-#: tensorflow backend
-# https://stackoverflow.com/a/38645250
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
-logging.getLogger('tensorflow').setLevel(logging.ERROR)
-if tensorflow_available():
-    OMEGA_STORE_BACKENDS.update({
-        'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
-        'tfkeras.savedmodel': 'omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend',
-        'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
-        'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
-    })
-#: keras backend
-if keras_available():
-    OMEGA_STORE_BACKENDS.update({
-        'keras.h5': 'omegaml.backends.keras.KerasBackend',
-    })
+OMEGA_STORE_BACKENDS_TENSORFLOW = {
+    'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
+    'tfkeras.savedmodel': 'omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend',
+    'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
+    'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
+}
+OMEGA_STORE_BACKENDS_KERAS = {
+    'keras.h5': 'omegaml.backends.keras.KerasBackend',
+}
+#: supported frameworks
+if is_test_run:
+    OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras')
+else:
+    OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS') or ('scikit-learn')
 
 #: storage mixins
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
     'omegaml.mixins.store.package.PythonPackageMixin',
+    'omegaml.mixins.store.promotion.PromotionMixin',
 ]
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
@@ -238,10 +242,8 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
 
 
 # -- test
-if any(m in [basename(arg) for arg in sys.argv]
-       # this is to avoid using production settings during test
-       for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
-                 '_jb_nosetest_runner.py')):
+# this is to avoid using production settings during test
+if not is_cli_run and is_test_run:
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = ''
@@ -251,3 +253,21 @@ else:
     OMEGA_CONFIG_FILE = locate_config_file()
     update_from_config(globals(), config_file=OMEGA_CONFIG_FILE)
     update_from_env(globals())
+
+    if is_cli_run:
+        # be les
+        import warnings
+
+        warnings.filterwarnings("ignore", category=FutureWarning)
+
+# load framework-specific backends
+# -- note we do this here to ensure this happens after config updates
+if 'tensorflow' in OMEGA_FRAMEWORKS and tensorflow_available():
+    #: tensorflow backend
+    # https://stackoverflow.com/a/38645250
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+    logging.getLogger('tensorflow').setLevel(logging.ERROR)
+    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_TENSORFLOW)
+#: keras backend
+if 'keras' in OMEGA_FRAMEWORKS and keras_available():
+    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_KERAS)

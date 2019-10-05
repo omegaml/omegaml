@@ -93,6 +93,12 @@ def omega_settings(self):
 def omega_ping(task, *args, **kwargs):
     import socket
     hostname = task.request.hostname or socket.gethostname()
+    # resolve standard kwargs
+    om = task.om
+    args = task.delegate_args
+    kwargs = task.delegate_kwargs
+    kwargs.pop('pure_python', None)
+    # return ping
     return {
         'message': 'ping return message',
         'time': datetime.datetime.now().isoformat(),

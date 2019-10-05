@@ -22,7 +22,9 @@ def splinter_browser(context):
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
         options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--remote-debugging-address=0.0.0.0')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
     context.browser = Browser('chrome', options=options)
     context.browser.driver.set_window_size(1024, 768)
     context.screenshot_path = screenshot_path

@@ -1,6 +1,8 @@
 import os
 
-from omegaml.client.auth import OmegaSecureAuthenticationEnv, OmegaRuntimeAuthentication
+import six
+import yaml
+
 from omegaml.client.userconf import get_omega_from_apikey
 from omegaml.client.util import protected
 from omegaml.omega import Omega as CoreOmega
@@ -34,7 +36,7 @@ class OmegaCloud(CoreOmega):
         return super()._clone(**kwargs)
 
     def __repr__(self):
-        return 'OmegaCloud(auth={})'.format(repr(self.auth))
+        return 'OmegaCloud(bucket={}, auth={})'.format(self.bucket or 'default', repr(self.auth))
 
 
 class OmegaCloudRuntime(OmegaRuntime):
@@ -64,9 +66,27 @@ class OmegaCloudRuntime(OmegaRuntime):
 def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
     # from now on, link OmegaCloud implementation as the default
     import omegaml as om
-    api_url = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = api_url or os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
     om.Omega = OmegaCloud
     om.setup = setup
     om.get_omega_for_task = lambda *args, **kwargs: setup(*args, **kwargs)
     om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier)
     return om[bucket]
+
+
+def setup_from_config(config_file=None):
+    from omegaml import _base_config
+    config_file = config_file or _base_config.OMEGA_CONFIG_FILE
+    if isinstance(config_file, six.string_types) and os.path.exists(config_file):
+        with open(config_file, 'r') as fin:
+            userconfig = yaml.safe_load(fin)
+            try:
+                omega = setup(userid=userconfig['OMEGA_USERID'],
+                              apikey=userconfig['OMEGA_APIKEY'],
+                              api_url=userconfig['OMEGA_RESTAPI_URL'])
+            except:
+                raise ValueError('Could not login using config file {}'.format(config_file))
+            else:
+                omega.defaults.OMEGA_CONFIG_FILE = config_file
+            return omega
+    raise SystemError('Config file {} does not exist'.format(config_file))

@@ -39,32 +39,39 @@ else
 fi
 # copy local dist packages instead of using pypi if requested
 if [ "$local" == "yes" ]; then
+   echo "Using local packages from $script_dir/../dist"
    mkdir -p $script_dir/livetest/packages
    cp $script_dir/../dist/*whl $script_dir/livetest/packages
 fi
 # build omegaml image if requested
 if [ "$build" == "yes" ]; then
+   echo "Building omegaml image"
    buildopt="--build"
    docker-compose down --rmi local
 fi
 # prepare to run
+echo "Preparing to run"
 pushd $script_dir/..
 mkdir -p /tmp/screenshots
 # only build livetest image if requested
 if [ -z "$nobuild" ]; then
+  echo "Building livetest image using $pypi"
   docker rmi -f $docker_image
   docker build --build-arg pypi=$pypi -f ./scripts/livetest/Dockerfile -t $docker_image $script_dir/livetest
 fi
 # get omegaml running, build if requested
+echo "Running omegaml in docker-compose using $buildopt"
 docker-compose stop
-docker-compose up $buildopt -d
+docker-compose up $buildopt -d --remove-orphans
 # tag the built image
 if [ ! -z "$tag" ]; then
+  echo "The omegaml image is omegaml/omegaml:$docker_tag"
   docker tag omegaml/omegaml:latest omegaml/omegaml:$docker_tag
 fi
 echo "giving the services time to spin up"
 countdown 30
 # actually run the livetest
+echo "Running the livetest image using port: $chrome_debug_port network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
 docker run -p $chrome_debug_port -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS
 success=$?
 rm -f $script_dir/livetest/packages/*whl
