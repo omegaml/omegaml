@@ -110,6 +110,14 @@ class OmegaDeferredInstance(object):
             self.setup()
         return getattr(self.omega, name)
 
+    def __getitem__(self, bucket):
+        if self.base:
+            base = getattr(self.base, self.attribute)
+            return getattr(base, name)
+        if not self.initialized:
+            self.setup()
+        return self.omega[bucket]
+
     def __repr__(self):
         if self.base:
             return repr(getattr(self.base, self.attribute))
