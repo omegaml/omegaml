@@ -129,6 +129,17 @@ class OmegaStore(object):
     def __repr__(self):
         return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
 
+    def __equal__(self, other):
+        """test for equality of OmegaStore instances
+
+        Args:
+            other: OmegaStore instance
+
+        Returns:
+            True if other is the same database, same bucket, same prefix
+        """
+        return self.mongo_url == other.mongo_url and self.bucket == other.bucket and self.prefix == other.prefix
+
     @property
     def tmppath(self):
         """
