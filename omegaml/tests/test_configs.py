@@ -58,10 +58,10 @@ class ConfigurationTests(TestCase):
         setup = om.setup
         with patch.object(defaults, 'OMEGA_MONGO_URL') as mock:
             defaults.OMEGA_MONGO_URL = 'foo'
-            om.setup()
+            om = om.setup()
             self.assertEqual(om.datasets.mongo_url, 'foo')
         # reset om.datasets to restored defaults
-        setup()
+        om = setup()
         self.assertNotEqual(om.datasets.mongo_url, 'foo')
         # now test we can change the default through config
         # we patch the actual api call to avoid having to set up the user db
@@ -79,10 +79,10 @@ class ConfigurationTests(TestCase):
             with patch.object(defaults, 'OMEGA_MONGO_URL') as mock:
                 from omegaml.client.userconf import get_omega_from_apikey
                 defaults.OMEGA_MONGO_URL = 'foo'
-                om.setup()
+                om = setup()
                 self.assertEqual(om.datasets.mongo_url, 'foo')
                 om = get_omega_from_apikey('foo', 'bar')
                 self.assertEqual(om.datasets.mongo_url, 'updated-foo')
-        setup()
+        om = setup()
         self.assertNotEqual(om.datasets.mongo_url, 'foo')
 

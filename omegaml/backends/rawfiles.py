@@ -22,7 +22,7 @@ class PythonRawFileBackend(BaseDataBackend):
     def get(self, name, version=-1, lazy=False, **kwargs):
         return self.data_store.metadata(name, **kwargs).gridfile
 
-    def put(self, obj, name, attributes=None, prefix=None, bucket=None, encoding=None, **kwargs):
+    def put(self, obj, name, attributes=None, encoding=None, **kwargs):
         self.data_store.drop(name, force=True)
         fn = self.data_store._get_obj_store_key(name, 'file')
         if self._is_path(obj):
@@ -35,8 +35,8 @@ class PythonRawFileBackend(BaseDataBackend):
                                collection_name=self.data_store.bucket)
         return self.data_store._make_metadata(
             name=name,
-            prefix=prefix or self.data_store.prefix,
-            bucket=bucket or self.data_store.bucket,
+            prefix=self.data_store.prefix,
+            bucket=self.data_store.bucket,
             kind=self.KIND,
             attributes=attributes,
             gridfile=gridfile).save()

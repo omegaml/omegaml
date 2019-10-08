@@ -1,58 +1,47 @@
 version: 2
 jobs:
   build:
-    docker:
-    - image: continuumio/miniconda3:4.5.12
-    - image: mongo:3.6.8-stretch
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: foobar
-      command:
-      - --auth
-      - --oplogSize
-      - '100'
-#    - image: rabbitmq
+    working_directory: /home/circleci
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
-    - checkout
+    - checkout:
+        path: /home/circleci/omegaml-ce
     - run:
-        name: Install system packages
+        name: Install Miniconda
         command: |
-          apt-get -q update
-          apt-get -q -y install make
-    - restore_cache:
-        key: v1-omegaml-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
-          "pip-requirements.txt" }}
+          curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+          sh Miniconda3-4.5.12-Linux-x86_64.sh -b
     - run:
         name: Create Python environment
         command: |
-          if [ ! -d /opt/conda/envs/omenv ]
-          then
-            conda create --offline -q -y -n omenv
-            conda activate omenv
-            conda install -q -y --file conda-requirements.txt
-            pip install -q -r pip-requirements.txt
-          fi
+          source miniconda3/etc/profile.d/conda.sh
+          conda create --offline -q -y -n omenv
+          conda activate omenv
+          cd omegaml-ce
+          conda install -q -y --file conda-requirements.txt
+          pip install -q -r pip-requirements.txt
         shell: /bin/bash -l -eo pipefail
-    - save_cache:
-        key: v1-omegaml-condaenv-{{ checksum "conda-requirements.txt" }}-{{ checksum
-          "pip-requirements.txt" }}
-        paths:
-        - /opt/conda/envs/omenv
-        - /root/.conda
-#    - run:
-#        name: Start processes
-#        command: |
-#          conda activate omenv
-#          honcho start worker notebook restapi
-#        shell: /bin/bash -l -eo pipefail
-#        background: true
-#        environment:
-#          C_FORCE_ROOT: true
     - run:
         name: Run unit tests
         command: |
+          source miniconda3/etc/profile.d/conda.sh
           conda activate omenv
+          cd omegaml-ce
+          docker-compose -f docker-compose-dev.yml up -d
+          echo "Waiting..."
+          sleep 10
+          docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
           make test
+          docker-compose down --remove-orphans
+        shell: /bin/bash -l -eo pipefail
+    - run:
+        name: Run live tests
+        command: |
+          source miniconda3/etc/profile.d/conda.sh
+          conda activate omenv
+          cd omegaml-ce
+          LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
         shell: /bin/bash -l -eo pipefail
 workflows:
   version: 2

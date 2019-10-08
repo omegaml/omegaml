@@ -49,7 +49,9 @@ OMEGA_CELERY_CONFIG = {
     },
 }
 #: celery task packages
-OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks']
+OMEGA_CELERY_IMPORTS = ['omegaml',
+                        'omegaml.notebook',
+                        'omegaml.backends.package']
 #: storage backends
 OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
@@ -57,6 +59,7 @@ OMEGA_STORE_BACKENDS = {
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
     'pandas.rawdict': 'omegaml.backends.rawdict.PandasRawDictBackend',
     'python.file': 'omegaml.backends.rawfiles.PythonRawFileBackend',
+    'python.package': 'omegaml.backends.package.PythonPackageData',
 }
 
 #: tensorflow backend
@@ -80,6 +83,7 @@ if keras_available():
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
+    'omegaml.mixins.store.package.PythonPackageMixin',
 ]
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [

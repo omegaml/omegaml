@@ -135,6 +135,7 @@ splinter==0.11.0
 tables==3.4.4
 tabulate==0.8.2
 tblib==1.4.0
+tee==0.0.2
 tensorboard==1.14.0
 tensorflow==1.14.0
 tensorflow-estimator==1.14.0

@@ -10,7 +10,7 @@ from shutil import rmtree
 
 import numpy as np
 import six
-from pandas.io.json import json_normalize
+import sys
 from six import string_types
 
 try:
@@ -173,10 +173,10 @@ def load_class(requested_class):
             cls = getattr(m, class_name)
             CLASS_CACHE[requested_class] = cls
             return cls
-        except:
+        except Exception as e:
             logging.debug(
-                'could not load module %s for class %s' % (
-                    module_name, class_name))
+                'could not load module %s for class %s due to %s. sys.path=%s' % (
+                    module_name, class_name, str(e), str(sys.path)))
             raise
     return requested_class
 
@@ -564,3 +564,9 @@ def ensure_json_serializable(v):
         }
         return vv
     return v
+
+def mkdirs(path):
+    """ safe os.makedirs for python 2 & 3
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)

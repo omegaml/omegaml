@@ -8,13 +8,19 @@ from omegaml import Omega
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.restapi.app import app
 from omegaml.restapi.tests.util import RequestsLikeTestClient
+from omegaml.tests.util import OmegaTestMixin
 
 
-class OmegaRestApiTests(TestCase):
+class OmegaRestApiTests(OmegaTestMixin, TestCase):
     def setUp(self):
         self.client = RequestsLikeTestClient(app)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
+        self.clean()
+
+    @property
+    def _headers(self):
+        return {}
 
     def test_predict_from_data_inline(self):
         X = np.arange(10).reshape(-1, 1)
@@ -29,7 +35,7 @@ class OmegaRestApiTests(TestCase):
         resp = self.client.put('/api/v1/model/regression/predict', json={
             'columns': ['v'],
             'data': [dict(v=5)]
-        }, auth=self.auth)
+        }, auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertEqual(data.get('model'), 'regression')
@@ -47,7 +53,7 @@ class OmegaRestApiTests(TestCase):
         self.om.datasets.put([5], 'foo', append=False)
         # check we can use it to predict
         resp = self.client.put('/api/v1/model/regression/predict?datax=foo',
-                               json={}, auth = self.auth)
+                               json={}, auth = self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertEqual(data.get('model'), 'regression')
@@ -60,7 +66,7 @@ class OmegaRestApiTests(TestCase):
             'y': np.arange(100),
         })
         om.datasets.put(df, 'test', append=False)
-        resp = self.client.get('/api/v1/dataset/test', auth=self.auth)
+        resp = self.client.get('/api/v1/dataset/test', auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertIn('data', data)
@@ -80,7 +86,8 @@ class OmegaRestApiTests(TestCase):
         query = {
             'x__gte': 90,
         }
-        resp = self.client.get('/api/v1/dataset/test', query_string=query, auth=self.auth)
+        resp = self.client.get('/api/v1/dataset/test', query_string=query,
+                               auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertIn('data', data)
@@ -105,7 +112,8 @@ class OmegaRestApiTests(TestCase):
             },
             'append': False,
         }
-        resp = self.client.put('/api/v1/dataset/foo', json=data, auth=self.auth)
+        resp = self.client.put('/api/v1/dataset/foo', json=data,
+                               auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         # -- see if we can query
         df = om.datasets.get('foo')
@@ -115,7 +123,8 @@ class OmegaRestApiTests(TestCase):
         self.assertEqual([str(v) for v in range(10)], list(df['s']))
         # append more records
         data['append'] = True
-        resp = self.client.put('/api/v1/dataset/foo', json=data, auth=self.auth)
+        resp = self.client.put('/api/v1/dataset/foo', json=data,
+                               auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         df = om.datasets.get('foo')
         self.assertEqual(20, len(df))
@@ -127,7 +136,8 @@ class OmegaRestApiTests(TestCase):
         om = self.om
         # test non-existent dataset
         om.datasets.drop('foo', force=True)
-        resp = self.client.delete('/api/v1/dataset/foo', auth=self.auth)
+        resp = self.client.delete('/api/v1/dataset/foo',
+                                  auth=self.auth, headers=self._headers)
         self.assertEqual(404, resp.status_code)
         df = pd.DataFrame({
             'x': np.arange(100),
@@ -135,6 +145,10 @@ class OmegaRestApiTests(TestCase):
         })
         # test existing dataset
         om.datasets.put(df, 'foo', append=False)
-        resp = self.client.delete('/api/v1/dataset/foo', auth=self.auth)
+        resp = self.client.delete('/api/v1/dataset/foo',
+                                  auth=self.auth, headers=self._headers)
         self.assertEqual(200, resp.status_code)
         self.assertEqual(None, om.datasets.get('foo'))
+
+    
+
