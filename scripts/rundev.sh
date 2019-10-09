@@ -44,7 +44,7 @@ if [[ ! -z $clean ]]; then
     docker-compose -f docker-compose-dev.yml down
     docker-compose -f docker-compose-dev.yml up -d --remove-orphans
     cat scripts/mongoinit.js | docker exec -i omegaml_mongo_1 mongo
-    docker-compose -f docker-compose-dev.yml exec omegaml-dev scripts/initlocal.sh
+    docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/initlocal.sh"
 fi
 
 if [[ ! -z $docker ]]; then
@@ -52,7 +52,7 @@ if [[ ! -z $docker ]]; then
     if [[ ! -z $shell ]]; then
         docker-compose -f docker-compose-dev.yml exec omegaml-dev bash
     else
-        docker-compose -f docker-compose-dev.yml exec omegaml-dev scripts/rundev.sh
+        docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/rundev.sh"
     fi
 else
     # run with local software installed

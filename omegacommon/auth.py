@@ -96,9 +96,9 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
                     'cannot parse authentication as {}'.format(auth))
         elif auth == default_auth:
             # we provide the default implementation as per configuration
-            import omegaml
+            from omegaml import _omega
             from omegaml.util import settings
-            om = omegaml
+            om = _omega._om
             if not settings().OMEGA_ALLOW_TASK_DEFAULT_AUTH:
                 raise ValueError(
                     'Default task authentication is not allowed, got {}'.format(auth))
