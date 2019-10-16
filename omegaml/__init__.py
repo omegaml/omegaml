@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import logging
 
-# FIXME this is a hack to enable get_client_config
 import omegaml.defaults as _base_config
 from omegaml.util import load_class, settings
 
