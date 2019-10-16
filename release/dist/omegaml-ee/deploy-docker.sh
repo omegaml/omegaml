@@ -23,8 +23,7 @@ if [[ ! -z $clean ]]; then
 fi
 echo "Starting services"
 docker-compose up -d
-echo "Waiting for services to have initialised"
-countdown 45
+waiton "Waiting for services to have initialised" http://localhost:5000
 docker-compose up -d nginx
 
 # apply configurations

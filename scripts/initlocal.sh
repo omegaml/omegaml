@@ -13,7 +13,7 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 
 omegamlee_dir=$script_dir/..
-omegamlcore_dir=../omegaml-ce
+omegamlcore_dir=$omegamlee_dir/../omegaml-ce
 
 pushd $omegamlee_dir
 rm -f db.sqlite3

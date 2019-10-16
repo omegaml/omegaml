@@ -13,6 +13,7 @@ source $script_dir/easyoptions || exit
 pushd $script_dir/..
 python manage.py collectstatic --noinput --no-post-process
 echo  "waiting for mysql & mongo db to be up and running..."
-sleep 30
+countdown 30
+waitfor "waiting for mongodb" http://localhost:27017
 python manage.py migrate
 honcho start web

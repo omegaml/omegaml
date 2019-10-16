@@ -45,3 +45,9 @@ fi
 # start livetest
 behave ./omegaee/features --no-capture $behave_options $LIVETEST_BEHAVE_EXTRA_OPTS
 
+# stop
+if [[ ! -z $runlocal ]]; then
+    pushd $script_dir/../release/dist/omegaml-ee
+    docker-compose down
+fi
+

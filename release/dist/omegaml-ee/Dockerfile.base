@@ -4,6 +4,7 @@ ADD *requirements.txt /app/
 RUN apt-get update -y && \
     apt-get install -y --fix-missing mysql-client && \
     apt-get install -y default-libmysqlclient-dev python-dev build-essential  && \
+    apt-get install -y procps htop && \
     apt-get clean
 RUN conda install -y conda=4.3 && \
     conda update -y python 

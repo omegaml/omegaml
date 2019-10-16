@@ -33,7 +33,7 @@ if [[ ! -z $build ]]; then
       echo "WARNING Install chromedriver from https://sites.google.com/a/chromium.org/chromedriver/downloads"
    fi
    pushd $distdir
-   docker build -t $devimage -f Dockerfile.dev .
+   docker build --no-cache -t $devimage -f Dockerfile.dev .
    popd
    echo "Run application using scripts/rundev.sh --docker"
    echo "Run shell using scripts/rundev.sh --docker --shell"

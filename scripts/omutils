@@ -24,3 +24,14 @@ function compose_exec() {
   local service="$1"; shift
   docker exec -i $(docker-compose ps -q $service) $@
 }
+
+function waiton() {
+  # Usage:
+  #   waiton "text" "http://host:port"
+  # https://stackoverflow.com/a/23157343/890242
+  echo "Waiting on $2 to become available"
+  until $(curl --output /dev/null --silent --head --fail $2); do
+      printf '.'
+      sleep 5
+  done
+}
