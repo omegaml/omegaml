@@ -10,10 +10,8 @@ import yaml
 
 from omegaml.util import tensorflow_available, keras_available
 
-user_homedir = os.path.expanduser('~')
-
-#: configuration file, defaults to $HOME/.omegaml/config.yml
-OMEGA_CONFIG_FILE = os.path.join(user_homedir, '.omegaml', 'config.yml')
+#: configuration file, by default will be searched in current directory, user config or site config
+OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 #: the temp directory used by omegaml processes
 OMEGA_TMP = '/tmp'
 #: the fully qualified mongodb database URL, including the database name
@@ -23,7 +21,7 @@ OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
 #: if set forces eager execution of runtime tasks
-OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME')
+OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 #: the celery broker name or URL
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
@@ -104,6 +102,7 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
 
+
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
 # =========================================
@@ -121,7 +120,7 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
         if os.path.exists(config_file):
             with open(config_file, 'r') as fin:
                 userconfig = yaml.safe_load(fin)
-    else:
+    elif hasattr(config_file, 'read'):
         userconfig = yaml.safe_load(config_file)
     if userconfig:
         for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
@@ -189,16 +188,61 @@ try:
 except Exception as e:
     pass
 
+
+def locate_config_file(configfile=OMEGA_CONFIG_FILE):
+    """
+    locate the configuration file, if any
+
+    Will search the following locations for the config file:
+        1. current directory
+        2. user configuration directory
+        3. site configuration directory
+
+    The exact location depends on the platform:
+        Linux:
+            user = ~/.config/omegaml
+            site = /etc/xdg/omegaml
+        Windows:
+            user = C:\Documents and Settings\<User>\Application Data\omegaml\omegaml
+            site = C:\Documents and Settings\All Users\Application Data\omegaml\omegaml
+        Mac:
+            user = ~/Library/Application Support/omegaml
+            site = /Library/Application Support/omegaml
+
+    Args:
+        configfile: the default config file name or path
+
+    Returns:
+        location of the config file or None if not found
+    """
+    try:
+        from appdirs import user_config_dir, site_config_dir
+    except:
+        # we don't have appdirs installed, this can happen during setup.py. fake it
+        user_config_dir = lambda *args: os.path.expanduser('~/.config/omegaml')
+        site_config_dir = lambda *args: '/etc/xdg/omegaml'
+
+    if os.path.exists(configfile):
+        return configfile
+    appdirs_args = ('omegaml', 'omegaml')
+    for cfgdir in (os.getcwd(), user_config_dir(*appdirs_args), site_config_dir(*appdirs_args)):
+        cfgfile = os.path.join(cfgdir, os.path.basename(configfile))
+        if os.path.exists(cfgfile):
+            return cfgfile
+    return None
+
+
 # -- test
 if any(m in [basename(arg) for arg in sys.argv]
+       # this is to avoid using production settings during test
        for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
                  '_jb_nosetest_runner.py')):
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
-    OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'] = True
+    OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = ''
     logging.getLogger().setLevel(logging.ERROR)
 else:
     # overrides in actual operations
-    # this is to avoid using production settings during test
-    update_from_config(globals())
+    OMEGA_CONFIG_FILE = locate_config_file()
+    update_from_config(globals(), config_file=OMEGA_CONFIG_FILE)
     update_from_env(globals())

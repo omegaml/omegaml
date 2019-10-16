@@ -58,6 +58,8 @@ class OmegaRuntime(object):
         # initialize celery as a runtimes
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
+        # ensure we use current value
+        celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
         self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
         # needed to get it to actually load the tasks (???)
