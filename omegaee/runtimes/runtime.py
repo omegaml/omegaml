@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from omegaee.runtimes.scriptproxy import OmegaScriptProxy
+from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 from omegaml.runtimes import OmegaRuntime, OmegaJobProxy
 
 
@@ -19,18 +19,6 @@ class OmegaAuthenticatedRuntime(OmegaRuntime):
     @property
     def _common_kwargs(self):
         return dict(__auth=self.auth_tuple, pure_python=self.pure_python)
-
-    def script(self, scriptname):
-        """
-        return a script for remote execution
-        """
-        return OmegaScriptProxy(scriptname, runtime=self)
-
-    def job(self, jobname):
-        """
-        return a job for remote exeuction
-        """
-        return OmegaJobProxy(jobname, runtime=self)
 
     @property
     def auth(self):

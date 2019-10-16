@@ -9,7 +9,7 @@ from omegaml.util import tensorflow_available, keras_available
 OMEGA_STORE_BACKENDS = {
     'spark.mllib': 'omegaee.backends.SparkBackend',
     'pandas.csv': 'omegaee.backends.PandasExternalData',
-    'python.package': 'omegapkg.PythonPackageData',
+    'python.package': 'omegaml.backends.package.PythonPackageData',
     'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',

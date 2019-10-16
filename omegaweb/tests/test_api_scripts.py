@@ -1,6 +1,7 @@
 import os
 
-import omegapkg
+import sys
+
 from django.contrib.auth.models import User
 from landingpage.models import ServicePlan
 from omegaml import Omega
@@ -55,8 +56,10 @@ class ScriptResourceTests(ResourceTestCase):
         return self.create_apikey(self.username, self.apikey)
 
     def test_script_run(self):
+        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
+        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
-        pkg = 'pkg://{}'.format(os.path.join(os.path.dirname(omegapkg.__file__), 'demo', 'helloworld'))
+        pkg = 'pkg://{}'.format(pkgpath)
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster

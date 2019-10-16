@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 
 from omegacommon.auth import OmegaRuntimeAuthentication
-from omegaee.runtimes.jobproxy import OmegaAuthenticatedJobProxy
-from omegaee.runtimes.scriptproxy import OmegaScriptProxy
-from omegaml.runtimes import OmegaRuntimeDask, OmegaJobProxy
+from omegaml.runtimes import OmegaRuntimeDask
+from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 
 
 class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):

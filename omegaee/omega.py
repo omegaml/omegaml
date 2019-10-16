@@ -42,7 +42,6 @@ class EnterpriseOmega(CoreOmega):
         self.auth = auth
 
         # enterprise extensions
-        self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
         self.runtime = OmegaAuthenticatedRuntime(self, auth=self.auth, defaults=self.defaults)
         self.jobs = OmegaEnterpriseJobs(store=self._jobdata)
 
