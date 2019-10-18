@@ -34,7 +34,7 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         # check we can use it to predict
         resp = self.client.put('/api/v1/model/regression/predict', json={
             'columns': ['v'],
-            'data': [dict(v=5)]
+            'data': dict(v=[5]),
         }, auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
