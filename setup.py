@@ -38,14 +38,16 @@ setup(
         'pymongo>=3.2.2',
         'mongoengine>=0.10.6',
         'pandas>=0.17.1',
-        'numpy>=1.10.4',
+        'numpy>=1.16.4',
         'scipy>=0.17.0',
-        'scikit-learn>=0.17.1',
+        'scikit-learn>=0.20',
         'tables>=3.2.2',
-        'croniter>=0.3.12',
+        'croniter>=0.3.30',
         'PyYAML>=3.11',
         'nbformat>=4.0.1',
-        'nbconvert>=5.3.1'
+        'nbconvert>=5.3.1',
+        'appdirs==1.4.3',
+        'cron-descriptor==1.2.24',
     ],
     dependency_links=[
     ]

@@ -2,6 +2,7 @@ adal==1.2.2
 amqp==2.5.0
 aniso8601==7.0.0
 anyjson==0.3.3
+appdirs==1.4.3
 argh==0.26.2
 awscli==1.16.197
 bcrypt==3.1.7
@@ -16,7 +17,8 @@ celery==4.2.1
 cffi==1.12.2
 chardet==3.0.4
 colorama==0.3.9
-croniter==0.3.12
+croniter==0.3.30
+cron-descriptor==1.2.24
 dash==1.0.1
 dash-core-components==1.0.0
 dash-daq==0.1.5
@@ -51,7 +53,6 @@ Fabric3==1.14.post1
 Flask==1.1.1
 Flask-Compress==1.4.0
 flask-restplus==0.12.1
-gast==0.2.2
 google-auth==1.6.3
 gunicorn==19.7.1
 honcho==1.0.1

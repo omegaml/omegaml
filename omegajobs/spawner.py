@@ -104,6 +104,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         import omegaee
         env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
+        env['OMEGA_USERID'] = configs['OMEGA_USERID']
         env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
         self.log.info("***within user_env {}".format(os.getpid()))
         # pass user configuration to preexecfn

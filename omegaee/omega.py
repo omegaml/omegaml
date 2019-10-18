@@ -36,13 +36,14 @@ class EnterpriseOmega(CoreOmega):
         """
         super(EnterpriseOmega, self).__init__(**kwargs)
         # avoid circular imports
-        from omegaml.store import OmegaStore
 
         # store inputs for reference
         self.auth = auth
 
         # enterprise extensions
-        self.runtime = OmegaAuthenticatedRuntime(self, auth=self.auth, defaults=self.defaults)
+        self.runtime = OmegaAuthenticatedRuntime(self, bucket=self.bucket,
+                                                 auth=self.auth,
+                                                 defaults=self.defaults)
         self.jobs = OmegaEnterpriseJobs(store=self._jobdata)
 
     def __repr__(self):
@@ -86,7 +87,7 @@ class EnterpriseOmegaDeferredInstance(CoreOmegaDeferredInstance):
         return self
 
 
-def setup(username=None, apikey=None, api_url=None, qualifier=None, view=True):
+def setup(username=None, apikey=None, api_url=None, qualifier=None, bucket=None, view=True):
     """
     configure and return the omega client instance
 
@@ -131,7 +132,7 @@ def setup(username=None, apikey=None, api_url=None, qualifier=None, view=True):
     # otherwise return a new instance. use this to open a second instance for
     # another user/apikey or qualifier
     om = EnterpriseOmegaDeferredInstance()
-    return om.setup(**kwargs).omega
+    return om.setup(**kwargs).omega[bucket]
 
 def get_omega_for_task(task):
     """

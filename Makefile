@@ -13,6 +13,7 @@ dist:
 
 test:
 	DJANGO_SETTINGS_MODULE=app.settings python manage.py test --debug-config --verbosity=2
+	DJANGO_SETTINGS_MODULE=app.settings python manage.py test omegaml --debug-config --verbosity=2
 
 devtest:
 	scripts/devtest.sh --headless
