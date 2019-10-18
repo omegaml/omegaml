@@ -7,7 +7,6 @@ from flask import request
 from flask_restplus import Resource, Model, fields
 from mongoengine import DoesNotExist
 
-from omegaml import _omega
 from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.restapi.util import strict
 from .app import api
@@ -52,8 +51,10 @@ class OmegaResourceMixin(object):
 
     @property
     def _omega(self):
+        import omegaml as om
+
         bucket = flask.request.headers.get('bucket')
-        return _omega._om.setup(bucket=bucket)
+        return om.setup()[bucket]
 
     @property
     def _generic_model_resource(self):

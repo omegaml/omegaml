@@ -36,7 +36,7 @@ class OmegaRestApiTestsWithBuckets(OmegaRestApiTests):
         om.models.put(clf, 'regression')
         resp = self.client.put('/api/v1/model/regression/predict', json={
             'columns': ['v'],
-            'data': [dict(v=5)]
+            'data': [dict(v=[5])],
         }, auth=self.auth, headers=self._headers)
         # we expect an error because the model does not exist in the default bucket
         self.assertEqual(resp.status_code, 500)
@@ -44,6 +44,6 @@ class OmegaRestApiTestsWithBuckets(OmegaRestApiTests):
         # -- note we simply remove the the 'bucket' header which reverts to the default
         resp = self.client.put('/api/v1/model/regression/predict', json={
             'columns': ['v'],
-            'data': [dict(v=5)]
+            'data': dict(v=[5])
         }, auth=self.auth)
         self.assertEqual(resp.status_code, 200)

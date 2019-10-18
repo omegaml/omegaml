@@ -115,7 +115,10 @@ class MDataFrameMixinTests(TestCase):
         mdf = mdf.apply(complexfn)
         df['x'] = df['x'] * 5
         expected = df
-        assert_frame_equal(expected, mdf.value)
+        # note since pandas 0.25.1 column order depends on dict key
+        # insertion order, using [expected.colums] is to ensure the
+        # same column order -- we can't control the key order by pymongo
+        assert_frame_equal(expected, mdf.value[expected.columns])
 
     def test_apply_custom_project_simple(self):
         om = self.om
