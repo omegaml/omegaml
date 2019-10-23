@@ -1,10 +1,8 @@
-from constance import config
-from django.contrib.auth.models import User
 from pymongo.mongo_client import MongoClient
 
-from landingpage.models import ServicePlan
 from omegaml.util import urlparse, settings as get_settings
 
+# note no global imports from Django to avoid settings sequence issue
 
 def add_user(user, password, dbname=None):
     """
@@ -12,6 +10,8 @@ def add_user(user, password, dbname=None):
 
     only this user will have access r/w rights to the database.
     """
+    from django.contrib.auth.models import User
+
     dbuser = User.objects.make_random_password(length=36)
     dbname = dbname or User.objects.make_random_password(length=36)
     if isinstance(user, User):
@@ -60,6 +60,8 @@ def add_userdb(dbname, username, password):
     :return: (newdb, client_mongo_url) the tuple of the new db instance and
       the mongo_url
     """
+    from constance import config
+
     settings = get_settings()
 
     roles = [{
@@ -97,6 +99,8 @@ def authorize_userdb(grant_user, grantee_user, username, password):
     :param password:
     :return:
     """
+    from django.contrib.auth.models import User
+
     # get settings from both users
     grant_settings = grant_user.services.get(offering__name='omegaml').settings
     grantee_service = grantee_user.services.get(offering__name='omegaml')
@@ -121,6 +125,8 @@ def add_service_deployment(user, config):
     """
     add the service deployment
     """
+    from landingpage.models import ServicePlan
+
     plan = ServicePlan.objects.get(name='omegaml')
     text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
         **locals())
@@ -144,6 +150,8 @@ def get_client_config(user, qualifier=None, view=False):
     :param view: if True return the internal mongo url, else external as defined in
        constance.MONGO_HOST
     """
+    from constance import config
+
     settings = get_settings()
 
     qualifier = qualifier or 'default'

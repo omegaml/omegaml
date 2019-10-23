@@ -68,6 +68,22 @@ services:
          - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
          - OMEGA_RESTAPI_URL=http://omegaml:5000/
          - C_FORCE_ROOT=yes
+   omegaops:
+       image: omegaml/omegaml-ee:latest
+       hostname: worker
+       links:
+          - omegaml
+          - rabbitmq
+          - mongodb
+       working_dir: /app
+       command: honcho start scheduler omegaops
+       environment:
+         - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
+         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - C_FORCE_ROOT=yes
+         - MYSQL_DATABASE=omegaml
+         - MYSQL_USER=omegaml
+         - MYSQL_PASSWORD=mysql
    rabbitmq:
        image: rabbitmq
    mongodb:

@@ -60,5 +60,5 @@ else
     omegamlcore_scripts_dir=$omegamlcore_dir/scripts
     export DJANGO_DEBUG=1
     python manage.py migrate
-    PORT=8000 honcho start web worker notebook
+    PORT=8000 honcho start web worker notebook scheduler omegaops
 fi

@@ -18,22 +18,38 @@ OMEGA_CLOUD_CELERY_CONFIG = {
         'deploy_pending_services': {
             'task': 'paasdeploy.tasks.deploy_pending_services',
             'schedule': 10,
+            'options': {
+                'queue': 'omegaops',
+            }
         },
         'execute_pending_tasks': {
             'task': 'paasdeploy.tasks.execute_pending_tasks',
             'schedule': 10,
+            'options': {
+                'queue': 'omegaops',
+            }
         },
         'update_deployment_status': {
             'task': 'paasdeploy.tasks.update_deployment_status',
             'schedule': 10,
+            'options': {
+                'queue': 'omegaops',
+            }
         },
+        'run_user_scheduler': {
+            'task': 'omegaops.tasks.run_user_scheduler',
+            'schedule': 60,
+            'options': {
+                'queue': 'omegaops',
+            }
+        }
     },
 }
 #: celery task packages
 OMEGA_CLOUD_CELERY_IMPORTS = ['paasdeploy', 'omegaops']
 if 'beat' in sys.argv:
     # if this is the scheduler, make sure we include all omega tasks
-    import omegaml.defaults as omdefaults
+    from omegaml import _base_config as omdefaults
 
     OMEGA_CLOUD_CELERY_IMPORTS += omdefaults.OMEGA_CELERY_IMPORTS
 print("*** OMEGA_CLOUD_CELERY_IMPORTS", OMEGA_CLOUD_CELERY_IMPORTS)
