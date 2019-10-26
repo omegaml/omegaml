@@ -3,6 +3,7 @@ REST API to models
 """
 import json
 
+from celery.result import AsyncResult
 from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
@@ -14,6 +15,8 @@ from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
+
+from omegaweb.util import get_api_task_data
 
 
 class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
@@ -119,6 +122,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         datay = query.get('datay')
         result = om.runtime.model(name).fit(datax, datay)
         meta = result.get()
+        if isinstance(result, AsyncResult):
+            request.logging_context = get_api_task_data(result)
         data = {
             'datax': datax,
             'datay': datay,
@@ -150,6 +155,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'datay': datay,
             'result': [result.get()]
         }
+        if isinstance(result, AsyncResult):
+            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data, response_class=HttpAccepted)
 
     @cqrsapi(allowed_methods=['get'])
@@ -179,6 +186,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'datay': datay,
             'result': [result_data]
         }
+        if isinstance(result, AsyncResult):
+            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     @cqrsapi(allowed_methods=['get'])
@@ -205,6 +214,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'datax': datax,
             'result': [result_data]
         }
+        if isinstance(result, AsyncResult):
+            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     @cqrsapi(allowed_methods=['get'])
@@ -233,6 +244,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             'datay': datay,
             'result': result_data.tolist()
         }
+        if isinstance(result, AsyncResult):
+            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     def get_detail(self, request, **kwargs):

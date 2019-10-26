@@ -19,7 +19,7 @@ def configure():
 def start():
     from omegaops import opsdefaults
     # start celery
-    app = Celery('omegaml-cloudmgr')
+    app = Celery('omegaops')
     app.config_from_object(opsdefaults.OMEGA_CLOUD_CELERY_CONFIG)
     app.autodiscover_tasks(opsdefaults.OMEGA_CLOUD_CELERY_IMPORTS)
     return app

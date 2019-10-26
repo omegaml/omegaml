@@ -3,6 +3,7 @@ REST API to jobs
 """
 import json
 
+from celery.result import AsyncResult
 from nbformat import v4
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
@@ -13,6 +14,8 @@ from tastypie.resources import Resource
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
+
+from omegaweb.util import get_api_task_data
 
 
 class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
@@ -47,6 +50,8 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
         else:
+            if isinstance(result, AsyncResult):
+                request.logging_context = get_api_task_data(result)
             meta = om.jobs.metadata(name)
             data = self._get_job_detail(meta)
         return self.create_response(request, data)

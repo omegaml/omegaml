@@ -38,6 +38,11 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     StackableSettings.patch_apps(_prefix_apps, at='django.contrib.staticfiles')
     StackableSettings.patch_apps(_addl_apps)
 
+    _addl_middlewares = (
+        'omegaweb.middleware.EventsLoggingMiddleware',
+    )
+    StackableSettings.patch_middleware(_addl_middlewares)
+
     API_CONFIG = {
         'apis': (
             ('omegaweb', 'omegaweb.api.v1_api'),

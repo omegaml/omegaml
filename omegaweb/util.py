@@ -1,4 +1,9 @@
+import socket
+
+from django.utils import timezone
 from whitenoise.storage import CompressedManifestStaticFilesStorage
+
+from omegaops.tasks import log_event_task
 
 
 class FailsafeCompressedManifestStaticFilesStorage(
@@ -15,3 +20,66 @@ class FailsafeCompressedManifestStaticFilesStorage(
             if isinstance(processed, Exception):
                 processed = False
             yield name, hashed_name, processed
+
+
+def log_request(request, response):
+    """
+    Create log data from request and response objects
+    """
+    request_end = timezone.now()
+    request_absolute_path = request.path
+    request_uri = request.get_full_path()
+    resolver = request.resolver_match
+    request_app_name = resolver.app_name or ''
+    request_namespaces = resolver.namespaces or []
+    request_url_name = resolver.url_name or ''
+    # For Tastypie resources
+    request_resource_name = resolver.kwargs.get('resource_name', '')
+
+    if 'HTTP_X_FORWARDED_FOR' in request.META:
+        request_client_ip = request.META['HTTP_X_FORWARDED_FOR'].split(",")[0]
+    else:
+        request_client_ip = request.META['REMOTE_ADDR']
+
+    server_ip = socket.gethostbyname(socket.gethostname())
+
+    # Create request specific logs  
+    request_data = {
+        'request_absolute_path': request_absolute_path,
+        'request_method': request.method,
+        'request_app_name': request_app_name,
+        'request_namespaces': request_namespaces,
+        'request_url_name': request_url_name,
+        'request_resource_name': request_resource_name,
+    }
+    # Add logging context data in request log
+    request_data.update(request.logging_context)
+    
+    request_log = {
+        'start_dt': request.start_dt.isoformat(),
+        'end_dt': request_end.isoformat(),
+        'user': request.user.username,
+        'kind': 'request',
+        'client_ip': request_client_ip,
+        'server_ip': server_ip,
+        'action': request_uri,
+        'data': request_data,
+        'status': response.status_code,
+    }
+        
+    log_event_task.apply_async((request_log,), retry=True, retry_policy={
+        'max_retries': 3,
+        'interval_start': 0,
+        'interval_step': 0.2,
+        'interval_max': 0.2,
+    })
+
+
+def get_api_task_data(task_result):
+    task_data = {
+        'task_id': task_result.task_id,
+        'task_status': task_result.status
+    }
+    if task_result.traceback:
+        task_data['task_traceback']: task_result.traceback
+    return task_data

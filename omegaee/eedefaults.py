@@ -57,3 +57,6 @@ OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', 
 
 #: authentication environment
 OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
+
+#: imports that the celery runtime will load dynamically
+OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']
