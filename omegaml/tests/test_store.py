@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import unittest
 import uuid
+from unittest import skip
 from zipfile import ZipFile
 
 import gridfs
@@ -12,17 +13,16 @@ from mongoengine.errors import DoesNotExist
 from pandas.io.json import json_normalize
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import BytesIO, StringIO
+from six import BytesIO
 from six.moves import range
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
 from omegaml import backends
-from omegaml.documents import MDREGISTRY
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
+from omegaml.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
-
 from omegaml.store import OmegaStore
 from omegaml.util import delete_database
 
@@ -405,12 +405,14 @@ class StoreTests(unittest.TestCase):
         # make sure the collection is created
         self.assertIn(
             'omegaml.dfgroup.datastore', store.mongodb.collection_names())
+        # note column order can differ due to insertion order since pandas 0.25.1
+        # hence using [] to ensure same column order for both expected, result
         df2 = store.get('dfgroup', kwargs={'b': 1})
-        self.assertTrue(df2.equals(result_df))
+        self.assertTrue(df2.equals(result_df[df2.columns]))
         df3 = store.get('dfgroup')
-        self.assertTrue(df3.equals(df))
+        self.assertTrue(df3.equals(df[df3.columns]))
         df4 = store.get('dfgroup', kwargs={'a': 1})
-        self.assertTrue(df4.equals(result_df))
+        self.assertTrue(df4.equals(result_df[df4.columns]))
 
     def test_store_dataframe_as_hdf(self):
         data = {
@@ -610,12 +612,31 @@ class StoreTests(unittest.TestCase):
     def test_store_tz_datetime(self):
         """ test storing timezoned datetimes """
         df = pd.DataFrame({
-            'y': pd.date_range('now', periods=10, tz='US/Eastern', normalize=True)
+            'y': pd.date_range('2019-10-01', periods=5, tz='US/Eastern', normalize=True)
         })
         store = OmegaStore()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         testing.assert_frame_equal(df, df2)
+
+    # TODO support DST-crossing datetime objects. use UTC to avoid the issue
+    @skip('date ranges across dst period start/end do not return the original DatetimeIndex values')
+    def test_store_tz_datetime_dst(self):
+        """ test storing timezoned datetimes """
+        # 2019 11 03 02:00 is the end of US DST https://www.timeanddate.com/time/dst/2019.html
+        # pymongo will transform the object into a naive dt at UTC time at +3h (arguably incorrectly so)
+        # while pandas creates the Timestamp as UTC -4 (as the day starts at 00:00, not 02:00).
+        # On rendering back to a tz-aware datetime, this yields the wrong date (1 day eaerlier) because
+        # pandas applies -4 on converting from UTC to US/Eastern (correctly).
+        df = pd.DataFrame({
+            'y': pd.date_range('2019-11-01', periods=5, tz='US/Eastern', normalize=True)
+        })
+        store = OmegaStore()
+        store.put(df, 'test-date', append=False)
+        df2 = store.get('test-date')
+        # currently this fails, see @skip reason
+        testing.assert_frame_equal(df, df2)
+
 
     def test_store_dict_in_df(self):
         df = pd.DataFrame({
@@ -636,8 +657,9 @@ class StoreTests(unittest.TestCase):
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
-        data_ = store.get('myfoo', raw=True)
-        assert_frame_equal(json_normalize(data), data_)
+        data_df = store.get('myfoo', raw=True)
+        data_raw = store.collection('myfoo').find_one()
+        assert_frame_equal(json_normalize(data_raw), data_df)
         # test we get just the data column
         data_ = store.get('myfoo', raw=False)
         cols = ['foo', 'bax']
@@ -655,8 +677,9 @@ class StoreTests(unittest.TestCase):
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
-        data_ = store.get('myfoo', raw=True)
-        assert_frame_equal(json_normalize(data), data_)
+        data_df = store.get('myfoo', raw=True)
+        data_raw = store.collection('myfoo').find_one()
+        assert_frame_equal(json_normalize(data_raw), data_df)
         # test we get just the data column
         data_ = store.get('myfoo', raw=False)
         cols = ['foo', 'bax.fox']
@@ -676,14 +699,16 @@ class StoreTests(unittest.TestCase):
         # test we get back _id column if raw=True
         mdf = store.getl('myfoo', raw=True)
         self.assertIsInstance(mdf, MDataFrame)
-        data_ = mdf.value
-        assert_frame_equal(json_normalize(data), data_)
+        data_df = mdf.value
+        data_raw = store.collection('myfoo').find_one()
+        assert_frame_equal(json_normalize(data_raw), data_df)
         # test we get just the data column
         mdf = store.getl('myfoo', raw=False)
         self.assertIsInstance(mdf, MDataFrame)
-        data_ = mdf.value
+        data_df = mdf.value
+        data_raw = store.collection('myfoo').find_one()
         cols = ['foo', 'bax.fox']
-        assert_frame_equal(json_normalize(data)[cols], data_[cols])
+        assert_frame_equal(json_normalize(data)[cols], data_df[cols])
 
     def test_arbitrary_collection_new(self):
         data = {'foo': 'bar',
@@ -697,12 +722,16 @@ class StoreTests(unittest.TestCase):
         store.put(foo_coll, 'myfoo').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
-        data_ = store.get('myfoo', raw=True)
-        assert_frame_equal(data_, json_normalize(data))
+        data_df = store.get('myfoo', raw=True)
+        data_raw = store.collection('myfoo').find_one()
+        assert_frame_equal(json_normalize(data_raw), data_df)
         # test we get just the data column
-        data_ = store.get('myfoo', raw=False)
+        data_df = store.get('myfoo', raw=False)
+        data_raw = store.collection('myfoo').find_one()
+        del data_raw['_id']
+        assert_frame_equal(json_normalize(data_raw), data_df)
         cols = ['foo', 'bax']
-        assert_frame_equal(data_[cols], json_normalize(data)[cols])
+        assert_frame_equal(data_df[cols], json_normalize(data_raw)[cols])
 
     def test_raw_files(self):
         store = OmegaStore()

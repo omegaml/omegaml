@@ -229,3 +229,6 @@ fabric.properties
 
 
 # End of https://www.gitignore.io/api/pycharm
+/cloud-config.yml
+/config.yml
+/config-cloud.yml

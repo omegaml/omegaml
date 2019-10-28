@@ -42,7 +42,7 @@ setup(
         'pymongo>=3.2.2',
         'mongoengine>=0.10.6',
         'pandas>=0.17.1',
-        'numpy>=1.10.4',
+        'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.20',
         'PyYAML>=3.11',
@@ -52,6 +52,8 @@ setup(
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
         'dill==0.2.9',
+        'tee==0.0.3',
+        'callable-pip==1.0.0',
     ],
     extras_require={
         'graph': graph_deps,

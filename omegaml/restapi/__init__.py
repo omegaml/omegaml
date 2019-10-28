@@ -7,7 +7,6 @@ from flask import request
 from flask_restplus import Resource, Model, fields
 from mongoengine import DoesNotExist
 
-import omegaml as om
 from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.restapi.util import strict
 from .app import api
@@ -16,7 +15,6 @@ import numpy as np
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
-
 
 PredictInput = strict(api).model('ModelInputSchema', {
     'columns': fields.List(fields.String),
@@ -45,6 +43,24 @@ DatasetQueryOutput = api.model('DatasetQueryOutput', {
     'index': fields.Nested(DatasetIndex)
 })
 
+
+class OmegaResourceMixin(object):
+    """
+    helper mixin to resolve the request to a configured Omega instance
+    """
+
+    @property
+    def _omega(self):
+        import omegaml as om
+
+        bucket = flask.request.headers.get('bucket')
+        return om.setup()[bucket]
+
+    @property
+    def _generic_model_resource(self):
+        return GenericModelResource(self._omega)
+
+
 @api.route('/api/v1/ping')
 class PingResource(Resource):
     def get(self):
@@ -53,17 +69,17 @@ class PingResource(Resource):
 
 
 @api.route('/api/v1/model/<string:model_id>/predict')
-class ModelResource(Resource):
+class ModelResource(OmegaResourceMixin, Resource):
     @api.expect(PredictInput, validate=False)
     @api.marshal_with(PredictOutput)
     def put(self, model_id):
         query = flask.request.args
         payload = api.payload
-        return GenericModelResource(om).put(model_id, query, payload)
+        return self._generic_model_resource.put(model_id, query, payload)
 
 
 @api.route('/api/v1/dataset/<string:dataset_id>')
-class DatasetResource(Resource):
+class DatasetResource(OmegaResourceMixin, Resource):
     def _restore_filter(self, om, fltparams, name):
         """
         restore filter kwargs for query in om.datasets.get
@@ -93,6 +109,7 @@ class DatasetResource(Resource):
 
     @api.marshal_with(DatasetQueryOutput)
     def get(self, dataset_id):
+        om = self._omega
         orient = request.args.get('orient', 'dict')
         fltkwargs = self._restore_filter(om, request.args, dataset_id)
         df = om.datasets.getl(dataset_id, filter=fltkwargs).value
@@ -116,6 +133,7 @@ class DatasetResource(Resource):
     @api.expect(DatasetInput, validate=True)
     @api.response(200, 'updated')
     def put(self, dataset_id):
+        om = self._omega
         orient = request.args.get('orient', 'dict')
         if 'append' in request.args:
             append = isTrue(request.args.get('append', 'true'))
@@ -135,6 +153,7 @@ class DatasetResource(Resource):
     @api.response(200, 'updated')
     @api.response(404, 'does not exist')
     def delete(self, dataset_id):
+        om = self._omega
         try:
             om.datasets.drop(dataset_id)
         except DoesNotExist:
@@ -142,5 +161,3 @@ class DatasetResource(Resource):
         else:
             status = 200
         return '', status
-
-

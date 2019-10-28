@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from celery import Celery
 
 from omegaml.runtimes.jobproxy import OmegaJobProxy
+from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 from omegaml.util import settings
 import logging
 
@@ -48,14 +49,17 @@ class OmegaRuntime(object):
     omegaml compute cluster gateway 
     """
 
-    def __init__(self, omega, defaults=None, celeryconf=None):
+    def __init__(self, omega, bucket=None, defaults=None, celeryconf=None):
         self.omega = omega
         defaults = defaults or settings()
+        self.bucket = bucket
         self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
         # initialize celery as a runtimes
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
         celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
+        # ensure we use current value
+        celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
         self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
         # needed to get it to actually load the tasks (???)
@@ -72,7 +76,8 @@ class OmegaRuntime(object):
 
     @property
     def _common_kwargs(self):
-        common = dict(pure_python=self.pure_python)
+        common = dict(pure_python=self.pure_python,
+                      __bucket=self.bucket)
         common.update(self._task_default_kwargs)
         common.update(self._require_kwargs)
         return common
@@ -131,6 +136,12 @@ class OmegaRuntime(object):
         self.require(require) if require else None
         return OmegaJobProxy(jobname, runtime=self)
 
+    def script(self, scriptname):
+        """
+        return a script for remote execution
+        """
+        return OmegaScriptProxy(scriptname, runtime=self)
+
     def task(self, name, **kwargs):
         """
         retrieve the task function from the celery instance
@@ -139,10 +150,9 @@ class OmegaRuntime(object):
         celery configurations (as opposed to using the default app's
         import, which seems to confuse celery)
         """
-        # import omegapkg.tasks
         kwargs.update(self._common_kwargs)
         taskfn = self.celeryapp.tasks.get(name)
-        assert taskfn is not None, "cannot find task {name} in Celery runtime"
+        assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
         task = CeleryTask(taskfn, **kwargs)
         self._require_kwargs = {}
         return task

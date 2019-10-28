@@ -15,7 +15,8 @@ class Omega(object):
 
     """
 
-    def __init__(self, defaults=None, mongo_url=None, celeryconf=None, **kwargs):
+    def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None,
+                 **kwargs):
         """
         Initialize the client API
 
@@ -37,16 +38,47 @@ class Omega(object):
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
+        self.bucket = bucket
         # setup storage locations
-        self.models = OmegaStore(mongo_url=self.mongo_url, prefix='models/', defaults=self.defaults)
-        self.datasets = OmegaStore(mongo_url=self.mongo_url, prefix='data/', defaults=self.defaults)
-        self._jobdata = OmegaStore(mongo_url=self.mongo_url, prefix='jobs/', defaults=self.defaults)
+        self.models = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='models/', defaults=self.defaults)
+        self.datasets = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='data/', defaults=self.defaults)
+        self._jobdata = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='jobs/', defaults=self.defaults)
+        self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
         # runtimes environments
-        self.runtime = OmegaRuntime(self, defaults=self.defaults, celeryconf=celeryconf)
+        self.runtime = OmegaRuntime(self, bucket=bucket, defaults=self.defaults, celeryconf=celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
 
     def __repr__(self):
         return 'Omega()'.format()
+
+    def _clone(self, **kwargs):
+        return self.__class__(defaults=self.defaults,
+                              mongo_url=self.mongo_url,
+                              **kwargs)
+
+    def __getitem__(self, bucket):
+        """
+        return Omega instance configured for the given bucket
+
+        Args:
+            bucket (str): the bucket name. If it does not exist
+                  it gets created on first storage of an object.
+                  If bucket=None returns self.
+
+        Usage:
+            import omegaml as om
+
+            # om is configured on the default bucket
+            # om_mybucket will use the same settings, but configured for mybucket
+            om_mybucket = om['mybucket']
+
+        Returns:
+            Omega instance configured for the given bucket
+        """
+        if bucket is None or self.bucket == bucket:
+            return self
+        return self._clone(bucket=bucket)
+
 
 
 class OmegaDeferredInstance(object):
@@ -63,10 +95,12 @@ class OmegaDeferredInstance(object):
         self.base = base
         self.attribute = attribute
 
-    def setup(self):
-        self.omega = Omega()
-        self.initialized = True
-        return self
+    def setup(self, mongo_url=None, bucket=None, celeryconf=None):
+        omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
+        if not self.initialized:
+            self.initialized = True
+            self.omega = omega
+        return omega
 
     def __getattr__(self, name):
         if self.base:
@@ -76,6 +110,11 @@ class OmegaDeferredInstance(object):
             self.setup()
         return getattr(self.omega, name)
 
+    def __getitem__(self, bucket):
+        if not self.initialized:
+            self.setup()
+        return self.omega[bucket]
+
     def __repr__(self):
         if self.base:
             return repr(getattr(self.base, self.attribute))
@@ -83,15 +122,15 @@ class OmegaDeferredInstance(object):
         return repr(self.omega)
 
 
-def setup():
+def setup(*args, **kwargs):
     """
     configure and return the omega client instance
     """
-    return _om.setup().omega
+    return _om.setup(*args, **kwargs)
 
 
 # dynamic lookup of Omega instance in a task context
-get_omega_for_task = lambda *args, **kwargs: _om
+get_omega_for_task = lambda *args, **kwargs: _om.setup(*args, **kwargs)
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance

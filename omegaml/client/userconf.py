@@ -3,7 +3,7 @@ import sys
 import yaml
 
 from omegaml import settings
-from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
 
 
 def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
@@ -43,7 +43,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
     return configs
 
 
-#FIXME enable cache by arguments (mnemonic) @cached(seconds=3600)
+# FIXME enable cache by arguments (mnemonic) @cached(seconds=3600)
 def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
                           qualifier=None, view=False):
     """
@@ -59,8 +59,9 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     """
     from omegaml import Omega
     from omegaml import settings, _base_config
+    from omegaml.util import DefaultsContext
 
-    defaults = settings()
+    defaults = DefaultsContext(settings())
     qualifier = qualifier or 'default'
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
@@ -77,9 +78,9 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
         config = configs.get(qualifier, configs)
     else:
         config = configs[qualifier]
-    _base_config.update_from_dict(config)
-    settings(reload=True)
-    om = Omega(defaults=defaults)
+    _base_config.update_from_dict(config, attrs=defaults)
+    auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
+    om = Omega(defaults=defaults, auth=auth)
     return om
 
 
@@ -94,13 +95,14 @@ def get_omega_from_config(configfile, qualifier=None):
         config = configs.get(qualifier, configs)
     else:
         config = configs[qualifier]
-    _base_config.update_from_dict(config)
+    _base_config.update_from_dict(config, attrs=defaults)
     settings(reload=True)
     om = Omega(defaults=defaults)
     return om
 
 
-def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None):
+def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
+                                view=False):
     from omegaml import settings
     defaults = settings()
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
@@ -108,7 +110,8 @@ def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, reques
         auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(auth,
                                            api_url=api_url,
-                                           requested_userid=requested_userid)
+                                           requested_userid=requested_userid,
+                                           view=view)
         config = configs['objects'][0]['data']
         yaml.safe_dump(config, fconfig, default_flow_style=False)
         print("Config is in {configfile}".format(**locals()))
