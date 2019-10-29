@@ -280,14 +280,15 @@ class OmegaStore(object):
                              prefix=prefix,
                              bucket=bucket)
         if meta:
+            dict_fields = 'attributes', 'kind_meta'
             for k, v in six.iteritems(kwargs):
-                if k == 'attributes' and v is not None and len(v) > 0:
+                if k in dict_fields and v is not None and len(v) > 0:
                     previous = getattr(meta, k, {})
                     previous.update(v)
                     setattr(meta, k, previous)
-                elif k == 'attributes' and v is not None and len(v) == 0:
+                elif k in dict_fields and v is not None and len(v) == 0:
                     setattr(meta, k, {})
-                elif k == 'attributes' and v is None:
+                elif k in dict_fields and v is None:
                     # ignore non specified attributes
                     continue
                 else:
@@ -644,7 +645,10 @@ class OmegaStore(object):
         :param kwargs: the kwargs passed to the backend initialization
         :return: the backend 
         """
-        backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
+        try:
+            backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
+        except:
+            raise ValueError('backend {kind} does not exist'.forma(**locals()))
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,
