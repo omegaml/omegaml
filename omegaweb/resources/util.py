@@ -1,6 +1,3 @@
-from omegacommon.auth import OmegaRuntimeAuthentication
-
-
 class BundleObj(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
@@ -20,6 +17,8 @@ def get_omega_for_user(user, qualifier=None, view=False):
     """
     from omegaml import Omega
     from omegaops import get_client_config
+    from omegacommon.auth import OmegaRuntimeAuthentication
+
     config = get_client_config(user, qualifier=qualifier, view=view)
     mongo_url = config.get('OMEGA_MONGO_URL')
     auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)

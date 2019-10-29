@@ -44,6 +44,7 @@ ACME_CHALLENGE=$(acme:=./.omegaml/letsencrypt/challenge)
 OMEGA_ADMIN_EMAIL=${admin_email:="admin@omegaml.io"}
 OMEGA_ADMIN_PW=${admin_password:="test"}
 OMEGA_JYADMIN_APIKEY=${admin_apikey:="b7b034f57d442e605ab91f88a8936149e968e12e"}
+OMEGA_OMOPS_APIKEY=${admin_apikey:="b7b034f57d442e605ab91f88a8936149e968e12e"}
 
 # print cluster info
 kubectl cluster-info || echo "Error with kubectl"
@@ -121,6 +122,7 @@ podssh omegaml python manage.py migrate
 podssh omegaml python manage.py loaddata landingpage.json
 podssh omegaml python manage.py omsetupuser --username admin --email $OMEGA_ADMIN_EMAIL --password $OMEGA_ADMIN_PW --admin --nodeploy
 podssh omegaml python manage.py omsetupuser --username jyadmin --staff --apikey $OMEGA_JYADMIN_APIKEY
+podssh omegaml python manage.py omsetupuser --username omops --staff --apikey $OMEGA_OMOPS_APIKEY
 
 # finish with a nice message
 echo "Installation complete. Access at http://HOST:5000"

@@ -20,9 +20,6 @@ if [[ ! -z $headless ]]; then
    export CHROME_HEADLESS=1
 fi
 
-# force celery eager task execution
-export OMEGA_LOCAL_RUNTIME=1
-
 export OMEGA_URL=http://localhost:8000
 export OMEGA_ADMIN_USER=admin@omegaml.io
 export OMEGA_ADMIN_PASSWORD=test

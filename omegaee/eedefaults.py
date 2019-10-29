@@ -13,6 +13,8 @@ OMEGA_STORE_BACKENDS = {
     'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
+    'pandas.rawdict': 'omegaml.backends.rawdict.PandasRawDictBackend',
+    'python.file': 'omegaml.backends.rawfiles.PythonRawFileBackend',
 }
 
 #: tensorflow backend

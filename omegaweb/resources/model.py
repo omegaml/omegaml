@@ -120,14 +120,16 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         query = request.GET
         datax = query.get('datax')
         datay = query.get('datay')
-        result = om.runtime.model(name).fit(datax, datay)
-        meta = result.get()
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
+        try:
+            result = om.runtime.model(name).fit(datax, datay)
+            meta = result.get()
+        except Exception as e:
+            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        request.logging_context = get_api_task_data(result)
         data = {
             'datax': datax,
             'datay': datay,
-            'result': 'ok' if meta else 'error',
+            'result': str(meta),
         }
         return self.create_response(request, data, response_class=HttpAccepted)
 
@@ -149,14 +151,16 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         query = request.GET
         datax = query.get('datax')
         datay = query.get('datay')
-        result = om.runtime.model(name).partial_fit(datax, datay)
+        try:
+            result = om.runtime.model(name).partial_fit(datax, datay)
+        except Exception as e:
+            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        request.logging_context = get_api_task_data(result)
         data = {
             'datax': datax,
             'datay': datay,
             'result': [result.get()]
         }
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data, response_class=HttpAccepted)
 
     @cqrsapi(allowed_methods=['get'])
@@ -179,15 +183,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         try:
             result = om.runtime.model(name).score(datax, datay)
             result_data = result.get()
-        except NotFittedError as e:
+        except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        request.logging_context = get_api_task_data(result)
         data = {
             'datax': datax,
             'datay': datay,
             'result': [result_data]
         }
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     @cqrsapi(allowed_methods=['get'])
@@ -208,14 +211,13 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         try:
             result = om.runtime.model(name).decision_function(datax)
             result_data = result.get()
-        except NotFittedError as e:
+        except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        request.logging_context.update(get_api_task_data(result))
         data = {
             'datax': datax,
             'result': [result_data]
         }
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     @cqrsapi(allowed_methods=['get'])
@@ -237,15 +239,14 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         try:
             result = om.runtime.model(name).transform(datax, datay)
             result_data = result.get()
-        except NotFittedError as e:
+        except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+        request.logging_context = get_api_task_data(result)
         data = {
             'datax': datax,
             'datay': datay,
             'result': result_data.tolist()
         }
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)
 
     def get_detail(self, request, **kwargs):

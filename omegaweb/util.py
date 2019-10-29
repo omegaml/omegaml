@@ -3,7 +3,8 @@ import socket
 from django.utils import timezone
 from whitenoise.storage import CompressedManifestStaticFilesStorage
 
-from omegaops.tasks import log_event_task
+# FIXME remove dependency on omegaops
+from omegaops.celeryapp import app
 
 
 class FailsafeCompressedManifestStaticFilesStorage(
@@ -11,6 +12,7 @@ class FailsafeCompressedManifestStaticFilesStorage(
     """
     originally from landingpage
     """
+
     def post_process(self, *args, **kwargs):
         """
         make the collectstatic command ignore exceptions
@@ -54,7 +56,7 @@ def log_request(request, response):
     }
     # Add logging context data in request log
     request_data.update(request.logging_context)
-    
+
     request_log = {
         'start_dt': request.start_dt.isoformat(),
         'end_dt': request_end.isoformat(),
@@ -66,20 +68,17 @@ def log_request(request, response):
         'data': request_data,
         'status': response.status_code,
     }
-        
-    log_event_task.apply_async((request_log,), retry=True, retry_policy={
-        'max_retries': 3,
-        'interval_start': 0,
-        'interval_step': 0.2,
-        'interval_max': 0.2,
-    })
+
+    if app.conf.task_always_eager:
+        # send_task in eager mode / without a broker running will wait forever
+        from omegaops.tasks import log_event_task
+        log_event_task(task, task_log)
+    else:
+        app.send_task('omegaops.tasks.log_event_task', (request_log,), queue='omegaops')
 
 
 def get_api_task_data(task_result):
     task_data = {
         'task_id': task_result.task_id,
-        'task_status': task_result.status
     }
-    if task_result.traceback:
-        task_data['task_traceback']: task_result.traceback
     return task_data

@@ -91,8 +91,9 @@ echo "Execute one-off admin tasks to the omegaml web app and enable security"
 cat scripts/mongoinit.js | podssh mongodb mongo
 podssh omegaml python manage.py collectstatic --noinput
 podssh omegaml python manage.py loaddata landingpage.json
-podssh omegaml python manage.py createsuperuser
+podssh omegaml python manage.py omsetupuser --username admin --email admin@omegaml.io --password test --admin --nodeploy
 podssh omegaml python manage.py omsetupuser --username jyadmin --staff --apikey b7b034f57d442e605ab91f88a8936149e968e12e
+podssh omegaml python manage.py omsetupuser --username omops --staff --apikey 686ae4620522e790d92009be674e3bdc0391164f
 
 # setting up port forwarding
 echo "Setting up port forwarding as $PORTS"

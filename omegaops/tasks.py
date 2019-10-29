@@ -1,16 +1,16 @@
-from celery import shared_task
-from celery.task import Task
-from django.conf import settings
+from celery import Task, shared_task
+from celery.signals import worker_init
 from django.contrib.auth.models import User
-from landingpage.models import DEPLOY_COMPLETED, ServicePlan
-from omegaml.util import DefaultsContext
-from omegaml.notebook.tasks import execute_scripts
-from paasdeploy.models import ServiceDeployConfiguration
-from paasdeploy.tasks import deploy
+from pymongo.errors import ConnectionFailure
 
 import omegaops as omops
+from landingpage.models import DEPLOY_COMPLETED, ServicePlan
+from omegacommon.userconf import get_omega_from_apikey
+from omegaml.notebook.tasks import execute_scripts
 from omegaops.celeryapp import app
-from omegaops.util import enforce_logging_format
+from omegaops.util import enforce_logging_format, retry
+from paasdeploy.models import ServiceDeployConfiguration
+from paasdeploy.tasks import deploy
 
 
 class BaseLoggingTask(Task):
@@ -19,19 +19,35 @@ class BaseLoggingTask(Task):
     Acquires 'omops' omega for tasks
     """
     queue = 'omegaops'
+    _om = None
+    _events = None
 
     def __init__(self):
-        self._om = None
+        self._in_eager_logging = False
+
+    @property
+    def events(self):
+        # return the collection
+        if BaseLoggingTask._events is None:
+            BaseLoggingTask._events = self.om.datasets.collection('events')
+        return BaseLoggingTask._events
 
     @property
     def om(self):
-        if self._om is None:
-            from omegaml import load_class
+        # initialize only once
+        if BaseLoggingTask._om is None:
             omops_user = User.objects.get(username='omops')
-            auth = (omops_user.username, omops_user.api_key.key, 'default')
-            auth_env = load_class(settings.OMEGA_AUTH_ENV)
-            self._om = auth_env.get_omega_for_task(auth=auth)
-        return self._om
+            BaseLoggingTask._om = om = get_omega_from_apikey(omops_user.username, omops_user.api_key.key)
+            # ensure the dataset is created and the db connection exists
+            if om.datasets.metadata('events') is None:
+                coll = om.datasets.collection('events')
+                om.datasets.put({'initial_entry': True}, 'events')
+
+                initial = coll.find_one()
+                coll.delete_one(initial)
+            else:
+                om.datasets.collection('events').find_one()
+        return BaseLoggingTask._om
 
 
 @shared_task
@@ -78,6 +94,33 @@ def run_user_scheduler():
 
 @app.task(base=BaseLoggingTask, bind=True)
 def log_event_task(self, log_data):
-    log_data = enforce_logging_format(log_data)
-    self.om.datasets.put(log_data, 'events')
-    
+    @retry(ConnectionFailure)
+    def do(self, log_data):
+        if not self._in_eager_logging:
+            # check is to avoid endless logging calls due to, in eager mode,
+            # 1. self.om triggering a request to /api/config
+            # 2. which triggers the middleware to call log_event_task
+            # 3. starts at 1 again (note in eager mode 2 did not return yet)
+            # if not _in_eager_logging = there is no pending self.om call, so fine
+            # if we run distributed, not an issue. worst case there are two
+            # log calls but since they run async it won't be endless (unless
+            # self.om is always None, which should not happen)
+            self._in_eager_logging = True if self.request.is_eager else False
+            try:
+                log_data = enforce_logging_format(log_data)
+            except:
+                log_data['log_format_error'] = True
+            # we must not fail, making sure _in_eager_logging gets reset
+            try:
+                # perform a fast path of self.om.datasets.put(log_data, 'events')
+                # this is 20x faster
+                self.events.insert({'data': log_data})
+            finally:
+                self._in_eager_logging = False
+
+    do(self, log_data)
+
+
+@worker_init.connect
+def initialise_omega_connection(*args, **kwargs):
+    BaseLoggingTask().events

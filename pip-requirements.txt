@@ -109,7 +109,7 @@ stripe==2.21.0
 suds-jurko==0.6
 tables==3.4.4
 tee==0.0.2
-tensorflow==1.14.0
+tensorflow==1.15.0
 tpl==0.9.1
 tqdm==4.33.0
 Unidecode==1.0.23

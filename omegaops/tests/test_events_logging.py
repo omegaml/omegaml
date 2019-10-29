@@ -1,19 +1,16 @@
-import numpy as np
-import pandas as pd
-import pymongo
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from landingpage.models import ServicePlan
 from mock import Mock
 from tastypie.test import ResourceTestCase
 
-from omegaml import Omega, load_class
-from omegaops import add_service_deployment, add_user, get_client_config
+from landingpage.models import ServicePlan
+from omegaml import Omega
+from omegaml.tests.util import OmegaTestMixin
+from omegaops import get_client_config, tasks
 from omegaweb.middleware import EventsLoggingMiddleware
 
 
-class EventsLoggingTests(ResourceTestCase):
+class EventsLoggingTests(OmegaTestMixin, ResourceTestCase):
     def setUp(self):
         super(EventsLoggingTests, self).setUp()
         # setup omega credentials
@@ -21,15 +18,16 @@ class EventsLoggingTests(ResourceTestCase):
         # have an injectable config module of sorts)
         ServicePlan.objects.create(name='omegaml')
         # setup test omega
-        call_command('omsetupuser', username='omops', staff=True, apikey='686ae4620522e790d92009be674e3bdc0391164f')
+        call_command('omsetupuser', username='omops', staff=True,
+                     apikey='686ae4620522e790d92009be674e3bdc0391164f')
         self.omops_user = User.objects.get(username='omops')
         config = get_client_config(self.omops_user)
         # auth = (omops_user.username, omops_user.api_key.key, 'default')
         # auth_env = load_class(settings.OMEGA_AUTH_ENV)
-        self.omops_om = Omega(mongo_url=config.get('OMEGA_MONGO_URL'))
+        self.om = Omega(mongo_url=config.get('OMEGA_MONGO_URL'))
         self.middleware = EventsLoggingMiddleware()
         self.request = Mock()
- 
+        self.clean()
 
     def test_logging_middleware_process_request(self):
         self.assertIsNone(self.middleware.process_request(self.request))
@@ -61,10 +59,12 @@ class EventsLoggingTests(ResourceTestCase):
             'status': 200
         }
         log_event_task.s(request_log).apply()
-        log = self.omops_om.datasets.get('events')[0]
-        self.assertEquals(request_log, log)
+        events = self.om.datasets.get('events')
+        self.assertIsNotNone(events)
+        self.assertEquals(len(events), 1)
+        self.assertEquals(request_log, events[0])
 
-        # Test broken log format is not accepted
+        # Test broken log format is marked as such
         task_log = {
             'start_dt': '2019-10-16T15:15:41.740389', 
             'end_dt': '2019-10-16T15:15:42.336744',
@@ -78,4 +78,8 @@ class EventsLoggingTests(ResourceTestCase):
             'status': 'SUCCESS'
         }
         log_event_task.s(task_log).apply()
-        self.assertEquals(len(self.omops_om.datasets.get('events')), 1)
+        # we should have two events now
+        events = self.om.datasets.get('events')
+        self.assertEquals(len(events), 2)
+        self.assertEquals(sum(1 if e.get('log_format_error') else 0
+                              for e in events), 1)

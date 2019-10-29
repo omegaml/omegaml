@@ -43,6 +43,5 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             data = result.get()
         except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        if isinstance(result, AsyncResult):
-            request.logging_context = get_api_task_data(result)
+        request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)

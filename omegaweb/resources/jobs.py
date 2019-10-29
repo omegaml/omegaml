@@ -19,7 +19,6 @@ from omegaweb.util import get_api_task_data
 
 
 class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
-
     """
     Job resource implements the REST API to omegaml.jobs
     """
@@ -49,11 +48,9 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
             result.get()
         except Exception as e:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        else:
-            if isinstance(result, AsyncResult):
-                request.logging_context = get_api_task_data(result)
-            meta = om.jobs.metadata(name)
-            data = self._get_job_detail(meta)
+        request.logging_context.update(get_api_task_data(result))
+        meta = om.jobs.metadata(name)
+        data = self._get_job_detail(meta)
         return self.create_response(request, data)
 
     def get_detail(self, request, **kwargs):
