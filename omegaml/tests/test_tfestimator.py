@@ -1,10 +1,12 @@
 from inspect import isfunction
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from omegaml import Omega
 from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModelBackend, TFEstimatorModel
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
+
+import tensorflow as tf
 
 
 def make_data():
@@ -238,17 +240,28 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         result = om.runtime.model('estimator-model').predict('test_x').get()
         self.assertIsInstance(result, pd.DataFrame)
 
+    @skip("not supported yet as we don't have a good way to store feature dicts")
     def test_runtime_predict_from_numpy_default_inputfn(self):
         import pandas as pd
         om = self.om
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
         train_x, train_y, test_x, test_y = make_data()
-        train_x = train_x.as_matrix()  # numpy
-        train_y = train_y.as_matrix()
-        test_x = test_x.as_matrix()
-        om.datasets.put(train_x, 'train_x')
-        om.datasets.put(train_y, 'train_y')
-        om.datasets.put(test_x, 'test_x')
+
+        def as_features(x, names=None):
+            # convert dataframe to feature vectors suitable for numpy_inputfn
+            cols = range(x.shape[1])
+            x = x.as_matrix()
+            features = {
+                'col'.format(i + 1): x[:, i] for i, col in zip(cols, names)
+            }
+            return features
+
+        train_x = as_features(train_x, train_x.columns)
+        train_y = train_y.values
+        test_x = as_features(test_x, test_x.columns)
+        om.datasets.put(train_x, 'train_x', append=False)
+        om.datasets.put(train_y, 'train_y', append=False)
+        om.datasets.put(test_x, 'test_x', append=False)
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
         self.assertTrue(meta.startswith('<Metadata:'))
@@ -257,7 +270,6 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(test_y, 'test_y', append=False)
         result = om.runtime.model('estimator-model').predict('test_x').get()
         self.assertIsInstance(result, pd.DataFrame)
-
 
     def test_runtime_score(self):
         import pandas as pd
