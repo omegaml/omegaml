@@ -38,7 +38,7 @@ def make_Metadata():
 
         # fields
         #: this is the name of the data
-        name = StringField()
+        name = StringField(unique_with=['bucket', 'prefix'])
         #: bucket
         bucket = StringField()
         #: prefix

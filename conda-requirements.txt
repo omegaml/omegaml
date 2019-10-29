@@ -132,10 +132,6 @@ snappy=1.1.7=hbae5bb6_3
 sortedcontainers=2.1.0=py36_0
 sqlite=3.28.0=h7b6447c_0
 tblib=1.4.0=py_0
-tensorboard=1.14.0=py36hf484d3e_0
-tensorflow=1.14.0=mkl_py36h2526735_0
-tensorflow-base=1.14.0=mkl_py36h7ce6ba3_0
-tensorflow-estimator=1.14.0=py_0
 termcolor=1.1.0=py36_1
 terminado=0.8.2=py36_0
 testpath=0.4.2=py36_0

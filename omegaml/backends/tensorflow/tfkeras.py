@@ -1,7 +1,5 @@
 import os
-from mongoengine import GridFSProxy
 
-from omegaml.backends import BaseModelBackend
 from omegaml.backends.keras import KerasBackend
 from omegaml.util import temp_filename
 
@@ -38,7 +36,6 @@ class TensorflowKerasBackend(KerasBackend):
 
     def _load_model(self, fn):
         # override to implement model loading
-        import tensorflow as tf
         from tensorflow import keras
         load_model = keras.engine.saving.load_model
         return load_model(fn)
@@ -49,7 +46,6 @@ class TensorflowKerasBackend(KerasBackend):
         return keras.models.load_model(fn)
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, tpu_specs=None, **kwargs):
-        import tensorflow as tf
         meta = self.model_store.metadata(modelname)
         tpu_specs = tpu_specs or meta.attributes.get('tpu_specs')
         if tpu_specs:

@@ -1,5 +1,7 @@
-from omegaml.backends.basedata import BaseDataBackend
 import numpy as np
+from six import BytesIO
+
+from omegaml.backends.basedata import BaseDataBackend
 
 
 class NumpyNDArrayBackend(BaseDataBackend):
@@ -22,7 +24,10 @@ class NumpyNDArrayBackend(BaseDataBackend):
             'shape': obj.shape,
         }
         fout = self.data_store.fs.new_file(filename=name)
-        fout.write(obj.tostring())
+        buf = BytesIO()
+        np.save(buf, obj)
+        buf.seek(0)
+        fout.write(buf)
         fout.close()
         return self.data_store.make_metadata(name, self.KIND, attributes=attributes,
                                              kind_meta=kind_meta,
@@ -34,4 +39,8 @@ class NumpyNDArrayBackend(BaseDataBackend):
         dtype_name = meta.kind_meta['dtype']
         dtype = getattr(np, dtype_name, None)
         shape = meta.kind_meta['shape']
-        return np.frombuffer(fin.read(), dtype=dtype).reshape(*shape)
+        buf = BytesIO()
+        buf.write(fin.read())
+        fin.close()
+        buf.seek(0)
+        return np.load(buf)
