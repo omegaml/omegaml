@@ -644,7 +644,10 @@ class OmegaStore(object):
         :param kwargs: the kwargs passed to the backend initialization
         :return: the backend 
         """
-        backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
+        try:
+            backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
+        except:
+            raise ValueError('backend {kind} does not exist'.forma(**locals()))
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,

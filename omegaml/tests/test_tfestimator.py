@@ -238,6 +238,27 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         result = om.runtime.model('estimator-model').predict('test_x').get()
         self.assertIsInstance(result, pd.DataFrame)
 
+    def test_runtime_predict_from_numpy_default_inputfn(self):
+        import pandas as pd
+        om = self.om
+        estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
+        train_x, train_y, test_x, test_y = make_data()
+        train_x = train_x.as_matrix()  # numpy
+        train_y = train_y.as_matrix()
+        test_x = test_x.as_matrix()
+        om.datasets.put(train_x, 'train_x')
+        om.datasets.put(train_y, 'train_y')
+        om.datasets.put(test_x, 'test_x')
+        om.models.put(estmdl, 'estimator-model')
+        meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
+        self.assertTrue(meta.startswith('<Metadata:'))
+        # predict using fitted model in runtime
+        om.datasets.put(test_x, 'test_x', append=False)
+        om.datasets.put(test_y, 'test_y', append=False)
+        result = om.runtime.model('estimator-model').predict('test_x').get()
+        self.assertIsInstance(result, pd.DataFrame)
+
+
     def test_runtime_score(self):
         import pandas as pd
         om = self.om

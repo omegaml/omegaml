@@ -1,5 +1,6 @@
 # import glob
 import glob
+import logging
 import os
 import tempfile
 from copy import copy
@@ -12,6 +13,9 @@ from mongoengine import GridFSProxy
 from omegaml.backends import BaseModelBackend
 
 ok = lambda v, vtype: isinstance(v, vtype)
+
+logger = logging.getLogger(__name__)
+
 
 
 class TFEstimatorModel(object):

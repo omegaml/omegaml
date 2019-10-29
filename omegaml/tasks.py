@@ -12,6 +12,16 @@ from celery.signals import worker_process_init
 from omegaml.celery_util import OmegamlTask, sanitized
 
 
+try:
+    # ensure tensorflow is loaded -- this avoids AttributeError for tf.estimator later
+    # we do this here instead of in tfestimatormodel to avoid loading tensorflow if it
+    # is not needed. loading means this happens at runtime startup
+    import tensorflow as tf
+    tf.version
+except:
+    pass
+
+
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).predict(*self.delegate_args, **self.delegate_kwargs)
