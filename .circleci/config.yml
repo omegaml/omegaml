@@ -13,6 +13,19 @@ jobs:
     - checkout:
         path: /home/circleci/omegaml
     - run:
+        name: Merge current master into PR branch
+        command: |
+          pr_number=${CI_PULL_REQUEST//*pull\//}
+          if [ -n "$pr_number" ]
+          then
+            echo "Building PR #$pr_number. Try to merge current master."
+            cd omegaml
+            git pull --ff-only origin "refs/pull/$pr_number/merge" || \
+              (echo "Merge failed. Please merge manually into your branch."; exit 1)
+          else
+            echo "Not a PR build."
+          fi
+    - run:
         name: Install Miniconda
         command: |
           curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
