@@ -17,8 +17,8 @@ celery==4.2.1
 cffi==1.12.2
 chardet==3.0.4
 colorama==0.3.9
-croniter==0.3.30
 cron-descriptor==1.2.24
+croniter==0.3.30
 dash==1.0.1
 dash-core-components==1.0.0
 dash-daq==0.1.5

@@ -1,10 +1,11 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaee/VERSION)
+RELEASE=$(shell cat omegaee/RELEASE)
 
 dist-prod:
 	: "build a release"
 	rm -rf ./dist/*
-	scripts/distrelease.sh --version=${VERSION}
+	scripts/distrelease.sh --version=${RELEASE}
 
 dist:
 	: "build a release"
@@ -20,7 +21,7 @@ devtest:
 
 release-docker: dist-prod
 	: "docker push image sto dockerhub"
-	docker push omegaml/omegaml-ee:${VERSION}
+	docker push omegaml/omegaml-ee:${RELEASE}
 	docker push omegaml/omegaml-ee:latest
 
 thirdparty:

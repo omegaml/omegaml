@@ -3,7 +3,16 @@ Enterprise Edition defaults
 """
 import os
 
+import sys
+from os.path import basename
+
 from omegaml.util import tensorflow_available, keras_available
+
+# determine how we're run
+is_cli_run = os.path.basename(sys.argv[0]) == 'om'
+is_test_run = any(m in [basename(arg) for arg in sys.argv]
+                  for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
+                            '_jb_nosetest_runner.py'))
 
 #: storage backends
 OMEGA_STORE_BACKENDS = {
@@ -61,4 +70,7 @@ OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', 
 OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
 
 #: imports that the celery runtime will load dynamically
-OMEGA_CELERY_IMPORTS = ['omegaml.tasks', 'omegaml.notebook.tasks', 'omegaee.tasks', 'omegapkg.tasks']
+OMEGA_CELERY_IMPORTS = ['omegaml',
+                        'omegaee',
+                        'omegaml.notebook',
+                        'omegaml.backends.package']
