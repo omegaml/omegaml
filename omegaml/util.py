@@ -118,7 +118,7 @@ def override_settings(**kwargs):
 
 def delete_database():
     """ test support """
-    from pymongo import MongoClient
+    from omegaml.mongoshim import MongoClient
 
     mongo_url = settings().OMEGA_MONGO_URL
     parsed_url = urlparse.urlparse(mongo_url)
@@ -432,7 +432,7 @@ class PickableCollection(object):
         }
 
     def __setstate__(self, state):
-        from pymongo import MongoClient
+        from omegaml.mongoshim import MongoClient
         url = 'mongodb://{credentials.username}:{credentials.password}@{host}:{port}/{database}'.format(**state)
         client = MongoClient(url, authSource=state['credentials'].source)
         db = client.get_database()

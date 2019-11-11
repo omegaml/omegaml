@@ -178,7 +178,9 @@ class OmegaStore(object):
                              password=password,
                              connect=False,
                              authentication_source='admin',
-                             serverSelectionTimeoutMS=2500)
+                             serverSelectionTimeoutMS=2500,
+                             **self.defaults.OMEGA_MONGO_SSL_KWARGS,
+                            )
         self._db = getattr(connection, self.database_name)
         # mongoengine 0.15.0 connection setup is seriously broken -- it does
         # not remember username/password on authenticated connections
