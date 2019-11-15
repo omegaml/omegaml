@@ -1,6 +1,7 @@
 from multiprocessing import Pool
 from itertools import repeat
-from pymongo import MongoClient
+
+from omegaml.mongoshim import MongoClient 
 
 pool = None
 
