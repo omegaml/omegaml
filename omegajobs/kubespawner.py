@@ -7,6 +7,7 @@ from kubespawner import KubeSpawner
 from omegacommon.auth import OmegaRestApiAuth
 from omegacommon.userconf import get_user_config_from_api
 
+affinity_role = os.environ.get('JUPYTER_AFFINITY_ROLE', 'worker').split(',')
 
 class OmegaKubeSpawner(KubeSpawner):
     image = Unicode(
@@ -17,17 +18,17 @@ class OmegaKubeSpawner(KubeSpawner):
             By default uses the omegaml enterprise edition image
             """
     )
-
+    #
     node_affinity_required = [
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1NodeSelectorTerm.md
         V1NodeSelectorTerm(
             match_expressions=[
                 V1NodeSelectorRequirement(key='omegaml.io/role',
-                                          values=os.environ.get('JUPYTER_AFFINITY_ROLE', 'worker').split(','),
+                                          values=affinity_role,
                                           operator='In')
             ])
     ]
-
+    #
     image_pull_policy = Unicode(
         'Always',
         config=True,
@@ -108,7 +109,7 @@ class OmegaKubeSpawner(KubeSpawner):
     def get_env(self):
         env = super().get_env()
         # delete all env_keeps as we want the pod to start clean
-        [env.pop(k, None) for k in self.env_keep]
+        _ = [env.pop(k, None) for k in self.env_keep] #keep as is for pyminifier
         self.log.info('OmegaKubeSpawner: user environment created')
         configs = self._get_omega_config()
         env['USER'] = self.user.name

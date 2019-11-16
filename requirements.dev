@@ -6,4 +6,5 @@
 -e ../tastypiex
 -e ../omegaml-ce[all]
 jupyterhub-kubespawner==0.10.1
+git+https://github.com/liftoff/pyminifier.git
 
