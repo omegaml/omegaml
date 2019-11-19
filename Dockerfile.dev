@@ -1,34 +1,60 @@
 # this builds the local development image
+# uses tips from https://jcrist.github.io/conda-docker-tips.html
+# FROM jcrist/alpine-conda:4.6.8
 FROM continuumio/miniconda3:4.5.12
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-
-RUN apt-get update --fix-missing && \
-    apt-get install -y wget bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git && \
-    apt-get install -y build-essential psmisc && \
-    apt-get install -y texlive-xetex && \
-    apt-get install -y default-libmysqlclient-dev gcc
+ENV PYTHONDONTWRITEBYTECODE=true
 
 # https://jpmelos.com/articles/how-use-chrome-selenium-inside-docker-container-running-python/
-RUN curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /chrome.deb && \
+RUN apt-get update --fix-missing && \
+    apt-get install -y wget bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git && \
+    apt-get install -y build-essential psmisc libcurl3 zip unzip && \
+    apt-get install -y default-libmysqlclient-dev gcc && \
+    curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /chrome.deb && \
     dpkg -i /chrome.deb || apt-get install -yf && \
-    rm /chrome.deb && \
     curl https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_linux64.zip -o /tmp/chromedriver.zip && \
-    unzip -o /tmp/chromedriver.zip -d /usr/local/bin && chmod +x /usr/local/bin/chromedriver
+    unzip -o /tmp/chromedriver.zip -d /usr/local/bin && chmod +x /usr/local/bin/chromedriver && \
+    rm -rf /var/cache/apt && \
+    rm -rf /var/lib/apt/lists/*  && \
+    apt-get clean  && \
+    rm /chrome.deb && \
+    rm /tmp/chromedriver.zip && \
+    find /opt/conda/ -follow -type f -name '*.pyc' -delete  && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete
+
+# optional install of texlive
+# RUN apt-get update --fix-missing && \
+#     apt-get install -y texlive-xetex &&
+#     rm -rf /var/cache/apt && \
+#     rm -rf /var/lib/apt/lists/*  && \
+#     apt-get clean
+
+# https://stackoverflow.com/a/44683248/890242
+ARG UNAME=omegadev
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID -o $UNAME
+RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
+USER $UNAME
 
 COPY conda-requirements.txt ./
 COPY pip-requirements.txt ./
 COPY pip-requirements.extra ./
-COPY .bashrc /root
-COPY behave.yml /root/.omegaml/behave.yml
 
 RUN conda create -n omegamlee python=3.6.8
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate omegamlee && \
-    conda install --file conda-requirements.txt
+    conda install --file conda-requirements.txt && \
+    conda clean -ya
 
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate omegamlee && \
-    pip install --ignore-installed -r pip-requirements.txt && \
-    pip install --ignore-installed -r pip-requirements.extra
+    pip install --no-cache-dir --ignore-installed -r pip-requirements.txt && \
+    pip install --no-cache-dir --ignore-installed -r pip-requirements.extra
+
+RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
+RUN echo "conda activate omegamlee" >> ~/.bashrc
+COPY .bashrc /home/$UNAME
+COPY behave.yml /home/$UNAME/.omegaml/behave.yml

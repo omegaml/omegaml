@@ -15,9 +15,18 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 source $script_dir/omutils || exit
 
+# set script arguments
 devimage=omegaml/omegaml-dev
 chromedriverbin=`which chromedriver`
 distdir=./dist/omegaml-dev
+host_user=omegadev
+host_uid=$(id -u)
+host_guid=$(id -g)
+container_uid=$host_uid:$host_guid
+
+# run process
+export CURRENT_UID=$container_uid
+export CURRENT_USER=$host_user
 
 if [[ ! -z $build ]]; then
    echo "Building $devimage"
@@ -26,19 +35,16 @@ if [[ ! -z $build ]]; then
    cp *requirements* $distdir
    cp Dockerfile.dev $distdir
    cp -r ./release/dist/omegaml-dev/. $distdir
-   if [[ -f $chromedriverbin ]]; then
-      cp $chromedriverbin $distdir
-   else
-      echo "WARNING Missing $chromedriverbin. You won't be able to run livetests"
-      echo "WARNING Install chromedriver from https://sites.google.com/a/chromium.org/chromedriver/downloads"
-   fi
    pushd $distdir
-   docker build --no-cache -t $devimage -f Dockerfile.dev .
+   # https://stackoverflow.com/a/50362562/890242
+   build_args="--build-arg UNAME=$host_user --build-arg UID=$host_uid --build-arg GID=$host_guid"
+   docker build $build_args  --no-cache -t $devimage -f Dockerfile.dev .
    popd
    echo "Run application using scripts/rundev.sh --docker"
    echo "Run shell using scripts/rundev.sh --docker --shell"
    exit 0
 fi
+
 
 if [[ ! -z $clean ]]; then
     docker-compose -f docker-compose-dev.yml down

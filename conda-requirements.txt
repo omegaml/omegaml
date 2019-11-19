@@ -83,7 +83,6 @@ markdown=3.1.1=py36_0
 markupsafe=1.1.1=py36h7b6447c_0
 matplotlib=3.1.0=py36h5429711_0
 mistune=0.8.4=py36h7b6447c_0
-mkl=2019.4=243
 msgpack-python=0.6.1=py36hfd86e86_1
 nbconvert=5.5.0=py_0
 nbformat=4.4.0=py36_0

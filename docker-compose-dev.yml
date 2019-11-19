@@ -19,6 +19,7 @@ services:
       - "8000:8000"
       - "5000:5000"
       - "9222:9222"
+    user: ${CURRENT_USER}
 
   mongo:
     image: mongo:3.6.8-stretch

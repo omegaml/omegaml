@@ -43,7 +43,7 @@ Credit where credit is due:
 
 In general you should be able to follow these steps:
 
-1. Run the development docker image shell as your development shell (
+1. Run the development docker image shell as your development shell
 
     $ scripts/rundev.sh --docker --clean --shell
 
@@ -174,6 +174,6 @@ Same thing as building for test, but minifies all sources first.
 Push final release to dockerhub
 -------------------------------
 
-$ make releae-docker
+$ make release-docker
 
 Runs make dist-prod then pushes omegaee image to dockerhub tagged as release and latest
