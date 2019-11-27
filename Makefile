@@ -1,5 +1,6 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
+PIPVERSION=$(shell cat omegaml/VERSION | sed 's/-//')
 
 test:
 	unset DJANGO_SETTINGS_MODULE && nosetests
@@ -8,7 +9,7 @@ dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	python setup.py sdist bdist_wheel
-	twine check dist/omegaml-0.11.3rc1-py3-none-any.whl
+	twine check dist/omegaml-${PIPVERSION}-py3-none-any.whl
 
 livetest: dist
 	scripts/livetest.sh --local --build

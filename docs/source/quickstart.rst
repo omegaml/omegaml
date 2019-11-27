@@ -39,7 +39,7 @@ Leverage the power of omega|ml by installing as follows:
 .. code::
 
     # assuming you have started the server as per above
-    $ pip install omega|ml
+    $ pip install omegaml
 
 
 Examples
