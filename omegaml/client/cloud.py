@@ -70,7 +70,7 @@ def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
     om.Omega = OmegaCloud
     om.setup = setup
     om.get_omega_for_task = lambda *args, **kwargs: setup(*args, **kwargs)
-    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier)
+    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=False)
     return om[bucket]
 
 
