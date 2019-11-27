@@ -16,6 +16,7 @@ services:
          - APP=omegaml
          - OMEGA_MONGO_URL=mongodb://mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//
+         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
    worker:
        image: omegaml/omegaml:latest
@@ -28,6 +29,7 @@ services:
        environment:
          - OMEGA_MONGO_URL=mongodb://mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//
+         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
          - C_FORCE_ROOT=yes
    rabbitmq:
        image: rabbitmq:3.7.17

@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
-import omegaml.defaults as _base_config
 from omegaml.util import load_class, settings
+import omegaml.defaults as _base_config
 
 logger = logging.getLogger(__file__)
 
@@ -11,6 +11,8 @@ try:
     from omegaee import omega as _omega
 except Exception as e:
     from omegaml import omega as _omega
+except:
+    pass
 
 # link implementation
 setup = _omega.setup
@@ -30,3 +32,4 @@ scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')
 runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
+

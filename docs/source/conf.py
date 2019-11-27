@@ -357,10 +357,15 @@ texinfo_documents = [
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.getcwd(), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 print(sys.path)
-import omegaml
+
 
 def setup(app):
+    from omegaml import settings
     app.add_stylesheet('custom.css')
-    
+    del os.environ['DJANGO_SETTINGS_MODULE']
+    defaults = settings()
+
+

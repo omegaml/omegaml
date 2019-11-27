@@ -1,17 +1,16 @@
 import datetime
 import flask
-
+import numpy as np
 import pandas as pd
 import six
 from flask import request
-from flask_restplus import Resource, Model, fields
+from flask_restplus import Resource, fields
 from mongoengine import DoesNotExist
 
+import omegaml as om
 from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.restapi.util import strict
 from .app import api
-
-import numpy as np
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
@@ -51,8 +50,6 @@ class OmegaResourceMixin(object):
 
     @property
     def _omega(self):
-        import omegaml as om
-
         bucket = flask.request.headers.get('bucket')
         return om.setup()[bucket]
 

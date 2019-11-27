@@ -5,6 +5,7 @@ include scripts
 include LICENSE
 include NOTICE
 include THIRDPARTY
+include THIRDPARTY-LICENSES
 include README.rst
 include omegaml/VERSION
 include Procfile

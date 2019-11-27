@@ -3,23 +3,25 @@ omega runtime model tasks
 """
 from __future__ import absolute_import
 
-import datetime
 import os
+import sys
 
+import datetime
 from celery import shared_task
 from celery.signals import worker_process_init
 
 from omegaml.celery_util import OmegamlTask, sanitized
 
+if os.path.basename(sys.argv[0]) == 'celery':
+    try:
+        # ensure tensorflow is loaded -- this avoids AttributeError for tf.estimator later
+        # we do this here instead of in tfestimatormodel to avoid loading tensorflow if it
+        # is not needed. loading means this happens at runtime worker startup
+        import tensorflow as tf
 
-try:
-    # ensure tensorflow is loaded -- this avoids AttributeError for tf.estimator later
-    # we do this here instead of in tfestimatormodel to avoid loading tensorflow if it
-    # is not needed. loading means this happens at runtime startup
-    import tensorflow as tf
-    tf.version
-except:
-    pass
+        tf.version
+    except:
+        pass
 
 
 @shared_task(base=OmegamlTask, bind=True)
@@ -93,6 +95,12 @@ def omega_settings(self):
 def omega_ping(task, *args, **kwargs):
     import socket
     hostname = task.request.hostname or socket.gethostname()
+    # resolve standard kwargs
+    om = task.om
+    args = task.delegate_args
+    kwargs = task.delegate_kwargs
+    kwargs.pop('pure_python', None)
+    # return ping
     return {
         'message': 'ping return message',
         'time': datetime.datetime.now().isoformat(),

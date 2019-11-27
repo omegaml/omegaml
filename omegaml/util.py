@@ -8,7 +8,6 @@ import uuid
 import warnings
 from shutil import rmtree
 
-import numpy as np
 import six
 import sys
 from six import string_types
@@ -473,6 +472,7 @@ def remove_temp_filename(fn, dir=True):
 
 
 def ensure_python_array(arr, dtype):
+    import numpy as np
     return np.array(arr).astype(dtype)
 
 
@@ -495,7 +495,7 @@ def tensorflow_available():
 
 def keras_available():
     try:
-        import tensorflow
+        import keras
     except:
         return False
     return True
@@ -549,6 +549,14 @@ class DefaultsContext(object):
             if k.isupper():
                 setattr(self, k, getattr(source, k))
 
+    def __iter__(self):
+        for k in dir(self):
+            if k.startswith('OMEGA') and k.isupper():
+                yield k, getattr(self, k)
+
+    def __repr__(self):
+        return '{}'.format(dict(self))
+
 
 def ensure_json_serializable(v):
     import numpy as np
@@ -570,3 +578,4 @@ def mkdirs(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+

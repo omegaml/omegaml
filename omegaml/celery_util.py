@@ -1,6 +1,5 @@
 import six
 from celery import Task
-from celery.result import EagerResult
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -71,7 +70,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         # TODO do some more intelligent caching, i.e. by client/auth
         if self._om is None:
             from omegaml import get_omega_for_task
-            bucket = self.request.kwargs.get('__bucket')
+            bucket = self.request.kwargs.pop('__bucket', None)
             self._om = get_omega_for_task(self)[bucket]
         return self._om
 

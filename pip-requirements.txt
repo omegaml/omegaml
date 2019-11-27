@@ -2,6 +2,7 @@ absl-py==0.7.1
 alabaster==0.7.12
 amqp==2.5.0
 aniso8601==7.0.0
+appdirs==1.4.3
 argh==0.26.2
 astor==0.7.1
 attrs==19.1.0
@@ -18,7 +19,8 @@ chardet==3.0.4
 Click==7.0
 cloudpickle==1.2.1
 coverage==4.5.3
-croniter==0.3.12
+cron-descriptor==1.2.24
+croniter==0.3.30
 cycler==0.10.0
 cytoolz==0.9.0.1
 dask==1.1.4
@@ -28,6 +30,7 @@ dill==0.2.9
 dismagic==0.0.1
 distributed==1.26.0
 docutils==0.15
+docopt==0.6.2
 entrypoints==0.3
 Flask==1.0.2
 flask-restplus==0.12.1
@@ -154,3 +157,4 @@ Werkzeug==0.15.4
 widgetsnbextension==3.4.2
 wrapt==1.11.2
 zict==1.0.0
+

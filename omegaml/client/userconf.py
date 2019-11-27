@@ -2,12 +2,12 @@ import sys
 
 import yaml
 
-from omegaml import settings
 from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
 
 
 def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
+    from omegaml import settings
     defaults = settings()
     api_url = api_url or defaults.OMEGA_RESTAPI_URL
     api_url += '/api/v1/config/'
@@ -81,6 +81,10 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     _base_config.update_from_dict(config, attrs=defaults)
     auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
     om = Omega(defaults=defaults, auth=auth)
+    # update config to reflect request
+    om.defaults.OMEGA_RESTAPI_URL = api_url
+    om.defaults.OMEGA_USERID = userid
+    om.defaults.OMEGA_APIKEY = apikey
     return om
 
 
@@ -113,5 +117,6 @@ def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, reques
                                            requested_userid=requested_userid,
                                            view=view)
         config = configs['objects'][0]['data']
+        config['OMEGA_RESTAPI_URL'] = api_url
         yaml.safe_dump(config, fconfig, default_flow_style=False)
         print("Config is in {configfile}".format(**locals()))

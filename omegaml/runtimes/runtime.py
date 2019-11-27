@@ -29,7 +29,7 @@ class CeleryTask(object):
         self.kwargs = kwargs
 
     def apply_async(self, args=None, kwargs=None, *args_, **kwargs_):
-        kwargs_.update(self.kwargs)
+        kwargs.update(self.kwargs)
         return self.task.apply_async(args=args, kwargs=kwargs, *args_)
 
     def delay(self, *args, **kwargs):

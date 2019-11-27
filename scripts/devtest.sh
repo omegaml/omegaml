@@ -20,7 +20,6 @@ if [[ ! -z $headless ]]; then
 fi
 
 # force celery eager task execution
-export OMEGA_LOCAL_RUNTIME=1
 export BEHAVE_DEBUG=1
 unset DJANGO_SETTINGS
 

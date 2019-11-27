@@ -13,11 +13,11 @@ Further, omega|ml is the fastest way to
 - collaborate on data science projects easily, sharing Jupyter Notebooks
 - deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
 
-Links
-=====
+.. info::
 
-* Documentation: https://omegaml.github.io/omegaml/
-* Contributions: http://bit.ly/omegaml-contribute
+   * Documentation: https://omegaml.github.io/omegaml/
+
+   * Contributions: http://bit.ly/omegaml-contribute
 
 Get started in < 5 minutes
 ==========================

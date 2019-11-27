@@ -96,7 +96,11 @@ class OmegaDeferredInstance(object):
         self.attribute = attribute
 
     def setup(self, mongo_url=None, bucket=None, celeryconf=None):
-        omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
+        from omegaml.client.cloud import setup_from_config
+        try:
+            omega = setup_from_config()
+        except SystemError:
+            omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
         if not self.initialized:
             self.initialized = True
             self.omega = omega
