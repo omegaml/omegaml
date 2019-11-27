@@ -3,6 +3,8 @@ omega runtime script tasks
 """
 from __future__ import absolute_import
 
+import json
+
 import datetime
 from celery import shared_task
 
@@ -75,4 +77,4 @@ def run_omega_script(self, scriptname, **kwargs):
         'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
         'started': dtstart.isoformat(),
     }
-    return data
+    return json.dumps(data)

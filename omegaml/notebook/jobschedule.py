@@ -197,9 +197,46 @@ class JobSchedule(object):
         # every friday
         specs = {}
         # ensure single whitespace
-        text = ' '.join(text.split())
+        orig_text = text
+        text = ' '.join(text.split()).lower()
+        # try placing commas
+        text = text.replace(' ', ',')
+        text = text.replace('every,', 'every ')
+        text = text.replace(',and,', ' and ')
+        text = text.replace(',only,', ' only ')
+        text = text.replace('at,', 'at ')
+        text = text.replace('on,', 'on ')
+        text = text.replace('in,', 'in ')
+        text = text.replace(',through,', ' through ')
+        text = text.replace(',-,', ' - ')
+        text = text.replace(',until,', ' until ')
+        text = text.replace(',till,', ' till ')
+        text = text.replace(',to,', ' to ')
+        text = text.replace(',of,', ' of ')
+        text = text.replace(',from,', ' from ')
+        text = text.replace(',hours,', ' hours,')
+        text = text.replace(',hour,', ' hour,')
+        text = text.replace('day hour,', 'day,hour ')
+        text = text.replace('hours,', 'hours ')
+        text = text.replace('hour,', 'hour ')
+        text = text.replace('working,day', 'working day')
+        text = text.replace('week,day', 'week day')
+        text = text.replace(',minutes', ' minutes')
+        text = text.replace(',minute', ' minute')
+        text = text.replace(',day', ' day')
+        text = text.replace(',end', ' end')
+        text = text.replace(',month,', ' month,')
         # get parts separated by comma
-        parts = (part.strip() for part in text.split(','))
+        parts = [part.strip() for part in text.split(',') if part]
+        try:
+            specs = self._parse_parts(parts)
+            sched = JobSchedule(**specs)
+        except:
+            raise ValueError(f'Cannot parse {orig_text}, read as {parts}')
+        return sched
+
+    def _parse_parts(self, parts):
+        specs = {}
         for part in parts:
             # Monday and Friday => Monday/Friday
             part = part.replace(' and ', ',')
@@ -244,4 +281,4 @@ class JobSchedule(object):
             elif 'minute' in part:
                 # every minute, every 3rd minute, every 5 minutes, minute 6/7
                 specs['minute'] = part.replace('minute', '').replace('at ', '').strip()
-        return JobSchedule(**specs)
+        return specs

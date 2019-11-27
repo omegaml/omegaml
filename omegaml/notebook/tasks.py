@@ -81,12 +81,12 @@ def execute_scripts(self, **kwargs):
     now = kwargs.get('now') or datetime.datetime.now()
     # get pending tasks, execute if time is right
     for job_meta in om.jobs.list(raw=True):
-        logger.info("***** {}".format(job_meta))
+        logger.debug("***** {}".format(job_meta))
         triggers = job_meta.attributes.get('triggers', [])
         # run pending jobs
         pending = (trigger for trigger in triggers
                    if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING')
-        logger.info("***** {}".format(pending))
+        logger.debug("***** {}".format(pending))
         for trigger in pending:
             run_at = trigger['run-at']
             logger.info("***** {} {}".format(now, run_at))

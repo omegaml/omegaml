@@ -201,7 +201,7 @@ class ApplyMixin(object):
             cursor = self._get_cached_cursor(pipeline=pipeline, use_cache=use_cache)
             if cursor is None:
                 filter_criteria = self._get_filter_criteria()
-                cursor = self.collection.aggregate(pipeline, filter=filter_criteria)
+                cursor = self.collection.aggregate(pipeline, filter=filter_criteria, allowDiskUse=True)
         else:
             cursor = super(ApplyMixin, self)._get_cursor()
         return cursor
@@ -241,8 +241,8 @@ class ApplyContext(object):
 
         mdf.apply(lambda v: v * 5 ) => multiply every column in dataframe
         mdf.apply(lambda v: v['foo'].dt.week) => get week of date for column foo
-        mdf.apply(dict(a=v['foo'].dt.week,
-                       b=v['bar'] * 5) => run multiple pipelines and get results
+        mdf.apply(lambda v: dict(a=v['foo'].dt.week,
+                                 b=v['bar'] * 5) => run multiple pipelines and get results
 
         The callable passed to apply can be any function. It can either return None,
         the context passed in or a list of pipeline stages.
