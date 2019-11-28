@@ -458,7 +458,7 @@ def extend_instance(obj, cls, *args, **kwargs):
 def temp_filename(dir=None, ext='tmp'):
     """ generate a temporary file name """
     dir = dir or tempfile.mkdtemp()
-    return os.path.join(dir, uuid.uuid4().hex)
+    return os.path.join(dir, uuid.uuid4().hex + f'.{ext}')
 
 
 def remove_temp_filename(fn, dir=True):

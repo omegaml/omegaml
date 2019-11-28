@@ -1,12 +1,12 @@
 import datetime
 import nbformat
 from cron_descriptor import get_description
-from omegaml.client.docoptparser import DocoptCommand
+from omegaml.client.docoptparser import CommandBase
 
 from omegaml.client.util import get_omega
 
 
-class JobsCommand(DocoptCommand):
+class JobsCommandBase(CommandBase):
     """
     Usage:
       om jobs list [<pattern>] [--raw] [options]
@@ -101,29 +101,34 @@ class JobsCommand(DocoptCommand):
         run_at, triggers = om.jobs.get_schedule(name, only_pending=True)
         if run_at:
             human_sched = get_description(run_at)
-            print("Currently {name} is scheduled at {human_sched}".format(**locals()))
+            self.logger.info("Currently {name} is scheduled at {human_sched}".format(**locals()))
             if next_n:
-                print("Given this existing interval, next {next_n} times would be:".format(**locals()))
+                self.logger.info("Given this existing interval, next {next_n} times would be:".format(**locals()))
                 for time in om.jobs.Schedule.from_cron(run_at).next_times(int(next_n)):
-                    print("  {}".format(time))
+                    self.logger.info("  {}".format(time))
         else:
-            print("Currently {name} is not scheduled".format(**locals()))
+            self.logger.info("Currently {name} is not scheduled".format(**locals()))
+        # show current triggers
         if triggers:
             trigger = triggers[-1]
             if trigger['status'] == 'PENDING':
                 event = trigger['event']
-                print("{name} is scheduled to run next at {event}".format(**locals()))
+                self.logger.info("{name} is scheduled to run next at {event}".format(**locals()))
         # delete if currently scheduled
         if delete:
             if run_at or triggers:
-                answer = input("Do you want to delete this schedule? [N/y]")
-                if answer.lower().startswith('y'):
-                    return om.jobs.drop_schedule(name)
+                answer = self.ask("Do you want to delete this schedule?", options='Y/n', default='y')
+                should_drop = answer.lower().startswith('y')
+                return om.jobs.drop_schedule(name) if should_drop else None
         # create new schedule
         if not (show or delete):
             if interval:
-                # nlp text-like
-                spec = om.jobs.Schedule(interval).cron
+                try:
+                    # nlp text-like
+                    spec = om.jobs.Schedule(interval).cron
+                except Exception as e:
+                    self.logger.info(f"Cannot parse {interval}, error was {e}")
+                    raise
             if not spec:
                 cron_repr = ('{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
                              '{0._orig_month_of_year} {0._orig_day_of_week}')
@@ -137,11 +142,11 @@ class JobsCommand(DocoptCommand):
                 cron_sched = spec
             human_sched = get_description(cron_sched)
             if next_n:
-                print("Given this new interval, next {next_n} times would be:".format(**locals()))
+                self.logger.info("Given this new interval, next {next_n} times would be:".format(**locals()))
                 for time in om.jobs.Schedule.from_cron(cron_sched).next_times(int(next_n)):
-                    print("  {}".format(time))
-            answer = input("Do you want to schedule {name} at {human_sched}? [N/y]".format(**locals()))
-            if not answer or answer.lower().startswith('n'):
+                    self.logger.info("  {}".format(time))
+            answer = self.ask("Do you want to schedule {name} at {human_sched}?", options="Y/n", default='y')
+            if answer.lower().startswith('n'):
                 self.logger.info('Ok, not scheduled. Try again.')
                 return
             self.logger.info('{name} will be scheduled to run {human_sched}'.format(**locals()))
@@ -154,10 +159,10 @@ class JobsCommand(DocoptCommand):
         attrs = meta.attributes
         runs = attrs.get('job_runs', [])
         run_at, triggers = om.jobs.get_schedule(name, only_pending=True)
-        print("Runs:")
+        self.logger.info("Runs:")
         for run in runs:
-            print("  {ts} {status} ".format(**run))
-        print("Next scheduled runs:")
+            self.logger.info("  {ts} {status} ".format(**run))
+        self.logger.info("Next scheduled runs:")
         for trigger in triggers:
             trigger['ts'] = trigger.get('ts', '')
-            print("  {ts} {status} {event-kind} {event}".format(**trigger))
+            self.logger.info("  {ts} {status} {event-kind} {event}".format(**trigger))

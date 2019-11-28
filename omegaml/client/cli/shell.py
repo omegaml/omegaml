@@ -1,9 +1,9 @@
 
-from omegaml.client.docoptparser import DocoptCommand
+from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class ShellCommand(DocoptCommand):
+class ShellCommandBase(CommandBase):
     """
     Usage:
         om shell [options]

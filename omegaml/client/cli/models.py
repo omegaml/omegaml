@@ -1,23 +1,28 @@
 from importlib import import_module
 
-from omegaml.client.docoptparser import DocoptCommand
+from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class ModelsCommand(DocoptCommand):
+class ModelsCommandBase(CommandBase):
     """
     Usage:
       om models put <module.callable> <name>
-      om models list [<pattern>] [--raw]
+      om models list [<pattern>] [--raw] [-E|--regexp] [options]
       om models metadata <name>
+
+    Description:
+        Great stuff with models
     """
     command = 'models'
 
     def list(self):
         om = get_omega(self.args)
         pattern = self.args.get('<pattern>')
+        regexp = self.args.get('--regexp') or self.args.get('-E')
         raw = self.args.get('--raw')
-        self.logger.info(om.models.list(pattern=pattern, raw=raw))
+        kwargs = dict(regexp=pattern) if regexp else dict(pattern=pattern)
+        self.logger.info(om.models.list(raw=raw, **kwargs))
 
     def put(self):
         om = get_omega(self.args)

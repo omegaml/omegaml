@@ -1,10 +1,10 @@
-from omegaml.client.docoptparser import DocoptCommand
+from omegaml.client.docoptparser import CommandBase
 from omegaml.client.userconf import save_userconfig_from_apikey
 from omegaml.client.util import get_omega
 from omegaml.defaults import update_from_config
 
 
-class CloudCommand(DocoptCommand):
+class CloudCommandBase(CommandBase):
     """
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
@@ -23,9 +23,9 @@ class CloudCommand(DocoptCommand):
         api_url = self.args.get('--apiurl')
         configfile = self.args.get('--config') or 'config.yml'
         if not userid:
-            userid = input('Userid: ')
+            userid = self.ask('Userid:')
         if not apikey:
-            apikey = input('Apikey: ')
+            apikey = self.ask('Apikey:')
         save_userconfig_from_apikey(configfile, userid, apikey, api_url=api_url)
 
     def config(self):

@@ -1,13 +1,13 @@
-from omegaml.client.docoptparser import DocoptCommand
+from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class RuntimeCommand(DocoptCommand):
+class RuntimeCommandBase(CommandBase):
     """
     Usage:
-      om runtime model <name> <model-action> [<X>] [<Y>] [<kw=value> ...>] [--async] [options]
-      om runtime script <name> [<script-action>] [<args ...>] [--async] [options]
-      om runtime job <name> [<job-action>] [<args ...>] [--async] [options]
+      om runtime model <name> <model-action> [<X>] [<Y>] [--result=<output-name>] [--param=<kw=value>]... [options]
+      om runtime script <name> [<script-action>] [<kw=value>...] [--async] [options]
+      om runtime job <name> [<job-action>] [<args...>] [--async] [options]
       om runtime result <taskid> [options]
       om runtime ping [options]
 
@@ -45,7 +45,8 @@ class RuntimeCommand(DocoptCommand):
         name = self.args.get('<name>')
         action = self.args.get('<model-action>')
         async = self.args.get('--async')
-        kwargs_lst = self.args.get('<kw=value>')
+        kwargs_lst = self.args.get('--param')
+        output = self.args.get('--result')
         X = self._ensure_valid_XY(self.args.get('<X>'))
         Y = self._ensure_valid_XY(self.args.get('<Y>'))
         # parse the list of kw=value values
@@ -56,12 +57,19 @@ class RuntimeCommand(DocoptCommand):
             k, v = kv.split('=', 1)
             kv_dct[k] = eval(v)
         kwargs = {}
+        if action in ('predict', 'predict_proba',
+                      'decision_function', 'transform', 'score'):
+            # actions that take rName, but no Y
+            kwargs['rName'] = output
+        else:
+            # actions that take Y, but no rName
+            kwargs['Yname'] = Y
         if action == 'gridsearch':
             kwargs['parameters'] = kv_dct
         rt_model = om.runtime.model(name)
         meth = getattr(rt_model, action, None)
         if meth is not None:
-            result = meth(X, Y, **kwargs)
+            result = meth(X, **kwargs)
             if not async:
                 self.logger.info(result.get())
             else:
@@ -73,7 +81,8 @@ class RuntimeCommand(DocoptCommand):
         om = get_omega(self.args)
         name = self.args.get('<name>')
         async = self.args.get('--async')
-        result = om.runtime.script(name).run()
+        kwargs = self.parse_kwargs('<kw=value>')
+        result = om.runtime.script(name).run(**kwargs)
         if not async:
             self.logger.info(result.get())
         else:
