@@ -1,6 +1,10 @@
 from multiprocessing import Pool
 from itertools import repeat
 
+import math
+
+import os
+
 from omegaml.mongoshim import MongoClient 
 
 pool = None
@@ -19,7 +23,7 @@ def insert_chunk(job):
                 from the default database of the connection.
     """
     sdf, mongo_url, collection_name = job
-    client = MongoClient(mongo_url, authSource='admin'  )
+    client = MongoClient(mongo_url, authSource='admin')
     db = client.get_database()
     collection = db[collection_name]
     result = collection.insert_many(sdf.to_dict(orient='records'))
@@ -49,7 +53,8 @@ def fast_insert(df, omstore, name, chunk_size=int(1e4)):
         collection_name = omstore.collection(name).name
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
-        pool = pool or Pool()
+        cores = max(1, math.ceil(os.cpu_count() / 2))
+        pool = pool or Pool(processes=cores)
         jobs = zip(dfchunker(df, size=chunk_size),
                    repeat(mongo_url), repeat(collection_name))
         pool.map(insert_chunk, (job for job in jobs))

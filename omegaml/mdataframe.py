@@ -46,13 +46,16 @@ class MGrouper(object):
 
         return statfunc
 
+    def __getitem__(self, item):
+        return self.__getattr__(item)
+
     def agg(self, specs):
         """
         shortcut for .aggregate
         """
         return self.aggregate(specs)
 
-    def aggregate(self, specs):
+    def aggregate(self, specs, **kwargs):
         """
         aggregate by given specs
 
@@ -123,7 +126,7 @@ class MGrouper(object):
         if self.should_sort:
             sort = qops.SORT(**dict(qops.make_sortkey('_id')))
             pipeline.append(sort)
-        return list(self.collection.aggregate(pipeline))
+        return list(self.collection.aggregate(pipeline, allowDiskUse=True))
 
     def count(self):
         """ return counts by group columns """
@@ -138,10 +141,11 @@ class MGrouper(object):
 
     def __iter__(self):
         """ for each group returns the key and a Filter object"""
-        groups = self._count()
+        # reduce count to only one column
+        groups = getattr(self, self.columns[0])._count()
         for group in groups:
             keys = group.get('_id')
-            data = Filter(self.collection, **keys)
+            data = self.mdataframe._clone(query=keys)
             yield keys, data
 
 
@@ -316,7 +320,7 @@ class MDataFrame(object):
     """
     A DataFrame for mongodb
 
-    Performs out-of-core, lazy computation on a mongodb cluster.
+    Performs out-of-core, lazy computOation on a mongodb cluster.
     Behaves like a pandas DataFrame. Actual results are returned
     as pandas DataFrames.
     """
@@ -388,8 +392,10 @@ class MDataFrame(object):
         data = dict(self.__dict__)
         data.update(_evaluated=None)
         data.update(_inspect_cache=None)
-        data.update(auto_inspect=None)
-        data.update(_preparefn=None)
+        data.update(auto_inspect=self.auto_inspect)
+        data.update(_preparefn=self._preparefn)
+        data.update(_parser=self._parser)
+        data.update(_raw=self._raw)
         data.update(collection=self.collection)
         return data
 
@@ -411,7 +417,7 @@ class MDataFrame(object):
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
 
-    def __array__(self):
+    def __array__(self, dtype=None):
         # FIXME inefficient. make MDataFrame a drop-in replacement for any numpy ndarray
         # this evaluates every single time
         if self._evaluated is None:
@@ -475,6 +481,11 @@ class MDataFrame(object):
             self.columns.append(column)
         return self
 
+    def _clone(self, collection=None, **kwargs):
+        # convenience method to clone itself with updates
+        return self.__class__(collection or self.collection, **kwargs,
+                              **self._getcopy_kwargs(without=list(kwargs.keys())))
+
     def statfunc(self, stat):
         aggr = MGrouper(self, self.collection, [], sort=False)
         return getattr(aggr, stat)
@@ -497,9 +508,9 @@ class MDataFrame(object):
                 result = list(doc.keys())
             else:
                 result = [str(col) for col in doc.keys()
-                              if col != '_id'
-                              and not col.startswith('_idx')
-                              and not col.startswith('_om#')]
+                          if col != '_id'
+                          and not col.startswith('_idx')
+                          and not col.startswith('_om#')]
         return result
 
     def _get_frame_index(self):
@@ -602,6 +613,16 @@ class MDataFrame(object):
             df = self._preparefn(df)
         return df
 
+    def reset(self):
+        # TODO if head(), tail(), query(), .loc/iloc should return a new MDataFrame instance to avoid having a reset need
+        self.head_limit = None
+        self.skip_topn = None
+        self.filter_criteria = {}
+        self.force_columns = []
+        self.sort_order = None
+        self.from_loc_indexer = False
+        return self
+
     def _get_dataframe_from_cursor(self, cursor):
         """ 
         from the given cursor return a DataFrame
@@ -656,9 +677,7 @@ class MDataFrame(object):
         :param limit: the number of rows to return. Defaults to 10
         :return: the MDataFrame
         """
-        self._evaluated = None
-        self.head_limit = limit
-        return self
+        return self._clone(limit=limit)
 
     def tail(self, limit=10):
         """
@@ -667,9 +686,8 @@ class MDataFrame(object):
         :param limit:
         :return:
         """
-        self._evaluated = None
-        self.skip(len(self) - limit)
-        return self
+        tail_n = self.skip(len(self) - limit)
+        return self._clone(skip=tail_n)
 
     def skip(self, topn):
         """
@@ -678,9 +696,7 @@ class MDataFrame(object):
         :param topn: the number of rows to skip.
         :return: the MDataFrame 
         """
-        self._evaluated = None
-        self.skip_topn = topn
-        return self
+        return self._clone(skip=topn)
 
     def merge(self, right, on=None, left_on=None, right_on=None,
               how='inner', target=None, suffixes=('_x', '_y'),
@@ -778,7 +794,7 @@ class MDataFrame(object):
         if inspect:
             result = pipeline
         else:
-            result = self.collection.aggregate(pipeline)
+            result = self.collection.aggregate(pipeline, allowDiskUse=True)
             result = MDataFrame(self.collection.database[target_name],
                                 force_columns=expected_columns)
         return result
@@ -822,7 +838,7 @@ class MDataFrame(object):
         }
         output = qops.OUT(outname)
         pipeline = [unwind, output]
-        self.collection.aggregate(pipeline)
+        self.collection.aggregate(pipeline, allowDiskUse=True)
         return self
 
     def _get_collection_name_of(self, some, default=None):
@@ -900,8 +916,7 @@ class MDataFrame(object):
         else:
             effective_filter.update(filter_criteria)
         coll = FilteredCollection(self.collection, query=effective_filter)
-        return self.__class__(coll, query=effective_filter,
-                              **self._getcopy_kwargs(without='query'))
+        return self._clone(collection=coll, query=effective_filter)
 
     def create_index(self, keys, **kwargs):
         """

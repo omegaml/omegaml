@@ -39,6 +39,7 @@ def build_sdist(src, distdir):
 def install_package(src, dst):
     cpip.main('install',
               src,
+              '--force-reinstall',
               '--upgrade',
               '--target', dst)
 
@@ -46,12 +47,14 @@ def install_package(src, dst):
 def load_from_path(name, path):
     import importlib
     sys.path.insert(0, path)
-    if name in sys.modules:
-        del sys.modules[name]
-    if name in globals():
-        del globals()[name]
-    mod = importlib.import_module(name)
-    sys.path.remove(path)
+    try:
+        if name in sys.modules:
+            del sys.modules[name]
+        if name in globals():
+            del globals()[name]
+        mod = importlib.import_module(name)
+    finally:
+        sys.path.remove(path)
     return mod
 
 

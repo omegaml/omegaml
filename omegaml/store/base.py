@@ -749,7 +749,7 @@ class OmegaStore(object):
 
         :param name: the name of the object (str)
         :param columns: the column projection as a list of column names
-        :param lazy: if True returns a lazy representation as an MDataFrame. 
+        :param lazy: if True returns a lazy representation as an MDataFrame.
            If False retrieves all data and returns a DataFrame (default) 
         :param filter: the filter to be applied as a column__op=value dict 
         :param version: the version to retrieve (not supported)
@@ -957,7 +957,7 @@ class OmegaStore(object):
                 files = [f for f in files if fnmatch(f, pattern)]
             files = [f.replace('.omm', '') for f in files]
             if not include_temp:
-                files = [f for f in files if not f.startswith('_temp')]
+                files = [f for f in files if not f.startswith('_')]
         return files
 
     def object_store_key(self, name, ext):
