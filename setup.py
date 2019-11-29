@@ -12,7 +12,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 hdf_deps = ['tables>=3.2.2']
 tf_deps = ['tensorflow==1.15.0']
 keras_deps = ['keras==2.2.4']
-graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0']
+graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0', 'imageio==2.6.1']
 
 setup(
     name='omegaml',
