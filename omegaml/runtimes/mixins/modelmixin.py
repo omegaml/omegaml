@@ -31,8 +31,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
-        return omega_fit.delay(self.modelname, Xname, Yname,
-                               **self.runtime._common_kwargs, **kwargs)
+        return omega_fit.delay(self.modelname, Xname, Yname, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
         """
@@ -54,8 +53,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
-        return omega_fit.delay(self.modelname, Xname, Yname,
-                               **self.runtime._common_kwargs, **kwargs)
+        return omega_fit.delay(self.modelname, Xname, Yname, **kwargs)
 
     def transform(self, Xname, rName=None, **kwargs):
         """
@@ -72,8 +70,7 @@ class ModelMixin(object):
         omega_transform = self.task('omegaml.tasks.omega_transform')
         Xname = self._ensure_data_is_stored(Xname)
         return omega_transform.delay(self.modelname, Xname,
-                                     rName=rName,
-                                     **self.runtime._common_kwargs, **kwargs)
+                                     rName=rName, **kwargs)
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
         """
@@ -95,8 +92,7 @@ class ModelMixin(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname)
         return omega_fit_transform.delay(self.modelname, Xname, Yname,
-                                         rName=rName, transform=True,
-                                         **self.runtime._common_kwargs, **kwargs)
+                                         rName=rName, transform=True, **kwargs)
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -112,8 +108,7 @@ class ModelMixin(object):
         """
         omega_predict = self.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
-        return omega_predict.delay(self.modelname, Xname, rName=rName,
-                                   **self.runtime._common_kwargs, **kwargs)
+        return omega_predict.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -130,8 +125,7 @@ class ModelMixin(object):
         omega_predict_proba = self.task(
             'omegaml.tasks.omega_predict_proba')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
-        return omega_predict_proba.delay(self.modelname, Xname, rName=rName,
-                                         **self.runtime._common_kwargs, **kwargs)
+        return omega_predict_proba.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def score(self, Xname, yName, rName=None, **kwargs):
         """
@@ -149,8 +143,7 @@ class ModelMixin(object):
         omega_score = self.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
         yName = self._ensure_data_is_stored(yName)
-        return omega_score.delay(self.modelname, Xname, yName, rName=rName,
-                                 **self.runtime._common_kwargs, **kwargs)
+        return omega_score.delay(self.modelname, Xname, yName, rName=rName, **kwargs)
 
     def decision_function(self, Xname, rName=None, **kwargs):
         """
@@ -166,8 +159,7 @@ class ModelMixin(object):
         """
         omega_decision_function = self.task('omegaml.tasks.omega_decision_function')
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_decision_function.delay(self.modelname, Xname, rName=rName,
-                                             **self.runtime._common_kwargs, **kwargs)
+        return omega_decision_function.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
         if is_dataframe(name_or_data):

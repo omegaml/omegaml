@@ -77,7 +77,7 @@ class CliJobsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         meta = self.om.jobs.metadata('test')
         triggers = meta.attributes['triggers']
         trigger = triggers[-1]
-        kwargs = dict(now=trigger['run-at'], **self.om.runtime._common_kwargs)
+        kwargs = dict(now=trigger['run-at'])
         self.om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
         self.cli('jobs status test', new_start=True)
         entries =  self.get_log('info')

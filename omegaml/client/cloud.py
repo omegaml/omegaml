@@ -54,7 +54,7 @@ class OmegaCloudRuntime(OmegaRuntime):
     @property
     def _common_kwargs(self):
         common = super()._common_kwargs
-        common.update({self._auth_kwarg: self.auth_tuple})
+        common['task'].update({self._auth_kwarg: self.auth_tuple})
         return common
 
     @property
@@ -85,6 +85,7 @@ def setup_from_config(config_file=None):
                               apikey=userconfig['OMEGA_APIKEY'],
                               api_url=userconfig['OMEGA_RESTAPI_URL'])
             except:
+                # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
                 raise ValueError('Could not login using config file {}'.format(config_file))
             else:
                 omega.defaults.OMEGA_CONFIG_FILE = config_file
