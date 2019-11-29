@@ -5,8 +5,8 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from matplotlib.pyplot import imsave
 from nbformat import v4
-from scipy.misc import imsave
 from sklearn.linear_model import LinearRegression
 
 from omegaml.client import cli
