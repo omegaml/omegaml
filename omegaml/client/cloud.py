@@ -55,12 +55,25 @@ class OmegaCloudRuntime(OmegaRuntime):
     def _common_kwargs(self):
         common = super()._common_kwargs
         common['task'].update({self._auth_kwarg: self.auth_tuple})
+        label = common['routing'].get('label', 'default')
+        common['routing'].update(self.build_account_routing(label))
         return common
 
     @property
     def auth_tuple(self):
         auth = self.omega.auth
         return auth.userid, auth.apikey, auth.qualifier
+
+    @property
+    def dispatch_label(self):
+        return self.omega.auth.userid
+
+    def build_account_routing(self, label):
+        # build the queue
+        account_routing = {
+            'label': '{self.dispatch_label}-{label}'.format(**locals())
+        }
+        return account_routing
 
 
 def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):

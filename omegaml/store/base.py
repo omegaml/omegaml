@@ -949,6 +949,8 @@ class OmegaStore(object):
                 files = [f for f in meta if fnmatch(f.name, pattern)]
             else:
                 files = [f for f in meta]
+            if not include_temp:
+                files = [f for f in files if not f.name.startswith('_')]
         else:
             files = [d.name for d in meta]
             if regexp:

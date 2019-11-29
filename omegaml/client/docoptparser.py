@@ -576,6 +576,8 @@ class CommandBase:
         docs = self.add_global_options() if self.global_docs else self.docs
         args = safe_docopt(docs, argv=self.argv, help=False)
         self.args.update(args)
+        if self.parser.should_debug:
+            print("*** {self.command} parsed args".format(**locals()), self.args)
 
     @property
     def has_usage(self):
