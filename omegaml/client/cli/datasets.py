@@ -1,8 +1,9 @@
 import imghdr
 
+import pandas as pd
+
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
-import pandas as pd
 
 
 class DatasetsCommandBase(CommandBase):
@@ -47,7 +48,7 @@ class DatasetsCommandBase(CommandBase):
             meta = om.datasets.put(data, name, append=not replace)
         elif imghdr.what(local):
             # images
-            from scipy.misc import imread
+            from imageio import imread
             img = imread(local)
             meta = om.datasets.put(img, name)
         else:
