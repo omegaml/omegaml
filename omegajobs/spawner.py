@@ -106,6 +106,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
         env['OMEGA_USERID'] = configs['OMEGA_USERID']
         env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
+        env['CA_CERTS_PATH'] = os.environ.get('CA_CERTS_PATH')
         self.log.info("***within user_env {}".format(os.getpid()))
         # pass user configuration to preexecfn
         self.__config_env = {

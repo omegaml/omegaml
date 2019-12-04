@@ -1,6 +1,7 @@
 import os
 
 import sys
+from unittest import skip
 
 from django.contrib.auth.models import User
 from landingpage.models import ServicePlan

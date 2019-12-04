@@ -1,4 +1,7 @@
 # Configuration file for jupyterhub.
+import os
+import socket
+import sys
 
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
@@ -39,7 +42,6 @@
 ## Grant admin users permission to access single-user servers.
 #  
 #  Users should be properly informed if this is enabled.
-import socket
 
 c.JupyterHub.admin_access = True
 
@@ -61,7 +63,6 @@ c.JupyterHub.admin_access = True
 #  
 #  Consider using service_tokens for general services that talk to the JupyterHub
 #  API.
-import os
 # must match omegaml.defaults
 jyuser = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
 jytoken = os.environ.get('OMEGA_JYHUB_TOKEN', '2a67924fa4a9782abe3dd23826a01401833a10f1')
@@ -146,7 +147,8 @@ c.JupyterHub.authenticator_class = 'omegajobs.hubauth.OmegaAuthenticator'
 #c.JupyterHub.cookie_secret_file = 'jupyterhub_cookie_secret'
 
 ## The location of jupyterhub data files (e.g. /usr/local/share/jupyter/hub)
-#c.JupyterHub.data_files_path = '/usr/local/anaconda/envs/omegamlpy3/share/jupyter/hub'
+#userid = os.geteuid()
+#c.JupyterHub.data_files_path = f'/tmp/{userid}/hub'
 
 ## Include any kwargs to pass to the database connection. See
 #  sqlalchemy.create_engine for details.
@@ -784,8 +786,5 @@ c.Authenticator.admin_users = {jyuser}
 ## The number of threads to allocate for encryption
 #c.CryptKeeper.n_threads = 4
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import omegaml as om
 

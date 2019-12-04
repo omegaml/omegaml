@@ -74,3 +74,8 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaee',
                         'omegaml.notebook',
                         'omegaml.backends.package']
+#: additional SSL kwargs for mongodb SSL connections
+OMEGA_MONGO_SSL_KWARGS = {
+    'ssl': True,
+    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH'),
+}

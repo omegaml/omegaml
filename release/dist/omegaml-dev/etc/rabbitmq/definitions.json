@@ -1,0 +1,33 @@
+{
+    "users": [
+        {
+            "name": "omegaml",
+            "password": "ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe",
+            "tags": ""
+    },
+    {
+        "name": "admin",
+        "password": "een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP",
+        "tags": "administrator"
+    }
+    ],
+    "vhosts": [
+        {
+            "name": "omegaml"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "omegaml",
+            "vhost": "omegaml",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+    }
+    ],
+    "parameters": [],
+    "policies": [],
+    "queues": [],
+    "exchanges": [],
+    "bindings": []
+}

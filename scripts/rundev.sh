@@ -50,7 +50,7 @@ if [[ ! -z $clean ]]; then
     docker-compose -f docker-compose-dev.yml down
     docker-compose -f docker-compose-dev.yml up -d --remove-orphans
     countdown 5
-    cat scripts/mongoinit.js | docker exec -i omegaml_mongo_1 mongo
+    cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
     docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/initlocal.sh"
 fi
 

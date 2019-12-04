@@ -12,6 +12,7 @@
 ##      --tags=VALUE      if specified execute this tag only
 ##      --runlocal        if specified run omegaml-ee in docker-compose
 ##      --debug           if specified drops into pdb on error
+##      --cacert=PEMFILE  if specified set CA_CERTS_PATH
 ##
 ## Required: url
 
@@ -31,6 +32,9 @@ export OMEGA_URL=$url
 export OMEGA_ADMIN_USER=$user
 export OMEGA_ADMIN_PASSWORD=$pass
 export BEHAVE_NBFILES=$script_dir/../../omegaml-ce/docs/source/nb
+if [[ ! -z $cacert ]]; then
+    export CA_CERTS_PATH=$cacert
+fi
 
 # run omega-ee
 if [[ ! -z $runlocal ]]; then

@@ -46,6 +46,7 @@ OMEGA_CLOUD_CELERY_CONFIG = {
             }
         }
     },
+    'BROKER_USE_SSL': True,
 }
 #: celery task packages
 OMEGA_CLOUD_CELERY_IMPORTS = ['paasdeploy', 'omegaops']

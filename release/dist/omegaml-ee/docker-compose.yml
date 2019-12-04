@@ -1,100 +1,136 @@
 version: '3'
 services:
    nginx:
-       image: nginx
-       ports:
-         - 5000:5000
-         - 5672:5672
-         - 27017:27017
-         - 8899:8888
-         - 8010:8010
-       links:
-          - omegaml
-          - omjobs
-          - rabbitmq
-          - mongodb
-       volumes:
-          - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-          - ./etc/nginx/http.conf:/etc/nginx/conf.d/http.conf:ro
-          - ./etc/nginx/stream.conf:/etc/nginx/conf.d/stream.conf:ro
+      image: nginx
+      container_name: nginx
+      ports:
+      - 5000:5000
+      - 5671:5671
+      - 27017:27017
+      - 8899:8888
+      - 8010:8010
+      links:
+         - omegaml
+         - omjobs
+         - rabbitmq
+         - mongodb
+      volumes:
+         - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+         - ./etc/nginx/http.conf:/etc/nginx/conf.d/http.conf:ro
+         - ./etc/nginx/stream.conf:/etc/nginx/conf.d/stream.conf:ro
    omegaml:
-       image: omegaml/omegaml-ee:latest
-       hostname: omegaml
-       links:
-          - rabbitmq
-          - mongodb
-          - mysql
-       working_dir: /app
-       command: scripts/startweb.sh
-       environment:
+      image: omegaml/omegaml-ee:latest
+      container_name: omegaml
+      hostname: omegaml
+      links:
+         - rabbitmq
+         - mongodb
+         - mysql
+      working_dir: /app
+      command: scripts/startweb.sh
+      environment:
          - APP=omegaml
          - DJANGO_CONFIGURATION=EnvSettings_docker
          - MYSQL_DATABASE=omegaml
          - MYSQL_USER=omegaml
          - MYSQL_PASSWORD=mysql
-         - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
-         - OMEGA_MONGO_URL=mongodb://mongodb:27017
-         - MONGO_ADMIN_URL=mongodb://admin:foobar@mongodb:27017/admin
+         - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
+         - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_JYHUB_USER=jyadmin
          - OMEGA_JYHUB_APIKEY=b7b034f57d442e605ab91f88a8936149e968e12e
          - JYHUB_HOST=localhost:8899
          - MONGO_HOST=localhost:27017
-         - BROKER_URL=amqp://localhost:5672//
+         - BROKER_URL=amqp://localhost:5671//
+         - BROKER_USE_SSL=True
+         - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
    omjobs:
-       image: omegaml/omegaml-ee:latest
-       hostname: omjobs
-       links:
+      image: omegaml/omegaml-ee:latest
+      container_name: omjobs
+      hostname: omjobs
+      links:
          - omegaml
          - mongodb
-       working_dir: /app
-       command: scripts/omegajobs.sh
-       environment:
+      working_dir: /app
+      command: scripts/omegajobs.sh
+      environment:
          - APP=omjobs
          - OMEGA_RESTAPI_URL=http://omegaml:5000/
-         - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
+         - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
+         - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_JYHUB_USER=jyadmin
          - OMEGA_JYHUB_APIKEY=b7b034f57d442e605ab91f88a8936149e968e12e
          - OMEGA_JYHUB_TOKEN=PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL
+         - BROKER_USE_SSL=True
+         - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
    worker:
-       image: omegaml/omegaml-ee:latest
-       hostname: worker
-       links:
-          - omegaml
-          - rabbitmq
-          - mongodb
-       working_dir: /app
-       command: honcho start worker
-       environment:
-         - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
+      image: omegaml/omegaml-ee:latest
+      container_name: worker
+      hostname: worker
+      links:
+         - omegaml
+         - rabbitmq
+         - mongodb
+      working_dir: /app
+      command: honcho start worker
+      environment:
+         - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
+         - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_RESTAPI_URL=http://omegaml:5000/
          - C_FORCE_ROOT=yes
+         - BROKER_USE_SSL=True
+         - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
    omegaops:
-       image: omegaml/omegaml-ee:latest
-       hostname: worker
-       links:
-          - omegaml
-          - rabbitmq
-          - mongodb
-       working_dir: /app
-       command: honcho start scheduler omegaops
-       environment:
-         - OMEGA_BROKER=amqp://guest@rabbitmq:5672//
+      image: omegaml/omegaml-ee:latest
+      container_name: omegaops
+      hostname: worker
+      links:
+         - omegaml
+         - rabbitmq
+         - mongodb
+      working_dir: /app
+      command: honcho start scheduler omegaops
+      environment:
+         - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
+         - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_RESTAPI_URL=http://omegaml:5000/
          - C_FORCE_ROOT=yes
          - MYSQL_DATABASE=omegaml
          - MYSQL_USER=omegaml
          - MYSQL_PASSWORD=mysql
+         - BROKER_USE_SSL=True
+         - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
    rabbitmq:
-       image: rabbitmq
+      image: rabbitmq
+      container_name: rabbitmq
+      hostname: rabbitmq
+      volumes:
+         - ./etc-dev/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+         - ./etc-dev/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+         - ./etc-dev/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+         - ./etc-dev/rabbitmq/certs:/etc/rabbitmq/certs
    mongodb:
-       # initialize by running cat scripts/mongoinit.js | docker exec -i mongodb_1 mongo
-       image: mongo:3.6.8-stretch
-       command: --auth
+      # initialize by running cat scripts/mongoinit.js | docker exec -i mongodb_1 mongo
+      image: mongo:3.6.8-stretch
+      container_name: mongodb
+      hostname: mongodb
+      volumes:
+         - ./etc-dev/mongo/certs/server_key.pem:/etc/mongo/server_key.pem
+      command: 
+         - "--auth"
+         - "--sslMode"
+         - "preferSSL"
+         - "--sslPEMKeyFile"
+         - "etc/mongo/server_key.pem"
+         - "--oplogSize"
+         - "100"
    mysql:
-       image: mysql
-       environment:
-          - MYSQL_ROOT_PASSWORD=rootadmin
-          - MYSQL_DATABASE=omegaml
-          - MYSQL_USER=omegaml
-          - MYSQL_PASSWORD=mysql
-
+      image: mysql
+      environment:
+         - MYSQL_ROOT_PASSWORD=rootadmin
+         - MYSQL_DATABASE=omegaml
+         - MYSQL_USER=omegaml
+         - MYSQL_PASSWORD=mysql

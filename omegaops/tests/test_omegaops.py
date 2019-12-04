@@ -6,9 +6,8 @@ from django.contrib.auth.models import User
 from django.test.testcases import TestCase
 from landingpage.models import ServicePlan
 from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user
-from pymongo import MongoClient
+from omegaml.mongoshim import MongoClient
 from pymongo.errors import PyMongoError, OperationFailure
-
 
 class OmegaOpsTest(TestCase):
     def setUp(self):

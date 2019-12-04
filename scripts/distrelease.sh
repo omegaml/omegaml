@@ -28,6 +28,7 @@ source $script_dir/easyoptions || exit
 release=$script_dir/release.sh
 sourcedir=$script_dir/..
 sourcedir=$(realpath $sourcedir)
+cacert=$script_dir/../release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem
 
 # distdir is where we stage the release files
 distdir=$script_dir/../dist
@@ -90,7 +91,8 @@ cp $sourcedir/NOTICE .
 cp $sourcedir/THIRDPARTY .
 cp $sourcedir/manage.py .
 cp -r $sourcedir/scripts .
-zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts
+cp -r $sourcedir/release/dist/omegaml-dev/etc/ ./etc-dev
+zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev
 popd
 
 # add distribution files
@@ -133,7 +135,8 @@ pushd $distdir/docker-staging/build
 ./deploy-docker.sh --clean
 popd
 
-scripts/livetest.sh --url http://localhost:5000 --headless
+
+scripts/livetest.sh --url http://localhost:5000 --headless --cacert $cacert
 success=$?
 
 echo "Stopping docker services from $distdir/docker-staging/build"

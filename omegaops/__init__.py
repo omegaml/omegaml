@@ -1,4 +1,6 @@
-from pymongo.mongo_client import MongoClient
+import os 
+
+from omegaml.mongoshim import MongoClient
 
 from omegaml.util import urlparse, settings as get_settings
 
@@ -186,6 +188,7 @@ def get_client_config(user, qualifier=None, view=False):
                 "json",
             ],
             "CELERY_TASK_SERIALIZER": 'pickle',
+            "BROKER_USE_SSL": True,
         },
         "OMEGA_MONGO_URL": mongo_url,
         "OMEGA_NOTEBOOK_COLLECTION": settings.OMEGA_NOTEBOOK_COLLECTION,

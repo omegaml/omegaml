@@ -1,9 +1,18 @@
 version: '3'
 services:
-  mongo:
+  mongodb:
     image: mongo:3.6.8-stretch
     ports:
       - "27017:27017"
       - "28017:28017"
-    command: ["--auth"]
+    volumes:
+      - ./release/dist/omegaml-dev/etc/mongo/certs/server_key.pem:/etc/mongo/server_key.pem
+    command: 
+      - "--auth"
+      - "--sslMode"
+      - "preferSSL"
+      - "--sslPEMKeyFile"
+      - "etc/mongo/server_key.pem"
+      - "--oplogSize"
+      - "100"
   
