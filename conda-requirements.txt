@@ -45,6 +45,7 @@ heapdict=1.0.0=py36_2
 icu=58.2=h9c2bf20_1
 idna=2.8=py36_0
 intel-openmp=2019.4=243
+imageio=2.6.1=py36_0
 ipykernel=5.1.1=py36h39e3cac_0
 ipython=7.6.0=py36h39e3cac_0
 ipython_genutils=0.2.0=py36_0
