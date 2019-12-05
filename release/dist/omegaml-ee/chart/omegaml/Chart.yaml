@@ -1,0 +1,8 @@
+apiVersion: v1
+appVersion: "1.0"
+description: "Python AI/ML analytics deployment & collaboration for humans"
+name: omegaml
+version: 0.1.0
+keywords: ["analytics", "artifical intelligence", "machine learning"]
+home: https://omegaml.io
+icon: https://avatars3.githubusercontent.com/u/39219557?s=460&v=4

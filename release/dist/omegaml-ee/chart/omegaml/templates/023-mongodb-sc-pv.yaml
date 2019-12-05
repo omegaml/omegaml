@@ -1,0 +1,36 @@
+{{- if  and .Values.localVolumes.enabled .Values.mongodb.persistence.enabled}}
+# https://vocon-it.com/2018/12/20/kubernetes-local-persistent-volumes/
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-disk
+spec:
+  capacity:
+    storage: {{ .Values.mongodb.persistence.size }}
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ .Values.mongodb.persistence.storageClass }} 
+  local:
+    path: {{ .Values.mongodb.persistence.localVolumePath }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        {{- range $key, $val := .Values.mongodb.nodeSelector }}
+        - key: {{ $key }}
+          operator: In
+          values:
+          - {{ $val }}
+        {{- end }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.mongodb.persistence.storageClass }}
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+{{- end -}}
+

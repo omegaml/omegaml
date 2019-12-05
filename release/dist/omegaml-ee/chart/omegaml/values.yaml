@@ -1,0 +1,102 @@
+mailgun:
+    apiKey: mailgunkey                                         # k8sconfig/ MAILGUN_API_KEY
+    senderDomain: mg.omegaml.io                                # k8sconfig/ MAILGUND_SENDER_DOMAIN
+
+# omegaml-jobs
+omegaJobs:
+    omegaJyhubApiKey: b7b034f57d442e605ab91f88a8936149e968e12e # k8sconfig/ OMEGA_JYHUB_APIKEY
+    jyhubSpawnerType: secure                                   # k8sconfig/ JYHUB_SPAWNER_TYPE
+
+# omegaml-worker
+omegaWorker:
+    cForceRoot: "yes"                                          # k8sconfig/ C_FORCE_ROOT
+
+# omegaml-web
+omegaWeb:
+    djangoConfiguration: EnvSettings_kubernetes                # k8sconfig/ DJANGO_CONFIGURATION
+    omegaJyhubToken: PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL      # k8sconfig/ OMEGA_JYHUB_TOKEN
+    omegaJyhubUser: jyadmin                                    # k8sconfig/ OMEGA_JYHUB_USER
+    allowedHosts: "*"
+    debug: "1"
+
+
+#omegaml-common        
+omegaRestApiUrl: http://omegaml:5000/                          # k8sconfig/ OMEGA_RESTAPI_URL
+omegaJyhubApiKey: b7b034f57d442e605ab91f88a8936149e968e12e     # k8sconfig/ OMEGA_JYHUB_APIKEY
+
+
+omegaCredentials:
+    adminEmail: "admin@omegaml.io"                                 # rancher-deploy-k8s/ OMEGA_ADMIN_EMAIL
+    adminPw: "test"                                                # rancher-deploy-k8s/ OMEGA_ADMIN_PW
+    jyadminApiKey: "b7b034f57d442e605ab91f88a8936149e968e12e"      # rancher-deploy-k8s/ OMEGA_JYADMIN_APIKEY
+    omopsApiKey: "b7b034f57d442e605ab91f88a8936149e968e12e"        # rancher-deploy-k8s/ OMEGA_OMOPS_APIKEY
+
+
+loadBalancer:
+    IP: null                                                       #"172.31.0.15"
+    trafficPolicy: "Local"
+
+dockerRegistry:
+    url: https://index.docker.io/v1/                               # rancher-deploy-k8s/ DOCKER_SERVER 
+    user: null                                                     # rancher-deploy-k8s/ DOCKER_USER
+    pass: null                                                     # rancher-deploy-k8s/ DOCKER_PASSWORD
+    email: null                                                    # rancher-deploy-k8s/ DOCKER_EMAIL
+    name: omegaml-enterprise                                        
+     
+image:
+    pullPolicy: "IfNotPresent"
+    name: "omegaml/omegaml-ee"                                    # rancher-deploy-k8s/ image
+    tag:  "latest"                                                 
+
+
+acmeChallenge: "foo bar"                                 # rancher-deploy-k8s/ 
+
+localVolumes:
+#Set to true if you want to use predefined local presistent volumes for mongo and mysql
+#Node for PV  selection will be based  on app nodeselector
+    enabled: true
+
+rabbitmq:
+# Available variables here: https://github.com/helm/charts/tree/master/stable/rabbitmq
+    fullnameOverride: rabbitmq
+    rabbitmq:
+      username: guest
+      password: foobar
+    persistence:
+            enabled: false
+
+mongodb:
+# Available variables here: https://github.com/helm/charts/tree/master/stable/mongodb
+    mongodbRootPassword: foobar
+    mongodbUsername: admin
+    mongodbPassword: foobar
+    mongodbDatabase: omegaml
+    fullnameOverride: mongodb
+    persistence:
+        enabled: true
+        storageClass: mongodb-disk
+        size: 2Gi
+        #localVolumePath used when localVolumes.enabled is true
+        #Node for PV  selection will be based  on mysql nodeselector
+        localVolumePath: /data/mongodb
+    nodeSelector:
+        omegaml.io/role: dbmaster 
+
+
+mysql:
+# Available variables here: https://github.com/helm/charts/tree/master/stable/mysql
+    fullnameOverride: mysql
+    mysqlRootPassword: rootadmin
+    mysqlUser: omegaml
+    mysqlPassword: foobar
+    mysqlDatabase: omegaml
+    persistence:
+        enabled: true
+        storageClass: mysql-disk
+        size: 1Gi
+        #localVolumePath used when localVolumes.enabled is true
+        #Node for PV  selection will be based  on mysql nodeselector
+        localVolumePath: /data/mysql
+    nodeSelector:
+        omegaml.io/role: dbmaster 
+

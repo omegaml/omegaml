@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.16.0 (0c01309)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: omegaml
+  name: omegaml
+
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: omegaml
+    spec:
+      {{- if and .Values.dockerRegistry.user (.Values.dockerRegistry.pass) }}
+      imagePullSecrets:
+      - name: {{ .Values.dockerRegistry.name }}
+      {{ end }}
+      containers:
+      - args:
+        - scripts/startweb.sh
+        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: omegaml
+        ports:
+         - containerPort: 5000
+        envFrom:
+        - configMapRef:
+             name: omegaml-web-configmap
+        resources: {}
+        workingDir: /app
+      initContainers:
+      - name: init-omegaml
+        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        command:
+         - bash
+         - -exc
+         - |
+            cd /app
+            python manage.py migrate
+            python manage.py loaddata landingpage.json 
+            python manage.py omsetupuser --username admin --email $OMEGA_ADMIN_EMAIL --password $OMEGA_ADMIN_PW --admin --nodeploy
+            python manage.py omsetupuser --username jyadmin --staff --apikey $OMEGA_JYADMIN_APIKEY
+            python manage.py omsetupuser --username omops --staff --apikey $OMEGA_OMOPS_APIKEY
+            env
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+             name: omegaml-web-configmap
+      hostname: omegaml
+      restartPolicy: Always
+status: {}

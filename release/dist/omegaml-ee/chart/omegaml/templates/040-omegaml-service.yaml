@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: omegaml
+
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    io.kompose.service: omegaml
