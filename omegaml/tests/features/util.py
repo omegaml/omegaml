@@ -34,7 +34,8 @@ class Notebook:
         except:
             pass
         else:
-            alert.accept()
+            if alert is not None:
+                alert.accept()
 
     @property
     def body(self):

@@ -38,11 +38,11 @@ class OmegaJobProxy(object):
         :return: the result
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.run_omegaml_job')
-        return job_run.delay(self.jobname, **self.runtime._common_kwargs, **kwargs)
+        return job_run.delay(self.jobname, **kwargs)
 
     def schedule(self, **kwargs):
         """
         schedule the job
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.schedule_omegaml_job')
-        return job_run.delay(self.jobname, **self.runtime._common_kwargs, **kwargs)
+        return job_run.delay(self.jobname, **kwargs)

@@ -26,9 +26,11 @@ OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    'mongodb://admin:foobar@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
+#: determine if we should use SSL for mongodb and rabbitmq
+OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
-    'ssl': False,
+    'ssl': OMEGA_USESSL,
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
@@ -55,7 +57,7 @@ OMEGA_CELERY_CONFIG = {
             'schedule': 60,
         },
     },
-    'BROKER_USE_SSL': os.environ.get('BROKER_USE_SSL') or False
+    'BROKER_USE_SSL': OMEGA_USESSL,
 }
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['omegaml',
