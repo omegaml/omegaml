@@ -1,18 +1,18 @@
-from landingpage.models import ServicePlan
 import os
 import random
-import time
 
+import pandas as pd
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_frame_equal
 from six import iteritems
 from tastypie.test import ResourceTestCase
 
-from omegaops import add_service_deployment, get_client_config, add_user
-import pandas as pd
+from landingpage.models import ServicePlan
+from omegaops import get_client_config
+from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class DatasetResourceTests(ResourceTestCase):
+class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
     def setUp(self):
         from omegaml import Omega
 
@@ -24,17 +24,7 @@ class DatasetResourceTests(ResourceTestCase):
         self.user = User.objects.create_user(username, email, password)
         self.apikey = self.user.api_key.key
         # setup omega credentials
-        # FIXME refactor to remove dependency to landingpage (omegaweb should
-        # have an injectable config module of sorts)
-        ServicePlan.objects.create(name='omegaml')
-        init_config = {
-            'dbname': 'testdb',
-            'username': self.user.username,
-            'password': 'foobar',
-        }
-        self.config = add_user(init_config['username'],
-                               init_config['password'], dbname=init_config['dbname'])
-        add_service_deployment(self.user, self.config)
+        self.setup_initconfig()
         # setup test data
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
                                      'y': random.sample(list(range(0, 100)), 20)})

@@ -61,6 +61,7 @@ jobs:
           CA_CERTS_PATH: /home/circleci/omegaml/release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem
           MONGO_ADMIN_URL: mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@localhost:27017/admin
           OMEGA_MONGO_URL: mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@localhost:27017/userdb
+          OMEGA_USESSL: yes
     - run:
         name: Update Chrome
         command: |

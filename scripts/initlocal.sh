@@ -22,7 +22,7 @@ rm -f jupyterhub.sqlite
 cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
 
 pip install --no-deps -e $omegamlee_dir
-pip install --no-deps -e $omegamlcore_dir
+pip install --no-deps -e $omegamlcore_dir[all]
 
 python manage.py migrate
 python manage.py loaddata landingpage.json

@@ -29,7 +29,7 @@ class UserSignupTests(TestCase):
         self.assertEqual(user.username, data['email'].split('@')[0])
         service = user.services.first()
         self.assertEqual(service.offering.name, 'omegaml')
-        self.assertIn('dbname', service.settings.get('default'))
+        self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))
 
     def test_usersignup_complex(self):
         """
@@ -46,4 +46,4 @@ class UserSignupTests(TestCase):
         self.assertEqual(user.username, data['email'].split('@')[0])
         service = user.services.first()
         self.assertEqual(service.offering.name, 'omegaml')
-        self.assertIn('dbname', service.settings.get('default'))
+        self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))

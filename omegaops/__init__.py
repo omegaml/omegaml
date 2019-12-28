@@ -1,8 +1,9 @@
-import os 
+import os
 
 from omegaml.mongoshim import MongoClient
 
 from omegaml.util import urlparse, settings as get_settings
+
 
 # note no global imports from Django to avoid settings sequence issue
 
@@ -25,12 +26,20 @@ def add_user(user, password, dbname=None):
         nb_url = add_usernotebook(username, password)
     except:
         nb_url = 'jupyterhub is not supported'
+    # see get_client_config for specs on config
     config = {
-        'default': {
-            'dbname': dbname,
-            'user': dbuser,
-            'password': password,
-            'notebook_url': nb_url,
+        'version': 'v2',
+        'services': {
+            'notebook': {
+                'url': nb_url,
+            }
+        },
+        'qualifiers': {
+            'default': {
+                'mongodbname': dbname,
+                'mongouser': dbuser,
+                'mongopassword': password,
+            }
         }
     }
     return config
@@ -80,10 +89,10 @@ def add_userdb(dbname, username, password):
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
     mongohost = config.MONGO_HOST
-    client_mongo_url = settings.BASE_MONGO_URL.format(user=username,
+    client_mongo_url = settings.BASE_MONGO_URL.format(mongouser=username,
                                                       mongohost=mongohost,
-                                                      password=password,
-                                                      dbname=dbname)
+                                                      mongopassword=password,
+                                                      mongodbname=dbname)
     client = MongoClient(client_mongo_url)
     newdb = client[dbname]
     return newdb, client_mongo_url
@@ -107,7 +116,7 @@ def authorize_userdb(grant_user, grantee_user, username, password):
     grant_settings = grant_user.services.get(offering__name='omegaml').settings
     grantee_service = grantee_user.services.get(offering__name='omegaml')
     dbuser = User.objects.make_random_password(length=36)
-    dbname = grant_settings.get('default', grant_settings).get('dbname')
+    dbname = grant_settings['qualifiers'].get('default', grant_settings).get('mongodbname')
     # add user to other db
     add_userdb(dbname, username, password)
     otherdb_config = {
@@ -149,35 +158,93 @@ def get_client_config(user, qualifier=None, view=False):
     """
     return the full client configuration
 
-    :param view: if True return the internal mongo url, else external as defined in
+    Args:
+        view (bool): if True return the internal mongo url, else external as defined in
        constance.MONGO_HOST
+
+    Notes:
+        The client configuration is in user.services.settings for offering='omegaml'
+        provided by landingpage/paasdeploy. settings is a dict (JSON formatted on
+        input) of the following format
+
+        v2:
+            "version": "v2",
+            'services' : {
+               'jupyter': {
+                  'image': 'imagename:tag',
+                  'node_selector': 'key=value',
+                  'namespace': 'namespace',
+                  'affinity_role': 'worker',
+               },
+               'notebook': {
+                  'url': 'http...',
+               },
+               'runtime': {
+                   "brokerurl": "<broker url:port/vhost", # external
+                   "brokerurl.in": "<broker url:port/vhost", # internal
+                   'image': 'imagename:tag',
+                   'node_selector': 'key=value',
+                   'namespace': 'namespace',
+                   'affinity_role': 'worker',
+               },
+            },
+            'qualifiers': {
+                <qualifier>: {
+                    # mandatory
+                    "mongodbname": "<mongo dbname>",
+                    "mongouser": "<mongo user>",
+                    "mongopassword": "<mongo password",
+                    # optional, if not provided defaults to environment
+                    "mongohost": "<mongo host:port>", # external
+                    "mongohost.in": "<mongo host:port>", # internal
+                },
+                [...]
+            },
+
+        v1:
+            <qualifier>: {
+                "dbname": "<mongo dbname>",
+                "user": "<mongo user>",
+                "password": "<mongo password",
+            },
+            [...]
+
+        v0:
+            "dbname": "<mongo dbname>",
+            "username": "<mongo user>",
+            "password": "<mongo password",
     """
     from constance import config
-
+    # -- get settings from environment
+    #    there are several sources:
+    #      settings = from defaults
+    #      user.services.settings = from deployed instance
     settings = get_settings()
-
     qualifier = qualifier or 'default'
     user_settings = user.services.get(offering__name='omegaml').settings
-    user_settings = user_settings.get(qualifier, user_settings)
-    user_settings['user'] = user_settings.get('username') or user_settings.get('user')
-
-    if not view:
-        # provide cluster-external mongo+rabbitmq hosts URL
-        mongo_url = settings.BASE_MONGO_URL.format(mongohost=config.MONGO_HOST,
-                                                   **user_settings)
-        broker_url = config.BROKER_URL
+    # -- parse user settings to most recent version
+    #    we support multiple config versions for legacy reasons
+    #    every parser must return to the most recent version spec as per above
+    PARSERS = {
+        'v1': parse_client_config_v1,
+        'v2': parse_client_config_v2,
+    }
+    user_settings_version = user_settings.get('version', 'v1')
+    parser = PARSERS[user_settings_version]
+    user_settings = parser(user_settings, qualifier, settings, config)
+    qualifier_settings = user_settings['qualifiers'][qualifier]
+    # -- prepare actual client config based on user settings
+    if view:
+        mongohost_key = 'mongohost.in'
+        brokerurl_key = 'brokerurl.in'
     else:
-        # provide cluster-internal mongo+rabbitmq hosts URL
-        # parse salient parts of mongourl, e.g.
-        # mongodb://user:password@host/dbname
-        parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
-        host = parsed_url.netloc
-        if '@' in host:
-            creds, host = host.split('@', 1)
-        mongo_url = settings.BASE_MONGO_URL.format(mongohost=host,
-                                                   **user_settings)
-        broker_url = settings.OMEGA_BROKER
-
+        mongohost_key = 'mongohost'
+        brokerurl_key = 'brokerurl'
+    broker_url = user_settings['services']['runtime'][brokerurl_key]
+    mongo_url = settings.BASE_MONGO_URL.format(mongouser=qualifier_settings['mongouser'],
+                                               mongopassword=qualifier_settings['mongopassword'],
+                                               mongohost=qualifier_settings[mongohost_key],
+                                               mongodbname=qualifier_settings['mongodbname'])
     # FIXME permission user instead of standard
     client_config = {
         "OMEGA_CELERY_CONFIG": {
@@ -188,7 +255,7 @@ def get_client_config(user, qualifier=None, view=False):
                 "json",
             ],
             "CELERY_TASK_SERIALIZER": 'pickle',
-            "BROKER_USE_SSL": True,
+            "BROKER_USE_SSL": settings.OMEGA_USESSL,
         },
         "OMEGA_MONGO_URL": mongo_url,
         "OMEGA_NOTEBOOK_COLLECTION": settings.OMEGA_NOTEBOOK_COLLECTION,
@@ -197,9 +264,120 @@ def get_client_config(user, qualifier=None, view=False):
         "OMEGA_USERID": user.username,
         "OMEGA_APIKEY": user.api_key.key,
     }
+
+    if view:
+        # only include internals if needed
+        client_config.update({
+            "JUPYTER_IMAGE": user_settings['services']['jupyter']['image'],
+            "JUPYTER_NODE_SELECTOR": user_settings['services']['jupyter']['node_selector'],
+            "JUPYTER_NAMESPACE": user_settings['services']['jupyter']['namespace'],
+            "JUPYTER_AFFINITY_ROLE": user_settings['services']['jupyter']['affinity_role'],
+            "RUNTIME_WORKER_IMAGE": user_settings['services']['runtime']['image'],
+            "RUNTIME_NODE_SELECTOR": user_settings['services']['runtime']['node_selector'],
+            "RUNTIME_NAMESPACE": user_settings['services']['runtime']['namespace'],
+            "RUNTIME_AFFINITY_ROLE": user_settings['services']['runtime']['affinity_role'],
+        })
+
     if settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER']:
         client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
     return client_config
+
+
+def parse_client_config_v1(user_settings, qualifier, settings, config):
+    # parse config v0, v1 to current format
+    # -- mongo credentials
+    user_settings = user_settings.get(qualifier, user_settings)
+    mongouser = user_settings.get('username') or user_settings.get('user')
+    mongopassword = user_settings.get('password')
+    mongodbname = user_settings.get('dbname')
+    # -- external hosts
+    mongohost_ext = config.MONGO_HOST
+    broker_url_ext = config.BROKER_URL
+    # -- internal hosts
+    parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
+    host = parsed_url.netloc
+    if '@' in host:
+        creds, host = host.split('@', 1)
+    mongohost_in = host
+    broker_url_in = settings.OMEGA_BROKER
+    # prepare parsed
+    parsed = {
+        'services': {
+            'jupyter': {
+                'image': config.JUPYTER_IMAGE,
+                'node_selector': config.JUPYTER_NODE_SELECTOR,
+                'namespace': config.JUPYTER_NAMESPACE,
+                'affinity_role': config.JUPYTER_AFFINITY_ROLE,
+            },
+            'runtime': {
+                'brokerurl': broker_url_ext,
+                'brokerurl.in': broker_url_in,
+                'image': config.RUNTIME_IMAGE,
+                'node_selector': config.RUNTIME_NODE_SELECTOR,
+                'namespace': config.RUNTIME_NAMESPACE,
+                'affinity_role': config.RUNTIME_AFFINITY_ROLE,
+            }
+        },
+        'qualifiers': {
+            qualifier: {
+                'mongohost': mongohost_ext,
+                'mongohost.in': mongohost_in,
+                'mongouser': mongouser,
+                'mongopassword': mongopassword,
+                'mongodbname': mongodbname,
+            }
+        }
+    }
+    return parsed
+
+
+def parse_client_config_v2(user_settings, qualifier, settings, config):
+    # parse config v2 to current format
+    qualifiers = dict(user_settings.get('qualifiers'))
+    qualifier_settings = qualifiers.get(qualifier, qualifiers['default'])
+    # -- external hosts
+    mongohost_ext = qualifier_settings.get('mongohost') or config.MONGO_HOST
+    broker_url_ext = qualifier_settings.get('brokerurl') or config.BROKER_URL
+    # -- internal hosts
+    parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
+    host = parsed_url.netloc
+    if '@' in host:
+        creds, host = host.split('@', 1)
+    mongohost_in = qualifier_settings.get('mongohost.in') or host
+    broker_url_in = qualifier_settings.get('brokerurl.in') or settings.OMEGA_BROKER
+    # note we specify parsers for clarity, values can be overriden below
+    parsed = {
+        'services': {
+            'jupyter': {
+                'image': config.JUPYTER_IMAGE,
+                'node_selector': config.JUPYTER_NODE_SELECTOR,
+                'namespace': config.JUPYTER_NAMESPACE,
+                'affinity_role': config.JUPYTER_AFFINITY_ROLE,
+            },
+            'runtime': {
+                'brokerurl': broker_url_ext,
+                'brokerurl.in': broker_url_in,
+                'image': config.RUNTIME_IMAGE,
+                'node_selector': config.RUNTIME_NODE_SELECTOR,
+                'namespace': config.RUNTIME_NAMESPACE,
+                'affinity_role': config.RUNTIME_AFFINITY_ROLE,
+            }
+        },
+        'qualifiers': {
+            qualifier: {
+                'mongohost': mongohost_ext,
+                'mongohost.in': mongohost_in,
+                'mongouser': qualifier_settings.get('mongouser'),
+                'mongopassword': qualifier_settings.get('mongopassword'),
+                'mongodbname': qualifier_settings.get('mongodbname'),
+            }
+        }
+    }
+    # the user provided values take precedence, if any
+    parsed['services']['jupyter'].update(user_settings['services'].get('jupyter', {}))
+    parsed['services']['runtime'].update(user_settings['services'].get('runtime', {}))
+    parsed['qualifiers'][qualifier].update(qualifier_settings)
+    return parsed
 
 
 def stop_usernotebook(username):

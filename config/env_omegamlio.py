@@ -21,6 +21,14 @@ class EnvSettings_omegamlio(Config_Dokku,
         'JYHUB_HOST': ('omjobs.omegaml.io', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@omegaml.omegaml.io:5672//',
                        'rabbitmq public broker url'),
+        'JUPYTER_IMAGE': ('omegaml/omegaml-ee:latest', 'jupyter image'),
+        'JUPYTER_AFFINITY_ROLE': ('worker', 'jupyter k8s affinity role'),
+        'JUPYTER_NODE_SELECTOR': ('omegaml.io/role=worker', 'jupyter k8s node selector'),
+        'JUPYTER_NAMESPACE': ('default', 'jupyter k8s cluster namespace'),
+        'RUNTIME_IMAGE': ('omegaml/omegaml-ee:latest', 'runtime image'),
+        'RUNTIME_AFFINITY_ROLE': ('worker', 'runtime k8s affinity role'),
+        'RUNTIME_NODE_SELECTOR': ('omegaml.io/role=worker', 'runtime k8s node selector'),
+        'RUNTIME_NAMESPACE': ('default', 'runtime k8s cluster namespace'),
     }
     # jupyerhub settings
     OMEGA_JYHUB_URL = 'http://omjobs.omegaml.io'

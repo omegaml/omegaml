@@ -19,7 +19,7 @@ class OmegaAuthenticatedRuntime(OmegaRuntime):
     @property
     def _common_kwargs(self):
         kwargs = super()._common_kwargs
-        kwargs.update(__auth=self.auth_tuple)
+        kwargs['task'].update(__auth=self.auth_tuple)
         return kwargs
 
     @property

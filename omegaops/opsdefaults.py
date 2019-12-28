@@ -11,6 +11,11 @@ OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
 OMEGA_RESULT_BACKEND = 'amqp'
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 
+#: deployment scheduler rate. adjust to worker load
+DEPLOY_SCHEDULE_RATE=os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 240)
+#: user scheduler rate. adjust to worker load
+USER_SCHEDULER_RATE=os.environ.get('OMEGA_USER_SCHEDULER_RATE', 120)
+
 OMEGA_CLOUD_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
     'BROKER_URL': OMEGA_BROKER,
@@ -19,34 +24,34 @@ OMEGA_CLOUD_CELERY_CONFIG = {
     'CELERYBEAT_SCHEDULE': {
         'deploy_pending_services': {
             'task': 'paasdeploy.tasks.deploy_pending_services',
-            'schedule': 60,
+            'schedule': DEPLOY_SCHEDULE_RATE,
             'options': {
                 'queue': 'omegaops',
             }
         },
         'execute_pending_tasks': {
             'task': 'paasdeploy.tasks.execute_pending_tasks',
-            'schedule': 60,
+            'schedule': DEPLOY_SCHEDULE_RATE,
             'options': {
                 'queue': 'omegaops',
             }
         },
         'update_deployment_status': {
             'task': 'paasdeploy.tasks.update_deployment_status',
-            'schedule': 60,
+            'schedule': DEPLOY_SCHEDULE_RATE,
             'options': {
                 'queue': 'omegaops',
             }
         },
         'run_user_scheduler': {
             'task': 'omegaops.tasks.run_user_scheduler',
-            'schedule': 60,
+            'schedule': USER_SCHEDULER_RATE,
             'options': {
                 'queue': 'omegaops',
             }
         }
     },
-    'BROKER_USE_SSL': True,
+    'BROKER_USE_SSL': True if os.environ.get('OMEGA_USESSL') else False,
 }
 #: celery task packages
 OMEGA_CLOUD_CELERY_IMPORTS = ['paasdeploy', 'omegaops']

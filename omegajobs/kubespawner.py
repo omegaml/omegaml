@@ -3,6 +3,7 @@ import os
 from jupyterhub.traitlets import Command, Unicode
 from kubernetes.client import V1NodeSelectorTerm, V1NodeSelectorRequirement
 from kubespawner import KubeSpawner
+from tornado import gen
 
 from omegacommon.auth import OmegaRestApiAuth
 from omegacommon.userconf import get_user_config_from_api
@@ -49,7 +50,7 @@ class OmegaKubeSpawner(KubeSpawner):
     )
 
     image_pull_secrets = Unicode(
-        'regcred',
+        'omegamlee-secreg',
         allow_none=True,
         config=True,
         help="""
@@ -77,6 +78,10 @@ class OmegaKubeSpawner(KubeSpawner):
         """
                   ).tag(config=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._omega_configs = None
+
     def get_args(self):
         args = super().get_args()
         args.append('--singleuser')
@@ -95,16 +100,35 @@ class OmegaKubeSpawner(KubeSpawner):
         )
 
     def _get_omega_config(self):
-        from omegaml import settings
-        defaults = settings()
-        admin_user = defaults.OMEGA_JYHUB_USER
-        admin_apikey = defaults.OMEGA_JYHUB_APIKEY
-        api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
-                                           view=True)
-        configs = configs['objects'][0]['data']
-        configs['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
-        return configs
+        if self._omega_configs is None:
+            from omegaml import settings
+            defaults = settings()
+            admin_user = defaults.OMEGA_JYHUB_USER
+            admin_apikey = defaults.OMEGA_JYHUB_APIKEY
+            api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
+            configs = get_user_config_from_api(api_auth, api_url=None,
+                                               requested_userid=self.user.name,
+                                               view=True)
+            configs = configs['objects'][0]['data']
+            configs['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
+            self._omega_configs = configs
+        return self._omega_configs
+
+    def _clear_omega_config(self):
+        self._omega_configs = None
+
+    @gen.coroutine
+    def get_pod_manifest(self):
+        # update traits used in super().get_pod_manifest()
+        configs = self._get_omega_config()
+        if 'JUPYTER_IMAGE' in configs:
+            self.image = configs['JUPYTER_IMAGE']
+        if 'JUPYTER_NAMESPACE' in configs:
+            self.namespace = configs['JUPYTER_NAMESPACE']
+        if 'JUPYTER_NODE_SELECTOR' in configs:
+            self.node_selector = dict([configs['JUPYTER_NODE_SELECTOR'].split('=')])
+        result = yield from super().get_pod_manifest()
+        return result
 
     def get_env(self):
         env = super().get_env()
@@ -123,4 +147,5 @@ class OmegaKubeSpawner(KubeSpawner):
         env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
         env['OMEGA_RESTAPI_URL'] = configs['OMEGA_RESTAPI_URL']
         self.log.info("***within user_env {}".format(os.getpid()))
+        self._clear_omega_config()
         return env

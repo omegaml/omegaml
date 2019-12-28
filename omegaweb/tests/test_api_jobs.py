@@ -5,9 +5,10 @@ from tastypie.test import ResourceTestCase
 from landingpage.models import ServicePlan
 from omegaml import Omega
 from omegaops import add_user, add_service_deployment, get_client_config
+from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class JobResourceTests(ResourceTestCase):
+class JobResourceTests(OmegaResourceTestMixin, ResourceTestCase):
     def setUp(self):
         super(JobResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)
@@ -18,17 +19,7 @@ class JobResourceTests(ResourceTestCase):
         self.user = User.objects.create_user(username, email, password)
         self.apikey = self.user.api_key.key
         # setup omega credentials
-        # FIXME refactor to remove dependency to landingpage (omegaweb should
-        # have an injectable config module of sorts)
-        ServicePlan.objects.create(name='omegaml')
-        init_config = {
-            'dbname': 'testdb',
-            'username': self.user.username,
-            'password': 'foobar',
-        }
-        self.config = add_user(init_config['username'],
-                               init_config['password'], dbname=init_config['dbname'])
-        add_service_deployment(self.user, self.config)
+        self.setup_initconfig()
         # setup test data
         config = get_client_config(self.user)
         om = self.om = Omega(mongo_url=config.get('OMEGA_MONGO_URL'))

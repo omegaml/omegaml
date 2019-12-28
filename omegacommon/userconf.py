@@ -74,10 +74,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
         raise ValueError('invalid api_url {}'.format(api_url))
-    if qualifier == 'default':
-        config = configs.get(qualifier, configs)
-    else:
-        config = configs[qualifier]
+    config = configs.get('qualifiers', configs).get(qualifier, configs)
     _base_config.update_from_dict(config, attrs=defaults)
     om = Omega(defaults=defaults)
     return om
@@ -90,10 +87,7 @@ def get_omega_from_config(configfile, qualifier=None):
     with open(configfile, 'r') as fconfig:
         configs = yaml.safe_load(fconfig)
     qualifier = qualifier or 'default'
-    if qualifier == 'default':
-        config = configs.get(qualifier, configs)
-    else:
-        config = configs[qualifier]
+    config = configs.get('qualifiers', configs).get(qualifier, configs)
     _base_config.update_from_dict(config, attrs=defaults)
     settings(reload=True)
     om = Omega(defaults=defaults)

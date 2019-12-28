@@ -94,7 +94,7 @@ class OmegaOpsTest(TestCase):
         add_service_deployment(self.user, config)
         # check we can authenticate and insert
         mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
-                                                   **config['default'])
+                                                   **config['qualifiers']['default'])
         client = MongoClient(mongo_url, authSource='admin')
         db = client.get_database()
         coll = db['data']
@@ -106,7 +106,7 @@ class OmegaOpsTest(TestCase):
         config2 = add_user(username2, password2)
         add_service_deployment(self.user2, config2)
         mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
-                                                   **config['default'])
+                                                   **config['qualifiers']['default'])
         client2 = MongoClient(mongo_url, authSource='admin')
         db2 = client2.get_database()
         coll2 = db2['data']
@@ -115,11 +115,11 @@ class OmegaOpsTest(TestCase):
         config3 = authorize_userdb(self.user, self.user2, username2, password2)
         # see if we can access first user's db using second user's credentials
         qualified_config = config3.get(self.user.username)
-        username3 = qualified_config.get('user')
-        password3 = qualified_config.get('password')
-        dbname3 = qualified_config.get('dbname')
+        username3 = qualified_config.get('mongouser')
+        password3 = qualified_config.get('mongopassword')
+        dbname3 = qualified_config.get('mongodbname')
         mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
-                                                   **config['default'])
+                                                   **config['qualifiers']['default'])
         client3 = MongoClient(mongo_url, authSource='admin')
         db3 = client3.get_database()
         coll3 = db3['data']

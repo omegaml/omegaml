@@ -13,18 +13,18 @@ class EnvSettings_kubernetes(Config_Dokku,
     _allowed_hosts = 'omegaml.me,localhost,omegaml'
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', _allowed_hosts).split(',')
 
-    BASE_MONGO_URL = 'mongodb://{user}:{password}@{mongohost}/{dbname}'
+    BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
-                       BASE_MONGO_URL.format(user='admin',
+                       BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost='mongodb',
-                                             password='foobar',
-                                             dbname='admin'))
+                                             mongopassword='foobar',
+                                             mongodbname='admin'))
 
     OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
-                       BASE_MONGO_URL.format(user='user',
+                       BASE_MONGO_URL.format(mongouser='user',
                                              mongohost='mongodb',
-                                             password='foobar',
-                                             dbname='userdb'))
+                                             mongopassword='foobar',
+                                             mongodbname='userdb'))
 
     OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://omjobs:5000')
     OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')

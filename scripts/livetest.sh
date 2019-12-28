@@ -48,6 +48,7 @@ fi
 # FIXME build a container as in core in order to test a known release
 # start livetest
 behave ./omegaee/features --no-capture $behave_options $LIVETEST_BEHAVE_EXTRA_OPTS
+livetest_rc=$?
 
 # stop
 if [[ ! -z $runlocal ]]; then
@@ -55,3 +56,5 @@ if [[ ! -z $runlocal ]]; then
     docker-compose down
 fi
 
+# don't swallow behave results
+exit $livetest_rc

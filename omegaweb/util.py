@@ -71,8 +71,8 @@ def log_request(request, response):
 
     if app.conf.task_always_eager:
         # send_task in eager mode / without a broker running will wait forever
-        from omegaops.tasks import log_event_task
-        log_event_task(task, task_log)
+        # so we don't log in eager mode
+        pass
     else:
         app.send_task('omegaops.tasks.log_event_task', (request_log,), queue='omegaops')
 
