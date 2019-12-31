@@ -44,9 +44,13 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     StackableSettings.patch_middleware(_addl_middlewares)
 
     API_CONFIG = {
-        'apis': (
+        'omega_apis': (
             ('omegaweb', 'omegaweb.api.v1_api'),
         ),
+        'admin_apis': (
+            ('landingpage', 'landingpage.api.config.v2_auth_api'),
+            ('landingpage', 'landingpage.api.config.v2_service_api'),
+        )
     }
 
     BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'
@@ -55,14 +59,14 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,
-                                             mongopassword='foobar',
+                                             mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                              mongodbname='admin'))
 
     OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                        os.environ.get('MONGO_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,
-                                             mongopassword='foobar',
+                                             mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                              mongodbname='userdb'))
 
     SITE_ID = 1

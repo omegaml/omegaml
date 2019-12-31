@@ -1,5 +1,5 @@
 @tutorials
-Feature: showing off behave
+Feature: Tutorial
 
   Scenario: sign up a new user
     Given we have the site deployed

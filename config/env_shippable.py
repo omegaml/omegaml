@@ -10,7 +10,7 @@ class EnvSettings_Shippable(EnvSettings_LocalTest):
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(mongouser='admin',
                                             mongohost='localhost:{}'.format(
                                                 MONGO_PORT),
-                                            mongopassword='foobar',
+                                            mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                             mongodbname='admin')
 
     OMEGA_MONGO_URL = BASE_MONGO_URL.format(mongouser='admin',

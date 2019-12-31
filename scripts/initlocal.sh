@@ -21,6 +21,7 @@ rm -f jupyterhub.sqlite
 
 cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
 
+pip install -U -r pip-requirements.extra
 pip install --no-deps -e $omegamlee_dir
 pip install --no-deps -e $omegamlcore_dir[all]
 

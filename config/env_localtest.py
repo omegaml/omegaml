@@ -11,7 +11,7 @@ class EnvSettings_LocalTest(EnvSettings_Local):
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,
-                                             mongopassword='foobar',
+                                             mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                              mongodbname='admin'))
 
     OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or

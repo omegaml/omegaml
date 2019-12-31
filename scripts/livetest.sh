@@ -1,4 +1,3 @@
-#!/bin/bash
 ## package
 ##
 ## Test a deployed site
@@ -31,6 +30,8 @@ export CHROME_HEADLESS=$headless
 export OMEGA_URL=$url
 export OMEGA_ADMIN_USER=$user
 export OMEGA_ADMIN_PASSWORD=$pass
+export OMEGA_APIUSER=omops
+export OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
 export BEHAVE_NBFILES=$script_dir/../../omegaml-ce/docs/source/nb
 if [[ ! -z $cacert ]]; then
     export CA_CERTS_PATH=$cacert

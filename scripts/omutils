@@ -30,8 +30,13 @@ function waiton() {
   #   waiton "text" "http://host:port"
   # https://stackoverflow.com/a/23157343/890242
   echo "Waiting on $2 to become available"
-  until $(curl --output /dev/null --silent --head --fail $2); do
+  until $(curl --output /dev/null --silent --fail $2); do
       printf '.'
       sleep 5
   done
 }
+
+# https://stackoverflow.com/a/25515370/890242
+function yell() { echo "$0: $*" >&2; }
+function die() { yell "$*"; exit 111; }
+function try() { "$@" || die "cannot $*"; }

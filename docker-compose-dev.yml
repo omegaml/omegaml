@@ -6,6 +6,7 @@ services:
     volumes:
       - ../omegaml:/omegaml
       - ../omegaml-ce:/omegaml-ce
+      - ..:/external
     environment:
       - MONGO_HOST=mongodb:27017
       - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
@@ -17,6 +18,7 @@ services:
       - CA_CERTS_PATH=/omegaml/release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem
       - OMEGA_USESSL=yes
       - CELERY_Q=celery
+      - DJANGO_DEBUG=1
     depends_on:
       - mongodb
       - rabbitmq

@@ -49,7 +49,7 @@ fi
 if [[ ! -z $clean ]]; then
     docker-compose -f docker-compose-dev.yml down
     docker-compose -f docker-compose-dev.yml up -d --remove-orphans
-    countdown 5
+    waiton "waiting for mongodb" http://localhost:27017
     cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
     docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/initlocal.sh"
 fi
@@ -65,6 +65,8 @@ else
     # run with local software installed
     omegamlcore_dir=../omegaml-ce
     omegamlcore_scripts_dir=$omegamlcore_dir/scripts
+    pip install -e $omegamlcore_dir
+    pip install -e .
     export DJANGO_DEBUG=1
     python manage.py migrate
     PORT=8000 honcho start web worker notebook scheduler omegaops

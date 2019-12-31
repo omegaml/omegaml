@@ -1,6 +1,8 @@
 # -- FILE: features/environment.py
 # CONTAINS: Browser fixture setup and teardown
 import os
+from unittest import TestCase
+
 from behave import fixture, use_fixture
 from splinter.browser import Browser
 
@@ -36,16 +38,24 @@ def before_all(context):
     context.headless = istrue(os.environ.get('LIVETEST_HEADLESS'))
     use_fixture(splinter_browser, context)
     # set url and admin password
-    context.web_url = os.environ.get('OMEGA_URL', 'https://omegaml.omegaml.io')
+    context.web_url = os.environ.get('OMEGA_URL', 'https://hub.omegaml.io')
     admin_user, admin_password = get_admin_secrets(context.web_url)
     context.admin_user = os.environ.get('OMEGA_ADMIN_USER') or admin_user
     context.admin_password = os.environ.get('OMEGA_ADMIN_PASSWORD') or admin_password
+    context.api_user = os.environ.get('OMEGA_APIUSER') or admin_user.split('@')[0]
+    context.api_key = os.environ.get('OMEGA_APIKEY') or admin_password
     # setup environment
     context.debug = os.environ.get('BEHAVE_DEBUG', False)
     defaults = settings()
     defaults.OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
     context.browser.visit(context.web_url)
     context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
+    # setup test assertion methods
+    # -- so we can use ctx.assertEqual, ctx.assertIn etc. just as with tests
+    tc = TestCase()
+    for m in dir(tc):
+        if m.startswith('assert'):
+            setattr(context, m, getattr(tc, m))
 
 def after_step(context, step):
     context.screenshotfn = os.path.join(context.screenshot_path, step.name + '.png')

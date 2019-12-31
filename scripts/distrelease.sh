@@ -23,6 +23,7 @@ distname=${distname:=omegaml-ee}
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
+source $script_dir/omutils || exit
 
 # setup
 release=$script_dir/release.sh
@@ -120,10 +121,10 @@ if [[ -z $nodocker ]]; then
 
   if [[ ! -z $makebase ]]; then
      docker images | grep "$dockerbasetag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
-     docker build -f Dockerfile.base -t $dockerbasetag .
+     try docker build -f Dockerfile.base -t $dockerbasetag .
   fi
 
-  docker build -f Dockerfile -t $dockertag:$version .
+  try docker build -f Dockerfile -t $dockertag:$version .
   docker tag $dockertag:$version $dockertag:latest
   popd
   popd
@@ -132,9 +133,8 @@ fi
 
 # test release
 pushd $distdir/docker-staging/build
-./deploy-docker.sh --clean
+try ./deploy-docker.sh --clean
 popd
-
 
 scripts/livetest.sh --url http://localhost:5000 --headless --cacert $cacert
 success=$?

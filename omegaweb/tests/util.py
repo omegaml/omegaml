@@ -13,7 +13,7 @@ class OmegaResourceTestMixin:
                 'default': {
                     'mongodbname': 'testdb',
                     'mongousername': self.user.username,
-                    'mongopassword': 'foobar',
+                    'mongopassword': 'jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                 }
             }
         }
