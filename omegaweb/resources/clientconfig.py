@@ -3,6 +3,7 @@ from tastypie.fields import DictField
 from tastypie.resources import Resource
 from tastypie.authentication import ApiKeyAuthentication
 from omegaops import get_client_config
+from tastypiex.selfauth import SelfAuthorization
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
@@ -13,7 +14,7 @@ class ClientConfigResource(Resource):
 
     class Meta:
         list_allowed_methods = ['get']
-        detail_allowed_methods = ['']
+        detail_allowed_methods = []
         resource_name = 'config'
         authentication = ApiKeyAuthentication()
 

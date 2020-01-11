@@ -1,2 +1,4 @@
 # keep shippable happy
 -r pip-requirements.txt
+attrdict==2.0.1
+sphinx-django-command==0.1.3

@@ -40,9 +40,10 @@ jobs:
           conda activate omenv
           cd omegaml
           conda install -q -y --file conda-requirements.txt
-          pip install --ignore-installed -r pip-requirements.txt
-          pip install --ignore-installed -r pip-requirements.extra
-          pip install --ignore-installed -r docs/requirements.txt
+          pip install --ignore-installed --progress-bar off -r pip-requirements.txt
+          pip install --ignore-installed --progress-bar off -r pip-requirements.extra
+          pip install --ignore-installed --progress-bar off -r docs/requirements.txt
+          conda list
         shell: /bin/bash -l -eo pipefail
     - run:
         name: Run unit tests

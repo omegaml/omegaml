@@ -81,7 +81,7 @@ Enterprise components
 ---------------------
 
 Enterprise components provide a full-fledged multi-user environment for
-distributed data science. Several   
+distributed data science.
 
 * :code:`OmegaRuntime` - the celery runtime cluster to train and execute models and jobs
 * :code:`OmegaRuntimeDask` - the dask distributed runtime cluster to execute models and jobs

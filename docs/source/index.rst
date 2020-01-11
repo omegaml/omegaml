@@ -13,3 +13,4 @@ platform for data science.*
    reference/index
    screenshots
    admin/architecture
+   msp/index
