@@ -1,5 +1,5 @@
 from celery import Task, shared_task
-from celery.signals import worker_init
+from celery.signals import worker_init, worker_process_init
 from django.contrib.auth.models import User
 from pymongo.errors import ConnectionFailure
 
@@ -124,3 +124,15 @@ def log_event_task(self, log_data):
 @worker_init.connect
 def initialise_omega_connection(*args, **kwargs):
     BaseLoggingTask().events
+
+@worker_process_init.connect
+def fix_multiprocessing(**kwargs):
+    # allow celery to start sub processes
+    # this is required for sklearn joblib unpickle support
+    # issue see https://github.com/celery/billiard/issues/168
+    # fix source https://github.com/celery/celery/issues/1709
+    from multiprocessing import current_process
+    try:
+        current_process()._config
+    except AttributeError:
+        current_process()._config = {'semprefix': '/mp'}

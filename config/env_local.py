@@ -5,6 +5,7 @@ from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
+from stackable.contrib.config.conf_debugperm import Config_DjangoDebugPermissions
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
@@ -27,6 +28,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
+                        Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
     _addl_apps = ('tastypie',
@@ -49,7 +51,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         ),
         'admin_apis': (
             ('landingpage', 'landingpage.api.config.v2_auth_api'),
-            ('landingpage', 'landingpage.api.config.v2_service_api'),
+            ('paasdeploy', 'paasdeploy.api.config.v2_service_api'),
         )
     }
 

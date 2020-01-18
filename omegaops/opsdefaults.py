@@ -12,9 +12,9 @@ OMEGA_RESULT_BACKEND = 'amqp'
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 
 #: deployment scheduler rate. adjust to worker load
-DEPLOY_SCHEDULE_RATE=os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 240)
+DEPLOY_SCHEDULE_RATE=int(os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 240))
 #: user scheduler rate. adjust to worker load
-USER_SCHEDULER_RATE=os.environ.get('OMEGA_USER_SCHEDULER_RATE', 120)
+USER_SCHEDULER_RATE=int(os.environ.get('OMEGA_USER_SCHEDULER_RATE', 120))
 
 OMEGA_CLOUD_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json', 'msgpack', 'yaml'],
@@ -24,6 +24,13 @@ OMEGA_CLOUD_CELERY_CONFIG = {
     'CELERYBEAT_SCHEDULE': {
         'deploy_pending_services': {
             'task': 'paasdeploy.tasks.deploy_pending_services',
+            'schedule': DEPLOY_SCHEDULE_RATE,
+            'options': {
+                'queue': 'omegaops',
+            }
+        },
+        'execute_pending_commands': {
+            'task': 'paasdeploy.tasks.execute_pending_commands',
             'schedule': DEPLOY_SCHEDULE_RATE,
             'options': {
                 'queue': 'omegaops',

@@ -2,7 +2,7 @@ from datetime import datetime
 
 import re
 from celery.signals import (task_failure, task_prerun,
-                            task_success)
+                            task_success, worker_process_init)
 
 from omegaee.util import log_task
 
@@ -31,3 +31,4 @@ def task_success_handler(sender=None, **kwargs):
 def task_failure_handler(sender=None, exception=None, **kwargs):
     if should_log(sender):
         log_task(sender, 'FAILURE', exception=exception)
+

@@ -96,20 +96,30 @@ Management CLI
 .. autoclass::  paasdeploy.management.commands.deployservice.Command
 .. autoclass::  paasdeploy.management.commands.listservices.Command
 
+
 REST API (overview)
 +++++++++++++++++++
 
 .. autosummary::
 
-     paasdeploy.api.service
+    landingpage.api.signup.SignupResource
+    landingpage.api.reset.ResetResource
+    landingpage.api.user.UserResource
+    paasdeploy.api.service.ServicePlanResource
+    paasdeploy.api.service.ServiceConfigurationResource
+    paasdeploy.api.command.ServiceCommandResource
 
+landingpage.api
++++++++++++++++
 
-paasdeploy.api.service
-++++++++++++++++++++++
+.. autoclass:: landingpage.api.signup.SignupResource
+.. autoclass:: landingpage.api.reset.ResetResource
+.. autoclass:: landingpage.api.user.UserResource
+
+paasdeploy.api
+++++++++++++++
 
 .. autoclass:: paasdeploy.api.service.ServicePlanResource
-.. autoclass:: paasdeploy.api.service.ServiceDeploymentResource
-.. autoclass:: paasdeploy.api.service.ServiceConfigurationResource
 .. autoclass:: paasdeploy.api.command.ServiceCommandResource
 
 
