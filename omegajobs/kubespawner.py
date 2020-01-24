@@ -20,15 +20,26 @@ class OmegaKubeSpawner(KubeSpawner):
             """
     )
     #
-    node_affinity_required = [
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1NodeSelectorTerm.md
-        V1NodeSelectorTerm(
-            match_expressions=[
-                V1NodeSelectorRequirement(key='omegaml.io/role',
-                                          values=affinity_role,
-                                          operator='In')
-            ])
-    ]
+    namespace = Unicode(
+        os.environ.get('JUPYTER_NAMESPACE', 'omegaml-services'),
+        config=True,
+        help="""
+            Kubernetes namespace to spawn user pods in.
+
+            If running inside a kubernetes cluster with service accounts enabled,
+            defaults to the current namespace. If not, defaults to `default`
+            """
+    )
+    # TODO understand how we can use this instead/in combination with node selector
+    #node_affinity_preferred = [
+    #    # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1NodeSelectorTerm.md
+    ##    V1NodeSelectorTerm(
+    #        match_expressions=[
+    #            V1NodeSelectorRequirement(key='omegaml.io/role',
+    #                                      values=affinity_role,
+    #                                      operator='In')
+    #        ])
+    #]
     #
     image_pull_policy = Unicode(
         'Always',

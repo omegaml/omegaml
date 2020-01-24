@@ -28,7 +28,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
-                        Config_DjangoDebugPermissions,
+                        # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
     _addl_apps = ('tastypie',

@@ -12,7 +12,7 @@ OMEGA_RESULT_BACKEND = 'amqp'
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 
 #: deployment scheduler rate. adjust to worker load
-DEPLOY_SCHEDULE_RATE=int(os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 240))
+DEPLOY_SCHEDULE_RATE=int(os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 10))
 #: user scheduler rate. adjust to worker load
 USER_SCHEDULER_RATE=int(os.environ.get('OMEGA_USER_SCHEDULER_RATE', 120))
 
