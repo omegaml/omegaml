@@ -145,7 +145,8 @@ class JobsCommandBase(CommandBase):
                 self.logger.info("Given this new interval, next {next_n} times would be:".format(**locals()))
                 for time in om.jobs.Schedule.from_cron(cron_sched).next_times(int(next_n)):
                     self.logger.info("  {}".format(time))
-            answer = self.ask("Do you want to schedule {name} at {human_sched}?", options="Y/n", default='y')
+            text = "Do you want to schedule {name} at {human_sched}?".format(**locals())
+            answer = self.ask(text, options="Y/n", default='y')
             if answer.lower().startswith('n'):
                 self.logger.info('Ok, not scheduled. Try again.')
                 return

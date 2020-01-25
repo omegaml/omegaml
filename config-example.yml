@@ -1,0 +1,5 @@
+# example user config file
+#OMEGA_USER_EXTENSIONS:
+#    OMEGA_STORE_BACKENDS:
+#         anything: omegaml.example.userext.mymodule.MyBackend
+

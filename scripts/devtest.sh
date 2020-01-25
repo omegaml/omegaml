@@ -24,10 +24,10 @@ export BEHAVE_DEBUG=1
 unset DJANGO_SETTINGS
 
 # start services
-docker-compose -f ./docker-compose-dev.yml up -d
-cat $script_dir/mongoinit.js | docker exec -i omegaml-ce_mongo_1 mongo
 pushd $script_dir/..
 nohup $script_dir/rundev.sh &
+
+sleep 10
 # run livetest
 behave omegaml/tests/features --no-capture $behave_options
 # stop everything, keep services running in case they were already up

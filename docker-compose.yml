@@ -5,19 +5,47 @@ services:
        image: omegaml/omegaml:latest
        hostname: omegaml
        ports:
-          - "8899:8888"
           - "5000:5000"
+          - "8899:8899"
        links:
           - rabbitmq
           - mongodb
        working_dir: /app
-       command: honcho start notebook restapi
+       command: honcho start restapi notebook
        environment:
          - APP=omegaml
          - OMEGA_MONGO_URL=mongodb://mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//
          - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
+         - JUPYTER_PORT=8899
+         - PYTHONPATH=/app/pylib
+       volumes:
+         - pythonlib:/app/pylib
+   jyhub:
+       build:
+         context: scripts/docker/jyhub
+         args:
+           - pypi
+       image: omegaml/jyhub:latest
+       hostname: jyhub
+       ports:
+          - "8000:8000"
+          - "8050-8060:8050-8060"
+       links:
+          - omegaml
+          - rabbitmq
+          - mongodb
+       command: jupyterhub
+       environment:
+         - APP=omegaml
+         - OMEGA_MONGO_URL=mongodb://mongodb/omega
+         - OMEGA_BROKER=amqp://rabbitmq:5672//
+         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
+         - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
+         - PYTHONPATH=/app/pylib
+       volumes:
+         - pythonlib:/app/pylib
    worker:
        image: omegaml/omegaml:latest
        hostname: worker
@@ -30,10 +58,18 @@ services:
          - OMEGA_MONGO_URL=mongodb://mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//
          - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
+         - JY_CONTENTS_MANAGER=
          - C_FORCE_ROOT=yes
    rabbitmq:
        image: rabbitmq:3.7.17
        hostname: rabbitmq
+       ports:
+          - 5672:5672
    mongodb:
        image: mongo:3.6.8-stretch
        hostname: mongodb
+       ports:
+          - 27017:27017
+
+volumes:
+   pythonlib:

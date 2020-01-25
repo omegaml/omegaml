@@ -54,7 +54,17 @@ class Notebook:
         br.windows.current = br.windows[-1]
         return self
 
-    def login(self):
+    def login_hub(self):
+        br = self.browser
+        br.find_by_id('username_input').first.fill('admin')
+        br.find_by_id('password_input').first.fill('test')
+        br.click_link_by_id('login_submit')
+        assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
+        # check that there is actually a connection
+        assert not br.is_text_present('Server error: Traceback', wait_time=5)
+        assert not br.is_text_present('Connection refuse', wait_time=5)
+
+    def login_nb(self):
         br = self.browser
         assert br.is_element_present_by_id('ipython-main-app', wait_time=2)
         br.find_by_id('password_input').fill('omegamlisfun')
