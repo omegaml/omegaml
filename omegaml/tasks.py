@@ -83,7 +83,7 @@ def omega_gridsearch(self, modelname, Xname, Yname, parameters=None, **kwargs):
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_settings(self):
+def omega_settings(self, *args, **kwargs):
     if os.environ.get('OMEGA_DEBUG'):
         defaults = self.om.defaults
         return {k: getattr(defaults, k, '')

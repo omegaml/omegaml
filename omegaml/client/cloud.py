@@ -93,14 +93,16 @@ def setup_from_config(config_file=None):
     if isinstance(config_file, six.string_types) and os.path.exists(config_file):
         with open(config_file, 'r') as fin:
             userconfig = yaml.safe_load(fin)
-            try:
-                omega = setup(userid=userconfig['OMEGA_USERID'],
-                              apikey=userconfig['OMEGA_APIKEY'],
-                              api_url=userconfig['OMEGA_RESTAPI_URL'])
-            except:
-                # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
-                raise ValueError('Could not login using config file {}'.format(config_file))
+            if isinstance(userconfig, dict) and 'OMEGA_USERID' in userconfig:
+                try:
+                    omega = setup(userid=userconfig['OMEGA_USERID'],
+                                  apikey=userconfig['OMEGA_APIKEY'],
+                                  api_url=userconfig['OMEGA_RESTAPI_URL'])
+                except:
+                    # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
+                    raise ValueError('Could not login using config file {}'.format(config_file))
             else:
-                omega.defaults.OMEGA_CONFIG_FILE = config_file
+                _base_config.OMEGA_CONFIG_FILE = config_file
+                raise SystemError
             return omega
     raise SystemError('Config file {} does not exist'.format(config_file))

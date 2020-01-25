@@ -50,7 +50,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_RESULT_SERIALIZER': 'pickle',
     'CELERY_DEFAULT_QUEUE': 'default',
     'BROKER_URL': OMEGA_BROKER,
-    'BROKER_HEARTBEAT': 0, # due to https://github.com/celery/celery/issues/4980
+    'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
     'CELERYBEAT_SCHEDULE': {
@@ -114,6 +114,8 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyString', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
+#: user extensions
+OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
 
 
 # =========================================
@@ -222,6 +224,9 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
             user = ~/Library/Application Support/omegaml
             site = /Library/Application Support/omegaml
 
+    See the appdirs package for details on the platform specific locations of the
+    user and site config dir, https://pypi.org/project/appdirs/
+
     Args:
         configfile: the default config file name or path
 
@@ -243,6 +248,51 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
         if os.path.exists(cfgfile):
             return cfgfile
     return None
+
+
+def load_user_extensions(extensions=OMEGA_USER_EXTENSIONS, vars=globals()):
+    """
+    user extensions are extensions to settings
+
+    Usage:
+        in config.yml specify, e.g.
+
+            OMEGA_USER_EXTENSIONS:
+                OMEGA_STORE_BACKENDS:
+                   KIND: path.to.BackendClass
+                EXTENSION_LOADER: path.to.module
+
+        This will extend OMEGA_STORE_BACKENDS and load path.to.module. If the
+        EXENSION_LOADER given module has a run(vars) method, it will be called
+        using the current defaults variables (dict) as input.
+
+    Args:
+        extensions (dict): a list of extensions in the form python.path.to.module or
+             <setting_name>: <value>
+
+    Returns:
+        None
+    """
+    for k, v in extensions.items():
+        omvar = vars.get(k)
+        try:
+            if isinstance(omvar, list):
+                omvar.append(v)
+            elif isinstance(omvar, dict):
+                omvar.update(v)
+            elif k == 'EXTENSION_LOADER':
+                from importlib import import_module
+                mod = import_module(v)
+                if hasattr(mod, 'run'):
+                    mod.run(vars)
+            else:
+                raise ValueError
+        except:
+            omvar_type = type(omvar)
+            k_type = type(v)
+            msg = ('user extensions error: cannot apply {k} to {omvar}, '
+                   'expected type {omvar_type} got {k_type}').format(**locals())
+            raise ValueError(msg)
 
 
 # -- test
@@ -275,3 +325,7 @@ if 'tensorflow' in OMEGA_FRAMEWORKS and tensorflow_available():
 #: keras backend
 if 'keras' in OMEGA_FRAMEWORKS and keras_available():
     OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_KERAS)
+
+# load user extensions if any
+if OMEGA_USER_EXTENSIONS is not None:
+    load_user_extensions(OMEGA_USER_EXTENSIONS)
