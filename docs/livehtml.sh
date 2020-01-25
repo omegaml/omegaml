@@ -9,8 +9,6 @@
 # You can trigger a build by pressing ctrl-c.
 # Exit by ctrl-z
 
-(cd build/html && python -m http.server 8002 &)
-
 function rebuild() {
     notify-send "sphinx: building docs... "
     make html

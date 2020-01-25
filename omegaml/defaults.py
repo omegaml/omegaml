@@ -23,7 +23,7 @@ OMEGA_TMP = '/tmp'
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    os.environ.get('MONGO_URL') or
-                   'mongodb://admin:foobar@localhost:27017/omega')
+                   'mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
 #: determine if we should use SSL for mongodb and rabbitmq
@@ -48,7 +48,9 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
+    'CELERY_DEFAULT_QUEUE': 'default',
     'BROKER_URL': OMEGA_BROKER,
+    'BROKER_HEARTBEAT': 0, # due to https://github.com/celery/celery/issues/4980
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
     'CELERYBEAT_SCHEDULE': {

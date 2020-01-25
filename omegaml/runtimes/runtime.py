@@ -29,8 +29,13 @@ class CeleryTask(object):
         self.kwargs = kwargs
 
     def _apply_kwargs(self, task_kwargs, celery_kwargs):
+        # update task_kwargs from runtime's passed on kwargs
+        # update celery_kwargs to match celery routing semantics
         task_kwargs.update(self.kwargs.get('task', {}))
         celery_kwargs.update(self.kwargs.get('routing', {}))
+        if 'label' in celery_kwargs:
+            celery_kwargs['queue'] = celery_kwargs['label']
+            del celery_kwargs['label']
 
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
         """
@@ -76,7 +81,7 @@ class OmegaRuntime(object):
         celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
         self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
-        # needed to get it to actually load the tasks (???)
+        # needed to get it to actually load the tasks
         # https://stackoverflow.com/a/35735471
         self.celeryapp.autodiscover_tasks(taskpkgs, force=True)
         self.celeryapp.finalize()
@@ -84,6 +89,8 @@ class OmegaRuntime(object):
         self._require_kwargs = dict(task={}, routing={})
         # fixed default arguments, use .require(always=True) to set
         self._task_default_kwargs = dict(task={}, routing={})
+        # default routing label
+        self._default_label = self.celeryapp.conf.get('CELERY_DEFAULT_QUEUE')
 
     def __repr__(self):
         return 'OmegaRuntime({})'.format(self.omega.__repr__())
@@ -106,7 +113,7 @@ class OmegaRuntime(object):
         else:
             return False
 
-    def require(self, always=False, **kwargs):
+    def require(self, always=False, label=None, **kwargs):
         """
         specify requirements for the task execution
 
@@ -116,18 +123,16 @@ class OmegaRuntime(object):
 
         Args:
             always (bool): if True requirements will persist across task calls. defaults to False
+            label (str): the label required by the worker to have a runtime task dispatched to it
             **kwargs: requirements specification that the runtime understands
 
         Usage:
-            # celery runtime
-            om.runtime.require(queue='gpu').model('foo').fit(...)
-
-            # dask distributed runtime
-            om.runtime.require(resource='gpu').model('foo').fit(...)
+            om.runtime.require(label='gpu').model('foo').fit(...)
 
         Returns:
             self
         """
+        kwargs.update({'label': label or self._default_label})
         if always:
             self._task_default_kwargs['routing'].update(kwargs)
         else:

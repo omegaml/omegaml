@@ -41,7 +41,7 @@ setup(
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
-        'mongoengine>=0.10.6',
+        'mongoengine>=0.18.2,<0.19',
         'pandas>=0.17.1',
         'numpy>=1.16.4,<1.17',
         'scipy>=0.17.0',
