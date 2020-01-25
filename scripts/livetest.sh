@@ -62,7 +62,7 @@ fi
 # get omegaml running, build if requested
 echo "Running omegaml in docker-compose using $buildopt"
 docker-compose stop
-docker-compose up $buildopt -d --remove-orphans
+docker-compose up $buildopt -d --remove-orphans --force-recreate
 # tag the built image
 if [ ! -z "$tag" ]; then
   echo "The omegaml image is omegaml/omegaml:$docker_tag"
