@@ -1,10 +1,10 @@
 import os
-from urllib.parse import unquote
 
 import nbformat
 from datetime import datetime
 from notebook.services.contents.manager import ContentsManager
 from tornado import web
+from urllib.parse import unquote
 
 from omegaml.notebook.checkpoints import NoOpCheckpoints
 

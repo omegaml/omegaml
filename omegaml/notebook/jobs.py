@@ -109,7 +109,7 @@ class OmegaJobs(object):
             meta_config.update(dict(**nb_config))
             meta.attributes['config'] = meta_config
         meta = meta.save()
-        if 'run-at' in meta_config:
+        if not name.startswith('results') and ('run-at' in meta_config):
             meta = self.schedule(name)
         return meta
 
@@ -286,6 +286,8 @@ class OmegaJobs(object):
         # -- a dictionary of JobSchedule
         if isinstance(run_at, dict):
             run_at = self.Schedule(**run_at).cron
+        if isinstance(run_at, str):
+            run_at = self.Schedule(run_at).cron
         # -- a JobSchedule
         if isinstance(run_at, self.Schedule):
             run_at = run_at.cron
@@ -318,7 +320,14 @@ class OmegaJobs(object):
             'run-at': run_at,
             'status': 'PENDING'
         }
-        triggers.append(scheduled_run)
+        # search for existing trigger, only add if not existing yet
+        for cur in triggers:
+            if cur.get('status') != 'PENDING':
+                continue
+            if scheduled_run['run-at'] == cur.get('run-at'):
+                break
+        else:
+            triggers.append(scheduled_run)
         attrs['config'] = config
         return meta.save()
 
