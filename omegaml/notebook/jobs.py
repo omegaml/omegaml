@@ -12,13 +12,14 @@ from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
 
+from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.documents import MDREGISTRY
 from omegaml.notebook.jobschedule import JobSchedule
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings
 
 
-class OmegaJobs(object):
+class OmegaJobs(BackendBaseCommon):
     """
     Omega Jobs API
     """
@@ -88,19 +89,17 @@ class OmegaJobs(object):
         meta = self.store.metadata(name)
         if not meta:
             filename = uuid4().hex
-            fileid = self._fs.put(bbuf, filename=filename)
+            fileid = self._store_to_file(self.store, bbuf, filename)
             meta = self.store._make_metadata(name=name,
                                              prefix=self.store.prefix,
                                              bucket=self.store.bucket,
                                              kind=self.kind,
                                              attributes=attributes,
-                                             gridfile=GridFSProxy(grid_id=fileid))
+                                             gridfile=fileid)
             meta = meta.save()
         else:
             filename = uuid4().hex
-            meta.gridfile.delete()
-            fileid = self._fs.put(bbuf, filename=filename)
-            meta.gridfile = GridFSProxy(grid_id=fileid)
+            meta.gridfile = self._store_to_file(self.store, bbuf, filename)
             meta = meta.save()
         # set config
         nb_config = self.get_notebook_config(name)

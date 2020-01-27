@@ -1,12 +1,10 @@
-from itertools import product
-
 import hashlib
 import json
-from uuid import uuid4
-
 import pandas as pd
 import six
-from omegaml import defaults
+from itertools import product
+from uuid import uuid4
+
 from omegaml.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import qops
@@ -34,8 +32,25 @@ class ApplyMixin(object):
         self.is_from_facet = kwargs.get('is_from_facet', False)
         # index columns
         self.index_columns = kwargs.get('index_columns', [])
+        # db alias
+        self._db_alias = kwargs.get('db_alias', self._ensure_db_connection())
         # cache used on persist()
-        self.cache = kwargs.get('cache', ApplyCache())
+        self.cache = kwargs.get('cache', ApplyCache(self._db_alias))
+
+    def _ensure_db_connection(self):
+        from mongoengine.connection import _dbs, _connections
+
+        seek_db = self.collection.database
+        for alias, db in _dbs.items():
+            if db is seek_db:
+                self._db_alias = alias
+                break
+        else:
+            # fake connection register
+            alias = self._db_alias = 'omega-{}'.format(uuid4().hex)
+            _connections[alias] = seek_db.client
+            _dbs[alias] = seek_db
+        return self._db_alias
 
     def nocache(self):
         self.cache = None
@@ -49,7 +64,7 @@ class ApplyMixin(object):
             the cache for the specific .apply operations
         :return:
         """
-        QueryCache = make_QueryCache()
+        QueryCache = make_QueryCache(db_alias=self._db_alias)
         if full:
             QueryCache.objects.filter(value__collection=self.collection.name).delete()
         else:
@@ -757,15 +772,17 @@ class ApplyCache(object):
     """
     A Cache that works on collections and pipelines
     """
+    def __init__(self, db_alias):
+        self._db_alias = db_alias
 
     def set(self, key, value):
         # https://stackoverflow.com/a/22003440/890242
-        QueryCache = make_QueryCache()
+        QueryCache = make_QueryCache(self._db_alias)
         QueryCache.objects(key=key).update_one(set__key="{}".format(key),
                                                set__value=value, upsert=True)
 
     def get(self, key):
-        QueryCache = make_QueryCache()
+        QueryCache = make_QueryCache(self._db_alias)
         try:
             result = QueryCache.objects.get(key=key)
         except:

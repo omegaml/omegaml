@@ -73,14 +73,14 @@ as follows:
 """
 from __future__ import absolute_import
 
-import os
-import tempfile
 import warnings
 from fnmatch import fnmatch
 
 import gridfs
+import os
 import re
 import six
+import tempfile
 from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect
@@ -112,7 +112,7 @@ class OmegaStore(object):
         self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
-        self._fs_collection = self.defaults.OMEGA_MONGO_COLLECTION
+        self._fs_collection = self._ensure_fs_collection()
         self._fs = None
         self._tmppath = None
         self.prefix = prefix or ''
@@ -170,17 +170,17 @@ class OmegaStore(object):
             if ':' in creds:
                 username, password = creds.split(':')
         # connect via mongoengine
+        #
         # note this uses a MongoClient in the background, with pooled
         # connections. there are multiprocessing issues with pymongo:
         # http://api.mongodb.org/python/3.2/faq.html#using-pymongo-with-multiprocessing
         # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
         # this defers connecting until the first access
         # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
-        # FIXME use an instance specific alias. requires that every access
-        #       to Metadata is configured correctly. this to avoid sharing
-        #       inadevertedly between threads and processes.
-        # alias = 'omega-{}'.format(uuid4().hex)
-        alias = 'omega'
+        #
+        # use an instance specific alias, note that access to Metadata and
+        # QueryCache must pass the very same alias
+        self._dbalias = alias = 'omega-{}'.format(uuid4().hex)
         # always disconnect before registering a new connection because
         # connect forgets all connection settings upon disconnect WTF?!
         disconnect(alias)
@@ -207,7 +207,8 @@ class OmegaStore(object):
         if self._Metadata_cls is None:
             # hack to localize metadata
             self.mongodb
-            self._Metadata_cls = make_Metadata()
+            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
+                                               collection=self._fs_collection)
         return self._Metadata_cls
 
     @property
@@ -570,7 +571,8 @@ class OmegaStore(object):
                                    bucket=self.bucket,
                                    kind=MDREGISTRY.PANDAS_HDF,
                                    attributes=attributes,
-                                   gridfile=GridFSProxy(grid_id=fileid)).save()
+                                   gridfile=GridFSProxy(db_alias=self._dbalias,
+                                                        grid_id=fileid)).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None):
         """ store numpy array as hdf
@@ -1060,3 +1062,25 @@ class OmegaStore(object):
         df = hdf[key]
         hdf.close()
         return df
+
+    def _ensure_fs_collection(self):
+        # ensure backwards-compatible gridfs access
+        if self.defaults.OMEGA_BUCKET_FS_LEGACY:
+            # prior to 0.13.2 a single gridfs instance was used, always equal to the default collection
+            return self.defaults.OMEGA_MONGO_COLLECTION
+        if self.bucket == self.defaults.OMEGA_MONGO_COLLECTION:
+            # from 0.13.2 onwards, only the default bucket is equal to the default collection
+            # backwards compatibility for existing installations
+            return self.bucket
+        # since 0.13.2, all buckets other than the default use a qualified collection name to
+        # effectively separate files in different buckets, enabling finer-grade access control
+        # and avoiding name collisions from different buckets
+        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
+
+
+
+
+
+
+
+

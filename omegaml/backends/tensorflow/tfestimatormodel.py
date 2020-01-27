@@ -8,7 +8,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import dill
 import logging
 
-from omegaml.backends import BaseModelBackend
+from omegaml.backends.basemodel import BaseModelBackend
 
 ok = lambda v, vtype: isinstance(v, vtype)
 

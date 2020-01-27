@@ -1,10 +1,9 @@
-import random
 from unittest import TestCase
 
-from omegaml import Omega
 import pandas as pd
-from omegaml.store import Filter
 from pandas.util.testing import assert_frame_equal, assert_series_equal
+
+from omegaml import Omega
 
 
 class MDataFrameMixinTests(TestCase):
@@ -494,18 +493,3 @@ class MDataFrameMixinTests(TestCase):
         mdf = om.datasets.getl('corrtest')
         result = mdf.corr().value
         assert_frame_equal(result, expected)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

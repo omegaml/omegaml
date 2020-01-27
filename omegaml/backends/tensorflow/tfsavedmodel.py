@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import numpy as np
 from shutil import rmtree
 
-from omegaml.backends import BaseModelBackend
+from omegaml.backends.basemodel import BaseModelBackend
 
 
 class TensorflowSavedModelPredictor(object):

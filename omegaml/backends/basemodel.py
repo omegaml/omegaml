@@ -1,13 +1,44 @@
-import os
-
-from mongoengine import GridFSProxy
+from omegaml.backends.basecommon import BackendBaseCommon
 
 
-class BaseModelBackend(object):
+class BaseModelBackend(BackendBaseCommon):
     """
     OmegaML BaseModelBackend to be subclassed by other arbitrary backends
 
     This provides the abstract interface for any model backend to be implemented
+    Subclass to implement custom backends.
+
+    Essentially a model backend:
+
+     * provides methods to serialize and deserialize a machine learning model for a given ML framework
+     * offers fit() and predict() methods to be called by the runtime
+     * offers additional methods such as score(), partial_fit(), transform()
+
+    Model backends are the middleware that connects the om.models API to specific frameworks. This class
+    makes it simple to implement a model backend by offering a common syntax as well as a default implementation
+    for get() and put().
+
+    Methods to implement:
+
+        # for model serialization (mandatory)
+        @classmethod supports() - determine if backend supports given model instance
+        _package_model() - serialize a model instance into a temporary file
+        _extract_model() - deserialize the model from a file-like
+
+        Both methods provide readily set up temporary file names so that all you have to do is actually
+        save the model to the given output file and restore the model from the given input file, respectively.
+        All other logic has already been implemented (see get_model and put_model methods).
+
+        # for fitting and predicting (mandatory)
+        fit()
+        predict()
+
+        # other methods (optional)
+        fit_transform() - fit and return a transformed dataset
+        partial_fit() - fit incrementally
+        predict_proba() - predict probabilities
+        score() - score fitted classifier vv test dataset
+
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
@@ -46,19 +77,6 @@ class BaseModelBackend(object):
         # support new backend architecture while keeping back compatibility
         return self.put_model(obj, name, **kwargs)
 
-    def _tmp_packagefn(self, name):
-        filename = os.path.join(self.model_store.tmppath, name)
-        dirname = os.path.dirname(filename)
-        os.makedirs(dirname, exist_ok=True)
-        return filename
-
-    def _store_file(self, infile, filename):
-        gridfile = GridFSProxy(db_alias='omega',
-                               collection_name=self.model_store._fs_collection)
-        with open(infile, 'rb') as pkgf:
-            gridfile.put(pkgf, filename=filename)
-        return gridfile
-
     def _package_model(self, model, key, tmpfn, **kwargs):
         """
         implement this method to serialize a model to the given tmpfn
@@ -96,7 +114,8 @@ class BaseModelBackend(object):
         """
         meta = self.model_store.metadata(name)
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
-        model = self._extract_model(meta.gridfile, storekey, self._tmp_packagefn(storekey), **kwargs)
+        model = self._extract_model(meta.gridfile, storekey,
+                                    self._tmp_packagefn(self.model_store, storekey), **kwargs)
         return model
 
     def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
@@ -104,9 +123,9 @@ class BaseModelBackend(object):
         Packages a model using joblib and stores in GridFS
         """
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
-        tmpfn = self._tmp_packagefn(storekey)
+        tmpfn = self._tmp_packagefn(self.model_store, storekey)
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
-        gridfile = self._store_file(packagefname, storekey)
+        gridfile = self._store_to_file(self.model_store, packagefname, storekey)
         kind_meta = {
             self._backend_version_tag: self._backend_version,
         }

@@ -26,6 +26,8 @@ OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    'mongodb://admin:foobar@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
+#: bucket backwards compatibility
+OMEGA_BUCKET_FS_LEGACY = False
 #: determine if we should use SSL for mongodb and rabbitmq
 OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional kwargs for mongodb SSL connections
@@ -69,7 +71,7 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.backends.package']
 #: storage backends
 OMEGA_STORE_BACKENDS = {
-    'sklearn.joblib': 'omegaml.backends.ScikitLearnBackend',
+    'sklearn.joblib': 'omegaml.backends.scikitlearn.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
     'pandas.rawdict': 'omegaml.backends.rawdict.PandasRawDictBackend',

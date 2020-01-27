@@ -1,7 +1,5 @@
 import os
-
 import six
-from mongoengine import GridFSProxy
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path
@@ -34,12 +32,8 @@ class PythonPackageData(BaseDataBackend):
             version = sdist.metadata.version
             pkgname = sdist.metadata.name
             pkgdist = os.path.join(distdir, '{pkgname}-{version}.tar.gz'.format(**locals()))
-        with open(pkgdist, 'rb') as fzip:
-            fileid = self.data_store.fs.put(
-                fzip, filename=self.data_store._get_obj_store_key(name, 'pkg'))
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias='omega',
-                                   collection_name=self.data_store.bucket)
+        filename = self.data_store.object_store_key(name, 'pkg', hashed=True)
+        gridfile = self._store_to_file(self.data_store, pkgdist, filename)
         return self.data_store._make_metadata(
             name=name,
             prefix=self.data_store.prefix,
@@ -60,8 +54,8 @@ class PythonPackageData(BaseDataBackend):
         self.path = self.packages_path
         dstdir = self.path
         if not os.path.exists(os.path.join(dstdir, name)):
-            filename = self.data_store._get_obj_store_key(name, '.pkg')
-            outf = self.data_store.fs.get_version(filename)
+            meta = self.data_store.metadata(name)
+            outf = meta.gridfile
             with open(packagefname, 'wb') as pkgf:
                 pkgf.write(outf.read())
             mod = install_and_import(packagefname, name, dstdir)

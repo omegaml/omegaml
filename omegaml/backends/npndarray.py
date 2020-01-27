@@ -28,20 +28,20 @@ class NumpyNDArrayBackend(BaseDataBackend):
             'save_method': self._save_method,
             'allow_pickle': allow_pickle,
         }
-        fout = self.data_store.fs.new_file(filename=name)
         buf = BytesIO()
         np.save(buf, obj, allow_pickle=allow_pickle)
         buf.seek(0)
-        fout.write(buf)
-        fout.close()
+        fn = self.data_store.object_store_key(name, 'np', hashed=True)
+        gridfile = self._store_to_file(self.data_store, buf, fn)
         return self.data_store.make_metadata(name, self.KIND, attributes=attributes,
                                              kind_meta=kind_meta,
+                                             gridfile=gridfile,
                                              **kwargs).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         # TODO read file from meta.gridfile if exists, fallback to .fs only if not
-        fin = self.data_store.fs.get_last_version(name)
         meta = self.data_store.metadata(name)
+        fin = meta.gridfile
         if meta.kind_meta.get('save_method') == self._save_method:
             allow_pickle = meta.kind_meta.get('allow_pickle')
             loaded = self._load_from_npsave(fin, allow_pickle)

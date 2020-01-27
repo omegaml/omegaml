@@ -75,14 +75,18 @@ class Metadata:
     modified = DateTimeField(default=datetime.datetime.now)
 
 
-def make_Metadata():
+def make_Metadata(db_alias='omega', collection=None):
     # this is to create context specific Metadata class that takes the
     # database from the given alias at the time of use
     from omegaml.documents import Metadata as Metadata_base
     class Metadata(Metadata_base, Document):
+        # override db_alias in gridfile
+        gridfile = FileField(
+            db_alias=db_alias,
+            collection_name=collection or settings().OMEGA_MONGO_COLLECTION)
         # the actual db is defined at runtime
         meta = {
-            'db_alias': 'omega',
+            'db_alias': db_alias,
             'strict': False,
             'indexes': [
                 # unique entry
@@ -95,7 +99,8 @@ def make_Metadata():
 
         def __new__(cls, *args, **kwargs):
             # undo the Metadata.__new__ protection
-            return super(Metadata, cls).__real_new__(cls)
+            newcls = super(Metadata, cls).__real_new__(cls)
+            return newcls
 
         def __eq__(self, other):
             return self.objid == other.objid
@@ -114,13 +119,13 @@ def make_Metadata():
     return Metadata
 
 
-def make_QueryCache():
+def make_QueryCache(db_alias='omega'):
     class QueryCache(Document):
         collection = StringField()
         key = StringField()
         value = DictField()
         meta = {
-            'db_alias': 'omega',
+            'db_alias': db_alias,
             'indexes': [
                 'key',
             ]
