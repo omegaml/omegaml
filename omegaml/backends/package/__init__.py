@@ -57,7 +57,8 @@ class PythonPackageData(BaseDataBackend):
         :return: the loaded module
         """
         packagefname = '{}.tar.gz'.format(os.path.join(self.data_store.tmppath, name))
-        dstdir = self.packages_path
+        self.path = self.packages_path
+        dstdir = self.path
         if not os.path.exists(os.path.join(dstdir, name)):
             filename = self.data_store._get_obj_store_key(name, '.pkg')
             outf = self.data_store.fs.get_version(filename)

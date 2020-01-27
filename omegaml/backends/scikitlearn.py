@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
 import glob
+import os
+import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import datetime
-import os
-import tempfile
+import joblib
 from mongoengine.fields import GridFSProxy
 from shutil import rmtree
 from sklearn.base import BaseEstimator
@@ -15,17 +16,19 @@ from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.util import reshaped, gsreshaped
 
+# byte string
+_u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
 
-class ScikitLearnBackend(BaseModelBackend):
-    """
-    OmegaML backend to use with ScikitLearn
-    """
+
+class ScikitLearnBackendV1(BaseModelBackend):
+    KIND = MDREGISTRY.SKLEARN_JOBLIB
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         return isinstance(obj, BaseEstimator)
 
-    def _package_model(self, model, filename):
+    # kept to support legacy scikit learn model serializations prior to ~scikit learn v0.18
+    def _v1_package_model(self, model, filename):
         """
         Dumps a model using joblib and packages all of joblib files into a zip
         file
@@ -42,7 +45,7 @@ class ScikitLearnBackend(BaseModelBackend):
         rmtree(lpath)
         return zipfname
 
-    def _extract_model(self, packagefname):
+    def _v1_extract_model(self, packagefname):
         """
         Loads a model using joblib from a zip file created with _package_model
         """
@@ -56,7 +59,7 @@ class ScikitLearnBackend(BaseModelBackend):
         rmtree(lpath)
         return model
 
-    def get_model(self, name, version=-1):
+    def _v1_get_model(self, name, version=-1):
         """
         Retrieves a pre-stored model
         """
@@ -71,14 +74,14 @@ class ScikitLearnBackend(BaseModelBackend):
         outf = self.model_store.fs.get_version(filename, version=version)
         with open(packagefname, 'wb') as zipf:
             zipf.write(outf.read())
-        model = self._extract_model(packagefname)
+        model = self._v1_extract_model(packagefname)
         return model
 
-    def put_model(self, obj, name, attributes=None):
+    def _v1_put_model(self, obj, name, attributes=None):
         """
         Packages a model using joblib and stores in GridFS
         """
-        zipfname = self._package_model(obj, name)
+        zipfname = self._v1_package_model(obj, name)
         with open(zipfname, 'rb') as fzip:
             fileid = self.model_store.fs.put(
                 fzip, filename=self.model_store._get_obj_store_key(name, 'omm'))
@@ -92,6 +95,42 @@ class ScikitLearnBackend(BaseModelBackend):
             kind=MDREGISTRY.SKLEARN_JOBLIB,
             attributes=attributes,
             gridfile=gridfile).save()
+
+
+class ScikitLearnBackendV2(ScikitLearnBackendV1):
+    """
+    OmegaML backend to use with ScikitLearn
+    """
+    def _package_model(self, model, key, tmpfn):
+        """
+        Dumps a model using joblib and packages all of joblib files into a zip
+        file
+        """
+        joblib.dump(model, tmpfn, protocol=4, compress=True)
+        return tmpfn
+
+    def _extract_model(self, infile, key, tmpfn):
+        """
+        Loads a model using joblib from a zip file created with _package_model
+        """
+        with open(tmpfn, 'wb') as pkgf:
+            pkgf.write(infile.read())
+        model = joblib.load(tmpfn)
+        return model
+
+    def get_model(self, name, version=-1):
+        """
+        Retrieves a pre-stored model
+        """
+        meta = self.model_store.metadata(name)
+        if self._backend_version != meta.kind_meta.get(self._backend_version_tag):
+            return super()._v1_get_model(name, version=version)
+        return super().get_model(name, version=version)
+
+    def put_model(self, obj, name, attributes=None, _kind_version=None):
+        if _kind_version and _kind_version != self._backend_version:
+            return super()._v1_put_model(obj, name, attributes=attributes)
+        return super().put_model(obj, name, attributes=attributes)
 
     def predict(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -161,7 +200,7 @@ class ScikitLearnBackend(BaseModelBackend):
         return meta
 
     def score(
-          self, modelname, Xname, Yname, rName=None, pure_python=True,
+          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
           **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
@@ -249,3 +288,7 @@ class ScikitLearnBackend(BaseModelBackend):
         })
         meta.save()
         return meta
+
+
+class ScikitLearnBackend(ScikitLearnBackendV2):
+    pass

@@ -37,17 +37,17 @@ class ModelMixin(object):
         """
         update the model
 
-        Calls :code:`.partial_fit(X, Y, **kwargs)`. If instead of dataset names actual 
-        data  is given, the data is stored using _fitX/fitY prefixes and 
-        a unique name. 
+        Calls :code:`.partial_fit(X, Y, **kwargs)`. If instead of dataset names actual
+        data  is given, the data is stored using _fitX/fitY prefixes and
+        a unique name.
 
         After fitting, a new model version is stored with its attributes
         fitX and fitY pointing to the datasets, as well as the sklearn
-        version used.   
+        version used.
 
         :param Xname: name of X dataset or data
         :param Yname: name of Y dataset or data
-        :return: the model (self) or the string representation (python clients) 
+        :return: the model (self) or the string representation (python clients)
         """
         omega_fit = self.task('omegaml.tasks.omega_partial_fit')
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
@@ -127,7 +127,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName, **kwargs)
 
-    def score(self, Xname, yName, rName=None, **kwargs):
+    def score(self, Xname, Yname=None, rName=None, **kwargs):
         """
         calculate score
 
@@ -142,7 +142,7 @@ class ModelMixin(object):
         """
         omega_score = self.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
-        yName = self._ensure_data_is_stored(yName)
+        yName = self._ensure_data_is_stored(Yname)
         return omega_score.delay(self.modelname, Xname, yName, rName=rName, **kwargs)
 
     def decision_function(self, Xname, rName=None, **kwargs):

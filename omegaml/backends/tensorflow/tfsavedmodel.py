@@ -1,11 +1,10 @@
 import glob
 import os
 import tempfile
-from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import numpy as np
-from mongoengine import GridFSProxy
+from shutil import rmtree
 
 from omegaml.backends import BaseModelBackend
 
@@ -50,6 +49,20 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         import tensorflow as tf
         return isinstance(obj, tf.estimator.Estimator)
 
+    def _package_model(self, model, key, tmpfn, serving_input_fn=None,
+                       strip_default_attrs=None, **kwargs):
+        export_dir_base = self._make_savedmodel(model, serving_input_receiver_fn=serving_input_fn,
+                                                strip_default_attrs=strip_default_attrs)
+        zipfname = self._package_savedmodel(export_dir_base, key)
+        rmtree(export_dir_base)
+        return zipfname
+
+    def _extract_model(self, infile, key, tmpfn, **kwargs):
+        with open(tmpfn, 'wb') as pkgfn:
+            pkgfn.write(infile.read())
+        model = self._extract_savedmodel(tmpfn)
+        return model
+
     def _package_savedmodel(self, export_base_dir, filename):
         fname = os.path.basename(filename)
         zipfname = os.path.join(self.model_store.tmppath, fname)
@@ -84,39 +97,8 @@ class TensorflowSavedModelBackend(BaseModelBackend):
                               strip_default_attrs=strip_default_attrs)
         return export_dir_base
 
-    def put_model(self, obj, name, attributes=None, serving_input_fn=None,
-                  strip_default_attrs=None, **kwargs):
-        export_dir_base = self._make_savedmodel(obj, serving_input_receiver_fn=serving_input_fn,
-                                                strip_default_attrs=strip_default_attrs)
-        zipfname = self._package_savedmodel(export_dir_base, name)
-        with open(zipfname, 'rb') as fzip:
-            fileid = self.model_store.fs.put(
-                fzip, filename=self.model_store._get_obj_store_key(name, self._model_ext))
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias='omega',
-                                   collection_name=self.model_store.bucket)
-        rmtree(export_dir_base)
-        os.remove(zipfname)
-        return self.model_store._make_metadata(
-            name=name,
-            prefix=self.model_store.prefix,
-            bucket=self.model_store.bucket,
-            kind=self.KIND,
-            attributes=attributes,
-            gridfile=gridfile).save()
-
-    def get_model(self, name, version=-1):
-        filename = self.model_store._get_obj_store_key(name, self._model_ext)
-        packagefname = os.path.join(self.model_store.tmppath, name)
-        outf = self.model_store.fs.get_version(filename, version=version)
-        with open(packagefname, 'wb') as zipf:
-            zipf.write(outf.read())
-        model = self._extract_savedmodel(packagefname)
-        os.remove(packagefname)
-        return model
-
     def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         Predict from a SavedModel
 
@@ -130,7 +112,6 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         Returns:
 
         """
-        import pandas as pd
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         result = model.predict(X)
@@ -189,9 +170,9 @@ class ServingInput(object):
         if isinstance(self.features, dict):
             input_fn = self.from_features()
         elif isinstance(self.like, np.ndarray):
-            shape = tuple((self.batchsize, *self.like.shape[1:])) # assume (rows, *cols)
+            shape = tuple((self.batchsize, *self.like.shape[1:]))  # assume (rows, *cols)
             input_fn = self.from_ndarray(shape, self.like.dtype)
-        elif isinstance(self.shape, (list,tuple,np.ndarray)):
+        elif isinstance(self.shape, (list, tuple, np.ndarray)):
             input_fn = self.from_ndarray(self.shape, self.dtype)
         return input_fn
 
@@ -214,7 +195,7 @@ class ServingInput(object):
         else:
             input_layer_name = self.features[0]
         features = {
-           input_layer_name: tf.placeholder(dtype=dtype, shape=shape, )
+            input_layer_name: tf.placeholder(dtype=dtype, shape=shape, )
         }
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
             features,
@@ -234,7 +215,3 @@ class ServingInput(object):
             receiver_tensors = {X_name: placeholder}
             features = {X_name: placeholder}
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
-
-
-
-

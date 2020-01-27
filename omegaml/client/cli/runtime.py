@@ -59,7 +59,7 @@ class RuntimeCommandBase(CommandBase):
             kv_dct[k] = eval(v)
         kwargs = {}
         if action in ('predict', 'predict_proba',
-                      'decision_function', 'transform', 'score'):
+                      'decision_function', 'transform'):
             # actions that take rName, but no Y
             kwargs['rName'] = output
         else:

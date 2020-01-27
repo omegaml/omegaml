@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
-from os.path import basename
-
 import logging
 import os
-import six
 import sys
+from os.path import basename
+
+import six
 import yaml
 
 from omegaml.util import tensorflow_available, keras_available, module_available
@@ -101,6 +101,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.package.PythonPackageMixin',
     'omegaml.mixins.store.promotion.PromotionMixin',
     'omegaml.mixins.mdf.iotools.IOToolsStoreMixin',
+    'omegaml.mixins.store.modelversion.ModelVersionMixin',
 ]
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [

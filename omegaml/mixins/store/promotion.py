@@ -1,3 +1,6 @@
+from omegaml.documents import MDREGISTRY
+
+
 class PromotionMixin(object):
     """
     Promote objects from one bucket to another
@@ -24,7 +27,16 @@ class PromotionMixin(object):
         backend = self.get_backend(name)
         if hasattr(backend, 'promote'):
             return backend.promote(name, other)
-        # do default promotion
+        # do default promotion, i.e. copy
+        meta = self.metadata(name)
         obj = self.get(name)
         other.drop(name, force=True)
-        return other.put(obj, name)
+        # TODO refactor to promote of python native data backend
+        if meta.kind == MDREGISTRY.PYTHON_DATA:
+            # in case of native python data we get back a list of
+            # all previously inserted objects. do the same in other
+            [other.put(o, name) for o in obj]
+            other_meta = other.metadata(name)
+        else:
+            other_meta = other.put(obj, name)
+        return other_meta

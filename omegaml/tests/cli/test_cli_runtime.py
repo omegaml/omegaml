@@ -1,8 +1,7 @@
-import os
-import sys
 from unittest import TestCase
 
 import numpy as np
+from numpy.testing import assert_almost_equal
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
@@ -64,4 +63,21 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.cli('runtime script helloworld run foo=bar', new_start=True)
         self.assertLogContains('info', '"foo": "bar"')
 
-
+    def test_cli_runtime_model_fit_predict_versions(self):
+        self.make_model('reg')
+        reg = self.om.models.get('reg')
+        self.make_dataset_from_dataframe('test', N=10, m=2, b=0)
+        self.make_dataset_from_dataframe('test2', N=10, m=5, b=10)
+        # -- fit the model
+        self.cli('runtime model reg fit test[x] test[y]')
+        self.cli('runtime model reg fit test2[x] test2[y]')
+        # -- run a prediction, we store the results, by previous pointer
+        self.cli('runtime model reg^ predict test[x] --result pred1')
+        self.cli('runtime model reg predict test[x] --result pred2')
+        df_expect1 = self.om.datasets.get('test')['y'].values
+        df_expect2 = self.om.datasets.get('test2')['y'].values
+        #    check the data has actually been stored as requested
+        df_pred1 = self.om.datasets.get('pred1').flatten()
+        df_pred2 = self.om.datasets.get('pred2').flatten()
+        assert_almost_equal(df_expect1, df_pred1, decimal=1)
+        assert_almost_equal(df_expect2, df_pred2, decimal=1)

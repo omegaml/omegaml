@@ -1,21 +1,18 @@
 # import glob
 import glob
-import logging
 import os
 import tempfile
-from copy import copy
 from inspect import isfunction
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import dill
-from mongoengine import GridFSProxy
+import logging
 
 from omegaml.backends import BaseModelBackend
 
 ok = lambda v, vtype: isinstance(v, vtype)
 
 logger = logging.getLogger(__name__)
-
 
 
 class TFEstimatorModel(object):
@@ -164,13 +161,13 @@ class TFEstimatorModelBackend(BaseModelBackend):
     def supports(self, obj, name, **kwargs):
         return isinstance(obj, TFEstimatorModel)
 
-    def _package_model(self, obj, filename):
-        model_dir = obj.model_dir
-        fname = os.path.basename(filename)
+    def _package_model(self, model, key, tmpfn, **kwargs):
+        model_dir = model.model_dir
+        fname = os.path.basename(tmpfn)
         zipfname = os.path.join(self.model_store.tmppath, fname)
         # get relevant parts of model_dir
         with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
-            zipf.writestr('modelobj.dill', dill.dumps(obj))
+            zipf.writestr('modelobj.dill', dill.dumps(model))
             for part in glob.glob(os.path.join(model_dir, '*')):
                 arcname = os.path.basename(part)
                 if arcname == 'modelobj.dill':
@@ -179,51 +176,15 @@ class TFEstimatorModelBackend(BaseModelBackend):
                 zipf.write(part, arcname)
         return zipfname
 
-    def _extract_model(self, packagefname):
+    def _extract_model(self, infile, key, tmpfn, **kwargs):
         lpath = tempfile.mkdtemp()
-        fname = os.path.basename(packagefname)
-        mklfname = os.path.join(lpath, fname)
-        with ZipFile(packagefname) as zipf:
+        with open(tmpfn, 'wb') as pkgf:
+            pkgf.write(infile.read())
+        with ZipFile(tmpfn) as zipf:
             zipf.extractall(lpath)
         with open(os.path.join(lpath, 'modelobj.dill'), 'rb') as fin:
             model = dill.load(fin)
         model.restore(lpath)
-        return model
-
-    def put_model(self, obj, name, attributes=None):
-        # create a copy so we can reset the model dir
-        # this is required so the model path does not get restored on get
-        obj = copy(obj)
-        obj._model_dir = None
-        zipfname = self._package_model(obj, name)
-        with open(zipfname, 'rb') as fzip:
-            fileid = self.model_store.fs.put(
-                fzip, filename=self.model_store._get_obj_store_key(name, '.tfm'))
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias='omega',
-                                   collection_name=self.model_store.bucket)
-        return self.model_store._make_metadata(
-            name=name,
-            prefix=self.model_store.prefix,
-            bucket=self.model_store.bucket,
-            kind=self.KIND,
-            attributes=attributes,
-            gridfile=gridfile).save()
-
-    def get_model(self, name, version=-1):
-        filename = self.model_store._get_obj_store_key(name, '.tfm')
-        packagefname = os.path.join(self.model_store.tmppath, name)
-        dirname = os.path.dirname(packagefname)
-        try:
-            os.makedirs(dirname)
-        except OSError:
-            # OSError is raised if path exists already
-            pass
-        outf = self.model_store.fs.get_version(filename, version=version)
-        with open(packagefname, 'wb') as zipf:
-            zipf.write(outf.read())
-        # restore the model, this will also set the model_dir
-        model = self._extract_model(packagefname)
         return model
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
@@ -239,7 +200,7 @@ class TFEstimatorModelBackend(BaseModelBackend):
         return meta
 
     def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         import pandas as pd
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
@@ -252,8 +213,8 @@ class TFEstimatorModelBackend(BaseModelBackend):
         return result
 
     def score(
-            self, modelname, Xname, Yname, rName=True, pure_python=True,
-            **kwargs):
+          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
+          **kwargs):
         import pandas as pd
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)

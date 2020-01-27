@@ -1,11 +1,8 @@
 from __future__ import absolute_import
 
 import logging
-from uuid import uuid4
 
-import six
-
-from omegaml.util import is_dataframe, settings, is_ndarray, extend_instance
+from omegaml.util import extend_instance
 
 logger = logging.getLogger(__name__)
 

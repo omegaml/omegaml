@@ -100,7 +100,7 @@ def settings(reload=False):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
     __settings = defaults
-    return __settings
+    return DefaultsContext(__settings)
 
 
 def override_settings(**kwargs):

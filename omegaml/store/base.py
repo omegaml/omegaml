@@ -74,13 +74,12 @@ as follows:
 from __future__ import absolute_import
 
 import os
-import re
 import tempfile
 import warnings
 from fnmatch import fnmatch
-from uuid import uuid4
 
 import gridfs
+import re
 import six
 from datetime import datetime
 from mongoengine.connection import disconnect, \
@@ -88,6 +87,7 @@ from mongoengine.connection import disconnect, \
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
+from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -112,6 +112,7 @@ class OmegaStore(object):
         self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
+        self._fs_collection = self.defaults.OMEGA_MONGO_COLLECTION
         self._fs = None
         self._tmppath = None
         self.prefix = prefix or ''
@@ -191,7 +192,7 @@ class OmegaStore(object):
                              authentication_source='admin',
                              serverSelectionTimeoutMS=2500,
                              **self.defaults.OMEGA_MONGO_SSL_KWARGS,
-                            )
+                             )
         self._db = getattr(connection, self.database_name)
         # mongoengine 0.15.0 connection setup is seriously broken -- it does
         # not remember username/password on authenticated connections
@@ -218,10 +219,7 @@ class OmegaStore(object):
         """
         if self._fs is not None:
             return self._fs
-        try:
-            self._fs = gridfs.GridFS(self.mongodb, collection=self.bucket)
-        except Exception as e:
-            raise e
+        self._fs = gridfs.GridFS(self.mongodb, collection=self._fs_collection)
         return self._fs
 
     def metadata(self, name=None, bucket=None, prefix=None, version=-1):
@@ -390,10 +388,10 @@ class OmegaStore(object):
         # TODO move all of the specifics to backend implementations
         if is_estimator(obj):
             backend = self.get_backend_bykind(MDREGISTRY.SKLEARN_JOBLIB)
-            return backend.put_model(obj, name, attributes)
+            return backend.put(obj, name, attributes=attributes, **kwargs)
         elif is_spark_mllib(obj):
             backend = self.get_backend_bykind(MDREGISTRY.SKLEARN_JOBLIB)
-            return backend.put_model(obj, name, attributes, **kwargs)
+            return backend.put(obj, name, attributes=attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
             groupby = kwargs.get('groupby')
             if obj.empty:
@@ -490,7 +488,7 @@ class OmegaStore(object):
         dtypes = {
             dict(column_map).get(k): v.name
             for k, v in iteritems(obj.dtypes)
-            }
+        }
         kind_meta = {
             'columns': column_map,
             'dtypes': dtypes,
@@ -543,7 +541,7 @@ class OmegaStore(object):
 
         def row_to_doc(obj):
             for gval, gdf in obj.groupby(groupby):
-                if hasattr(gval,'astype'):
+                if hasattr(gval, 'astype'):
                     gval = make_tuple(gval.astype('O'))
                 else:
                     gval = make_tuple(gval)
@@ -934,7 +932,7 @@ class OmegaStore(object):
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def __iter__(self):
-        for f in self.list():
+        for f in self.list(include_temp=True):
             yield f
 
     def list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
@@ -988,16 +986,28 @@ class OmegaStore(object):
                 files = [f for f in files if not f.startswith('.')]
         return files
 
-    def object_store_key(self, name, ext):
+    def object_store_key(self, name, ext, hashed=False):
         """
         Returns the store key
 
+        Unless you write a mixin or a backend you should not use this method
+
         :param name: The name of object
         :param ext: The extension of the filename
+        :param hashed: hash the key to support arbitrary name length, defaults to False,
+           will default to True in future versions
 
         :return: A filename with relative bucket, prefix and name
         """
-        return self._get_obj_store_key(name, ext)
+        # byte string
+        _u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
+        key = self._get_obj_store_key(name, ext)
+        if hashed:
+            from hashlib import sha1
+            hasher = sha1()
+            hasher.update(_u8(key))
+            key = hasher.hexdigest()
+        return key
 
     def _get_obj_store_key(self, name, ext, prefix=None, bucket=None):
         # backwards compatilibity implementation of object_store_key()
