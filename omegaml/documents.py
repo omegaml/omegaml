@@ -9,6 +9,7 @@ from mongoengine.fields import (
 
 from omegaml.util import settings
 
+
 # default kinds of objects
 class MDREGISTRY:
     PANDAS_DFROWS = 'pandas.dfrows'  # dataframe
@@ -63,6 +64,8 @@ def make_Metadata():
         uri = StringField()
         #: created datetime
         created = DateTimeField(default=datetime.datetime.now)
+        #: created datetime
+        modified = DateTimeField(default=datetime.datetime.now)
         # the actual db is defined in settings, OMEGA_MONGO_URL
         meta = {
             'db_alias': 'omega',
@@ -83,6 +86,10 @@ def make_Metadata():
             kwargs = ('%s=%s' % (k, getattr(self, k))
                       for k in self._fields.keys() if k in fields)
             return u"Metadata(%s)" % ','.join(kwargs)
+
+        def save(self, *args, **kwargs):
+            self.modified = datetime.datetime.now()
+            return super().save(*args, **kwargs)
 
     return Metadata
 

@@ -86,10 +86,9 @@ def execute_scripts(self, **kwargs):
         # run pending jobs
         pending = (trigger for trigger in triggers
                    if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING')
-        logger.debug("***** {}".format(pending))
         for trigger in pending:
             run_at = trigger['run-at']
-            logger.info("***** {} {}".format(now, run_at))
+            logger.info("***** now={} run_at={}".format(now, run_at))
             if now >= run_at:
                 om.runtime.job(job_meta.name).run(event=trigger['event'])
                 # immediately schedule for next time

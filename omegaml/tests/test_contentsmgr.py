@@ -177,6 +177,12 @@ class OmegaContentsManagerTests(TestCase):
         model = self.mgr._base_model('Notebook.ipynb', kind='notebook')
         result = self.mgr.exists('Notebook.ipynb')
 
+    def test_rename_notebook(self):
+        # create a dummy notebook just so we have a valid model
+        self._create_notebook('foo')
+        nbmodel = self.mgr.get('foo.ipynb', type='notebook')
+        self.mgr.rename('foo.ipynb', 'bar.ipynb')
+
     def test_rename_directory(self):
         model = self.mgr._base_model('sub', kind='directory')
         self.mgr.save(model, 'sub')
