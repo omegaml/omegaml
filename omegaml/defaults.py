@@ -23,7 +23,7 @@ OMEGA_TMP = '/tmp'
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    os.environ.get('MONGO_URL') or
-                   'mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@localhost:27017/omega')
+                   'mongodb://admin:foobar@localhost:27017/omega')
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
 #: determine if we should use SSL for mongodb and rabbitmq

@@ -24,7 +24,7 @@ setup(
         ('omegaml/docs/', glob.glob('./docs/source/nb/*.ipynb'))
     ],
     license='Apache 2.0',
-    description='the fastest way to deploy machine learning models',
+    description='An open source DataOps, MLOps platform for humans',
     long_description=README,
     long_description_content_type='text/x-rst',
     url='https://omegaml.io/',
@@ -35,7 +35,13 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
+        'Development Status :: 4 - Beta',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Software Development',
+        'Operating System :: POSIX :: Linux',
+        'License :: OSI Approved :: Apache Software License',
     ],
     install_requires=[
         'celery==4.2.1',
@@ -44,7 +50,7 @@ setup(
         'pymongo>=3.2.2',
         'mongoengine>=0.18.2,<0.19',
         'pandas>=0.17.1',
-        'numpy>=1.16.4,<1.17',
+        'numpy>=1.16.4,<1.18',
         'scipy>=0.17.0',
         'scikit-learn>=0.20,<0.22',
         'PyYAML>=3.11',
@@ -73,7 +79,7 @@ setup(
         'dashserve': dashserve_deps,
         'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps,
     },
-    entry_points = {
+    entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],
     }
 )

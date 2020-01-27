@@ -19,7 +19,7 @@ source $script_dir/easyoptions || exit
 source $script_dir/omutils || exit
 
 # configuration specific to the environment
-mongourl="mongodb://mongodb:27017/omega"
+mongourl="mongodb://admin:foobar@mongodb/omega"
 omegaurl="http://omegaml:5000"
 jupyterurl="http://omegaml:8899"
 brokerurl="amqp://rabbitmq:5672//"
