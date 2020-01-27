@@ -1,7 +1,6 @@
 version: '3'
 services:
    omegaml:
-       build: .
        image: omegaml/omegaml:latest
        hostname: omegaml
        ports:
@@ -20,13 +19,10 @@ services:
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
          - JUPYTER_PORT=8899
          - PYTHONPATH=/app/pylib
+         - OMEGA_CONFIG_FILE=/app/config.yml
        volumes:
          - pythonlib:/app/pylib
    jyhub:
-       build:
-         context: scripts/docker/jyhub
-         args:
-           - pypi
        image: omegaml/jyhub:latest
        hostname: jyhub
        ports:
@@ -44,6 +40,7 @@ services:
          - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
          - PYTHONPATH=/app/pylib
+         - OMEGA_CONFIG_FILE=/app/config.yml
        volumes:
          - pythonlib:/app/pylib
    worker:
@@ -60,6 +57,10 @@ services:
          - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
          - JY_CONTENTS_MANAGER=
          - C_FORCE_ROOT=yes
+         - OMEGA_CONFIG_FILE=/app/config.yml
+         - PYTHONPATH=/app/pylib
+       volumes:
+       - pythonlib:/app/pylib
    rabbitmq:
        image: rabbitmq:3.7.17
        hostname: rabbitmq

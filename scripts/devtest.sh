@@ -26,7 +26,6 @@ unset DJANGO_SETTINGS
 # start services
 pushd $script_dir/..
 nohup $script_dir/rundev.sh &
-
 sleep 10
 # run livetest
 behave omegaml/tests/features --no-capture $behave_options

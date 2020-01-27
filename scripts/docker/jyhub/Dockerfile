@@ -8,5 +8,6 @@ RUN pip install --upgrade pip -q
 RUN pip install --ignore-installed six -f /var/packages -i ${pypi:-https://pypi.org/simple/} --extra-index-url https://pypi.org/simple/ --pre omegaml[all]
 RUN pip install notebook jupyterlab
 RUN useradd -ms/bin/bash admin && \
-    echo "admin:test" | chpasswd admin
+    echo "admin:test" | chpasswd admin && \
+    touch /app/config.yml
 RUN /app/setupnb.sh
