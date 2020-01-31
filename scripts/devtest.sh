@@ -21,6 +21,7 @@ fi
 
 # force celery eager task execution
 export BEHAVE_DEBUG=1
+export OMEGA_MONGO_URL=mongodb://admin:foobar@localhost:27017/omega
 unset DJANGO_SETTINGS
 
 # start services

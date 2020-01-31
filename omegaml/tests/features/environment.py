@@ -3,8 +3,9 @@
 import os
 
 from behave import fixture, use_fixture
-from splinter.browser import Browser
+import nbformat
 from selenium.webdriver import ChromeOptions
+from splinter.browser import Browser
 
 from omegaml import settings
 from omegaml.tests.features.util import istrue
@@ -57,6 +58,17 @@ def after_step(context, step):
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb
         ipdb.post_mortem(step.exc_traceback)
+    # also copy notebooks for debugging
+    for nbname in context.om.jobs.list():
+        try:
+            nb = context.om.jobs.get(nbname)
+            if nb is not None:
+                dirname = os.path.dirname(nbname)
+                os.makedirs(dirname, exist_ok=True)
+                nbformat.write(nb, os.path.join(context.screenshot_path, nbname))
+        except:
+            print("WARNING could not write {nbname}".format(**locals()))
+
 
 def after_scenario(context, scenario):
     for omstore in (context.om.datasets, context.om.jobs):
