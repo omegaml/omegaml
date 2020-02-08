@@ -69,7 +69,7 @@ class KerasBackend(BaseModelBackend):
             Xname: the name of the X dataset
             Yname: the name of the Y dataset
             pure_python: deprecated
-            **kwargs: any additional kwargs are passed on to model.fit()
+            kwargs: any additional kwargs are passed on to model.fit()
 
         Returns:
             the meta data object of the model

@@ -14,4 +14,5 @@ User Guide
    restapi
    custombackends
    runtimes
+   buckets
    streaming

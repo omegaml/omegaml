@@ -62,7 +62,7 @@ omegaml.documents
 omegaml.jobs
 ------------
 
-.. autoclass:: omegaml.jobs.OmegaJobs
+.. autoclass:: omegaml.notebook.jobs.OmegaJobs
 
 
 omegajobs

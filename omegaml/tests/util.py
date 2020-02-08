@@ -45,6 +45,8 @@ def tf_perhaps_eager_execution(*args, **kwargs):
     else:
         warnings.warn('TensorFlow eager execution not enabled TF_EAGER={tf_eager_switch}'.format(**locals()))
 
-
+def clear_om(om):
+    for omstore in (om.datasets, om.jobs, om.models):
+        [omstore.drop(name) for name in omstore.list()]
 
 

@@ -125,7 +125,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
             Xname:
             rName:
             pure_python:
-            **kwargs:
+            kwargs:
 
         Returns:
 

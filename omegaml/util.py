@@ -506,8 +506,10 @@ def calltrace(obj):
     trace calls on an object
 
     Usage:
-        def __init__(self, *args, **kwargs):
-            calltrace(self)
+        .. code ::
+
+            def __init__(self, *args, **kwargs):
+                calltrace(self)
 
         This will print the method arguments and return values
         for every call. Exceptions will be caught and printed,
