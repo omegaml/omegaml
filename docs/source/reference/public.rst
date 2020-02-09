@@ -5,7 +5,7 @@ Python API (overview)
 ---------------------
 
 .. autosummary::
-     
+
      omegaml.datasets 
      omegaml.models
      omegaml.runtimes
@@ -17,7 +17,7 @@ Python API (overview)
      omegaml.runtimes.OmegaRuntimeDask
      omegaml.runtimes.OmegaModelProxy
      omegaml.runtimes.OmegaJobProxy
-     omegaml.jobs.OmegaJobs
+     omegaml.notebook.jobs.OmegaJobs
 
      omegaml.mdataframe.MDataFrame
      omegaml.mdataframe.MGrouper
@@ -39,7 +39,7 @@ omega|ml
 .. autodata:: omegaml.runtimes
    :annotation:  - the cluster runtime API
 
-.. autodata:: omegaml.jobs 
+.. autodata:: omegaml.notebook.jobs
    :annotation:  - the lambda compute service
 
 
@@ -70,7 +70,7 @@ omegaml.runtimes
 omegaml.jobs
 ++++++++++++ 
 
-.. autoclass:: omegaml.jobs.OmegaJobs
+.. autoclass:: omegaml.notebook.jobs.OmegaJobs
    :members: run, run_notebook, schedule
 
 

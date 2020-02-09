@@ -677,6 +677,7 @@ class OmegaStore(object):
     def get_backend_byobj(self, obj, name, kind=None, attributes=None, **kwargs):
         """
         return the matching backend for the given obj
+
         Returns:
             the first backend that supports the given parameters or None
         """

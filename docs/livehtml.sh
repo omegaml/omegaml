@@ -25,6 +25,7 @@ function countdown() {
     done
 }
 
+bash -c "cd build/html && nohup python -m http.server 8002" &
 
 trap rebuild INT
 

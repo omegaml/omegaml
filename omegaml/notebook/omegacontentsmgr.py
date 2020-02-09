@@ -161,6 +161,14 @@ class OmegaStoreContentsManager(ContentsManager):
         return self.file_exists(path) or (self.dir_exists(path))
 
     def dir_exists(self, path=''):
+        """check if directory exists
+
+        Args:
+            path: name of directory
+
+        Returns:
+            True if directory exists
+        """
         path = unquote(path).strip('/')
         if path == '':
             return True
@@ -168,10 +176,26 @@ class OmegaStoreContentsManager(ContentsManager):
         return len(self.omega.jobs.list(pattern)) > 0
 
     def file_exists(self, path):
+        """check if file exists
+
+        Args:
+            path: name of file
+
+        Returns:
+            True if file exists
+        """
         path = unquote(path).strip('/')
         return path in self.omega.jobs.list(path)
 
     def is_hidden(self, path):
+        """check if path or file is hidden
+
+        Args:
+            path: name of file or path
+
+        Returns:
+            False, currently always returns false
+        """
         return False
 
     def _read_notebook(self, path, as_version=None):

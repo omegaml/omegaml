@@ -2,13 +2,14 @@
 # CONTAINS: Browser fixture setup and teardown
 import os
 
-from behave import fixture, use_fixture
 import nbformat
+from behave import fixture, use_fixture
 from selenium.webdriver import ChromeOptions
 from splinter.browser import Browser
 
 from omegaml import settings
 from omegaml.tests.features.util import istrue
+from omegaml.tests.util import clear_om
 
 
 @fixture
@@ -71,5 +72,15 @@ def after_step(context, step):
 
 
 def after_scenario(context, scenario):
-    for omstore in (context.om.datasets, context.om.jobs):
-        [omstore.drop(name) for name in omstore.list()]
+    try:
+        if hasattr(context, 'om'):
+            clear_om(context.om)
+        if hasattr(context.feature, 'om'):
+            clear_om(context.feature.om)
+        if hasattr(scenario, 'om'):
+            clear_om(scenario.om)
+    except:
+        if context.debug:
+            import ipdb
+            ipdb.post_mortem()
+

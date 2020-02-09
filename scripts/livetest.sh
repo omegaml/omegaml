@@ -44,6 +44,7 @@ if [ "$local" == "yes" ]; then
    cp $script_dir/../dist/*whl $script_dir/docker/jyhub/packages
    cp $script_dir/../dist/*whl $script_dir/docker/livetest/packages
 fi
+
 # build omegaml image if requested
 if [ "$build" == "yes" ]; then
    echo "Building omegaml images"
@@ -67,7 +68,9 @@ mkdir -p /tmp/screenshots
 if [ -z "$nobuild" ]; then
   echo "Building livetest image using $pypi"
   docker rmi -f $docker_image
-  docker build --build-arg pypi=$pypi -f ./scripts/docker/livetest/Dockerfile -t $docker_image $script_dir/docker/livetest
+  pushd $script_dir/docker/livetest
+  docker build --build-arg pypi=$pypi -t $docker_image .
+  popd
 fi
 
 # get omegaml running
