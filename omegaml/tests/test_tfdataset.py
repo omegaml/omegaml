@@ -6,7 +6,7 @@ from omegaml.backends.tensorflow.tfdataset import TFDatasetBackend
 from omegaml.tests.util import tf_in_eager_execution, tf_perhaps_eager_execution, OmegaTestMixin
 
 # check https://www.tensorflow.org/datasets/api_docs/python/tfds/testing/run_in_graph_and_eager_modes
-@skip
+@skip("requires eager mode which must be enabled once for the whole python session")
 class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         import os

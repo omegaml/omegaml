@@ -11,6 +11,6 @@ class CliModelsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         self.om = Omega()
         self.clean()
 
-    @skip
+    @skip("only works in enterprise context")
     def test_cli_cloud_add_resource(self):
         self.cli('--config ../../../config.yml cloud add worker')

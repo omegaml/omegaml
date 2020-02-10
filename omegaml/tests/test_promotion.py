@@ -5,7 +5,6 @@ from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
 from omegaml.mixins.store.promotion import PromotionMixin
-from omegaml.omega import OmegaDeferredInstance
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -64,7 +63,9 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         self.assertIn('mymodel', prod.models.list())
 
     def test_promotion_deferred(self):
-        om = OmegaDeferredInstance()
+        # ensure we always import injected deferred
+        from omegaml import _omega
+        om = _omega.OmegaDeferredInstance()
         prod = om['prod']
         reg = LinearRegression()
         om.models.put(reg, 'mymodel')

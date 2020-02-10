@@ -9,7 +9,7 @@ import gridfs
 import pandas as pd
 from datetime import timedelta
 from mongoengine.connection import disconnect
-from mongoengine.errors import DoesNotExist
+from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.io.json import json_normalize
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
@@ -386,6 +386,32 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.attributes, attributes)
         lr2 = om.get('mymodel')
         self.assertIsInstance(lr2, LogisticRegression)
+
+    def test_store_metadata_notstrict(self):
+        """ ensure Metadata attributes are not strictly checked
+
+        this is to allow metadata extensions between omegaml versions
+        """
+        om = OmegaStore(prefix='')
+        # dict
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        attributes = {'foo': 'bar'}
+        meta = om.put(data, 'data', attributes=attributes)
+        meta_collection = om.mongodb['metadata']
+        flt = {'name': 'data'}
+        meta_entry = meta_collection.find_one(flt)
+        meta_entry['modified_extra'] = meta_entry['modified']
+        meta_collection.replace_one(flt, meta_entry)
+        try:
+            meta = om.metadata('data')
+        except FieldDoesNotExist:
+            not_raised = False
+        else:
+            not_raised = True
+        self.assertTrue(not_raised)
 
     def test_store_dataframe_as_dfgroup(self):
         data = {

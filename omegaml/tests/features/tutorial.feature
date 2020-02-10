@@ -44,3 +44,22 @@ Feature: omegaml feature testing
     When we upload the tfestimator-tutorial notebook
     When we run the notebook tfestimator-tutorial
     Then model tf-model-mnist-estimator exists
+
+  @snowflake
+  Scenario: snowflake-plugin
+    Given we have a connection to omegaml
+    When we store snowflake credentials in secrets
+    When we open jupyter
+    When we upload the a-snowflake-plugin-demo
+    When we run the notebook a-snowflake-plugin-demo
+    Then dataset mysnowflake exists
+
+  @omxiotools
+  Scenario: omx_iotools
+    Given we have a connection to omegaml
+    When we open jupyter
+    When we upload the omx_iotools-tutorial
+    When we run the notebook omx_iotools-tutorial
+    Then dataset tripdata exists
+
+

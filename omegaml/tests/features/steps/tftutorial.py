@@ -1,6 +1,5 @@
-from time import sleep
-
 import os
+
 from behave import when, then
 
 from omegaml.tests.features.util import Notebook
@@ -45,3 +44,9 @@ def checkmodel(ctx, model_name):
     br = ctx.browser
     om = ctx.feature.om
     assert model_name in om.models.list()
+
+@then('dataset {dataset_name} exists')
+def checkdataset(ctx, dataset_name):
+    br = ctx.browser
+    om = ctx.feature.om
+    assert dataset_name in om.datasets.list()

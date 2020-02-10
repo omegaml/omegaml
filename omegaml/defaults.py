@@ -61,6 +61,8 @@ OMEGA_CELERY_CONFIG = {
     },
     'BROKER_USE_SSL': OMEGA_USESSL,
 }
+#: enable cloud worker routing
+OMEGA_TASK_ROUTING_ENABLED = os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False)
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.notebook',

@@ -89,9 +89,9 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn(), input_fn=make_input_fn())
         train_x, train_y, test_x, test_y = make_data()
         # create a feature dict from a numpy array
-        train_x = train_x.as_matrix()  # numpy
-        train_y = train_y.as_matrix()
-        test_x = test_x.as_matrix()
+        train_x = train_x.values  # numpy
+        train_y = train_y.values
+        test_x = test_x.values
         classifier = estmdl.fit(train_x, train_y)
         self.assertIsInstance(classifier, tf.estimator.LinearClassifier)
         # score
@@ -225,9 +225,9 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om = self.om
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn(), input_fn=make_input_fn())
         train_x, train_y, test_x, test_y = make_data()
-        train_x = train_x.as_matrix()  # numpy
-        train_y = train_y.as_matrix()
-        test_x = test_x.as_matrix()
+        train_x = train_x.values  # numpy
+        train_y = train_y.values
+        test_x = test_x.values
         om.datasets.put(train_x, 'train_x')
         om.datasets.put(train_y, 'train_y')
         om.datasets.put(test_x, 'test_x')
@@ -250,7 +250,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         def as_features(x, names=None):
             # convert dataframe to feature vectors suitable for numpy_inputfn
             cols = range(x.shape[1])
-            x = x.as_matrix()
+            x = x.values
             features = {
                 'col'.format(i + 1): x[:, i] for i, col in zip(cols, names)
             }
