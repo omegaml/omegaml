@@ -18,7 +18,7 @@ class PromotionMixin(object):
         Returns:
             The Metadata of the new object
         """
-        if self.bucket == other.bucket and self.prefix == other.prefix:
+        if self == other:
             raise ValueError('cannot promote to self')
         # see if the backend supports explicit promotion
         backend = self.get_backend(name)
