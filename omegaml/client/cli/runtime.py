@@ -44,7 +44,7 @@ class RuntimeCommandBase(CommandBase):
         om = get_omega(self.args)
         name = self.args.get('<name>')
         action = self.args.get('<model-action>')
-        async = self.args.get('--async')
+        is_async = self.args.get('--async')
         kwargs_lst = self.args.get('--param')
         output = self.args.get('--result')
         X = self._ensure_valid_XY(self.args.get('<X>'))
@@ -70,7 +70,7 @@ class RuntimeCommandBase(CommandBase):
         meth = getattr(rt_model, action, None)
         if meth is not None:
             result = meth(X, **kwargs)
-            if not async:
+            if not is_async:
                 self.logger.info(result.get())
             else:
                 self.logger.info(result)
@@ -80,10 +80,10 @@ class RuntimeCommandBase(CommandBase):
     def script(self):
         om = get_omega(self.args)
         name = self.args.get('<name>')
-        async = self.args.get('--async')
+        is_async = self.args.get('--async')
         kwargs = self.parse_kwargs('<kw=value>')
         result = om.runtime.script(name).run(**kwargs)
-        if not async:
+        if not is_async:
             self.logger.info(result.get())
         else:
             self.logger.info(result.task_id)
@@ -91,9 +91,9 @@ class RuntimeCommandBase(CommandBase):
     def job(self):
         om = get_omega(self.args)
         name = self.args.get('<name>')
-        async = self.args.get('--async')
+        is_async = self.args.get('--async')
         result = om.runtime.job(name).run()
-        if not async:
+        if not is_async:
             self.logger.info(result.get())
         else:
             self.logger.info(result.task_id)
