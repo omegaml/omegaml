@@ -3,6 +3,8 @@ omega runtime script tasks
 """
 from __future__ import absolute_import
 
+import json
+
 import datetime
 from celery import shared_task
 
@@ -59,6 +61,11 @@ def run_omega_script(self, scriptname, **kwargs):
     """
     runs omegaml job
     """
+    SERIALIZER = {
+        'json': json.dumps,
+        'python': lambda v: v,
+    }
+    format = kwargs.get('__format') or 'json'
     mod = self.om.scripts.get(scriptname)
     dtstart = datetime.datetime.now()
     try:
@@ -75,4 +82,4 @@ def run_omega_script(self, scriptname, **kwargs):
         'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
         'started': dtstart.isoformat(),
     }
-    return data
+    return SERIALIZER[format](data)

@@ -9,6 +9,7 @@ from mongoengine.fields import (
 
 from omegaml.util import settings
 
+
 # default kinds of objects
 class MDREGISTRY:
     PANDAS_DFROWS = 'pandas.dfrows'  # dataframe
@@ -28,42 +29,58 @@ class MDREGISTRY:
     ]
 
 
-def make_Metadata():
-    # this is to create context specific Metadata classes that take the
-    # database from the given alias at the time of use
-    class Metadata(Document):
-        """
-        Metadata stores information about objects in OmegaStore
-        """
+class Metadata:
+    """
+    Metadata stores information about objects in OmegaStore
+    """
 
-        # fields
-        #: this is the name of the data
-        name = StringField(unique_with=['bucket', 'prefix'])
-        #: bucket
-        bucket = StringField()
-        #: prefix
-        prefix = StringField()
-        #: kind of data
-        kind = StringField(choices=MDREGISTRY.KINDS)
-        #: for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile
-        gridfile = FileField(
-            db_alias='omega',
-            collection_name=settings().OMEGA_MONGO_COLLECTION)
-        #: for PANDAS_DFROWS this is the collection
-        collection = StringField()
-        #: for PYTHON_DATA this is the actual document
-        objid = ObjectIdField()
-        #: omegaml technical attributes, e.g. column indicies
-        kind_meta = DictField()
-        #: customer-defined other meta attributes
-        attributes = DictField()
-        #: s3file attributes
-        s3file = DictField()
-        #: location URI
-        uri = StringField()
-        #: created datetime
-        created = DateTimeField(default=datetime.datetime.now)
-        # the actual db is defined in settings, OMEGA_MONGO_URL
+    # NOTE THIS IS ONLY HERE FOR DOCUMENTATION PURPOSE.
+    #
+    # If you use this class to save a document, it will raise a NameError
+    #
+    # The actual Metadata class is created in make_Metadata() below.
+    # Rationale: If we let mongoengine create Metadata here the class
+    # is bound to a specific MongoClient instance. Using make_Metadata
+    # binds the class to the specific instance that exists at the time
+    # of creation. Open to better ways.
+
+    # fields
+    #: this is the name of the data
+    name = StringField(unique_with=['bucket', 'prefix'])
+    #: bucket
+    bucket = StringField()
+    #: prefix
+    prefix = StringField()
+    #: kind of data
+    kind = StringField(choices=MDREGISTRY.KINDS)
+    #: for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile
+    gridfile = FileField(
+        db_alias='omega',
+        collection_name=settings().OMEGA_MONGO_COLLECTION)
+    #: for PANDAS_DFROWS this is the collection
+    collection = StringField()
+    #: for PYTHON_DATA this is the actual document
+    objid = ObjectIdField()
+    #: omegaml technical attributes, e.g. column indicies
+    kind_meta = DictField()
+    #: customer-defined other meta attributes
+    attributes = DictField()
+    #: s3file attributes
+    s3file = DictField()
+    #: location URI
+    uri = StringField()
+    #: created datetime
+    created = DateTimeField(default=datetime.datetime.now)
+    #: created datetime
+    modified = DateTimeField(default=datetime.datetime.now)
+
+
+def make_Metadata():
+    # this is to create context specific Metadata class that takes the
+    # database from the given alias at the time of use
+    from omegaml.documents import Metadata as Metadata_base
+    class Metadata(Metadata_base, Document):
+        # the actual db is defined at runtime
         meta = {
             'db_alias': 'omega',
             'indexes': [
@@ -75,6 +92,10 @@ def make_Metadata():
             ]
         }
 
+        def __new__(cls, *args, **kwargs):
+            # undo the Metadata.__new__ protection
+            return super(Metadata, cls).__real_new__(cls)
+
         def __eq__(self, other):
             return self.objid == other.objid
 
@@ -83,6 +104,10 @@ def make_Metadata():
             kwargs = ('%s=%s' % (k, getattr(self, k))
                       for k in self._fields.keys() if k in fields)
             return u"Metadata(%s)" % ','.join(kwargs)
+
+        def save(self, *args, **kwargs):
+            self.modified = datetime.datetime.now()
+            return super(Metadata_base, self).save(*args, **kwargs)
 
     return Metadata
 
@@ -100,3 +125,14 @@ def make_QueryCache():
         }
 
     return QueryCache
+
+
+def raise_on_use(exc):
+    def inner(*args, **kwargs):
+        raise exc
+
+    return inner
+
+
+Metadata.__real_new__ = Metadata.__new__
+Metadata.__new__ = raise_on_use(NameError("You must use make_Metadata()() to instantiate a working object"))

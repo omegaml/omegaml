@@ -226,7 +226,8 @@ dummy:
 
 # https://pypi.python.org/pypi/sphinx-autobuild
 livehtml:
-	sphinx-autobuild -p 8001 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	# sphinx-autobuild -p 8002 --poll -i "*__jb*" -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	./livehtml.sh
 
 # fix brand naming 
 fix:

@@ -8,7 +8,6 @@ import uuid
 import warnings
 from shutil import rmtree
 
-import numpy as np
 import six
 import sys
 from six import string_types
@@ -118,7 +117,7 @@ def override_settings(**kwargs):
 
 def delete_database():
     """ test support """
-    from pymongo import MongoClient
+    from omegaml.mongoshim import MongoClient
 
     mongo_url = settings().OMEGA_MONGO_URL
     parsed_url = urlparse.urlparse(mongo_url)
@@ -432,7 +431,7 @@ class PickableCollection(object):
         }
 
     def __setstate__(self, state):
-        from pymongo import MongoClient
+        from omegaml.mongoshim import MongoClient
         url = 'mongodb://{credentials.username}:{credentials.password}@{host}:{port}/{database}'.format(**state)
         client = MongoClient(url, authSource=state['credentials'].source)
         db = client.get_database()
@@ -459,7 +458,7 @@ def extend_instance(obj, cls, *args, **kwargs):
 def temp_filename(dir=None, ext='tmp'):
     """ generate a temporary file name """
     dir = dir or tempfile.mkdtemp()
-    return os.path.join(dir, uuid.uuid4().hex)
+    return os.path.join(dir, uuid.uuid4().hex + f'.{ext}')
 
 
 def remove_temp_filename(fn, dir=True):
@@ -473,6 +472,7 @@ def remove_temp_filename(fn, dir=True):
 
 
 def ensure_python_array(arr, dtype):
+    import numpy as np
     return np.array(arr).astype(dtype)
 
 
@@ -495,7 +495,7 @@ def tensorflow_available():
 
 def keras_available():
     try:
-        import tensorflow
+        import keras
     except:
         return False
     return True
@@ -506,8 +506,10 @@ def calltrace(obj):
     trace calls on an object
 
     Usage:
-        def __init__(self, *args, **kwargs):
-            calltrace(self)
+        .. code ::
+
+            def __init__(self, *args, **kwargs):
+                calltrace(self)
 
         This will print the method arguments and return values
         for every call. Exceptions will be caught and printed,
@@ -549,6 +551,14 @@ class DefaultsContext(object):
             if k.isupper():
                 setattr(self, k, getattr(source, k))
 
+    def __iter__(self):
+        for k in dir(self):
+            if k.startswith('OMEGA') and k.isupper():
+                yield k, getattr(self, k)
+
+    def __repr__(self):
+        return '{}'.format(dict(self))
+
 
 def ensure_json_serializable(v):
     import numpy as np
@@ -570,3 +580,4 @@ def mkdirs(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+

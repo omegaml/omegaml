@@ -19,9 +19,9 @@ source $script_dir/easyoptions || exit
 source $script_dir/omutils || exit
 
 # configuration specific to the environment
-mongourl="mongodb://mongodb:27017/omega"
+mongourl="mongodb://admin:foobar@mongodb/omega"
 omegaurl="http://omegaml:5000"
-jupyterurl="http://omegaml:8888"
+jupyterurl="http://omegaml:8899"
 brokerurl="amqp://rabbitmq:5672//"
 # from here on should be all standard
 docker_network="--network omegaml-ce_default"
@@ -39,32 +39,49 @@ else
 fi
 # copy local dist packages instead of using pypi if requested
 if [ "$local" == "yes" ]; then
-   mkdir -p $script_dir/livetest/packages
-   cp $script_dir/../dist/*whl $script_dir/livetest/packages
+   echo "Using local packages from $script_dir/../dist"
+   mkdir -p $script_dir/docker/packages
+   cp $script_dir/../dist/*whl $script_dir/docker/jyhub/packages
+   cp $script_dir/../dist/*whl $script_dir/docker/livetest/packages
 fi
+
 # build omegaml image if requested
 if [ "$build" == "yes" ]; then
-   buildopt="--build"
+   echo "Building omegaml images"
+   export pypi=$pypi
    docker-compose down --rmi local
+   docker build --build-arg pypi=$pypi -t omegaml/omegaml $script_dir/..
+   docker build --build-arg pypi=$pypi -t omegaml/jyhub $script_dir/docker/jyhub
+   # tag the built image
+   if [ ! -z "$tag" ]; then
+     echo "The omegaml image is omegaml/omegaml:$docker_tag"
+     docker tag omegaml/omegaml:latest omegaml/omegaml:$docker_tag
+     docker tag omegaml/jyhub:latest omegaml/jyhub:$docker_tag
+   fi
 fi
+
 # prepare to run
+echo "Preparing to run"
 pushd $script_dir/..
 mkdir -p /tmp/screenshots
 # only build livetest image if requested
 if [ -z "$nobuild" ]; then
+  echo "Building livetest image using $pypi"
   docker rmi -f $docker_image
-  docker build --build-arg pypi=$pypi -f ./scripts/livetest/Dockerfile -t $docker_image $script_dir/livetest
+  pushd $script_dir/docker/livetest
+  docker build --build-arg pypi=$pypi -t $docker_image .
+  popd
 fi
-# get omegaml running, build if requested
+
+# get omegaml running
+echo "Running omegaml in docker-compose "
 docker-compose stop
-docker-compose up $buildopt -d
-# tag the built image
-if [ ! -z "$tag" ]; then
-  docker tag omegaml/omegaml:latest omegaml/omegaml:$docker_tag
-fi
+docker-compose up -d --remove-orphans --force-recreate
 echo "giving the services time to spin up"
 countdown 30
+
 # actually run the livetest
+echo "Running the livetest image using port: $chrome_debug_port network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
 docker run -p $chrome_debug_port -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS
 success=$?
 rm -f $script_dir/livetest/packages/*whl

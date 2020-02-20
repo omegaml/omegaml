@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
+from celery.exceptions import NotRegistered
+
 logger = logging.getLogger(__file__)
 
 
@@ -39,5 +41,4 @@ class OmegaScriptProxy(object):
         :return: the result
         """
         script_run = self.runtime.task('omegaml.backends.package.tasks.run_omega_script')
-        return script_run.delay(self.scriptname, **self.runtime._common_kwargs,
-                                **kwargs)
+        return script_run.delay(self.scriptname, **kwargs)

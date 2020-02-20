@@ -14,7 +14,6 @@ class Omega(object):
     * :code:`scripts` - access to lambda modules stored and executed in the cluster
 
     """
-
     def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None,
                  **kwargs):
         """
@@ -33,7 +32,6 @@ class Omega(object):
         from omegaml.util import settings
         # avoid circular imports
         from omegaml.notebook.jobs import OmegaJobs
-        from omegaml.runtimes import OmegaRuntime
         from omegaml.store import OmegaStore
         # celery and mongo configuration
         self.defaults = defaults or settings()
@@ -45,7 +43,7 @@ class Omega(object):
         self._jobdata = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='jobs/', defaults=self.defaults)
         self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
         # runtimes environments
-        self.runtime = OmegaRuntime(self, bucket=bucket, defaults=self.defaults, celeryconf=celeryconf)
+        self.runtime = self._make_runtime(celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
 
     def __repr__(self):
@@ -55,6 +53,10 @@ class Omega(object):
         return self.__class__(defaults=self.defaults,
                               mongo_url=self.mongo_url,
                               **kwargs)
+
+    def _make_runtime(self, celeryconf):
+        from omegaml.runtimes import OmegaRuntime
+        return OmegaRuntime(self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf)
 
     def __getitem__(self, bucket):
         """
@@ -96,7 +98,11 @@ class OmegaDeferredInstance(object):
         self.attribute = attribute
 
     def setup(self, mongo_url=None, bucket=None, celeryconf=None):
-        omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
+        from omegaml.client.cloud import setup_from_config
+        try:
+            omega = setup_from_config()
+        except SystemError:
+            omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
         if not self.initialized:
             self.initialized = True
             self.omega = omega
@@ -111,6 +117,9 @@ class OmegaDeferredInstance(object):
         return getattr(self.omega, name)
 
     def __getitem__(self, bucket):
+        if self.base:
+            base = getattr(self.base, self.attribute)
+            return base[bucket]
         if not self.initialized:
             self.setup()
         return self.omega[bucket]

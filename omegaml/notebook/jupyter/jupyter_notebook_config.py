@@ -621,7 +621,7 @@ c.Session.debug = False
 
 # omegaml setup
 default_contents_manager = 'omegaml.notebook.omegacontentsmgr.OmegaStoreContentsManager'
-contents_manager = os.environ.get('JY_CONTENTS_MANAGER', default_contents_manager)
+contents_manager = os.environ.get('JY_CONTENTS_MANAGER') or default_contents_manager
 c.NotebookApp.contents_manager_class = contents_manager
 
 import logging

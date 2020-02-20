@@ -13,6 +13,10 @@ class OmegaTestMixin(object):
         [drop(m, force=True) for m in om.models]
         drop = om.datasets.drop
         [drop(m, force=True) for m in om.datasets]
+        drop = om.jobs.drop
+        [drop(m, force=True) for m in om.jobs.store]
+        drop = om.scripts.drop
+        [drop(m, force=True) for m in om.scripts]
         self.assertListEqual(om.datasets.list(), [])
         self.assertListEqual(om.models.list(), [])
 
@@ -41,6 +45,8 @@ def tf_perhaps_eager_execution(*args, **kwargs):
     else:
         warnings.warn('TensorFlow eager execution not enabled TF_EAGER={tf_eager_switch}'.format(**locals()))
 
-
+def clear_om(om):
+    for omstore in (om.datasets, om.jobs, om.models):
+        [omstore.drop(name) for name in omstore.list()]
 
 

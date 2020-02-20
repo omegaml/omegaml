@@ -2,14 +2,13 @@
 
 from __future__ import absolute_import
 
-import os
-import tempfile
 from unittest import TestCase
 
 import gridfs
-from nbformat import write, v4
+from nbformat import v4
 
 from omegaml import Omega
+from omegaml.notebook.jobs import JobSchedule
 from omegaml.util import settings as omegaml_settings
 
 
@@ -120,10 +119,8 @@ class JobTests(TestCase):
         self.assertRaises(
             gridfs.errors.NoFile, om.jobs.run_notebook, 'dummys.ipynb')
 
-    def test_scheduled_job(self):
+    def test_scheduled_job_with_omegaml_block(self):
         om = self.om
-        fs = om.jobs.get_fs()
-        dummy_nb_file = tempfile.NamedTemporaryFile().name
         cells = []
         conf = """
         # omega-ml:
@@ -135,6 +132,53 @@ class JobTests(TestCase):
         notebook = v4.new_notebook(cells=cells)
         # check we have a valid configuration object
         meta = om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job()
+
+    def test_scheduled_job_with_run_at_schedule(self):
+        om = self.om
+        cells = []
+        conf = """
+        # run-at: "*/5 * * * *"
+        """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        # check we have a valid configuration object
+        meta = om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job()
+
+    def test_scheduled_job_with_cron_schedule(self):
+        om = self.om
+        cells = []
+        conf = """
+        # run-at: "*/5 * * * *"
+        """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        # check we have a valid configuration object
+        meta = om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job()
+
+    def test_scheduled_job_with_nlp_schedule(self):
+        om = self.om
+        cells = []
+        conf = """
+        # schedule: daily, at 06:00
+        """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job()
+
+
+    def _check_scheduled_job(self):
+        om = self.om
+        meta = om.jobs.metadata('testjob')
         config = om.jobs.get_notebook_config('testjob')
         self.assertIn('run-at', config)
         self.assertIn('config', meta.attributes)
@@ -165,7 +209,7 @@ class JobTests(TestCase):
 
         assert_pending()
         # -- run by the periodic task. note we pass now= as to simulate a time
-        kwargs = dict(now=trigger['run-at'], **om.runtime._common_kwargs)
+        kwargs = dict(now=trigger['run-at'])
         om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
         assert_ok(event=trigger['event'])
         # -- it should be pending again
@@ -181,3 +225,137 @@ class JobTests(TestCase):
         # reschedule explicit and check we have a pending event
         om.runtime.job('testjob').schedule().get()
         assert_pending()
+
+    def test_schedule_triggers_by_api(self):
+        om = self.om
+        cells = []
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        # check we have a valid configuration object
+        om.jobs.put(notebook, 'testjob')
+        schedule = om.jobs.Schedule(weekday='mon-fri', at='06:00')
+        om.jobs.schedule('testjob', run_at=schedule)
+
+    def test_jobschedule_maker(self):
+        # basics
+        sched = JobSchedule(minute='*')
+        self.assertEqual(sched.text, 'Every minute')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, 'Every minute')
+        # day specs
+        sched = JobSchedule(weekday='mon-fri', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        self.assertEqual(sched.cron, '00 06 * * mon-fri')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # day specs 2
+        sched = JobSchedule(weekday='Mon-Fri', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        self.assertEqual(sched.cron, '00 06 * * mon-fri')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # day specs 3
+        sched = JobSchedule(weekday='Mon-FRI', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        self.assertEqual(sched.cron, '00 06 * * mon-fri')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # day specs 4
+        sched = JobSchedule(weekday='Mon-FRI', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        self.assertEqual(sched.cron, '00 06 * * mon-fri')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # multiple times
+        sched = JobSchedule(weekday='mon-fri', at='06:05,12:05')
+        self.assertEqual(sched.text, 'At 06:05 AM and 12:05 PM, Monday through Friday')
+        self.assertEqual(sched.cron, '05 06,12 * * mon-fri')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # months and days with every
+        sched = JobSchedule(month='every 2', at='08:00', weekday='every 3')
+        self.assertEqual(sched.text, 'At 08:00 AM, every 3 days of the week, every 2 months')
+        self.assertEqual(sched.cron, '00 08 * */2 */3')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # step days
+        sched = JobSchedule(weekday='every 2nd', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, every 2 days of the week')
+        self.assertEqual(sched.cron, '00 06 * * */2')
+        sched = JobSchedule(weekday='every 1st', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Monday')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        sched = JobSchedule(weekday='every 3rd', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, every 3 days of the week')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        sched = JobSchedule(weekday='every 4th', at='06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, every 4 days of the week')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # step hours
+        sched = JobSchedule(hour='every 2nd', minute=0, weekday='mon-fri')
+        self.assertEqual(sched.text, 'Every 2 hours, Monday through Friday')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # step minutes
+        sched = JobSchedule(minute='every 5', weekday='mon-fri')
+        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday')
+        sched2 = JobSchedule.from_cron(sched.cron)
+        self.assertEqual(sched2.text, sched.text)
+        # text specs
+        sched = JobSchedule('friday, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Friday')
+        sched = JobSchedule('fridays, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Friday')
+        sched = JobSchedule('Mondays and Fridays, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Monday and Friday')
+        sched = JobSchedule('Mondays/Fridays, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Monday and Friday')
+        sched = JobSchedule('monday-friday, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('mon-fri, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('mon-fri at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('Mon-Fri, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('Mon-Fri, 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('Mon-Fri 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('at 06:00, Mon-Fri')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('monday-friday, 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('every 2nd month, monday-friday, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday, every 2 months')
+        sched = JobSchedule('every 5 minutes, every day, hour 6')
+        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM')
+        sched = JobSchedule('every 5 minutes every working day hour 6')
+        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM, Monday through Friday')
+        sched = JobSchedule('every 5 minutes every working day, hour 6')
+        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM, Monday through Friday')
+        sched = JobSchedule('every 5 minutes, every working day, hour 6')
+        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM, Monday through Friday')
+        sched = JobSchedule('every 5 minutes, on workdays, hours 6/7')
+        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday')
+        sched = JobSchedule('every 5 minutes, on workdays, in april')
+        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
+        sched = JobSchedule('every 5 minutes, on weekends, in april')
+        self.assertEqual(sched.text, 'Every 5 minutes, Saturday through Sunday, only in April')
+        sched = JobSchedule('every 5 minutes, from monday to friday, in april')
+        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
+        sched = JobSchedule('at 5 minutes, every hour, monday to friday, april')
+        self.assertEqual(sched.text, 'At 5 minutes past the hour, Monday through Friday, only in April')
+        sched = JobSchedule('1st day of month, at 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, on day 1 of the month')
+        sched = JobSchedule('mon-fri, 06:00')
+        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
+        sched = JobSchedule('every 2nd hour, 5 minute, weekdays')
+        self.assertEqual(sched.text, 'At 5 minutes past the hour, every 2 hours, Monday through Friday')
+
+
+

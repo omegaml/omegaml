@@ -18,19 +18,38 @@ class CeleryTask(object):
     .task() call
     """
 
-    def __init__(self, task, **kwargs):
+    def __init__(self, task, kwargs):
         """
 
         Args:
             task (Celery.Task): the celery task object
-            **kwargs (dict): optional, the kwargs to pass to apply_async
+            kwargs (dict): optional, the kwargs to pass to apply_async
         """
         self.task = task
         self.kwargs = kwargs
 
-    def apply_async(self, args=None, kwargs=None, *args_, **kwargs_):
-        kwargs_.update(self.kwargs)
-        return self.task.apply_async(args=args, kwargs=kwargs, *args_)
+    def _apply_kwargs(self, task_kwargs, celery_kwargs):
+        # update task_kwargs from runtime's passed on kwargs
+        # update celery_kwargs to match celery routing semantics
+        task_kwargs.update(self.kwargs.get('task', {}))
+        celery_kwargs.update(self.kwargs.get('routing', {}))
+        if 'label' in celery_kwargs:
+            celery_kwargs['queue'] = celery_kwargs['label']
+            del celery_kwargs['label']
+
+    def apply_async(self, args=None, kwargs=None, **celery_kwargs):
+        """
+
+        Args:
+            args (tuple): the task args
+            kwargs (dict): the task kwargs
+            celery_kwargs (dict): apply_async kwargs, e.g. routing
+
+        Returns:
+            AsyncResult
+        """
+        self._apply_kwargs(kwargs, celery_kwargs)
+        return self.task.apply_async(args=args, kwargs=kwargs, **celery_kwargs)
 
     def delay(self, *args, **kwargs):
         """
@@ -38,7 +57,7 @@ class CeleryTask(object):
 
         This calls task.apply_async and passes on the self.kwargs.
         """
-        return self.apply_async(args=args, kwargs=kwargs, **self.kwargs)
+        return self.apply_async(args=args, kwargs=kwargs)
 
     def run(self, *args, **kwargs):
         return self.delay(*args, **kwargs)
@@ -62,24 +81,25 @@ class OmegaRuntime(object):
         celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
         self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
-        # needed to get it to actually load the tasks (???)
+        # needed to get it to actually load the tasks
         # https://stackoverflow.com/a/35735471
         self.celeryapp.autodiscover_tasks(taskpkgs, force=True)
         self.celeryapp.finalize()
         # temporary requirements, use .require() to set
-        self._require_kwargs = {}
+        self._require_kwargs = dict(task={}, routing={})
         # fixed default arguments, use .require(always=True) to set
-        self._task_default_kwargs = {}
+        self._task_default_kwargs = dict(task={}, routing={})
+        # default routing label
+        self._default_label = self.celeryapp.conf.get('CELERY_DEFAULT_QUEUE')
 
     def __repr__(self):
         return 'OmegaRuntime({})'.format(self.omega.__repr__())
 
     @property
     def _common_kwargs(self):
-        common = dict(pure_python=self.pure_python,
-                      __bucket=self.bucket)
-        common.update(self._task_default_kwargs)
-        common.update(self._require_kwargs)
+        common = dict(self._task_default_kwargs)
+        common['task'].update(pure_python=self.pure_python, __bucket=self.bucket)
+        common['routing'].update(self._require_kwargs['routing'])
         return common
 
     def _client_is_pure_python(self):
@@ -93,7 +113,7 @@ class OmegaRuntime(object):
         else:
             return False
 
-    def require(self, always=False, **kwargs):
+    def require(self, always=False, label=None, **kwargs):
         """
         specify requirements for the task execution
 
@@ -103,70 +123,81 @@ class OmegaRuntime(object):
 
         Args:
             always (bool): if True requirements will persist across task calls. defaults to False
-            **kwargs: requirements specification that the runtime understands
+            label (str): the label required by the worker to have a runtime task dispatched to it
+            kwargs: requirements specification that the runtime understands
 
         Usage:
-            # celery runtime
-            om.runtime.require(queue='gpu').model('foo').fit(...)
-
-            # dask distributed runtime
-            om.runtime.require(resource='gpu').model('foo').fit(...)
+            om.runtime.require(label='gpu').model('foo').fit(...)
 
         Returns:
             self
         """
+        kwargs.update({'label': label or self._default_label})
         if always:
-            self._task_default_kwargs.update(kwargs)
+            self._task_default_kwargs['routing'].update(kwargs)
         else:
-            self._require_kwargs.update(kwargs)
+            self._require_kwargs['routing'].update(kwargs)
         return self
 
     def model(self, modelname, require=None):
         """
         return a model for remote execution
+
+        Args:
+            require (dict): routing requirements for this job
         """
         from omegaml.runtimes.modelproxy import OmegaModelProxy
-        self.require(require) if require else None
+        self.require(**require) if require else None
         return OmegaModelProxy(modelname, runtime=self)
 
     def job(self, jobname, require=None):
         """
         return a job for remote exeuction
+
+        Args:
+            require (dict): routing requirements for this job
         """
-        self.require(require) if require else None
+        self.require(**require) if require else None
         return OmegaJobProxy(jobname, runtime=self)
 
-    def script(self, scriptname):
+    def script(self, scriptname, require=None):
         """
         return a script for remote execution
+
+        Args:
+            require (dict): routing requirements for this job
         """
+        self.require(**require) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
-    def task(self, name, **kwargs):
+    def task(self, name):
         """
         retrieve the task function from the celery instance
 
-        we do it like this so we can per-OmegaRuntime instance
-        celery configurations (as opposed to using the default app's
-        import, which seems to confuse celery)
+        Args:
+            kwargs (dict): routing keywords to CeleryTask.apply_async
         """
-        kwargs.update(self._common_kwargs)
         taskfn = self.celeryapp.tasks.get(name)
         assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
-        task = CeleryTask(taskfn, **kwargs)
-        self._require_kwargs = {}
+        task = CeleryTask(taskfn, self._common_kwargs)
+        self._require_kwargs = dict(routing={}, task={})
         return task
 
     def settings(self, require=None):
         """
         return the runtimes's cluster settings
         """
-        self.require(require) if require else None
+        self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
     def ping(self, require=None, *args, **kwargs):
         """
         ping the runtimes
+
+        Args:
+            require (dict): routing requirements for this job
+            args (tuple): task args
+            kwargs (dict): task kwargs
         """
-        self.require(require) if require else None
+        self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs).get()

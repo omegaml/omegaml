@@ -10,10 +10,16 @@ def open_jupyter(ctx):
     br = ctx.browser
     br.visit(ctx.feature.jynb_url)
     nb = Notebook(br)
-    login_required = br.is_text_present('Password', wait_time=2)
-    login_required |= br.is_text_present('token', wait_time=2)
-    if login_required:
-        nb.login()
+    if br.is_text_present('JupyterHub', wait_time=10):
+        login_required = br.is_element_present_by_id('username_input', wait_time=30)
+        if login_required:
+            nb.login_hub()
+    else:
+        # fallback to juypter notebook
+        login_required = br.is_text_present('Password', wait_time=2)
+        login_required |= br.is_text_present('token', wait_time=2)
+        if login_required:
+            nb.login_nb()
     nb.jupyter_home
 
 
@@ -57,7 +63,7 @@ def list_datasets(ctx):
     sleep(10)
     current = nb.current_cell_output()
     expected = "['sample']"
-    assert current == expected, "Expected {expected}, got {current}".format(**locals)
+    assert current == expected, "Expected {expected}, got {current}".format(**locals())
 
 
 @then(u'we can add a notebook in the folder')

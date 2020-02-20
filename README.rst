@@ -1,20 +1,23 @@
-**omega|ml is the fastest way to deploy machine learning models**
+omega|ml - DataOps & MLOps for humans
+=====================================
 
-omega|ml takes just a single line of code to
+with just a single line of code you can
 
-* deploy machine learning models straight from Jupyter Notebook (or any other code)
-* implement data pipelines quickly, without memory limitation, all from a Pandas-like API
-* serve models and data from an easy to use REST API 
+- deploy machine learning models straight from Jupyter Notebook (or any other code)
+- implement data pipelines quickly, without memory limitation, all from a Pandas-like API
+- serve models and data from an easy to use REST API
 
 Further, omega|ml is the fastest way to
 
-* scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
-* collaborate on data science projects easily, sharing Jupyter Notebooks
-* deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
+- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
+- collaborate on data science projects easily, sharing Jupyter Notebooks
+- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
 
-Documentation: https://omegaml.github.io/omegaml/
+Links
+=====
 
-Contributions: http://bit.ly/omegaml-contribute
+* Documentation: https://omegaml.github.io/omegaml/
+* Contributions: http://bit.ly/omegaml-contribute
 
 Get started in < 5 minutes
 ==========================
@@ -36,7 +39,7 @@ Leverage the power of omega|ml by installing as follows:
 .. code::
 
     # assuming you have started the server as per above
-    $ pip install omegaml
+    $ pip install omega|ml
 
 
 Examples
@@ -69,8 +72,10 @@ Get more information at https://omegaml.github.io/omegaml/
 Use Cases
 =========
 
-omega|ml currently supports scikit-learn out of the box. Need to deploy a model from another framework?
-Open an issue at https://github.com/omegaml/omegaml/issues or drop us a line at support@omegaml.io
+omega|ml currently supports scikit-learn, Keras and Tensorflow out of the box.
+Need to deploy a model from another framework? Open an issue at
+https://github.com/omegaml/omegaml/issues or drop us a line at support@omegaml.io
+
 
 Machine Learning Deployment
 ---------------------------
@@ -82,14 +87,14 @@ Machine Learning Deployment
 Data Science Collaboration
 --------------------------
 
-- get a fully integrated data science workplace within minutes [1]
+- get a fully integrated data science workplace within minutes
 - easily share models, data, jupyter notebooks and reports with your collaborators
 
 Centralized Data & Compute cluster
 ----------------------------------
 
-- perform out-of-core computations on a pure-python or Apache Spark compute cluster [2]
-- have a shared NoSQL database, out of the box, that behaves like a Pandas dataframe [3]
+- perform out-of-core computations on a pure-python or Apache Spark compute cluster
+- have a shared NoSQL database (MongoDB), out of the box, working like a Pandas dataframe
 - use a compute cluster to train your models with no additional setup
 
 Scalability and Extensibility
@@ -100,12 +105,6 @@ Scalability and Extensibility
 
 Towards Data Science recently published an article on omega|ml:
 https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
-
-[1] supporting scikit-learn, Spark MLLib out of the box, Keras and
-Tensorflow available shortly. Note the Spark integration is currently only available with
-the enterprise edition.
-[2] using Celery, Dask Distributed or Spark
-[3] leveraging MongoDB's excellent aggregation framework
 
 In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
 compute cluster, database and data source.

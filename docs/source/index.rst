@@ -7,8 +7,9 @@ that scales from laptop to teams to enterprise. Batteries included.*
 .. toctree::
    :maxdepth: 2
 
-   admin/index
+   quickstart
    guide/index
+   admin/index
    devguide/index
    reference/index
    nb/index

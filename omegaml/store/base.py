@@ -129,6 +129,17 @@ class OmegaStore(object):
     def __repr__(self):
         return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
 
+    def __equal__(self, other):
+        """test for equality of OmegaStore instances
+
+        Args:
+            other: OmegaStore instance
+
+        Returns:
+            True if other is the same database, same bucket, same prefix
+        """
+        return self.mongo_url == other.mongo_url and self.bucket == other.bucket and self.prefix == other.prefix
+
     @property
     def tmppath(self):
         """
@@ -178,7 +189,9 @@ class OmegaStore(object):
                              password=password,
                              connect=False,
                              authentication_source='admin',
-                             serverSelectionTimeoutMS=2500)
+                             serverSelectionTimeoutMS=2500,
+                             **self.defaults.OMEGA_MONGO_SSL_KWARGS,
+                            )
         self._db = getattr(connection, self.database_name)
         # mongoengine 0.15.0 connection setup is seriously broken -- it does
         # not remember username/password on authenticated connections
@@ -675,6 +688,7 @@ class OmegaStore(object):
     def get_backend_byobj(self, obj, name, kind=None, attributes=None, **kwargs):
         """
         return the matching backend for the given obj
+
         Returns:
             the first backend that supports the given parameters or None
         """
@@ -747,7 +761,7 @@ class OmegaStore(object):
 
         :param name: the name of the object (str)
         :param columns: the column projection as a list of column names
-        :param lazy: if True returns a lazy representation as an MDataFrame. 
+        :param lazy: if True returns a lazy representation as an MDataFrame.
            If False retrieves all data and returns a DataFrame (default) 
         :param filter: the filter to be applied as a column__op=value dict 
         :param version: the version to retrieve (not supported)
@@ -947,6 +961,8 @@ class OmegaStore(object):
                 files = [f for f in meta if fnmatch(f.name, pattern)]
             else:
                 files = [f for f in meta]
+            if not include_temp:
+                files = [f for f in files if not f.name.startswith('_')]
         else:
             files = [d.name for d in meta]
             if regexp:
@@ -955,7 +971,7 @@ class OmegaStore(object):
                 files = [f for f in files if fnmatch(f, pattern)]
             files = [f.replace('.omm', '') for f in files]
             if not include_temp:
-                files = [f for f in files if not f.startswith('_temp')]
+                files = [f for f in files if not f.startswith('_')]
         return files
 
     def object_store_key(self, name, ext):

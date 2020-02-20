@@ -2,12 +2,14 @@
 # CONTAINS: Browser fixture setup and teardown
 import os
 
+import nbformat
 from behave import fixture, use_fixture
-from splinter.browser import Browser
 from selenium.webdriver import ChromeOptions
+from splinter.browser import Browser
 
 from omegaml import settings
 from omegaml.tests.features.util import istrue
+from omegaml.tests.util import clear_om
 
 
 @fixture
@@ -22,7 +24,9 @@ def splinter_browser(context):
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
         options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--remote-debugging-address=0.0.0.0')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
     context.browser = Browser('chrome', options=options)
     context.browser.driver.set_window_size(1024, 768)
     context.screenshot_path = screenshot_path
@@ -55,7 +59,28 @@ def after_step(context, step):
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb
         ipdb.post_mortem(step.exc_traceback)
+    # also copy notebooks for debugging
+    for nbname in context.om.jobs.list():
+        try:
+            nb = context.om.jobs.get(nbname)
+            if nb is not None:
+                dirname = os.path.dirname(nbname)
+                os.makedirs(dirname, exist_ok=True)
+                nbformat.write(nb, os.path.join(context.screenshot_path, nbname))
+        except:
+            print("WARNING could not write {nbname}".format(**locals()))
+
 
 def after_scenario(context, scenario):
-    for omstore in (context.om.datasets, context.om.jobs):
-        [omstore.drop(name) for name in omstore.list()]
+    try:
+        if hasattr(context, 'om'):
+            clear_om(context.om)
+        if hasattr(context.feature, 'om'):
+            clear_om(context.feature.om)
+        if hasattr(scenario, 'om'):
+            clear_om(scenario.om)
+    except:
+        if context.debug:
+            import ipdb
+            ipdb.post_mortem()
+

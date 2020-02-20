@@ -1,3 +1,5 @@
+import json
+
 import datetime
 import os
 import sys
@@ -91,9 +93,9 @@ class PythonPackageDataTests(TestCase):
         om.scripts.put(pkgsrc, 'helloworld')
         print("***omega test_runtime (om, om.runtime)", om, om.runtime)
         result = om.runtime.script('helloworld').run(text='foo')
-        data = result.get()
+        data = json.loads(result.get())
         self.assertIn('runtimes', data)
-        expected = ('hello from helloworld', {'text': 'foo', 'pure_python': False})
+        expected = ['hello from helloworld', {'text': 'foo', 'pure_python': False}]
         self.assertEqual(data['result'], expected)
 
     def test_sysargv_stability(self):
