@@ -48,7 +48,7 @@ def before_all(context):
     context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
 
 def before_scenario(context, scenario):
-    # FIXME we do this because context.feature is set dynamically in EE testing 
+    # FIXME we do this because context.feature is set dynamically in EE testing
     context.feature.jynb_url = context.jynb_url
 
 def after_step(context, step):
@@ -64,11 +64,12 @@ def after_step(context, step):
         try:
             nb = context.om.jobs.get(nbname)
             if nb is not None:
-                dirname = os.path.dirname(nbname)
+                outname = os.path.join(context.screenshot_path, nbname)
+                dirname = os.path.dirname(outname)
                 os.makedirs(dirname, exist_ok=True)
-                nbformat.write(nb, os.path.join(context.screenshot_path, nbname))
-        except:
-            print("WARNING could not write {nbname}".format(**locals()))
+                nbformat.write(nb, outname)
+        except Exception as e:
+            print("WARNING could not write {nbname} to {outname}, got {e}".format(**locals()))
 
 
 def after_scenario(context, scenario):
