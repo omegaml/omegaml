@@ -1,11 +1,13 @@
 import os
-from urllib.parse import unquote
 
 import nbformat
+from datetime import datetime
 from notebook.services.contents.manager import ContentsManager
 from tornado import web
+from urllib.parse import unquote
 
 from omegaml.notebook.checkpoints import NoOpCheckpoints
+
 
 class OmegaStoreContentsManager(ContentsManager):
     """
@@ -124,7 +126,7 @@ class OmegaStoreContentsManager(ContentsManager):
 
     def rename_file(self, old_path, new_path):
         """
-        rename a file 
+        rename a file
 
         this is called by the contents engine to rename an entry
         """
@@ -136,8 +138,9 @@ class OmegaStoreContentsManager(ContentsManager):
         elif self.dir_exists(new_path):
             raise web.HTTPError(409, u'Directory already exists: %s' % new_path)
         # do the renaming
-        if self.dir_exists(old_path):
-            meta = self.omega.jobs.metadata(old_path + '/' + self._dir_placeholder)
+        dirname = old_path + '/' + self._dir_placeholder
+        if self.dir_exists(dirname):
+            meta = self.omega.jobs.metadata(dirname)
             meta.name = new_path + '/' + self._dir_placeholder
         elif self.file_exists(old_path):
             meta = self.omega.jobs.metadata(old_path)
@@ -150,7 +153,7 @@ class OmegaStoreContentsManager(ContentsManager):
         Does a file or dir exist at the given collection in gridFS?
         We do not have dir so dir_exists returns true.
 
-        :param path: (str) The relative path to the file's directory 
+        :param path: (str) The relative path to the file's directory
           (with '/' as separator)
         :returns exists: (boo) The relative path to the file's directory (with '/' as separator)
         """
@@ -158,6 +161,14 @@ class OmegaStoreContentsManager(ContentsManager):
         return self.file_exists(path) or (self.dir_exists(path))
 
     def dir_exists(self, path=''):
+        """check if directory exists
+
+        Args:
+            path: name of directory
+
+        Returns:
+            True if directory exists
+        """
         path = unquote(path).strip('/')
         if path == '':
             return True
@@ -165,10 +176,26 @@ class OmegaStoreContentsManager(ContentsManager):
         return len(self.omega.jobs.list(pattern)) > 0
 
     def file_exists(self, path):
+        """check if file exists
+
+        Args:
+            path: name of file
+
+        Returns:
+            True if file exists
+        """
         path = unquote(path).strip('/')
         return path in self.omega.jobs.list(path)
 
     def is_hidden(self, path):
+        """check if path or file is hidden
+
+        Args:
+            path: name of file or path
+
+        Returns:
+            False, currently always returns false
+        """
         return False
 
     def _read_notebook(self, path, as_version=None):
@@ -190,22 +217,22 @@ class OmegaStoreContentsManager(ContentsManager):
             model['content'] = nb
             model['format'] = 'json'
             self.validate_notebook_model(model)
-        # if exists already fake last modified and created timestamps
-        # otherwise jupyter notebook will claim a newer version "on disk"
-        if self.exists(path):
-            from IPython.utils import tz
-            # FIXME get actual datetime
-            model['last_modified'] = tz.datetime(1970, 1, 1)
-            model['created'] = tz.datetime(1970, 1, 1)
+        # always add accurate created and modified
+        meta = self.omega.jobs.metadata(path)
+        if meta is not None:
+            model['created'] = meta.created
+            model['last_modified'] = meta.modified
+        else:
+            model['last_modified'] = datetime.utcnow()
+            model['created'] = datetime.utcnow()
         return model
 
     def _base_model(self, path, kind=None):
         """Build the common base of a contents model"""
         # http://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
-        from IPython.utils import tz
         path = unquote(path).strip('/')
-        last_modified = tz.utcnow()
-        created = tz.utcnow()
+        last_modified = datetime.utcnow()
+        created = last_modified
         # Create the base model.
         model = {}
         model['name'] = os.path.basename(path)

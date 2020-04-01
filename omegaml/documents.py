@@ -64,8 +64,12 @@ def make_Metadata():
         #: created datetime
         created = DateTimeField(default=datetime.datetime.now)
         # the actual db is defined in settings, OMEGA_MONGO_URL
+        #: created datetime
+        modified = DateTimeField(default=datetime.datetime.now)
+
         meta = {
             'db_alias': 'omega',
+            'strict': False,
             'indexes': [
                 # unique entry
                 {
