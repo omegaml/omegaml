@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+from datetime import timedelta
 from unittest import TestCase
 
 import gridfs
@@ -72,7 +73,7 @@ class JobTests(TestCase):
 
     def test_run_job_valid(self):
         """
-        test running a valid job 
+        test running a valid job
         """
         om = self.om
         # create a notebook
@@ -175,8 +176,41 @@ class JobTests(TestCase):
         om.jobs.put(notebook, 'testjob')
         self._check_scheduled_job()
 
+    def test_scheduled_not_duplicated(self):
+        om = self.om
+        cells = []
+        conf = """
+                # schedule: daily, at 06:00
+                """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job(autorun=False, reschedule=False)
+        meta = om.jobs.metadata('testjob')
+        trigger = meta.attributes['triggers']
+        self.assertEqual(len(trigger), 1)
 
-    def _check_scheduled_job(self):
+    def test_scheduled_results_not_rescheduled(self):
+        om = self.om
+        cells = []
+        conf = """
+                        # schedule: daily, at 06:00
+                        """.strip()
+        cmd = "print('hello')"
+        cells.append(v4.new_code_cell(source=conf))
+        cells.append(v4.new_code_cell(source=cmd))
+        notebook = v4.new_notebook(cells=cells)
+        om.jobs.put(notebook, 'testjob')
+        self._check_scheduled_job(autorun=True, reschedule=False)
+        meta = om.jobs.metadata('testjob')
+        runs = meta.attributes['job_runs']
+        result_name = runs[-1]['results']
+        meta_result = om.jobs.metadata(result_name)
+        self.assertNotIn('triggers', meta_result.attributes)
+
+    def _check_scheduled_job(self, autorun=True, reschedule=False):
         om = self.om
         meta = om.jobs.metadata('testjob')
         config = om.jobs.get_notebook_config('testjob')
@@ -208,23 +242,26 @@ class JobTests(TestCase):
             self.assertEqual(trigger['status'], 'OK')
 
         assert_pending()
-        # -- run by the periodic task. note we pass now= as to simulate a time
-        kwargs = dict(now=trigger['run-at'])
-        om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
-        assert_ok(event=trigger['event'])
-        # -- it should be pending again
-        assert_pending()
-        # execute the scheduled job by event name
-        trigger = get_trigger()
-        om.runtime.job('testjob').run(event=trigger['event'])
-        # the last run should be ok, and there should not be a new pending event
-        # since we did not reschedule
-        assert_ok()
-        with self.assertRaises(AssertionError):
+        if autorun:
+            # -- run by the periodic task. note we pass now= as to simulate a time
+            kwargs = dict(now=trigger['run-at'])
+            om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
+            assert_ok(event=trigger['event'])
+            # -- it should be pending again
             assert_pending()
-        # reschedule explicit and check we have a pending event
-        om.runtime.job('testjob').schedule().get()
-        assert_pending()
+            # execute the scheduled job by event name
+            trigger = get_trigger()
+            om.runtime.job('testjob').run(event=trigger['event'])
+            # the last run should be ok, and there should not be a new pending event
+            # since we did not reschedule
+            assert_ok()
+            with self.assertRaises(AssertionError):
+                assert_pending()
+        if reschedule:
+            # reschedule explicit and check we have a pending event
+            next_time = trigger['run-at'] + timedelta(minutes=2)
+            om.runtime.job('testjob').schedule(run_at='daily, at 07:00').get()
+            assert_pending()
 
     def test_schedule_triggers_by_api(self):
         om = self.om

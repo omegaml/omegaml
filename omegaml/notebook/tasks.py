@@ -67,7 +67,7 @@ def schedule_omegaml_job(self, nb_file, **kwargs):
     """
     schedules the running of omegaml job
     """
-    result = self.om.jobs.schedule(nb_file)
+    result = self.om.jobs.schedule(nb_file, run_at=kwargs.get('run_at'))
     return sanitized(result)
 
 
@@ -81,6 +81,9 @@ def execute_scripts(self, **kwargs):
     now = kwargs.get('now') or datetime.datetime.now()
     # get pending tasks, execute if time is right
     for job_meta in om.jobs.list(raw=True):
+        if job_meta.name.startswith('results'):
+            # ignore any scheduled results
+            continue
         logger.debug("***** {}".format(job_meta))
         triggers = job_meta.attributes.get('triggers', [])
         # run pending jobs
