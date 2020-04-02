@@ -88,6 +88,10 @@ def make_Metadata():
                       for k in self._fields.keys() if k in fields)
             return u"Metadata(%s)" % ','.join(kwargs)
 
+        def save(self, *args, **kwargs):
+            self.modified = datetime.datetime.now()
+            return super(Metadata, self).save(*args, **kwargs)
+
     return Metadata
 
 
