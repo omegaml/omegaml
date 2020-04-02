@@ -56,7 +56,8 @@ class OmegaCloudRuntime(OmegaRuntime):
         common = super()._common_kwargs
         common['task'].update({self._auth_kwarg: self.auth_tuple})
         label = common['routing'].get('label', 'default')
-        common['routing'].update(self.build_account_routing(label))
+        if getattr(self.omega.defaults, 'OMEGA_TASK_ROUTING_ENABLED', False):
+            common['routing'].update(self.build_account_routing(label))
         return common
 
     @property
