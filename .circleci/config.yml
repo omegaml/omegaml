@@ -28,33 +28,31 @@ jobs:
           curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
           sh Miniconda3-4.5.12-Linux-x86_64.sh -b
     - run:
-        name: Create Python environment
-        command: |
-          source miniconda3/etc/profile.d/conda.sh
-          conda create --offline -q -y -n omenv
-          conda activate omenv
-          cd omegaml-ce
-          conda install -q -y --file conda-requirements.txt
-          pip install -q -r pip-requirements.txt
-        shell: /bin/bash -l -eo pipefail
-    - run:
         name: Run unit tests
         command: |
           source miniconda3/etc/profile.d/conda.sh
-          conda activate omenv
           cd omegaml-ce
           docker-compose -f docker-compose-dev.yml up -d
           echo "Waiting..."
           sleep 10
           docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-          make test
+          for VER in 3.6 3.7 3.8
+          do
+            echo "Testing with python $VER"
+            conda create -q -y -n omenv$VER python=$VER
+            conda activate omenv$VER
+            conda install -q -y --file conda-requirements.txt
+            pip install -q -r pip-requirements.txt
+            make test
+            conda deactivate
+          done
           docker-compose down --remove-orphans
         shell: /bin/bash -l -eo pipefail
     - run:
         name: Run live tests
         command: |
           source miniconda3/etc/profile.d/conda.sh
-          conda activate omenv
+          conda activate omenv3.8
           cd omegaml-ce
           LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
         shell: /bin/bash -l -eo pipefail
