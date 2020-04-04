@@ -65,7 +65,7 @@ class CeleryTask(object):
 
 class OmegaRuntime(object):
     """
-    omegaml compute cluster gateway 
+    omegaml compute cluster gateway
     """
 
     def __init__(self, omega, bucket=None, defaults=None, celeryconf=None):
@@ -113,7 +113,7 @@ class OmegaRuntime(object):
         else:
             return False
 
-    def require(self, always=False, label=None, **kwargs):
+    def require(self, label=None, always=False, **kwargs):
         """
         specify requirements for the task execution
 

@@ -83,6 +83,7 @@ def make_Metadata():
         # the actual db is defined at runtime
         meta = {
             'db_alias': 'omega',
+            'strict': False,
             'indexes': [
                 # unique entry
                 {

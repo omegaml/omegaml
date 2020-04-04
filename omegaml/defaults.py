@@ -48,7 +48,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
-    'CELERY_DEFAULT_QUEUE': 'default',
+    'CELERY_DEFAULT_QUEUE': os.environ.get('CELERY_Q', 'default'),
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
