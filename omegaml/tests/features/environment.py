@@ -15,7 +15,8 @@ from omegaml.tests.util import clear_om
 @fixture
 def splinter_browser(context):
     headless = istrue(os.environ.get('CHROME_HEADLESS'))
-    screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp')
+    screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp/screenshots')
+    os.makedirs(screenshot_path, exist_ok=True)
     options = None
     if headless:
         print("Running headless, debug at http://localhost:9222")
