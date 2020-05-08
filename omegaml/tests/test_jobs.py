@@ -102,7 +102,7 @@ class JobTests(TestCase):
         om = self.om
         # create a long-running notebook
         cells = []
-        code = "import time; time.sleep(10)"
+        code = "import time; time.sleep(15)"
         cells.append(v4.new_code_cell(source=code))
         notebook = v4.new_notebook(cells=cells)
         meta = om.jobs.put(notebook, 'testjob')

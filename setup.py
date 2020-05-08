@@ -14,6 +14,7 @@ tf_deps = ['tensorflow==1.15.0']
 keras_deps = ['keras==2.2.4']
 graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0', 'imageio==2.6.1']
 dashserve_deps = ['dashserve']
+sql_deps = ['sqlalchemy', 'ipython-sql']
 
 setup(
     name='omegaml',
@@ -78,7 +79,8 @@ setup(
         'tensorflow': tf_deps,
         'keras': keras_deps,
         'dashserve': dashserve_deps,
-        'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps,
+        'sql': sql_deps,
+        'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

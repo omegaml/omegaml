@@ -239,3 +239,5 @@ fabric.properties
 build_sdist.err
 build_sdist.out
 nohup.out
+/omegaml/tests/test.db
+/test.db

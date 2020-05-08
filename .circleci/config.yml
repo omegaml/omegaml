@@ -43,6 +43,7 @@ jobs:
             conda activate omenv$VER
             conda install -q -y --file conda-requirements.txt
             pip install -q -r pip-requirements.txt
+            pip install .[all]
             make test
             conda deactivate
           done
