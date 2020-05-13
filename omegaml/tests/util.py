@@ -9,17 +9,11 @@ import os
 class OmegaTestMixin(object):
     def clean(self, bucket=None):
         om = self.om[bucket] if bucket is not None else self.om
-        drop = om.models.drop
-        [drop(m, force=True) for m in om.models]
-        drop = om.datasets.drop
-        [drop(m, force=True) for m in om.datasets]
-        drop = om.jobs.drop
-        [drop(m, force=True) for m in om.jobs.store]
-        drop = om.scripts.drop
-        [drop(m, force=True) for m in om.scripts]
-        self.assertListEqual(om.datasets.list(), [])
-        self.assertListEqual(om.models.list(), [])
-
+        for element in ('models', 'jobs', 'datasets', 'scripts'):
+            part = getattr(om, element)
+            drop = part.drop
+            [drop(m.name, force=True) for m in part.list(hidden=True, include_temp=True, raw=True)]
+            self.assertListEqual(part.list(hidden=True, include_temp=True), [])
 
 def tf_in_eager_execution():
     # condition for unittest.skipIf decorator

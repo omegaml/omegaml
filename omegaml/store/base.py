@@ -927,7 +927,7 @@ class OmegaStore(object):
         for f in self.list():
             yield f
 
-    def list(self, pattern=None, regexp=None, kind=None, raw=False,
+    def list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
              include_temp=False, bucket=None, prefix=None, filter=None):
         """
         List all files in store
@@ -953,7 +953,7 @@ class OmegaStore(object):
                 searchkeys.update(kind=kind)
         if filter:
             searchkeys.update(filter)
-        meta = self._Metadata.objects(**searchkeys)
+        meta = self._Metadata.objects.no_cache()(**searchkeys)
         if raw:
             if regexp:
                 files = [f for f in meta if re.match(regexp, f.name)]
@@ -963,8 +963,10 @@ class OmegaStore(object):
                 files = [f for f in meta]
             if not include_temp:
                 files = [f for f in files if not f.name.startswith('_')]
+            if not hidden:
+                files = [f for f in files if not f.name.startswith('.')]
         else:
-            files = [d.name for d in meta]
+            files = [str(d.name) for d in meta]
             if regexp:
                 files = [f for f in files if re.match(regexp, f)]
             elif pattern:
@@ -972,6 +974,8 @@ class OmegaStore(object):
             files = [f.replace('.omm', '') for f in files]
             if not include_temp:
                 files = [f for f in files if not f.startswith('_')]
+            if not hidden:
+                files = [f for f in files if not f.startswith('.')]
         return files
 
     def object_store_key(self, name, ext):

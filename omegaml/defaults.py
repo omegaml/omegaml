@@ -118,7 +118,10 @@ OMEGA_MDF_APPLY_MIXINS = [
 ]
 #: user extensions
 OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
-
+#: log dataset
+OMEGA_LOG_DATASET = '.omega/logs'
+#: OmegaLoggingHandler log format
+OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----

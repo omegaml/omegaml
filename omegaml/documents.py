@@ -107,6 +107,7 @@ def make_Metadata():
             return u"Metadata(%s)" % ','.join(kwargs)
 
         def save(self, *args, **kwargs):
+            assert self.name is not None, "a dataset name is needed before saving"
             self.modified = datetime.datetime.now()
             return super(Metadata_base, self).save(*args, **kwargs)
 

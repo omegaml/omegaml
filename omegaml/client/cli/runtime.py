@@ -10,10 +10,11 @@ class RuntimeCommandBase(CommandBase):
       om runtime job <name> [<job-action>] [<args...>] [--async] [options]
       om runtime result <taskid> [options]
       om runtime ping [options]
-
+      om runtime log [-f]
 
     Options:
       --async  don't wait for results, will print taskid
+      -f       tail log
 
     Description:
       <model-action> can be any valid model action like fit, predict, score,
@@ -105,3 +106,16 @@ class RuntimeCommandBase(CommandBase):
         task_id = self.args.get('<taskid>')
         result = AsyncResult(task_id, app=om.runtime.celeryapp).get()
         self.logger.info(result)
+
+    def log(self):
+        import pandas as pd
+        tail  = self.args.get('-f')
+        om = get_omega(self.args)
+        if not tail:
+            df = om.logger.dataset.get()
+            with pd.option_context('display.max_rows', None,
+                                   'display.max_columns', None,
+                                   'display.max_colwidth', -1):
+                print(df[['text']])
+        else:
+            om.logger.dataset.tail()
