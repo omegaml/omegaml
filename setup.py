@@ -55,6 +55,7 @@ setup(
         'scikit-learn>=0.20,<0.22',
         'PyYAML>=3.11',
         'flask-restplus>=0.12.1',
+        'werkzeug~=0.16.1',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
         'six>=1.11.0',
         'croniter>=0.3.30',
         'nbformat>=4.0.1',

@@ -234,8 +234,12 @@ class OmegaJobs(object):
         meta_job = self.metadata(name)
         ts = datetime.datetime.now()
         # execute
+        ep_kwargs = {
+            'timeout': None
+        }
+        ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
         try:
-            ep = ExecutePreprocessor()
+            ep = ExecutePreprocessor(**ep_kwargs)
             ep.preprocess(notebook, {'metadata': {'path': '/'}})
         except Exception as e:
             status = 'ERROR'

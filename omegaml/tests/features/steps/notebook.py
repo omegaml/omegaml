@@ -1,6 +1,5 @@
-from time import sleep
-
 from behave import when, then
+from time import sleep
 
 from omegaml.tests.features.util import Notebook
 
@@ -39,6 +38,13 @@ def create_notebook(ctx):
     assert nb.current_cell_output() == 'hello'
     nb.save_notebook()
     assert not br.is_text_present('error while saving')
+
+
+@when(u'we restart the notebook')
+def restart_kernel(ctx):
+    br = ctx.browser
+    nb = Notebook(br)
+    nb.restart(wait=True)
 
 
 @when(u'we create a folder')

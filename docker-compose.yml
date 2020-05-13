@@ -23,7 +23,7 @@ services:
        volumes:
          - pythonlib:/app/pylib
    jyhub:
-       image: omegaml/omegaml:latest
+       image: omegaml/jyhub:latest
        hostname: jyhub
        ports:
           - "8000:8000"

@@ -53,11 +53,17 @@ jobs:
         command: |
           source miniconda3/etc/profile.d/conda.sh
           conda activate omenv3.8
+          mkdir -p ~/.omegaml
+          echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+          ls -lart ~/.omegaml
           cd omegaml-ce
           LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
         shell: /bin/bash -l -eo pipefail
+    - store_artifacts:
+        path: /tmp/screenshots
 workflows:
   version: 2
   workflow:
     jobs:
-    - build
+    - build:
+        context: omegaml

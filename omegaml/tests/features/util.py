@@ -1,13 +1,16 @@
+import os
+
+import yaml
+from selenium.webdriver.common.keys import Keys
 from time import sleep
 from urllib.parse import quote
-
-from selenium.webdriver.common.keys import Keys
 
 istrue = lambda v: (
     (v.lower() in ('yes', '1', 'y', 'true', 't'))
     if isinstance(v, str) else bool(v)
 )
 isfalse = lambda v: not istrue(v)
+
 
 def uri(browser, uri):
     """ given a browser, replace the path with uri """
@@ -17,10 +20,12 @@ def uri(browser, uri):
     parsed[2] = uri
     return urlunparse(parsed)
 
+
 ACTIVATE_CELL = Keys.ESCAPE, Keys.ENTER
 EXEC_CELL = Keys.SHIFT, Keys.ENTER
 ADD_CELL_BELOW = Keys.ESCAPE, 'b'
 SAVE_NOTEBOOK = Keys.CONTROL, 's'
+
 
 class Notebook:
     """
@@ -110,6 +115,18 @@ class Notebook:
         self.last_notebook
         return self
 
+    def restart(self, wait=False):
+        br = self.browser
+        assert br.is_element_present_by_text('Cell', wait_time=5)
+        br.find_link_by_text('Kernel', )[0].click()
+        sleep(1)
+        br.find_link_by_text('Restart')[0].click()
+        if wait:
+            busy = True
+            while busy:
+                sleep(5)
+                busy = br.is_element_present_by_css('#kernel_indicator_icon.kernel_busy_icon')
+
     def run_all_cells(self, wait=False):
         br = self.browser
         assert br.is_element_present_by_text('Cell', wait_time=5)
@@ -143,3 +160,15 @@ class Notebook:
 
     def save_notebook(self):
         self.body.type(SAVE_NOTEBOOK)
+
+
+def get_admin_secrets(scope=None, keys=None):
+    secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
+    with open(secrets) as fin:
+        secrets = yaml.safe_load(fin)
+        secrets = secrets[scope] if scope else secrets
+    if keys:
+        result = [secrets.get(k) for k in keys]
+    else:
+        result = secrets
+    return result
