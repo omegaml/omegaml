@@ -1,15 +1,13 @@
-
 from __future__ import absolute_import
 
-from omegaml.util import PickableCollection
 from pymongo.collection import Collection
 
 from omegaml.store import qops
 from omegaml.store.query import Filter
+from omegaml.util import PickableCollection
 
 
-class FilteredCollection(Collection):
-
+class FilteredCollection:
     """
     A permanently filtered collection
 
@@ -18,9 +16,9 @@ class FilteredCollection(Collection):
 
         fcoll = FilteredCollection(collection, query={ expression })
 
-    Any subsequent operation will automatically apply the query expression. 
+    Any subsequent operation will automatically apply the query expression.
 
-    Note that v.v. a Collection and all methods that accept a filter as their first  
+    Note that v.v. a Collection and all methods that accept a filter as their first
     argument have a changed signature - the filter argument is optional
     with all FilteredCollection methods, as the filter is set at instantiation.
 
@@ -39,7 +37,7 @@ class FilteredCollection(Collection):
     This is so that calls to a FilteredCollection feel more natural, as opposed
     to specifying an empty filter argument on every call. Still, an additional
     filter can be specified on every method that accepts the filter= optional
-    argument:  
+    argument:
 
             # temporarily add another filter
 
@@ -49,121 +47,130 @@ class FilteredCollection(Collection):
     global filter set by query= is unchanged.
 
     If no expression is given, the empty expression {} is assumed. To change
-    the expression for the set fcoll.query = { expression }  
+    the expression for the set fcoll.query = { expression }
     """
 
     def __init__(self, collection, query=None, projection=None, **kwargs):
-        if isinstance(collection, (Collection, PickableCollection)):
-            database = collection.database
-            name = collection.name
-        else:
-            raise ValueError('collection should be a pymongo.Collection')
+        is_real_collection = isinstance(collection, Collection)
+        while not is_real_collection:
+            collection = collection.collection
+            is_real_collection = isinstance(collection, Collection)
+        collection = PickableCollection(collection)
         query = query or {}
-        super(FilteredCollection, self).__init__(
-            database, name, create=False, **kwargs)
-        self.query = Filter(self, **query).query
+        self._fixed_query = query
         self.projection = projection
-    def replace_one(self, replacement, filter=None, upsert=False,
-                    bypass_document_validation=False):
-        query = dict(self.query)
-        query.update(filter or {})
-        kwargs = dict(query, replacement, upsert=upsert,
-                      bypass_document_validation=bypass_document_validation)
-        return super(FilteredCollection, self).replace_one(**kwargs)
-    def update_one(self, update, filter=None, upsert=False,
-                   bypass_document_validation=False):
-        query = dict(self.query)
-        query.update(filter or {})
-        kwargs = dict(query, update, upsert=upsert,
-                      bypass_document_validation=bypass_document_validation)
-        return super(FilteredCollection, self).update_one(**kwargs)
-    def update_many(self, update, filter=None, upsert=False,
-                    bypass_document_validation=False):
-        query = dict(self.query)
-        query.update(filter or {})
-        kwargs = dict(query, update, upsert=upsert,
-                      bypass_document_validation=bypass_document_validation)
-        return super(FilteredCollection, self).update_many(**kwargs)
-    def delete_one(self, filter=None):
-        query = dict(self.query)
-        query.update(filter or {})
-        return super(FilteredCollection, self).delete_one(query)
-    def delete_many(self, filter=None):
-        query = dict(self.query)
-        query.update(filter or {})
-        return super(FilteredCollection, self).delete_many(query)
+        self.collection = collection
+
+    @property
+    def _Collection__database(self):
+        return self.collection.database
+
+    @property
+    def name(self):
+        return self.collection.name
+
+    @property
+    def database(self):
+        return self.collection.database
+
+    @property
+    def query(self):
+        return Filter(self.collection, **self._fixed_query).query
+
     def aggregate(self, pipeline, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
         pipeline.insert(0, qops.MATCH(query))
-        return super(FilteredCollection, self).aggregate(pipeline, **kwargs)
+        kwargs.update(allowDiskUse=True)
+        return self.collection.aggregate(pipeline, **kwargs)
+
     def find(self, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).find(filter=query, **kwargs)
+        return self.collection.find(filter=query, **kwargs)
+
     def find_one(self, filter=None, *args, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).find_one(query, *args, **kwargs)
+        return self.collection.find_one(query, *args, **kwargs)
+
     def find_one_and_delete(self, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).find_one_and_delete(query,
-                                                                   **kwargs)
+        return self.collection.find_one_and_delete(query,
+                                                   **kwargs)
+
     def find_one_and_replace(self, replacement, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).find_one_and_replace(query,
-                                                                    replacement,
-                                                                    **kwargs)
+        return self.collection.find_one_and_replace(query,
+                                                    replacement,
+                                                    **kwargs)
+
     def find_one_and_update(self, update, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).find_one_and_update(query,
-                                                                   update,
-                                                                   **kwargs)
+        return self.collection.find_one_and_update(query,
+                                                   update,
+                                                   **kwargs)
+
     def count(self, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).count(filter=query, **kwargs)
+        return self.collection.count(filter=query, **kwargs)
+
     def distinct(self, key, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return super(FilteredCollection, self).distinct(key, filter=query,
-                                                        **kwargs)
+        return self.collection.distinct(key, filter=query, **kwargs)
+
+    def create_index(self, keys, **kwargs):
+        return self.collection.create_index(keys, **kwargs)
+
+    def list_indexes(self, **kwargs):
+        return self.list_indexes(**kwargs)
+
     def group(self, key, initial, reduce, condition=None, **kwargs):
         condition = dict(self.query)
         condition.update(condition or {})
-        return super(FilteredCollection, self).group(key, condition, initial,
-                                                     reduce,
-                                                     **kwargs)
+        return self.collection.group(key, condition, initial,
+                                     reduce,
+                                     **kwargs)
+
     def map_reduce(self, m, r, out, full_response=False, query=None, **kwargs):
         _query = dict(self.query)
         _query.update(query or {})
-        return super(FilteredCollection, self).map_reduce(m, r, out,
-                                                          full_response=False,
-                                                          query=_query, **kwargs)
+        return self.collection.map_reduce(m, r, out,
+                                          full_response=False,
+                                          query=_query, **kwargs)
+
     def inline_map_reduce(self, m, r, full_response=False,
                           query=None, **kwargs):
         _query = dict(self.query)
         _query.update(query or {})
-        return super(FilteredCollection, self).inline_map_reduce(m, r,
-                                                                 full_response=False, query=_query, **kwargs)
+        return self.collection.inline_map_reduce(m, r,
+                                                 full_response=False, query=_query, **kwargs)
+
     def insert(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
     def update(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
     def remove(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
     def find_and_modify(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
     def ensure_index(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
     def save(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")

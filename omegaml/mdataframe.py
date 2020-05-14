@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from uuid import uuid4
-
 import numpy as np
 import pandas as pd
 import six
@@ -9,8 +7,8 @@ from bson import Code
 from numpy import isscalar
 from pandas.io.json import json_normalize
 from pymongo.collection import Collection
+from uuid import uuid4
 
-from omegaml import defaults
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
@@ -59,11 +57,11 @@ class MGrouper(object):
         """
         aggregate by given specs
 
-        See the following link for a list of supported operations. 
+        See the following link for a list of supported operations.
         https://docs.mongodb.com/manual/reference/operator/aggregation/group/
 
-        :param specs: a dictionary of { column : function | list[functions] } 
-           pairs. 
+        :param specs: a dictionary of { column : function | list[functions] }
+           pairs.
         """
 
         def add_stats(specs, column, stat):
@@ -304,7 +302,7 @@ class MSeriesGroupby(MGrouper):
         """
         return series count
 
-        :return: counts by group 
+        :return: counts by group
         """
         # MGrouper will insert a _count column, see _count(). we remove
         # that column again and return a series named as the group column
@@ -592,7 +590,7 @@ class MDataFrame(object):
         """
         resolve the query and return a Pandas DataFrame
 
-        :return: the result of the query as a pandas DataFrame 
+        :return: the result of the query as a pandas DataFrame
         """
         cursor = self._get_cursor()
         df = self._get_dataframe_from_cursor(cursor)
@@ -624,7 +622,7 @@ class MDataFrame(object):
         return self
 
     def _get_dataframe_from_cursor(self, cursor):
-        """ 
+        """
         from the given cursor return a DataFrame
         """
         df = cursor_to_dataframe(cursor, parser=self._parser)
@@ -694,7 +692,7 @@ class MDataFrame(object):
         skip the topn number of rows
 
         :param topn: the number of rows to skip.
-        :return: the MDataFrame 
+        :return: the MDataFrame
         """
         return self._clone(skip=topn)
 
@@ -709,13 +707,13 @@ class MDataFrame(object):
         :param right: the other MDataFrame
         :param on: the list of key columns to merge by
         :param left_on: the list of the key columns to merge on this dataframe
-        :param right_on: the list of the key columns to merge on the other 
+        :param right_on: the list of the key columns to merge on the other
            dataframe
-        :param how: the method to merge. supported are left, inner, right. 
+        :param how: the method to merge. supported are left, inner, right.
            Defaults to inner
         :param target: the name of the collection to store the merge results
            in. If not provided a temporary name will be created.
-        :param suffixes: the suffixes to apply to identical left and right 
+        :param suffixes: the suffixes to apply to identical left and right
            columns
         :param sort: if True the merge results will be sorted. If False the
            MongoDB natural order is implied.
@@ -857,14 +855,14 @@ class MDataFrame(object):
         return name
 
     def _get_filter_criteria(self, *args, **kwargs):
-        """ 
+        """
         return mongo query from filter specs
 
         this uses a Filter to produce the query from the kwargs.
 
         :param args: a Q object or logical combination of Q objects
            (optional)
-        :param kwargs: all AND filter criteria 
+        :param kwargs: all AND filter criteria
         """
         if len(args) > 0:
             q = args[0]
@@ -878,14 +876,14 @@ class MDataFrame(object):
 
     def query_inplace(self, *args, **kwargs):
         """
-        filters this MDataFrame and returns it. 
+        filters this MDataFrame and returns it.
 
         Any subsequent operation on the dataframe will have the filter
         applied. To reset the filter call .reset() without arguments.
 
         :param args: a Q object or logical combination of Q objects
            (optional)
-        :param kwargs: all AND filter criteria 
+        :param kwargs: all AND filter criteria
         :return: self
         """
         self._evaluated = None
@@ -906,7 +904,7 @@ class MDataFrame(object):
 
         :param args: a Q object or logical combination of Q objects
            (optional)
-        :param kwargs: all AND filter criteria 
+        :param kwargs: all AND filter criteria
         :return: a new MDataFrame with the filter applied
         """
         effective_filter = dict(self.filter_criteria)
@@ -959,7 +957,7 @@ class MDataFrame(object):
 
 class MSeries(MDataFrame):
     """
-    Series implementation for MDataFrames 
+    Series implementation for MDataFrames
 
     behaves like a DataFrame but limited to one column.
     """
@@ -1008,7 +1006,7 @@ class MSeries(MDataFrame):
         only distinct values are returned as an array, matching
         the behavior of a Series
 
-        :return: pandas.Series 
+        :return: pandas.Series
         """
         cursor = self._get_cursor()
         column = make_tuple(self.columns)[0]
