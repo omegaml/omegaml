@@ -393,8 +393,9 @@ def _is_valid_url(url):
 
     try:
         url = sqlalchemy.engine.url.make_url(url)
+        drivername = url.drivername.split('+')[0] # e.g. mssql+pyodbc => mssql
         valid = url.drivername in sqlalchemy.dialects.__all__
-        valid |= sqlalchemy.dialects.registry.load(url.drivername) is not None
+        valid |= sqlalchemy.dialects.registry.load(drivername) is not None
     except:
         valid = False
     return valid
