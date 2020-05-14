@@ -1,13 +1,14 @@
 from multiprocessing import Pool
-from itertools import repeat
 
 import math
-
 import os
+from itertools import repeat
 
-from omegaml.mongoshim import MongoClient 
+from omegaml.mongoshim import MongoClient
 
+# single instance multiprocessing pool
 pool = None
+
 
 def dfchunker(df, size=10000):
     """ chunk a dataframe as in iterator """
@@ -16,7 +17,7 @@ def dfchunker(df, size=10000):
 
 def insert_chunk(job):
     """
-    insert one chunk of data 
+    insert one chunk of data
 
     :param job: the (dataframe, mongo_url, collection_name) tuple. mongo_url
                 should include the database name, as the collection is taken
@@ -35,16 +36,16 @@ def fast_insert(df, omstore, name, chunk_size=int(1e4)):
     """
     fast insert of dataframe to mongodb
 
-    Depending on size use single-process or multiprocessing. Typically 
+    Depending on size use single-process or multiprocessing. Typically
     multiprocessing is faster on datasets with > 10'000 data elements
-    (rows x columns). Note this may max out your CPU and may use 
+    (rows x columns). Note this may max out your CPU and may use
     processor count * chunksize of additional memory. The chunksize is
     set to 10'000. The processor count is the default used by multiprocessing,
-    typically the number of CPUs reported by the operating system. 
+    typically the number of CPUs reported by the operating system.
 
     :param df: dataframe
     :param omstore: the OmegaStore to use. will be used to get the mongo_url
-    :param name: the dataset name in OmegaStore to use. will be used to get the 
+    :param name: the dataset name in OmegaStore to use. will be used to get the
     collection name from the omstore
     """
     global pool

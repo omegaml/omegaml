@@ -660,8 +660,8 @@ class OmegaStore(object):
         """
         try:
             backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
-        except:
-            raise ValueError('backend {kind} does not exist'.forma(**locals()))
+        except KeyError as e:
+            raise ValueError('backend {kind} does not exist'.format(**locals()))
         model_store = model_store or self
         data_store = data_store or self
         backend = backend_cls(model_store=model_store,
@@ -685,16 +685,23 @@ class OmegaStore(object):
                                            data_store=data_store)
         return None
 
-    def get_backend_byobj(self, obj, name, kind=None, attributes=None, **kwargs):
+    def get_backend_byobj(self, obj, name, kind=None, attributes=None,
+                          model_store=None, data_store=None, **kwargs):
         """
         return the matching backend for the given obj
 
         Returns:
             the first backend that supports the given parameters or None
         """
-        if kind:
+        model_store = model_store or self
+        data_store = data_store or self
+        meta = self.metadata(name)
+        kind = kind or (meta.kind if meta is not None else None)
+        if kind and kind in self.defaults.OMEGA_STORE_BACKENDS:
             backend = self.get_backend_bykind(kind)
-            if not backend.supports(obj, name, attributes=attributes, **kwargs):
+            if not backend.supports(obj, name, attributes=attributes,
+                                    data_store=data_store,
+                                    model_store=model_store, **kwargs):
                 objtype = str(type(obj))
                 warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
             return backend
@@ -748,7 +755,7 @@ class OmegaStore(object):
                 return self.get_dataframe_dfgroup(
                     name, version=version, **kwargs)
             elif meta.kind == MDREGISTRY.PYTHON_DATA:
-                return self.get_python_data(name, version=version)
+                return self.get_python_data(name, version=version, **kwargs)
             elif meta.kind == MDREGISTRY.PANDAS_HDF:
                 return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
@@ -889,7 +896,7 @@ class OmegaStore(object):
                 "{0} does not exist in mongo collection '{1}'".format(
                     name, self.bucket))
 
-    def get_python_data(self, name, version=-1):
+    def get_python_data(self, name, version=-1,  **kwargs):
         """
         Retrieve objects as python data
 
@@ -899,7 +906,7 @@ class OmegaStore(object):
         :return: Returns the object as python list object
         """
         datastore = self.collection(name)
-        cursor = datastore.find()
+        cursor = datastore.find(**kwargs)
         data = (d.get('data') for d in cursor)
         return list(data)
 

@@ -1,14 +1,14 @@
 from __future__ import absolute_import
 
-import logging
-import os
-import sys
 from os.path import basename
 
+import logging
+import os
 import six
+import sys
 import yaml
 
-from omegaml.util import tensorflow_available, keras_available
+from omegaml.util import tensorflow_available, keras_available, module_available
 
 # determine how we're run
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
@@ -84,6 +84,9 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
 }
 OMEGA_STORE_BACKENDS_KERAS = {
     'keras.h5': 'omegaml.backends.keras.KerasBackend',
+}
+OMEGA_STORE_BACKENDS_SQL = {
+    'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
 }
 #: supported frameworks
 if is_test_run:
@@ -330,6 +333,9 @@ if 'tensorflow' in OMEGA_FRAMEWORKS and tensorflow_available():
 #: keras backend
 if 'keras' in OMEGA_FRAMEWORKS and keras_available():
     OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_KERAS)
+#: sqlalchemy backend
+if module_available('sqlalchemy'):
+    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_SQL)
 
 # load user extensions if any
 if OMEGA_USER_EXTENSIONS is not None:

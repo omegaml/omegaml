@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 
 import glob
-import os
-import tempfile
-from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import datetime
+import os
+import tempfile
 from mongoengine.fields import GridFSProxy
+from shutil import rmtree
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
 
 from omegaml.backends.basemodel import BaseModelBackend
@@ -19,6 +20,10 @@ class ScikitLearnBackend(BaseModelBackend):
     """
     OmegaML backend to use with ScikitLearn
     """
+
+    @classmethod
+    def supports(self, obj, name, **kwargs):
+        return isinstance(obj, BaseEstimator)
 
     def _package_model(self, model, filename):
         """
@@ -89,7 +94,7 @@ class ScikitLearnBackend(BaseModelBackend):
             gridfile=gridfile).save()
 
     def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         data = self.data_store.get(Xname)
         model = self.model_store.get(modelname)
         result = model.predict(reshaped(data), **kwargs)
@@ -101,7 +106,7 @@ class ScikitLearnBackend(BaseModelBackend):
         return result
 
     def predict_proba(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         data = self.data_store.get(Xname)
         model = self.model_store.get(modelname)
         result = model.predict_proba(reshaped(data), **kwargs)
@@ -134,7 +139,7 @@ class ScikitLearnBackend(BaseModelBackend):
         return meta
 
     def partial_fit(
-            self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+          self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None
@@ -156,8 +161,8 @@ class ScikitLearnBackend(BaseModelBackend):
         return meta
 
     def score(
-            self, modelname, Xname, Yname, rName=None, pure_python=True,
-            **kwargs):
+          self, modelname, Xname, Yname, rName=None, pure_python=True,
+          **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
@@ -168,8 +173,8 @@ class ScikitLearnBackend(BaseModelBackend):
         return result
 
     def fit_transform(
-            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-            **kwargs):
+          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
+          **kwargs):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None

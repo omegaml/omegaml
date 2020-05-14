@@ -1,15 +1,16 @@
 from __future__ import absolute_import
 
+import warnings
+from importlib import import_module
+
 import logging
 import os
 import re
-import tempfile
-import uuid
-import warnings
-from shutil import rmtree
-
 import six
 import sys
+import tempfile
+import uuid
+from shutil import rmtree
 from six import string_types
 
 try:
@@ -224,7 +225,7 @@ def get_labeled_points_from_rdd(rdd):
 
 
 def unravel_index(df, row_count=0):
-    """ 
+    """
     convert index columns into dataframe columns
 
     index columns are stored in the dataframe, named '_idx#<n>_<name>'
@@ -485,20 +486,20 @@ def dict_update_if(condition, dict, other):
         dict.update(other)
 
 
-def tensorflow_available():
+def module_available(modname):
     try:
-        import tensorflow
+        import_module(modname)
     except:
         return False
     return True
+
+
+def tensorflow_available():
+    return module_available('tensorflow')
 
 
 def keras_available():
-    try:
-        import keras
-    except:
-        return False
-    return True
+    return module_available('keras')
 
 
 def calltrace(obj):
@@ -575,9 +576,9 @@ def ensure_json_serializable(v):
         return vv
     return v
 
+
 def mkdirs(path):
     """ safe os.makedirs for python 2 & 3
     """
     if not os.path.exists(path):
         os.makedirs(path)
-
