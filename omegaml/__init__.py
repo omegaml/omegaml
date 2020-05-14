@@ -30,6 +30,8 @@ jobs = _omega.OmegaDeferredInstance(_omega._om, 'jobs')
 scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')
 #: the OmegaRuntime for cluster execution
 runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
+#: the OmegaSimpleLogger for easy log access
+logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
 

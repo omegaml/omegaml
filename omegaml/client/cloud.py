@@ -101,9 +101,9 @@ def setup_from_config(config_file=None):
                     omega = setup(userid=userconfig['OMEGA_USERID'],
                                   apikey=userconfig['OMEGA_APIKEY'],
                                   api_url=userconfig['OMEGA_RESTAPI_URL'])
-                except:
+                except Exception as e:
                     # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
-                    raise ValueError('Could not login using config file {}'.format(config_file))
+                    raise ValueError('Could not login using config file {}, error={}'.format(config_file, str(e)))
             else:
                 _base_config.OMEGA_CONFIG_FILE = config_file
                 raise SystemError

@@ -21,7 +21,7 @@ class ShellCommandBase(CommandBase):
             use_ipython = True
         # ipython
         if use_ipython:
-            IPython.embed(header='omegaml as available as the om variable', colors='neutral')
+            IPython.embed(header='omegaml is available as the om variable', colors='neutral')
             return
         # default console
         import code

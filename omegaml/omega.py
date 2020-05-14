@@ -1,4 +1,5 @@
 from ._version import version
+from .store.logging import OmegaSimpleLogger
 
 
 class Omega(object):
@@ -14,6 +15,7 @@ class Omega(object):
     * :code:`scripts` - access to lambda modules stored and executed in the cluster
 
     """
+
     def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None,
                  **kwargs):
         """
@@ -45,6 +47,8 @@ class Omega(object):
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
+        # logger
+        self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
 
     def __repr__(self):
         return 'Omega()'.format()
@@ -80,7 +84,6 @@ class Omega(object):
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)
-
 
 
 class OmegaDeferredInstance(object):
