@@ -27,7 +27,7 @@ release-test: dist
 	# config is in $HOME/.pypirc
 	twine upload --repository testpypi dist/*
 	sleep 5
-	scripts/livetest.sh --testpypi
+	scripts/livetest.sh --testpypi --build
 
 release-prod: test dist
 	: "twine upload to pypi prod"
