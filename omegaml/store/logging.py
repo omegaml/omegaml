@@ -144,7 +144,7 @@ class OmegaSimpleLogger:
     def collection(self):
         if not self._is_setup:
             self._collection = _setup_logging_dataset(self.store, self.dsname, self,
-                                                     collection=self._collection, size=self.size)
+                                                      collection=self._collection, size=self.size)
             self._is_setup = True
         return self._collection
 
@@ -250,10 +250,9 @@ class TailableLogDataset:
         self.tail_stop = False
         # register exit handler to stop thread
         atexit.register(self._stop_handler)
-        signal.signal(signal.SIGHUP, self._stop_handler)
-        if hasattr(signal, 'SIGBREAK'):
-            signal.signal(signal.SIGBREAK, self._stop_handler)  # windows only
-        signal.signal(signal.SIGINT, self._stop_handler)
+        for sig in ('SIGHUP', 'SIGBREAK', 'SIGINT'):
+            if hasattr(signal, sig):
+                signal.signal(signal.SIGHUP, self._stop_handler)
         # block if requested
         if wait:
             while wait:
@@ -304,10 +303,11 @@ class TailableLogDataset:
             stdout = sys.stdout
         return stdout
 
+
 def _make_record(level, levelno, name, message, text=None, fmt='{message}'):
     from datetime import datetime
     created = datetime.utcnow()
-    text = text if text is None else fmt.format(**locals())
+    text = text if text is not None else fmt.format(**locals())
     return {
         'levelname': level,
         'levelno': levelno,
@@ -316,6 +316,7 @@ def _make_record(level, levelno, name, message, text=None, fmt='{message}'):
         'created': created,
         'text': text,
     }
+
 
 def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 1024 * 1024, reset=False):
     # setup the dataset
