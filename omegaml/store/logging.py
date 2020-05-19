@@ -313,8 +313,8 @@ def _make_record(level, levelno, name, message, text=None, fmt='{message}'):
         'levelno': levelno,
         'name': name,
         'msg': message,
-        'created': created,
         'text': text,
+        'created': created,
     }
 
 
