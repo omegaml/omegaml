@@ -200,11 +200,11 @@ class MLocIndexer(object):
         if isinstance(specs, np.ndarray):
             specs = specs.tolist()
         if (isinstance(specs, enumerable_types)
-                and isscalar(specs[0]) and len(idx_cols) == 1
-                and not any(isinstance(s, slice) for s in specs)):
+              and isscalar(specs[0]) and len(idx_cols) == 1
+              and not any(isinstance(s, slice) for s in specs)):
             # single column index with list of scalar values
             if (self.positional and isinstance(specs, tuple) and len(specs) == 2
-                    and all(isscalar(v) for v in specs)):
+                  and all(isscalar(v) for v in specs)):
                 # iloc[int, int] is a cell access
                 flt_kwargs[idx_cols[0]] = specs[0]
                 projection.extend(self._get_projection(specs[1]))
@@ -740,7 +740,7 @@ class MDataFrame(object):
         target_name = self._get_collection_name_of(
             target, '_temp.merge.%s' % uuid4().hex)
         target_field = (
-                "%s_%s" % (right_name.replace('.', '_'), right_on or on))
+              "%s_%s" % (right_name.replace('.', '_'), right_on or on))
         lookup = qops.LOOKUP(right_name,
                              key=on,
                              left_key=left_on,
@@ -929,6 +929,48 @@ class MDataFrame(object):
         list all indices in database
         """
         return cursor_to_dataframe(self.collection.list_indexes())
+
+    def iterchunks(self, chunksize=100):
+        """
+        return an iterator
+
+        Args:
+            chunksize (int): number of rows in each chunk
+
+        Returns:
+            a dataframe of max. length chunksize
+        """
+        i = 0
+        while True:
+            chunkdf = self.skip(i).head(chunksize).value
+            if len(chunkdf) == 0:
+                break
+            i += chunksize
+            yield chunkdf
+
+    def itertuples(self, chunksize=1000):
+        __doc__ = pd.DataFrame.itertuples.__doc__
+
+        for chunkdf in self.iterchunks(chunksize=chunksize):
+            for row in chunkdf.iterrows():
+                yield row
+
+    def iterrows(self, chunksize=1000):
+        __doc__ = pd.DataFrame.iterrows.__doc__
+
+        for chunkdf in self.iterchunks(chunksize=chunksize):
+            for row in chunkdf.iterrows():
+                yield row
+
+    def iteritems(self):
+        __doc__ = pd.DataFrame.iteritems.__doc__
+        return self.items()
+
+    def items(self):
+        __doc__ = pd.DataFrame.items.__doc__
+
+        for col in self.columns:
+            yield col, self[col].value
 
     @property
     def loc(self):

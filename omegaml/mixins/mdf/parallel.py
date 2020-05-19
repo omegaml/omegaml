@@ -1,7 +1,4 @@
-try:
-    from sklearn.externals.joblib import Parallel, delayed
-except:
-    from joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 from omegaml.util import PickableCollection
 

@@ -762,6 +762,7 @@ class OmegaStore(object):
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
                                 filter=None, version=-1, is_series=False,
+                                chunksize=None,
                                 **kwargs):
         """
         Internal method to return DataFrame from documents
@@ -779,12 +780,14 @@ class OmegaStore(object):
 
         """
         collection = self.collection(name)
-        if lazy:
+        if lazy or chunksize:
             from ..mdataframe import MDataFrame
             filter = filter or kwargs
             df = MDataFrame(collection, columns=columns).query(**filter)
             if is_series:
                 df = df[0]
+            if chunksize is not None and chunksize > 0:
+                return df.iterchunks(chunksize=chunksize)
         else:
             # TODO ensure the same processing is applied in MDataFrame
             # TODO this method should always use a MDataFrame disregarding lazy
