@@ -686,6 +686,7 @@ class ApplyString(object):
 
     concat = __strexpr__('$concat', base=True)
     split = __strexpr__('$split', unwind=True, base=True, max_terms=2)
+    usplit = __strexpr__('$split', unwind=False, base=True, max_terms=2)
     upper = __strunary__('$toUpper')
     lower = __strunary__('$toLower')
     substr = __strexpr__('$substr', base=True)
