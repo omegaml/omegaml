@@ -7,12 +7,7 @@ import os
 import six
 import sys
 import yaml
-try:
-    from sklearn.externals.joblib import register_parallel_backend
-except:
-    from joblib import register_parallel_backend
 
-from omegaml.runtimes.locky import OmegaRuntimeBackend
 from omegaml.util import tensorflow_available, keras_available, module_available
 
 # determine how we're run
@@ -105,6 +100,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
     'omegaml.mixins.store.package.PythonPackageMixin',
     'omegaml.mixins.store.promotion.PromotionMixin',
+    'omegaml.mixins.mdf.iotools.IOToolsStoreMixin',
 ]
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
@@ -116,6 +112,7 @@ OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.FilterOpsMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.apply.ApplyStatistics', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.iotools.IOToolsMDFMixin', 'MDataFrame'),
     ('omegaml.mixins.mdf.ParallelApplyMixin', 'MDataFrame'),
 ]
 #: mdataframe apply context mixins
@@ -342,8 +339,6 @@ if 'keras' in OMEGA_FRAMEWORKS and keras_available():
 #: sqlalchemy backend
 if module_available('sqlalchemy'):
     OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_SQL)
-#: register joblib parallel omegaml  backend
-register_parallel_backend('omegaml', OmegaRuntimeBackend)
 # load user extensions if any
 if OMEGA_USER_EXTENSIONS is not None:
     load_user_extensions(OMEGA_USER_EXTENSIONS)

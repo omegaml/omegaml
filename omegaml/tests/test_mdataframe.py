@@ -1,18 +1,20 @@
 from __future__ import absolute_import
 
-import os
 import random
 import string
-import unittest
-from unittest.case import TestCase, skip
 
 import numpy as np
+import os
 import pandas as pd
+import unittest
+from pandas.util.testing import assert_frame_equal, assert_series_equal
+from six.moves import range
+from unittest.case import TestCase
+
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
 from omegaml.util import flatten_columns
-from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six.moves import range
+
 
 class MDataFrameTests(TestCase):
 
@@ -193,7 +195,7 @@ class MDataFrameTests(TestCase):
         mdf = om.datasets.getl('samplez')
         mdf.append(mdf)
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, on='x', how='left', suffixes=('','')).value
+        result = MDataFrame(coll).merge(coll2, on='x', how='left', suffixes=('', '')).value
         testdf = df.append(other, ignore_index=True)
         testdf = testdf[result.columns]
         assert_frame_equal(result, testdf)
@@ -381,7 +383,6 @@ class MDataFrameTests(TestCase):
         dfx = om.datasets.getl('foo').iloc[[1, 2]].value
         assert_frame_equal(df.iloc[[1, 2]], dfx)
 
-
     def test_ilocindexer_single_column(self):
         om = self.om
         data = {
@@ -422,7 +423,7 @@ class MDataFrameTests(TestCase):
         dfx = om.datasets.getl('foo').iloc[[1, 2], :].value
         assert_frame_equal(df.iloc[[1, 2], :], dfx, check_names=False)
         # by ndarray
-        sel = np.array([1,2])
+        sel = np.array([1, 2])
         dfx = om.datasets.getl('foo').iloc[sel, :].value
         assert_frame_equal(df.iloc[sel, :], dfx, check_names=False)
 
@@ -436,7 +437,7 @@ class MDataFrameTests(TestCase):
         df = pd.DataFrame(data, index=(c for c in idx))
         om.datasets.put(df, 'foo', append=False)
         # by ndarray with immediate loc
-        sel = np.array([1,2])
+        sel = np.array([1, 2])
         dfx = om.datasets.getl('foo')
         dfx.immediate_loc = True
         dfx = dfx[['a']].iloc[sel]
@@ -448,4 +449,32 @@ class MDataFrameTests(TestCase):
         dfx = dfx[['a']].iloc[sel].value
         assert_frame_equal(df[['a']].iloc[sel], dfx, check_names=False)
 
+    def test_iterchunks(self):
+        om = self.om
+        for cdf in om.datasets.getl('sample', chunksize=2):
+            self.assertEqual(len(cdf), 2)
+
+    def test_iterrows(self):
+        om = self.om
+        mdf = om.datasets.getl('sample')
+        df = mdf.value
+        for df_row, mdf_row in zip(mdf.iterrows(), df.iterrows()):
+            self.assertEqual(type(df_row), type(mdf_row))
+            assert_series_equal(df_row[1], mdf_row[1])
+
+    def test_iteritems(self):
+        om = self.om
+        mdf = om.datasets.getl('sample')
+        df = mdf.value
+        for df_row, mdf_row in zip(mdf.iteritems(), df.iteritems()):
+            self.assertEqual(type(df_row), type(mdf_row))
+            assert_series_equal(df_row[1], mdf_row[1])
+
+    def test_items(self):
+        om = self.om
+        mdf = om.datasets.getl('sample')
+        df = mdf.value
+        for df_row, mdf_row in zip(mdf.items(), df.items()):
+            self.assertEqual(type(df_row), type(mdf_row))
+            assert_series_equal(df_row[1], mdf_row[1])
 

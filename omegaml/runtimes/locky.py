@@ -1,10 +1,7 @@
-try:
-    from sklearn.externals.joblib.parallel import BACKENDS
-except:
-    from joblib.parallel import BACKENDS
 from tqdm import tqdm
+import joblib
 
-LokyBackend = BACKENDS['loky']
+LokyBackend = joblib.parallel.BACKENDS['loky']
 
 
 class OmegaRuntimeBackend(LokyBackend):
@@ -40,3 +37,6 @@ class OmegaRuntimeBackend(LokyBackend):
             self.tqdm.close()
         finally:
             super().terminate()
+
+#: register joblib parallel omegaml  backend
+joblib.register_parallel_backend('omegaml', OmegaRuntimeBackend)
