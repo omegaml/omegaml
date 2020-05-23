@@ -1,3 +1,4 @@
+*.whl
 node_modules/
 .idea
 celerybeat*

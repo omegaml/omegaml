@@ -34,16 +34,12 @@ class TensorflowKerasBackend(KerasBackend):
             except NotImplementedError:
                 pass
 
-    def _load_model(self, fn):
+    def _extract_model(self, infile, key, tmpfn):
         # override to implement model loading
         from tensorflow import keras
-        load_model = keras.engine.saving.load_model
-        return load_model(fn)
-
-    def _load_model(self, fn):
-        # override to implement model loading
-        from tensorflow import keras
-        return keras.models.load_model(fn)
+        with open(tmpfn, 'wb') as pkgfn:
+            pkgfn.write(infile.read())
+        return keras.models.load_model(tmpfn)
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, tpu_specs=None, **kwargs):
         meta = self.model_store.metadata(modelname)
@@ -85,5 +81,5 @@ class TensorflowKerasBackend(KerasBackend):
         fn = temp_filename()
         tpu_model.save_weights(fn, overwrite=True)
         model.load_weights(fn)
-        meta = self.put_model(model, modelname)
+        meta = self.put(model, modelname)
         return meta

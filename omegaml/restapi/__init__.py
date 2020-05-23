@@ -74,6 +74,13 @@ class ModelResource(OmegaResourceMixin, Resource):
         payload = api.payload
         return self._generic_model_resource.put(model_id, query, payload)
 
+    @api.expect(PredictInput, validate=False)
+    @api.marshal_with(PredictOutput)
+    def get(self, model_id):
+        query = flask.request.args
+        payload = api.payload
+        return self._generic_model_resource.put(model_id, query, payload)
+
 
 @api.route('/api/v1/dataset/<string:dataset_id>')
 class DatasetResource(OmegaResourceMixin, Resource):

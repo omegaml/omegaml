@@ -1,5 +1,5 @@
 """
-omega runtime model tasks 
+omega runtime model tasks
 """
 from __future__ import absolute_import
 
@@ -51,7 +51,7 @@ def omega_partial_fit(self,
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_score(self, modelname, Xname, Yname, rName=True, pure_python=True,
+def omega_score(self, modelname, Xname, Yname=None, rName=True, pure_python=True,
                 **kwargs):
     result = self.get_delegate(modelname).score(*self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)

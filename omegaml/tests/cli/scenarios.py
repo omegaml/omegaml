@@ -146,7 +146,7 @@ class CliTestScenarios:
         reg = LinearRegression()
         return om.models.put(reg, 'reg')
 
-    def make_dataset_from_dataframe(self, name, N=100):
+    def make_dataset_from_dataframe(self, name, N=100, m=2, b=0):
         """
         create and store a pandas dataframe
 
@@ -161,7 +161,7 @@ class CliTestScenarios:
             'x': range(N),
             'y': range(N)
         })
-        df['y'] = df['x'] * 2
+        df['y'] = df['x'] * m + b
         return self.om.datasets.put(df, name, append=False)
 
     def create_local_csv(self, path, size=(100, 2), sep=','):

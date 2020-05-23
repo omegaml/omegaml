@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -26,12 +26,15 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         # promote to prod
         om.datasets.promote('foo', prod.datasets)
         self.assertIn('foo', prod.datasets.list())
+        self.assertEqual(om.datasets.get('foo'), prod.datasets.get('foo'))
 
     def test_model_promotion(self):
         om = self.om
         prod = om['prod']
         reg = LinearRegression()
         om.models.put(reg, 'mymodel')
+        reg_ = om.models.get('mymodel')
+        self.assertIsInstance(reg_, LinearRegression)
         # ensure dataset is in default bucket, not in prod
         self.assertIn('mymodel', om.models.list())
         self.assertNotIn('mymodel', prod.models.list())
@@ -97,12 +100,34 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         with self.assertRaises(ValueError):
             om.datasets.promote('foo', om.datasets)
 
+    @skip('skipped until metadata is able to access different database')
     def test_promotion_to_other_db_works(self):
         om = self.om
-        other = Omega(mongo_url=om.mongo_url + '_test')
+        other = Omega(mongo_url=om.mongo_url + '_promotest')
+        [other.models.drop(name, force=True) for name in other.models.list(include_temp=True)]
+        [other.datasets.drop(name, force=True) for name in other.datasets.list(include_temp=True)]
         reg = LinearRegression()
+        reg.coef_ = 10
+        # try models
         om.models.put(reg, 'mymodel')
+        self.assertIn('mymodel', om.models.list())
+        self.assertNotIn('mymodel', other.models.list())
         om.models.promote('mymodel', other.models)
+        self.assertIn('mymodel', other.models.list())
+        # ensure changes only in original
+        reg.coef_ = 15
+        om.models.put(reg, 'mymodel')
+        self.assertNotEqual(om.models.get('mymodel').coef_, other.models.get('mymodel').coef_)
+        # try datasets
         om.datasets.put(['foo'], 'foo')
+        # -- ensure only in original
+        self.assertIn('foo', om.datasets.list())
+        self.assertNotIn('foo', other.datasets.list())
+        # -- promote to other
         om.datasets.promote('foo', other.datasets)
-
+        self.assertIn('foo', other.datasets.list())
+        self.assertEqual(om.datasets.get('foo'), other.datasets.get('foo'))
+        # change original ensure copy not changed
+        om.datasets.put(['foo'], 'foo', append=True)
+        self.assertNotEqual(om.datasets.get('foo'), other.datasets.get('foo'))
+        # try models too
