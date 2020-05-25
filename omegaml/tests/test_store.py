@@ -21,6 +21,7 @@ from sklearn.linear_model import LogisticRegression
 from omegaml import backends
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
+from omegaml.backends.scikitlearn import ScikitLearnBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
 from omegaml.store import OmegaStore
@@ -48,7 +49,7 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
-        backend = backends.ScikitLearnBackend(model_store=store,
+        backend = ScikitLearnBackend(model_store=store,
                                               data_store=store)
         # v2 of the ScikitLearnBackend no longer supports testing these methods
         # test put(), get() instead

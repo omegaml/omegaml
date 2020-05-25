@@ -1,6 +1,5 @@
 import dill
 import six
-from mongoengine import GridFSProxy
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -67,11 +66,8 @@ class VirtualObjectBackend(BaseDataBackend):
         if isinstance(obj, six.class_types):
             obj = obj()
         data = dill.dumps(obj)
-        filename = self.model_store._get_obj_store_key(name, '.dill')
-        fileid = self.model_store.fs.put(data, filename=filename)
-        gridfile = GridFSProxy(grid_id=fileid,
-                               db_alias='omega',
-                               collection_name=self.model_store.bucket)
+        filename = self.model_store.object_store_key(name, '.dill', hashed=True)
+        gridfile = self._store_to_file(self.model_store, data, filename)
         return self.model_store._make_metadata(
             name=name,
             prefix=self.model_store.prefix,
@@ -81,9 +77,10 @@ class VirtualObjectBackend(BaseDataBackend):
             gridfile=gridfile).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
-        filename = self.model_store._get_obj_store_key(name, '.dill')
-        outf = self.model_store.fs.get_version(filename, version=version)
+        meta = self.model_store.metadata(name)
+        outf = meta.gridfile
         obj = dill.load(outf)
+        outf.close()
         return obj
 
     def predict(self, modelname, xName, rName, **kwargs):

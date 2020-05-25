@@ -1,6 +1,7 @@
+from omegaml.backends.basecommon import BackendBaseCommon
 
 
-class BaseDataBackend(object):
+class BaseDataBackend(BackendBaseCommon):
 
     """
     OmegaML BaseDataBackend to be subclassed by other arbitrary backends
@@ -22,7 +23,7 @@ class BaseDataBackend(object):
 
     def put(self, obj, name, attributes=None, **kwargs):
         """
-        put an obj 
+        put an obj
 
         :param obj: the object to store (object)
         :param name: the name of the object (str)
@@ -34,7 +35,7 @@ class BaseDataBackend(object):
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         """
-        get an obj 
+        get an obj
 
         :param name: the name of the object (str)
         :return: the object as it was originally stored
@@ -45,12 +46,12 @@ class BaseDataBackend(object):
         """
         get an lazy implementation to access the obj
 
-        A lazy implementation is a proxy to the object that can be 
+        A lazy implementation is a proxy to the object that can be
         evaluated using the :code:`.value` property. The proxy should
         ensure that any operations applied on the object are delayed until
         the .value property is accessed. Typically this is to ensure that
         the actual computation is executed on the cluster, not on the local
-        machine. 
+        machine.
 
         :param name: the name of the object (str)
         :return: the proxy to the object as it was originally stored

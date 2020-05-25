@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
 import glob
-import os
-import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import datetime
 import joblib
-from mongoengine.fields import GridFSProxy
+import os
+import tempfile
 from shutil import rmtree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
@@ -18,7 +17,6 @@ from omegaml.util import reshaped, gsreshaped
 
 # byte string
 _u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
-
 
 class ScikitLearnBackendV1(BaseModelBackend):
     KIND = MDREGISTRY.SKLEARN_JOBLIB
@@ -71,9 +69,10 @@ class ScikitLearnBackendV1(BaseModelBackend):
         except OSError:
             # OSError is raised if path exists already
             pass
+        meta = self.model_store.metadata(name, version=version)
         outf = self.model_store.fs.get_version(filename, version=version)
         with open(packagefname, 'wb') as zipf:
-            zipf.write(outf.read())
+            zipf.write(meta.gridfile.read())
         model = self._v1_extract_model(packagefname)
         return model
 
@@ -83,11 +82,8 @@ class ScikitLearnBackendV1(BaseModelBackend):
         """
         zipfname = self._v1_package_model(obj, name)
         with open(zipfname, 'rb') as fzip:
-            fileid = self.model_store.fs.put(
+            gridfile = self.model_store.fs.put(
                 fzip, filename=self.model_store._get_obj_store_key(name, 'omm'))
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias='omega',
-                                   collection_name=self.model_store.bucket)
         return self.model_store._make_metadata(
             name=name,
             prefix=self.model_store.prefix,

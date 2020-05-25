@@ -1,6 +1,6 @@
 import six
 
-from omegaml.backends import BaseModelBackend
+from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.util import ensure_python_array
 
 

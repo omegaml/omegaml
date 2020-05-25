@@ -1,5 +1,3 @@
-from mongoengine import GridFSProxy
-
 from omegaml import load_class
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -14,10 +12,8 @@ class ProtobufDataBackend(BaseDataBackend):
 
     def put(self, obj, name, attributes=None, **kwargs):
         data = obj.SerializeToString()
-        fileid = self.model_store.fs.put(data, filename=self.model_store._get_obj_store_key(name, '.pbf'))
-        gridfile = GridFSProxy(grid_id=fileid,
-                               db_alias='omega',
-                               collection_name=self.model_store.bucket)
+        storekey = self.model_store.object_store_key(name, '.pbf', hashed=True)
+        gridfile = self._store_to_file(self.model_store, data, storekey)
         kind_meta = {
             'protobuf_type': '{module}.{name}'.format(module=obj.DESCRIPTOR._concrete_class.__module__,
                                                       name=obj.DESCRIPTOR._concrete_class.__name__)
