@@ -16,6 +16,7 @@ graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0', 'imageio==2.6.1']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
+streaming_deps = ['minibatch[all]']
 
 setup(
     name='omegaml',
@@ -82,7 +83,8 @@ setup(
         'dashserve': dashserve_deps,
         'sql': sql_deps,
         'iotools': iotools_deps,
-        'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps,
+        'streaming': streaming_deps,
+        'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

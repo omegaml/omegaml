@@ -12,7 +12,7 @@ from omegaml.util import tensorflow_available, keras_available, module_available
 
 # determine how we're run
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
-is_test_run = any(m in [basename(arg) for arg in sys.argv]
+is_test_run = any(m in [basename(arg) for arg in ' '.join(sys.argv).split(' ')]
                   for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
                             '_jb_nosetest_runner.py'))
 
@@ -87,14 +87,17 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
 OMEGA_STORE_BACKENDS_KERAS = {
     'keras.h5': 'omegaml.backends.keras.KerasBackend',
 }
+OMEGA_STORE_BACKENDS_DASH = {
+    'python.dash': 'omegaml.backends.dashapp.DashAppBackend',
+}
 OMEGA_STORE_BACKENDS_SQL = {
     'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
 }
 #: supported frameworks
 if is_test_run:
-    OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras')
+    OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras', 'dash')
 else:
-    OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS') or ('scikit-learn')
+    OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', '').split(',') or ('scikit-learn',)
 
 #: storage mixins
 OMEGA_STORE_MIXINS = [
@@ -342,6 +345,9 @@ if 'keras' in OMEGA_FRAMEWORKS and keras_available():
 #: sqlalchemy backend
 if module_available('sqlalchemy'):
     OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_SQL)
+#: dash backend
+if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
+    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_DASH)
 # load user extensions if any
 if OMEGA_USER_EXTENSIONS is not None:
     load_user_extensions(OMEGA_USER_EXTENSIONS)

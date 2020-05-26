@@ -84,7 +84,6 @@ def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
     import omegaml as om
     api_url = api_url or os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
     om.Omega = OmegaCloud
-    om.setup = setup
     om.get_omega_for_task = lambda *args, **kwargs: setup(*args, **kwargs)
     om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=False)
     return om[bucket]
