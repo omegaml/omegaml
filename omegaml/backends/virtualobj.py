@@ -83,12 +83,12 @@ class VirtualObjectBackend(BaseDataBackend):
         outf.close()
         return obj
 
-    def predict(self, modelname, xName, rName, **kwargs):
+    def predict(self, modelname, xName, rName=None, **kwargs):
         # make this work as a model backend too
         meta = self.model_store.metadata(modelname)
         handler = self.get(modelname)
         X = self.data_store.get(xName)
-        return handler(method='predict', data=X, meta=meta, store=self.model_store)
+        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName, **kwargs)
 
 def virtualobj(fn):
     """

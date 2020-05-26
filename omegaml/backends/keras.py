@@ -75,8 +75,11 @@ class KerasBackend(BaseModelBackend):
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
-        score = model.evaluate(X, Y)
-        return score
+        result = model.evaluate(X, Y)
+        if rName:
+            meta = self.data_store.put(result, rName)
+            result = meta
+        return result
 
 
 def serializable_history(history):
