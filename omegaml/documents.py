@@ -54,9 +54,7 @@ class Metadata:
     #: kind of data
     kind = StringField(choices=MDREGISTRY.KINDS)
     #: for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile
-    gridfile = FileField(
-        db_alias='omega',
-        collection_name=settings().OMEGA_MONGO_COLLECTION)
+    gridfile = FileField()
     #: for PANDAS_DFROWS this is the collection
     collection = StringField()
     #: for PYTHON_DATA this is the actual document

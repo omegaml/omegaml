@@ -1,11 +1,7 @@
 from __future__ import absolute_import
 
-from celery import Celery
-
-from omegaml.runtimes.jobproxy import OmegaJobProxy
-from omegaml.runtimes.scriptproxy import OmegaScriptProxy
-from omegaml.util import settings
 import logging
+from celery import Celery
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +22,7 @@ class CeleryTask(object):
             kwargs (dict): optional, the kwargs to pass to apply_async
         """
         self.task = task
-        self.kwargs = kwargs
+        self.kwargs = dict(kwargs)
 
     def _apply_kwargs(self, task_kwargs, celery_kwargs):
         # update task_kwargs from runtime's passed on kwargs
@@ -69,6 +65,8 @@ class OmegaRuntime(object):
     """
 
     def __init__(self, omega, bucket=None, defaults=None, celeryconf=None):
+        from omegaml.util import settings
+
         self.omega = omega
         defaults = defaults or settings()
         self.bucket = bucket
@@ -96,6 +94,10 @@ class OmegaRuntime(object):
         return 'OmegaRuntime({})'.format(self.omega.__repr__())
 
     @property
+    def auth(self):
+        return None
+
+    @property
     def _common_kwargs(self):
         common = dict(self._task_default_kwargs)
         common['task'].update(pure_python=self.pure_python, __bucket=self.bucket)
@@ -112,6 +114,14 @@ class OmegaRuntime(object):
             return True
         else:
             return False
+
+    def _sanitize_require(self, value):
+        # convert value into dict(label=value)
+        if isinstance(value, str):
+            return dict(label=value)
+        if isinstance(value, (list, tuple)):
+            return dict(*value)
+        return value
 
     def require(self, label=None, always=False, **kwargs):
         """
@@ -147,7 +157,7 @@ class OmegaRuntime(object):
             require (dict): routing requirements for this job
         """
         from omegaml.runtimes.modelproxy import OmegaModelProxy
-        self.require(**require) if require else None
+        self.require(**self._sanitize_require(require)) if require else None
         return OmegaModelProxy(modelname, runtime=self)
 
     def job(self, jobname, require=None):
@@ -157,7 +167,9 @@ class OmegaRuntime(object):
         Args:
             require (dict): routing requirements for this job
         """
-        self.require(**require) if require else None
+        from omegaml.runtimes.jobproxy import OmegaJobProxy
+
+        self.require(**self._sanitize_require(require)) if require else None
         return OmegaJobProxy(jobname, runtime=self)
 
     def script(self, scriptname, require=None):
@@ -167,7 +179,9 @@ class OmegaRuntime(object):
         Args:
             require (dict): routing requirements for this job
         """
-        self.require(**require) if require else None
+        from omegaml.runtimes.scriptproxy import OmegaScriptProxy
+
+        self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
     def task(self, name):

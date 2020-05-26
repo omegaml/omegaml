@@ -1,8 +1,8 @@
-from pandas.io.json import json_normalize
 from pymongo.collection import Collection
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
+from omegaml.util import json_normalize
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -29,12 +29,13 @@ class PandasRawDictBackend(BaseDataBackend):
     def supports(self, obj, name, as_raw=None, **kwargs):
         return (as_raw and isinstance(obj, dict)) or isinstance(obj, Collection)
 
-    def get(self, name, version=-1, lazy=False, raw=False, parser=None, **kwargs):
+    def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, **kwargs):
         collection = self.data_store.collection(name)
         # json_normalize needs a list of dicts to work, not a generator
         json_normalizer = lambda v: json_normalize([r for r in v])
         parser = parser or json_normalizer
-        mdf = MDataFrame(collection, query=kwargs, parser=parser, raw=raw, **kwargs)
+        query = filter or kwargs
+        mdf = MDataFrame(collection, query=query, parser=parser, raw=raw, **kwargs)
         return mdf if lazy else mdf.value
 
     def put(self, obj, name, attributes=None, **kwargs):

@@ -14,7 +14,7 @@ class CloudCommandBase(CommandBase):
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
       om cloud config [options]
-      om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [options]
+      om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [--specs <specs>] [options]
 
     Options:
       --userid=USERID   the userid at hub.omegaml.io (see account profile)
@@ -22,6 +22,7 @@ class CloudCommandBase(CommandBase):
       --apiurl=URL      the cloud URL [default: https://hub.omegaml.io]
       --count=NUMBER    how many instances to set up [default: 1]
       --node-type=TYPE  the type of node [default: small]
+      --specs=SPECS     the service specifications as "key=value[,...]"
     """
     command = 'cloud'
 
@@ -68,8 +69,10 @@ class CloudCommandBase(CommandBase):
         offering = self.args.get('<kind>')
         size = self.args.get('--count')
         node_type = self.args.get('--node-type')
+        specs = self.args.get('--specs')
         user = getattr(om.defaults, 'OMEGA_USERID')
-        params = "size={size},node-type={node_type}".format(**locals())
+        default_specs = "size={size},node-type={node_type}".format(**locals())
+        params = specs or default_specs
         data = {
             'offering': offering,
             'user': user,

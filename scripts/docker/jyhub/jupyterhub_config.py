@@ -56,7 +56,7 @@
 #c.JupyterHub.admin_users = set()
 
 ## Allow named single-user servers per user
-#c.JupyterHub.allow_named_servers = False
+c.JupyterHub.allow_named_servers = True
 
 ## Answer yes to any questions (e.g. confirm overwrite)
 #c.JupyterHub.answer_yes = False
@@ -367,7 +367,7 @@ c.JupyterHub.logo_file = '/app/logo.jpg'
 #  Setting this can limit the total resources a user can consume.
 #
 #  If set to 0, no limit is enforced.
-#c.JupyterHub.named_server_limit_per_user = 0
+c.JupyterHub.named_server_limit_per_user = 2
 
 ## File to write PID Useful for daemonizing JupyterHub.
 #c.JupyterHub.pid_file = ''
@@ -683,7 +683,7 @@ c.JupyterHub.logo_file = '/app/logo.jpg'
 #  This whitelist is used to ensure that sensitive information in the JupyterHub
 #  process's environment (such as `CONFIGPROXY_AUTH_TOKEN`) is not passed to the
 #  single-user server's process.
-c.Spawner.env_keep = ['PATH', 'PYTHONPATH', 'CONDA_ROOT',
+c.Spawner.env_keep = ['PATH', 'PYTHONPATH', 'CONDA_ROOT', 'JY_DEFAULT_URL',
                       'CONDA_DEFAULT_ENV', 'VIRTUAL_ENV', 'LANG', 'LC_ALL',
                       'OMEGA_MONGO_URL', 'OMEGA_BROKER', 'OMEGA_FRAMEWORKS']
 

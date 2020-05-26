@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import six
 from celery import Task
 from kombu.serialization import registry
@@ -23,8 +25,12 @@ class EagerSerializationTaskMixin(object):
         if self._not_eager:
             return super(EagerSerializationTaskMixin, self).apply_async(args=args, kwargs=kwargs, *args_, **kwargs_)
         # only execute if eager
-        args, kwargs = self._eager_serialize_args(args=args, kwargs=kwargs, **kwargs_)
-        result = super(EagerSerializationTaskMixin, self).apply_async(args=args, kwargs=kwargs, **kwargs_)
+        # -- perform a serialization / deserialization roundtrip, as we would in distributed mode (not eager)
+        sargs, skwargs = self._eager_serialize_args(args=args, kwargs=kwargs, **kwargs_)
+        sargs_, skwargs_ = self._eager_serialize_args(args=args_, kwargs=kwargs_, **kwargs_)
+        # -- call actual task with deserialized args, kwargs, as it would be by remote
+        result = super(EagerSerializationTaskMixin, self).apply_async(args=sargs, kwargs=skwargs, *sargs_, **skwargs_)
+        # -- do the same for the result
         result = self._eager_serialize_result(result, **kwargs_)
         return result
 
@@ -85,6 +91,10 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     @property
     def delegate_kwargs(self):
         return {k: v for k, v in six.iteritems(self.request.kwargs) if not k.startswith('__')}
+
+    def __call__(self, *args, **kwargs):
+        self.reset()
+        return super().__call__(*args, **kwargs)
 
     def reset(self):
         # ensure next call will start over and get a new om instance

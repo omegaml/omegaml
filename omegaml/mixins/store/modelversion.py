@@ -35,12 +35,12 @@ class ModelVersionMixin(object):
           all functionality will continue to work as before
     """
 
-    def put(self, obj, name, tag=None, commit=None, previous='latest', **kwargs):
+    def put(self, obj, name, tag=None, commit=None, previous='latest', noversion=False, **kwargs):
         # create a new version
         meta = super().put(obj, name, **kwargs)
-        if self._model_version_applies():
+        if self._model_version_applies() and not noversion:
             self._ensure_versioned(meta)
-            meta = self._put_version(meta, tag=tag, commit=commit, previous=previous)
+            meta = self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, **kwargs)
         return meta
 
     def get(self, name, commit=None, tag=None, version=-1, **kwargs):
@@ -146,13 +146,15 @@ class ModelVersionMixin(object):
             meta.attributes['versions']['commits'] = []
             meta.attributes['versions']['tree'] = {}
 
-    def _put_version(self, meta, tag=None, commit=None, previous=None):
+    def _put_version(self, obj, meta, tag=None, commit=None, previous=None, **kwargs):
         version_hash = commit or self._model_version_hash(meta)
         previous = meta.attributes['versions']['tags'].get(previous) or previous
-        version_meta = deepcopy(meta)
-        version_meta.id = None
-        version_meta.name = self._model_version_store_key(meta.name, version_hash)
-        del version_meta.attributes['versions']
+        version_name = self._model_version_store_key(meta.name, version_hash)
+        version_meta = self.put(obj, version_name, noversion=True, **kwargs)
+        version_meta.attributes = deepcopy(meta.attributes)
+        version_meta.attributes.update(kwargs.get('attributes', {}))
+        if 'versions' in version_meta.attributes:
+            del version_meta.attributes['versions']
         version_meta.save()
         meta.attributes['versions']['commits'].append(dict(name=version_meta.name, ref=version_hash))
         meta.attributes['versions']['tree'][version_hash] = previous

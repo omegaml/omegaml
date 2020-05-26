@@ -1,3 +1,5 @@
+from os.path import basename, dirname
+
 import os
 import six
 
@@ -50,17 +52,19 @@ class PythonPackageData(BaseDataBackend):
         :param kwargs:
         :return: the loaded module
         """
-        packagefname = '{}.tar.gz'.format(os.path.join(self.data_store.tmppath, name))
+        pkgname = basename(name)
+        packagefname = '{}.tar.gz'.format(os.path.join(self.data_store.tmppath, pkgname))
+        os.makedirs(dirname(packagefname), exist_ok=True)
         self.path = self.packages_path
         dstdir = self.path
-        if not os.path.exists(os.path.join(dstdir, name)):
+        if not os.path.exists(os.path.join(dstdir, pkgname)):
             meta = self.data_store.metadata(name)
             outf = meta.gridfile
             with open(packagefname, 'wb') as pkgf:
                 pkgf.write(outf.read())
-            mod = install_and_import(packagefname, name, dstdir)
+            mod = install_and_import(packagefname, pkgname, dstdir)
         else:
-            mod = load_from_path(name, dstdir)
+            mod = load_from_path(pkgname, dstdir)
         return mod
 
     @property

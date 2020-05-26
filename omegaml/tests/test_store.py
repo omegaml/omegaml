@@ -10,7 +10,6 @@ import uuid
 from datetime import timedelta
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
-from pandas.io.json import json_normalize
 from pandas.util import testing
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 from six import BytesIO
@@ -18,14 +17,13 @@ from six.moves import range
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
-from omegaml import backends
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
 from omegaml.store import OmegaStore
-from omegaml.util import delete_database
+from omegaml.util import delete_database, json_normalize
 
 
 class StoreTests(unittest.TestCase):
@@ -50,7 +48,7 @@ class StoreTests(unittest.TestCase):
         result = lr.predict(X)
         # package locally
         backend = ScikitLearnBackend(model_store=store,
-                                              data_store=store)
+                                     data_store=store)
         # v2 of the ScikitLearnBackend no longer supports testing these methods
         # test put(), get() instead
         zipfname = backend._v1_package_model(lr, 'models/foo')
@@ -665,7 +663,6 @@ class StoreTests(unittest.TestCase):
         # currently this fails, see @skip reason
         testing.assert_frame_equal(df, df2)
 
-
     def test_store_dict_in_df(self):
         df = pd.DataFrame({
             'x': [{'foo': 'bar '}],
@@ -785,7 +782,7 @@ class StoreTests(unittest.TestCase):
         foo_store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
         bar_store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
         foo_data = {'foo': 'bar',
-                'bax': 'fox'}
+                    'bax': 'fox'}
         bar_data = {'foo': 'bax',
                     'bax': 'foz'}
         foo_store.put(foo_data, 'data')
@@ -800,4 +797,3 @@ class StoreTests(unittest.TestCase):
         file_like = BytesIO(bar_data.encode('utf-8'))
         bar_store.put(file_like, 'myfile')
         self.assertNotEqual(foo_store.get('myfile').read(), bar_store.get('myfile').read())
-

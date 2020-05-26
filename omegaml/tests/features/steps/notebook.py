@@ -1,24 +1,15 @@
 from behave import when, then
 from time import sleep
 
-from omegaml.tests.features.util import Notebook
+from omegaml.tests.features.util import Notebook, jburl
 
 
 @when(u'we open jupyter')
 def open_jupyter(ctx):
     br = ctx.browser
-    br.visit(ctx.feature.jynb_url)
-    nb = Notebook(br)
-    if br.is_text_present('JupyterHub', wait_time=10):
-        login_required = br.is_element_present_by_id('username_input', wait_time=30)
-        if login_required:
-            nb.login_hub()
-    else:
-        # fallback to juypter notebook
-        login_required = br.is_text_present('Password', wait_time=2)
-        login_required |= br.is_text_present('token', wait_time=2)
-        if login_required:
-            nb.login_nb()
+    br.visit(jburl(ctx.feature.jynb_url, ''))
+    nb = Notebook(br, password='omegamlisfun')
+    nb.login()
     nb.jupyter_home
 
 
@@ -51,6 +42,7 @@ def restart_kernel(ctx):
 def create_folder(ctx):
     br = ctx.browser
     nb = Notebook(br)
+    nb.jupyter_home
     nb.create_folder()
     nb.open_folder('Untitled Folder')
 
@@ -60,6 +52,7 @@ def list_datasets(ctx):
     # test omegaml functionality
     br = ctx.browser
     nb = Notebook(br)
+    nb.last_notebook
     code = """
     import omegaml as om
     om.datasets.put(['sample'], 'sample', append=False)
@@ -75,7 +68,7 @@ def list_datasets(ctx):
 @then(u'we can add a notebook in the folder')
 def add_notebook_in_folder(ctx):
     br = ctx.browser
-    br.visit(ctx.feature.jynb_url)
+    br.visit(jburl(ctx.feature.jynb_url, '', nbstyle='tree'))
     nb = Notebook(br)
     nb.jupyter_home
     nb.open_folder('Untitled Folder')

@@ -10,22 +10,19 @@ from nbformat import v4
 
 from omegaml import Omega
 from omegaml.notebook.jobs import JobSchedule
-from omegaml.util import settings as omegaml_settings
+from omegaml.util import settings as omegaml_settings, settings
 
 
 class JobTests(TestCase):
 
-    def setup(self):
-        TestCase.setUp(self)
-
     def tearDown(self):
-        TestCase.tearDown(self)
+        super().tearDown()
         for fn in self.om.jobs.list():
             self.om.jobs.drop(fn)
 
     @property
     def om(self):
-        om = Omega()
+        om = Omega(defaults=settings(reload=True))
         return om
 
     @property
@@ -97,7 +94,7 @@ class JobTests(TestCase):
 
     def test_run_job_timeout(self):
         """
-        test running a valid job
+        test running a job that times out
         """
         om = self.om
         # create a long-running notebook

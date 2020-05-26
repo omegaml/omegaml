@@ -1,20 +1,12 @@
-from __future__ import absolute_import
-
 import logging
 
-from omegaml.util import load_class, settings
-import omegaml.defaults as _base_config
+from omegaml.util import load_class, settings, base_loader
+from omegaml import defaults as _base_config
 
 logger = logging.getLogger(__file__)
 
-try:
-    from omegaee import omega as _omega
-except Exception as e:
-    from omegaml import omega as _omega
-except:
-    pass
-
 # link implementation
+_omega = base_loader(_base_config)
 setup = _omega.setup
 version = _omega.version
 get_omega_for_task = _omega.get_omega_for_task
@@ -34,4 +26,3 @@ runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
-

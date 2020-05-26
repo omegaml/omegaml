@@ -34,7 +34,7 @@ class BackendBaseCommon:
     def _is_path(self, obj):
         return isinstance(obj, six.string_types) and os.path.exists(obj)
 
-    def _store_to_file(self, store, obj, filename, encoding=None, replace=True):
+    def _store_to_file(self, store, obj, filename, encoding=None, replace=False):
         """
         Use this method to store file-like objects to the store's gridfs
 
@@ -45,15 +45,15 @@ class BackendBaseCommon:
             filename (path): the path in the store (key)
             encoding (str): a valid encoding such as utf8, optional
             replace (bool): if True the existing file(s) of the same name are deleted to avoid automated versioning
-               by gridfs. defaults to True
+               by gridfs. defaults to False
 
         Returns:
             gridfile (GridFSProxy), assignable to Metadata.gridfile
         """
         if replace:
-            for fileid in store.fs.find({'filename': filename}):
+            for fileobj in store.fs.find({'filename': filename}):
                 try:
-                    store.fs.delete(fileid)
+                    store.fs.delete(fileobj._id)
                 except Exception as e:
                     warn('deleting {filename} resulted in {e}'.format(**locals()))
                     pass

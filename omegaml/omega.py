@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from ._version import version
 from .store.logging import OmegaSimpleLogger
 
@@ -34,16 +36,16 @@ class Omega(object):
         from omegaml.util import settings
         # avoid circular imports
         from omegaml.notebook.jobs import OmegaJobs
-        from omegaml.store import OmegaStore
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket
         # setup storage locations
-        self.models = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='models/', defaults=self.defaults)
-        self.datasets = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='data/', defaults=self.defaults)
-        self._jobdata = OmegaStore(mongo_url=self.mongo_url, bucket=bucket, prefix='jobs/', defaults=self.defaults)
-        self.scripts = OmegaStore(mongo_url=self.mongo_url, prefix='scripts/', defaults=self.defaults)
+        self._dbalias = self._make_dbalias()
+        self.models = self._make_store(prefix='models/')
+        self.datasets = self._make_store(prefix='data/')
+        self._jobdata = self._make_store(prefix='jobs/')
+        self.scripts = self._make_store(prefix='scripts/')
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
@@ -61,6 +63,14 @@ class Omega(object):
     def _make_runtime(self, celeryconf):
         from omegaml.runtimes import OmegaRuntime
         return OmegaRuntime(self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf)
+
+    def _make_store(self, prefix):
+        from omegaml.store import OmegaStore
+        return OmegaStore(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults,
+                          dbalias=self._dbalias)
+
+    def _make_dbalias(self):
+        return 'omega-{}'.format(uuid4().hex)
 
     def __getitem__(self, bucket):
         """
@@ -105,7 +115,7 @@ class OmegaDeferredInstance(object):
         try:
             omega = setup_from_config()
         except SystemError:
-            omega = Omega(mongo_url=None, bucket=bucket, celeryconf=None)
+            omega = Omega(mongo_url=mongo_url, bucket=bucket, celeryconf=celeryconf)
         if not self.initialized:
             self.initialized = True
             self.omega = omega
@@ -142,7 +152,7 @@ def setup(*args, **kwargs):
 
 
 # dynamic lookup of Omega instance in a task context
-get_omega_for_task = lambda *args, **kwargs: _om.setup(*args, **kwargs)
+get_omega_for_task = lambda task: _om.setup()
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance
