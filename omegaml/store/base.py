@@ -89,7 +89,7 @@ from mongoengine.fields import GridFSProxy
 from six import iteritems
 from uuid import uuid4
 
-from omegaml.store.fastinsert import fast_insert
+from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance
 from ..documents import make_Metadata, MDREGISTRY
@@ -409,8 +409,10 @@ class OmegaStore(object):
             append = kwargs.get('append', None)
             timestamp = kwargs.get('timestamp', None)
             index = kwargs.get('index', None)
+            chunksize = kwargs.get('chunksize', default_chunksize)
             return self.put_dataframe_as_documents(
-                obj, name, append, attributes, index, timestamp)
+                obj, name, append=append, attributes=attributes, index=index,
+                timestamp=timestamp, chunksize=chunksize)
         elif is_ndarray(obj):
             return self.put_ndarray_as_hdf(obj, name,
                                            attributes=attributes,
@@ -427,7 +429,7 @@ class OmegaStore(object):
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
-                                   timestamp=None):
+                                   timestamp=None, chunksize=None):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -510,7 +512,7 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        fast_insert(obj, self, name)
+        fast_insert(obj, self, name, chunksize=chunksize)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series
                 else MDREGISTRY.PANDAS_DFROWS)
