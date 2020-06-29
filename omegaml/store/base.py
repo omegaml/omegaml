@@ -91,7 +91,7 @@ from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index
 from ..documents import make_Metadata, MDREGISTRY
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
@@ -221,6 +221,7 @@ class OmegaStore(object):
         if self._fs is not None:
             return self._fs
         self._fs = gridfs.GridFS(self.mongodb, collection=self._fs_collection)
+        self._ensure_fs_index(self._fs)
         return self._fs
 
     def metadata(self, name=None, bucket=None, prefix=None, version=-1):
@@ -378,11 +379,13 @@ class OmegaStore(object):
         extend_instance(self, mixincls)
         return self
 
-    def put(self, obj, name, attributes=None, kind=None, **kwargs):
+    def put(self, obj, name, attributes=None, kind=None, replace=False, **kwargs):
         """
         Stores an object, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
+        if replace:
+            self.drop(name, force=True)
         backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind, **kwargs)
         if backend:
             return backend.put(obj, name, attributes=attributes, **kwargs)
@@ -901,7 +904,7 @@ class OmegaStore(object):
                 "{0} does not exist in mongo collection '{1}'".format(
                     name, self.bucket))
 
-    def get_python_data(self, name, version=-1,  **kwargs):
+    def get_python_data(self, name, version=-1, **kwargs):
         """
         Retrieve objects as python data
 
@@ -1079,10 +1082,8 @@ class OmegaStore(object):
         # and avoiding name collisions from different buckets
         return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
 
-
-
-
-
-
-
-
+    def _ensure_fs_index(self, fs):
+        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
+        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
+        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
+        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})

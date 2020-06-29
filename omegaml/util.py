@@ -340,6 +340,30 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     return df
 
 
+def ensure_index(coll, idx_specs, **kwargs):
+    """
+    ensure a pymongo index specification exists on a given collection
+
+    Checks if the index exists in regards to the fields in the specification.
+    Only checks for field names, not sort order.
+
+    Args:
+        coll (pymongo.Collection): mongodb collection
+        idx_specs (dict): specs as field => sort order
+
+    Returns:
+        None
+    """
+    idx_keys = list(dict(dict(v)['key']).keys() for v in coll.list_indexes())
+    chunks_index_exists = any(all(k in keys for k in idx_specs.keys()) for keys in idx_keys)
+    created = False
+    if not chunks_index_exists:
+        idx_specs_SON = list(dict(idx_specs).items())
+        coll.create_index(idx_specs_SON, **kwargs)
+        created = True
+    return created
+
+
 def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
