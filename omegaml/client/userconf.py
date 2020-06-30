@@ -5,6 +5,10 @@ from urllib3 import Retry
 
 from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
 
+def ensure_api_url(api_url, defaults):
+    api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = api_url or getattr(defaults, 'OMEGA_RESTAPI_URL', api_url_default)
+    return api_url
 
 def ensure_api_url(api_url, defaults):
     api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
