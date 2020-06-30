@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 
+import sys
 import warnings
+from copy import deepcopy
 from importlib import import_module
 
 import logging
 import os
-import re
 import six
-import sys
 import tempfile
 import uuid
 from shutil import rmtree
@@ -18,6 +18,14 @@ try:
 except:
     from urllib import parse as urlparse
 
+# support pandas < 1.0
+try:
+    from pandas import json_normalize
+except:
+    from pandas.io.json import json_normalize
+json_normalize = json_normalize
+
+# reset global settings
 __settings = None
 
 
@@ -66,41 +74,38 @@ def is_spark_mllib(obj):
 
 
 def settings(reload=False):
-    """ wrapper to get omega settings from either django or omegamldefaults """
+    """ wrapper to get omega settings from either django or omegaml.defaults """
     from omegaml import _base_config as omdefaults
     global __settings
     if not reload and __settings is not None:
         return __settings
     try:
         # see if we're running as a django app
-        from django.utils import six
-        from django.utils.functional import empty
+        from django.contrib.auth.models import User
         from django.conf import settings as djsettings  # @UnresolvedImport
-        defaults = djsettings
-        # this is to test if django was initialized. if not revert
-        # to using omdefaults
         try:
-            if defaults._wrapped is empty:
-                # django is not initialized, use omega defaults
-                raise ValueError()
-            getattr(defaults, 'SECRET_KEY')
+            getattr(djsettings, 'SECRET_KEY')
         except Exception as e:
             from warnings import warn
             warn("Using omegaml.defaults because Django was not initialized."
                  "Try importing omegaml within a method instead of at the "
                  "module level")
             raise
+        else:
+            defaults = djsettings
     except Exception as e:
+        # django failed to initialize, use omega defaults
         defaults = omdefaults
     else:
-        # get default omega settings into django settings if not set
-        # there already
+        # get default omega settings into django settings if not set there
         from omegaml import _base_config as omdefaults
         for k in dir(omdefaults):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
-    __settings = defaults
-    return DefaultsContext(__settings)
+    __settings = DefaultsContext(defaults)
+    omdefaults.load_framework_support(vars=__settings)
+    omdefaults.load_user_extensions(vars=__settings)
+    return __settings
 
 
 def override_settings(**kwargs):
@@ -340,6 +345,30 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     return df
 
 
+def ensure_index(coll, idx_specs, **kwargs):
+    """
+    ensure a pymongo index specification exists on a given collection
+
+    Checks if the index exists in regards to the fields in the specification.
+    Only checks for field names, not sort order.
+
+    Args:
+        coll (pymongo.Collection): mongodb collection
+        idx_specs (dict): specs as field => sort order
+
+    Returns:
+        None
+    """
+    idx_keys = list(dict(dict(v)['key']).keys() for v in coll.list_indexes())
+    chunks_index_exists = any(all(k in keys for k in idx_specs.keys()) for keys in idx_keys)
+    created = False
+    if not chunks_index_exists:
+        idx_specs_SON = list(dict(idx_specs).items())
+        coll.create_index(idx_specs_SON, **kwargs)
+        created = True
+    return created
+
+
 def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
@@ -547,18 +576,50 @@ def calltrace(obj):
 
 
 class DefaultsContext(object):
+    """
+    om.defaults as set for a particular Omega() instance
+
+    Usage:
+        defaults = DefaultsContext(source)
+
+        # attribute access
+        defaults.SOME_VARIABLE
+        defaults['SOME_VARIABLE']
+        defaults.get('SOME_VARIABLE', default=None)
+
+        were source is a module or a settings object (any object with
+        any number of .UPPERCASE_VARIABLE attributes). Source will be
+        deep-copied to ensure DefaultsContext cannot be changed by external
+        references.
+    """
+
     def __init__(self, source):
         for k in dir(source):
             if k.isupper():
-                setattr(self, k, getattr(source, k))
+                value = getattr(source, k)
+                setattr(self, k, deepcopy(value))
 
     def __iter__(self):
         for k in dir(self):
             if k.startswith('OMEGA') and k.isupper():
                 yield k, getattr(self, k)
 
+    def __getitem__(self, k):
+        if k in dir(self):
+            return getattr(self, k)
+        raise KeyError(k)
+
+    def __setitem__(self, k, v):
+        setattr(self, k, v)
+
+    def get(self, k, default=None):
+        try:
+            return self[k]
+        except KeyError:
+            return default
+
     def __repr__(self):
-        return '{}'.format(dict(self))
+        return 'DefaultsContext({})'.format(dict(self))
 
 
 def ensure_json_serializable(v):
@@ -582,3 +643,140 @@ def mkdirs(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def base_loader(_base_config):
+    try:
+        from omegaee import omega as _omega
+        from omegaee import eedefaults as _base_config_ee
+    except Exception as e:
+        from omegaml import omega as _omega
+    else:
+        _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
+    settings(reload=True)
+    return _omega
+
+
+from io import StringIO
+
+from contextlib import contextmanager
+import re
+
+
+def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None, msg='could not read {}',
+           **kwargs):
+    """
+    a safe markup file reader, accepts json and yaml, returns a dict or a default
+    Usage:
+        file_or_str = filename|file-like|markup-str
+        # try, return None if not readable, will issue a warning in the log
+        data = markup(file_or_str)
+        # try, return some other default, will issue a warning in the log
+        data = markup(file_or_str, default={})
+        # try and fail
+        data = markup(file_or_str, on_error='fail')
+    Args:
+        file_or_str (None, str, file-like): any file-like, can be
+           any object that the parsers accept
+        parsers (list): the list of parsers, defaults to json.load, yaml.safe_load,
+           json.loads
+        direct (bool): if True returns the result, else returns markup (self). then use
+           .read() to actually read the contents
+        on_error (str): 'fail' raises a ValueError in case of error, 'warn' outputs a warning to the log,
+           and returns the default, 'silent' returns the default. Defaults to warn
+        default (obj): return the obj if the input is None or in case of on_error=warn or silent
+        **kwargs (dict): any kwargs passed on to read(), any entry that matches a parser
+            function's module name will be passed on to the parser
+    Returns:
+        data parsed or default
+        markups.exceptions contains list of exceptions raised, if any
+    """
+    # source: https://gist.github.com/miraculixx/900a28a94c375b7259b1f711b93417d3
+    import json
+    import yaml
+    import logging
+
+    parsers = parsers or (json.load, yaml.safe_load, json.loads)
+    # path-like regex
+    # - \/?                  leading /, optional
+    # - (?P<path>\w+/?)*     any path-part followed by /, repeated 0 - n times
+    # - (?P<ext>(\w*\.?\w*)+ any file.ext, at least once
+    pathlike = lambda s: re.match(r"^\/?(?P<path>\w+/?)*(?P<ext>(\w*\.?\w*))$", s)
+
+    @contextmanager
+    def fopen(filein, *args, **kwargs):
+        # https://stackoverflow.com/a/55032634/890242
+        if isinstance(filein, str) and pathlike(filein):  # filename
+            with open(filein, *args, **kwargs) as f:
+                yield f
+        elif isinstance(filein, str):  # some other string, make a file-like
+            yield StringIO(filein)
+        else:
+            # file-like object
+            yield filein
+
+    throw = lambda ex: (_ for _ in ()).throw(ex)
+    exceptions = []
+
+    def read(**kwargs):
+        if file_or_str is None:
+            return default
+        for fn in parsers:
+            try:
+                with fopen(file_or_str) as fin:
+                    if hasattr(fin, 'seek'):
+                        fin.seek(0)
+                    data = fn(fin, **kwargs.get(fn.__module__, {}))
+            except Exception as e:
+                exceptions.append(e)
+            else:
+                return data
+        # nothing worked so far
+        actions = {
+            'fail': lambda: throw(ValueError("Reading {} caused exceptions {}".format(file_or_str, exceptions))),
+            'warn': lambda: logging.warning(msg.format(file_or_str)) or default,
+            'silent': lambda: default,
+        }
+        return actions[on_error]()
+
+    markup.read = read
+    markup.exceptions = exceptions
+    return markup.read(**kwargs) if direct else markup
+
+
+def raises(fn, wanted_ex):
+    try:
+        fn()
+    except Exception as e:
+        assert isinstance(e, wanted_ex), "expected {}, raised {} instead".format(wanted_ex, e)
+    else:
+        raise ValueError("did not raise {}".format(wanted_ex))
+    return True
+
+def dict_merge(destination, source, delete_on='__delete__'):
+    """
+    Merge two dictionaries, including sub dicts
+
+    Args:
+        destination (dict): the dictionary to merge into
+        source (dict): the dictionary to merge from
+        delete_on (obj): for each entry in source, its value is
+            compared to match delete_on, if it does the key will
+            be deleted in the destination dict. Defaults to '__delete__'
+
+    See Also:
+        https://stackoverflow.com/a/20666342/890242
+    """
+    dict_merge.DELETE = delete_on
+    for key, value in source.items():
+        if isinstance(value, dict):
+            # get node or create one
+            node = destination.setdefault(key, {})
+            dict_merge(node, value, delete_on=delete_on)
+        else:
+            if value == dict_merge.DELETE and key in destination:
+                del destination[key]
+            else:
+                destination[key] = value
+
+

@@ -83,15 +83,15 @@ import six
 import tempfile
 from datetime import datetime
 from mongoengine.connection import disconnect, \
-    connect
+    connect, _connections, get_connection, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
 from uuid import uuid4
 
-from omegaml.store.fastinsert import fast_insert
+from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index
 from ..documents import make_Metadata, MDREGISTRY
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
@@ -102,7 +102,7 @@ class OmegaStore(object):
     The storage backend for models and data
     """
 
-    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None, defaults=None):
+    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None, defaults=None, dbalias=None):
         """
         :param mongo_url: the mongourl to use for the gridfs
         :param bucket: the mongo collection to use for gridfs
@@ -122,6 +122,7 @@ class OmegaStore(object):
         # otherwise Metadata will already have a connection and not use
         # the one provided in override_settings
         self._db = None
+        self._dbalias = dbalias
         # add backends and mixins
         self._apply_mixins()
         # register backends
@@ -180,33 +181,29 @@ class OmegaStore(object):
         #
         # use an instance specific alias, note that access to Metadata and
         # QueryCache must pass the very same alias
-        self._dbalias = alias = 'omega-{}'.format(uuid4().hex)
+        self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
         # always disconnect before registering a new connection because
         # connect forgets all connection settings upon disconnect WTF?!
-        disconnect(alias)
-        connection = connect(alias=alias, db=self.database_name,
-                             host=host,
-                             username=username,
-                             password=password,
-                             connect=False,
-                             authentication_source='admin',
-                             serverSelectionTimeoutMS=2500,
-                             **self.defaults.OMEGA_MONGO_SSL_KWARGS,
-                             )
-        self._db = getattr(connection, self.database_name)
-        # mongoengine 0.15.0 connection setup is seriously broken -- it does
-        # not remember username/password on authenticated connections
-        # so we reauthenticate here
-        if username and password:
-            self._db.logout()
-            self._db.authenticate(username, password, source='admin')
+        if alias not in _connections:
+            disconnect(alias)
+            connection = connect(alias=alias, db=self.database_name,
+                                 host=host,
+                                 username=username,
+                                 password=password,
+                                 connect=False,
+                                 authentication_source='admin',
+                                 serverSelectionTimeoutMS=2500,
+                                 **self.defaults.OMEGA_MONGO_SSL_KWARGS,
+                                 )
+
+        self._db = get_db(alias)
         return self._db
 
     @property
     def _Metadata(self):
         if self._Metadata_cls is None:
             # hack to localize metadata
-            self.mongodb
+            db = self.mongodb
             self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
                                                collection=self._fs_collection)
         return self._Metadata_cls
@@ -221,6 +218,7 @@ class OmegaStore(object):
         if self._fs is not None:
             return self._fs
         self._fs = gridfs.GridFS(self.mongodb, collection=self._fs_collection)
+        self._ensure_fs_index(self._fs)
         return self._fs
 
     def metadata(self, name=None, bucket=None, prefix=None, version=-1):
@@ -378,11 +376,13 @@ class OmegaStore(object):
         extend_instance(self, mixincls)
         return self
 
-    def put(self, obj, name, attributes=None, kind=None, **kwargs):
+    def put(self, obj, name, attributes=None, kind=None, replace=False, **kwargs):
         """
         Stores an object, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
+        if replace:
+            self.drop(name, force=True)
         backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind, **kwargs)
         if backend:
             return backend.put(obj, name, attributes=attributes, **kwargs)
@@ -409,8 +409,10 @@ class OmegaStore(object):
             append = kwargs.get('append', None)
             timestamp = kwargs.get('timestamp', None)
             index = kwargs.get('index', None)
+            chunksize = kwargs.get('chunksize', default_chunksize)
             return self.put_dataframe_as_documents(
-                obj, name, append, attributes, index, timestamp)
+                obj, name, append=append, attributes=attributes, index=index,
+                timestamp=timestamp, chunksize=chunksize)
         elif is_ndarray(obj):
             return self.put_ndarray_as_hdf(obj, name,
                                            attributes=attributes,
@@ -427,7 +429,7 @@ class OmegaStore(object):
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
-                                   timestamp=None):
+                                   timestamp=None, chunksize=None):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -510,7 +512,7 @@ class OmegaStore(object):
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
         obj = obj.astype('O')
-        fast_insert(obj, self, name)
+        fast_insert(obj, self, name, chunksize=chunksize)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series
                 else MDREGISTRY.PANDAS_DFROWS)
@@ -899,7 +901,7 @@ class OmegaStore(object):
                 "{0} does not exist in mongo collection '{1}'".format(
                     name, self.bucket))
 
-    def get_python_data(self, name, version=-1,  **kwargs):
+    def get_python_data(self, name, version=-1, **kwargs):
         """
         Retrieve objects as python data
 
@@ -1077,10 +1079,8 @@ class OmegaStore(object):
         # and avoiding name collisions from different buckets
         return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
 
-
-
-
-
-
-
-
+    def _ensure_fs_index(self, fs):
+        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
+        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
+        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
+        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})

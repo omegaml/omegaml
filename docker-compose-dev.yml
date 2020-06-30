@@ -10,3 +10,6 @@ services:
     image: rabbitmq
     ports:
       - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: foobar

@@ -1,17 +1,34 @@
 import os
-
 import sys
-
 import yaml
+from urllib3 import Retry
 
 from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
+
+
+def ensure_api_url(api_url, defaults):
+    api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = api_url or getattr(defaults, 'OMEGA_RESTAPI_URL', api_url_default)
+    return api_url
+
+
+def session_backoff(retries=5):
+    import requests
+    from requests.adapters import HTTPAdapter
+    s = requests.Session()
+    retry = Retry(total=retries,
+                  backoff_factor=.1,
+                  status_forcelist=[500, 502, 503, 504])
+    s.mount('http://', HTTPAdapter(max_retries=retry))
+    s.mount('https://', HTTPAdapter(max_retries=retry))
+    return s
 
 
 def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
     from omegaml import settings
     defaults = settings()
-    api_url = api_url or os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = ensure_api_url(api_url, defaults)
     api_url += '/api/v1/config/'
     api_url = api_url.replace('//api', '/api')
     query = []
@@ -23,10 +40,10 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
     # -- setup appropriate client API
     if api_url.startswith('http'):
         import requests
-        server = requests
+        server = session_backoff()
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()
-    elif any('test' in v for v in sys.argv):
+    elif api_url.startswith('test') or any('test' in v for v in sys.argv):
         # test support
         import json
         from tastypie.test import TestApiClient
@@ -61,11 +78,10 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     """
     from omegaml import Omega
     from omegaml import settings, _base_config
-    from omegaml.util import DefaultsContext
 
-    defaults = DefaultsContext(settings())
+    defaults = settings(reload=True)
     qualifier = qualifier or 'default'
-    api_url = api_url or os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = ensure_api_url(api_url, defaults)
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
         api_auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(api_auth, api_url=api_url,
@@ -80,7 +96,10 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
         config = configs.get(qualifier, configs)
     else:
         config = configs[qualifier]
+    # update
     _base_config.update_from_dict(config, attrs=defaults)
+    _base_config.load_framework_support(defaults)
+    _base_config.load_user_extensions(defaults)
     auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
     om = Omega(defaults=defaults, auth=auth)
     # update config to reflect request
@@ -111,7 +130,7 @@ def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, reques
                                 view=False):
     from omegaml import settings
     defaults = settings()
-    api_url = api_url or os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
+    api_url = ensure_api_url(api_url, defaults)
     with open(configfile, 'w') as fconfig:
         auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(auth,

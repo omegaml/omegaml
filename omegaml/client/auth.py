@@ -1,4 +1,6 @@
 # source https://djangosnippets.org/snippets/2727/
+import os
+
 from requests.auth import AuthBase
 
 
@@ -22,7 +24,7 @@ class OmegaRestApiAuth(AuthBase):
     for the Omega REST API key authentication.
 
     Usage:
-        auth = OmegaRestApiAuth('jezdez', 
+        auth = OmegaRestApiAuth('jezdez',
                          '25fdd0d9d210acb78b5b845fe8284a3c93630252')
         response = requests.get('http://api.foo.bar/v1/spam/', auth=auth)
     """
@@ -82,32 +84,41 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
         :param auth: the OmegaRuntimeAuthentication object
         :return: the Omega instance configured for the user
         """
+        from omegaml.util import settings
+
         default_auth = (None, None, 'default')
         is_auth_provided = lambda auth: (auth is not None
                                          and auth != default_auth)
+        defaults = settings()
+
         if is_auth_provided(auth):
             if isinstance(auth, (list, tuple)):
                 # we get a serialized tuple, recreate auth object
                 # -- this is a hack to easily support python 2/3 client/server mix
                 userid, apikey, qualifier = auth
-                om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier)
+                # by default assume worker is in cluster
+                # TODO refactor this setting to eedefaults
+                view = defaults.OMEGA_WORKER_INCLUSTER
+                om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier, view=view)
             else:
                 raise ValueError(
                     'cannot parse authentication as {}'.format(auth))
         elif auth == default_auth:
             # we provide the default implementation as per configuration
-            import omegaml
-            from omegaml.util import settings
-            om = omegaml
-            if not settings().OMEGA_ALLOW_TASK_DEFAULT_AUTH:
+            from omegaml import _omega
+            om = _omega._om
+            if not defaults.OMEGA_ALLOW_TASK_DEFAULT_AUTH:
                 raise ValueError(
                     'Default task authentication is not allowed, got {}'.format(auth))
         else:
             raise ValueError(
-                'need authentication tupleas (userid, apikey, qualifier), got {}'.format(auth))
+                'missing authentication tuple as (userid, apikey, qualifier), got {}'.format(auth))
         return om
 
     @classmethod
     def get_omega_from_apikey(cls, *args, **kwargs):
         from omegaml.client.userconf import get_omega_from_apikey
         return get_omega_from_apikey(*args, **kwargs)
+
+isTrue = lambda v: v if isinstance(v, bool) else (
+    v.lower() in ['yes', 'y', 't', 'true', '1'])

@@ -59,6 +59,11 @@ def load_from_path(name, path):
 
 
 def install_and_import(pkgfilename, package, installdir):
+    """
+
+    Returns:
+        object: 
+    """
     install_package(pkgfilename, installdir)
     mod = load_from_path(package, installdir)
     return mod

@@ -5,7 +5,6 @@ import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
-from pandas.io.json import json_normalize
 from pymongo.collection import Collection
 from uuid import uuid4
 
@@ -14,7 +13,7 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index, \
-    cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance
+    cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance, json_normalize
 
 INSPECT_CACHE = []
 
@@ -419,7 +418,7 @@ class MDataFrame(object):
         # FIXME inefficient. make MDataFrame a drop-in replacement for any numpy ndarray
         # this evaluates every single time
         if self._evaluated is None:
-            self._evaluated = array = self.value.as_matrix()
+            self._evaluated = array = self.value.values()
         else:
             array = self._evaluated
         return array
@@ -556,7 +555,7 @@ class MDataFrame(object):
         else:
             data = self._inspect_cache
         if not (raw or explain):
-            data = pd.DataFrame(pd.io.json.json_normalize(data))
+            data = pd.DataFrame(json_normalize(data))
         return data
 
     def count(self):

@@ -19,7 +19,7 @@ class MongoQ(object):
     q_all = q1 | q2
 
     Query objects are passed into a Filter, and evaluated when
-    the filter's .value property is read. 
+    the filter's .value property is read.
 
     Conditions specified in one Q object are AND together. Various
     operators can be specified using __<op> syntax, e.g. year__eq=2015.
@@ -31,18 +31,18 @@ class MongoQ(object):
     gte    >=
     ne     <>
     not    <>
-    in     isin(v) 
+    in     isin(v)
     between
 
     startswith
     endwith
-    contains  
-    match     
+    contains
+    match
 
     Evaluation works as follows:
 
     1. for each Q object, apply the filters as collection.find(query)
-    2. return the dataframe 
+    2. return the dataframe
 
     """
     def __init__(self, **kwargs):
@@ -64,7 +64,7 @@ class MongoQ(object):
         resolve the query by actually applying the filter on given collection
 
         :param collection: the collection objec
-        :return: the result of the apply_filter() call 
+        :return: the result of the apply_filter() call
         """
         return self.apply_filter(collection)
 
@@ -73,7 +73,7 @@ class MongoQ(object):
         apply the filter to the given collection
 
         This builds the actual mongo query using build_filters and
-        calls apply_conditions to execute the query 
+        calls apply_conditions to execute the query
 
         :param collection: the collection object
         :return: the result of the apply_conditions() call
@@ -85,9 +85,9 @@ class MongoQ(object):
         """
         apply the mongo query on a given collection
 
-        :param collection: the collection 
+        :param collection: the collection
         :param query: the query dictionary applicable to collection.find()
-        :return: the result of collection.find()  
+        :return: the result of collection.find()
         """
         operators = flatten_keys(query)
         if '$near' in operators:
@@ -128,10 +128,10 @@ class MongoQ(object):
         For a given query definition return the collection.find() simple query
 
         Using all conditions, build the query as a dictionary suitable for
-        collection.find(). This uses MongoQueryOps to transform query 
+        collection.find(). This uses MongoQueryOps to transform query
         definitions into mongo db syntax.
 
-        :return: the query in mongo db syntax  
+        :return: the query in mongo db syntax
         """
         query = {}
         qops = MongoQueryOps()
@@ -184,8 +184,10 @@ class MongoQ(object):
                 addq(k, qops.EQ(nan) if v else qops.NE(nan))
             elif op in ['islong', 'isint']:
                 addq(k, qops.TYPE('long'))
+            elif op == 'regex':
+                _ggtaddq(k, qops.REGEX(v))
             elif op == 'contains':
-                addq(k, qops.REGEX('^%s.*' % v))
+                addq(k, qops.REGEX('.*%s.*' % v))
             elif op == 'startswith':
                 addq(k, qops.REGEX('^%s.*' % v))
             elif op == 'endswith':
@@ -263,11 +265,11 @@ class Filter(object):
         complex filters.
 
         Internally, Filter keeps the .q MongoQ object to represent
-        the filter. Filter thus is a thin wrapper around MongoQ to 
+        the filter. Filter thus is a thin wrapper around MongoQ to
         represent the human-readable high-level API to MongoQ:
 
         .filter -- add a new condition with AND
-        .exclude -- exclude values given a condition 
+        .exclude -- exclude values given a condition
         .count -- count result lengths. note this triggers .value
         .value -- evaluate the filter
 

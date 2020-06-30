@@ -1,16 +1,15 @@
-from multiprocessing import Pool
-
 import math
 import os
+from billiard.pool import Pool
 from itertools import repeat
 
 from omegaml.mongoshim import MongoClient
 
 # single instance multiprocessing pool
-pool = None
+default_chunksize = int(1e4)
 
 
-def dfchunker(df, size=10000):
+def dfchunker(df, size=default_chunksize):
     """ chunk a dataframe as in iterator """
     return (df.iloc[pos:pos + size].copy() for pos in range(0, len(df), size))
 
@@ -32,7 +31,7 @@ def insert_chunk(job):
     return mongo_url, db.name, collection_name, len(result.inserted_ids)
 
 
-def fast_insert(df, omstore, name, chunk_size=int(1e4)):
+def fast_insert(df, omstore, name, chunksize=default_chunksize):
     """
     fast insert of dataframe to mongodb
 
@@ -48,15 +47,28 @@ def fast_insert(df, omstore, name, chunk_size=int(1e4)):
     :param name: the dataset name in OmegaStore to use. will be used to get the
     collection name from the omstore
     """
-    global pool
-    if len(df) * len(df.columns) > chunk_size:
+    # this is the fastest implementation (pool)
+    # #records	pool	thread/wo copy	thread/w copy	pool w=0	pool dict	no chunking
+    # 0.1m        1.47     2.06            2.17           1.59        2.11        2.28
+    # 1m         17.4     19.8            20.6            16         17.8        22.2
+    # 10m       149      193             183             177        213         256
+    # based on
+    # df = pd.DataFrame({'x': range(rows)})
+    # om.datasets.put(df, 'test', replace=True) # no chunking: chunksize=False
+    # - pool mp Pool, passes copy of df chunks, to_dict in pool processes
+    # - thread/wo copy uses ThreadPool, shared memory on df
+    # - thread/w copy uses ThreadPool, copy of chunks
+    # - pool w=0 disables the mongo write concern
+    # - pool dict performs to_dict on chunking, passes list of json docs pools just insert
+    # - no chunking sets chunksize=False
+    if chunksize and len(df) * len(df.columns) > chunksize:
         mongo_url = omstore.mongo_url
         collection_name = omstore.collection(name).name
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
         cores = max(1, math.ceil(os.cpu_count() / 2))
-        pool = pool or Pool(processes=cores)
-        jobs = zip(dfchunker(df, size=chunk_size),
+        pool = Pool(processes=cores)
+        jobs = zip(dfchunker(df, size=chunksize),
                    repeat(mongo_url), repeat(collection_name))
         pool.map(insert_chunk, (job for job in jobs))
     else:

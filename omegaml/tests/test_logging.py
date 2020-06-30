@@ -77,7 +77,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         pylogger.handlers.remove(handler)
         # msg contains the exact message as passed in
         for level in ['INFO', 'ERROR', 'WARNING', 'DEBUG']:
-            df = omlogger.dataset.get(levelname=level)
+            df = omlogger.dataset.get(filter=dict(levelname=level, name='root'))
             expected = 1
             self.assertEqual(len(df), expected, 'expected 1 message for level {}'.format(level))
             if expected:

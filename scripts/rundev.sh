@@ -12,4 +12,4 @@ docker-compose -f docker-compose-dev.yml down
 docker-compose -f docker-compose-dev.yml up -d --remove-orphans --force-recreate
 sleep 5
 cat $script_dir/mongoinit.js | docker exec -i omegaml-ce_mongo_1 mongo
-honcho start restapi worker notebook
+honcho -f scripts/docker/omegaml/Procfile start restapi worker notebook

@@ -5,18 +5,24 @@ from setuptools import setup, find_packages
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).read()
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 # extras
 hdf_deps = ['tables>=3.2.2']
-tf_deps = ['tensorflow==1.15.0']
+tf_version = os.environ.get('TF_VERSION', '2.2.0')
+tf_deps = ['tensorflow=={}'.format(tf_version)]
+tf_deps = tf_deps + ['tensorflow-gpu==1.15.0'] if tf_version.startswith('1.15') else []
 keras_deps = ['keras==2.2.4']
 graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0', 'imageio==2.6.1']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
+snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
 streaming_deps = ['minibatch[all]']
+jupyter_deps = ['jupyterlab', 'jupyterhub']
+
+# all deps
+all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
+            + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
 
 setup(
     name='omegaml',
@@ -24,8 +30,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     data_files=[
-        ('omegaml/docs/', glob.glob('./docs/source/nb/*.ipynb'))
+        ('omegaml/docs/', glob.glob('./docs/source/nb/*.ipynb')),
     ],
+    scripts=glob.glob('./scripts/runtime/*'),
     license='Apache 2.0',
     description='An open source DataOps, MLOps platform for humans',
     long_description=README,
@@ -55,10 +62,10 @@ setup(
         'pandas>=0.17.1',
         'numpy>=1.16.4,<1.18',
         'scipy>=0.17.0',
-        'scikit-learn>=0.20,<0.22',
-        'PyYAML>=3.11',
+        'scikit-learn>=0.21',
+        'PyYAML>=5.1',
         'flask-restplus>=0.12.1',
-        'werkzeug~=0.16.1',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
+        'werkzeug<1.0.0',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
         'six>=1.11.0',
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
@@ -74,6 +81,7 @@ setup(
         # https://github.com/tensorflow/tensorflow/issues/26691#issuecomment-525519742
         'absl-py>=0.8.1',
         'tqdm>=4.32.2',
+        'honcho>=1.0.1',  # not strictly required, but used in docker compose
     ],
     extras_require={
         'graph': graph_deps,
@@ -82,9 +90,11 @@ setup(
         'keras': keras_deps,
         'dashserve': dashserve_deps,
         'sql': sql_deps,
+        'snowflake': snowflake_deps,
         'iotools': iotools_deps,
         'streaming': streaming_deps,
         'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
+        'all-client': hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

@@ -13,8 +13,9 @@ class RuntimeCommandBase(CommandBase):
       om runtime log [-f]
 
     Options:
-      --async  don't wait for results, will print taskid
-      -f       tail log
+      --async          don't wait for results, will print taskid
+      -f               tail log
+      --require=VALUE  worker label
 
     Description:
       <model-action> can be any valid model action like fit, predict, score,
@@ -31,7 +32,8 @@ class RuntimeCommandBase(CommandBase):
 
     def ping(self):
         om = get_omega(self.args)
-        self.logger.info(om.runtime.ping())
+        label = self.args.get('--require')
+        self.logger.info(om.runtime.require(label).ping())
 
     def _ensure_valid_XY(self, value):
         if value is not None:
@@ -48,6 +50,7 @@ class RuntimeCommandBase(CommandBase):
         is_async = self.args.get('--async')
         kwargs_lst = self.args.get('--param')
         output = self.args.get('--result')
+        label = self.args.get('--require')
         X = self._ensure_valid_XY(self.args.get('<X>'))
         Y = self._ensure_valid_XY(self.args.get('<Y>'))
         # parse the list of kw=value values
@@ -67,7 +70,7 @@ class RuntimeCommandBase(CommandBase):
             kwargs['Yname'] = Y
         if action == 'gridsearch':
             kwargs['parameters'] = kv_dct
-        rt_model = om.runtime.model(name)
+        rt_model = om.runtime.require(label).model(name)
         meth = getattr(rt_model, action, None)
         if meth is not None:
             result = meth(X, **kwargs)
@@ -83,7 +86,8 @@ class RuntimeCommandBase(CommandBase):
         name = self.args.get('<name>')
         is_async = self.args.get('--async')
         kwargs = self.parse_kwargs('<kw=value>')
-        result = om.runtime.script(name).run(**kwargs)
+        label = self.args.get('--require')
+        result = om.runtime.require(label).script(name).run(**kwargs)
         if not is_async:
             self.logger.info(result.get())
         else:
@@ -93,7 +97,8 @@ class RuntimeCommandBase(CommandBase):
         om = get_omega(self.args)
         name = self.args.get('<name>')
         is_async = self.args.get('--async')
-        result = om.runtime.job(name).run()
+        label = self.args.get('--require')
+        result = om.runtime.require(label).job(name).run()
         if not is_async:
             self.logger.info(result.get())
         else:

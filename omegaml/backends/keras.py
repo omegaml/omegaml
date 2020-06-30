@@ -13,7 +13,11 @@ class KerasBackend(BaseModelBackend):
         return isinstance(obj, (Sequential, Model))
 
     def _package_model(self, model, key, tmpfn):
-        model.save(tmpfn)
+        # https://www.tensorflow.org/api_docs/python/tf/keras/models/save_model
+        # defaults to h5 since TF 2.x. We keep with h5 for simplicity for now
+        import tensorflow as tf
+        kwargs = dict(save_format='h5') if tf.__version__.startswith('2') else {}
+        model.save(tmpfn, **kwargs)
         return tmpfn
 
     def _extract_model(self, infile, key, tmpfn):

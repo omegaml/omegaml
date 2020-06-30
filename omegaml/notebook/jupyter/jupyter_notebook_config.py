@@ -115,7 +115,9 @@ c.NotebookApp.allow_root = True if os.environ.get('JY_ALLOW_ROOT') else False
 # c.NotebookApp.cookie_secret_file = ''
 
 # The default URL to redirect to from `/`
-# c.NotebookApp.default_url = '/tree'
+# /tree is the old style notebook
+# /lab is JupyterLab
+c.NotebookApp.default_url = os.environ.get('JY_DEFAULT_URL') or '/lab'
 
 # Disable cross-site-request-forgery protection
 #

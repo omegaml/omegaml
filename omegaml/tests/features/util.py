@@ -3,7 +3,7 @@ import os
 import yaml
 from selenium.webdriver.common.keys import Keys
 from time import sleep
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 istrue = lambda v: (
     (v.lower() in ('yes', '1', 'y', 'true', 't'))
@@ -32,8 +32,10 @@ class Notebook:
     A simple driver for the notebook
     """
 
-    def __init__(self, browser):
+    def __init__(self, browser, user='admin', password='test'):
         self.browser = browser
+        self.user = user
+        self.password = password
         try:
             alert = browser.get_alert()
         except:
@@ -59,11 +61,25 @@ class Notebook:
         br.windows.current = br.windows[-1]
         return self
 
+    def login(self):
+        br = self.browser
+        if br.is_text_present('JupyterHub', wait_time=10):
+            login_required = br.is_element_present_by_id('username_input', wait_time=30)
+            if login_required:
+                self.login_hub()
+        else:
+            # fallback to juypter notebook
+            login_required = br.is_text_present('Password', wait_time=2)
+            login_required |= br.is_text_present('token', wait_time=2)
+            if login_required:
+                self.login_nb()
+
     def login_hub(self):
         br = self.browser
-        br.find_by_id('username_input').first.fill('admin')
-        br.find_by_id('password_input').first.fill('test')
+        br.find_by_id('username_input').first.fill(self.user)
+        br.find_by_id('password_input').first.fill(self.password)
         br.click_link_by_id('login_submit')
+        br.visit(jburl(br.url, self.user, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection
         assert not br.is_text_present('Server error: Traceback', wait_time=5)
@@ -72,8 +88,9 @@ class Notebook:
     def login_nb(self):
         br = self.browser
         assert br.is_element_present_by_id('ipython-main-app', wait_time=2)
-        br.find_by_id('password_input').fill('omegamlisfun')
+        br.find_by_id('password_input').fill(self.password)
         br.find_by_id('login_submit').click()
+        br.visit(jburl(br.url, '', nbstyle='tree'))
         # check that there is actually a connection
         assert not br.is_text_present('Server error: Traceback', wait_time=2)
         assert not br.is_text_present('Connection refuse', wait_time=2)
@@ -103,7 +120,6 @@ class Notebook:
     def open_notebook(self, name, retry=5):
         self.jupyter_home
         br = self.browser
-        retry = 5
         # FIXME sometimes it takes long for the nb to appear why?
         while retry:
             br.reload()
@@ -172,3 +188,13 @@ def get_admin_secrets(scope=None, keys=None):
     else:
         result = secrets
     return result
+
+def jburl(url, userid, nbstyle='tree'):
+    # provide a users notebook url to lab (new style) or tree (old style) notebook
+    parsed = urlparse(url)
+    baseurl = '{parsed.scheme}://{parsed.netloc}'.format(**locals())
+    if userid:
+        jburl = '{baseurl}/user/{userid}/{nbstyle}'
+    else:
+        jburl = '{baseurl}/{nbstyle}'
+    return jburl.format(**locals()).replace('//', '/')

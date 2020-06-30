@@ -50,7 +50,7 @@ services:
           - rabbitmq
           - mongodb
        working_dir: /app
-       command: honcho start worker
+       command: honcho start worker scheduler
        environment:
          - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//

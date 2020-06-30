@@ -1,14 +1,13 @@
 from __future__ import absolute_import
 
-import logging
-import os
-import sys
 from os.path import basename
 
+import logging
+import os
 import six
-import yaml
+import sys
 
-from omegaml.util import tensorflow_available, keras_available, module_available
+from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge
 
 # determine how we're run
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
@@ -33,13 +32,16 @@ OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
+    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH') if OMEGA_USESSL else None,
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 #: the celery broker name or URL
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
-                'amqp://guest@127.0.0.1:5672//')
+                'amqp://admin:foobar@localhost:5672//')
+#: is the worker considered inside the same cluster as the client
+OMEGA_WORKER_INCLUSTER = False
 #: (deprecated) the collection used to store ipython notebooks
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
@@ -50,9 +52,11 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
+    'CELERY_TASK_RESULT_EXPIRES': 3600, # expire results within 1 hour
     'CELERY_DEFAULT_QUEUE': os.environ.get('CELERY_Q', 'default'),
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
+    # TODO replace result backend with redis or mongodb
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
     'CELERYBEAT_SCHEDULE': {
@@ -94,11 +98,11 @@ OMEGA_STORE_BACKENDS_SQL = {
     'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
 }
 #: supported frameworks
+OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
     OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras', 'dash')
-else:
-    OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', '').split(',') or ('scikit-learn',)
-
+#: disable framework preloading, e.g. for web, jupyter
+OMEGA_DISABLE_FRAMEWORKS = os.environ.get('OMEGA_DISABLE_FRAMEWORKS')
 #: storage mixins
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
@@ -135,9 +139,11 @@ OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
+
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
 # =========================================
+# TODO move functions to util and make passing globals() explicit to avoid unintended side effects
 def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     """
     update omegaml.defaults from configuration file
@@ -147,18 +153,12 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     :return:
     """
     # override from configuration file
-    userconfig = {}
-    if isinstance(config_file, six.string_types):
-        if os.path.exists(config_file):
-            with open(config_file, 'r') as fin:
-                userconfig = yaml.safe_load(fin)
-    elif hasattr(config_file, 'read'):
-        userconfig = yaml.safe_load(config_file)
+    userconfig = markup(config_file, default={}, msg='could not read config file {}')
     if userconfig:
         for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
             value = userconfig.get(k, None) or vars[k]
             if isinstance(vars[k], dict):
-                vars[k].update(value)
+                dict_merge(vars[k], value)
             else:
                 vars[k] = value
     return vars
@@ -186,15 +186,32 @@ def update_from_obj(obj, vars=globals(), attrs=None):
     helper function to update omegaml.defaults from arbitrary module
 
     :param obj: the source object (must support getattr). Any
-       variable starting with OMEGA is set in omegaml.defaults
+       upppe case variable/key in source is set in vars or attrs
+    :param vars: the target object as a dict or obj
+    :param attrs: the target object as attributes (deprecated). Specifying
+        attrs takes precedence over vars and is equal to setting vars to attrs
     """
-    for k in [k for k in dir(obj) if k.startswith('OMEGA')]:
-        if hasattr(obj, k):
-            value = getattr(obj, k)
-            if attrs:
-                setattr(attrs, k, value)
-            else:
-                vars[k] = value
+
+    def update(target, k, value):
+        # for dict obj and dict value, merge the two, else set key or attribute
+        if isinstance(value, dict):
+            set_default(target, k, {})
+            dict_merge(get_k(target, k), value)
+        else:
+            set_k(target, k, value)
+
+    # helper functions that work for both dict and obj
+    keys = lambda o: o.keys() if isinstance(o, dict) else dir(o)
+    as_attrs = lambda o: not isinstance(o, dict)
+    has_k = lambda o, k: hasattr(o, k) if as_attrs(o) else k in o
+    get_k = lambda o, k: getattr(o, k) if as_attrs(o) else o[k]
+    set_k = lambda o, k, v: setattr(o, k, v) if as_attrs(o) else o.__setitem__(k, v)
+    set_default = lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k, o.get(k) or d)
+    # update any
+    target = attrs or vars
+    for k in [k for k in keys(obj) if k.isupper()]:
+        value = get_k(obj, k)
+        update(target, k, value)
 
 
 def update_from_dict(d, vars=globals(), attrs=None):
@@ -202,23 +219,9 @@ def update_from_dict(d, vars=globals(), attrs=None):
     helper function to update omegaml.defaults from arbitrary dictionary
 
     :param d: the source dict (must support [] lookup). Any
-       variable starting with OMEGA is set in omegaml.defaults
+       uppercase variable is set in omegaml.defaults
     """
-    for k, v in six.iteritems(d):
-        if k.startswith('OMEGA'):
-            if attrs:
-                setattr(attrs, k, v)
-            else:
-                vars[k] = v
-
-
-# load Enterprise Edition if available
-try:
-    from omegaee import eedefaults
-
-    update_from_obj(eedefaults, vars=globals())
-except Exception as e:
-    pass
+    return update_from_obj(d, vars=vars, attrs=attrs)
 
 
 def locate_config_file(configfile=OMEGA_CONFIG_FILE):
@@ -267,7 +270,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
     return None
 
 
-def load_user_extensions(extensions=OMEGA_USER_EXTENSIONS, vars=globals()):
+def load_user_extensions(vars=globals()):
     """
     user extensions are extensions to settings
 
@@ -290,6 +293,9 @@ def load_user_extensions(extensions=OMEGA_USER_EXTENSIONS, vars=globals()):
     Returns:
         None
     """
+    extensions = vars.get('OMEGA_USER_EXTENSIONS') or {}
+    if not isinstance(extensions, dict):
+        extensions = markup(extensions, default={})
     for k, v in extensions.items():
         omvar = vars.get(k)
         try:
@@ -312,7 +318,29 @@ def load_user_extensions(extensions=OMEGA_USER_EXTENSIONS, vars=globals()):
             raise ValueError(msg)
 
 
-# -- test
+def load_framework_support(vars=globals()):
+    # load framework-specific backends
+    # -- note we do this here to ensure this happens after config updates
+    if OMEGA_DISABLE_FRAMEWORKS:
+        return
+    if 'tensorflow' in vars['OMEGA_FRAMEWORKS'] and tensorflow_available():
+        #: tensorflow backend
+        # https://stackoverflow.com/a/38645250
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+        logging.getLogger('tensorflow').setLevel(logging.ERROR)
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
+    #: keras backend
+    if 'keras' in vars['OMEGA_FRAMEWORKS'] and keras_available():
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_KERAS'])
+    #: sqlalchemy backend
+    if module_available('sqlalchemy'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_SQL'])
+    #: dash backend
+    if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_DASH'])
+
+
+# -- test support
 # this is to avoid using production settings during test
 if not is_cli_run and is_test_run:
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
@@ -324,30 +352,12 @@ else:
     OMEGA_CONFIG_FILE = locate_config_file()
     update_from_config(globals(), config_file=OMEGA_CONFIG_FILE)
     update_from_env(globals())
-
     if is_cli_run:
         # be les
         import warnings
 
         warnings.filterwarnings("ignore", category=FutureWarning)
 
-# load framework-specific backends
-# -- note we do this here to ensure this happens after config updates
-if 'tensorflow' in OMEGA_FRAMEWORKS and tensorflow_available():
-    #: tensorflow backend
-    # https://stackoverflow.com/a/38645250
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
-    logging.getLogger('tensorflow').setLevel(logging.ERROR)
-    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_TENSORFLOW)
-#: keras backend
-if 'keras' in OMEGA_FRAMEWORKS and keras_available():
-    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_KERAS)
-#: sqlalchemy backend
-if module_available('sqlalchemy'):
-    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_SQL)
-#: dash backend
-if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
-    OMEGA_STORE_BACKENDS.update(OMEGA_STORE_BACKENDS_DASH)
-# load user extensions if any
-if OMEGA_USER_EXTENSIONS is not None:
-    load_user_extensions(OMEGA_USER_EXTENSIONS)
+# load extensions, always last step to ensure we have user configs loaded
+load_framework_support()
+load_user_extensions()
