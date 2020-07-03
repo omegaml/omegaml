@@ -25,7 +25,7 @@ except:
 
 
 class IOToolsMDFMixin:
-    def to_csv(mdf, csvfn, chunksize=10000, maxobs=None, apply=None, mode='w', **kwargs):
+    def to_csv(mdf, csvfn, chunksize=10000, maxobs=None, apply=None, mode='w', open_kwargs=None, **kwargs):
         """
         write MDataframe to s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets
 
@@ -34,11 +34,12 @@ class IOToolsMDFMixin:
             mdf.to_csv('/path/filename.csv')
         """
         df_iter = mdf.iterchunks(chunksize=chunksize)
-        _chunked_to_csv(df_iter, csvfn, mode, apply, **kwargs)
+        _chunked_to_csv(df_iter, csvfn, mode, apply, open_kwargs=open_kwargs, **kwargs)
 
 
 class IOToolsStoreMixin:
-    def read_csv(self, csvfn, name, chunksize=10000, append=False, apply=None, mode='r', **kwargs):
+    def read_csv(self, csvfn, name, chunksize=10000, append=False, apply=None, mode='r',
+                 open_kwargs=None, **kwargs):
         """
         read large files from s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets
 
@@ -54,7 +55,8 @@ class IOToolsStoreMixin:
             om.datasets.read_csv(...., apply=process)
         """
         store = self
-        with open_file(csvfn, mode=mode) as fin:
+        open_kwargs = open_kwargs or {}
+        with open_file(csvfn, mode=mode, **open_kwargs) as fin:
             it = pd.read_csv(fin, chunksize=chunksize, iterator=True, **kwargs)
             pbar = tqdm(it)
             try:
@@ -67,7 +69,7 @@ class IOToolsStoreMixin:
                 pbar.close()
         return store.getl(name)
 
-    def to_csv(self, name, csvfn, chunksize=10000, apply=None, mode='w', **kwargs):
+    def to_csv(self, name, csvfn, chunksize=10000, apply=None, mode='w', open_kwargs=None, **kwargs):
         """
         write an object that returns an iterable dataframe to s3, hdfs, http/s, sftp, scp, ssh
 
@@ -75,11 +77,12 @@ class IOToolsStoreMixin:
             om.datasets.write_csv(name, '/path/to/filename')
         """
         df_iter = self.get(name, chunksize=chunksize)
-        _chunked_to_csv(df_iter, csvfn, mode, apply, **kwargs)
+        _chunked_to_csv(df_iter, csvfn, mode, apply, open_kwargs=open_kwargs, **kwargs)
 
 
-def _chunked_to_csv(df_iter, csvfn, mode, apply, **kwargs):
-    with open_file(csvfn, mode) as fout:
+def _chunked_to_csv(df_iter, csvfn, mode, apply, open_kwargs=None, **kwargs):
+    open_kwargs = open_kwargs or {}
+    with open_file(csvfn, mode, **open_kwargs) as fout:
         for i, chunkdf in tqdm(enumerate(df_iter)):
             if apply:
                 result = apply(chunkdf)

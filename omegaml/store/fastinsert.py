@@ -1,11 +1,11 @@
-import math
 import os
+
+import math
 from billiard.pool import Pool
 from itertools import repeat
 
 from omegaml.mongoshim import MongoClient
 
-# single instance multiprocessing pool
 default_chunksize = int(1e4)
 
 
@@ -71,6 +71,7 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         jobs = zip(dfchunker(df, size=chunksize),
                    repeat(mongo_url), repeat(collection_name))
         pool.map(insert_chunk, (job for job in jobs))
+        pool.close()
     else:
         # still within bounds for single threaded inserts
         omstore.collection(name).insert_many(df.to_dict(orient='records'))
