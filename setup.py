@@ -1,5 +1,7 @@
 import glob
 import os
+import sys
+
 from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
@@ -8,21 +10,29 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 
 # extras
 hdf_deps = ['tables>=3.2.2']
-tf_version = os.environ.get('TF_VERSION', '2.2.0')
-tf_deps = ['tensorflow=={}'.format(tf_version)]
-tf_deps = tf_deps + ['tensorflow-gpu==1.15.0'] if tf_version.startswith('1.15') else []
-keras_deps = ['keras==2.2.4']
-graph_deps = ['matplotlib==3.1.0', 'seaborn==0.9.0', 'imageio==2.6.1']
+graph_deps = ['matplotlib>=3.1.0', 'seaborn>=0.9.0', 'imageio>=2.6.1']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
 streaming_deps = ['minibatch[all]']
 jupyter_deps = ['jupyterlab', 'jupyterhub']
+dev_deps = ['nose', 'twine', 'flake8', 'mock']
 
-# all deps
-all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
-            + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
+# -- tensorflow specifics
+tf_version = os.environ.get('TF_VERSION', '2')
+if tf_version.startswith('1.15'):
+    assert sys.version_info <= (3, 7), "TF < 2.x requires Python <= 3.7"
+    tf_deps = ['tensorflow=={}'.format(tf_version)]
+    tf_deps = tf_deps + ['tensorflow-gpu==1.15.0']
+    keras_deps = ['keras==2.2.4']
+elif sys.version_info >= (3, 8):
+    assert tf_version.startswith('2'), "Python version 3.8 only supported by TF >= 2.2"
+    tf_deps = ['tensorflow>={}'.format(tf_version)]
+    keras_deps = ['keras>=2.4.3']
+else:
+    tf_deps = ['tensorflow>={}'.format(tf_version)]
+    keras_deps = ['keras>=2.4.3']
 
 setup(
     name='omegaml',
@@ -95,6 +105,7 @@ setup(
         'streaming': streaming_deps,
         'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
         'all-client': hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
+        'dev': dev_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

@@ -1,10 +1,11 @@
 import glob
 import os
 import tempfile
+from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import numpy as np
-from shutil import rmtree
+import tensorflow as tf
 
 from omegaml.backends.basemodel import BaseModelBackend
 
@@ -15,24 +16,51 @@ class TensorflowSavedModelPredictor(object):
     """
 
     def __init__(self, model_dir):
+        self.model_dir = model_dir
+        if tf.__version__.startswith('1'):
+            self.__init_tf_v1()
+        else:
+            self.__init__tf_v2()
+
+    def __init__tf_v2(self):
+        imported = tf.saved_model.load(self.model_dir)
+        if callable(imported):
+            self.predict_fn = imported
+        self.inputs = imported.signatures["serving_default"].inputs
+        self.outputs = imported.signatures["serving_default"].outputs
+        self._convert_to_model_input = self._convert_to_model_input_v2
+        self._convert_to_model_output = self._convert_to_model_output_v2
+
+    def __init_tf_v1(self):
         from tensorflow.contrib import predictor
-        self.predict_fn = predictor.from_saved_model(model_dir)
+        self.predict_fn = predictor.from_saved_model(self.model_dir)
         self.input_names = list(self.predict_fn.feed_tensors.keys())
         self.output_names = list(self.predict_fn.fetch_tensors.keys())
+        self._convert_to_model_input = self._convert_to_model_input_v1
+        self._convert_to_model_output = self._convert_to_model_output_v1
 
-    def _convert_to_model_input(self, X):
+    def _convert_to_model_input_v1(self, X):
         # coerce input into expected feature mapping
-        if len(self.input_names) > 1:
-            raise ValueError('multiple inputs not supported')
         model_input = {
             self.input_names[0]: X
         }
         return model_input
 
-    def _convert_to_model_output(self, yhat):
+    def _convert_to_model_input_v2(self, X):
+        # coerce input into expected feature mapping
+        from omegaml.backends.tensorflow import _tffn
+        return _tffn('convert_to_tensor')(X,
+                                          name=self.inputs[0].name,
+                                          dtype=self.inputs[0].dtype)
+
+    def _convert_to_model_output_v1(self, yhat):
         # coerce output into dict or array-like response
         if len(self.output_names) == 1:
             yhat = yhat[self.output_names[0]]
+        return yhat
+
+    def _convert_to_model_output_v2(self, yhat):
+        # coerce output into dict or array-like response
         return yhat
 
     def predict(self, X):

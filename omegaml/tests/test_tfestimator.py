@@ -2,11 +2,10 @@ from inspect import isfunction
 from unittest import TestCase, skip
 
 from omegaml import Omega
+from omegaml.backends.tensorflow import _tffn
 from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModelBackend, TFEstimatorModel
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
-
-import tensorflow as tf
 
 
 def make_data():
@@ -50,7 +49,7 @@ def make_input_fn():
         X = {
             'f{}'.format(i + 1): X[:, i] for i in range(X.shape[1])
         }
-        return tf.estimator.inputs.numpy_input_fn(x=X, y=Y, num_epochs=1, shuffle=False)
+        return _tffn('numpy_input_fn')(x=X, y=Y, num_epochs=1, shuffle=False)
 
     return input_fn
 
@@ -299,7 +298,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
             import omegaml as om
             X = om.datasets.get(Xname)
             Y = om.datasets.get(Yname)
-            dataset = tf.estimator.inputs.pandas_input_fn(X, Y, shuffle=True)
+            dataset = _tffn('pandas_input_fn')(X, Y, shuffle=True)
             return dataset
 
         @virtualobj
@@ -307,7 +306,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
             import tensorflow as tf
             import omegaml as om
             X = om.datasets.get(Xname)
-            dataset = tf.estimator.inputs.pandas_input_fn(X, shuffle=False)
+            dataset = _tffn('pandas_input_fn')(X, shuffle=False)
             return dataset
 
         # create classifier
