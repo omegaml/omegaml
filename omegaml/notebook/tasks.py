@@ -59,7 +59,7 @@ def run_omegaml_job(self, nb_file, event=None, **kwargs):
     runs omegaml job
     """
     result = self.om.jobs.run_notebook(nb_file, event=event)
-    return result.to_json()
+    return sanitized(result)
 
 
 @shared_task(base=NotebookTask, bind=True)

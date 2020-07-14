@@ -5,6 +5,7 @@ import gridfs
 import re
 import yaml
 from croniter import croniter
+from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from six import StringIO, BytesIO
@@ -236,6 +237,10 @@ class OmegaJobs(BackendBaseCommon):
         }
         ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
         try:
+            if not meta_job.kind_meta.get('keep_output', False):
+                resources = {}  # https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html
+                cp = ClearOutputPreprocessor()
+                cp.preprocess(notebook, resources)
             ep = ExecutePreprocessor(**ep_kwargs)
             ep.preprocess(notebook, {'metadata': {'path': '/'}})
         except Exception as e:
@@ -244,14 +249,14 @@ class OmegaJobs(BackendBaseCommon):
         else:
             status = 'OK'
             message = ''
-            # record results
-            meta_results = self.put(
-                notebook, 'results/{name}_{ts}'.format(**locals()))
-            meta_results.attributes['source_job'] = name
-            meta_results.save()
-            job_results = meta_job.attributes.get('job_results', [])
-            job_results.append(meta_results.name)
-            meta_job.attributes['job_results'] = job_results
+        # record results
+        meta_results = self.put(
+            notebook, 'results/{name}_{ts}'.format(**locals()))
+        meta_results.attributes['source_job'] = name
+        meta_results.save()
+        job_results = meta_job.attributes.get('job_results', [])
+        job_results.append(meta_results.name)
+        meta_job.attributes['job_results'] = job_results
         # record final job status
         job_runs = meta_job.attributes.get('job_runs', [])
         runstate = {
@@ -272,7 +277,8 @@ class OmegaJobs(BackendBaseCommon):
                 if event == trigger['event']:
                     trigger['status'] = status
                     trigger['ts'] = ts
-        return meta_job.save()
+        meta_job.save()
+        return meta_results
 
     def schedule(self, nb_file, run_at=None, last_run=None):
         """
