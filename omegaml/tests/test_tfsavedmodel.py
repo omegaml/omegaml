@@ -14,6 +14,8 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
     def _build_model(self):
         # build a dummy model for testing. does not need to make sense
         import tensorflow as tf
+        from omegaml.backends.tensorflow import _tffn
+
         keras = tf.keras
         Sequential = keras.models.Sequential
         Dense = keras.layers.Dense
@@ -43,7 +45,7 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
 
         # https://www.tensorflow.org/guide/estimators
         est_model = tf.keras.estimator.model_to_estimator(keras_model=model)
-        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        train_input_fn = _tffn('numpy_input_fn')(
             x={"X_input": x_train},
             y=y_train,
             num_epochs=1,

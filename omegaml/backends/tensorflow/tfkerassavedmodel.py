@@ -1,6 +1,6 @@
 import tempfile
 
-from omegaml.backends.tensorflow import TensorflowSavedModelBackend
+from .tfsavedmodel import TensorflowSavedModelBackend
 
 
 class TensorflowKerasSavedModelBackend(TensorflowSavedModelBackend):
@@ -17,10 +17,8 @@ class TensorflowKerasSavedModelBackend(TensorflowSavedModelBackend):
         # https://www.tensorflow.org/api_docs/python/tf/keras/experimental/export_saved_model
         import tensorflow as tf
         export_dir = tempfile.mkdtemp()
-        tf.contrib.saved_model.save_keras_model(obj, export_dir,
-                                                input_signature=[tf.TensorSpec(shape=obj.input.shape,
-                                                                               dtype=obj.input.dtype,
-                                                                               name='input')])
+        tf.keras.models.save_model(obj, export_dir,
+                                   save_format='tf')
         return export_dir
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, tpu_specs=None, **kwargs):

@@ -36,16 +36,20 @@ jobs:
           echo "Waiting..."
           sleep 10
           docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-          for VER in 3.6 3.7 3.8
+          for TF_VERSION in 1.15.3 2.2.0
           do
-            echo "Testing with python $VER"
-            conda create -q -y -n omenv$VER python=$VER
-            conda activate omenv$VER
-            conda install -q -y --file conda-requirements.txt
-            pip install -q -r pip-requirements.txt
-            pip install .[all]
-            make test
-            conda deactivate
+            for VER in 3.6 3.7 3.8
+            do
+              conda env remove -q -y -n omenv$VER || echo ""
+              echo "Testing with python $VER"
+              conda create -q -y -n omenv$VER python=$VER
+              conda activate omenv$VER
+              conda install -q -y --file conda-requirements.txt
+              pip install -q -r pip-requirements.txt
+              pip install .[all]
+              make test
+              conda deactivate
+            done
           done
           docker-compose down --remove-orphans
         shell: /bin/bash -l -eo pipefail
