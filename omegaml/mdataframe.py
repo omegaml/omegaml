@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
+from uuid import uuid4
+
 import numpy as np
 import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
 from pymongo.collection import Collection
-from uuid import uuid4
 
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
@@ -189,7 +190,7 @@ class MLocIndexer(object):
 
     def _get_filter(self, specs):
         filterq = []
-        projection = []
+        projection = None
         if self.positional:
             idx_cols = ['_om#rowid']
         else:
@@ -206,7 +207,7 @@ class MLocIndexer(object):
                   and all(isscalar(v) for v in specs)):
                 # iloc[int, int] is a cell access
                 flt_kwargs[idx_cols[0]] = specs[0]
-                projection.extend(self._get_projection(specs[1]))
+                projection = self._get_projection(specs[1])
             else:
                 flt_kwargs['{}__in'.format(idx_cols[0])] = specs
                 self._from_range = True
@@ -238,7 +239,16 @@ class MLocIndexer(object):
                         flt_kwargs[col] = spec
                 else:
                     # we're out of index columns, let's look at columns
-                    projection.extend(self._get_projection(spec))
+                    cur_proj = self._get_projection(spec)
+                    # if we get a single column, that's the projection
+                    # if we had a single column, now need to add more, create a list
+                    # if we have a list already, extend that
+                    if projection is None:
+                        projection = cur_proj
+                    elif isinstance(projection, list):
+                        projection.extend(cur_proj)
+                    else:
+                        projection = [projection, cur_proj]
         if flt_kwargs:
             filterq.append(MongoQ(**flt_kwargs))
         finalq = None
@@ -329,7 +339,7 @@ class MDataFrame(object):
                  force_columns=None, immediate_loc=False, auto_inspect=False,
                  normalize=False, raw=False,
                  parser=None,
-                 preparefn=None, **kwargs):
+                 preparefn=None, from_loc_range=False, **kwargs):
         self.collection = PickableCollection(collection)
         # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields(raw=raw)
@@ -347,7 +357,7 @@ class MDataFrame(object):
         # was this created from the loc indexer?
         self.from_loc_indexer = kwargs.get('from_loc_indexer', False)
         # was the loc index used a range? Else a single value
-        self.from_loc_range = None
+        self.from_loc_range = from_loc_range
         # setup query for filter criteries, if provided
         if self.filter_criteria:
             # make sure we have a filtered collection with the criteria given
@@ -407,6 +417,7 @@ class MDataFrame(object):
                       limit=self.head_limit,
                       skip=self.skip_topn,
                       from_loc_indexer=self.from_loc_indexer,
+                      from_loc_range=self.from_loc_range,
                       immediate_loc=self.immediate_loc,
                       query=self.filter_criteria,
                       auto_inspect=self.auto_inspect,
@@ -939,6 +950,7 @@ class MDataFrame(object):
         Returns:
             a dataframe of max. length chunksize
         """
+        chunksize = int(chunksize)
         i = 0
         while True:
             chunkdf = self.skip(i).head(chunksize).value
@@ -948,6 +960,7 @@ class MDataFrame(object):
             yield chunkdf
 
     def itertuples(self, chunksize=1000):
+        chunksize = int(chunksize)
         __doc__ = pd.DataFrame.itertuples.__doc__
 
         for chunkdf in self.iterchunks(chunksize=chunksize):
@@ -955,11 +968,17 @@ class MDataFrame(object):
                 yield row
 
     def iterrows(self, chunksize=1000):
+        chunksize = int(chunksize)
         __doc__ = pd.DataFrame.iterrows.__doc__
 
         for chunkdf in self.iterchunks(chunksize=chunksize):
-            for row in chunkdf.iterrows():
-                yield row
+            if isinstance(chunkdf, pd.DataFrame):
+                for row in chunkdf.iterrows():
+                    yield row
+            else:
+                # Series does not have iterrows
+                for i in range(0, len(chunkdf), chunksize):
+                    yield chunkdf.iloc[i:i+chunksize]
 
     def iteritems(self):
         __doc__ = pd.DataFrame.iteritems.__doc__
@@ -989,6 +1008,12 @@ class MDataFrame(object):
         self._evaluated = None
         indexer = MPosIndexer(self)
         return indexer
+
+    def rows(self, start=None, end=None, chunksize=1000):
+        # equivalent to .iloc[start:end].iteritems(),
+        start, end, chunksize = (int(v) for v in (start, end, chunksize))
+        return self.iloc[slice(start, end)].iterchunks(chunksize)
+
 
     def __repr__(self):
         kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
@@ -1071,3 +1096,7 @@ class MSeries(MDataFrame):
         kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
         return "MSeries(collection={collection.name}, {kwargs})".format(collection=self.collection,
                                                                         kwargs=kwargs)
+
+    @property
+    def shape(self):
+        return len(self),
