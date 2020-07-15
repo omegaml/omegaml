@@ -81,5 +81,6 @@ def run_omega_script(self, scriptname, **kwargs):
         'result': result,
         'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
         'started': dtstart.isoformat(),
+        'ended': dtend.isoformat(),
     }
     return SERIALIZER[format](data)

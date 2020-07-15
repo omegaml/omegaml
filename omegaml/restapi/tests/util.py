@@ -1,3 +1,6 @@
+import flask
+
+
 class RequestsLikeTestClient(object):
     # inspired by https://stackoverflow.com/a/41151251
     def __init__(self, app):
@@ -22,10 +25,13 @@ class RequestsLikeTestClient(object):
         def inner(self, *args, **kwargs):
             kwargs = self.make_client_kwargs(**kwargs)
             return getattr(self.client, method)(*args, **kwargs)
+
         return inner
 
     get = wrapper('get')
     post = wrapper('post')
     put = wrapper('put')
     delete = wrapper('delete')
+
+
 
