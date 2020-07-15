@@ -3,6 +3,11 @@ from os.path import dirname, basename
 
 from omegaml.backends.basedata import BaseDataBackend
 
+try:
+    from smart_open import open
+except:
+    pass
+
 
 class PythonRawFileBackend(BaseDataBackend):
     """
@@ -11,11 +16,24 @@ class PythonRawFileBackend(BaseDataBackend):
     KIND = 'python.file'
 
     @classmethod
-    def supports(self, obj, name, as_raw=None, **kwargs):
+    def supports(self, obj, name, open_kwargs=None, **kwargs):
         is_filelike = hasattr(obj, 'read')
+        open_kwargs = dict(open_kwargs or {})
+        if kwargs.get('kind') == self.KIND:
+            is_filelike = self._is_openable(obj, **open_kwargs)
         return is_filelike or self._is_path(self, obj)
 
-    def get(self, name, local=None, **kwargs):
+    def _is_openable(self, obj, **kwargs):
+        if 'mode' not in 'kwargs':
+            kwargs['mode'] = 'rb'
+        try:
+            with open(obj, **kwargs) as fin:
+                fin.read(1)
+        except:
+            return False
+        return True
+
+    def get(self, name, local=None, mode='wb', open_kwargs=None, **kwargs):
         """
         get a stored file as a file handler with binary contents or a local file
 
@@ -37,7 +55,7 @@ class PythonRawFileBackend(BaseDataBackend):
             target_dir = dirname(local) if is_filename else local
             local = local if is_filename else '{local}/{name}'.format(**locals())
             os.makedirs(target_dir, exist_ok=True)
-            with open(local, 'wb') as flocal:
+            with open(local, mode=mode, **open_kwargs) as flocal:
                 flocal.write(outf.read())
             return local
         return outf
