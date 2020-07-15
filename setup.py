@@ -34,6 +34,12 @@ else:
     tf_deps = ['tensorflow>={}'.format(tf_version)]
     keras_deps = ['keras>=2.4.3']
 
+# all deps
+all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
+            + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
+all_client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
+
+
 setup(
     name='omegaml',
     version=version,
