@@ -107,6 +107,7 @@ OMEGA_DISABLE_FRAMEWORKS = os.environ.get('OMEGA_DISABLE_FRAMEWORKS')
 #: storage mixins
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
+    'omegaml.mixins.store.LazyGetMixin',
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
     'omegaml.mixins.store.package.PythonPackageMixin',
     'omegaml.mixins.store.promotion.PromotionMixin',

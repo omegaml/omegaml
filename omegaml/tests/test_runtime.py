@@ -1,23 +1,23 @@
 from __future__ import absolute_import
 
 import os
-from unittest import TestCase, skipUnless
+from unittest import TestCase
 
+import numpy as np
+import pandas as pd
+from six.moves import range
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model.base import LinearRegression
-from sklearn.linear_model.stochastic_gradient import SGDRegressor
-from sklearn.metrics.regression import mean_squared_error
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDRegressor
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
-import numpy as np
 from omegaml import Omega
-from omegaml.util import delete_database, reshaped, settings
-import pandas as pd
-from six.moves import range
+from omegaml.util import delete_database, reshaped
 
 
 class RuntimeTests(TestCase):
@@ -169,6 +169,40 @@ class RuntimeTests(TestCase):
             pred1 = result.get()
             mse = mean_squared_error(df.y, pred1)
             self.assertLess(mse, previous_mse)
+
+    def test_partial_fit_chunked(self):
+        # create some data
+        x = np.array(list(range(0, 100)))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        # put into Omega
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        om = Omega()
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        # generate a large dataset
+        for i in range(100):
+            om.datasets.put(df, 'data', append=(i > 0))
+        # create a model locally, store (unfitted) in Omega
+        # -- ignore warnings on y shape
+        import warnings
+        warnings.filterwarnings("ignore", category=DataConversionWarning)
+        lr = SGDRegressor(max_iter=1000, tol=1e-3, random_state=42)
+        om.models.put(lr, 'mymodel2')
+        # have Omega fit the model to get a start, then predict
+        result = om.runtime.model('mymodel2').fit(df[['x']], df[['y']])
+        result.get()
+        # check the new model version metadata includes the datax/y references
+        result = om.runtime.model('mymodel2').predict('data[x]')
+        pred1 = result.get()
+        mse = mean_squared_error(om.datasets.get('data[y]'), pred1)
+        self.assertGreater(mse, 40)
+        # fit mini batches add better training data, update model
+        result = om.runtime.model('mymodel2').partial_fit('data[x]#', 'data[y]#')
+        result = om.runtime.model('mymodel2').predict('data[x]')
+        pred1 = result.get()
+        mse_2 = mean_squared_error(om.datasets.get('data[y]'), pred1)
+        self.assertLess(mse_2, mse)
 
     def test_predict_pure_python(self):
         # create some data

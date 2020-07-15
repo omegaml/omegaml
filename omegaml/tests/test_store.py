@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 
+import unittest
+import uuid
+from datetime import timedelta
 from unittest import skip
 
 import gridfs
 import joblib
 import pandas as pd
-import unittest
-import uuid
-from datetime import timedelta
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.util import testing
@@ -245,6 +245,71 @@ class StoreTests(unittest.TestCase):
             else:
                 dfx = df[[spec]]
             self.assertTrue(dfx.equals(df2), "expected dataframes to be equal")
+
+    def test_get_dataframe_opspec(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10)),
+            'c': list(range(1, 10)),
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # check # op returns iterchunks by default
+        value = store.get('mydata#')
+        self.assertTrue(hasattr(value, '__next__'))
+        nvalue = next(value)
+        self.assertEqual(len(nvalue), len(df))
+        assert_frame_equal(nvalue, df)
+        # check we can specify specific operator
+        value = store.get('mydata#iterchunks')
+        nvalue = next(value)
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(nvalue), len(df))
+        assert_frame_equal(nvalue, df)
+        # check we can specify kwargs
+        value = store.get('mydata#iterchunks:chunksize=1')
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(next(value)), 1)
+        value = store.get('mydata#iterchunks:chunksize=2')
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(next(value)), 2)
+        # check we can use rows op as equiv of .iloc[start:end]
+        value = store.get('mydata#rows:start=2,end=4')
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(next(value)), 2)
+        # same as .iloc[start:end]
+        value = store.get('mydata#rows:start=2,end=3')
+        self.assertTrue(hasattr(value, '__next__'))
+        assert_frame_equal(next(value), df.iloc[2:3])
+
+    def test_get_dataframe_colspec_opspec(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10)),
+            'c': list(range(1, 10)),
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # check we can specify [] and # qualifiers
+        value = store.get('mydata[a]#')
+        self.assertTrue(hasattr(value, '__next__'))
+        nvalue = next(value)
+        self.assertEqual(len(nvalue), len(df))
+        assert_frame_equal(nvalue, df[['a']])
+        # check we can specify specific operator
+        value = store.get('mydata[a,b]#iterchunks')
+        nvalue = next(value)
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(nvalue), len(df))
+        assert_frame_equal(nvalue, df[['a', 'b']])
+        # check we can specify kwargs
+        value = store.get('mydata[a,b]#iterchunks:chunksize=1')
+        nvalue = next(value)
+        self.assertTrue(hasattr(value, '__next__'))
+        self.assertEqual(len(nvalue), 1)
+        assert_frame_equal(nvalue, df[['a', 'b']].iloc[0:1])
 
     def test_put_dataframe_with_index(self):
         # create some dataframe
