@@ -4,8 +4,6 @@ import math
 from billiard.pool import Pool
 from itertools import repeat
 
-from omegaml.mongoshim import MongoClient
-
 default_chunksize = int(1e4)
 
 
@@ -22,6 +20,8 @@ def insert_chunk(job):
                 should include the database name, as the collection is taken
                 from the default database of the connection.
     """
+    from omegaml.mongoshim import MongoClient
+
     sdf, mongo_url, collection_name = job
     client = MongoClient(mongo_url, authSource='admin')
     db = client.get_database()
