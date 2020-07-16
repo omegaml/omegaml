@@ -26,7 +26,7 @@ image:
 	: "run docker build"
 	scripts/livetest.sh --build
 
-release-test: dist
+release-test: dist sanity
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -34,7 +34,7 @@ release-test: dist
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
-release-prod: test dist
+release-prod: test dist sanity
 	: "twine upload to pypi prod"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc

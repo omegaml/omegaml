@@ -27,7 +27,7 @@ class TFEstimatorModel(object):
         The estimator_fn returns a tf.estimator.Estimator or subclass.
     """
 
-    def __init__(self, estimator_fn, model=None, input_fn=None, model_dir=None):
+    def __init__(self, estimator_fn, model=None, input_fn=None, model_dir=None, v1_compat=False):
         """
 
         Args:
@@ -43,11 +43,14 @@ class TFEstimatorModel(object):
                                   provided as a dict, must contain the 'fit', 'evaluate' and 'predict' keys where
                                   each value is a valid input_fn as fn(X, Y, batch_size=n).
             model_dir (str): the model directory to use. Defaults to whatever estimator_fn/Estimator instance sets
+            v1_compat (bool): use tensorflow.compat.v1 to create create the input functions. Use this when
+                 migrating tensorflow v1.x Estimator models that are not yet v2.x native yet.
         """
         self.estimator_fn = estimator_fn
         self._model_dir = model_dir
         self._estimator = model
         self._input_fn = input_fn
+        self.v1_compat = v1_compat
 
     @property
     def model_dir(self):
@@ -84,9 +87,15 @@ class TFEstimatorModel(object):
             If none of these options work, create your own input_fn and pass it
             to the .fit/.predict methods using the input_fn= kwarg
         """
-        import tensorflow as tf
         import pandas as pd
         import numpy as np
+
+        if self.v1_compat:
+            # https://www.tensorflow.org/guide/migrate
+            import tensorflow.compat.v1 as tf
+            tf.disable_v2_behavior()
+        else:
+            import tensorflow as tf
 
         if self._input_fn is not None:
             if isinstance(self._input_fn, dict):
