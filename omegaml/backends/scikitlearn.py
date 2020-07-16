@@ -225,7 +225,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
             return result
 
         result = process(maybe_chunked(model.score,
-                                       lambda data: as_args(reshaped(X), reshaped(Y)),
+                                       lambda X, Y: as_args(reshaped(X), reshaped(Y)),
                                        X, Y, **kwargs), fn=store, keep_last=True)
         return result
 
@@ -248,7 +248,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
             return result
 
         result = process(maybe_chunked(model.fit_transform,
-                                       lambda data: as_args(reshaped(X), reshaped(Y)),
+                                       lambda X, Y: as_args(reshaped(X), reshaped(Y)),
                                        X, Y, **kwargs), fn=store, keep_last=True)
 
         # store information required for retraining
@@ -277,7 +277,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
             return result
 
         result = process(maybe_chunked(model.transform,
-                                       lambda data: as_args(reshaped(X)),
+                                       lambda X: as_args(reshaped(X)),
                                        X, **kwargs), fn=store, keep_last=True)
         return result
 
@@ -294,7 +294,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
             return result
 
         result = process(maybe_chunked(model.decision_function,
-                                       lambda data: as_args(reshaped(X)),
+                                       lambda X: as_args(reshaped(X)),
                                        X, **kwargs), fn=store, keep_last=True)
         return result
 
