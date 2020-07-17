@@ -13,16 +13,18 @@ from unittest.case import TestCase
 
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
+from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import flatten_columns
 
 
-class MDataFrameTests(TestCase):
+class MDataFrameTests(OmegaTestMixin, TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
                                      'y': random.sample(list(range(0, 100)), 20)})
         om = self.om = Omega()
+        self.clean()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
 
