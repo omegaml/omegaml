@@ -13,6 +13,10 @@ class OmegaRuntimeBackend(LokyBackend):
     def __init__(self, *args, **kwargs):
         self._tqdm = None
         self._job_count = kwargs.pop('n_tasks', None)
+        import multiprocessing as mp
+        # get LokyBackend to run in Celery, see LokyBackend.effective_n_jobs
+        # TODO replace mp with billiard
+        mp.current_process().daemon = False
         super().__init__(*args, **kwargs)
 
     def start_call(self):
