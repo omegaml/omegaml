@@ -6,6 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.framework.ops import EagerTensor
 
 from omegaml.backends.basemodel import BaseModelBackend
 
@@ -26,6 +27,8 @@ class TensorflowSavedModelPredictor(object):
         imported = tf.saved_model.load(self.model_dir)
         if callable(imported):
             self.predict_fn = imported
+        else:
+            self.predict_fn = imported.signatures["serving_default"]
         self.inputs = imported.signatures["serving_default"].inputs
         self.outputs = imported.signatures["serving_default"].outputs
         self._convert_to_model_input = self._convert_to_model_input_v2
@@ -75,7 +78,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
     @classmethod
     def supports(self, obj, name, **kwargs):
         import tensorflow as tf
-        return isinstance(obj, tf.estimator.Estimator)
+        return isinstance(obj, (tf.estimator.Estimator, tf.compat.v1.estimator.Estimator))
 
     def _package_model(self, model, key, tmpfn, serving_input_fn=None,
                        strip_default_attrs=None, **kwargs):
@@ -143,8 +146,20 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         result = model.predict(X)
-        if pure_python:
-            result = result.tolist()
+
+        def ensure_serializable(data):
+            # convert to numpy
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    data[k] = ensure_serializable(v)
+            elif isinstance(data, EagerTensor):
+                data = data.numpy()
+                if pure_python:
+                    data = data.tolist()
+            return data
+
+        result = ensure_serializable(result)
+
         if rName:
             result = self.data_store.put(result, rName)
         return result
@@ -156,7 +171,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
 class ServingInput(object):
     # FIXME this is not working yet
     def __init__(self, model=None, features=None, like=None, shape=None, dtype=None,
-                 batchsize=1, from_keras=False):
+                 batchsize=1, from_keras=False, v1_compat=False):
         """
         Helper to create serving_input_fn
 
@@ -193,6 +208,7 @@ class ServingInput(object):
         self.dtype = dtype
         self.batchsize = batchsize
         self.from_keras = from_keras
+        self.v1_compat = v1_compat
 
     def build(self):
         if isinstance(self.features, dict):
@@ -208,8 +224,18 @@ class ServingInput(object):
         input_fn = self.build()
         return input_fn()
 
+    @property
+    def tf(self):
+        if self.v1_compat:
+            # https://www.tensorflow.org/guide/migrate
+            import tensorflow.compat.v1 as tf
+            tf.disable_v2_behavior()
+        else:
+            import tensorflow as tf
+        return tf
+
     def from_features(self):
-        import tensorflow as tf
+        tf = self.tf
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
             self.features,
             default_batch_size=self.batchsize
@@ -217,14 +243,19 @@ class ServingInput(object):
         return input_fn
 
     def from_ndarray(self, shape, dtype):
-        import tensorflow as tf
+        tf = self.tf
         if self.from_keras:
             input_layer_name = '{}_input'.format(self.features[0])
         else:
             input_layer_name = self.features[0]
-        features = {
-            input_layer_name: tf.placeholder(dtype=dtype, shape=shape, )
-        }
+        if self.v1_compat:
+            features = {
+                input_layer_name: tf.placeholder(dtype=dtype, shape=shape, )
+            }
+        else:
+            features = {
+                input_layer_name: tf.TensorSpec(shape=shape, dtype=dtype)
+            }
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
             features,
             default_batch_size=None

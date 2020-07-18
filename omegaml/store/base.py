@@ -75,6 +75,7 @@ from __future__ import absolute_import
 
 import warnings
 from fnmatch import fnmatch
+from time import sleep
 
 import gridfs
 import os
@@ -195,7 +196,6 @@ class OmegaStore(object):
                                  serverSelectionTimeoutMS=2500,
                                  **self.defaults.OMEGA_MONGO_SSL_KWARGS,
                                  )
-
         self._db = get_db(alias)
         return self._db
 

@@ -17,7 +17,7 @@ snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
 streaming_deps = ['minibatch[all]']
 jupyter_deps = ['jupyterlab', 'jupyterhub<0.11'] # jupyterhub-0.11 has breaking changes
-dev_deps = ['nose', 'twine', 'flake8', 'mock']
+dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb']
 
 # -- tensorflow specifics
 tf_version = os.environ.get('TF_VERSION', '2')
@@ -86,7 +86,7 @@ setup(
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
-        'dill>=0.2.9',
+        'dill>=0.3.2',
         'tee>=0.0.3',
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
