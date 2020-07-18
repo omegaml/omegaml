@@ -68,7 +68,6 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
         cores = max(1, math.ceil(os.cpu_count() / 2))
-        # pool = Pool(processes=cores)
         jobs = zip(dfchunker(df, size=chunksize),
                    repeat(mongo_url), repeat(collection_name))
         approx_jobs = int(len(df) / chunksize)
