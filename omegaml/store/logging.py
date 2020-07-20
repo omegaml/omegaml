@@ -1,10 +1,14 @@
 import atexit
 
 import logging
+import os
 import signal
+import platform
+
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
+LOGGER_HOSTNAME=os.environ.get('HOSTNAME') or platform.node()
 
 class OmegaLoggingHandler(logging.Handler):
     """
@@ -41,7 +45,8 @@ class OmegaLoggingHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = _make_record(record.levelname, record.levelno, record.name,
-                                 record.msg, self.format(record))
+                                 text=record.msg, fmt=self.format(record),
+                                 hostname=getattr(record, 'hostname', LOGGER_HOSTNAME))
         self.collection.insert_one(log_entry)
 
     def tail(self, wait=False):
@@ -304,10 +309,11 @@ class TailableLogDataset:
         return stdout
 
 
-def _make_record(level, levelno, name, message, text=None, fmt='{message}'):
+def _make_record(level, levelno, name, message, text=None, fmt='{message}', hostname=None):
     from datetime import datetime
     created = datetime.utcnow()
     text = text if text is not None else fmt.format(**locals())
+    hostname = hostname or LOGGER_HOSTNAME
     return {
         'levelname': level,
         'levelno': levelno,
