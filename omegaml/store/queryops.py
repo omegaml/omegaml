@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 import json
+import uuid
+
 import sys
 
 import pymongo
@@ -22,7 +24,7 @@ class GeoJSON(dict):
 
     output:
         GeoJSON.to_dict()
-        GeOJSON.to_json()  
+        GeOJSON.to_json()
     """
     def __init__(self, lon=None, lat=None, coordinates=None):
         if isinstance(lon, GeoJSON):
@@ -77,7 +79,7 @@ class GeoJSON(dict):
 class MongoQueryOps(object):
 
     """
-    A Pythonic API to build Mongo query statements 
+    A Pythonic API to build Mongo query statements
 
     Examples:
 
@@ -86,7 +88,7 @@ class MongoQueryOps(object):
     d = dict
 
     # build queries
-    query = x.MATCH(d(foo='value', baz=x.CONTAINS('value'))) 
+    query = x.MATCH(d(foo='value', baz=x.CONTAINS('value')))
     groupby = x.GROUP(columns=[col1, col2]), count=x.COUNT())
 
     result = coll.find(query)
@@ -195,7 +197,7 @@ class MongoQueryOps(object):
         :param other: the other collection
         :param key: the key field (applies to both left and right)
         :param left_key: the left key field
-        :param right_key: the right key field 
+        :param right_key: the right key field
         :param target: the target array to store the matching other-documents
         """
         return {
@@ -209,7 +211,7 @@ class MongoQueryOps(object):
     def UNWIND(self, field, preserve=True, index=None):
         """
         returns $unwind for the given array field. the index in the
-        array will be output as _index_<field>. 
+        array will be output as _index_<field>.
 
         :param field: the array field to unwind from
         :param preserve: if True, the document is output even if the
@@ -297,7 +299,7 @@ class MongoQueryOps(object):
         :param columns: a single index column, or a list of columns
         :param kwargs: optional kwargs to merge. if kwargs contains the
         'name' key it will be preserved
-        :return: (idx, **kwargs) tuple, pass as create_index(idx, **kwargs)  
+        :return: (idx, **kwargs) tuple, pass as create_index(idx, **kwargs)
         """
         SORTPREFIX = ['-', '+', '@']
         DIRECTIONMAP = {
@@ -316,11 +318,7 @@ class MongoQueryOps(object):
         idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
                 direction(col))
                for col in sort_cols]
-        name = '__'.join([(col
-                           .replace('-', 'desc_')
-                           .replace('+', 'asc_')
-                           .replace('@', 'geo_'))
-                          for col in sort_cols])
+        name = uuid.uuid4().hex
         kwargs.setdefault('name', name)
         return idx, kwargs
     def make_sortkey(self, columns):
@@ -338,7 +336,7 @@ def flatten_keys(d, keys=None):
 
     :param d: a dictionary
     :param keys: previously found keys. internal use.
-    :returns: list of flattened keys 
+    :returns: list of flattened keys
     """
     keys = keys or []
     keys.extend(list(d.keys()))

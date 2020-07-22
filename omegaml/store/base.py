@@ -73,22 +73,21 @@ as follows:
 """
 from __future__ import absolute_import
 
-import warnings
-from fnmatch import fnmatch
-from time import sleep
-
-import gridfs
 import os
 import re
-import six
 import tempfile
+import warnings
 from datetime import datetime
+from fnmatch import fnmatch
+from uuid import uuid4
+
+import gridfs
+import six
 from mongoengine.connection import disconnect, \
-    connect, _connections, get_connection, get_db
+    connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from six import iteritems
-from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -488,8 +487,9 @@ class OmegaStore(object):
         obj, idx_meta = unravel_index(obj, row_count=row_count)
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
+        d_column_map = dict(column_map)
         dtypes = {
-            dict(column_map).get(k): v.name
+            d_column_map.get(k): v.name
             for k, v in iteritems(obj.dtypes)
         }
         kind_meta = {
@@ -503,6 +503,7 @@ class OmegaStore(object):
         df_idxcols = [col for col in obj.columns if col.startswith('_idx')]
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
+            # name is given to avoid oversized generated names
             collection.create_index(keys, **idx_kwargs)
         # create index on row id
         keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
