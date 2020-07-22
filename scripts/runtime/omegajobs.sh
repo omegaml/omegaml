@@ -51,4 +51,5 @@ fi
 pip install -U --user jupyterhub==$JY_HUB_VERSION jupyterlab
 cd $HOME/.jupyter
 nohup honcho -d $APPBASE start worker >> worker.log 2>&1 &
+jupyter serverextension enable jupyterlab
 jupyterhub-singleuser --ip $ip --port $port $jydebug
