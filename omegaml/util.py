@@ -452,18 +452,22 @@ class PickableCollection(object):
     def __getstate__(self):
         client = self.collection._Collection__database._Database__client
         host, port = list(client.nodes)[0]
+        creds = self.database.client._MongoClient__all_credentials[self.database.name]
+        creds_state = dict(creds._asdict())
+        creds_state.pop('cache')
+        creds_state['source'] = str(creds.source)
         return {
             'name': self.name,
             'database': self.database.name,
             'host': host,
             'port': port,
-            'credentials': self.database.client._MongoClient__all_credentials[self.database.name],
+            'credentials': creds_state
         }
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
-        url = 'mongodb://{credentials.username}:{credentials.password}@{host}:{port}/{database}'.format(**state)
-        client = MongoClient(url, authSource=state['credentials'].source)
+        url = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(**state, **state['credentials'])
+        client = MongoClient(url, authSource=state['credentials']['source'])
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -477,9 +481,11 @@ def extend_instance(obj, cls, *args, **kwargs):
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
     cls = load_class(cls)
-    if cls not in obj.__class__.mro():
+    base_mro = obj.__class__.mro()
+    if cls not in base_mro:
         base_cls = obj.__class__
         base_cls_name = 'Extended{}'.format(obj.__class__.__name__.split('.')[0])
+        base_cls_name = base_mro[-2].__name__
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
     if hasattr(obj, '_init_mixin'):
         obj._init_mixin(*args, **kwargs)

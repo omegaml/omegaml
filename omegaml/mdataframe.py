@@ -186,7 +186,7 @@ class MLocIndexer(object):
         return df
 
     def __setitem__(self, specs, value):
-        raise NotImplemented
+        raise NotImplementedError()
 
     def _get_filter(self, specs):
         filterq = []
@@ -406,9 +406,19 @@ class MDataFrame(object):
         data.update(collection=self.collection)
         return data
 
+    def __reduce__(self):
+        def remake(collection):
+            mdf = MDataFrame(collection)
+            return mdf
+
+        state = self.__getstate__()
+        args = self.collection,
+        return remake, args, state
+
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
-        self.__dict__.update(**state)
+        for k, v in state.items():
+            setattr(self, k, v)
 
     def _getcopy_kwargs(self, without=None):
         """ return all parameters required on a copy of this MDataFrame """
@@ -429,7 +439,7 @@ class MDataFrame(object):
         # FIXME inefficient. make MDataFrame a drop-in replacement for any numpy ndarray
         # this evaluates every single time
         if self._evaluated is None:
-            self._evaluated = array = self.value.values()
+            self._evaluated = array = self.value.values
         else:
             array = self._evaluated
         return array
@@ -478,7 +488,7 @@ class MDataFrame(object):
             kwargs.update(query=cols_or_slice.query)
             return MDataFrame(self.collection, **kwargs)
         elif isinstance(cols_or_slice, np.ndarray):
-            raise NotImplemented
+            return self.iloc[cols_or_slice]
         raise ValueError('unknown accessor type %s' % type(cols_or_slice))
 
     def __setitem__(self, column, value):
@@ -1100,3 +1110,4 @@ class MSeries(MDataFrame):
     @property
     def shape(self):
         return len(self),
+

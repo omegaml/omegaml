@@ -104,6 +104,10 @@ class OmegaRuntime(object):
         common['routing'].update(self._require_kwargs['routing'])
         return common
 
+    def mode(self, local=False):
+        self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
+        return self
+
     def _client_is_pure_python(self):
         try:
             import pandas as pd

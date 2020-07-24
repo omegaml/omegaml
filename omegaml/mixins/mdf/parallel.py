@@ -21,7 +21,7 @@ class ParallelApplyMixin:
 
     def transform(self, fn=None, n_jobs=-2, maxobs=None,
                   chunksize=50000, chunkfn=None, outname=None,
-                  resolve='worker'):
+                  resolve='worker', backend='omegaml'):
         """
 
         Args:
@@ -47,9 +47,9 @@ class ParallelApplyMixin:
 
         """
         mdf = self.__class__(self.collection, **self._getcopy_kwargs())
-        self._pyapply_opts = getattr(self, '_pyapply_opts', {})
-        self._pyapply_opts.update({
-            'maxobs': maxobs or len(self),
+        mdf._pyapply_opts = getattr(self, '_pyapply_opts', {})
+        mdf._pyapply_opts.update({
+            'maxobs': maxobs or len(mdf),
             'n_jobs': n_jobs,
             'chunksize': chunksize,
             'applyfn': fn or pyappply_nop_transform,
@@ -58,8 +58,9 @@ class ParallelApplyMixin:
             'append': False,
             'outname': outname or '_tmp{}_'.format(mdf.collection.name),
             'resolve': resolve,  # worker or function
+            'backend': backend,
         })
-        return self
+        return mdf
 
     def _chunker(self, mdf, chunksize, maxobs):
         if getattr(mdf.collection, 'query', None):
@@ -81,10 +82,11 @@ class ParallelApplyMixin:
         outname = opts['outname']
         append = opts['append']
         resolve = opts['resolve']
+        backend = opts['backend']
         outcoll = PickableCollection(mdf.collection.database[outname])
         if not append:
             outcoll.drop()
-        with Parallel(n_jobs=n_jobs, backend='omegaml',
+        with Parallel(n_jobs=n_jobs, backend=backend,
                       verbose=verbose) as p:
             # prepare for serialization to remote worker
             chunks = chunkfn(mdf, chunksize, maxobs)
@@ -192,6 +194,8 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
             raise RuntimeError(e)
         else:
             chunkdf = result if result is not None else chunkdf
+            if isinstance(chunkdf, dict):
+                chunkdf = pd.DataFrame(chunkdf)
             if isinstance(chunkdf, pd.Series):
                 chunkdf = pd.DataFrame(chunkdf,
                                        index=chunkdf.index,
