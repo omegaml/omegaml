@@ -75,7 +75,7 @@ setup(
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
         'mongoengine>=0.18.2,<0.19',
-        'pandas>=0.17.1',
+        'pandas>=0.17.1,<1.1', # 1.1 fails on storing multi-indexes
         'numpy>=1.16.4,<1.18',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',

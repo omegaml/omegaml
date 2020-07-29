@@ -39,6 +39,8 @@ class OmegaRuntimeBackend(LokyBackend):
     def terminate(self):
         try:
             self.tqdm.close()
+        except:
+            pass
         finally:
             super().terminate()
 

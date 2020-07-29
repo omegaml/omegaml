@@ -45,7 +45,7 @@ class OmegaLoggingHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = _make_record(record.levelname, record.levelno, record.name,
-                                 text=record.msg, fmt=self.format(record),
+                                 record.msg, text=self.format(record),
                                  hostname=getattr(record, 'hostname', LOGGER_HOSTNAME))
         self.collection.insert_one(log_entry)
 

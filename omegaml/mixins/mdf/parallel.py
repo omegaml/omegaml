@@ -47,8 +47,8 @@ class ParallelApplyMixin:
 
         """
         mdf = self.__class__(self.collection, **self._getcopy_kwargs())
-        mdf._pyapply_opts = getattr(self, '_pyapply_opts', {})
-        mdf._pyapply_opts.update({
+        options = mdf._transform_options()
+        options.update({
             'maxobs': maxobs or len(mdf),
             'n_jobs': n_jobs,
             'chunksize': chunksize,
@@ -72,7 +72,7 @@ class ParallelApplyMixin:
 
     def _do_transform(self, verbose=0):
         # setup mdf and parameters
-        opts = self._pyapply_opts
+        opts = self._transform_options()
         n_jobs = opts['n_jobs']
         chunksize = opts['chunksize']
         applyfn = opts['applyfn']
@@ -86,10 +86,11 @@ class ParallelApplyMixin:
         outcoll = PickableCollection(mdf.collection.database[outname])
         if not append:
             outcoll.drop()
+        non_transforming = lambda mdf: mdf._clone()
         with Parallel(n_jobs=n_jobs, backend=backend,
                       verbose=verbose) as p:
             # prepare for serialization to remote worker
-            chunks = chunkfn(mdf, chunksize, maxobs)
+            chunks = chunkfn(non_transforming(mdf), chunksize, maxobs)
             runner = delayed(pyapply_process_chunk)
             worker_resolves_mdf = resolve in ('worker', 'w')
             # run in parallel
@@ -103,15 +104,23 @@ class ParallelApplyMixin:
 
     def _get_cursor(self, pipeline=None, use_cache=True):
         # called by .value
-        if getattr(self, '_pyapply_opts', None):
+        if self._transform_options():
             result = self._do_transform().find()
         else:
             result = super()._get_cursor(pipeline=pipeline, use_cache=use_cache)
         return result
 
+    @property
+    def is_transforming(self):
+        return bool(self._transform_options())
+
+    def _transform_options(self):
+        self._pyapply_opts = getattr(self, '_pyapply_opts', {})
+        return self._pyapply_opts
+
     def persist(self, name=None, store=None, append=False, local=False):
         """
-        Persist the result of a .transform() in chunks
+        Evaluate and persist the result of a .transform() in chunks
 
         Args:
             name (str): the name of the target dataset
@@ -125,9 +134,9 @@ class ParallelApplyMixin:
         Returns:
             Metadata of persisted dataset
         """
-        self._pyapply_opts = getattr(self, '_pyapply_opts', {})
         # -- .transform() active
-        if self._pyapply_opts:
+        options = self._transform_options()
+        if options:
             meta = None
             if name and store:
                 coll = store.collection(name)
@@ -142,7 +151,7 @@ class ParallelApplyMixin:
                 else:
                     # _do_transform expects the collection name, not the store's name
                     name = coll.name
-            self._pyapply_opts.update(dict(outname=name, append=append))
+            options.update(dict(outname=name, append=append))
             coll = self._do_transform()
             result = meta or self.__class__(coll, **self._getcopy_kwargs())
         # -- run with noop in parallel

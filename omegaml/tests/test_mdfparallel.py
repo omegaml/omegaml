@@ -111,7 +111,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
 
         om.datasets.put(large, 'largedf', append=False)
         mdf = om.datasets.getl('largedf')
-        mdf.transform(myfunc, chunkfn=chunker, chunksize=5).persist('largedf_transformed', om.datasets)
+        mdf.transform(myfunc, chunkfn=chunker, chunksize=5, n_jobs=1).persist('largedf_transformed', om.datasets)
         self.assertIn('largedf_transformed', om.datasets.list())
         # parallel insert may result in different row order, get back in sort order
         dfx = om.datasets.getl('largedf_transformed').sort('x').value
