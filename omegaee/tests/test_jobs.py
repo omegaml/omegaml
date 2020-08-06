@@ -1,20 +1,23 @@
 from __future__ import absolute_import
 
 import os
+from unittest import skip
 
 import gridfs
 from nbformat import v4
 
+from omegaee.omega import EnterpriseOmega
 from omegaml import Omega
 from omegaml.tests.test_jobs import JobTests
 from omegaml.util import settings as omegaml_settings
 
 __all__ = ['EnterpriseJobTests']
 
+
 class EnterpriseJobTests(JobTests):
     @property
     def om(self):
-        om = Omega()
+        om = EnterpriseOmega(defaults=omegaml_settings(reload=True))
         return om
 
     def test_export_job_html(self):
@@ -66,6 +69,7 @@ class EnterpriseJobTests(JobTests):
         om.jobs.export(resultnb_name, outpath, format='slides')
         self.assertTrue(os.path.exists(outpath))
 
+    @skip("require pdf latex to run which is not installed in base image")
     def test_export_job_pdf(self):
         """
         test export a job to PDF

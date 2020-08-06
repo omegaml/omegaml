@@ -1,8 +1,7 @@
 import os
+
 from stackable.contrib.config.conf_api import Config_ApiKeys
 from stackable.contrib.config.conf_dokku import Config_Dokku
-from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
-
 from .env_local import EnvSettings_Local
 
 

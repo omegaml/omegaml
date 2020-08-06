@@ -3,23 +3,18 @@ REST API to models
 """
 import json
 
-from celery.result import AsyncResult
-from sklearn.exceptions import NotFittedError
 from tastypie.authentication import ApiKeyAuthentication
-from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, ListField, DictField
-from tastypie.http import HttpBadRequest, HttpCreated, HttpAccepted
+from tastypie.http import HttpCreated
 from tastypie.resources import Resource
 
-from omegaml.backends.restapi.model import GenericModelResource
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from omegaml.util import load_class
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
-from omegaweb.util import get_api_task_data
 
-
-class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+class ModelResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie, Resource):
     """
     ModelResource implements the REST API to omegaml.models
     """
@@ -80,27 +75,20 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         detail_allowed_methods = ['get', 'delete']
         resource_name = 'model'
         authentication = ApiKeyAuthentication()
+        result_uri = '/api/v1/task/{id}/result'
 
-    @cqrsapi(allowed_methods=['put'])
+    @cqrsapi(allowed_methods=['put', 'get'])
     def predict(self, request, *args, **kwargs):
         """
         predict from model
 
         HTTP GET :code:`/model/<name>/predict/?datax=dataset-name`
 
-        where 
+        where
 
         * :code:`datax` is the name of the features dataset
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        payload = self.deserialize(request, request.body) if request.body else None
-        try:
-            result = GenericModelResource(om).put(name, query, payload)
-        except NotFittedError as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        return self.create_response(request, result)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'predict', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['put'])
     def fit(self, request, *args, **kwargs):
@@ -109,29 +97,13 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP PUT :code:`/model/<name>/fit/?datax=dataset-name&datay=dataset-name`
 
-        where 
+        where
 
         * :code:`datax` is the name of the features dataset
         * :code:`datay` is the name of the target dataset (if required by
           the algorithm)
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
-        datay = query.get('datay')
-        try:
-            result = om.runtime.model(name).fit(datax, datay)
-            meta = result.get()
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context = get_api_task_data(result)
-        data = {
-            'datax': datax,
-            'datay': datay,
-            'result': str(meta),
-        }
-        return self.create_response(request, data, response_class=HttpAccepted)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'fit', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['put'])
     def partial_fit(self, request, *args, **kwargs):
@@ -140,28 +112,13 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP PUT :code:`/model/<name>/partial_fit/?datax=dataset-name&datay=dataset-name`
 
-        where 
+        where
 
         * :code:`datax` is the name of the features dataset
         * :code:`datay` is the name of the target dataset (if required by
           the algorithm)
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
-        datay = query.get('datay')
-        try:
-            result = om.runtime.model(name).partial_fit(datax, datay)
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context = get_api_task_data(result)
-        data = {
-            'datax': datax,
-            'datay': datay,
-            'result': [result.get()]
-        }
-        return self.create_response(request, data, response_class=HttpAccepted)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'partial_fit', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['get'])
     def score(self, request, *args, **kwargs):
@@ -170,28 +127,12 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP GET :code:`/model/<name>/score/?datax=dataset-name&datay=dataset-name`
 
-        where 
+        where
 
         * :code:`datax` is the name of the features test dataset
         * :code:`datay` are the true labels of the test dataset
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
-        datay = query.get('datay')
-        try:
-            result = om.runtime.model(name).score(datax, datay)
-            result_data = result.get()
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context = get_api_task_data(result)
-        data = {
-            'datax': datax,
-            'datay': datay,
-            'result': [result_data]
-        }
-        return self.create_response(request, data)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'score', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['get'])
     def decision_function(self, request, *args, **kwargs):
@@ -204,21 +145,7 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         * :code:`datax` is the name of the features test dataset
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
-        try:
-            result = om.runtime.model(name).decision_function(datax)
-            result_data = result.get()
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context.update(get_api_task_data(result))
-        data = {
-            'datax': datax,
-            'result': [result_data]
-        }
-        return self.create_response(request, data)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'decision_function', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['get'])
     def transform(self, request, *args, **kwargs):
@@ -227,27 +154,11 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP GET :code:`/model/<name>/transfer/?datax=dataset-name`
 
-        where 
+        where
 
         * :code:`datax` is the name of the features test dataset
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        query = request.GET
-        datax = query.get('datax')
-        datay = query.get('datay')
-        try:
-            result = om.runtime.model(name).transform(datax, datay)
-            result_data = result.get()
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context = get_api_task_data(result)
-        data = {
-            'datax': datax,
-            'datay': datay,
-            'result': result_data.tolist()
-        }
-        return self.create_response(request, data)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'transform', *args, **kwargs)
 
     def get_detail(self, request, **kwargs):
         """
@@ -306,13 +217,13 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP POST :code:`/model/<name>/`
 
-        Pass the model specification as the dictionary of 
+        Pass the model specification as the dictionary of
 
         * :code:`name` - see name field<
         * :code: `pipeline` - see pipeline field
 
         Note the method attempts to create a scikit-learn pipeline from
-        your specification. 
+        your specification.
         """
         om = self.get_omega(request)
         data = json.loads(request.body.decode('latin1'))

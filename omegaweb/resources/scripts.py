@@ -1,24 +1,18 @@
 """
 REST API to jobs
 """
-import json
 
-from celery.result import AsyncResult
-from nbformat import v4
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.fields import DictField
-from tastypie.http import HttpBadRequest, HttpCreated
+from tastypie.http import HttpBadRequest
 from tastypie.resources import Resource
 
-from omegaml.util import load_class
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
-from omegaweb.util import get_api_task_data
 
-
-class ScriptResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+class ScriptResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie, Resource):
     """
     Script resource implements the REST API to omegaml.scripts
     """
@@ -28,6 +22,7 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         detail_allowed_methods = []
         resource_name = 'script'
         authentication = ApiKeyAuthentication()
+        result_uri = '/api/v1/task/{id}/result'
 
     @cqrsapi(allowed_methods=['post'])
     def run(self, request, *args, **kwargs):
@@ -36,13 +31,14 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP POST :code:`/script/<name>/run/`
         """
+        return self.create_response_from_resource(request, '_generic_script_resource', 'run', *args, **kwargs)
+
         om = self.get_omega(request)
         name = kwargs.pop('pk')
         try:
             result = om.runtime.script(name).run(**request.GET.dict(),
                                                  __format='python')
             data = result.get()
-        except Exception as e:
+        except Exception:
             raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context = get_api_task_data(result)
         return self.create_response(request, data)

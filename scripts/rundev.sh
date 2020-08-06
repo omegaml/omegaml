@@ -27,45 +27,55 @@ container_uid=$host_uid:$host_guid
 # run process
 export CURRENT_UID=$container_uid
 export CURRENT_USER=$host_user
+# task routing means the default queue is $account-default
+# by enabling task routing we can have a central worker serve multiple accounts
+# on separate queues
+#export OMEGA_TASK_ROUTING_ENABLED=1
+export CELERY_Q=default
+#export OMEGA_USERID=omops
+#export OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
 
 if [[ ! -z $build ]]; then
-   echo "Building $devimage"
-   rm -rf $distdir
-   mkdir -p $distdir
-   cp *requirements* $distdir
-   cp Dockerfile.dev $distdir
-   cp -r ./release/dist/omegaml-dev/. $distdir
-   pushd $distdir
-   # https://stackoverflow.com/a/50362562/890242
-   build_args="--build-arg UNAME=$host_user --build-arg UID=$host_uid --build-arg GID=$host_guid"
-   docker build $build_args  --no-cache -t $devimage -f Dockerfile.dev .
-   popd
-   echo "Run application using scripts/rundev.sh --docker"
-   echo "Run shell using scripts/rundev.sh --docker --shell"
+   function dobuild() {
+       echo "Building $devimage"
+       rm -rf $distdir
+       mkdir -p $distdir
+       cp *requirements* $distdir
+       cp Dockerfile.dev $distdir
+       cp -r ./release/dist/omegaml-dev/. $distdir
+       cp -r ./scripts $distdir
+       pushd $distdir
+       # https://stackoverflow.com/a/50362562/890242
+       build_args="--build-arg UNAME=$host_user --build-arg UID=$host_uid --build-arg GID=$host_guid"
+       docker build $build_args  --no-cache -t $devimage -f Dockerfile.dev .
+       popd
+       echo "Run application using scripts/rundev.sh --docker"
+       echo "Run shell using scripts/rundev.sh --docker --shell"
+   }
+   dobuild
    exit 0
 fi
 
 
 if [[ ! -z $clean ]]; then
-    docker-compose -f docker-compose-dev.yml down
-    docker-compose -f docker-compose-dev.yml up -d --remove-orphans
-    countdown 5
+    docker-compose down
+    docker-compose up -d --remove-orphans
+    waiton "waiting for mongodb" http://localhost:27017
     cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
-    docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/initlocal.sh"
+    docker-compose exec omegaml-dev bash -ic "scripts/initlocal.sh --install"
 fi
 
 if [[ ! -z $docker ]]; then
-    docker-compose -f docker-compose-dev.yml up -d
+    docker-compose up -d
     if [[ ! -z $shell ]]; then
-        docker-compose -f docker-compose-dev.yml exec omegaml-dev bash
+        docker-compose exec omegaml-dev bash
     else
-        docker-compose -f docker-compose-dev.yml exec omegaml-dev bash -ic "scripts/rundev.sh"
+        docker-compose exec omegaml-dev bash -ic "scripts/rundev.sh"
     fi
 else
     # run with local software installed
-    omegamlcore_dir=../omegaml-ce
-    omegamlcore_scripts_dir=$omegamlcore_dir/scripts
     export DJANGO_DEBUG=1
     python manage.py migrate
+    python manage.py loaddata landingpage.json
     PORT=8000 honcho start web worker notebook scheduler omegaops
 fi

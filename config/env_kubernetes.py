@@ -20,7 +20,7 @@ class EnvSettings_kubernetes(Config_Dokku,
                                              mongopassword='foobar',
                                              mongodbname='admin'))
 
-    OMEGA_MONGO_URL = (os.environ.get('MONGO_URL') or
+    OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                        BASE_MONGO_URL.format(mongouser='user',
                                              mongohost='mongodb',
                                              mongopassword='foobar',
@@ -43,3 +43,5 @@ class EnvSettings_kubernetes(Config_Dokku,
     }
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+

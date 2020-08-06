@@ -22,7 +22,7 @@ class OmegaStoreContentsCheckpoints(GenericCheckpointsMixin, Checkpoints):
         coll = self.parent.store.collection('{}.ckp'.format(path))
         checkpoint = {
             'path': path,
-            'lastModified': datetime.datetime.utcnow(),
+            'last_modified': datetime.datetime.utcnow(),
             'content': nb,
         }
         cid = coll.insert(checkpoint)
@@ -58,7 +58,7 @@ class OmegaStoreContentsCheckpoints(GenericCheckpointsMixin, Checkpoints):
     def list_checkpoints(self, path):
         coll = self.parent.store.collection('{}.ckp'.format(path))
         return [dict(id=str(checkpoint['_id']),
-                     last_modified=checkpoint['lastModified'])
+                     last_modified=checkpoint.get('last_modified', datetime.datetime.utcnow()))
                 for checkpoint in coll.find()]
 
     def delete_checkpoint(self, checkpoint_id, path):

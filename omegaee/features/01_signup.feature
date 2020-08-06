@@ -1,3 +1,4 @@
+@signup
 Feature: signup a new user
 
     Scenario: sign up a new user
@@ -6,7 +7,7 @@ Feature: signup a new user
        Then the site sends out a registration email
        Then we confirm the account
        Then we log out
-       
+
     Scenario: login the new user
         Given we are not logged in
         When we log in

@@ -14,6 +14,7 @@ services:
          - omjobs
          - rabbitmq
          - mongodb
+         - apphub
       volumes:
          - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
          - ./etc/nginx/http.conf:/etc/nginx/conf.d/http.conf:ro
@@ -30,20 +31,48 @@ services:
       command: scripts/startweb.sh
       environment:
          - APP=omegaml
-         - DJANGO_CONFIGURATION=EnvSettings_docker
+         - APP_CONFIG=EnvSettings_docker
          - MYSQL_DATABASE=omegaml
          - MYSQL_USER=omegaml
          - MYSQL_PASSWORD=mysql
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - BROKER_URL=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_JYHUB_USER=jyadmin
          - OMEGA_JYHUB_APIKEY=b7b034f57d442e605ab91f88a8936149e968e12e
          - JYHUB_HOST=localhost:8899
-         - MONGO_HOST=localhost:27017
+         - MONGODB_SERVICE_HOST=mongodb
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - CELERY_Q=default
+   apphub:
+      image: omegaml/apphub:latest
+      container_name: apphub
+      hostname: apphub
+      links:
+         - omegaml
+         - mongodb
+         - rabbitmq
+      working_dir: /app
+      command: scripts/startapphub.sh
+      environment:
+         - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - CELERY_Q=default
+         - APP_CONFIG=EnvSettings_omegacloud_compose
+         - WEB_CONCURRENCY=4
+         - SESSION_TYPE=redis
+         - SESSION_REDIS=redis://:dei5oy1YMeeghae3@redis
+         - APPHUB_REGISTRY=apphub.contrib.registry.omegareg.OmegaCloudRegistry
+         - APPHUB_URL_PREFIX=/apps
+   # apphub caching
+   redis:
+      image: redis
+      hostname: redis
+      command: redis-server --requirepass dei5oy1YMeeghae3
    omjobs:
       image: omegaml/omegaml-ee:latest
       container_name: omjobs
@@ -82,7 +111,7 @@ services:
          - C_FORCE_ROOT=yes
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
-         - CELERY_Q=celery
+         - CELERY_Q=default
    omegaops:
       image: omegaml/omegaml-ee:latest
       container_name: omegaops
@@ -113,6 +142,8 @@ services:
          - ./etc-dev/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
          - ./etc-dev/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
          - ./etc-dev/rabbitmq/certs:/etc/rabbitmq/certs
+      ports:
+         - "15672:15672"
    mongodb:
       # initialize by running cat scripts/mongoinit.js | docker exec -i mongodb_1 mongo
       image: mongo:3.6.8-stretch
@@ -120,7 +151,7 @@ services:
       hostname: mongodb
       volumes:
          - ./etc-dev/mongo/certs/server_key.pem:/etc/mongo/server_key.pem
-      command: 
+      command:
          - "--auth"
          - "--sslMode"
          - "preferSSL"

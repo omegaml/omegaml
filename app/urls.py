@@ -2,7 +2,7 @@ import debug_toolbar
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
-from app.apiconfig import apis
+from app.apiconfig import omega_apis, admin_apis
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -14,4 +14,5 @@ urlpatterns = patterns('',
                        url(r'^__debug__/', include(debug_toolbar.urls)),
                        )
 
-urlpatterns += patterns('', *apis.urls)
+urlpatterns += patterns('', *omega_apis.urls)
+urlpatterns += patterns('', *admin_apis.urls)

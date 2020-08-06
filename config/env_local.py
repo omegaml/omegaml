@@ -1,10 +1,13 @@
+import json
 import os
+from urllib.parse import urlparse
 
 from config.env_global import EnvSettingsGlobal
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
+from stackable.contrib.config.conf_debugperm import Config_DjangoDebugPermissions
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
@@ -27,6 +30,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
+                        # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
     _addl_apps = ('tastypie',
@@ -44,36 +48,89 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     StackableSettings.patch_middleware(_addl_middlewares)
 
     API_CONFIG = {
-        'apis': (
+        'omega_apis': (
             ('omegaweb', 'omegaweb.api.v1_api'),
         ),
+        'admin_apis': (
+            ('landingpage', 'landingpage.api.config.v2_auth_api'),
+            ('paasdeploy', 'paasdeploy.api.config.v2_service_api'),
+        )
     }
 
     BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'
+    BASE_BROKER_URL = 'amqp://{brokeruser}:{brokerpassword}@{brokerhost}/{brokervhost}'
 
     mongo_host = os.environ.get('MONGO_HOST', 'localhost:27017')
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,
-                                             mongopassword='foobar',
+                                             mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                              mongodbname='admin'))
 
     OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                        os.environ.get('MONGO_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,
-                                             mongopassword='foobar',
+                                             mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                              mongodbname='userdb'))
 
     SITE_ID = 1
 
     jyhub_host = os.environ.get('JYHUB_HOST', 'localhost:5000')
-    broker_url = os.environ.get('BROKER_URL', 'amqp://localhost:5672//')
+    broker_url = os.environ.get('BROKER_URL', 'amqp://guest:foobar@localhost:5672//')
+    parsed = urlparse(broker_url)
+    broker_host = os.environ.get('BROKER_HOST') or '{}:{}'.format(parsed.hostname, parsed.port)
 
-    CONSTANCE_CONFIG = {
+    # TODO describe this in managed service docs
+    # jupyter kubespawner and omegaml-worker pylibs
+    # the default is to install the same pylib for all clients -- globally managed, only
+    # management pods can update the storage
+    # details see https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Volume.md
+    # * pvc-{username}-pylib-base maps to a cluster-wide nfs share in omegaml-services,
+    # * pvc-{username}-pylib-user maps to a user-namespaced nfs share in the user's namespace
+    #                             base is created in helmcharts/storage/033-pylib-pvc.yaml (global share)
+    #                             user pvcs created in helmcharts/worker/060-pylib-user-pvc.yaml
+    _default_cluster_storage = json.dumps({
+        "volumes": [
+            {
+                "name": "pylib-base",
+                "persistentVolumeClaim": {
+                    "claimName": "pvc-omegaml-pylib-base-omegaml",
+                    "readOnly": False
+                }},
+            {
+                "name": "pylib-user",
+                "persistentVolumeClaim": {
+                    "claimName": "pvc-omegaml-pylib-user",
+                    "readOnly": False
+                }
+            }
+        ],
+        "volumeMounts": [
+            {
+                "name": "pylib-base",
+                "mountPath": "/app/pylib/base",
+                "readOnly": True
+            },
+            {
+                "name": "pylib-user",
+                "mountPath": "/app/pylib/user",
+                "readOnly": True
+            }
+        ]
+    })
+    # the omegaml defaults provided by runtime
+    _default_omega_defaults = json.dumps({
+        'OMEGA_FRAMEWORKS': ('scikit-learn', 'tensorflow', 'keras', 'dash'),
+    })
+
+    _default_jupyter_config_overrides = json.dumps({})
+
+    StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': (mongo_host, 'mongo db host name'),
         'JYHUB_HOST': (jyhub_host, 'jupyter hub public host name'),
-        'BROKER_URL': (broker_url, 'rabbitmq broker url'),
+        'BROKER_URL': (broker_url, 'rabbitmq broker url (deprecated)'),
+        'BROKER_HOST': (broker_host, 'rabbitmq broker host'),
         'JUPYTER_IMAGE': ('omegaml/omegaml-ee:latest', 'jupyter image'),
         'JUPYTER_AFFINITY_ROLE': ('worker', 'jupyter k8s affinity role'),
         'JUPYTER_NODE_SELECTOR': ('omegaml.io/role=worker', 'jupyter k8s node selector'),
@@ -82,7 +139,10 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         'RUNTIME_AFFINITY_ROLE': ('worker', 'runtime k8s affinity role'),
         'RUNTIME_NODE_SELECTOR': ('omegaml.io/role=worker', 'runtime k8s node selector'),
         'RUNTIME_NAMESPACE': ('default', 'runtime k8s cluster namespace'),
-    }
+        'CLUSTER_STORAGE': (_default_cluster_storage, 'json cluster storage specs, applied to all services'),
+        'OMEGA_DEFAULTS': (_default_omega_defaults, 'json omegaml defaults'),
+        'JUPYTER_CONFIG': (_default_jupyter_config_overrides, 'json jupyter config overrides'),
+    })
 
     DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
@@ -100,7 +160,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                             'omegaee.tasks',
                             'omegaml.backends.package.tasks']
     #: authentication environment
-    OMEGA_AUTH_ENV = 'omegacommon.auth.OmegaSecureAuthenticationEnv'
+    OMEGA_AUTH_ENV = 'omegaml.client.auth.OmegaSecureAuthenticationEnv'
 
     # be compatible with omegaml-core flask API which does not allow trailing slash
     TASTYPIE_ALLOW_MISSING_SLASH = True
+    APPEND_SLASH = True

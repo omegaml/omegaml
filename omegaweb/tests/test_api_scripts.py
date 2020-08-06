@@ -1,16 +1,13 @@
 import os
 
 import sys
-from unittest import skip
-
 from django.contrib.auth.models import User
-from landingpage.models import ServicePlan
-from omegaml import Omega
-from omegaops import add_user, add_service_deployment, get_client_config
 from tastypie.test import ResourceTestCase
-from tastypiex.requesttrace import ClientRequestTracer
 
+from omegaml import Omega
+from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
+from tastypiex.requesttrace import ClientRequestTracer
 
 
 class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCase):

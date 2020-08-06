@@ -1,17 +1,21 @@
+from random import randint, random
+from time import sleep
+
 from celery import Task, shared_task
-from celery.signals import worker_init
+from celery.signals import worker_init, worker_process_init
+from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from pymongo.errors import ConnectionFailure
 
 import omegaops as omops
 from landingpage.models import DEPLOY_COMPLETED, ServicePlan
-from omegacommon.userconf import get_omega_from_apikey
-from omegaml.notebook.tasks import execute_scripts
+from omegaml.client.userconf import get_omega_from_apikey
 from omegaops.celeryapp import app
 from omegaops.util import enforce_logging_format, retry
 from paasdeploy.models import ServiceDeployConfiguration
 from paasdeploy.tasks import deploy
 
+logger = get_task_logger(__name__)
 
 class BaseLoggingTask(Task):
     """
@@ -88,9 +92,40 @@ def run_user_scheduler():
     users = User.objects.all()
     for user in users:
         qualifier = 'default'
-        auth_tuple = (user.username, user.api_key.key, qualifier)
-        execute_scripts.delay(__auth=auth_tuple)
+        # get an omega instance configured to the user's specifics and send task to user's worker
+        user_om = get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
+        execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
+        execute_scripts.delay()
+        # avoid excessive task bursts on rabbitmq
+        sleep(1)
 
+
+@shared_task(bind=True)
+def ensure_user_broker_ready(self, *args, **kwargs):
+    """
+    for every user (re-)create the vhost if it does not exist
+
+    TODO: this is hack to work with unpersisted rabbitmq backends. remove in favor of persisted rabbitmq
+    """
+    users = User.objects.all()
+    for user in users:
+        try:
+            user_settings = user.services.get(offering__name='omegaml').settings
+        except:
+            continue
+        if user_settings.get('version') != 'v3':
+            continue
+        for qualifier, cnx_config in user_settings.get('qualifiers', {}).items():
+            if 'brokervhost' in cnx_config:
+                print("recreating vhost {cnx_config[brokervhost]}...".format(**locals()))
+                try:
+                    omops.add_user_vhost(cnx_config['brokervhost'],
+                                         cnx_config['brokeruser'],
+                                         cnx_config['brokerpassword'])
+                except Exception as e:
+                    logger.error('error recreating user vhost {}'.format(str(e)))
+                    # avoid excessive task bursts on rabbitmq
+                sleep(.1 + random())
 
 @app.task(base=BaseLoggingTask, bind=True)
 def log_event_task(self, log_data):
@@ -121,6 +156,20 @@ def log_event_task(self, log_data):
     do(self, log_data)
 
 
+
 @worker_init.connect
 def initialise_omega_connection(*args, **kwargs):
     BaseLoggingTask().events
+
+
+@worker_process_init.connect
+def fix_multiprocessing(**kwargs):
+    # allow celery to start sub processes
+    # this is required for sklearn joblib unpickle support
+    # issue see https://github.com/celery/billiard/issues/168
+    # fix source https://github.com/celery/celery/issues/1709
+    from multiprocessing import current_process
+    try:
+        current_process()._config
+    except AttributeError:
+        current_process()._config = {'semprefix': '/mp'}

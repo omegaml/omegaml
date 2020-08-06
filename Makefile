@@ -1,27 +1,46 @@
 .PHONY: dist image help
-VERSION=$(shell cat omegaee/VERSION)
-RELEASE=$(shell cat omegaee/RELEASE)
 
-dist-prod:
-	: "build a release"
+clean:
 	rm -rf ./dist/*
-	scripts/distrelease.sh --version=${RELEASE}
+	rm -rf ./build/*
 
-dist:
+bumpminor:
+	bumpversion minor
+
+bumpbuild:
+	bumpversion build
+
+dist-prod: test clean
 	: "build a release"
+	-bash -c "docker ps -q | xargs docker kill"
+	scripts/distrelease.sh --version=`cat omegaee/RELEASE`
+
+dist: clean
+	: "build a release"
+	-bash -c "docker ps -q | xargs docker kill"
 	rm -rf ./dist/*
-	scripts/distrelease.sh --nominify
+	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE`
+
+candidate-dist: clean
+	-bash -c "docker ps -q | xargs docker kill"
+	rm -rf ./dist/*
+	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE` --nolivetest
 
 test:
+	docker-compose up -d || echo "assuming docker-compose environment already running"
 	DJANGO_SETTINGS_MODULE=app.settings python manage.py test --debug-config --verbosity=2
 	DJANGO_SETTINGS_MODULE=app.settings python manage.py test omegaml --debug-config --verbosity=2
 
 devtest:
 	scripts/devtest.sh --headless
 
-release-docker: dist-prod
-	: "docker push image sto dockerhub"
-	docker push omegaml/omegaml-ee:${RELEASE}
+candidate-docker: bumpbuild candidate-dist
+	: "docker push image to dockerhub"
+	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
+
+release-docker: bumpminor dist-prod
+	: "docker push image to dockerhub"
+	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
 	docker push omegaml/omegaml-ee:latest
 
 thirdparty:
@@ -33,3 +52,7 @@ help:
 		@echo -n "Common make targets"
 		@echo ":"
 		@cat Makefile | grep -A1 -E -e ".*:.*"
+
+circleci:
+	# put this into the BEHAVE_YML env variable to decode in circleci config.yml
+	@cat /home/patrick/.omegaml/behave.yml | grep -A3 -E "localhost|snowflake" | sed '/^--$$/d' | base64 -w0 && echo

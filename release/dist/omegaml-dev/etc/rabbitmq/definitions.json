@@ -8,7 +8,7 @@
     {
         "name": "admin",
         "password": "een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP",
-        "tags": "administrator"
+        "tags": "administrator,management"
     }
     ],
     "vhosts": [

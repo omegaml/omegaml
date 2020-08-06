@@ -7,20 +7,15 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 ENV PYTHONDONTWRITEBYTECODE=true
 
+COPY ./scripts/updatechromedriver.sh ./scripts/
+
 # https://jpmelos.com/articles/how-use-chrome-selenium-inside-docker-container-running-python/
 RUN apt-get update --fix-missing && \
     apt-get install -y wget bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git && \
-    apt-get install -y build-essential psmisc libcurl3 zip unzip && \
-    apt-get install -y default-libmysqlclient-dev gcc && \
-    curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /chrome.deb && \
-    dpkg -i /chrome.deb || apt-get install -yf && \
-    curl https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_linux64.zip -o /tmp/chromedriver.zip && \
-    unzip -o /tmp/chromedriver.zip -d /usr/local/bin && chmod +x /usr/local/bin/chromedriver && \
-    rm -rf /var/cache/apt && \
-    rm -rf /var/lib/apt/lists/*  && \
-    apt-get clean  && \
-    rm /chrome.deb && \
-    rm /tmp/chromedriver.zip && \
+    apt-get install -y build-essential psmisc libcurl3 libnss3 zip unzip && \
+    apt-get install -y default-libmysqlclient-dev gcc procps nano htop && \
+    update-ca-certificates --fresh && \
+    ./scripts/updatechromedriver.sh && \
     find /opt/conda/ -follow -type f -name '*.pyc' -delete  && \
     find /opt/conda/ -follow -type f -name '*.js.map' -delete
 
@@ -58,3 +53,4 @@ RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
 RUN echo "conda activate omegamlee" >> ~/.bashrc
 COPY .bashrc /home/$UNAME
 COPY behave.yml /home/$UNAME/.omegaml/behave.yml
+

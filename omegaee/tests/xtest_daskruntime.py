@@ -14,9 +14,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
 import omegaml
-from omegacommon.auth import OmegaRuntimeAuthentication
-from omegaml import Omega
 from omegaee.runtimes.daskruntime import OmegaAuthenticatedRuntimeDask
+from omegaml import Omega
+from omegaml.client.auth import OmegaRuntimeAuthentication
 from omegaml.runtimes.daskruntime import OmegaRuntimeDask
 from omegaml.util import delete_database, reshaped
 
@@ -153,7 +153,7 @@ class DaskRuntimeTests(TestCase):
         # -- ignore warnings on y shape
         import warnings
         warnings.filterwarnings("ignore", category=DataConversionWarning)
-        lr = SGDRegressor()
+        lr = SGDRegressor(max_iter=1000, tol=1e-3)
         om.models.put(lr, 'amodel2')
         # have Omega fit the model to get a start, then predict
         result = om.runtime.model('amodel2').fit('datax', 'datay')

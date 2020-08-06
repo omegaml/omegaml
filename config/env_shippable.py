@@ -1,6 +1,7 @@
 import os
 
 from config import EnvSettings_LocalTest
+from stackable import StackableSettings
 
 
 class EnvSettings_Shippable(EnvSettings_LocalTest):
@@ -10,7 +11,7 @@ class EnvSettings_Shippable(EnvSettings_LocalTest):
     MONGO_ADMIN_URL = BASE_MONGO_URL.format(mongouser='admin',
                                             mongohost='localhost:{}'.format(
                                                 MONGO_PORT),
-                                            mongopassword='foobar',
+                                            mongopassword='jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB',
                                             mongodbname='admin')
 
     OMEGA_MONGO_URL = BASE_MONGO_URL.format(mongouser='admin',
@@ -21,7 +22,7 @@ class EnvSettings_Shippable(EnvSettings_LocalTest):
 
     SITE_ID = 1
 
-    CONSTANCE_CONFIG = {
+    StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': ('localhost:{}'.format(MONGO_PORT), 'mongo db host name'),
         'JYHUB_HOST': ('localhost:8888', 'jupyter hub public host name'),
         'BROKER_URL': ('amqp://guest@127.0.0.1:5672//', 'rabbitmq broker url'),
@@ -33,6 +34,6 @@ class EnvSettings_Shippable(EnvSettings_LocalTest):
         'RUNTIME_AFFINITY_ROLE': ('worker', 'runtime k8s affinity role'),
         'RUNTIME_NODE_SELECTOR': ('omegaml.io/role=worker', 'runtime k8s node selector'),
         'RUNTIME_NAMESPACE': ('default', 'runtime k8s cluster namespace'),
-    }
+    })
 
     DEBUG = True

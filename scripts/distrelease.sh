@@ -6,11 +6,12 @@
 ##
 ## Options:
 ##    --version=VALUE   the version to build. defaults to omegaee/RELEASE
-##    --distname=VALUE  the name of the distribution. defaults to basename 
+##    --distname=VALUE  the name of the distribution. defaults to basename
 ##    --nominify        do not obfuscate code
 ##    --nodocker        do not build a docker image
 ##    --dockertag       docker image tag. defaults to $dockertag
 ##    --makebase        re-create the base image
+##    --nolivetest      do not run a livetest
 ##
 ##
 
@@ -23,6 +24,8 @@ distname=${distname:=omegaml-ee}
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
+source $script_dir/omutils || exit
+
 
 # setup
 release=$script_dir/release.sh
@@ -64,6 +67,8 @@ $release $use_nominify --source ../stackable
 $release $use_nominify --source ../django-tastypie-swagger
 $release $use_nominify --source ../ccbackend
 $release $use_nominify --source ../tastypiex
+$release $use_nominify --source ../omegaml-deploy/cloudmgr
+$release $use_nominify --source ../minibatch
 $release $use_nominify --source ../omegaml-ce
 
 # repackage into one zip file
@@ -74,11 +79,13 @@ unzip django-tastypie-swagger.zip "*whl"
 unzip ccbackend.zip "*whl"
 unzip tastypiex.zip "*whl"
 unzip omegaml.zip "*whl"
+unzip minibatch.zip "*whl"
 unzip omegaml-ce.zip "*whl"
+unzip cloudmgr.zip "*whl"
 rm -rf ./docs
 unzip omegaml.zip "docs/*"
 zip -r $releasezip *whl docs
-popd 
+popd
 
 # add requirements and stuff
 pushd $distdir
@@ -120,27 +127,28 @@ if [[ -z $nodocker ]]; then
 
   if [[ ! -z $makebase ]]; then
      docker images | grep "$dockerbasetag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
-     docker build -f Dockerfile.base -t $dockerbasetag .
+     try docker build -f Dockerfile.base -t $dockerbasetag .
   fi
 
-  docker build -f Dockerfile -t $dockertag:$version .
+  try docker build -f Dockerfile -t $dockertag:$version .
   docker tag $dockertag:$version $dockertag:latest
   popd
   popd
   echo "[INFO] Docker image $dockertag:$version built. Source in $distdir/docker-staging/build" >> $msgfile
 fi
 
-# test release
-pushd $distdir/docker-staging/build
-./deploy-docker.sh --clean
-popd
+if [[ -z $nolivetest ]]; then
+    # integration test release
+    pushd $distdir/docker-staging/build
+    try ./deploy-docker.sh --clean
+    popd
 
+    scripts/livetest.sh --url http://localhost:5000 --headless --cacert $cacert
+    success=$?
 
-scripts/livetest.sh --url http://localhost:5000 --headless --cacert $cacert
-success=$?
-
-echo "Stopping docker services from $distdir/docker-staging/build"
-docker-compose -f $distdir/docker-staging/build/docker-compose.yml stop
+    echo "Stopping docker services from $distdir/docker-staging/build"
+    docker-compose -f $distdir/docker-staging/build/docker-compose.yml stop
+fi
 
 echo "*** Done. Captured messages follow"
 cat $msgfile

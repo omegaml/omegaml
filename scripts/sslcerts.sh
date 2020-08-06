@@ -12,7 +12,7 @@ rabbitmq_certs_dir=$script_dir/../release/dist/omegaml-dev/etc/rabbitmq/certs/
 rm -rf $mongo_certs_dir
 rm -rf $rabbitmq_certs_dir
 
-mkdir -p mongo_certs_dir
+mkdir -p $mongo_certs_dir
 mkdir -p $rabbitmq_certs_dir
 
 # Clone tls-gen in upper directory
@@ -30,7 +30,7 @@ rm -rf result
 chmod 755 $rabbitmq_certs_dir/server_certificate.pem $rabbitmq_certs_dir/server_key.pem $rabbitmq_certs_dir/ca_certificate.pem
 
 # Create and move mongodb certs, use container hostname as CN
-make PASSWORD=pass CN=mongo
+make PASSWORD=pass CN=mongodb
 # Mongo expects key and certificate in a single file
 cat result/server_certificate.pem >> result/server_key.pem
 # Move certs to appropriate place in the repo

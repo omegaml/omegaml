@@ -27,7 +27,7 @@ class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
         self.setup_initconfig()
         # setup test data
         df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
-                                     'y': random.sample(list(range(0, 100)), 20)})
+                                     'y': random.sample(list(range(5, 100)), 20)})
         config = get_client_config(self.user)
         om = self.om = Omega(mongo_url=config.get('OMEGA_MONGO_URL'))
         for ds in om.datasets.list():
@@ -64,7 +64,7 @@ class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
 
     def test_get_list(self):
         """
-        test dataset listing 
+        test dataset listing
         """
         om = self.om
         df = self.df
@@ -80,7 +80,7 @@ class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
 
     def test_get_dataset(self):
         """
-        test get a dataset 
+        test get a dataset
         """
         # -- get orient=dict
         resp = self.api_client.get(
@@ -106,7 +106,7 @@ class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
 
     def test_get_dataset_filtered(self):
         """
-        test get a dataset 
+        test get a dataset
         """
         # -- try some filter
         resp = self.api_client.get(self.url('sample', 'x__gt=5'),

@@ -3,8 +3,8 @@ from time import sleep
 
 from behave import *
 
-import omegaml
 from omegaee.features.util import uri, find_user_apikey, handle_alert
+from omegaml.tests.features.util import jburl
 
 
 @then('we confirm the account')
@@ -31,6 +31,7 @@ def given_new_user(ctx):
 def login_new_user(ctx):
     br = ctx.browser
     br.visit(uri(br, '/accounts/login'))
+    assert hasattr(ctx.feature, 'username'), "feature.username is not set, did you run tag=@always?"
     br.fill('login', ctx.feature.username)
     br.fill('password', ctx.feature.password)
     br.click_link_by_text('Login ')
@@ -65,11 +66,15 @@ def log_out(ctx):
 
 @then('we can get an omega instance')
 def get_omgega_instance(ctx):
+    import omegaml as om
+
     br = ctx.browser
     # check we can get a new omegaml instance
     userid, apikey = find_user_apikey(br)
     # view = False => get a setup with public URLs
-    om = omegaml.setup(userid, apikey, api_url=ctx.web_url, view=False)
+    om = om.setup(userid, apikey, api_url=ctx.web_url, view=False)
+    ctx.feature.om_userid = userid
+    ctx.feature.om_apikey = apikey
     ctx.feature.om = om
     assert om.datasets.mongodb is not None
     # check it actually works
@@ -105,7 +110,6 @@ def not_logged_in(ctx):
     assert br.is_text_present('sign in', wait_time=5)
 
 
-
 @then('we can load the jupyter notebook')
 def load_jupyter_notebook(ctx):
     br = ctx.browser
@@ -122,6 +126,7 @@ def load_jupyter_notebook(ctx):
         br.find_by_id('username_input').first.fill(userid)
         br.find_by_id('password_input').first.fill(apikey)
         br.click_link_by_id('login_submit')
+        br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection
         assert not br.is_text_present('Server error: Traceback', wait_time=5)

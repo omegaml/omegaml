@@ -15,6 +15,7 @@
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
+source $script_dir/omutils || exit
 
 # setup basic directories
 mkdir -p dist
@@ -32,7 +33,8 @@ distdir=$(realpath $distdir)
 
 # execute
 setup() {
-    find $sourcedir/dist -name "*whl" | xargs rm -f
+    rm -rf $sourcedir/dist
+    rm -rf $sourcedir/build
     rm -rf $distdir/releasezip
     rm -rf $distdir/$release
     rm -rf $distdir/releasezip/docs
@@ -59,7 +61,7 @@ obfuscate () {
     # 2. obfuscate and prepend header file on each file
     pushd $distdir/$release
     # -- build a script, then execute
-    find . -name "*py" | xargs -L1 -I{} echo "echo Minify {} && pyminifier -o {}_pym --gzip {} && cat $headerfqn {}_pym > {} && rm {}_pym"  > obfuscate.sh
+    find . -name "*py" | xargs -L1 -I{} echo "echo Minify {} && pyminifier --nominify -o {}_pym --gzip {} && cat $headerfqn {}_pym > {} && rm {}_pym"  > obfuscate.sh
     chmod +x obfuscate.sh && obfuscate.sh
     popd
 }
@@ -116,7 +118,7 @@ clean () {
     rm -rf $distdir/releasezip
 }
 
-pushd $sourcedir
+try pushd $sourcedir
 setup
 build_sdist
 if [[ -z $nominify ]]; then

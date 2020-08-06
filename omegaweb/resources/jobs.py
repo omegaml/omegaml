@@ -1,9 +1,7 @@
 """
 REST API to jobs
 """
-import json
 
-from celery.result import AsyncResult
 from nbformat import v4
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
@@ -11,14 +9,12 @@ from tastypie.fields import DictField
 from tastypie.http import HttpBadRequest, HttpCreated
 from tastypie.resources import Resource
 
-from omegaml.util import load_class
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
-from omegaweb.util import get_api_task_data
 
-
-class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
+class JobResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie, Resource):
     """
     Job resource implements the REST API to omegaml.jobs
     """
@@ -33,6 +29,7 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         detail_allowed_methods = ['get', 'post', 'delete']
         resource_name = 'job'
         authentication = ApiKeyAuthentication()
+        result_uri = '/api/v1/task/{id}/result'
 
     @cqrsapi(allowed_methods=['post'])
     def run(self, request, *args, **kwargs):
@@ -41,17 +38,7 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP POST :code:`/job/<name>/run/`
         """
-        om = self.get_omega(request)
-        name = kwargs.get('pk')
-        try:
-            result = om.runtime.job(name).run()
-            result.get()
-        except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        request.logging_context.update(get_api_task_data(result))
-        meta = om.jobs.metadata(name)
-        data = self._get_job_detail(meta)
-        return self.create_response(request, data)
+        return self.create_response_from_resource(request, '_generic_job_resource', 'run', *args, **kwargs)
 
     def get_detail(self, request, **kwargs):
         """
@@ -59,7 +46,7 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP GET :code:`/job/<name>/`
 
-        Result is a dictionary of 
+        Result is a dictionary of
 
         { content => notebook JSON }
 
@@ -79,15 +66,15 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
 
         HTTP GET :code:`/job/`
 
-        Result is a dictionary of { meta => meta data, objects => list of 
+        Result is a dictionary of { meta => meta data, objects => list of
         objects }
 
-        :code:`objects` is a list of 
+        :code:`objects` is a list of
 
           >>> {
             'name': name of object
             'job_results': dictionary of results as { status => dataset }
-            'job_runs': list of run time timestamps  
+            'job_runs': list of run time timestamps
             'created': meta.created,
           }
         """
@@ -141,8 +128,8 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, Resource):
         HTTP GET :code:`/job/name/report/`
 
         This returns an HTML representation of a notebook. Note that this
-        does not run the notebook. To get the results of a notebook 
-        execution in HTML format, get it's result.  
+        does not run the notebook. To get the results of a notebook
+        execution in HTML format, get it's result.
         """
         om = self.get_omega(request)
         name = kwargs.get('pk')

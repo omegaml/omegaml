@@ -3,16 +3,42 @@ from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+dev_deps = [
+    'django-nose==1.4.5',
+    'mock==3.0.5',
+    'behave==1.2.6',
+    'jupyterhub',
+    'selenium==3.141.0',
+    'splinter==0.11.0',
+    'ipdb==0.13.2',
+    'jupyterhub-simplespawner==0.1',
+]
+
+web_deps = [
+   'Django>=1.8,<1.9',
+   'honcho==1.0.1',
+   'gunicorn==19.7.1',
+   'pyrabbit2==1.0.7',
+]
+
+jupyter_deps = [
+    'jupyterhub-kubespawner==0.12.0', # required or only dev
+    'jupyterhub>1.0',  # required or only dev?
+    'notebook==5.7.6',  # required or only dev?
+    'jupyter-client>=4.1.1',
+]
+
+all_deps = web_deps + jupyter_deps + dev_deps
+
+from omegaee._version import version
 
 setup(
     name='omegamlee',
-    version='0.1',
+    version=version,
     packages=find_packages(),
     include_package_data=True,
     license='commercial',  # example license
-    description='online machine learning environment for scikit-learn',
+    description='Enterprise DataOps, MLOps platform for humans',
     long_description=README,
     url='https://omegaml.io',
     author='Patrick Senti',
@@ -25,30 +51,23 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         # replace these appropriately if you are using Python 3
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'Django>=1.8,<1.9',
-        'celery==4.2.1',
-        'joblib>=0.9.4',
-        'jupyter-client>=4.1.1',
-        'pymongo>=3.2.2',
-        'mongoengine>=0.10.6',
-        'pandas>=0.17.1',
-        'numpy>=1.16.4',
-        'scipy>=0.17.0',
-        'scikit-learn>=0.20',
-        'tables>=3.2.2',
+        'omegaml>=0.13',
         'croniter>=0.3.30',
-        'PyYAML>=3.11',
-        'nbformat>=4.0.1',
-        'nbconvert>=5.3.1',
         'appdirs==1.4.3',
         'cron-descriptor==1.2.24',
+        'cachetools',
     ],
     dependency_links=[
-    ]
+    ],
+    extras_require={
+        'dev': dev_deps,
+        'all': all_deps,
+    },
+
 )

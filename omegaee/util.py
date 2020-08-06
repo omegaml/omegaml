@@ -30,6 +30,11 @@ def log_task(task, status, exception=None):
     if task.request.is_eager:
         # send_task in eager mode / without a broker running will wait forever
         from omegaops.tasks import log_event_task
-        log_event_task(task, task_log)
+        log_event_task(task_log)
     else:
-        task.app.send_task('omegaops.tasks.log_event_task', (task_log,), queue='omegaops')
+        # FIXME since omegaops runs on a separate broker vhost this is no longer feasible
+        #       must refactor logging to use a minibatch stream over mqtt instead
+        #       (we cannot expose the omegaops broker vhost - or its apikey - on a client worker
+        #        since otherwise every client can get access to the omegaops celery configuration)
+        # task.app.send_task('omegaops.tasks.log_event_task', (task_log,), queue='omegaops')
+        pass

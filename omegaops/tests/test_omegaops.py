@@ -1,15 +1,22 @@
+import datetime
 import hashlib
+from urllib.parse import urlparse
 
 from constance import config as constance_config
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test.testcases import TestCase
-from landingpage.models import ServicePlan
-from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user
-from omegaml.mongoshim import MongoClient
+from kombu import Connection
 from pymongo.errors import PyMongoError, OperationFailure
 
-class OmegaOpsTest(TestCase):
+from landingpage.models import ServicePlan
+from omegaml.mongoshim import MongoClient
+from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user, authorize_user_vhost, \
+    get_client_config
+from omegaml.util import settings as omsettings
+
+
+class OmegaOpsTests(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         # first user
@@ -22,7 +29,6 @@ class OmegaOpsTest(TestCase):
         self.email2 = email2 = 'testuser2@omegaml.io'
         self.password2 = password2 = 'password2'
         self.user2 = User.objects.create_user(username2, email2, password2)
-
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -81,9 +87,9 @@ class OmegaOpsTest(TestCase):
         service_config = service.settings
         self.assertDictEqual(service_config, config)
 
-    def test_adduser_authorize_user(self):
+    def test_adduser_authorize_userdb(self):
         """
-        test users can authorize each other
+        test users can authorize each other (database)
         """
         # setup service deployments
         ServicePlan.objects.create(name='omegaml')
@@ -128,3 +134,155 @@ class OmegaOpsTest(TestCase):
         coll3.insert({'foobar': 'bar-user2'})
         data = coll.find_one({'foobar': 'bar-user2'})
         self.assertEqual(data['foobar'], 'bar-user2')
+
+    def test_adduser_authorize_user_vhost(self):
+        """
+        test users can authorize each other (broker)
+        """
+        # setup service deployments
+        ServicePlan.objects.create(name='omegaml')
+        # create first user
+        username = hashlib.md5(self.username.encode('utf-8')).hexdigest()
+        password = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+        config = add_user(username, password, deploy_vhost=True)
+        add_service_deployment(self.user, config)
+        # add a second user
+        username2 = hashlib.md5(self.username2.encode('utf-8')).hexdigest()
+        password2 = hashlib.md5(self.password2.encode('utf-8')).hexdigest()
+        config2 = add_user(username2, password2, deploy_vhost=True)
+        add_service_deployment(self.user2, config2)
+        # authorize second user to first user's vhost
+        brokeruser = config2['qualifiers']['default']['brokeruser']
+        config3 = authorize_user_vhost(self.user, self.user2, brokeruser, password2)
+        # see if we can access first user's vhost using second user's credentials
+        qualified_config = config3.get(self.user.username)
+        username3 = qualified_config.get('brokeruser')
+        password3 = qualified_config.get('brokerpassword')
+        dbname3 = qualified_config.get('brokervhost')
+        config4 = get_client_config(self.user2, qualifier=self.user.username)
+        broker_url = config4['OMEGA_CELERY_CONFIG']['BROKER_URL']
+        use_ssl = config4['OMEGA_CELERY_CONFIG']['BROKER_USE_SSL']
+        self.assertIsNone(self._test_broker(broker_url, use_ssl))
+
+    def _test_broker(self, broker_url, use_ssl):
+        with Connection(broker_url, ssl=use_ssl) as conn:
+            conn.connect()
+            simple_queue = conn.SimpleQueue('simple_queue')
+            message_sent = 'helloworld, sent at {0}'.format(datetime.datetime.today())
+            simple_queue.put(message_sent)
+            simple_queue.close()
+        with Connection(broker_url, ssl=use_ssl) as conn:
+            simple_queue = conn.SimpleQueue('simple_queue')
+            message_received = simple_queue.get(block=True, timeout=1)
+            self.assertEqual(message_received.payload, message_sent)
+            message_received.ack()
+            simple_queue.close()
+
+    def test_parse_client_config_v1(self):
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'default': {
+                'dbname': 'dbname',
+                'user': 'dbuser',
+                'password': 'dbpass',
+                'notebook_url': 'nb_url',
+            }
+        }
+        defaults = omsettings()
+        add_service_deployment(self.user, config)
+        config = get_client_config(self.user, qualifier='default')
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # internal view
+        config = get_client_config(self.user, qualifier='default', view=True)
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+
+    def test_parse_client_config_v2(self):
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'version': 'v2',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                }
+            },
+            'qualifiers': {
+                'default': {
+                    'mongodbname': 'dbname',
+                    'mongouser': 'dbuser',
+                    'mongopassword': 'dbpass',
+                }
+            }
+        }
+        defaults = omsettings()
+        add_service_deployment(self.user, config)
+        # external view
+        config = get_client_config(self.user, qualifier='default')
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # internal view
+        config = get_client_config(self.user, qualifier='default', view=True)
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+
+    def test_parse_client_config_v3(self):
+        from constance import config as site_config
+
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                }
+            },
+            'qualifiers': {
+                # TODO simplify -- use a more generic user:password@service/selector format
+                'default': {
+                    'mongodbname': 'dbname',
+                    'mongouser': 'dbuser',
+                    'mongopassword': 'dbpass',
+                }
+            }
+        }
+        defaults = omsettings()
+        add_service_deployment(self.user, config)
+        config = get_client_config(self.user, qualifier='default')
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL)
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # internal view
+        config = get_client_config(self.user, qualifier='default', view=True)
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL,)
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+

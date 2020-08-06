@@ -3,9 +3,6 @@ import socket
 from django.utils import timezone
 from whitenoise.storage import CompressedManifestStaticFilesStorage
 
-# FIXME remove dependency on omegaops
-from omegaops.celeryapp import app
-
 
 class FailsafeCompressedManifestStaticFilesStorage(
     CompressedManifestStaticFilesStorage):
@@ -28,6 +25,9 @@ def log_request(request, response):
     """
     Create log data from request and response objects
     """
+    # FIXME remove dependency on omegaops
+    from omegaops.celeryapp import app
+
     request_end = timezone.now()
     request_absolute_path = request.path
     request_uri = request.get_full_path()
@@ -45,7 +45,7 @@ def log_request(request, response):
 
     server_ip = socket.gethostbyname(socket.gethostname())
 
-    # Create request specific logs  
+    # Create request specific logs
     request_data = {
         'request_absolute_path': request_absolute_path,
         'request_method': request.method,

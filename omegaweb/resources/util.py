@@ -4,12 +4,12 @@ class BundleObj(dict):
 
 
 isTrue = lambda v: v if isinstance(v, bool) else (
-    v.lower() in ['yes', 'y', 't', 'true', '1'])
+      v.lower() in ['yes', 'y', 't', 'true', '1'])
 
 
 def get_omega_for_user(user, qualifier=None, view=False):
     """
-    Return an Omega instance configured for the user 
+    Return an Omega instance configured for the user
 
     :param user: User object to get omega instance for
     :param qualifier: qualifier, defaults to 'default'
@@ -17,12 +17,15 @@ def get_omega_for_user(user, qualifier=None, view=False):
     """
     from omegaml import Omega
     from omegaops import get_client_config
-    from omegacommon.auth import OmegaRuntimeAuthentication
+    from omegaml.client.auth import OmegaRuntimeAuthentication
+    from omegaml import settings, _base_config
 
+    # this is the server-side equivalent of omegaml.client.userconf.get_omega_from_apikey
+    # note however we don't load any frameworks as omegaweb is supposed to use the runtime
+    defaults = settings(reload=False)
     config = get_client_config(user, qualifier=qualifier, view=view)
-    mongo_url = config.get('OMEGA_MONGO_URL')
+    _base_config.update_from_dict(config, attrs=defaults)
+    _base_config.load_user_extensions(defaults)
     auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)
-    om = Omega(mongo_url=mongo_url,
-               auth=auth,
-               celeryconf=config.get('OMEGA_CELERY_CONFIG'))
+    om = Omega(defaults=defaults, auth=auth)
     return om

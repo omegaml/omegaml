@@ -1,7 +1,7 @@
 import requests
 from jupyterhub.auth import Authenticator
-from omegacommon.auth import OmegaRestApiAuth
-from omegacommon.userconf import get_user_config_from_api
+from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.userconf import get_user_config_from_api
 from tornado import gen
 
 APIKEYS = {}

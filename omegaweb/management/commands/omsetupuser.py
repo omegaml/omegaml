@@ -1,7 +1,8 @@
-import omegaops
 from allauth.account.signals import user_signed_up
 from django.contrib.auth.models import User
 from django.core.management import BaseCommand
+
+import omegaops
 
 
 class Command(BaseCommand):
@@ -41,7 +42,7 @@ class Command(BaseCommand):
         print("User {} created as superuser: {} staff: {}".format(user.username, user.is_superuser, user.is_staff))
         # add/update omega user
         if options.get('nodeploy') is False:
-            config = omegaops.add_user(user, dbpassword)
+            config = omegaops.add_user(user, dbpassword, deploy_vhost=True)
             omegaops.add_service_deployment(user, config)
             print("Database {} deployed. Apikey {}. Is staff {}".format(user, user.api_key.key, user.is_staff))
             if options.get('verbose'):

@@ -1,20 +1,16 @@
-from landingpage.models import ServicePlan
-
+import numpy as np
+import pandas as pd
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_almost_equal
-from sklearn.linear_model import SGDRegressor
+from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.linear_model.base import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from tastypie.test import ResourceTestCase
 
-import numpy as np
-
-from omegacommon.sklext import OnlinePipeline
 from omegaml import Omega
-from omegaops import add_user, add_service_deployment, get_client_config
-import pandas as pd
-
+from omegaml.sklext import OnlinePipeline
+from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
@@ -100,7 +96,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
                                             'datax=X&datay=Y'),
                                    data={},
                                    authentication=self.get_credentials())
-        self.assertHttpAccepted(resp)
+        self.assertHttpOK(resp)
         # predict
         resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
@@ -151,7 +147,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
         data = {
             'columns': ['x'],
             'data': {'x': df['x'].values.tolist()},
-            #'shape': [1, len(df)],  # not needed here
+            # 'shape': [1, len(df)],  # not needed here
         }
         resp = self.api_client.put(self.url('mymodel', 'predict'),
                                    data=data,
@@ -184,7 +180,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
                                             'datax=X&datay=Y'),
                                    data={},
                                    authentication=self.get_credentials())
-        self.assertHttpAccepted(resp)
+        self.assertHttpOK(resp)
         # predict
         resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
@@ -206,7 +202,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
         p = OnlinePipeline([
             ('scale', StandardScaler()),
             ('sgdr', SGDRegressor(random_state=42, learning_rate='optimal',
-                                  penalty='none')),
+                                  penalty='none', max_iter=1000, tol=1e-3)),
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
@@ -220,7 +216,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
                                                 'datax=X&datay=Y'),
                                        data={},
                                        authentication=self.get_credentials())
-            self.assertHttpAccepted(resp)
+            self.assertHttpOK(resp)
         # predict
         resp = self.api_client.put(self.url('mymodel', 'predict', 'datax=X'),
                                    authentication=self.get_credentials())
@@ -252,7 +248,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
                                             'datax=X&datay=Y'),
                                    data={},
                                    authentication=self.get_credentials())
-        self.assertHttpAccepted(resp)
+        self.assertHttpOK(resp)
         # score
         resp = self.api_client.get(self.url('mymodel', 'score',
                                             'datax=X&datay=Y'),
@@ -262,7 +258,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
         # fit locally for comparison
         p.fit(X, Y)
         score = p.score(X, Y)
-        assert_almost_equal(data.get('result'), [score])
+        assert_almost_equal(data.get('result'), score)
 
     def test_transform(self):
         om = self.om
@@ -288,7 +284,7 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
                                             'datax=X&datay=Y'),
                                    data={},
                                    authentication=self.get_credentials())
-        self.assertHttpAccepted(resp)
+        self.assertHttpOK(resp)
         # score
         resp = self.api_client.get(self.url('mymodel', 'transform',
                                             'datax=X'),
@@ -297,5 +293,41 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
         data = self.deserialize(resp)
         # do the same locally
         p.fit(X, Y)
-        transformed = p.transform(X)
-        assert_almost_equal(data.get('result'), list(transformed))
+        transformed = p.transform(X).flatten().tolist()
+        assert_almost_equal(data.get('result'), transformed)
+
+    def test_decision_function(self):
+        om = self.om
+        x = np.array(list(range(1, 100)))
+        y = x * 2
+        df = pd.DataFrame({'x': x,
+                           'y': y})
+        X = df[['x']]
+        Y = df[['y']]
+        om.datasets.put(X, 'X', append=False)
+        om.datasets.put(Y, 'Y', append=False)
+        # create a pipeline without fitting yet
+        p = Pipeline([
+            ('lr', LogisticRegression()),
+        ])
+        om.models.put(p, 'mymodel')
+        # try to predict without fitting
+        resp = self.api_client.get(self.url('mymodel', 'decision_function', 'datax=X'),
+                                   authentication=self.get_credentials())
+        self.assertHttpBadRequest(resp)
+        # fit remotely
+        resp = self.api_client.put(self.url('mymodel', 'fit',
+                                            'datax=X&datay=Y'),
+                                   data={},
+                                   authentication=self.get_credentials())
+        self.assertHttpOK(resp)
+        # score
+        resp = self.api_client.get(self.url('mymodel', 'decision_function',
+                                            'datax=X'),
+                                   authentication=self.get_credentials())
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        # do the same locally
+        p.fit(X, Y)
+        local_result = p.decision_function(X).flatten().tolist()
+        assert_almost_equal(data.get('result'), local_result)

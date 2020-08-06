@@ -1,14 +1,15 @@
 import shutil
 
+from jupyterhub.spawner import LocalProcessSpawner
+from jupyterhub.traitlets import Command
 from traitlets import Unicode
 
-from jupyterhub.spawner import LocalProcessSpawner
+from omegajobs.spawnermixin import OmegaNotebookSpawnerMixin
+from omegaml.client.userconf import save_userconfig_from_apikey
 
-from omegacommon.auth import OmegaRestApiAuth
-from omegacommon.userconf import save_userconfig_from_apikey, get_user_config_from_api
+singleuser_starter = '/app/scripts/omegajobs.sh'
 
-
-class SimpleLocalProcessSpawner(LocalProcessSpawner):
+class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
     """
     Adopted from jupyterhub-simplespawner
 
@@ -25,12 +26,7 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
         help='Template to expand to set the user home. {userid} and {username} are expanded'
     )
 
-    @property
-    def home_path(self):
-        return self.home_path_template.format(
-            userid=self.user.id,
-            username=self.user.name
-        )
+    cmd = Command([singleuser_starter])
 
     def make_preexec_fn(self, name):
         home = self.home_path
@@ -52,8 +48,8 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
                 # must be an admin user to get back actual user's config
                 self.log.info(os.environ)
                 self.log.info("within get_config {}".format(os.getpid()))
-                user = self.__config_env.pop('OMEGA_USERID')
-                apikey = self.__config_env.pop('OMEGA_APIKEY')
+                user = self._config_env.pop('OMEGA_USERID')
+                apikey = self._config_env.pop('OMEGA_APIKEY')
                 save_userconfig_from_apikey(config_file, user, apikey, view=True)
             except Exception as e:
                 self.log.error('SimpleLocalProcessSpawner: exec_fn:get_config error {}'.format(str(e)))
@@ -86,31 +82,6 @@ class SimpleLocalProcessSpawner(LocalProcessSpawner):
 
     def user_env(self, env):
         # we don't call super because super assumes a local OS user. we don't
-        import os
-        from omegaml import settings
-        defaults = settings()
         self.log.info('SimpleLocalProcessSpawner: user environment created')
-        admin_user = defaults.OMEGA_JYHUB_USER
-        admin_apikey = defaults.OMEGA_JYHUB_APIKEY
-        api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
-                                           view=True)
-        configs = configs['objects'][0]['data']
-        env['USER'] = self.user.name
-        env['HOME'] = self.home_path
-        env['SHELL'] = '/bin/bash'
-        env['JY_CONTENTS_MANAGER'] = 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'
-        env['JY_ALLOW_ROOT'] = 'yes'
-        import omegaee
-        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
-        env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
-        env['OMEGA_USERID'] = configs['OMEGA_USERID']
-        env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
-        env['CA_CERTS_PATH'] = os.environ.get('CA_CERTS_PATH')
-        self.log.info("***within user_env {}".format(os.getpid()))
-        # pass user configuration to preexecfn
-        self.__config_env = {
-            'OMEGA_USERID': configs['OMEGA_USERID'],
-            'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
-        }
-        return env
+        return self._omega_get_env(env)
+

@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from unittest import TestCase
 
-from omegacommon.auth import OmegaRuntimeAuthentication
+from omegaml.client.auth import OmegaRuntimeAuthentication
 from omegaml import Omega
 from omegaml.util import delete_database, settings
 

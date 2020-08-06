@@ -1,8 +1,7 @@
-import omegaops
-from allauth.account.signals import user_signed_up
 from django.contrib.auth.models import User
 from django.core.management import BaseCommand
-from omegaops import authorize_userdb
+
+import omegaops
 
 
 class Command(BaseCommand):
@@ -21,4 +20,5 @@ class Command(BaseCommand):
         dbuser = User.objects.make_random_password(length=36)
         dbpassword = User.objects.make_random_password(length=36)
         omegaops.authorize_userdb(giver, grantee, dbuser, dbpassword)
+        omegaops.authorize_user_vhost(giver, grantee, dbuser, dbpassword)
         print("User {grantee_name} granted access to qualifer={giver_name}".format(**locals()))

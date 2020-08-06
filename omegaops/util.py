@@ -59,3 +59,52 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
         return f_retry  # true decorator
 
     return deco_retry
+
+
+def purge_result_queues(max=None):
+    """
+    Utility function to purge result queues
+
+    Use to combat high memory water mark (mnesia overloaded)
+
+    Celery creates a new queue for every message stored in the ampq:// results
+    backend. Every queue consumes some memory, resulting in excessive memory
+    usage by Rabbitmq.
+
+    This is a short-term hack only. It is better to apply below remedies.
+    Since the number of queues can be very high and it can take quite some time
+    to delete all queues, this function displays a progress indicator while
+    the deletion is in progress.
+
+    Remedies:
+        - Use CELERY_TASK_RESULT_EXPIRES to reduce the timeout for automatic deletion
+        - Use another results backend than ampq, e.g. Redis or Mongo
+
+    See:
+        http://www.pythondoc.com/celery-3.1.11/configuration.html#celery-task-result-expires
+
+    Args:
+        max: the number of queues to delete
+
+    Returns:
+        None
+    """
+    import pyrabbit2 as rmq
+    import tqdm
+    from omegaml.util import urlparse, settings as get_settings
+
+    defaults = get_settings()
+    parsed = urlparse.urlparse(defaults.OMEGA_BROKERAPI_URL)
+    host = '{}:{}'.format(parsed.hostname, parsed.port)
+    username = parsed.username
+    password = parsed.password
+    client = rmq.Client(host, username, password)
+    bindings = client.get_bindings()
+    result_queus = [b['destination'] for b in bindings if b['source'] == 'celeryresults']
+    for i, rq in tqdm.tqdm(enumerate(result_queus)):
+        if max and i > max:
+            break
+        try:
+            client.delete_queue('/', rq)
+        except Exception as e:
+            print("warning {}".format(e))

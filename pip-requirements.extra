@@ -1,6 +1,6 @@
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/stackable
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage#egg=landingpage[paasdeploy]
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage@118cbe80b5c4d242512aa5ce32e1c2a76dcdb9f7#egg=landingpage[all]
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/ccbackend
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml#egg=omegaml[all]
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex@1aa46386be8343738f24e9f7790e441c706b6a3d#egg=tastypiex
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml@d5bf1ec19e9cbd8049c361775b5bc87c24a9be9f#egg=omegaml[all]
