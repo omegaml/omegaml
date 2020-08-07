@@ -109,8 +109,8 @@ setup(
         'snowflake': snowflake_deps,
         'iotools': iotools_deps,
         'streaming': streaming_deps,
-        'all': hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
-        'all-client': hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps,
+        'all': all_deps,
+        'all-client': all_client_deps,
         'dev': dev_deps,
     },
     entry_points={
