@@ -57,7 +57,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'omegaml>=0.13',
+        'omegaml>=0.13.4',
         'croniter>=0.3.30',
         'appdirs==1.4.3',
         'cron-descriptor==1.2.24',
