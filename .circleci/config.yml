@@ -44,7 +44,7 @@ jobs:
               echo "Testing with python $VER"
               conda create -q -y -n omenv$VER python=$VER
               conda activate omenv$VER
-              pip install .[all,dev]
+              pip install --progress-bar off .[all,dev]
               make test
               conda deactivate
             done

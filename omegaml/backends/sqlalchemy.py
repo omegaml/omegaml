@@ -425,7 +425,7 @@ def _meta_to_indexcols(meta):
 
 
 def _format_dict(d, replace=None, **kwargs):
-    for k, v in d.items():
+    for k, v in dict(d).items():
         if replace:
             del d[k]
             k = k.replace(*replace) if replace else k
