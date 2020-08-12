@@ -1,5 +1,8 @@
+import base64
 from unittest import TestCase
 
+import json
+from nbformat import NotebookNode
 from tornado.web import HTTPError
 
 from omegaml import Omega
@@ -11,6 +14,7 @@ class OmegaContentsManagerTests(TestCase):
         self.om = Omega()
         self.mgr = OmegaStoreContentsManager(omega=self.om)
         [self.om.jobs.drop(fn) for fn in self.om.jobs.list()]
+        [self.om.datasets.drop(fn) for fn in self.om.datasets.list()]
 
     def _create_notebook(self, name):
         code = """
@@ -71,6 +75,39 @@ class OmegaContentsManagerTests(TestCase):
         self.assertEqual(model['name'], 'bar.ipynb')
         self.assertEqual(model['content']['cells'][0]['source'], "print('hello world')")
 
+    def test_get_notebook_as_file(self):
+        # create a dummy notebook just so we have a valid model
+        self._create_notebook('foo')
+        # check it can be read directly as a file
+        model = self.mgr.get('foo.ipynb', type='file')
+        nb_content = json.loads(model['content'])
+        self.assertEqual(model['name'], 'foo.ipynb')
+        self.assertEqual(nb_content['cells'][0]['source'], ["print('hello world')"])
+
+    def test_save_notebook_as_file(self):
+        # create a dummy notebook just so we have a valid model
+        self._create_notebook('foo')
+        # check it can be read directly as a file
+        model = self.mgr.get('foo.ipynb', type='file')
+        model['name'] = 'bar.ipynb'
+        self.mgr.save(model, 'bar.ipynb')
+        self.assertIn('bar.ipynb', self.om.jobs.list())
+        nb = self.om.jobs.get('bar.ipynb')
+        self.assertIsInstance(nb, NotebookNode)
+
+    def test_save_notebook_as_file_base64(self):
+        # create a dummy notebook just so we have a valid model
+        self._create_notebook('foo')
+        # check it can be read directly as a file
+        model = self.mgr.get('foo.ipynb', type='file', format='base64')
+        model['name'] = 'bar.ipynb'
+        model['format'] = 'base64'
+        model['content'] = base64.encodebytes(json.dumps(model['content']).encode('utf8'))
+        self.mgr.save(model, 'bar.ipynb')
+        self.assertIn('bar.ipynb', self.om.jobs.list())
+        nb = self.om.jobs.get('bar.ipynb')
+        self.assertIsInstance(nb, NotebookNode)
+
     def test_overwrite_existing_notebook(self):
         # create a dummy notebook just so we have a valid model
         self._create_notebook('foo')
@@ -109,6 +146,20 @@ class OmegaContentsManagerTests(TestCase):
         self.assertEqual(len(model['content']), 1)
         self.assertEqual(model['content'][0]['name'], 'sub1')
         self.assertEqual(model['content'][0]['type'], 'directory')
+
+    def test_get_directory_contents(self):
+        # test creating directory on top level
+        model = self.mgr._base_model('sub', kind='directory')
+        self.mgr.save(model, 'sub')
+        model = self.mgr.get('/')
+        self.assertEqual(len(model['content']), 1)
+        self.assertEqual(model['content'][0]['name'], 'sub')
+        self.assertEqual(model['content'][0]['type'], 'directory')
+        # test getting empty directory
+        model = self.mgr.get('/sub')
+        self.assertEqual('sub', model['name'])
+        self.assertEqual('directory', model['type'])
+        self.assertEqual([], model['content'])
 
     def test_create_directory_escaped(self):
         # test creating directory on top level
@@ -191,3 +242,15 @@ class OmegaContentsManagerTests(TestCase):
             model = self.mgr.get('sub', type='directory')
         model = self.mgr.get('new_sub', type='directory')
         self.assertEqual(len(model['content']), 0)
+
+    def test_save_file_base64(self):
+        model = self.mgr._base_model('textfile.txt', kind='file')
+        model['content'] = base64.encodebytes('hello world'.encode('utf8')).decode('ascii')
+        model['format'] = 'base64'
+        self.mgr.save(model, 'textfile.txt')
+
+    def test_save_file_text(self):
+        model = self.mgr._base_model('textfile.txt', kind='file')
+        model['content'] = 'hello world'
+        model['format'] = 'text'
+        self.mgr.save(model, 'textfile.txt')
