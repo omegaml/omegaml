@@ -16,11 +16,12 @@ sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
 streaming_deps = ['minibatch[all]']
-jupyter_deps = ['jupyterlab', 'jupyterhub<0.11'] # jupyterhub-0.11 has breaking changes
+jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0'] # jupyterhub-0.11 has breaking changes
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb']
 
 # -- tensorflow specifics
-tf_version = os.environ.get('TF_VERSION', '2')
+tf_version = os.environ.get('TF_VERSION', '2.2.0')
+tf_match = os.environ.get('TF_VERSION_MATCH', '==')
 if tf_version.startswith('1.15'):
     assert sys.version_info <= (3, 7), "TF < 2.x requires Python <= 3.7"
     tf_deps = ['tensorflow=={}'.format(tf_version)]
@@ -28,10 +29,10 @@ if tf_version.startswith('1.15'):
     keras_deps = ['keras==2.2.4']
 elif sys.version_info >= (3, 8):
     assert tf_version.startswith('2'), "Python version 3.8 only supported by TF >= 2.2"
-    tf_deps = ['tensorflow>={}'.format(tf_version)]
+    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras>=2.4.3']
 else:
-    tf_deps = ['tensorflow>={}'.format(tf_version)]
+    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras>=2.4.3']
 
 # all deps

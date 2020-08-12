@@ -27,6 +27,7 @@ fi
 # TODO env vars should come from runtime/worker configmap
 export C_FORCE_ROOT=1
 export CELERY_Q=$runtimelabel
+pip install -U jupyterhub==$JY_HUB_VERSION jupyterlab
 # -- running in pod, use /app as a shared home
 if [[ -d "/app" ]]; then
   export APPBASE="/app"
@@ -38,8 +39,8 @@ else
   export APPBASE=$HOME
   export OMEGA_CONFIG_FILE="$APPBASE/.omegaml/config.yml"
 fi
-if [[ ! -f $HOME/.jupyter/.omegaml ]]; then
-    mkdir -p $HOME/.jupyter
+if [[ ! -f $APPBASE/.jupyter/.omegaml ]]; then
+    mkdir -p $APPBASE/.jupyter
     cp $omegaml_dir/notebook/jupyter/* $HOME/.jupyter/
 fi
 # -- if there is no config file, create one
@@ -48,8 +49,7 @@ if [[ ! -f $OMEGA_CONFIG_FILE ]]; then
     touch $OMEGA_CONFIG_FILE/config.yml
 fi
 # -- start worker and jupyterhub
-pip install -U --user jupyterhub==$JY_HUB_VERSION jupyterlab
-cd $HOME/.jupyter
+cd $APPBASE/.jupyter
 nohup honcho -d $APPBASE start worker >> worker.log 2>&1 &
 jupyter serverextension enable jupyterlab
 jupyterhub-singleuser --ip $ip --port $port $jydebug
