@@ -156,7 +156,7 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     """
     # override from configuration file
     userconfig = markup(config_file, default={}, msg='could not read config file {}')
-    if userconfig:
+    if isinstance(userconfig, dict):
         for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
             value = userconfig.get(k, None) or vars[k]
             if isinstance(vars[k], dict):
