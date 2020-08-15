@@ -42,6 +42,20 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         om.models.promote('mymodel', prod.models)
         self.assertIn('mymodel', prod.models.list())
 
+    def test_versioned_model_promotion(self):
+        om = self.om
+        prod = om['prod']
+        reg = LinearRegression()
+        om.models.put(reg, 'mymodel', tag='latest')
+        reg_ = om.models.get('mymodel')
+        self.assertIsInstance(reg_, LinearRegression)
+        # ensure dataset is in default bucket, not in prod
+        self.assertIn('mymodel', om.models.list())
+        self.assertNotIn('mymodel', prod.models.list())
+        # promote to prod
+        om.models.promote('mymodel@latest', prod.models)
+        self.assertIn('mymodel', prod.models.list())
+
     def test_promotion_runtime(self):
         om = self.om
         prod = om['prod']
@@ -100,7 +114,6 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         with self.assertRaises(ValueError):
             om.datasets.promote('foo', om.datasets)
 
-    @skip('skipped until metadata is able to access different database')
     def test_promotion_to_other_db_works(self):
         om = self.om
         other = Omega(mongo_url=om.mongo_url + '_promotest')
