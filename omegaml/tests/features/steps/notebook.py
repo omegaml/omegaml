@@ -62,7 +62,7 @@ def list_datasets(ctx):
     sleep(10)
     current = nb.current_cell_output()
     expected = "['sample']"
-    assert current == expected, "Expected {expected}, got {current}".format(**locals())
+    assert expected in current, "Expected {expected}, got {current}".format(**locals())
 
 
 @then(u'we can add a notebook in the folder')
