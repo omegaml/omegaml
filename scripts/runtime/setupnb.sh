@@ -5,5 +5,7 @@ mkdir -p /etc/jupyter
 mkdir -p /etc/ipython
 cp -r $OMEGA_BASEPATH/notebook/jupyter/* /etc/jupyter
 cp -r $OMEGA_BASEPATH/notebook/jupyter/* /etc/ipython
+# make sure the user library has been created
+chown -R jovyan:users /app
 chmod +x /app/scripts/omegajobs.sh
 touch /app/config.yml
