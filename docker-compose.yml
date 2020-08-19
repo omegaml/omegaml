@@ -26,7 +26,8 @@ services:
        volumes:
          - pythonlib:/app/pylib
    jyhub:
-       image: omegaml/jyhub:latest
+       image: omegaml/omegaml:latest
+       user: root
        hostname: jyhub
        ports:
           - "8000:8000"
@@ -36,7 +37,7 @@ services:
           - rabbitmq
           - mongodb
        working_dir: /app
-       command: jupyterhub
+       command: honcho start jupyterhub
        environment:
          - APP=omegaml
          - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
@@ -46,6 +47,7 @@ services:
          - PYTHONPATH=/app/pylib
          - OMEGA_CONFIG_FILE=/app/config.yml
          - JY_HUB_VERSION=1.0.0
+         - PYTHONUNBUFFERED=1
        volumes:
          - pythonlib:/app/pylib
    worker:

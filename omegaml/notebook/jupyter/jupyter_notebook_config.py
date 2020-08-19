@@ -629,7 +629,7 @@ c.NotebookApp.contents_manager_class = contents_manager
 import logging
 
 logger = logging.getLogger(c.NotebookApp.__class__.__name__)
-handler = logging.FileHandler('/tmp/jupyter.log')
+handler = logging.FileHandler(os.path.expanduser('~/jupyter.log'))
 logger.addHandler(handler)
 logger.setLevel(os.environ.get('JY_DEBUG_LEVEL', 'INFO'))
 
