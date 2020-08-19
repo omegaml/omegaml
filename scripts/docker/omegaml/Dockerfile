@@ -1,12 +1,13 @@
-FROM omegaml/omegaml-base
+FROM jupyter/scipy-notebook
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
-USER ROOT
-# system install
 USER root
 COPY . /app
 RUN pip install --upgrade pip -q
-RUN pip install -f /app/packages -i $pypi --extra-index-url https://pypi.org/simple/ --pre -U omegaml[all] jupyterhub jupyterlab
+RUN pip install -f /app/packages -i $pypi --extra-index-url https://pypi.org/simple/ --pre -U omegaml[all]
 RUN /app/scripts/setupnb.sh
+#ensure PYTHONUSERBASE is created
+USER jovyan
+RUN pip install --user -U six
 
-CMD ["jupyter", '--config-dir', '/app/.jupyter']
+

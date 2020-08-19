@@ -35,7 +35,9 @@ cp -r $srcdir/* $distdir
 cp $runtime_scripts/* $distdir/scripts
 cp dist/*whl $distdir/packages
 # build and push
-cd $distdir && docker build $buildarg -t $imagename .
+pushd $distdir
+docker build $buildarg -t $imagename .
+popd
 docker tag $imagename $imagename_latest
 if [[ ! -z $push ]]; then
   docker push $imagename

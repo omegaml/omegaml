@@ -3,13 +3,14 @@ import os
 import math
 from billiard.pool import Pool
 from itertools import repeat
+from joblib import parallel_backend, delayed, Parallel
 
 default_chunksize = int(1e4)
 
 
 def dfchunker(df, size=default_chunksize):
     """ chunk a dataframe as in iterator """
-    return (df.iloc[pos:pos + size].copy() for pos in range(0, len(df), size))
+    return (df.iloc[pos:pos + size] for pos in range(0, len(df), size))
 
 
 def insert_chunk(job):
@@ -67,11 +68,14 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
         cores = max(1, math.ceil(os.cpu_count() / 2))
-        pool = Pool(processes=cores)
         jobs = zip(dfchunker(df, size=chunksize),
                    repeat(mongo_url), repeat(collection_name))
-        pool.map(insert_chunk, (job for job in jobs))
-        pool.close()
+        approx_jobs = int(len(df) / chunksize)
+        with Parallel(n_jobs=cores, backend='omegaml', verbose=True) as p:
+            runner = delayed(insert_chunk)
+            p_jobs = (runner(job) for job in jobs)
+            p._job_count = approx_jobs
+            p(p_jobs)
     else:
         # still within bounds for single threaded inserts
         omstore.collection(name).insert_many(df.to_dict(orient='records'))

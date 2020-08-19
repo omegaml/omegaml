@@ -23,6 +23,7 @@ from omegaml.backends.scikitlearn import ScikitLearnBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
 from omegaml.store import OmegaStore
+from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize
 
 
@@ -319,9 +320,9 @@ class StoreTests(unittest.TestCase):
         })
         store = OmegaStore(prefix='')
         store.put(df, 'mydata', index=['a', '-b'])
-        idxs = list(store.collection('mydata').list_indexes())
-        idx_names = map(lambda v: dict(v).get('name'), idxs)
-        self.assertIn('asc_a__desc_b', idx_names)
+        idxs = store.collection('mydata').index_information()
+        idx_names = humanize_index(idxs)
+        self.assertIn('asc__id_asc_a_desc_b_asc__idx#0_0_asc__om#rowid', idx_names)
 
     def test_put_dataframe_timeseries(self):
         # create some dataframe
@@ -334,9 +335,9 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata')
         dfx = store.get('mydata')
         assert_frame_equal(df, dfx)
-        idxs = list(store.collection('mydata').list_indexes())
-        idx_names = [dict(v).get('name') for v in idxs]
-        self.assertIn('asc__idx#0_0', idx_names)
+        idxs = store.collection('mydata').index_information()
+        idx_names = humanize_index(idxs)
+        self.assertIn('asc__id_asc__idx#0_0_asc__om#rowid', idx_names)
 
     def test_put_dataframe_multiindex(self):
         # create some dataframe
@@ -351,9 +352,9 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata')
         dfx = store.get('mydata')
         assert_frame_equal(df, dfx)
-        idxs = list(store.collection('mydata').list_indexes())
-        idx_names = [dict(v).get('name') for v in idxs]
-        self.assertIn('asc__idx#0_first__asc__idx#1_second', idx_names)
+        idxs = store.collection('mydata').index_information()
+        idx_names = humanize_index(idxs)
+        self.assertIn('asc__id_asc__idx#0_first_asc__idx#1_second_asc__om#rowid', idx_names)
 
     def test_put_python_dict(self):
         # create some data

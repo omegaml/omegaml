@@ -105,8 +105,8 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
 
     def test_mdataframe_xlarge(self):
         df = pd.DataFrame({
-            'a': list(range(0, int(1e4 + 1))),
-            'b': list(range(0, int(1e4 + 1)))
+            'a': list(range(0, int(1e6 + 1))),
+            'b': list(range(0, int(1e6 + 1)))
         })
         store = self.om.datasets
         store.put(df, 'mydata-xlarge', append=False)

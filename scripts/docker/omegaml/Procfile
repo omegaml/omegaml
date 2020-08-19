@@ -1,4 +1,5 @@
-worker: celery worker --app omegaml.celeryapp -E --loglevel=DEBUG --max-tasks-per-child 1
+worker: celery worker --app omegaml.celeryapp -E --loglevel=INFO --max-tasks-per-child 1
 scheduler:  celery beat --app omegaml.celeryapp --loglevel=debug
-notebook: jupyter notebook --allow-root --ip 0.0.0.0 --no-browser $JUPYTER_PARAM --port $JUPYTER_PORT
+notebook: start-notebook.sh --ip 0.0.0.0 --port $JUPYTER_PORT
+jupyterhub: jupyterhub --ip 0.0.0.0 --config /etc/jupyterhub/jupyterhub_config.py
 restapi: python -m omegaml.restapi

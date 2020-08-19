@@ -119,7 +119,7 @@ class AsyncResponseMixin:
             status = status or HTTPStatus.ACCEPTED
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
-        return body, status, headers
+        return body, int(status), headers
 
     maybe_async = prep_response
     create_maybe_async_response = prep_response
@@ -164,7 +164,7 @@ class AsyncResponseMixinTastypie(AsyncResponseMixin):
     def create_maybe_async_response(self, request, result, status=None, async_body=None):
         # tastypie.create_response drop-in to match AsyncResponseMixin.maybe_async compatibility
         body, status, headers = self.maybe_async(result, status=status, async_body=async_body)
-        resp = self.create_response(request, body, status=status)
+        resp = self.create_response(request, body, status=int(status))
         for k, v in headers.items():
             resp[k] = v
         return resp
@@ -263,7 +263,7 @@ class AsyncTaskResourceMixin:
         except Exception as e:
             value = self.get_task_status(promise, taskid, context, message=str(e))
             status = HTTPStatus.BAD_REQUEST
-        return value, status
+        return value, int(status)
 
     def get_task_status(self, promise, taskid, context, message=None):
         result = {

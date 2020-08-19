@@ -57,7 +57,6 @@ if [ "$build" == "yes" ]; then
    export pypi=$pypi
    docker-compose down --remove-orphans --rmi local
    $script_dir/distrelease.sh --buildarg $pypi --distname omegaml --version $docker_tag
-   $script_dir/distrelease.sh --buildarg $pypi --distname jyhub --version $docker_tag
    #docker build --build-arg pypi=$pypi -t omegaml/omegaml $script_dir/..
    #docker build --build-arg pypi=$pypi -t omegaml/jyhub $script_dir/docker/jyhub
    # tag the built image

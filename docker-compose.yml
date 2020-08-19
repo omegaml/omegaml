@@ -20,10 +20,14 @@ services:
          - JUPYTER_PORT=8899
          - PYTHONPATH=/app/pylib
          - OMEGA_CONFIG_FILE=/app/config.yml
+         - PYTHONUNBUFFERED=1
+         - JUPYTER_ENABLE_LAB=yes
+         - RESTARTABLE=yes
        volumes:
          - pythonlib:/app/pylib
    jyhub:
-       image: omegaml/jyhub:latest
+       image: omegaml/omegaml:latest
+       user: root
        hostname: jyhub
        ports:
           - "8000:8000"
@@ -32,7 +36,8 @@ services:
           - omegaml
           - rabbitmq
           - mongodb
-       command: jupyterhub
+       working_dir: /app
+       command: honcho start jupyterhub
        environment:
          - APP=omegaml
          - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
@@ -41,6 +46,8 @@ services:
          - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
          - PYTHONPATH=/app/pylib
          - OMEGA_CONFIG_FILE=/app/config.yml
+         - JY_HUB_VERSION=1.0.0
+         - PYTHONUNBUFFERED=1
        volumes:
          - pythonlib:/app/pylib
    worker:
@@ -55,10 +62,10 @@ services:
          - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
          - OMEGA_BROKER=amqp://rabbitmq:5672//
          - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
-         - JY_CONTENTS_MANAGER=
          - C_FORCE_ROOT=yes
          - OMEGA_CONFIG_FILE=/app/config.yml
          - PYTHONPATH=/app/pylib
+         - PYTHONUNBUFFERED=1
        volumes:
        - pythonlib:/app/pylib
    rabbitmq:

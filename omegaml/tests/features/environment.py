@@ -53,7 +53,8 @@ def before_scenario(context, scenario):
     context.feature.jynb_url = context.jynb_url
 
 def after_step(context, step):
-    context.screenshotfn = os.path.join(context.screenshot_path, step.name + '.png')
+    clean_stepname = step.name.replace('.', '_').replace('/', '_')
+    context.screenshotfn = os.path.join(context.screenshot_path, clean_stepname + '.png')
     context.browser.screenshot(context.screenshotfn)
     if context.debug and step.status == "failed":
         # -- ENTER DEBUGGER: Zoom in on failure location.
