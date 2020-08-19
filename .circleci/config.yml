@@ -36,7 +36,7 @@ jobs:
           echo "Waiting..."
           sleep 10
           docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-          for TF_VERSION in 1.15.3 2.2.0
+          for TF_VERSION in 1.15.3 2.2.0 2.3.0
           do
             for VER in 3.6 3.7 3.8
             do
