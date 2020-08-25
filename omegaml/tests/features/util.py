@@ -63,14 +63,14 @@ class Notebook:
 
     def login(self):
         br = self.browser
-        if br.is_text_present('JupyterHub', wait_time=10):
+        if br.is_text_present('JupyterHub', wait_time=15):
             login_required = br.is_element_present_by_id('username_input', wait_time=30)
             if login_required:
                 self.login_hub()
         else:
             # fallback to juypter notebook
-            login_required = br.is_text_present('Password', wait_time=2)
-            login_required |= br.is_text_present('token', wait_time=2)
+            login_required = br.is_text_present('Password', wait_time=15)
+            login_required |= br.is_text_present('token', wait_time=15)
             if login_required:
                 self.login_nb()
 
@@ -82,18 +82,18 @@ class Notebook:
         br.visit(jburl(br.url, self.user, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection
-        assert not br.is_text_present('Server error: Traceback', wait_time=5)
-        assert not br.is_text_present('Connection refuse', wait_time=5)
+        assert not br.is_text_present('Server error: Traceback', wait_time=15)
+        assert not br.is_text_present('Connection refuse', wait_time=15)
 
     def login_nb(self):
         br = self.browser
-        assert br.is_element_present_by_id('ipython-main-app', wait_time=2)
+        assert br.is_element_present_by_id('ipython-main-app', wait_time=10)
         br.find_by_id('password_input').fill(self.password)
         br.find_by_id('login_submit').click()
         br.visit(jburl(br.url, '', nbstyle='tree'))
         # check that there is actually a connection
-        assert not br.is_text_present('Server error: Traceback', wait_time=2)
-        assert not br.is_text_present('Connection refuse', wait_time=2)
+        assert not br.is_text_present('Server error: Traceback', wait_time=10)
+        assert not br.is_text_present('Connection refuse', wait_time=10)
 
     def create_folder(self):
         """
@@ -133,7 +133,7 @@ class Notebook:
 
     def restart(self, wait=False):
         br = self.browser
-        assert br.is_element_present_by_text('Cell', wait_time=5)
+        assert br.is_element_present_by_text('Cell', wait_time=15)
         br.find_link_by_text('Kernel', )[0].click()
         sleep(1)
         br.find_link_by_text('Restart')[0].click()
@@ -145,7 +145,7 @@ class Notebook:
 
     def run_all_cells(self, wait=False):
         br = self.browser
-        assert br.is_element_present_by_text('Cell', wait_time=5)
+        assert br.is_element_present_by_text('Cell', wait_time=15)
         br.find_link_by_text('Cell', )[0].click()
         sleep(1)
         br.find_link_by_text('Run All')[0].click()
