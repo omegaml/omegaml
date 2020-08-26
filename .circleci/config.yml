@@ -4,6 +4,7 @@ jobs:
     working_directory: /home/circleci
     machine:
       image: ubuntu-1604:201903-01
+    resource_class: xlarge
     steps:
     - run:
         name: Install system packages
@@ -51,7 +52,7 @@ jobs:
           git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex
           git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps
           pushd omegaml-ce
-          git fetch && git checkout d5bf1ec19e9cbd8049c361775b5bc87c24a9be9f
+          git fetch && git checkout 89bdb9692160a02b8f88851e00b37f1655b4c3ad
           popd
     - run:
         name: Run live tests

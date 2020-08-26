@@ -22,7 +22,7 @@ def given_new_user(ctx):
     # execution formation
     confirm_url = re.findall(regex, text)[0]
     br.visit(confirm_url)
-    assert br.is_text_present('Confirm E-mail Address', wait_time=2)
+    assert br.is_text_present('Confirm E-mail Address', wait_time=15)
     br.find_by_text('Confirm').click()
     assert br.is_text_present('Login', wait_time=2)
 
@@ -40,7 +40,7 @@ def login_new_user(ctx):
 @then('the site shows the dashboard')
 def site_shows_dashboard(ctx):
     br = ctx.browser
-    assert br.is_text_present('Your apps', wait_time=2)
+    assert br.is_text_present('Your apps', wait_time=15)
     assert br.is_text_present('omegaml')
 
 
@@ -104,16 +104,16 @@ def not_logged_in(ctx):
     br.visit(ctx.web_url)
     handle_alert(br)
     br.visit(uri(br, '/accounts/logout'))
-    br.is_text_present('Sign Out', wait_time=5)
+    br.is_text_present('Sign Out', wait_time=15)
     for el in br.find_by_text('Sign Out'):
         el.click()
-    assert br.is_text_present('sign in', wait_time=5)
+    assert br.is_text_present('sign in', wait_time=15)
 
 
 @then('we can load the jupyter notebook')
 def load_jupyter_notebook(ctx):
     br = ctx.browser
-    assert br.is_element_present_by_text('Profile', wait_time=5)
+    assert br.is_element_present_by_text('Profile', wait_time=15)
     br.click_link_by_text('Profile')
     userid, apikey = find_user_apikey(br)
     br.click_link_by_text('Dashboard')
@@ -129,8 +129,8 @@ def load_jupyter_notebook(ctx):
         br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection
-        assert not br.is_text_present('Server error: Traceback', wait_time=5)
-        assert not br.is_text_present('Connection refuse', wait_time=5)
+        assert not br.is_text_present('Server error: Traceback', wait_time=15)
+        assert not br.is_text_present('Connection refuse', wait_time=15)
 
 
 @given('we have a connection to omegaml-ee')

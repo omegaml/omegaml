@@ -3,4 +3,4 @@ git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landi
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/ccbackend
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex@1aa46386be8343738f24e9f7790e441c706b6a3d#egg=tastypiex
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml@d5bf1ec19e9cbd8049c361775b5bc87c24a9be9f#egg=omegaml[all]
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml@89bdb9692160a02b8f88851e00b37f1655b4c3ad#egg=omegaml[all]

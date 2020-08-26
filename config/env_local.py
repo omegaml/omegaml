@@ -126,16 +126,19 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     _default_jupyter_config_overrides = json.dumps({})
 
+    jupyter_image = os.environ.get('OMEGA_JUPYTER_IMAGE', 'omegaml/omegaml-ee:latest')
+    runtime_image = os.environ.get('OMEGA_RUNTIME_IMAGE', 'omegaml/omegaml-ee:latest')
+
     StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': (mongo_host, 'mongo db host name'),
         'JYHUB_HOST': (jyhub_host, 'jupyter hub public host name'),
         'BROKER_URL': (broker_url, 'rabbitmq broker url (deprecated)'),
         'BROKER_HOST': (broker_host, 'rabbitmq broker host'),
-        'JUPYTER_IMAGE': ('omegaml/omegaml-ee:latest', 'jupyter image'),
+        'JUPYTER_IMAGE': (jupyter_image, 'jupyter image'),
         'JUPYTER_AFFINITY_ROLE': ('worker', 'jupyter k8s affinity role'),
         'JUPYTER_NODE_SELECTOR': ('omegaml.io/role=worker', 'jupyter k8s node selector'),
         'JUPYTER_NAMESPACE': ('default', 'jupyter k8s cluster namespace'),
-        'RUNTIME_IMAGE': ('omegaml/omegaml-ee:latest', 'runtime image'),
+        'RUNTIME_IMAGE': (runtime_image, 'runtime image'),
         'RUNTIME_AFFINITY_ROLE': ('worker', 'runtime k8s affinity role'),
         'RUNTIME_NODE_SELECTOR': ('omegaml.io/role=worker', 'runtime k8s node selector'),
         'RUNTIME_NAMESPACE': ('default', 'runtime k8s cluster namespace'),
