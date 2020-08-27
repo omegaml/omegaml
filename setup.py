@@ -28,7 +28,11 @@ jupyter_deps = [
     'jupyter-client>=4.1.1',
 ]
 
-all_deps = web_deps + jupyter_deps + dev_deps
+airbrake_deps = [
+    'pybrake',
+]
+
+all_deps = web_deps + jupyter_deps + dev_deps + airbrake_deps
 
 from omegaee._version import version
 

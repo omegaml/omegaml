@@ -9,6 +9,7 @@ from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
 from stackable.contrib.config.conf_djangograppelli import Config_DjangoGrappelli
+from stackable.contrib.config.conf_djangologging import Config_DjangoLogging
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
@@ -16,6 +17,9 @@ from stackable.contrib.config.conf_sekizai import Config_DjangoSekizai
 from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 from stackable.contrib.config.email.filebased import Config_FileEmail
 from stackable.stackable import StackableSettings
+
+truefalse = lambda v: (v if isinstance(v, bool) else
+                       any(str(v).lower().startswith(c) for c in 'yt1'))
 
 
 class EnvSettings_Local(Config_DjangoWhitenoise,
@@ -26,11 +30,13 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoConstance,
                         Config_FileEmail,
                         Config_DjangoGrappelli,
-                        # Config_DebugToolbar,
+                        #Config_Airbrake,
+                        #Config_DebugToolbar,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
+                        Config_DjangoLogging,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
@@ -148,7 +154,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         'JUPYTER_CONFIG': (_default_jupyter_config_overrides, 'json jupyter config overrides'),
     })
 
-    DEBUG = os.environ.get('DJANGO_DEBUG', False)
+    DEBUG = truefalse(os.environ.get('DJANGO_DEBUG', False))
 
     ALLOWED_HOSTS = ['localhost', 'testserver']
 

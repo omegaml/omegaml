@@ -16,7 +16,7 @@ MONGO_PORT=${MONGODB_SERVICE_PORT:-27017}
 MONGO_HTTP_URL=${MONGO_HTTP_URL:-http://$MONGO_HOST:$MONGO_PORT}
 
 pushd $script_dir/..
-python manage.py collectstatic --noinput --no-post-process
+python manage.py collectstatic --noinput
 waiton "waiting for mongodb" $MONGO_HTTP_URL
 python manage.py migrate
 honcho start web
