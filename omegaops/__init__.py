@@ -201,7 +201,7 @@ def add_service_deployment(user, config):
     plan = ServicePlan.objects.get(name='omegaml')
     text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
         **locals())
-    user.services.all().delete()
+    user.services.filter(offering__name='omegaml').delete()
     deployment = user.services.create(user=user,
                                       text=text,
                                       offering=plan,

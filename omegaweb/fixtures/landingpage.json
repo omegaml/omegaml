@@ -1,1 +1,24 @@
-[{"fields": {"status": 1, "name": "omegaml"}, "model": "landingpage.serviceplan", "pk": 1}]
+[
+  {
+    "fields": {
+      "status": 1,
+      "name": "omegaml",
+      "visible": true
+    },
+    "model": "landingpage.serviceplan",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "status": 1,
+      "name": "stripe",
+      "visible": false,
+      "defaults": {
+        "apikey": "invalid-stripe-apikey",
+        "default_price": "invalid-stripe-price-ids"
+      }
+    },
+    "model": "landingpage.serviceplan",
+    "pk": 2
+  }
+]

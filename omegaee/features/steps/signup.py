@@ -36,13 +36,22 @@ def site_registration_email(ctx):
     br = ctx.browser
     # login to admin
     br.visit(uri(br, '/admin'))
-    assert br.is_text_present('Django administration', wait_time=15)
-    assert br.is_text_present('Password:')
-    br.fill('username', ctx.admin_user)
-    br.fill('password', ctx.admin_password)
-    br.find_by_value('Log in').first.click()
+    try:
+        # this is the original admin login
+        assert br.is_text_present('Django administration', wait_time=15)
+        assert br.is_text_present('Password:')
+        br.fill('username', ctx.admin_user)
+        br.fill('password', ctx.admin_password)
+        br.find_by_value('Log in').first.click()
+    except:
+        # this is the standard login, when admin site is login protected
+        br.fill('login', ctx.admin_user)
+        br.fill('password', ctx.admin_password)
+        br.click_link_by_text('Login ')
+    # never mind the way to login, go to admin site
+    br.visit(uri(br, '/admin'))
     # open emails sent
-    assert br.is_text_present('Django administration', wait_time=15)
+    assert br.is_text_present('landingpage admin', wait_time=15)
     br.visit(uri(br, '/admin/post_office/email/'))
     assert br.is_text_present(ctx.feature.username, wait_time=15)
 

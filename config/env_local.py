@@ -7,8 +7,8 @@ from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
-from stackable.contrib.config.conf_debugperm import Config_DjangoDebugPermissions
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
+from stackable.contrib.config.conf_djangograppelli import Config_DjangoGrappelli
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
@@ -25,6 +25,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoPayments,
                         Config_DjangoConstance,
                         Config_FileEmail,
+                        Config_DjangoGrappelli,
                         # Config_DebugToolbar,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
@@ -168,3 +169,14 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     # be compatible with omegaml-core flask API which does not allow trailing slash
     TASTYPIE_ALLOW_MISSING_SLASH = True
     APPEND_SLASH = True
+
+    # stripe
+    STRIPE_APIKEY = os.environ.get('STRIPE_APIKEY', 'invalid-stripe-token')
+    STRIPE_REGISTER_ON_SIGNUP = os.environ.get('STRIPE_REGISTER', False)
+
+    # fernet encryption fields
+    # https://django-fernet-fields.readthedocs.io/en/latest/#keys
+    # specify FERNET_KEYS as "new:previous-1:previous-2" with the oldest being the last one
+    # if you don't specify FERNET_KEYS env, SECRET_KEY will be used
+    _fernet_keys = os.environ.get('FERNET_KEYS', '').split(':') + [EnvSettingsGlobal.SECRET_KEY]
+    FERNET_KEYS = [k for k in _fernet_keys if k]

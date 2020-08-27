@@ -18,7 +18,7 @@ def given_new_user(ctx):
     text = br.find_by_id('id_message').text
     regex = r".*go.to.(.*)"
     # signout of admin
-    br.click_link_by_text('Log out')
+    br.visit(uri(br, '/admin/logout/'))
     # execution formation
     confirm_url = re.findall(regex, text)[0]
     br.visit(confirm_url)

@@ -26,6 +26,6 @@ def step_impl(ctx, uri):
     # wait until app is started, then see if we can get it
     sleep(10)
     br.visit(app_url)
-    assert br.is_text_present('Hello Dash', wait_time=15)
+    assert br.is_text_present('Hello Dash', wait_time=90)
 
 

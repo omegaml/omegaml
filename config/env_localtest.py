@@ -25,4 +25,7 @@ class EnvSettings_LocalTest(EnvSettings_Local):
     # allow default task auth for testing
     OMEGA_ALLOW_TASK_DEFAULT_AUTH = True
 
+    # switch off stripe customer registration in landingpage
+    STRIPE_REGISTER_ON_SIGNUP = False
+
 
