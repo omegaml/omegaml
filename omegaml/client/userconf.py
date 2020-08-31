@@ -5,10 +5,12 @@ from urllib3 import Retry
 
 from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
 
+
 def ensure_api_url(api_url, defaults):
     api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
     api_url = api_url or getattr(defaults, 'OMEGA_RESTAPI_URL', api_url_default)
     return api_url
+
 
 def ensure_api_url(api_url, defaults):
     api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
@@ -80,7 +82,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     :param qualifier: the database qualifier requested. defaults to 'default'
     :returns: the Omega instance configured for the given user
     """
-    from omegaml import Omega
+    from omegaml.client.cloud import OmegaCloud
     from omegaml import settings, _base_config
 
     defaults = settings(reload=True)
@@ -105,7 +107,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
     auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
-    om = Omega(defaults=defaults, auth=auth)
+    om = OmegaCloud(defaults=defaults, auth=auth)
     # update config to reflect request
     om.defaults.OMEGA_RESTAPI_URL = api_url
     om.defaults.OMEGA_USERID = userid
