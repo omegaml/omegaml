@@ -62,18 +62,15 @@ class OmegaStoreContentsManager(ContentsManager):
         store.
         """
         path = unquote(path).strip('/')
-        if not self.exists(path):
-            raise web.HTTPError(404, u'No such file or directorys: %s' % path)
-
-        if self.dir_exists(path) or type == 'directory':
+        if type == 'notebook' or (type is None and path.endswith('.ipynb')):
+            model = self._notebook_model(path, content=content)
+        elif type == 'file':
+            model = self._file_model(path, content=content)
+        elif type in (None, 'directory'):
             # jupyterlab passes None to get directory
             # we never return content with a directory listing to save time
             # the frontend will request the specific contents
             model = self._dir_model(path, content=False)
-        elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
-            model = self._notebook_model(path, content=content)
-        elif type == 'file':
-            model = self._file_model(path, content=content)
         else:
             raise web.HTTPError(404, u'Type {} at {} is not supported'.format(type, path))
         return model
@@ -202,7 +199,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if path == '':
             return True
         pattern = r'^{path}.*/({placeholder}|.+)'.format(path=path, placeholder=self._dir_placeholder)
-        return len(self.omega.jobs.list(pattern)) > 0
+        return len(self.omega.jobs.list(regexp=pattern)) > 0
 
     def file_exists(self, path):
         """check if file exists
@@ -214,8 +211,8 @@ class OmegaStoreContentsManager(ContentsManager):
             True if file exists
         """
         path = unquote(path).strip('/')
-        does_exist = path in self.omega.jobs.list(path)
-        does_exist |= path in self.omega.datasets.list(path)
+        does_exist = len(self.omega.jobs.list(regexp=path)) > 0
+        does_exist |= len(self.omega.datasets.list(regexp=path)) > 0
         return does_exist
 
     def is_hidden(self, path):
@@ -233,7 +230,7 @@ class OmegaStoreContentsManager(ContentsManager):
         path = unquote(path).strip('/')
         return self.omega.jobs.get(path)
 
-    def _notebook_model(self, path, content=True):
+    def _notebook_model(self, path, content=True, meta=None):
         """
         Build a notebook model
         if content is requested, the notebook content will be populated
@@ -242,20 +239,19 @@ class OmegaStoreContentsManager(ContentsManager):
         path = unquote(path).strip('/')
         model = self._base_model(path)
         model['type'] = 'notebook'
+        # always add accurate created and modified
+        meta = meta or self.omega.jobs.metadata(path)
+        if meta is not None:
+            model['created'] = meta.created
+            model['last_modified'] = meta.modified
+        else:
+            raise HTTPError(400, "Cannot read non-file {}".format(path))
         if content:
             nb = self._read_notebook(path, as_version=4)
             self.mark_trusted_cells(nb, path)
             model['content'] = nb
             model['format'] = 'json'
             self.validate_notebook_model(model)
-        # always add accurate created and modified
-        meta = self.omega.jobs.metadata(path)
-        if meta is not None:
-            model['created'] = meta.created
-            model['last_modified'] = meta.modified
-        else:
-            model['last_modified'] = datetime.utcnow()
-            model['created'] = datetime.utcnow()
         return model
 
     def _base_model(self, path, kind=None):
@@ -299,13 +295,17 @@ class OmegaStoreContentsManager(ContentsManager):
         # and we need to include them because we need to find sub/sub directories
         # note \w is any word character (letter, digit, underscore)
         #      \s is any white space
-        #      -  is the dash, literally
-        pattern = r'([\w\s-]+\/)?([\w\s-]+\.[\w]*)$'
+        #      \d is any digit
+        #      :_  match literally
+        pattern = r'([\w\s-]+\/)?([\w\s\-.\d:_]+\.[\w]*)$'
+        #pattern = r'([\w\s-]+\/)?([\w\-.\d\s\-_:]+$'
         # if we're looking in an existing directory, prepend that
         if path:
-            pattern = '{path}/{pattern}'.format(path=path, pattern=pattern)
+            pattern = r'{path}/{pattern}'.format(path=path, pattern=pattern)
         pattern = '^{}'.format(pattern)
-        entries = self.omega.jobs.list(pattern, raw=True)
+        entries = self.omega.jobs.list(regexp=pattern, raw=True)
+        if path and not entries:
+            raise HTTPError(400, "Directory not found {}".format(path))
         # by default assume the current path is listed already
         directories = [path]
         for meta in entries:
@@ -324,7 +324,7 @@ class OmegaStoreContentsManager(ContentsManager):
                 continue
             # include the actual file
             try:
-                entry = self.get(meta.name, content=content, type='notebook')
+                entry = self._notebook_model(meta.name, content=content, meta=meta)
             except Exception as e:
                 msg = ('_dir_model error, cannot get {}, '
                        'removing from list, exception {}'.format(meta.name, str(e)))

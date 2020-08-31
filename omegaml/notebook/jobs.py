@@ -164,13 +164,13 @@ class OmegaJobs(BackendBaseCommon):
         # FIXME this should use store.collection
         return getattr(self.store.mongodb, collection)
 
-    def list(self, jobfilter='.*', raw=False, **kwargs):
+    def list(self, pattern=None, regexp=None, raw=False, **kwargs):
         """
         list all jobs matching filter.
         filter is a regex on the name of the ipynb entry.
         The default is all, i.e. `.*`
         """
-        job_list = self.store.list(regexp=jobfilter, raw=raw, **kwargs)
+        job_list = self.store.list(pattern=pattern, regexp=regexp, raw=raw, **kwargs)
         name = lambda v: v.name if raw else v
         if not self._include_dir_placeholder:
             job_list = [v for v in job_list if not name(v).endswith(self._dir_placeholder)]
