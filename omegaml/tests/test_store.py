@@ -863,3 +863,12 @@ class StoreTests(unittest.TestCase):
         file_like = BytesIO(bar_data.encode('utf-8'))
         bar_store.put(file_like, 'myfile')
         self.assertNotEqual(foo_store.get('myfile').read(), bar_store.get('myfile').read())
+
+    def test_hidden_temp_handling(self):
+        foo_store = OmegaStore(bucket='foo')
+        foo_store.put({}, '_temp')
+        self.assertNotIn('_temp', foo_store.list(include_temp=False))
+        self.assertIn('_temp', foo_store.list(include_temp=True))
+        foo_store.put({}, '.hidden')
+        self.assertNotIn('.hidden', foo_store.list(hidden=False))
+        self.assertIn('.hidden', foo_store.list(hidden=True))

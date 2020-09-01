@@ -45,7 +45,7 @@ class JobsCommandBase(CommandBase):
         om = get_omega(self.args)
         raw = self.args.get('--raw', False)
         pattern = self.args.get('<pattern>')
-        entries = om.jobs.list(jobfilter=pattern, raw=raw)
+        entries = om.jobs.list(pattern=pattern, raw=raw)
         self.logger.info(entries)
 
     def put(self):

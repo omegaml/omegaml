@@ -211,8 +211,12 @@ class OmegaStoreContentsManager(ContentsManager):
             True if file exists
         """
         path = unquote(path).strip('/')
-        does_exist = len(self.omega.jobs.list(regexp=path)) > 0
-        does_exist |= len(self.omega.datasets.list(regexp=path)) > 0
+        if not path:
+            return False
+        # always check for an actual file, not some sub path
+        pattern = r'^{}$'.format(path)
+        does_exist = len(self.omega.jobs.list(regexp=pattern)) > 0
+        does_exist |= len(self.omega.datasets.list(regexp=pattern)) > 0
         return does_exist
 
     def is_hidden(self, path):
@@ -244,10 +248,10 @@ class OmegaStoreContentsManager(ContentsManager):
         if meta is not None:
             model['created'] = meta.created
             model['last_modified'] = meta.modified
-        else:
-            raise HTTPError(400, "Cannot read non-file {}".format(path))
         if content:
             nb = self._read_notebook(path, as_version=4)
+            if nb is None:
+                raise HTTPError(400, "Cannot read non-file {}".format(path))
             self.mark_trusted_cells(nb, path)
             model['content'] = nb
             model['format'] = 'json'
@@ -297,12 +301,13 @@ class OmegaStoreContentsManager(ContentsManager):
         #      \s is any white space
         #      \d is any digit
         #      :_  match literally
-        pattern = r'([\w\s-]+\/)?([\w\s\-.\d:_]+\.[\w]*)$'
-        #pattern = r'([\w\s-]+\/)?([\w\-.\d\s\-_:]+$'
+        #      [^\/]  matches any character except /
+        #pattern = r'([\w\s\-.\d:()+]+\/)?([\w\s\-.\d:()+]+\.[\w]*)$'
+        pattern = r'([^\/]+\/)?([^\/]+\.[^\/]*)$'
         # if we're looking in an existing directory, prepend that
         if path:
             pattern = r'{path}/{pattern}'.format(path=path, pattern=pattern)
-        pattern = '^{}'.format(pattern)
+        pattern = r'^{}'.format(pattern)
         entries = self.omega.jobs.list(regexp=pattern, raw=True)
         if path and not entries:
             raise HTTPError(400, "Directory not found {}".format(path))

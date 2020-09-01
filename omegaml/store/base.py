@@ -75,9 +75,9 @@ from __future__ import absolute_import
 
 import warnings
 
+import bson
 import gridfs
 import os
-import re
 import six
 import tempfile
 from datetime import datetime
@@ -85,6 +85,7 @@ from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
+from mongoengine.queryset.visitor import Q
 from six import iteritems
 from uuid import uuid4
 
@@ -954,17 +955,20 @@ class OmegaStore(object):
         :return: List of files in store
 
         """
+        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
         db = self.mongodb
         searchkeys = dict(bucket=bucket or self.bucket,
                           prefix=prefix or self.prefix)
+        q_excludes = Q()
         if regexp:
-            searchkeys['name'] = re.compile(regexp)
+            searchkeys['name'] = regex(regexp)
         elif pattern:
-            searchkeys['name'] = re.compile('^' + pattern.replace('*', '.*'))
+            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
+            searchkeys['name'] = regex(f'^{re_pattern}$')
         if not include_temp:
-            searchkeys['name__not__startswith'] = '_'
+            q_excludes &= Q(name__not__startswith='_')
         if not hidden:
-            searchkeys['name__not__startswith'] = '.'
+            q_excludes &= Q(name__not__startswith='.')
         if kind or self.force_kind:
             kind = kind or self.force_kind
             if isinstance(kind, (tuple, list)):
@@ -973,7 +977,8 @@ class OmegaStore(object):
                 searchkeys.update(kind=kind)
         if filter:
             searchkeys.update(filter)
-        files = self._Metadata.objects.no_cache()(**searchkeys)
+        q_search = Q(**searchkeys) & q_excludes
+        files = self._Metadata.objects.no_cache()(q_search)
         return [f if raw else str(f.name).replace('.omm', '') for f in files]
 
     def object_store_key(self, name, ext, hashed=False):
