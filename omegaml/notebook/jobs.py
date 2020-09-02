@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import datetime
 import gridfs
 import re
+import six
 import yaml
 from croniter import croniter
 from nbconvert.preprocessors import ClearOutputPreprocessor
@@ -357,7 +358,7 @@ class OmegaJobs(BackendBaseCommon):
         triggers = attrs.get('triggers', [])
         if only_pending:
             triggers = [trigger for trigger in triggers
-                        if  trigger['status'] == 'PENDING']
+                        if trigger['status'] == 'PENDING']
         if config and 'run-at' in config:
             run_at = config.get('run-at')
         else:
@@ -402,7 +403,7 @@ class OmegaJobs(BackendBaseCommon):
         :return: the (data, resources) tuple as returned by nbconvert. For
            format html data is the HTML's body, for PDF it is the pdf file contents
         """
-        from traitlets.config import Config, six
+        from traitlets.config import Config
         from nbconvert import SlidesExporter
         from nbconvert.exporters.html import HTMLExporter
         from nbconvert.exporters.pdf import PDFExporter
@@ -435,5 +436,3 @@ class OmegaJobs(BackendBaseCommon):
             with open(localpath, 'w' + fmode) as fout:
                 fout.write(data)
         return data, resources
-
-
