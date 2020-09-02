@@ -73,21 +73,21 @@ as follows:
 """
 from __future__ import absolute_import
 
-import os
-import re
-import tempfile
 import warnings
-from datetime import datetime
-from fnmatch import fnmatch
-from uuid import uuid4
 
+import bson
 import gridfs
+import os
 import six
+import tempfile
+from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
+from mongoengine.queryset.visitor import Q
 from six import iteritems
+from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -955,9 +955,20 @@ class OmegaStore(object):
         :return: List of files in store
 
         """
+        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
         db = self.mongodb
         searchkeys = dict(bucket=bucket or self.bucket,
                           prefix=prefix or self.prefix)
+        q_excludes = Q()
+        if regexp:
+            searchkeys['name'] = regex(regexp)
+        elif pattern:
+            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
+            searchkeys['name'] = regex(f'^{re_pattern}$')
+        if not include_temp:
+            q_excludes &= Q(name__not__startswith='_')
+        if not hidden:
+            q_excludes &= Q(name__not__startswith='.')
         if kind or self.force_kind:
             kind = kind or self.force_kind
             if isinstance(kind, (tuple, list)):
@@ -966,30 +977,9 @@ class OmegaStore(object):
                 searchkeys.update(kind=kind)
         if filter:
             searchkeys.update(filter)
-        meta = self._Metadata.objects.no_cache()(**searchkeys)
-        if raw:
-            if regexp:
-                files = [f for f in meta if re.match(regexp, f.name)]
-            elif pattern:
-                files = [f for f in meta if fnmatch(f.name, pattern)]
-            else:
-                files = [f for f in meta]
-            if not include_temp:
-                files = [f for f in files if not f.name.startswith('_')]
-            if not hidden:
-                files = [f for f in files if not f.name.startswith('.')]
-        else:
-            files = [str(d.name) for d in meta]
-            if regexp:
-                files = [f for f in files if re.match(regexp, f)]
-            elif pattern:
-                files = [f for f in files if fnmatch(f, pattern)]
-            files = [f.replace('.omm', '') for f in files]
-            if not include_temp:
-                files = [f for f in files if not f.startswith('_')]
-            if not hidden:
-                files = [f for f in files if not f.startswith('.')]
-        return files
+        q_search = Q(**searchkeys) & q_excludes
+        files = self._Metadata.objects.no_cache()(q_search)
+        return [f if raw else str(f.name).replace('.omm', '') for f in files]
 
     def object_store_key(self, name, ext, hashed=False):
         """

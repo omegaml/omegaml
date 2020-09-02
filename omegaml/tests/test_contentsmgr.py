@@ -75,6 +75,21 @@ class OmegaContentsManagerTests(TestCase):
         self.assertEqual(model['name'], 'bar.ipynb')
         self.assertEqual(model['content']['cells'][0]['source'], "print('hello world')")
 
+    def test_blankfile_exists_always_false(self):
+        # this protects against cannot use POST, use PUT error
+        # see https://stackoverflow.com/a/59775912/890242
+        # create a first notebook
+        result = self.mgr.file_exists('')
+        self.assertEqual(result, False)
+        self._create_notebook('foo')
+        result = self.mgr.file_exists('')
+        self.assertEqual(result, False)
+        result = self.mgr.file_exists('foo2')
+        self.assertEqual(result, False)
+        self._create_notebook('sub/foo')
+        result = self.mgr.file_exists('sub')
+        self.assertEqual(result, False)
+
     def test_get_notebook_as_file(self):
         # create a dummy notebook just so we have a valid model
         self._create_notebook('foo')
@@ -210,7 +225,16 @@ class OmegaContentsManagerTests(TestCase):
 
     def test_exists(self):
         om = self.om
-        # check director is empty to start with
+        # check directory is empty to start with
+        result = self.mgr.exists('')
+        self.assertTrue(result)
+        result = self.mgr.dir_exists('')
+        self.assertTrue(result)
+        result = self.mgr.file_exists('')
+        self.assertFalse(result)
+        result = self.mgr.file_exists('test.ipynb')
+        self.assertFalse(result)
+        # check directory is empty to start with
         result = self.mgr.exists('/Untitled1')
         self.assertFalse(result)
         result = self.mgr.exists('/sub/sub1')
@@ -248,9 +272,22 @@ class OmegaContentsManagerTests(TestCase):
         model['content'] = base64.encodebytes('hello world'.encode('utf8')).decode('ascii')
         model['format'] = 'base64'
         self.mgr.save(model, 'textfile.txt')
+        model = self.mgr.get('textfile.txt', type='file')
+        self.assertEqual(model['content'], 'hello world')
 
     def test_save_file_text(self):
         model = self.mgr._base_model('textfile.txt', kind='file')
         model['content'] = 'hello world'
         model['format'] = 'text'
         self.mgr.save(model, 'textfile.txt')
+        model = self.mgr.get('textfile.txt', type='file')
+        self.assertEqual(model['content'], 'hello world')
+
+    def test_weird_filenames(self):
+        for fn in ('Untitled (1).ipynb', 'Some+strange+name.+++'):
+            self._create_notebook(fn)
+            expected_fn = fn + ('.ipynb' if not fn.endswith('.ipynb') else '')
+            self.assertIn(expected_fn, self.om.jobs.list())
+            model = self.mgr.get('/')
+            contents = [e['name'] for e in model['content']]
+            self.assertIn(expected_fn, contents)
