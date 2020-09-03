@@ -12,7 +12,7 @@ from omegaml.backends.package.packager import build_sdist
 from omegaml.util import settings, delete_database, mkdirs
 
 
-class PythonPackageDataTests(TestCase):
+class PythonLocalPackageDataTests(TestCase):
     _multiprocess_can_split_ = False
 
     def setUp(self):
@@ -76,7 +76,7 @@ class PythonPackageDataTests(TestCase):
         loadtime2 = dtend - dtstart
         # assert that loading from the local module from disk is faster than loading from gridfs
         self.assertLess(loadtime2, loadtime1)
-        self.assertEqual(mod2.__file__, mod2.__file__)
+        self.assertEqual(mod1.__file__, mod2.__file__)
 
     def test_install(self):
         om = self.om
@@ -84,6 +84,25 @@ class PythonPackageDataTests(TestCase):
         pkgsrc = 'pkg://{}'.format(pkgpath)
         om.scripts.put(pkgsrc, 'helloworld')
         om.scripts.install()
+        self.assertIn('helloworld', sys.modules)
+
+    def test_install_fully_qualified(self):
+        om = self.om
+        pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld', 'setup.py'))
+        pkgsrc = 'pkg://{}'.format(pkgpath)
+        om.scripts.put(pkgsrc, 'helloworld')
+        om.scripts.install()
+        self.assertIn('helloworld', sys.modules)
+
+    def test_install_specifics(self):
+        om = self.om
+        pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
+        pkgsrc = 'pkg://{}'.format(pkgpath)
+        om.scripts.put(pkgsrc, 'helloworld')
+        om.scripts.install('helloworld')
+        self.assertIn('helloworld', sys.modules)
+        del sys.modules['helloworld']
+        om.scripts.install(['helloworld'])
         self.assertIn('helloworld', sys.modules)
 
     def test_runtime(self):
@@ -109,7 +128,5 @@ class PythonPackageDataTests(TestCase):
         om.scripts.put(pkgsrc, 'helloworld')
         new_sysargv = ' '.join(sys.argv)
         self.assertEqual(new_sysargv, orig_sysargv)
-
-
 
 

@@ -81,6 +81,7 @@ OMEGA_STORE_BACKENDS = {
     'pandas.rawdict': 'omegaml.backends.rawdict.PandasRawDictBackend',
     'python.file': 'omegaml.backends.rawfiles.PythonRawFileBackend',
     'python.package': 'omegaml.backends.package.PythonPackageData',
+    'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {

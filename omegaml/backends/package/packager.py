@@ -22,8 +22,12 @@ def build_sdist(src, distdir):
         sys.stdout.errors = None
         sys.stderr.errors = None
         try:
+            if not src.endswith('setup.py'):
+                setup_path = os.path.join(src, 'setup.py')
+            else:
+                setup_path = src
+                src = os.path.dirname(setup_path)
             os.chdir(src)
-            setup_path = os.path.join(src, 'setup.py')
             sdist = run_setup(setup_path, script_args=['sdist', '--dist-dir', distdir])
         finally:
             # restore cwd
@@ -40,6 +44,7 @@ def install_package(src, dst):
     cpip.main('install',
               src,
               '--force-reinstall',
+              '--no-cache-dir',
               '--upgrade',
               '--target', dst)
 
@@ -62,7 +67,7 @@ def install_and_import(pkgfilename, package, installdir):
     """
 
     Returns:
-        object: 
+        object:
     """
     install_package(pkgfilename, installdir)
     mod = load_from_path(package, installdir)
