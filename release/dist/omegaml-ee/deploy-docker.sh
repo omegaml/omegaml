@@ -29,13 +29,7 @@ docker-compose up -d nginx
 # apply configurations
 echo "Securing mongodb"
 cat scripts/mongoinit.js | compose_exec mongodb mongo
-echo "Setting up web service"
-docker-compose exec omegaml python manage.py collectstatic --noinput
-docker-compose exec omegaml python manage.py migrate
-docker-compose exec omegaml python manage.py loaddata landingpage.json
-docker-compose exec omegaml python manage.py omsetupuser --username admin --email admin@omegaml.io --password test --admin --nodeploy
-docker-compose exec omegaml python manage.py omsetupuser --username jyadmin --staff --apikey b7b034f57d442e605ab91f88a8936149e968e12e
-docker-compose exec omegaml python manage.py omsetupuser --username omops --staff --apikey 686ae4620522e790d92009be674e3bdc0391164f
+docker-compose exec omegaml scripts/initlocal.sh
 
 # finalize
 popd

@@ -46,6 +46,9 @@ OMEGA_CELERY_CONFIG = {
 OMEGA_CELERY_IMPORTS = ['paasdeploy', 'omegaops']
 OMEGA_CELERY_IMPORTS += omdefaults.OMEGA_CELERY_IMPORTS
 
+# remove omdefaults schedule entry
+del omdefaults.OMEGA_CELERY_CONFIG['CELERYBEAT_SCHEDULE']
+
 # test support -- always run tasks locally
 if any(m in [basename(arg) for arg in sys.argv]
        # this is to avoid using production settings during test

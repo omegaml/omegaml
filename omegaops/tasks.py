@@ -1,11 +1,11 @@
-from random import randint, random
-from time import sleep
+from random import random
 
 from celery import Task, shared_task
 from celery.signals import worker_init, worker_process_init
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from pymongo.errors import ConnectionFailure
+from time import sleep
 
 import omegaops as omops
 from landingpage.models import DEPLOY_COMPLETED, ServicePlan
@@ -16,6 +16,7 @@ from paasdeploy.models import ServiceDeployConfiguration
 from paasdeploy.tasks import deploy
 
 logger = get_task_logger(__name__)
+
 
 class BaseLoggingTask(Task):
     """
@@ -38,6 +39,14 @@ class BaseLoggingTask(Task):
 
     @property
     def om(self):
+        import omegaml as default_om
+        try:
+            _om = self._get_authorized_om()
+        except Exception as e:
+            _om = default_om
+        return _om
+
+    def _get_authorized_om(self):
         # initialize only once
         if BaseLoggingTask._om is None:
             omops_user = User.objects.get(username='omops')
@@ -60,6 +69,8 @@ def deploy_user_service(user_id):
     password = User.objects.make_random_password(length=36)
     config = omops.add_user(user, password)
     deplm = omops.add_service_deployment(user, config)
+    if user.username != 'omops' and User.objects.filter(username='omops').exists():
+        omops.create_ops_forwarding_shovel(user)
     omops.complete_service_deployment(deplm, DEPLOY_COMPLETED)
 
 
@@ -89,13 +100,16 @@ def run_user_scheduler():
 
     TODO this is hack to get this working. Will be replaced with a proper solution, https://github.com/omegaml/omegaml-enterprise/issues/117
     """
-    users = User.objects.all()
+    users = User.objects.filter(is_active=True)
     for user in users:
         qualifier = 'default'
         # get an omega instance configured to the user's specifics and send task to user's worker
-        user_om = get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
-        execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
-        execute_scripts.delay()
+        try:
+            user_om = get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
+            execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
+            execute_scripts.delay()
+        except Exception as e:
+            logger.error(f'error scheduling for {user}, exception {e}')
         # avoid excessive task bursts on rabbitmq
         sleep(1)
 
@@ -107,7 +121,7 @@ def ensure_user_broker_ready(self, *args, **kwargs):
 
     TODO: this is hack to work with unpersisted rabbitmq backends. remove in favor of persisted rabbitmq
     """
-    users = User.objects.all()
+    users = User.objects.filter(is_active=True)
     for user in users:
         try:
             user_settings = user.services.get(offering__name='omegaml').settings
@@ -122,10 +136,12 @@ def ensure_user_broker_ready(self, *args, **kwargs):
                     omops.add_user_vhost(cnx_config['brokervhost'],
                                          cnx_config['brokeruser'],
                                          cnx_config['brokerpassword'])
+                    omops.create_ops_forwarding_shovel(user)
                 except Exception as e:
                     logger.error('error recreating user vhost {}'.format(str(e)))
                     # avoid excessive task bursts on rabbitmq
                 sleep(.1 + random())
+
 
 @app.task(base=BaseLoggingTask, bind=True)
 def log_event_task(self, log_data):
@@ -154,7 +170,6 @@ def log_event_task(self, log_data):
                 self._in_eager_logging = False
 
     do(self, log_data)
-
 
 
 @worker_init.connect

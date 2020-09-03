@@ -1,6 +1,7 @@
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/ccbackend
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch
+git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml#egg=omegaml[all]
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage#egg=landingpage[all]
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/ccbackend
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
 git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex#egg=tastypiex
-git+https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/omegaml#egg=omegaml[all]

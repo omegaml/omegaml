@@ -5,8 +5,6 @@ from omegaml.util import urlparse, settings as get_settings, markup, dict_merge
 
 
 # note no global imports from Django to avoid settings sequence issue
-
-
 def add_user(user, password, dbname=None, deploy_vhost=False):
     """
     add a user to omegaml giving readWrite access rights
@@ -20,6 +18,7 @@ def add_user(user, password, dbname=None, deploy_vhost=False):
         username = user.username
     else:
         username = user
+
     dbuser = User.objects.make_random_password(length=36)
     dbname = dbname or User.objects.make_random_password(length=36)
     # setup services
@@ -192,6 +191,47 @@ def authorize_user_vhost(grant_user, grantee_user, username, password):
     return grantee_service.settings
 
 
+def create_ops_forwarding_shovel(user):
+    """
+    add a shovel to transmit user's omegaops messages to omegaops workers
+
+    Args:
+        user: the user to shovel messages from
+        ops_user: the ops user to shovel messages to
+
+    Returns:
+
+    """
+    from django.contrib.auth.models import User
+    import pyrabbit2 as rmq
+    # build broker urls and get vhosts
+    def get_broker_host_vhost(full_url):
+        parsed = urlparse.urlparse(full_url)
+        host = '{}:{}'.format(parsed.hostname, parsed.port)
+        vhost = parsed.path.strip('/')
+        return host, vhost, parsed
+
+    ops_user = User.objects.get(username='omops')
+    user_config = get_user_config(user, 'default', True)
+    ops_config = get_user_config(ops_user, 'default', True)
+    user_host, user_vhost, _ = get_broker_host_vhost(user_config['broker_url'])
+    _, ops_vhost, _ = get_broker_host_vhost(ops_config['broker_url'])
+    # add user to other db
+    ops_host, _, parsed = get_broker_host_vhost(ops_config['broker_api_url'])
+    # see https://www.rabbitmq.com/shovel-dynamic.html
+    client = rmq.Client(ops_host, parsed.username, parsed.password)
+    shovel_kwargs = {"src-uri": user_config['broker_url'],
+                     "src-queue": "omegaops",
+                     "dest-uri": ops_config['broker_url'],
+                     "dest-queue": "omegaops",
+                     "reconnect-delay": 1,
+                     "add-forward-headers": False,
+                     "ack-mode": "no-ack",  # fastest
+                     "delete-after": "never",
+                     }
+    client.create_shovel(user_vhost, 'omegaops', **shovel_kwargs)
+
+
 def add_service_deployment(user, config):
     """
     add the service deployment
@@ -221,6 +261,53 @@ def get_client_config(user, qualifier=None, view=False):
     Args:
         view (bool): if True return the internal mongo url, else external as defined in
        constance.MONGO_HOST
+    """
+    user_config = get_user_config(user, qualifier, view)
+    # FIXME permission user instead of standard
+    client_config = {
+        "OMEGA_CELERY_CONFIG": {
+            "BROKER_URL": user_config['broker_url'],
+            "CELERY_RESULT_BACKEND": 'amqp',
+            "CELERY_ACCEPT_CONTENT": [
+                "pickle",
+                "json",
+            ],
+            "CELERY_DEFAULT_QUEUE": user_config['default_queue'],
+            "CELERY_TASK_SERIALIZER": 'pickle',
+            "BROKER_USE_SSL": user_config['use_ssl'],
+        },
+        "OMEGA_MONGO_URL": user_config['mongo_url'],
+        "OMEGA_NOTEBOOK_COLLECTION": user_config['notebook_collection'],
+        "OMEGA_TMP": "/tmp",
+        "OMEGA_MONGO_COLLECTION": "omegaml",
+        "OMEGA_USERID": user.username,
+        "OMEGA_APIKEY": user.api_key.key,
+    }
+    # allow any updates to effectively omegaml.defaults
+    dict_merge(client_config, user_config['omega_defaults'])
+    user_settings = user_config['user_settings']
+    if view:
+        # only include internals if needed
+        client_config.update({
+            "JUPYTER_IMAGE": user_settings['services']['jupyter']['image'],
+            "JUPYTER_NODE_SELECTOR": user_settings['services']['jupyter']['node_selector'],
+            "JUPYTER_NAMESPACE": user_settings['services']['jupyter']['namespace'],
+            "JUPYTER_AFFINITY_ROLE": user_settings['services']['jupyter']['affinity_role'],
+            "RUNTIME_WORKER_IMAGE": user_settings['services']['runtime']['image'],
+            "RUNTIME_NODE_SELECTOR": user_settings['services']['runtime']['node_selector'],
+            "RUNTIME_NAMESPACE": user_settings['services']['runtime']['namespace'],
+            "RUNTIME_AFFINITY_ROLE": user_settings['services']['runtime']['affinity_role'],
+            "CLUSTER_STORAGE": user_settings['services']['cluster']['storage'],
+            "JUPYTER_CONFIG": user_settings['services']['jupyter']['config'],
+        })
+
+    client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = user_config['celery_eager']
+    return client_config
+
+
+def get_user_config(user, qualifier, view):
+    """
+    build the full user config
 
     Notes:
         The client configuration is in user.services.settings for offering='omegaml'
@@ -273,6 +360,15 @@ def get_client_config(user, qualifier=None, view=False):
             "dbname": "<mongo dbname>",
             "username": "<mongo user>",
             "password": "<mongo password",
+
+
+    Args:
+        user:
+        qualifier:
+        view:
+
+    Returns:
+        dict of user configuration
     """
     from constance import config
     # -- get settings from environment
@@ -312,46 +408,17 @@ def get_client_config(user, qualifier=None, view=False):
     broker_url = broker_url.replace('None:None@', '')
     default_queue = qualifier_settings.get('routing') or user_settings.get('routing') or 'default'
     omega_defaults = user_settings['services']['omegaml']['defaults']
-    # FIXME permission user instead of standard
-    client_config = {
-        "OMEGA_CELERY_CONFIG": {
-            "BROKER_URL": broker_url,
-            "CELERY_RESULT_BACKEND": 'amqp',
-            "CELERY_ACCEPT_CONTENT": [
-                "pickle",
-                "json",
-            ],
-            "CELERY_DEFAULT_QUEUE": default_queue,
-            "CELERY_TASK_SERIALIZER": 'pickle',
-            "BROKER_USE_SSL": settings.OMEGA_USESSL,
-        },
-        "OMEGA_MONGO_URL": mongo_url,
-        "OMEGA_NOTEBOOK_COLLECTION": settings.OMEGA_NOTEBOOK_COLLECTION,
-        "OMEGA_TMP": "/tmp",
-        "OMEGA_MONGO_COLLECTION": "omegaml",
-        "OMEGA_USERID": user.username,
-        "OMEGA_APIKEY": user.api_key.key,
+    user_config = {
+        'user_settings': user_settings,
+        'mongo_url': mongo_url,
+        'broker_url': broker_url,
+        'default_queue': default_queue,
+        'omega_defaults': omega_defaults,
+        'use_ssl': settings.OMEGA_USESSL,
+        'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
+        'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
+        'broker_api_url': settings.OMEGA_BROKERAPI_URL,
     }
-    # allow any updates to effectively omegaml.defaults
-    dict_merge(client_config, omega_defaults)
-
-    if view:
-        # only include internals if needed
-        client_config.update({
-            "JUPYTER_IMAGE": user_settings['services']['jupyter']['image'],
-            "JUPYTER_NODE_SELECTOR": user_settings['services']['jupyter']['node_selector'],
-            "JUPYTER_NAMESPACE": user_settings['services']['jupyter']['namespace'],
-            "JUPYTER_AFFINITY_ROLE": user_settings['services']['jupyter']['affinity_role'],
-            "RUNTIME_WORKER_IMAGE": user_settings['services']['runtime']['image'],
-            "RUNTIME_NODE_SELECTOR": user_settings['services']['runtime']['node_selector'],
-            "RUNTIME_NAMESPACE": user_settings['services']['runtime']['namespace'],
-            "RUNTIME_AFFINITY_ROLE": user_settings['services']['runtime']['affinity_role'],
-            "CLUSTER_STORAGE": user_settings['services']['cluster']['storage'],
-            "JUPYTER_CONFIG": user_settings['services']['jupyter']['config'],
-        })
-
-    if settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER']:
-        client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = True
 
     # recursively replace place holders
     # {username} - user's name
@@ -364,8 +431,8 @@ def get_client_config(user, qualifier=None, view=False):
             else:
                 pass
 
-    expand_placeholders(client_config)
-    return client_config
+    expand_placeholders(user_config)
+    return user_config
 
 
 def parse_client_config_v1(user_settings, qualifier, settings, config):

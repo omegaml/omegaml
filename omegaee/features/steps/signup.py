@@ -51,7 +51,7 @@ def site_registration_email(ctx):
     # never mind the way to login, go to admin site
     br.visit(uri(br, '/admin'))
     # open emails sent
-    assert br.is_text_present('landingpage admin', wait_time=15)
+    assert br.is_text_present('admin', wait_time=15)
     br.visit(uri(br, '/admin/post_office/email/'))
     assert br.is_text_present(ctx.feature.username, wait_time=15)
 

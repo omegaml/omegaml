@@ -66,6 +66,9 @@ setup(
         'appdirs==1.4.3',
         'cron-descriptor==1.2.24',
         'cachetools',
+        'celery>4,<=4.2.1',
+        'dj_database_url',
+        'six',
     ],
     dependency_links=[
     ],

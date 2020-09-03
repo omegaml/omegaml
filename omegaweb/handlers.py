@@ -10,3 +10,4 @@ def handle_usersignup(sender, request=None, user=None, **kwargs):
     handle user sign up
     """
     deploy_user_service(user.pk)
+

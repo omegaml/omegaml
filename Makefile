@@ -28,8 +28,9 @@ candidate-dist: clean
 
 test:
 	docker-compose up -d || echo "assuming docker-compose environment already running"
-	DJANGO_SETTINGS_MODULE=app.settings python manage.py test --debug-config --verbosity=2
-	DJANGO_SETTINGS_MODULE=app.settings python manage.py test omegaml --debug-config --verbosity=2
+	# note we use --exe to make this work with circleci, where all files are executable due to a uid/gid quirk
+	DJANGO_SETTINGS_MODULE=app.settings python manage.py test --debug-config --verbosity=2 --exe
+	DJANGO_SETTINGS_MODULE=app.settings python manage.py test omegaml --debug-config --verbosity=2 --exe
 
 devtest:
 	scripts/devtest.sh --headless

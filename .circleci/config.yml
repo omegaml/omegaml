@@ -10,7 +10,7 @@ jobs:
         name: Install system packages
         command: |
           sudo apt-get -q update
-          sudo apt-get -q -y install libmysqlclient-dev texlive-xetex texlive-generic-extra
+          sudo apt-get -q -y install libmysqlclient-dev
     - checkout:
         path: /home/circleci/omegaml
     - run:
@@ -29,41 +29,32 @@ jobs:
             echo "Not a PR build."
           fi
     - run:
-        name: Install Miniconda
+        name: Setup local build env
         command: |
-          curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-          sh Miniconda3-4.5.12-Linux-x86_64.sh -b
+          cd omegaml
+          scripts/initlocal.sh --deps --setup --noinit
+          # quick fix for allowing docker user to deal with circleci-owned files
+          chmod -f -R 777 ~ || true
     - run:
         name: Run unit tests
         command: |
-          source miniconda3/etc/profile.d/conda.sh
           cd omegaml
-          source scripts/runtest.sh
+          export CURRENT_USER=omegadev
+          scripts/rundev.sh --docker --clean --cmd "make test"
         shell: /bin/bash -l -eo pipefail
     - run:
-        name: Checkout sibling repos
+        # TODO replace with a livetest image instead of local installation
+        name: Build image and run live tests
         command: |
-          git clone https://github.com/omegaml/omegaml omegaml-ce
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/stackable
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/landingpage
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/ccbackend
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex
-          git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps
-          pushd omegaml-ce
-          git fetch && git checkout 89bdb9692160a02b8f88851e00b37f1655b4c3ad
-          popd
-    - run:
-        name: Run live tests
-        command: |
-          source miniconda3/etc/profile.d/conda.sh
-          conda activate omenv
+          source ~/miniconda3/etc/profile.d/conda.sh
+          conda activate base
           mkdir -p ~/.omegaml
           sudo chown -R circleci.circleci ~/.omegaml/
           echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
           cd omegaml
+          scripts/initlocal.sh --install --noinit
           docker login -u omegaml -p $DOCKER_PASS
+          export CURRENT_USER=omegadev
           LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~apphub --tags ~snowflake" make dist
         shell: /bin/bash -l -eo pipefail
     - store_artifacts:

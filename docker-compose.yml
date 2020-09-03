@@ -21,6 +21,7 @@ services:
       - OMEGA_USESSL=yes
       - CELERY_Q=default
       - DJANGO_DEBUG=1
+      - HOME=/home/omegadev
     depends_on:
       - mongodb
       - rabbitmq
@@ -29,7 +30,7 @@ services:
       - "8000:8000"
       - "5000:5000"
       - "9222:9222"
-    user: ${CURRENT_USER}
+    user: "${CURRENT_USER}"
 
   mongodb:
     image: mongo:3.6.8-stretch
@@ -59,3 +60,6 @@ services:
       - ./release/dist/omegaml-dev/etc/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
       - ./release/dist/omegaml-dev/etc/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./release/dist/omegaml-dev/etc/rabbitmq/certs:/etc/rabbitmq/certs
+
+volumes:
+   pythonlib:

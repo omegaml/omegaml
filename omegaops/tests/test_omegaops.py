@@ -29,6 +29,11 @@ class OmegaOpsTests(TestCase):
         self.email2 = email2 = 'testuser2@omegaml.io'
         self.password2 = password2 = 'password2'
         self.user2 = User.objects.create_user(username2, email2, password2)
+        # ops user
+        self.opsusername = opsusername = 'omops'
+        self.opsemail = opsemail = 'opsuser_test@omegaml.io'
+        self.opspassword = opspassword = 'opsuser_test'
+        self.user2 = User.objects.create_user(opsusername, opsemail, opspassword)
 
     def tearDown(self):
         TestCase.tearDown(self)

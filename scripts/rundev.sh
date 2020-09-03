@@ -4,11 +4,35 @@
 ## Run application from command line, optionally using docker
 ##    @script.name [option]
 ##
+## To develop locally, native linux, using your local conda
+##
+##       $ scripts/initlocal.sh --deps --setup --install --noinit
+##       $ scripts/rundev.sh --clean
+##
+## To develop inside docker
+##
+##       # build a clean env once
+##       $ scripts/rundev.sh --docker --clean
+##
+##       # just run the container
+##       $ scripts/rundev.sh --docker --shell
+##
+##       This will start mongodb, rabbitmq and the omegaml-dev container,
+##       dropping you to an initialised shell with all packages installed.
+##       The container has following directories mapped:
+##
+##       .. => /home/projects
+##        . => /app
+##        ~/.omegaml => /home/omegadev/.omegaml
+##
+##       This means you can use your favorite IDE to develop
+##
 ## Options:
 ##      --docker     if specified uses docker to run, otherwise runs from local command line
 ##      --shell      if specified will invoke the shell in docker, other runs apps
 ##      --build      if specified builds the omegaml-dev image
 ##      --clean      if specified restarts the docker containers a fresh and runs initlocal
+##      --cmd=VALUE  if specified passed on to shell
 # script setup to parse options
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
@@ -25,8 +49,7 @@ host_guid=$(id -g)
 container_uid=$host_uid:$host_guid
 
 # run process
-export CURRENT_UID=$container_uid
-export CURRENT_USER=$host_user
+export CURRENT_USER=${CURRENT_USER:-omegadev}
 # task routing means the default queue is $account-default
 # by enabling task routing we can have a central worker serve multiple accounts
 # on separate queues
@@ -40,7 +63,6 @@ if [[ ! -z $build ]]; then
        echo "Building $devimage"
        rm -rf $distdir
        mkdir -p $distdir
-       cp *requirements* $distdir
        cp Dockerfile.dev $distdir
        cp -r ./release/dist/omegaml-dev/. $distdir
        cp -r ./scripts $distdir
@@ -56,18 +78,19 @@ if [[ ! -z $build ]]; then
    exit 0
 fi
 
-
 if [[ ! -z $clean ]]; then
     docker-compose down
     docker-compose up -d --remove-orphans
     waiton "waiting for mongodb" http://localhost:27017
-    cat scripts/mongoinit.js | docker exec -i omegaml_mongodb_1 mongo
-    docker-compose exec omegaml-dev bash -ic "scripts/initlocal.sh --install"
+    cat scripts/mongoinit.js | docker-compose exec -T mongodb mongo
+    docker-compose exec omegaml-dev bash -ic "scripts/initlocal.sh --setup --install"
 fi
 
 if [[ ! -z $docker ]]; then
     docker-compose up -d
-    if [[ ! -z $shell ]]; then
+    if [[ ! -z $cmd ]]; then
+        docker-compose exec omegaml-dev bash -ic "$cmd"
+    elif [[ ! -z $shell ]]; then
         docker-compose exec omegaml-dev bash
     else
         docker-compose exec omegaml-dev bash -ic "scripts/rundev.sh"
@@ -75,7 +98,8 @@ if [[ ! -z $docker ]]; then
 else
     # run with local software installed
     export DJANGO_DEBUG=1
+    ./scripts/initlocal.sh --noinit
     python manage.py migrate
-    python manage.py loaddata landingpage.json
+    python manage.py loaddata --app omegaweb landingpage
     PORT=8000 honcho start web worker notebook scheduler omegaops
 fi
