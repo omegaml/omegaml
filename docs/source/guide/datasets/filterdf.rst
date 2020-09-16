@@ -24,9 +24,9 @@ is one of the following:
 
 * :code:`eq` compare equal (this is also the default, when using the short form, i.e.
   :code:`<column>=<value>`
-* :code:`gt` greator than
-* :code:`gte` greater or equal
+* :code:`gt` greater than
 * :code:`lt` less than
+* :code:`gte` greator or equal
 * :code:`lte` less or equal
 * :code:`between` between two values, specify :code:`value` as a 2-tuple
 * :code:`contains` contains a value, specify :code:`value` as a sequence
