@@ -6,7 +6,7 @@ from http import HTTPStatus
 class OmegaTestMixin(object):
     def clean(self, bucket=None):
         om = self.om[bucket] if bucket is not None else self.om
-        for element in ('models', 'jobs', 'datasets', 'scripts'):
+        for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
             part = getattr(om, element)
             drop = part.drop
             [drop(m.name, force=True) for m in part.list(hidden=True, include_temp=True, raw=True)]
