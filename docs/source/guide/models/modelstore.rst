@@ -1,5 +1,5 @@
-Working with Machine Learning Models
-====================================
+Introduction to models
+======================
 
 omega|ml currently implements the following machine learning frameworks out of the box. More backends are planned.
 Any backend can be implemented using the backend API.
@@ -27,7 +27,7 @@ Simply create the model, then use :code:`om.models.put()` to store:
     clf.fit(df[['x']], df[['y']])
     # store the trained model
     om.models.put(clf, 'lrmodel')
-    
+
 Models can also be stored untrained:
 
 .. code::
@@ -46,9 +46,9 @@ Retrieving a model is equally straight forward:
 
     clf = om.models.get('lrmodel')
     clf
-    => 
+    =>
     LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)
-    
+
 Once retrieved the model can be accessed as any model kept in memory, e.g.
 to predict using new data:
 
@@ -70,6 +70,69 @@ to predict using new data:
        [ 99.]])
 
 
+Model versioning
+----------------
+
+By default all models are versioned automatically. A model is a saved instance of the model
+that is connected to the same name. The following example will store two model versions, the first is not
+trained and thus cannot be used for prediction, the second is fitted and thus can be used for prediction:
+
+.. code:: python
+
+    reg = LinearRegression()
+    om.models.put(reg, 'mymodel')
+
+    reg.fit(X, Y)
+    om.models.put(reg, 'mymodel')
+
+
+Model versions can be accessed by specifying the version as part of the name:
+
+.. code:: python
+
+    # get the latest model, note @latest is implied if not specified
+    om.models.get('mymodel')
+    om.models.get('mymodel@latest`)
+
+Previous versions can be referenced by specifying :code:`^` for each previous version, or by
+specifying a tag on storage:
+
+.. code:: python
+
+    # retrieve one version before latest
+    om.models.get('mymodel^`)
+    # retrieve two versions before latest
+    om.models.get('mymodel^^`)
+
+    # store a new version, give it a name
+    om.models.put('mymodel', tag='experiment')
+    # retrieve the @experiment model
+    om.models.get('mymodel@experiment')
+
+To see all revisions of a model use :code:`om.models.revisions('mymodel')`
+
+.. code:: python
+
+    om.models.revisions('mymodel')
+    =>
+    [('e05bd064dbc9258df929d4099a02ad5452d73389', ''),
+    ('aef452194c1671e5b8a496bfbbba75d83bb51b91', ''),
+    ('3ca9aef680612bbfa0d2ac67a1b2bdbd73b976f0', ['latest', 'experiment'])]
+
+Note version naming works across all parts of omega|ml, e.g.
+
+.. code:: python
+
+    # use the runtime to work with a particular model version
+    om.runtime.model('mymodel@experiment').fit(...)
+
+    # works by the cli, too
+    $ om runtime model 'mymodel@experiment' fit ...
+
+    # works on the API, too
+    $ curl http://hostname/api/v1/model/mymodel@experiment/fit?datax=...&datay...
+
+
 Using the compute cluster
 -------------------------
 
@@ -84,7 +147,7 @@ the runtime you can delegate model tasks to the cluster:
     model = om.runtime.model('lrmodel')
     result = model.predict(df[['x']])
     result.get()
-    => 
+    =>
     array([[ 20.],
        [ 21.],
        [ 22.],
@@ -95,9 +158,9 @@ the runtime you can delegate model tasks to the cluster:
        [ 27.],
        [ 28.],
        [ 29.]])
- 
-Note that the :code:`result` is a deferred object that we resolve using 
-:code:`get`. 
+
+Note that the :code:`result` is a deferred object that we resolve using
+:code:`get`.
 
 Instead of passing data, you may also pass the name of a DataFrame stored
 in omegaml:
@@ -109,8 +172,8 @@ in omegaml:
     om.datasets.put(df, 'testlrmodel')
     # use it to predict
     result = om.runtime.model('lrmodel').predict('testlrmodel')
-    result.get()    
-    
+    result.get()
+
 Model Fitting
 +++++++++++++
 
@@ -178,8 +241,3 @@ runtime supports the following methods on a model:
 
 For details refer to the API reference.
 
-Specific frameworks
--------------------
-
-.. include:: keras.rst
-.. include:: tensorflow.rst

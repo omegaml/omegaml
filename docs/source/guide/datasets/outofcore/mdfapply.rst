@@ -1,5 +1,5 @@
 Aggregation Framework
-=====================
+---------------------
 
 .. _MongoDB's aggregate: https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/#db.collection.aggregate
 
@@ -8,7 +8,7 @@ the ease-of-use of Pandas syntax. Typical Pandas aggregation operations like gro
 have direct equivalents in omegal|ml with the same or very similar syntax, using :code:`MDataFrame.groupby`:
 
 Standard Groupby aggregation
-----------------------------
+++++++++++++++++++++++++++++
 
 .. code::
 
@@ -41,7 +41,7 @@ The following aggregations are currently supported:
 * :code:`last` - the last in the group
 
 Motivating example
-------------------
+++++++++++++++++++
 
 If the standard operations provided in `MDataFrame.groupby` do not provide the required functionality, custom
 operators or chains of operators can be easily applied using the :code:`MDataFrame.apply()` functionality. Much like
@@ -80,7 +80,7 @@ selected from the :code:`ApplyContext`, the operations are applied only to the o
 
 
 Math operations
----------------
++++++++++++++++
 
 All standard Python math operators are supported, in particular:
 
@@ -109,7 +109,7 @@ brackets to ensure readability and correct operations in special scenarios:
     mdf.apply(lambda ctx: (ctx * 5) + 2)
 
 Datetime Operators
-------------------
+++++++++++++++++++
 
 .. code::
 
@@ -125,7 +125,7 @@ Datetime Operators
     mdf.apply(lambda ctx: ctx['v'].dt.dayofweek)
 
 String Operators
-----------------
+++++++++++++++++
 
 .. code::
 
@@ -140,7 +140,7 @@ String Operators
 
 
 Cached operations
------------------
++++++++++++++++++
 
 Any :code:`apply()` call results can be cached to speed-up future queries. To do so call :code:`persist()`:
 
@@ -159,7 +159,7 @@ produced by :code:`persist()`. Note that :code:`persist()` returns the cache key
     calculation can be executed once and stored for subsequent and automatic retrieval by anyone on your team.
 
 Complex operations
-------------------
+++++++++++++++++++
 
 .. _MongoDB aggregation reference: https://docs.mongodb.com/manual/meta/aggregation-quick-reference/
 
