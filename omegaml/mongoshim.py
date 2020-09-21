@@ -9,4 +9,14 @@ def MongoClient(*args, **kwargs):
     from omegaml import settings
     defaults = settings()
     kwargs.update(defaults.OMEGA_MONGO_SSL_KWARGS)
-    return RealMongoClient(*args, **kwargs)
+    return RealMongoClient(*args, **sanitize_mongo_kwargs(kwargs))
+
+
+def sanitize_mongo_kwargs(kwargs):
+    # keep kwargs sane
+    # -- if we receive "use_ssl" = False from cloud config but have
+    #    a local CA defined, remove it. Otherwise mongo raises ConfigurationError
+    kwargs = dict(kwargs)
+    if 'ssl_ca_certs' in kwargs and not kwargs.get('ssl'):
+        del kwargs['ssl_ca_certs']
+    return kwargs

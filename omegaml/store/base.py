@@ -93,6 +93,7 @@ from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index
 from ..documents import make_Metadata, MDREGISTRY
+from ..mongoshim import sanitize_mongo_kwargs
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
 
@@ -193,7 +194,7 @@ class OmegaStore(object):
                                  connect=False,
                                  authentication_source='admin',
                                  serverSelectionTimeoutMS=2500,
-                                 **self.defaults.OMEGA_MONGO_SSL_KWARGS,
+                                 **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
                                  )
         self._db = get_db(alias)
         return self._db

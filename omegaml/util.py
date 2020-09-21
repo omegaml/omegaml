@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import sys
 import warnings
 from copy import deepcopy
 from importlib import import_module
@@ -8,6 +7,7 @@ from importlib import import_module
 import logging
 import os
 import six
+import sys
 import tempfile
 import uuid
 from shutil import rmtree
@@ -759,7 +759,8 @@ def raises(fn, wanted_ex):
         raise ValueError("did not raise {}".format(wanted_ex))
     return True
 
-def dict_merge(destination, source, delete_on='__delete__'):
+
+def dict_merge(destination, source, delete_on='__delete__', subset=None):
     """
     Merge two dictionaries, including sub dicts
 
@@ -769,12 +770,16 @@ def dict_merge(destination, source, delete_on='__delete__'):
         delete_on (obj): for each entry in source, its value is
             compared to match delete_on, if it does the key will
             be deleted in the destination dict. Defaults to '__delete__'
+        subset (callable): optional, only merge item
+            if subset(key, value) is True
 
     See Also:
         https://stackoverflow.com/a/20666342/890242
     """
     dict_merge.DELETE = delete_on
     for key, value in source.items():
+        if callable(subset) and not subset(key, value):
+            continue
         if isinstance(value, dict):
             # get node or create one
             node = destination.setdefault(key, {})
@@ -784,5 +789,3 @@ def dict_merge(destination, source, delete_on='__delete__'):
                 del destination[key]
             else:
                 destination[key] = value
-
-

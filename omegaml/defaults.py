@@ -32,7 +32,7 @@ OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
-    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH') if OMEGA_USESSL else None,
+    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH') or None,
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
