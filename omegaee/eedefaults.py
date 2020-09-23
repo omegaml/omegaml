@@ -13,6 +13,8 @@ is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = any(m in [basename(arg) for arg in sys.argv]
                   for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
                             '_jb_nosetest_runner.py'))
+truefalse = lambda v: (v if isinstance(v, bool) else
+                       any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
 
 #: the omegaweb url
 OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
@@ -43,7 +45,7 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.notebook',
                         'omegaml.backends.package']
 #: determine if we should use SSL for mongodb and rabbitmq
-OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
+OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
 #: additional SSL kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
