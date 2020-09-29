@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-from uuid import uuid4
-
 import numpy as np
 import pandas as pd
 import six
 from bson import Code
 from numpy import isscalar
 from pymongo.collection import Collection
+from uuid import uuid4
 
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
@@ -718,7 +717,7 @@ class MDataFrame(object):
 
     def merge(self, right, on=None, left_on=None, right_on=None,
               how='inner', target=None, suffixes=('_x', '_y'),
-              sort=False, inspect=False):
+              sort=False, inspect=False, filter=None):
         """
         merge this dataframe with another dataframe. only left outer joins
         are currently supported. the output is saved as a new collection,
@@ -761,6 +760,16 @@ class MDataFrame(object):
             target, '_temp.merge.%s' % uuid4().hex)
         target_field = (
               "%s_%s" % (right_name.replace('.', '_'), right_on or on))
+        """
+        TODO enable filter criteria on right dataframe. requires changing LOOKUP syntax from 
+             equitly to arbitray match 
+        
+        if right.filter_criteria:
+            right_filter = [qops.MATCH(self._get_filter_criteria(**right.filter_criteria))]
+        else:
+            right_filter = None
+        """
+        right_filter = None
         lookup = qops.LOOKUP(right_name,
                              key=on,
                              left_key=left_on,
@@ -799,10 +808,15 @@ class MDataFrame(object):
                 left_col = '%s' % right_col
             project[left_col] = '$%s.%s' % (target_field, right_col)
         expected_columns = list(project.keys())
+        if '_id' not in project:
+            project['_id'] = 0  # never copy objectids to avoid duplicate keys, unless requested
         project = {"$project": project}
         # store merged documents and return an MDataFrame to it
         out = qops.OUT(target_name)
         pipeline = [lookup, unwind, project]
+        if filter:
+            query = qops.MATCH(self._get_filter_criteria(**filter))
+            pipeline.append(query)
         if sort:
             sort_cols = make_list(on or [left_on, right_on])
             sort_key = qops.make_sortkey(sort_cols)
