@@ -1,72 +1,105 @@
 version: 2
 jobs:
-  build:
+  test:
     working_directory: /home/circleci
     machine:
       image: ubuntu-1604:201903-01
     steps:
-    - checkout:
-        path: /home/circleci/omegaml-ce
-    - run:
-        name: Merge current master into PR branch
-        command: |
-          pr_number=${CI_PULL_REQUEST//*pull\//}
-          if [ -n "$pr_number" ]
-          then
-            echo "Building PR #$pr_number. Try to merge current master."
+      - checkout:
+          path: /home/circleci/omegaml-ce
+      - run:
+          name: Merge current master into PR branch
+          command: |
+            pr_number=${CI_PULL_REQUEST//*pull\//}
+            if [ -n "$pr_number" ]
+            then
+              echo "Building PR #$pr_number. Try to merge current master."
+              cd omegaml-ce
+              git fetch
+              git checkout origin/master
+              git pull --ff-only origin "refs/pull/$pr_number/head" || \
+                (echo "Merge failed. Please merge manually into your branch."; exit 1)
+            else
+              echo "Not a PR build."
+            fi
+      - run:
+          name: Install Miniconda
+          command: |
+            curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+            sh Miniconda3-4.5.12-Linux-x86_64.sh -b
+      - run:
+          name: Run unit tests
+          command: |
+            source miniconda3/etc/profile.d/conda.sh
             cd omegaml-ce
-            git fetch
-            git checkout origin/master
-            git pull --ff-only origin "refs/pull/$pr_number/head" || \
-              (echo "Merge failed. Please merge manually into your branch."; exit 1)
-          else
-            echo "Not a PR build."
-          fi
-    - run:
-        name: Install Miniconda
-        command: |
-          curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-          sh Miniconda3-4.5.12-Linux-x86_64.sh -b
-    - run:
-        name: Run unit tests
-        command: |
-          source miniconda3/etc/profile.d/conda.sh
-          cd omegaml-ce
-          docker-compose -f docker-compose-dev.yml up -d
-          echo "Waiting..."
-          sleep 10
-          docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-          for TF_VERSION in 1.15.3 2.2.0 2.3.0
-          do
-            for VER in 3.6 3.7 3.8
+            docker-compose -f docker-compose-dev.yml up -d
+            echo "Waiting..."
+            sleep 10
+            docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
+            for TF_VERSION in 1.15.3 2.2.0 2.3.0
             do
-              conda env remove -q -y -n omenv$VER || echo ""
-              echo "Testing with python $VER"
-              conda create -q -y -n omenv$VER python=$VER
-              conda activate omenv$VER
-              pip install --progress-bar off .[all,dev]
-              make test
-              conda deactivate
+              for VER in 3.6 3.7 3.8
+              do
+                conda env remove -q -y -n omenv$VER || echo ""
+                echo "Testing with python $VER"
+                conda create -q -y -n omenv$VER python=$VER
+                conda activate omenv$VER
+                pip install --progress-bar off .[all,dev]
+                make test
+                conda deactivate
+              done
             done
-          done
-          docker-compose down --remove-orphans
-        shell: /bin/bash -l -eo pipefail
-    - run:
-        name: Run live tests
-        command: |
-          source miniconda3/etc/profile.d/conda.sh
-          conda activate omenv3.8
-          mkdir -p ~/.omegaml
-          echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
-          ls -lart ~/.omegaml
-          cd omegaml-ce
-          LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
-        shell: /bin/bash -l -eo pipefail
-    - store_artifacts:
-        path: /tmp/screenshots
+            docker-compose down --remove-orphans
+          shell: /bin/bash -l -eo pipefail
+      - run:
+          name: Run live tests
+          command: |
+            source miniconda3/etc/profile.d/conda.sh
+            conda activate omenv3.8
+            mkdir -p ~/.omegaml
+            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+            ls -lart ~/.omegaml
+            cd omegaml-ce
+            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
+          shell: /bin/bash -l -eo pipefail
+      - store_artifacts:
+          path: /tmp/screenshots
+  release:
+    working_directory: /home/circleci
+      machine:
+        image: ubuntu-1604:201903-01
+      steps:
+        - checkout:
+            path: /home/circleci/omegaml-ce
+        - run:
+            name: Install Miniconda
+            command: |
+              curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+              sh Miniconda3-4.5.12-Linux-x86_64.sh -b
+        - run:
+            name: Make image and pypi
+            command: |
+              source miniconda3/etc/profile.d/conda.sh
+              mkdir -p ~/.omegaml
+              echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+              ls -lart ~/.omegaml
+              cd omegaml-ce
+              docker-compose -f docker-compose-dev.yml up -d
+              echo "Waiting..."
+              sleep 10
+              docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
+              make release-prod release-docker
 workflows:
   version: 2
   workflow:
     jobs:
-    - build:
-        context: omegaml
+      - test:
+          context: omegaml
+          filters:
+            branches:
+              ignore: release-build
+      - release:
+          context: omegaml
+          filters:
+            branches:
+              only: release-build
