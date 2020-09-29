@@ -13,6 +13,7 @@ class OmegaRuntimeBackend(LokyBackend):
     def __init__(self, *args, **kwargs):
         self._tqdm = None
         self._job_count = kwargs.pop('n_tasks', None)
+        self._verbose = kwargs.pop('verbose', True)
         import multiprocessing as mp
         # get LokyBackend to run in Celery, see LokyBackend.effective_n_jobs
         # TODO replace mp with billiard
@@ -20,21 +21,22 @@ class OmegaRuntimeBackend(LokyBackend):
         super().__init__(*args, **kwargs)
 
     def start_call(self):
-        self.tqdm = tqdm(total=self._job_count, unit='tasks')
+        if self._verbose:
+            self.tqdm = tqdm(total=self._job_count, unit='tasks')
         self._orig_print_progress = self.parallel.print_progress
         self.parallel.print_progress = self.update_progress
 
     def update_progress(self):
         try:
-            self.tqdm.update(1)
+            self.tqdm.update(1) if self._verbose else None
         except:
-            self._origin_print_progress()
+            pass
 
     def stop_call(self):
         try:
             self.tqdm.close()
         except:
-            self._origin_print_progress()
+            pass
 
     def terminate(self):
         try:

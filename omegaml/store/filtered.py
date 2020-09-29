@@ -1,10 +1,8 @@
 from __future__ import absolute_import
 
-from pymongo.collection import Collection
-
 from omegaml.store import qops
 from omegaml.store.query import Filter
-from omegaml.util import PickableCollection
+from omegaml.util import PickableCollection, ensure_base_collection
 
 
 class FilteredCollection:
@@ -51,15 +49,16 @@ class FilteredCollection:
     """
 
     def __init__(self, collection, query=None, projection=None, **kwargs):
-        is_real_collection = isinstance(collection, Collection)
-        while not is_real_collection:
-            collection = collection.collection
-            is_real_collection = isinstance(collection, Collection)
-        collection = PickableCollection(collection)
-        query = query or {}
+        if isinstance(collection, FilteredCollection):
+            # avoid cascading of FilteredCollections
+            query = query or collection._fixed_query
+            projection = projection or collection.projection
+            collection = ensure_base_collection(collection)
+        else:
+            query = query or {}
         self._fixed_query = query
         self.projection = projection
-        self.collection = collection
+        self.collection = PickableCollection(collection)
 
     @property
     def _Collection__database(self):

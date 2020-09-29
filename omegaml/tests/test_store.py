@@ -15,7 +15,7 @@ from pandas.util.testing import assert_frame_equal, assert_series_equal
 from six import BytesIO
 from six.moves import range
 from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
@@ -872,3 +872,21 @@ class StoreTests(unittest.TestCase):
         foo_store.put({}, '.hidden')
         self.assertNotIn('.hidden', foo_store.list(hidden=False))
         self.assertIn('.hidden', foo_store.list(hidden=True))
+
+    def test_help(self):
+        foo_store = OmegaStore(bucket='foo')
+        obj = {}
+        foo_store.put(obj, '_temp')
+        # get backend for different signatures
+        backend_name = foo_store._resolve_help_backend('_temp')
+        backend_obj = foo_store._resolve_help_backend(obj)
+        self.assertEqual(backend_name, backend_obj)
+        self.assertIsInstance(backend_obj, OmegaStore)
+        # get backend for scikit model
+        reg = LinearRegression()
+        foo_store.put(reg, 'regmodel')
+        backend_name = foo_store._resolve_help_backend('regmodel')
+        backend_obj = foo_store._resolve_help_backend(reg)
+        self.assertIsInstance(backend_name, ScikitLearnBackend)
+        self.assertIsInstance(backend_obj, ScikitLearnBackend)
+

@@ -9,7 +9,7 @@ import pandas as pd
 import unittest
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 from six.moves import range
-from unittest.case import TestCase
+from unittest.case import TestCase, skip
 
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
@@ -312,6 +312,42 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         test = df[df.isnull().any(axis=1)]
         assert_frame_equal(result, test)
 
+    def test_query_pandas_style(self):
+        om = self.om
+        df = pd.DataFrame({'x': list(range(0, 5)),
+                           'y': [1, 2, 3, None, None]})
+        om.datasets.put(df, 'foox', append=False)
+        mdf = om.datasets.getl('foox')
+        # simple subset
+        mdf_flt = mdf['x'] == 4
+        df_flt = df['x'] == 4
+        assert_frame_equal(mdf[mdf_flt].value, df[df_flt])
+        # and combined
+        mdf_flt = (mdf['x'] == 4) & (mdf['x'] < 5)
+        df_flt = (df['x'] == 4) & (df['x'] < 5)
+        assert_frame_equal(mdf[mdf_flt].value, df[df_flt])
+        # or combined
+        mdf_flt = (mdf['x'] < 3) | (mdf['x'] > 3)
+        df_flt = (df['x'] < 3) | (df['x'] > 3)
+        assert_frame_equal(mdf[mdf_flt].value, df[df_flt])
+        # negative combined
+        mdf_flt = (mdf['x'] < 3) | (mdf['x'] > 3)
+        df_flt = (df['x'] < 3) | (df['x'] > 3)
+        assert_frame_equal(mdf[~mdf_flt].value, df[~df_flt])
+        # partial negative combined
+
+    @skip
+    def test_partial_negative_query(self):
+        om = self.om
+        df = pd.DataFrame({'x': list(range(0, 5)),
+                           'y': [1, 2, 3, None, None]})
+        om.datasets.put(df, 'foox', append=False)
+        mdf = om.datasets.getl('foox')
+        # TODO this fails and should not
+        mdf_flt = (~(mdf['x'] < 3)) | (mdf['x'] > 3)
+        df_flt = (~(df['x'] < 3)) | (df['x'] > 3)
+        assert_frame_equal(mdf[mdf_flt].value, df[df_flt])
+
     def test_locindexer_numeric_index(self):
         om = self.om
         data = {
@@ -514,4 +550,3 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         for df_row, mdf_row in zip(mdf.items(), df.items()):
             self.assertEqual(type(df_row), type(mdf_row))
             assert_series_equal(df_row[1], mdf_row[1])
-

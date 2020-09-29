@@ -109,8 +109,11 @@ class MongoQ(object):
             if i == 0:
                 query = q.build_conditions()
             elif op == '&':
-                query.setdefault("$and", [])
                 fn = q.build_conditions if q == self else q.build_filters
+                if i == 1:
+                    query = {"$and": [dict(query)]}
+                else:
+                    query.setdefault("$and", [])
                 query["$and"].append(fn())
             elif op == '|':
                 fn = q.build_conditions if q == self else q.build_filters
@@ -185,7 +188,7 @@ class MongoQ(object):
             elif op in ['islong', 'isint']:
                 addq(k, qops.TYPE('long'))
             elif op == 'regex':
-                _ggtaddq(k, qops.REGEX(v))
+                addq(k, qops.REGEX(v))
             elif op == 'contains':
                 addq(k, qops.REGEX('.*%s.*' % v))
             elif op == 'startswith':
@@ -397,8 +400,5 @@ class Filter(object):
         """
         return self.value == self.value
 
-    def _repr_html_(self):
-        return self.value._repr_html_()
-
     def __repr__(self):
-        return self.value.__repr__()
+        return ' '.join(f'Filter({self.q})'.replace('\n', ' ').split())

@@ -91,7 +91,7 @@ from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -235,7 +235,7 @@ class OmegaStore(object):
         bucket = bucket or self.bucket
         # Meta is to silence lint on import error
         Meta = self._Metadata
-        return Meta.objects(name=name, prefix=prefix, bucket=bucket).no_cache().first()
+        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
         """
@@ -338,7 +338,7 @@ class OmegaStore(object):
             datastore = getattr(self.mongodb, collection)
         except Exception as e:
             raise e
-        return datastore
+        return PickableCollection(datastore)
 
     def _apply_mixins(self):
         """
@@ -689,7 +689,27 @@ class OmegaStore(object):
                                            data_store=data_store)
         return None
 
-    def get_backend_byobj(self, obj, name, kind=None, attributes=None,
+    def help(self, name_or_obj=None, kind=None):
+        """
+        get help for an object by lookup its backend and calling help() on it
+
+        Returns:
+
+        """
+        return help(self._resolve_help_backend)
+
+    def _resolve_help_backend(self, name_or_obj=None, kind=None):
+        # helper so we can test help
+        meta = self.metadata(name_or_obj)
+        if kind:
+            backend = self.get_backend_bykind(kind)
+        else:
+            backend = self.get_backend(name_or_obj) or self.get_backend_byobj(name_or_obj)
+        if backend is None:
+            backend = self
+        return backend
+
+    def get_backend_byobj(self, obj, name=None, kind=None, attributes=None,
                           model_store=None, data_store=None, **kwargs):
         """
         return the matching backend for the given obj

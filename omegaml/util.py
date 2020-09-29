@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import sys
 import warnings
 from copy import deepcopy
 from importlib import import_module
@@ -7,7 +8,6 @@ from importlib import import_module
 import logging
 import os
 import six
-import sys
 import tempfile
 import uuid
 from shutil import rmtree
@@ -434,6 +434,22 @@ def convert_dtypes(df, dtypes):
 
 
 class PickableCollection(object):
+    """
+    A pickable pymongo.Collection
+
+    This enables clean transmission of Collection instances to other processes, e.g.
+    for multiprocessing tasks. It works by pickling the collection's connection data
+    and restoring the database connection on unpickling.
+
+    Usage:
+        from multiprocessing import Pool
+
+        def process(coll):
+            coll.insert(...)
+
+        p = Pool()
+        p.map(process, range(1000),
+    """
     def __init__(self, collection):
         super(PickableCollection, self).__setattr__('collection', collection)
 
@@ -450,8 +466,10 @@ class PickableCollection(object):
         self.collection[k] = v
 
     def __getstate__(self):
-        client = self.collection._Collection__database._Database__client
+        client = self.database.client
         host, port = list(client.nodes)[0]
+        # options contains ssl settings
+        options = self.database.client._MongoClient__options._options
         creds = self.database.client._MongoClient__all_credentials[self.database.name]
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
@@ -461,13 +479,14 @@ class PickableCollection(object):
             'database': self.database.name,
             'host': host,
             'port': port,
-            'credentials': creds_state
+            'credentials': creds_state,
+            'options': options,
         }
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
         url = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(**state, **state['credentials'])
-        client = MongoClient(url, authSource=state['credentials']['source'])
+        client = MongoClient(url, authSource=state['credentials']['source'], **state['options'])
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -759,7 +778,6 @@ def raises(fn, wanted_ex):
         raise ValueError("did not raise {}".format(wanted_ex))
     return True
 
-
 def dict_merge(destination, source, delete_on='__delete__', subset=None):
     """
     Merge two dictionaries, including sub dicts
@@ -789,3 +807,15 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
                 del destination[key]
             else:
                 destination[key] = value
+
+
+def ensure_base_collection(collection):
+    """ get base from pymongo.Collection subclass instance """
+    from pymongo.collection import Collection
+    is_real_collection = isinstance(collection, Collection)
+    while not is_real_collection:
+        collection = collection.collection
+        is_real_collection = isinstance(collection, Collection)
+    return collection
+
+
