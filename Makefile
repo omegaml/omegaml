@@ -72,6 +72,16 @@ old:
 	cd dist/staging/tensorflow-gpu && docker build -t omegaml/omegaml-tf:${VERSION} .
 	docker push omegaml/omegaml-tf:${VERSION}
 
+bumppatch:
+	bumpversion patch
+
+bumpminor:
+	bumpversion minor
+
+bumpbuild:
+	bumpversion build
+
+
 help:
 		@echo -n "Common make targets"
 		@echo ":"
