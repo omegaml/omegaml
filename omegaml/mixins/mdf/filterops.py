@@ -1,5 +1,6 @@
 from functools import partial
 
+from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import Filter
 from omegaml.store import MongoQ
 from omegaml.store.filtered import FilteredCollection
@@ -11,7 +12,7 @@ class FilterOpsMixin(object):
     """
 
     def __getfltop(op):
-        def inner(self, other):
+        def inner(self, other=True):
             return self.__fltop__(op, other)
 
         return inner
@@ -21,7 +22,8 @@ class FilterOpsMixin(object):
         q = None
         for col in self.columns:
             queryop = '{col}__{op}'.format(col=col, op=op)
-            qq = MongoQ(**{queryop: other})
+            value = other if not isinstance(other, MSeries) else '$' + other.columns[0]
+            qq = MongoQ(**{queryop: value})
             if q is None:
                 q = qq
             else:
@@ -34,3 +36,5 @@ class FilterOpsMixin(object):
     __le__ = __getfltop('lte')
     __gt__ = __getfltop('gt')
     __ge__ = __getfltop('gte')
+
+    isnull = __getfltop('isnull')

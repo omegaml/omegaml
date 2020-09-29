@@ -315,7 +315,7 @@ class OmegaJobs(BackendBaseCommon):
             if job_runs:
                 last_run = job_runs[-1]['ts']
             else:
-                last_run = datetime.datetime.now()
+                last_run = datetime.datetime.utcnow()
         # calculate next run time
         iter_next = croniter(interval, last_run)
         run_at = iter_next.get_next(datetime.datetime)

@@ -125,6 +125,7 @@ OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.FilterOpsMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.apply.ApplyStatistics', 'MDataFrame,MSeries'),
+    ('omegaml.mixins.mdf.applyutil.UtilitiesMixin', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.iotools.IOToolsMDFMixin', 'MDataFrame'),
     ('omegaml.mixins.mdf.ParallelApplyMixin', 'MDataFrame'),
 ]

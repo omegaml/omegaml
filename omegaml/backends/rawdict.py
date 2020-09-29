@@ -2,7 +2,7 @@ from pymongo.collection import Collection
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
-from omegaml.util import json_normalize
+from omegaml.util import json_normalize, PickableCollection
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -27,7 +27,7 @@ class PandasRawDictBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, as_raw=None, **kwargs):
-        return (as_raw and isinstance(obj, dict)) or isinstance(obj, Collection)
+        return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection))
 
     def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, **kwargs):
         collection = self.data_store.collection(name)

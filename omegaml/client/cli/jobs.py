@@ -151,7 +151,7 @@ class JobsCommandBase(CommandBase):
                 self.logger.info('Ok, not scheduled. Try again.')
                 return
             self.logger.info('{name} will be scheduled to run {human_sched}'.format(**locals()))
-            om.jobs.schedule(name, run_at=cron_sched, last_run=datetime.datetime.now())
+            om.jobs.schedule(name, run_at=cron_sched, last_run=datetime.datetime.utcnow())
 
     def status(self):
         om = get_omega(self.args)

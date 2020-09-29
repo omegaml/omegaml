@@ -406,13 +406,9 @@ class MDataFrame(object):
         return data
 
     def __reduce__(self):
-        def remake(collection):
-            mdf = MDataFrame(collection)
-            return mdf
-
         state = self.__getstate__()
         args = self.collection,
-        return remake, args, state
+        return _mdf_remake, args, state
 
     def __setstate__(self, state):
         # pickle support. note that the hard work is done in PickableCollection
@@ -745,7 +741,7 @@ class MDataFrame(object):
             if key:
                 assert isinstance(
                     key, six.string_types), "only single column merge keys are supported (%s)" % key
-        if isinstance(right, Collection):
+        if isinstance(right, (Collection, PickableCollection, FilteredCollection)):
             right = MDataFrame(right)
         assert isinstance(
             right, MDataFrame), "both must be MDataFrames, got right=%" % type(right)
@@ -1125,3 +1121,8 @@ class MSeries(MDataFrame):
     def shape(self):
         return len(self),
 
+
+def _mdf_remake(collection):
+    # recreate a pickled MDF
+    mdf = MDataFrame(collection)
+    return mdf

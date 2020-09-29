@@ -1,9 +1,9 @@
-import os
-
 import math
-from billiard.pool import Pool
+import os
 from itertools import repeat
-from joblib import parallel_backend, delayed, Parallel
+from joblib import delayed, Parallel
+
+from omegaml.util import PickableCollection
 
 default_chunksize = int(1e4)
 
@@ -21,15 +21,11 @@ def insert_chunk(job):
                 should include the database name, as the collection is taken
                 from the default database of the connection.
     """
-    from omegaml.mongoshim import MongoClient
 
-    sdf, mongo_url, collection_name = job
-    client = MongoClient(mongo_url, authSource='admin')
-    db = client.get_database()
-    collection = db[collection_name]
+    sdf, collection = job
     result = collection.insert_many(sdf.to_dict(orient='records'))
-    client.close()
-    return mongo_url, db.name, collection_name, len(result.inserted_ids)
+    collection.database.client.close()
+    return len(result.inserted_ids)
 
 
 def fast_insert(df, omstore, name, chunksize=default_chunksize):
@@ -63,15 +59,14 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
     # - pool dict performs to_dict on chunking, passes list of json docs pools just insert
     # - no chunking sets chunksize=False
     if chunksize and len(df) * len(df.columns) > chunksize:
-        mongo_url = omstore.mongo_url
-        collection_name = omstore.collection(name).name
+        collection = PickableCollection(omstore.collection(name))
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
         cores = max(1, math.ceil(os.cpu_count() / 2))
         jobs = zip(dfchunker(df, size=chunksize),
-                   repeat(mongo_url), repeat(collection_name))
+                   repeat(collection))
         approx_jobs = int(len(df) / chunksize)
-        with Parallel(n_jobs=cores, backend='omegaml', verbose=True) as p:
+        with Parallel(n_jobs=cores, backend='omegaml', verbose=False) as p:
             runner = delayed(insert_chunk)
             p_jobs = (runner(job) for job in jobs)
             p._job_count = approx_jobs
