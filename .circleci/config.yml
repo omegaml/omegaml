@@ -66,29 +66,29 @@ jobs:
           path: /tmp/screenshots
   release:
     working_directory: /home/circleci
-      machine:
-        image: ubuntu-1604:201903-01
-      steps:
-        - checkout:
-            path: /home/circleci/omegaml-ce
-        - run:
-            name: Install Miniconda
-            command: |
-              curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-              sh Miniconda3-4.5.12-Linux-x86_64.sh -b
-        - run:
-            name: Make image and pypi
-            command: |
-              source miniconda3/etc/profile.d/conda.sh
-              mkdir -p ~/.omegaml
-              echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
-              ls -lart ~/.omegaml
-              cd omegaml-ce
-              docker-compose -f docker-compose-dev.yml up -d
-              echo "Waiting..."
-              sleep 10
-              docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-              make release-prod release-docker
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout:
+          path: /home/circleci/omegaml-ce
+      - run:
+          name: Install Miniconda
+          command: |
+            curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+            sh Miniconda3-4.5.12-Linux-x86_64.sh -b
+      - run:
+          name: Make image and pypi
+          command: |
+            source miniconda3/etc/profile.d/conda.sh
+            mkdir -p ~/.omegaml
+            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+            ls -lart ~/.omegaml
+            cd omegaml-ce
+            docker-compose -f docker-compose-dev.yml up -d
+            echo "Waiting..."
+            sleep 10
+            docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
+            make release-prod release-docker
 workflows:
   version: 2
   workflow:
