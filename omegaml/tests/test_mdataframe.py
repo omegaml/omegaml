@@ -246,6 +246,41 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
 
+    def test_mdataframe_merge_right_cartesian(self):
+        coll = self.coll
+        df = self.df
+        om = self.om
+        other = pd.DataFrame({'x': list(range(0, 5)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
+        om.datasets.put(other, 'samplez', append=False)
+        om.datasets.put(other, 'samplez', append=True)
+        other = om.datasets.get('samplez')
+        coll2 = om.datasets.collection('samplez')
+        result = MDataFrame(coll).merge(coll2, on='x', how='left',
+                                        sort=True).value
+        testdf = df.merge(other, on='x', how='left', sort=True)
+        testdf = testdf[result.columns]
+        self.assertTrue(result.equals(testdf))
+
+    def test_mdataframe_merge_filtered(self):
+        coll = self.coll
+        df = self.df
+        om = self.om
+        other = pd.DataFrame({'x': list(range(0, 5)),
+                              'y': list(range(0, 5)),
+                              'z': list(range(0, 5))})
+        om.datasets.put(other, 'samplez', append=False)
+        om.datasets.put(other, 'samplez', append=True)
+        other = om.datasets.get('samplez')
+        coll2 = om.datasets.collection('samplez')
+        result = MDataFrame(coll).merge(coll2, on='x', how='left',
+                                        sort=True, filter=dict(x__in=[1, 2])).value
+        q = df['x'].isin([1, 2])
+        testdf = df[q].merge(other, on='x', how='left', sort=True)
+        testdf = testdf[result.columns]
+        self.assertTrue(result.equals(testdf))
+
     def test_verylarge_dataframe(self):
         if not os.environ.get('TEST_LARGE'):
             return
