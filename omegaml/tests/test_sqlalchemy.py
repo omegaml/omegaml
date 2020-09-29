@@ -1,3 +1,4 @@
+import os
 from getpass import getuser
 from unittest import TestCase
 
@@ -15,6 +16,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.om = Omega()
         self.om.models.register_backend(SQLAlchemyBackend.KIND, SQLAlchemyBackend)
         self.clean()
+        os.remove('test.db') if os.path.exists('test.db') else None
 
     def test_put_connection(self):
         """
@@ -26,7 +28,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.assertIn('testsqlite', om.datasets.list())
         meta = om.datasets.metadata('testsqlite')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
-        conn = om.datasets.get('testsqlite')
+        conn = om.datasets.get('testsqlite', raw=True)
         self.assertIsInstance(conn, Connection)
 
     def test_put_connection_with_secrets(self):
@@ -44,10 +46,10 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         with self.assertRaises(KeyError):
             om.datasets.get('testsqlite')
         # directly specified
-        conn = om.datasets.get('testsqlite', secrets=dict(user='user'))
+        conn = om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'))
         # via vault
         om.datasets.put(dict(userid=getuser(), user='foobar'), '_omega/vault', append=False)
-        conn = om.datasets.get('testsqlite')
+        conn = om.datasets.get('testsqlite', raw=True)
         self.assertIsInstance(conn, Connection)
 
     def test_put_connection_with_sql(self):
@@ -199,7 +201,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         cnx = 'sqlite:///test.db'
-        om.datasets.put(cnx, 'testsqlite', table='foo',
+        om.datasets.put(cnx, 'testsqlite', table=':foo',
                         kind=SQLAlchemyBackend.KIND)
         df = pd.DataFrame({
             'x': range(10)
@@ -218,6 +220,31 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         df_expected = df.append(df)
         assert_frame_equal(dfx, df_expected)
 
+    def test_put_data_via_connection_bucket(self):
+        """
+        store dataframe via connection
+        """
+        om = self.om['mybucket']
+        cnx = 'sqlite:///test.db'
+        om.datasets.put(cnx, 'testsqlite', table='foo',
+                        kind=SQLAlchemyBackend.KIND)
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df.index.names = ['index']
+        # replace
+        om.datasets.put(df, 'testsqlite', insert=True, append=False)
+        meta = om.datasets.metadata('testsqlite')
+        self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
+        dfx = om.datasets.get('testsqlite', sql='select * from mybucket_foo')
+        assert_frame_equal(df, dfx)
+        # append
+        om.datasets.put(df, 'testsqlite', insert=True, append=False)
+        om.datasets.put(df, 'testsqlite', insert=True)
+        dfx = om.datasets.get('testsqlite', sql='select * from mybucket_foo')
+        df_expected = df.append(df)
+        assert_frame_equal(dfx, df_expected)
+
     def test_put_raw_data_via_connection(self):
         """
         store raw dict via connection
@@ -225,7 +252,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om = self.om
         # store connection
         cnx = 'sqlite:///test.db'
-        om.datasets.put(cnx, 'testsqlite', table='foo',
+        om.datasets.put(cnx, 'testsqlite', table=':foo',
                         kind=SQLAlchemyBackend.KIND)
         df = pd.DataFrame({
             'x': range(10)
@@ -236,6 +263,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(raw, 'testsqlite', insert=True, append=False)
         meta = om.datasets.metadata('testsqlite')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
+        self.assertEqual(meta.kind_meta.get('table'), ':foo')
         dfx = om.datasets.get('testsqlite', sql='select * from foo')
         assert_frame_equal(df, dfx)
         # append

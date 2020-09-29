@@ -32,13 +32,14 @@ class SQLAlchemyBackend(BaseDataBackend):
 
         # -- just the connection
         om.datasets.put(sqlalchemy_constr, 'mysqlalchemy')
-        om.datasets.get('mysqlalchemy')
+        om.datasets.get('mysqlalchemy', raw=True)
         => the sql connection object
 
         # -- store connection with a predefined sql
         om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', sql='select ....')
         om.datasets.get('mysqlalchemy')
-        => will return a pandas dataframe. specify chunksize to return an interable of dataframes
+        => will return a pandas dataframe using the specified sql to run.
+           specify chunksize= to return an interable of dataframes
 
         # -- predefined sqls can contain variables to be resolved at access time
         #    if you miss to specify required variables in sqlvars, a KeyError is raised
@@ -52,6 +53,13 @@ class SQLAlchemyBackend(BaseDataBackend):
         om.datasets.get('mysqlalchemy')
         => will return a pandas dataframe (without executing any additional queries)
         => can also use with om.datasets.getl('mysqlalchemy') to return a MDataFrame
+
+        # -- the default table when storing data is {bucket}_{name}, override using table='myname'
+        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table='mytable', sql='select ...', copy=True)
+        om.datasets.get('mysqlalchemy') # read from {bucket}_myname
+        # -- to use a specific table, without bucket information use table=':myname'
+        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table='mytable', sql='select ...', copy=True)
+        om.datasets.get('mysqlalchemy') # read from myname
 
         Insert data via the connection
 
@@ -108,7 +116,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         return super().drop(name, **kwargs)
 
     def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
-            secrets=None, index=True, keep=False, lazy=False, *args, **kwargs):
+            secrets=None, index=True, keep=False, lazy=False, table=None, *args, **kwargs):
         """
         retrieve connection or query data from connection
 
@@ -116,6 +124,8 @@ class SQLAlchemyBackend(BaseDataBackend):
             name (str): the name of the connection
             secrets (dict): dict to resolve variables in the connection string
             keep (bool): if True connection is kept open.
+            table (str): the name of the table, will be prefixed with the store's bucket
+               unless it is specified as ':name'
 
         Query data, specify sql='select ...':
             sql (str): the sql query, defaults to the query specific on .put()
@@ -138,6 +148,9 @@ class SQLAlchemyBackend(BaseDataBackend):
         meta = self.data_store.metadata(name)
         connection_str = meta.kind_meta.get('sqlalchemy_connection')
         sql = sql or meta.kind_meta.get('sql')
+        table = self._default_table(table or meta.kind_meta.get('table') or name)
+        if not raw and not sql:
+            sql = f'select * from {table}'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
         keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE',
                        ALWAYS_CACHE) or keep
@@ -193,10 +206,12 @@ class SQLAlchemyBackend(BaseDataBackend):
         Returns:
             metadata
         """
+        meta = self.data_store.metadata(name)
         if not insert and self._is_valid_url(obj):
             # store a connection object
             url = obj
             cnx_name = name if not copy else '_cnx_{}'.format(name)
+            table = self._default_table(table or name)
             metadata = self._put_as_connection(url, cnx_name, sql=sql, chunksize=chunksize,
                                                table=table, attributes=attributes, **kwargs)
             if copy:
@@ -206,7 +221,8 @@ class SQLAlchemyBackend(BaseDataBackend):
                                   append=append, transform=None,
                                   secrets=secrets,
                                   **kwargs)
-        elif self.data_store.metadata(name) is not None:
+        elif meta is not None:
+            table = self._default_table(table or meta.kind_meta.get('table') or name)
             metadata = self._put_via(obj, name, append=append, table=table, chunksize=chunksize,
                                      transform=transform, **kwargs)
         else:
@@ -224,7 +240,6 @@ class SQLAlchemyBackend(BaseDataBackend):
         # -- get the connection
         connection = self.get(name, raw=True)
         metadata = self.data_store.metadata(name)
-        table = table or metadata.kind_meta['table'] or name
         if isinstance(obj, pd.DataFrame) and index:
             index_cols = _dataframe_to_indexcols(obj, metadata, index_columns=index_columns)
         else:
@@ -254,7 +269,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             'sqlalchemy_connection': str(url),
             'sql': sql,
             'chunksize': chunksize,
-            'table': table,
+            'table': ':' + table,
             'index_columns': index_columns,
             'kwargs': kwargs,
         }
@@ -385,6 +400,15 @@ class SQLAlchemyBackend(BaseDataBackend):
         if secrets:
             secrets = _format_dict(secrets, **os.environ, user=getuser())
         return secrets
+
+    def _default_table(self, name):
+        if name is None:
+            return name
+        if not name.startswith(':'):
+            name = f'{self.data_store.bucket}_{name}'
+        else:
+            name = name[1:]
+        return name
 
 
 def _is_valid_url(url):
