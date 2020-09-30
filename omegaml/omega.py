@@ -1,11 +1,12 @@
 from uuid import uuid4
 
 from ._version import version
+from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
 from omegaml.store.streams import StreamsProxy
 
 
-class Omega(object):
+class Omega(CombinedOmegaStoreMixin):
     """
     Client API to omegaml
 
@@ -54,6 +55,8 @@ class Omega(object):
         self.jobs = OmegaJobs(store=self._jobdata)
         # logger
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
+        # stores
+        self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
 
     def __repr__(self):
         return 'Omega()'.format()
@@ -76,6 +79,8 @@ class Omega(object):
         return 'omega-{}'.format(uuid4().hex)
 
     def _make_streams(self, prefix):
+        from omegaml.store.streams import StreamsProxy
+
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def __getitem__(self, bucket):

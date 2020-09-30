@@ -20,9 +20,10 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
-from omegaml.documents import MDREGISTRY
+from omegaml.documents import MDREGISTRY, Metadata
 from omegaml.mdataframe import MDataFrame
 from omegaml.store import OmegaStore
+from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize
 
@@ -889,4 +890,26 @@ class StoreTests(unittest.TestCase):
         backend_obj = foo_store._resolve_help_backend(reg)
         self.assertIsInstance(backend_name, ScikitLearnBackend)
         self.assertIsInstance(backend_obj, ScikitLearnBackend)
+
+    def test_combined_store(self):
+        foo_store = OmegaStore(bucket='foo', prefix='foo/')
+        bar_store = OmegaStore(bucket='bar', prefix='bar/')
+        obj = {}
+        foo_store.put(obj, 'obj')
+        obj = {}
+        bar_store.put(obj, 'obj')
+        combined = CombinedOmegaStoreMixin([foo_store, bar_store])
+        # list
+        contents = combined.list()
+        self.assertIn('foo/obj', contents)
+        self.assertIn('bar/obj', contents)
+        # get back
+        for member in contents:
+            self.assertEqual(combined.get(member), [obj])
+            meta = combined.metadata(member)
+            self.assertIsInstance(meta, Metadata)
+            self.assertEqual(meta.kind, 'python.data')
+            self.assertEqual(meta.name, member.split('/', 1)[1])
+
+
 
