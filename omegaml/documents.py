@@ -21,11 +21,12 @@ class MDREGISTRY:
     OMEGAML_JOBS = 'script.ipynb'
     SPARK_MLLIB = 'spark.mllib'
     OMEGAML_RUNNING_JOBS = 'job.run'
+    MINIBATCH_STREAM = 'stream.minibatch'
 
     #: the list of accepted data types. extend using OmegaStore.register_backend
     KINDS = [
         PANDAS_DFROWS, PANDAS_SEROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
-        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB
+        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB, MINIBATCH_STREAM,
     ]
 
 

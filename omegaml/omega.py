@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from ._version import version
 from .store.logging import OmegaSimpleLogger
+from omegaml.store.streams import StreamsProxy
 
 
 class Omega(object):
@@ -46,6 +47,8 @@ class Omega(object):
         self.datasets = self._make_store(prefix='data/')
         self._jobdata = self._make_store(prefix='jobs/')
         self.scripts = self._make_store(prefix='scripts/')
+        # minibatch integration
+        self.streams = self._make_streams(prefix='streams/')
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata)
@@ -71,6 +74,9 @@ class Omega(object):
 
     def _make_dbalias(self):
         return 'omega-{}'.format(uuid4().hex)
+
+    def _make_streams(self, prefix):
+        return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def __getitem__(self, bucket):
         """
