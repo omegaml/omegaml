@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import sys
 import warnings
 from copy import deepcopy
 from importlib import import_module
@@ -8,6 +7,7 @@ from importlib import import_module
 import logging
 import os
 import six
+import sys
 import tempfile
 import uuid
 from shutil import rmtree
@@ -345,7 +345,7 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     return df
 
 
-def ensure_index(coll, idx_specs, **kwargs):
+def ensure_index(coll, idx_specs, replace=False, **kwargs):
     """
     ensure a pymongo index specification exists on a given collection
 
@@ -360,10 +360,13 @@ def ensure_index(coll, idx_specs, **kwargs):
         None
     """
     idx_keys = list(dict(dict(v)['key']).keys() for v in coll.list_indexes())
-    chunks_index_exists = any(all(k in keys for k in idx_specs.keys()) for keys in idx_keys)
+    index_exists = any(all(k in keys for k in dict(idx_specs).keys()) for keys in idx_keys)
+    idx_specs_SON = list(dict(idx_specs).items())
     created = False
-    if not chunks_index_exists:
-        idx_specs_SON = list(dict(idx_specs).items())
+    if index_exists and replace:
+        coll.drop_index(idx_specs_SON, **kwargs)
+        index_exists = False
+    if not index_exists:
         coll.create_index(idx_specs_SON, **kwargs)
         created = True
     return created
@@ -450,6 +453,7 @@ class PickableCollection(object):
         p = Pool()
         p.map(process, range(1000),
     """
+
     def __init__(self, collection):
         super(PickableCollection, self).__setattr__('collection', collection)
 
@@ -778,6 +782,7 @@ def raises(fn, wanted_ex):
         raise ValueError("did not raise {}".format(wanted_ex))
     return True
 
+
 def dict_merge(destination, source, delete_on='__delete__', subset=None):
     """
     Merge two dictionaries, including sub dicts
@@ -817,5 +822,3 @@ def ensure_base_collection(collection):
         collection = collection.collection
         is_real_collection = isinstance(collection, Collection)
     return collection
-
-

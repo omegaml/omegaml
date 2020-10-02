@@ -14,10 +14,11 @@ from omegaml.util import settings as omegaml_settings, settings
 
 class JobTests(TestCase):
 
-    def tearDown(self):
-        super().tearDown()
-        for fn in self.om.jobs.list():
-            self.om.jobs.drop(fn)
+    def setUp(self):
+        super().setUp()
+        for omx in (self.om, self.om['bucket']):
+            for fn in omx.jobs.list():
+                omx.jobs.drop(fn)
 
     @property
     def om(self):
@@ -66,6 +67,31 @@ class JobTests(TestCase):
         job_list = self.om.jobs.list()
         expected = 'testjob.ipynb'
         self.assertIn(expected, job_list)
+
+    def test_job_list_bucket(self):
+        """
+        test job listing in buckets
+        """
+        om = self.om
+        omb = self.om['bucket']
+        # create a notebook
+        cells = []
+        code = "print 'hello'"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put the notebook
+        meta = om.jobs.put(notebook, 'testjob')
+        self.assertEqual(meta.name, 'testjob.ipynb')
+        nb = v4.new_notebook(cells=cells)
+        job_list = self.om.jobs.list()
+        expected = 'testjob.ipynb'
+        # ensure only in default bucket
+        self.assertIn(expected, job_list)
+        self.assertNotIn(expected, omb.jobs.list())
+        # put to new bucket
+        omb.jobs.put(notebook, 'testjob')
+        self.assertIn(expected, omb.jobs.list())
+
 
     def test_run_job_valid(self):
         """

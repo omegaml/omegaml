@@ -29,10 +29,10 @@ class OmegaJobs(BackendBaseCommon):
     _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
     _dir_placeholder = '_placeholder.ipynb'
 
-    def __init__(self, prefix=None, store=None, defaults=None):
+    def __init__(self, bucket=None, prefix=None, store=None, defaults=None):
         self.defaults = defaults or omega_settings()
-        prefix = prefix or 'jobs'
-        self.store = store or OmegaStore(prefix=prefix)
+        self.prefix = prefix or (store.prefix if store else None) or 'jobs'
+        self.store = store or OmegaStore(prefix=prefix, bucket=bucket, defaults=defaults)
         self.kind = MDREGISTRY.OMEGAML_JOBS
         self._include_dir_placeholder = True
         # convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))
@@ -56,7 +56,7 @@ class OmegaJobs(BackendBaseCommon):
 
     def drop(self, name, force=False):
         meta = self.metadata(name)
-        name = meta.name  # ensure we get the actual name
+        name = meta.name if meta is not None else name
         return self.store.drop(name, force=force)
 
     def metadata(self, name):

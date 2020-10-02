@@ -22,6 +22,7 @@ from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
 from omegaml.documents import MDREGISTRY, Metadata
 from omegaml.mdataframe import MDataFrame
+from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
@@ -139,6 +140,21 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'mydata')
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+
+    def test_put_dataframe_multiple(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        df2 = store.get('mydata')
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+        # add again
+        store.put(df, 'mydata')
+        df2 = store.get('mydata')
+        self.assertEqual(len(df) * 2, len(df2), "expected dataframes to be equal")
 
     def test_put_dataframe_xtra_large(self):
         # create some dataframe
@@ -894,11 +910,12 @@ class StoreTests(unittest.TestCase):
     def test_combined_store(self):
         foo_store = OmegaStore(bucket='foo', prefix='foo/')
         bar_store = OmegaStore(bucket='bar', prefix='bar/')
+        job_store = OmegaJobs(bucket='bar', prefix='jobs/')
         obj = {}
         foo_store.put(obj, 'obj')
         obj = {}
         bar_store.put(obj, 'obj')
-        combined = CombinedOmegaStoreMixin([foo_store, bar_store])
+        combined = CombinedOmegaStoreMixin([foo_store, bar_store, job_store])
         # list
         contents = combined.list()
         self.assertIn('foo/obj', contents)

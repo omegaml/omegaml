@@ -6,7 +6,7 @@ class PromotionMixin(object):
     Promote objects from one bucket to another
     """
 
-    def promote(self, name, other, asname=None, **kwargs):
+    def promote(self, name, other, asname=None, drop=True, **kwargs):
         """
         Promote object to another bucket.
 
@@ -32,7 +32,7 @@ class PromotionMixin(object):
         meta = self.metadata(name)
         obj = self.get(name)
         asname = asname or meta.name
-        other.drop(asname, force=True)
+        other.drop(asname, force=True) if drop else None
         # TODO refactor to promote of python native data backend
         if meta.kind == MDREGISTRY.PYTHON_DATA:
             # in case of native python data we get back a list of
