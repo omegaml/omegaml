@@ -3,22 +3,26 @@ from datetime import datetime
 
 
 def log_task(task, status, exception=None):
-    task_id = task.request.id
-    task_start_dt = task.request.start_dt.isoformat()
+    from datetime import datetime as dt
+
+    task_start_dt = task.request.get('start_dt', dt.now()).isoformat()
     task_end_dt = datetime.now().isoformat()
+
+    task_id = task.request.id
+    server_ip = socket.gethostbyname(socket.gethostname())
+    username = getattr(task.request, 'user', None)
 
     task_data = {
         'task_id': task_id,
         'exception': str(exception) if exception else None,
     }
 
-    server_ip = socket.gethostbyname(socket.gethostname())
-    username = getattr(task.request, 'user', None)
-
     task_log = {
         'start_dt': task_start_dt,
         'end_dt': task_end_dt,
         'user': username,
+        'client_hostname': task.request.origin,
+        'server_hostname': task.request.hostname,
         'kind': 'task',
         'client_ip': '',
         'server_ip': server_ip,

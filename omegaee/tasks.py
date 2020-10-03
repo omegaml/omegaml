@@ -1,10 +1,9 @@
+from celery.signals import (task_failure, task_prerun,
+                            task_success)
 from datetime import datetime
 
-import re
-from celery.signals import (task_failure, task_prerun,
-                            task_success, worker_process_init)
-
 from omegaee.util import log_task
+
 
 def should_log(task):
     return task.name.startswith('omegaml.tasks')
@@ -13,7 +12,7 @@ def should_log(task):
 @task_prerun.connect
 def task_prerun_handler(task_id, task, *args, **kwargs):
     if should_log(task):
-        auth = kwargs.get('__auth')
+        auth = task.request.kwargs.get('__auth')
         username = auth[0] if auth else None
         setattr(task.request, 'start_dt', datetime.now())
         setattr(task.request, 'user', username)

@@ -1,10 +1,12 @@
 version: 2
 jobs:
-  build:
+  test:
     working_directory: /home/circleci
     machine:
       image: ubuntu-1604:201903-01
     resource_class: xlarge
+    environment:
+        CURRENT_USER: omegadev
     steps:
     - run:
         name: Install system packages
@@ -35,12 +37,12 @@ jobs:
           scripts/initlocal.sh --deps --setup --noinit
           # quick fix for allowing docker user to deal with circleci-owned files
           chmod -f -R 777 ~ || true
+          scripts/rundev.sh --docker --clean --cmd "python -m site"
     - run:
         name: Run unit tests
         command: |
           cd omegaml
-          export CURRENT_USER=omegadev
-          scripts/rundev.sh --docker --clean --cmd "make test"
+          make test
         shell: /bin/bash -l -eo pipefail
     - run:
         # TODO replace with a livetest image instead of local installation
@@ -54,14 +56,62 @@ jobs:
           cd omegaml
           scripts/initlocal.sh --install --noinit
           docker login -u omegaml -p $DOCKER_PASS
-          export CURRENT_USER=omegadev
           LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~apphub --tags ~snowflake" make dist
         shell: /bin/bash -l -eo pipefail
     - store_artifacts:
         path: /tmp/screenshots
+  release:
+    working_directory: /home/circleci
+    machine:
+      image: ubuntu-1604:201903-01
+    resource_class: xlarge
+    environment:
+      CURRENT_USER: omegadev
+    steps:
+      - run:
+          name: Install system packages
+          command: |
+            sudo apt-get -q update
+            sudo apt-get -q -y install libmysqlclient-dev
+      - checkout:
+          path: /home/circleci/omegaml
+      - run:
+          name: Setup local build env
+          command: |
+            cd omegaml
+            scripts/initlocal.sh --deps --setup --noinit
+            # quick fix for allowing docker user to deal with circleci-owned files
+            sudo chmod -f -R 777 ~ || true
+            sudo chown -R circleci:circleci ~ ~ || true
+            scripts/rundev.sh --docker --clean --cmd "python -m site"
+      - run:
+          name: Build release docker
+          command: |
+            source ~/miniconda3/etc/profile.d/conda.sh
+            conda activate base
+            mkdir -p ~/.omegaml
+            sudo chown -R circleci.circleci ~/.omegaml/
+            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+            sudo chmod -f -R 777 ~ || true
+            sudo chown -R circleci:circleci ~ ~ || true
+            cd omegaml
+            scripts/initlocal.sh --install --noinit
+            docker login -u omegaml -p $DOCKER_PASS
+            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~apphub --tags ~snowflake" make release-docker
+          shell: /bin/bash -l -eo pipefail
 workflows:
   version: 2
   workflow:
     jobs:
-    - build:
+    - test:
         context: omegaml
+        filters:
+          branches:
+            ignore: release-build
+    - release:
+        context: omegaml
+        filters:
+          branches:
+            only: release-build
+
+

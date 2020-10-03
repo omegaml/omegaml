@@ -135,6 +135,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     jupyter_image = os.environ.get('OMEGA_JUPYTER_IMAGE', 'omegaml/omegaml-ee:latest')
     runtime_image = os.environ.get('OMEGA_RUNTIME_IMAGE', 'omegaml/omegaml-ee:latest')
+    use_ssl = True if os.environ.get('OMEGA_USESSL') else False
 
     StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': (mongo_host, 'mongo db host name'),
@@ -152,6 +153,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         'CLUSTER_STORAGE': (_default_cluster_storage, 'json cluster storage specs, applied to all services'),
         'OMEGA_DEFAULTS': (_default_omega_defaults, 'json omegaml defaults'),
         'JUPYTER_CONFIG': (_default_jupyter_config_overrides, 'json jupyter config overrides'),
+        'SERVICE_USESSL': (use_ssl, 'use ssl for public service hosts'),
+        'SERVICE_USESSL_VIEW': (use_ssl, 'use ssl in internal view'),
     })
 
     DEBUG = truefalse(os.environ.get('DJANGO_DEBUG', False))

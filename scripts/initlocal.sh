@@ -21,24 +21,10 @@ projects_dir=$script_dir/../..
 omegamlee_dir=$script_dir/..
 omegamlcore_dir=$omegamlee_dir/../omegaml-ce
 
-pushd $omegamlee_dir
-
 function installdeps() {
   # install sibling projects
-  pushd $projects_dir
-  git clone https://github.com/omegaml/omegaml omegaml-ce
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/ccbackend
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex
-  git clone --depth 1 https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps
-  #pushd omegaml-ce
-  #git fetch && git checkout 89bdb9692160a02b8f88851e00b37f1655b4c3ad
-  #popd
-  popd
+  pip install gil
+  gil clone
 }
 
 function activate_conda() {
@@ -58,11 +44,11 @@ function setup() {
     sh Miniconda3-4.5.12-Linux-x86_64.sh -b
     cat ~/miniconda3/etc/profile.d/conda.sh >> ~/.bashrc
     activate_conda
-    conda install -y --file conda-requirements.txt
 }
 
 function install() {
     activate_conda
+    conda install -y --file conda-requirements.txt
     pip install --progress-bar off -e $omegamlcore_dir[all]
     pip install --progress-bar off -e $omegamlee_dir[all]
     pip install --progress-bar off -U -r requirements.dev
@@ -73,6 +59,9 @@ function initlocal() {
     rm -f db.sqlite3
     rm -f jupyterhub.sqlite
     cat scripts/mongoinit.js | docker-compose exec -T mongodb mongo
+    # make sure the site user directory exists, expected in jupyter spawner
+    mkdir -p /app/pylib/user
+    # initialize django
     python manage.py migrate
     python manage.py loaddata --app omegaweb landingpage
     python manage.py omsetupuser --username omops --staff --apikey 686ae4620522e790d92009be674e3bdc0391164f --force
@@ -81,13 +70,14 @@ function initlocal() {
     python manage.py omsetupuser --username demo --apikey bac64ca4cac06325dcaf4643000f58d482f82553
 }
 
-# create and install conda env
-if [ ! -z $deps ]; then
-    installdeps
-fi
+pushd $omegamlee_dir
 
 if [ ! -z $setup ]; then
     setup
+fi
+
+if [ ! -z $deps ]; then
+    installdeps
 fi
 
 if [ ! -z $install ]; then

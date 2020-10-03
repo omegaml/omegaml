@@ -40,22 +40,24 @@ class EventsLoggingTests(OmegaTestMixin, ResourceTestCase):
         from omegaops.tasks import log_event_task
 
         request_log = {
-            'start_dt': '2019-10-16T14:41:54.897806+00:00', 
-            'end_dt': '2019-10-16T14:41:54.921061+00:00', 
+            'start_dt': '2019-10-16T14:41:54.897806+00:00',
+            'end_dt': '2019-10-16T14:41:54.921061+00:00',
             'user': 'jyadmin',
-            'kind': 'request', 
-            'client_ip': '127.0.0.1', 
-            'server_ip': '172.18.0.4', 
-            'action': 'request', 
+            'kind': 'request',
+            'client_ip': '127.0.0.1',
+            'client_hostname': 'client.host',
+            'server_ip': '172.18.0.4',
+            'server_hostname': 'server.host',
+            'action': 'request',
             'data': {
-                'request_absolute_path': '/api/v1/dataset/', 
-                'request_uri': '/api/v1/dataset/', 
-                'request_method': 'GET', 
-                'request_app_name': '', 
-                'request_namespaces': [], 
+                'request_absolute_path': '/api/v1/dataset/',
+                'request_uri': '/api/v1/dataset/',
+                'request_method': 'GET',
+                'request_app_name': '',
+                'request_namespaces': [],
                 'request_url_name': 'api_dispatch_list',
                 'request_resource_name': 'dataset'
-                }, 
+                },
             'status': 200
         }
         log_event_task.s(request_log).apply()
@@ -66,15 +68,15 @@ class EventsLoggingTests(OmegaTestMixin, ResourceTestCase):
 
         # Test broken log format is marked as such
         task_log = {
-            'start_dt': '2019-10-16T15:15:41.740389', 
+            'start_dt': '2019-10-16T15:15:41.740389',
             'end_dt': '2019-10-16T15:15:42.336744',
-            'user': 'jyadmin', 
-            #'kind': 'task', 
-            'client_ip': '', 
-            'server_ip': '172.18.0.4', 
-            'action': 'task', 
+            'user': 'jyadmin',
+            #'kind': 'task',
+            'client_ip': '',
+            'server_ip': '172.18.0.4',
+            'action': 'task',
             'data': {
-                'task_id': 'fef2c74d-e772-4e22-88e2-e0ebbb89eb94'}, 
+                'task_id': 'fef2c74d-e772-4e22-88e2-e0ebbb89eb94'},
             'status': 'SUCCESS'
         }
         log_event_task.s(task_log).apply()

@@ -1,0 +1,14 @@
+# dependent repositories pulled in by initlocal --install
+# or use gil clone
+# see https://github.com/chronoxor/gil
+# format:
+# name relpath git-repo-url branch
+omegaml ../omegaml-ce https://github.com/omegaml/omegaml master
+cloudmgr ../omegaml-deploy/cloudmgr https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr master
+stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable master
+landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage master
+ccbackend ../ccbackend https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/ccbackend master
+minibatch ../minibatch https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch master
+django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger master
+tastypiex ../tastypiex https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex master
+apps ../apps https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps master

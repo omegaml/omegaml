@@ -212,6 +212,8 @@ class OmegaOpsTests(TestCase):
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
         self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # -- this is to avoid merging server-side config is not mixed with client side defaults
+        self.assertTrue(all(k.isupper() for k in config))
 
     def test_parse_client_config_v2(self):
         ServicePlan.objects.create(name='omegaml')
@@ -250,6 +252,8 @@ class OmegaOpsTests(TestCase):
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
         self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # -- this is to avoid merging server-side config is not mixed with client side defaults
+        self.assertTrue(all(k.isupper() for k in config))
 
     def test_parse_client_config_v3(self):
         from constance import config as site_config
@@ -290,4 +294,7 @@ class OmegaOpsTests(TestCase):
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
         self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # make sure there are on lower case configs passed into defaults
+        # -- this is to avoid merging server-side config is not mixed with client side defaults
+        self.assertTrue(all(k.isupper() for k in config))
 

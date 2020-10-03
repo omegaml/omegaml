@@ -1,8 +1,12 @@
 .PHONY: dist image help
+test: export CURRENT_USER=omegadev
 
 clean:
 	rm -rf ./dist/*
 	rm -rf ./build/*
+
+bumppatch:
+	bumpversion patch
 
 bumpminor:
 	bumpversion minor
@@ -27,10 +31,10 @@ candidate-dist: clean
 	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE` --nolivetest
 
 test:
-	docker-compose up -d || echo "assuming docker-compose environment already running"
+	-docker-compose up -d || echo "assuming docker-compose environment already running"
 	# note we use --exe to make this work with circleci, where all files are executable due to a uid/gid quirk
-	DJANGO_SETTINGS_MODULE=app.settings python manage.py test --debug-config --verbosity=2 --exe
-	DJANGO_SETTINGS_MODULE=app.settings python manage.py test omegaml --debug-config --verbosity=2 --exe
+	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2 --exe"
+	scripts/rundev.sh --docker --cmd "python manage.py test omegaml --debug-config --verbosity=2 --exe"
 
 devtest:
 	scripts/devtest.sh --headless
@@ -39,7 +43,7 @@ candidate-docker: bumpbuild candidate-dist
 	: "docker push image to dockerhub"
 	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
 
-release-docker: bumpminor dist-prod
+release-docker: dist-prod
 	: "docker push image to dockerhub"
 	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
 	docker push omegaml/omegaml-ee:latest

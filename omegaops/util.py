@@ -3,17 +3,10 @@ from functools import wraps
 
 
 def enforce_logging_format(log_data):
-    log_data = {
-        'start_dt': log_data['start_dt'],
-        'end_dt': log_data['end_dt'],
-        'user': log_data['user'],
-        'kind': log_data['kind'],
-        'client_ip': log_data['client_ip'],
-        'server_ip': log_data['server_ip'],
-        'action': log_data['action'],
-        'data': log_data['data'],
-        'status': log_data['status'],
-    }
+    keys = 'start_dt,end_dt,user,kind,client_ip,server_ip,client_hostname,server_hostname,action,data,status'.split(',')
+    log_data = {k: log_data.get(k, '--invalid--') for k in keys}
+    if '--invalid--' in log_data.values():
+        log_data['log_format_error'] = True
     return log_data
 
 

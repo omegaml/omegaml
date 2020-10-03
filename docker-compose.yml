@@ -61,5 +61,3 @@ services:
       - ./release/dist/omegaml-dev/etc/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./release/dist/omegaml-dev/etc/rabbitmq/certs:/etc/rabbitmq/certs
 
-volumes:
-   pythonlib:

@@ -47,6 +47,7 @@ host_user=omegadev
 host_uid=$(id -u)
 host_guid=$(id -g)
 container_uid=$host_uid:$host_guid
+cmd=${cmd:-"scripts/rundev.sh"}
 
 # run process
 export CURRENT_USER=${CURRENT_USER:-omegadev}
@@ -84,16 +85,18 @@ if [[ ! -z $clean ]]; then
     waiton "waiting for mongodb" http://localhost:27017
     cat scripts/mongoinit.js | docker-compose exec -T mongodb mongo
     docker-compose exec omegaml-dev bash -ic "scripts/initlocal.sh --setup --install"
-fi
+    fi
 
 if [[ ! -z $docker ]]; then
-    docker-compose up -d
-    if [[ ! -z $cmd ]]; then
-        docker-compose exec omegaml-dev bash -ic "$cmd"
-    elif [[ ! -z $shell ]]; then
+    # if we're running in container, just run the command given
+    docker-compose ps > /dev/null || bash -c "$cmd"
+    docker-compose ps > /dev/null || exit 1
+    # if we're running outside container, run it
+    docker-compose up -d || (bash -c "$cmd")
+    if [[ ! -z $shell ]]; then
         docker-compose exec omegaml-dev bash
-    else
-        docker-compose exec omegaml-dev bash -ic "scripts/rundev.sh"
+    elif [[ ! -z $cmd ]]; then
+        docker-compose exec omegaml-dev bash -ic "$cmd"
     fi
 else
     # run with local software installed

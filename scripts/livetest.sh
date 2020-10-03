@@ -14,7 +14,7 @@
 ##      --tags=VALUE      if specified execute this tag only
 ##      --runlocal        if specified run omegaml-ee in docker-compose
 ##      --debug           if specified drops into pdb on error
-##      --cacert=PEMFILE  if specified set CA_CERTS_PATH
+##      --cacert=PEMFILE  if specified set CA_CERTS_PATH, defaults to dev certificate for local tests, unset else
 ##
 ## Required: url
 
@@ -36,15 +36,22 @@ export OMEGA_ADMIN_PASSWORD=$pass
 export OMEGA_APIUSER=${apiuser:-omops}
 export OMEGA_APIKEY=${apikey:-686ae4620522e790d92009be674e3bdc0391164f}
 export BEHAVE_NBFILES=$script_dir/../../omegaml-ce/docs/source/nb
-export CA_CERTS_PATH=${cacert:-`find . -name "ca_certificate.pem" | grep 'mongo/certs' | sort | tail -n 1`}
 
-
-# run omega-ee
 if [[ ! -z $runlocal ]]; then
+    # run a local test
+    # -- we deploy to local docker
+    # -- certs defaults to self signed certs
+    export CA_CERTS_PATH=${cacert:-`find . -name "ca_certificate.pem" | grep 'mongo/certs' | sort | tail -n 1`}
     pushd $script_dir/../dist/docker-staging/build
     ./deploy-docker.sh --clean
     popd
+elif [[ ! -z $cacert ]]; then
+    # run a remote test
+    # -- deployment is remote
+    # -- certs default to whatever the remote provides and optional user-specified CA
+    export CA_CERTS_PATH=$cacert
 fi
+
 
 if [[ ! -z $debug ]]; then
    export BEHAVE_DEBUG=1

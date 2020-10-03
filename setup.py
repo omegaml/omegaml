@@ -12,6 +12,7 @@ dev_deps = [
     'splinter==0.11.0',
     'ipdb==0.13.2',
     'jupyterhub-simplespawner==0.1',
+    'gil',
 ]
 
 web_deps = [

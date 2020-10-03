@@ -263,6 +263,8 @@ def get_client_config(user, qualifier=None, view=False):
        constance.MONGO_HOST
     """
     user_config = get_user_config(user, qualifier, view)
+    user_settings = user_config['user_settings']
+    omega_config = user_settings['services']['omegaml']
     # FIXME permission user instead of standard
     client_config = {
         "OMEGA_CELERY_CONFIG": {
@@ -272,20 +274,23 @@ def get_client_config(user, qualifier=None, view=False):
                 "pickle",
                 "json",
             ],
-            "CELERY_DEFAULT_QUEUE": user_config['default_queue'],
+            "CELERY_DEFAULT_QUEUE": omega_config['default_queue'],
             "CELERY_TASK_SERIALIZER": 'pickle',
-            "BROKER_USE_SSL": user_config['use_ssl'],
+            "BROKER_USE_SSL": omega_config['use_ssl'],
         },
         "OMEGA_MONGO_URL": user_config['mongo_url'],
-        "OMEGA_NOTEBOOK_COLLECTION": user_config['notebook_collection'],
+        "OMEGA_NOTEBOOK_COLLECTION": omega_config['notebook_collection'],
         "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_USERID": user.username,
         "OMEGA_APIKEY": user.api_key.key,
+        "OMEGA_MONGO_SSL_KWARGS": {
+            "ssl": omega_config['use_ssl'],
+        }
     }
     # allow any updates to effectively omegaml.defaults
-    dict_merge(client_config, user_config['omega_defaults'])
-    user_settings = user_config['user_settings']
+    dict_merge(client_config,
+               omega_config['defaults'])
     if view:
         # only include internals if needed
         client_config.update({
@@ -301,7 +306,7 @@ def get_client_config(user, qualifier=None, view=False):
             "JUPYTER_CONFIG": user_settings['services']['jupyter']['config'],
         })
 
-    client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = user_config['celery_eager']
+    client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = omega_config['celery_eager']
     return client_config
 
 
@@ -406,17 +411,18 @@ def get_user_config(user, qualifier, view):
                                                  brokerhost=qualifier_settings[brokerhost_key],
                                                  brokervhost=qualifier_settings['brokervhost'])
     broker_url = broker_url.replace('None:None@', '')
-    default_queue = qualifier_settings.get('routing') or user_settings.get('routing') or 'default'
-    omega_defaults = user_settings['services']['omegaml']['defaults']
+    # augment omega defaults
+    omega_config = user_settings['services']['omegaml']
+    default_queue = qualifier_settings.get('routing') or user_settings.get('routing')
+    omega_config['default_queue'] = default_queue or omega_config.get('default_queue', 'default')
+    if view:
+        # override ssl in view mode
+        omega_config['use_ssl'] = config.SERVICE_USESSL_VIEW
+    # return consolidated user settings
     user_config = {
         'user_settings': user_settings,
         'mongo_url': mongo_url,
         'broker_url': broker_url,
-        'default_queue': default_queue,
-        'omega_defaults': omega_defaults,
-        'use_ssl': settings.OMEGA_USESSL,
-        'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
-        'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
         'broker_api_url': settings.OMEGA_BROKERAPI_URL,
     }
 
@@ -477,6 +483,9 @@ def parse_client_config_v1(user_settings, qualifier, settings, config):
             },
             'omegaml': {
                 'defaults': markup(config.OMEGA_DEFAULTS or '{}'),
+                'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
+                'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
+                'use_ssl': config.SERVICE_USESSL,
             },
             'cluster': {
                 'storage': None,
@@ -554,6 +563,9 @@ def parse_client_config_v2(user_settings, qualifier, settings, config):
             },
             'omegaml': {
                 'defaults': json.loads(config.OMEGA_DEFAULTS or '{}'),
+                'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
+                'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
+                'use_ssl': config.SERVICE_USESSL,
             },
             'cluster': {
                 'storage': None,
@@ -614,6 +626,9 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
             },
             'omegaml': {
                 'defaults': json.loads(config.OMEGA_DEFAULTS or '{}'),
+                'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
+                'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
+                'use_ssl': config.SERVICE_USESSL,
             },
             'cluster': {
                 'storage': json.loads(config.CLUSTER_STORAGE or '{}'),
