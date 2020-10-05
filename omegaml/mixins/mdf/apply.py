@@ -8,6 +8,7 @@ from uuid import uuid4
 from omegaml.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import qops
+from omegaml.store.filtered import FilteredCollection
 from omegaml.util import make_tuple, extend_instance
 
 
@@ -216,7 +217,7 @@ class ApplyMixin(object):
             cursor = self._get_cached_cursor(pipeline=pipeline, use_cache=use_cache)
             if cursor is None:
                 filter_criteria = self._get_filter_criteria()
-                cursor = self.collection.aggregate(pipeline, filter=filter_criteria, allowDiskUse=True)
+                cursor = FilteredCollection(self.collection).aggregate(pipeline, filter=filter_criteria, allowDiskUse=True)
         else:
             cursor = super(ApplyMixin, self)._get_cursor()
         return cursor

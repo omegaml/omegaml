@@ -9,7 +9,7 @@ class PandasExternalData(BaseDataBackend):
     """
     external data is stored as a uri on some external medium
     """
-    SCHEMES = ['http', 'ftp', 'file', 's3']
+    SCHEMES = ['http', 'https', 'ftp', 'file', 's3']
     KIND = 'pandas.csv'
 
     @classmethod
@@ -30,7 +30,7 @@ class PandasExternalData(BaseDataBackend):
 
         Only URIs implemented by pandas.read_csv() are supported to store
         the URI (http, ftp, file, s3). Only s3 and local files are supported
-        to copy a csv file from either a supported URI or from an object 
+        to copy a csv file from either a supported URI or from an object
         into a csv on s3 or on the local file system.
 
         Examples:
@@ -44,7 +44,7 @@ class PandasExternalData(BaseDataBackend):
         # from dataframe to local
         om.datasets.put(df, 'google-local', uri='file:///tmp/google.csv')
         # from local directly to s3
-        om.datasets.put('s3://bucket/test/google2.csv', 
+        om.datasets.put('s3://bucket/test/google2.csv',
         'google-s3-direct', uri='file:///tmp/google.csv')
 
         :param obj: (str|pd.Series|pd.DataFrame) the object to store. If str
@@ -105,7 +105,9 @@ class PandasExternalData(BaseDataBackend):
         Get a csv stored at an external location
         """
         meta = self.data_store.metadata(name)
-        read_kwargs = dict(usecols=kwargs.get('columns'))
+        read_kwargs = meta.kind_meta.get('pandas_kwargs', {})
+        read_kwargs.update(dict(usecols=kwargs.get('columns')))
+        read_kwargs.update(kwargs)
         read_kwargs.update(kwargs.get('pandas_kwargs', {}))
         df = pd.read_csv(meta.uri, **read_kwargs)
         return df

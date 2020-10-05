@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from hashlib import md5
+
 import json
 import pymongo
 import six
@@ -350,7 +352,8 @@ class MongoQueryOps(object):
         idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
                 direction(col))
                for col in sort_cols]
-        name = uuid.uuid4().hex
+        # ensure the same index gets the same name, but limit name length
+        name = md5(str(idx).encode('utf8')).hexdigest()
         kwargs.setdefault('name', name)
         return idx, kwargs
 

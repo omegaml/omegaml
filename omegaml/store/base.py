@@ -470,7 +470,7 @@ class OmegaStore(object):
                 idx_kwargs = {}
             # create index with appropriate options
             keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
-            collection.create_index(keys, **idx_kwargs)
+            ensure_index(collection, keys, **idx_kwargs)
         if timestamp:
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
@@ -505,10 +505,10 @@ class OmegaStore(object):
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             # name is given to avoid oversized generated names
-            collection.create_index(keys, **idx_kwargs)
+            ensure_index(collection, keys, **idx_kwargs)
         # create index on row id
         keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
-        collection.create_index(keys, **idx_kwargs)
+        ensure_index(collection, keys, **idx_kwargs)
         # bulk insert
         # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
@@ -696,11 +696,11 @@ class OmegaStore(object):
         Returns:
 
         """
-        return help(self._resolve_help_backend)
+        return help(self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind))
 
     def _resolve_help_backend(self, name_or_obj=None, kind=None):
         # helper so we can test help
-        meta = self.metadata(name_or_obj)
+        meta = self.metadata(name_or_obj) if name_or_obj else None
         if kind:
             backend = self.get_backend_bykind(kind)
         else:

@@ -42,6 +42,24 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         om.models.promote('mymodel', prod.models)
         self.assertIn('mymodel', prod.models.list())
 
+    def test_model_promotion_versioned(self):
+        om = self.om
+        prod = om['prod']
+        reg = LinearRegression()
+        om.models.put(reg, 'mymodel')
+        reg_ = om.models.get('mymodel')
+        self.assertIsInstance(reg_, LinearRegression)
+        # ensure dataset is in default bucket, not in prod
+        self.assertIn('mymodel', om.models.list())
+        self.assertNotIn('mymodel', prod.models.list())
+        # promote to prod
+        om.models.promote('mymodel', prod.models)
+        self.assertIn('mymodel', prod.models.list())
+        # promote a second version
+        om.models.promote('mymodel', prod.models, drop=False)
+        commits = prod.models.metadata('mymodel').attributes['versions']['commits']
+        self.assertEqual(len(commits), 2)
+
     def test_versioned_model_promotion(self):
         om = self.om
         prod = om['prod']

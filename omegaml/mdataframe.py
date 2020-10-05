@@ -13,7 +13,7 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import make_tuple, make_list, restore_index, \
-    cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance, json_normalize
+    cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance, json_normalize, ensure_index
 
 INSPECT_CACHE = []
 
@@ -951,7 +951,7 @@ class MDataFrame(object):
         create and index the easy way
         """
         keys, kwargs = MongoQueryOps().make_index(keys)
-        result = self.collection.create_index(keys, **kwargs)
+        result = ensure_index(self.collection, keys, **kwargs)
         return result
 
     def list_indexes(self):
