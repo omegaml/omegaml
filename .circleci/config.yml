@@ -80,10 +80,14 @@ jobs:
           name: Make image and pypi
           command: |
             source miniconda3/etc/profile.d/conda.sh
+            conda create -q -y -n omenv python=3.7
+            conda activate omenv
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+            echo $PYPIRC_INI | base64 -d > ~/.pypirc
             ls -lart ~/.omegaml
             cd omegaml-ce
+            pip install --progress-bar off .[all,dev]
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
             sleep 10
