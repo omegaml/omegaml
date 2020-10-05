@@ -42,7 +42,10 @@ class OmegaNotebookSpawnerMixin:
 
     def _load_config(self, cfg, section_names=None, traits=None):
         result = super()._load_config(cfg, section_names=section_names, traits=traits)
-        self._get_omega_config()
+        try:
+            self._get_omega_config()
+        except Exception as e :
+            self.log.error(f'Error loading user configuration {e}')
         return result
 
     def _apply_omega_configs(self, configs):

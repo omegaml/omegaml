@@ -1,3 +1,7 @@
+from traitlets import Instance
+from traitlets.config import Config
+from unittest.mock import patch
+
 from time import sleep
 from unittest import skip
 
@@ -195,3 +199,21 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCase, AsyncTestC
             print("waiting")
             sleep(1)
         print("done")
+
+
+    def test_startup_failed_load_config(self):
+        # https://github.com/omegaml/omegaml-enterprise/issues/254
+        with patch('omegajobs.spawnermixin.get_user_config_from_api',
+                   side_effect=AssertionError('problem')) as mock:
+            config = Instance(Config, (), {})
+            config._has_section = lambda *args : False
+            try:
+                spawner = self._make_spawner()
+                spawner._load_config(config)
+            except:
+                raised = True
+            else:
+                raised = False
+            self.assertFalse(raised)
+
+
