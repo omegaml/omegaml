@@ -1,6 +1,7 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 PIPVERSION=$(shell cat omegaml/VERSION | sed 's/-//')
+FINAL_VERSION=$(shell cat omegaml/VERSION | sed -r 's/(.*)-rc.*$/\1//')
 
 test:
 	unset DJANGO_SETTINGS_MODULE && nosetests -v
@@ -81,6 +82,8 @@ bumpminor:
 bumpbuild:
 	bumpversion build
 
+bumpfinal:
+	bumpversion final --new-version ${FINAL_VERSION}
 
 help:
 		@echo -n "Common make targets"
