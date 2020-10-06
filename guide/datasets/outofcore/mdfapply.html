@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Aggregation Framework &mdash; omega|ml 1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="omega|ml 1.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Large, Out of Core-sized DataFrames" href="index.html"/>
+        <link rel="next" title="Debugging" href="mdfdebug.html"/>
+        <link rel="prev" title="Introduction" href="mdataframe.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> omega|ml
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../getstarted.html">Getting started</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Working with datasets</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../store_retrieve.html">Storing and retrieving data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../filterdf.html">Filtering Data</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Large, Out of Core-sized DataFrames</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#selection">Selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#filtering-data">Filtering data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#ordering-operations">Ordering operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#aggregation">Aggregation</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Aggregation Framework</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdfdebug.html">Debugging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../models/index.html">Working with models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega|ml</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">User Guide</a> &raquo;</li>
+        
+          <li><a href="../index.html">Working with datasets</a> &raquo;</li>
+        
+          <li><a href="index.html">Large, Out of Core-sized DataFrames</a> &raquo;</li>
+        
+      <li>Aggregation Framework</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../../_sources/guide/datasets/outofcore/mdfapply.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="aggregation-framework">
+<h1>Aggregation Framework<a class="headerlink" href="#aggregation-framework" title="Permalink to this headline">¶</a></h1>
+<p>omega|ml provides a rich aggregation framework that leverages <a class="reference external" href="https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/#db.collection.aggregate">MongoDB’s aggregate</a> operator while keeping
+the ease-of-use of Pandas syntax. Typical Pandas aggregation operations like group-by and descriptive statistics
+have direct equivalents in omegal|ml with the same or very similar syntax, using <code class="code docutils literal notranslate"><span class="pre">MDataFrame.groupby</span></code>:</p>
+<div class="section" id="standard-groupby-aggregation">
+<h2>Standard Groupby aggregation<a class="headerlink" href="#standard-groupby-aggregation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+     <span class="n">x_mean</span>
+<span class="n">x</span>
+<span class="mi">0</span>     <span class="mf">0.0</span>
+<span class="mi">1</span>     <span class="mf">1.0</span>
+<span class="mi">2</span>     <span class="mf">2.0</span>
+<span class="mi">3</span>     <span class="mf">3.0</span>
+<span class="mi">4</span>     <span class="mf">4.0</span>
+</pre></div>
+</div>
+<p>Multiple aggregations can be applied at once by the <code class="code docutils literal notranslate"><span class="pre">agg()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The following aggregations are currently supported:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">sum</span></code> - sum</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">mean</span></code> or <code class="code docutils literal notranslate"><span class="pre">avg</span></code> - mean</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">max</span></code> - the max value in the group</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">min</span></code> - the min value in the group</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">std</span></code> - standard deviation in the sample</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">first</span></code> - the first in the group</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">last</span></code> - the last in the group</p></li>
+</ul>
+</div>
+<div class="section" id="motivating-example">
+<h2>Motivating example<a class="headerlink" href="#motivating-example" title="Permalink to this headline">¶</a></h2>
+<p>If the standard operations provided in <cite>MDataFrame.groupby</cite> do not provide the required functionality, custom
+operators or chains of operators can be easily applied using the <code class="code docutils literal notranslate"><span class="pre">MDataFrame.apply()</span></code> functionality. Much like
+Pandas <code class="code docutils literal notranslate"><span class="pre">DataFrame.apply</span></code>, <code class="code docutils literal notranslate"><span class="pre">MDataFrame.apply</span></code> takes a callable that operates on the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># apply to all columns on a dataframe</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, the lambda will multiply every value in the dataframe by 5. All math operators (<a href="#id1"><span class="problematic" id="id2">*</span></a>, +, -, /, % etc.)
+are supported, as well as a number of other operations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unlike with Pandas, the callable passed to <code class="code docutils literal notranslate"><span class="pre">.apply()</span></code> is <em>not</em> executed on every row. Instead the
+callable is executed once during preparation of the MongoDB query. The callable receives an <code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code>
+which is responsible for translating requested operations to MongoDB query syntax when the dataframe is
+resolved by accessing the <code class="code docutils literal notranslate"><span class="pre">.value</span></code> property. Call <code class="code docutils literal notranslate"><span class="pre">MDataFrame.inspect()</span></code> to see the actual MongoDB
+query.</p>
+</div>
+<p><code class="code docutils literal notranslate"><span class="pre">.apply()</span></code> can be called either on a <code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> or on a <code class="code docutils literal notranslate"><span class="pre">MSeries</span></code>. Further, when called on a
+MDataFrame, the operations specified are applied to all columns. When called on a MSeries or when the column is
+selected from the <code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code>, the operations are applied only to the one column.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># apply to all columns on a dataframe</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># apply to a column, returning a series</span>
+<span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># apply to a column, return a dataframe</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="math-operations">
+<h2>Math operations<a class="headerlink" href="#math-operations" title="Permalink to this headline">¶</a></h2>
+<p>All standard Python math operators are supported, in particular:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">__mul__</span></code> (*)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__add__</span></code> (+)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__sub__</span></code> (-)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__div__</span></code> (/)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__floordiv__</span></code> (//)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__mod__</span></code> (%)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__pow__</span></code> (pow)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__ceil__</span></code> (ceil)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__floor__</span></code> (floor)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__trunc__</span></code> (trunc)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">__abs__</span></code> (abs)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">sqrt</span></code> (math.sqrt)</p></li>
+</ul>
+<p>Math operators can be chained. While operator priority is taken care of by the Python compiler, you should use
+brackets to ensure readability and correct operations in special scenarios:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># while this works, it is not recommended syntax</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># recommended</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="p">(</span><span class="n">ctx</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="datetime-operators">
+<h2>Datetime Operators<a class="headerlink" href="#datetime-operators" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">week</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">minute</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">millisecond</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">dayofyear</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">dayofweek</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="string-operators">
+<h2>String Operators<a class="headerlink" href="#string-operators" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len</span><span class="p">())</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="s1">&#39;xyz&#39;</span><span class="p">]))</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">substr</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">isequal</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;substring&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cached-operations">
+<h2>Cached operations<a class="headerlink" href="#cached-operations" title="Permalink to this headline">¶</a></h2>
+<p>Any <code class="code docutils literal notranslate"><span class="pre">apply()</span></code> call results can be cached to speed-up future queries. To do so call <code class="code docutils literal notranslate"><span class="pre">persist()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">persist</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Any subsequent call to the same apply operations, <code class="code docutils literal notranslate"><span class="pre">.value</span></code> will retrieve the results from the results
+produced by <code class="code docutils literal notranslate"><span class="pre">persist()</span></code>. Note that <code class="code docutils literal notranslate"><span class="pre">persist()</span></code> returns the cache key, not the actual results.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using cached operations can tremendously speed up data science work flows for complex aggregation
+queries that need to be executed repeatedly or are common in your scenario. As an example, consider
+an aggregation on a 50GB dataset that takes several minutes to compute. Using <code class="code docutils literal notranslate"><span class="pre">persist()</span></code> this
+calculation can be executed once and stored for subsequent and automatic retrieval by anyone on your team.</p>
+</div>
+</div>
+<div class="section" id="complex-operations">
+<h2>Complex operations<a class="headerlink" href="#complex-operations" title="Permalink to this headline">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">MDataFrame.groupby</span></code> supports only few descriptive statics, namely <code class="code docutils literal notranslate"><span class="pre">mean(),</span> <span class="pre">std(),</span> <span class="pre">min(),</span> <span class="pre">max()</span></code> since
+these are the MongoDB-provided operations. However using <code class="code docutils literal notranslate"><span class="pre">.apply()</span></code> more complex operators can be easily
+created. See the <a class="reference external" href="https://docs.mongodb.com/manual/meta/aggregation-quick-reference/">MongoDB aggregation reference</a> for details on syntax.</p>
+<p>Multiple statistics can be calculated for the same column:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Custom statistics using MongoDB syntax</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># specify the groupby in mongo db syntax</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;$sum&#39;</span><span class="p">:</span> <span class="s1">&#39;$v&#39;</span><span class="p">}</span>
+<span class="c1"># add a stage</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">labmda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">expr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Parallel execution of multiple calculations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ctx</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Custom projections:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;$divide&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;$v&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">]}))</span>
+</pre></div>
+</div>
+<p>Arbitrary pipeline stages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># specify the stage in mongo db syntax</span>
+<span class="n">stage</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;$&lt;stage&gt;&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;&lt;$operator&gt;&#39;</span> <span class="p">:</span> <span class="o">....</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1"># add a stage</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">labmda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">stage</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The callable to <code class="code docutils literal notranslate"><span class="pre">apply()</span></code> shall return any of the following result types:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">None</span></code> - this is equivalent to returning the <code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code> passed on calling</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code> - the context will be used to generate the stages passed to MongoDB’s <code class="code docutils literal notranslate"><span class="pre">aggregate()</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">dict</span></code> - a mapping of result-column names to an ApplyContext or a valid list of stages in MongoDB-syntax</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">list</span></code> - a list of stages in MongoDB-syntax</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mdfdebug.html" class="btn btn-neutral float-right" title="Debugging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mdataframe.html" class="btn btn-neutral" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

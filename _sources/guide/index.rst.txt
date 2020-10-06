@@ -6,12 +6,11 @@ User Guide
 
 
    getstarted
-   store_retrieve
-   filterdf
-   mdfapply
-   modelstore
-   lambda
-   restapi
-   custombackends
-   runtimes
-   streaming
+   datasets/index
+   models/index
+   jobs/index
+   clusters/index
+   advanced/index
+
+
+

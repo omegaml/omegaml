@@ -1,0 +1,11 @@
+running sdist
+running check
+writing manifest file 'MANIFEST'
+creating helloworld-1.0
+creating helloworld-1.0/helloworld
+making hard links in helloworld-1.0...
+hard linking README -> helloworld-1.0
+hard linking setup.py -> helloworld-1.0
+hard linking helloworld/__init__.py -> helloworld-1.0/helloworld
+Creating tar archive
+removing 'helloworld-1.0' (and everything under it)

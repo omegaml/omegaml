@@ -1,0 +1,20 @@
+Feature: omegaml feature testing # omegaml/tests/features/tutorial.feature:1
+
+  Scenario: connect to omegaml            # omegaml/tests/features/tutorial.feature:3
+    Given we have a connection to omegaml # omegaml/tests/features/steps/tutorial.py:4
+    When we ingest data                   # omegaml/tests/features/steps/tutorial.py:10
+    When we build a model                 # omegaml/tests/features/steps/tutorial.py:22
+    Then we can predict a result          # omegaml/tests/features/steps/tutorial.py:30
+
+  Scenario: work with notebook            # omegaml/tests/features/tutorial.feature:9
+    Given we have a connection to omegaml # omegaml/tests/features/steps/tutorial.py:4
+    When we open jupyter                  # omegaml/tests/features/steps/notebook.py:95
+    When we create a notebook             # omegaml/tests/features/steps/notebook.py:106
+    Then we can list datasets in omegaml  # omegaml/tests/features/steps/notebook.py:132
+
+  Scenario: create notebook folders          # omegaml/tests/features/tutorial.feature:15
+    Given we have a connection to omegaml    # omegaml/tests/features/steps/tutorial.py:4
+    When we open jupyter                     # omegaml/tests/features/steps/notebook.py:95
+    When we create a folder                  # omegaml/tests/features/steps/notebook.py:124
+    Then we can add a notebook in the folder # omegaml/tests/features/steps/notebook.py:146
+

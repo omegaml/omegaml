@@ -79,7 +79,7 @@ convenience.
    class CrossValidationMixin(object):
        def cross_validate(modelName, Xname, Yname, *args, **kwargs):
             # get the cross validation task
-            task = self.runtime.task('custom.tasks.cross_validate')
+            task = self.task('custom.tasks.cross_validate')
             return task.delay(modelName, Xname, Yname, *args, **kwargs)
             
    

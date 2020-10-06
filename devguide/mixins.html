@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mixins &mdash; omega|ml 1.0 documentation</title>
+  <title>Mixins &mdash; omega|ml 1.1 documentation</title>
   
 
   
@@ -24,20 +24,30 @@
 
   
 
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Reference" href="../reference/index.html" />
-    <link rel="prev" title="Storage backends" href="storage.html" /> 
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="omega|ml 1.1 documentation" href="../index.html"/>
+        <link rel="up" title="Development Guide" href="index.html"/>
+        <link rel="next" title="Reference" href="../reference/index.html"/>
+        <link rel="prev" title="Storage backends" href="storage.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
@@ -59,7 +69,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -84,8 +94,9 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Development Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom.html">Custom development</a></li>
@@ -99,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
 </ul>
 
@@ -111,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">omega|ml</a>
@@ -119,10 +131,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -166,15 +177,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="mixins">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="mixins">
 <h1>Mixins<a class="headerlink" href="#mixins" title="Permalink to this headline">¶</a></h1>
 <p>Mixins come in several flavors:</p>
 <ul class="simple">
-<li><code class="code docutils literal notranslate"><span class="pre">OmegaStore</span></code> mixins, enabling data pre-/post processing</li>
-<li><code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> mixins, enabling custom operations on lazy-evaluation dataframes</li>
-<li><code class="code docutils literal notranslate"><span class="pre">OmegaModelProxy</span></code> mixins, enabling tasks to run on the compute cluster</li>
-<li><code class="code docutils literal notranslate"><span class="pre">MDataFrame,</span> <span class="pre">MSeries</span></code> mixins, enabling custom operations on MDataFrame and MSeries objects</li>
-<li><code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code> mixins, enabling custom operations in <code class="code docutils literal notranslate"><span class="pre">apply()</span></code> contexts</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">OmegaStore</span></code> mixins, enabling data pre-/post processing</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> mixins, enabling custom operations on lazy-evaluation dataframes</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">OmegaModelProxy</span></code> mixins, enabling tasks to run on the compute cluster</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">MDataFrame,</span> <span class="pre">MSeries</span></code> mixins, enabling custom operations on MDataFrame and MSeries objects</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">ApplyContext</span></code> mixins, enabling custom operations in <code class="code docutils literal notranslate"><span class="pre">apply()</span></code> contexts</p></li>
 </ul>
 <div class="section" id="storage-mixins">
 <h2>Storage mixins<a class="headerlink" href="#storage-mixins" title="Permalink to this headline">¶</a></h2>
@@ -186,7 +221,7 @@ backend supports storing Python dictionaries, so we could ask the user to
 convert the Yaml documents to Pyton dictionaries first, and then use
 <code class="code docutils literal notranslate"><span class="pre">om.datasets.put</span></code> to store the object.</p>
 <p>As a convenience to users, we provide this conversion in a storage mixin:</p>
-<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YamlDataMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YamlDataMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
        <span class="n">attributes</span> <span class="o">=</span> <span class="n">attributes</span> <span class="ow">or</span> <span class="p">{}</span>
        <span class="k">try</span><span class="p">:</span>
@@ -208,13 +243,13 @@ convert the Yaml documents to Pyton dictionaries first, and then use
 </pre></div>
 </div>
 <p>To enable this mixin, call <code class="code docutils literal notranslate"><span class="pre">om.datasets.register_mixin</span></code>:</p>
-<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># on startup</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># on startup</span>
 <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">register_mixin</span><span class="p">(</span><span class="n">YamlDataMixin</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Celery clusters require that the module providing YamlDaskMixin is available on
+<p class="admonition-title">Note</p>
+<p>Celery clusters require that the module providing YamlDaskMixin is available on
 both the client and the worker instance. This limitation is planned
 to be removed in future versions of omega|ml using ccbackend, which provides
 for arbitrary functions to be executed on a celery cluster. Dask Distributed
@@ -230,11 +265,11 @@ user-requested functions to the compute cluster.</p>
 way that is not supported by the default runtime. While they could use
 a job (notebook) to accomplish this, we provide a runtime mixin as a
 convenience.</p>
-<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># in crossvalidate.py</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># in crossvalidate.py</span>
 <span class="k">class</span> <span class="nc">CrossValidationMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">cross_validate</span><span class="p">(</span><span class="n">modelName</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
          <span class="c1"># get the cross validation task</span>
-         <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;custom.tasks.cross_validate&#39;</span><span class="p">)</span>
+         <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;custom.tasks.cross_validate&#39;</span><span class="p">)</span>
          <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">modelName</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
@@ -251,14 +286,14 @@ convenience.</p>
 </pre></div>
 </div>
 <p>To enable this mixin, add the class to <code class="code docutils literal notranslate"><span class="pre">om.defaults.OMEGA_RUNTIME_MIXINS</span></code>:</p>
-<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OMEGA_STORE_MIXINS</span> <span class="o">=</span> <span class="p">[</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OMEGA_STORE_MIXINS</span> <span class="o">=</span> <span class="p">[</span>
   <span class="s1">&#39;crossvalidate.CrossValidationMixin&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Celery clusters require that the custom.tasks module is available on
+<p class="admonition-title">Note</p>
+<p>Celery clusters require that the custom.tasks module is available on
 both the client and the worker instance. This limitation is planned
 to be removed in future versions of omega|ml using ccbackend, which provides
 for arbitrary functions to be executed on a celery cluster. Dask Distributed
@@ -269,7 +304,9 @@ clusters do not have this limitation.</p>
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -287,11 +324,11 @@ clusters do not have this limitation.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2014-2018, omegaml.io by one2seven GmbH
+        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -306,23 +343,36 @@ clusters do not have this limitation.</p>
 
   
 
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-    
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
 
   
 
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
 
+  
+  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
+          SphinxRtdTheme.StickyNav.enable();
       });
-  </script> 
+  </script>
+   
 
 </body>
 </html>

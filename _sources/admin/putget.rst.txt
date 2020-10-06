@@ -1,4 +1,4 @@
-Interface with omega|ml to get/put models and objects.
+Interface with omega|ml to get/put models and objects
 =====================================================
 
 The below snippet displays how omega|ml can be used to store and retrieve
