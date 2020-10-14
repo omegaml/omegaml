@@ -127,7 +127,7 @@ class FilteredCollection:
         return self.collection.create_index(keys, **kwargs)
 
     def list_indexes(self, **kwargs):
-        return self.list_indexes(**kwargs)
+        return self.collection.list_indexes(**kwargs)
 
     def group(self, key, initial, reduce, condition=None, **kwargs):
         condition = dict(self.query)

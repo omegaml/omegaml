@@ -3,12 +3,10 @@ omega runtime script tasks
 """
 from __future__ import absolute_import
 
-import json
-
 import datetime
+import json
 from celery import shared_task
 
-from omegaml.backends.package import PythonPackageData
 from omegaml.celery_util import OmegamlTask
 
 
@@ -23,7 +21,6 @@ class NotebookTask(OmegamlTask):
         attrs = meta.attributes
         attrs['state'] = 'SUCCESS'
         attrs['task_id'] = task_id
-        meta.kind = PythonPackageData.KIND
 
         if not kwargs:
             pass
@@ -44,7 +41,6 @@ class NotebookTask(OmegamlTask):
         attrs = meta.attributes
         attrs['state'] = 'FAILURE'
         attrs['task_id'] = task_id
-        meta.kind = PythonPackageData.KIND
 
         if not kwargs:
             pass

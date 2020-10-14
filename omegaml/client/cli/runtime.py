@@ -11,13 +11,21 @@ class RuntimeCommandBase(CommandBase):
       om runtime result <taskid> [options]
       om runtime ping [options]
       om runtime log [-f]
+      om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...]
 
     Options:
       --async          don't wait for results, will print taskid
       -f               tail log
       --require=VALUE  worker label
+      --flags=VALUE    celery flags, list as "--flag VALUE"
+      --worker=VALUE   celery worker
+      --queue=VALUE    celery queue
+      --celery-help    show celery help
 
     Description:
+      model commands
+      --------------
+
       <model-action> can be any valid model action like fit, predict, score,
       transform, decision_function etc.
 
@@ -27,6 +35,24 @@ class RuntimeCommandBase(CommandBase):
       Examples:
         om runtime model <name> fit <X> <Y>
         om runtime model <name> predict <X>
+
+      celery commands
+      ---------------
+
+      This is the same as calling celery -A omegaml.celeryapp <commands>. Command
+      commands include:
+
+      inspect active         show currently running tasks
+      inspect active_queues  show active queues for each worker
+      inspect stats          show stats of each worker, including pool size (processes)
+      inspect ping           confirm that worker is connected
+
+      control pool_shrink N  shrink worker pool by N, specify 99 to remove all
+      control pool_grow N    grow worker poool by N
+
+      Examples:
+            om runtime celery inspect active
+            om runtime celery control pool_grow N
     """
     command = 'runtime'
 
@@ -124,3 +150,23 @@ class RuntimeCommandBase(CommandBase):
                 print(df[['text']])
         else:
             om.logger.dataset.tail()
+
+    def celery(self):
+        om = get_omega(self.args)
+        celery_cmds = ['celery']
+        # convert omega terms into celery terms
+        celery_opts = (
+            # omega term, celery term, value|flag
+            ('--worker', '--destination', 'value'),
+            ('--queue', '--queue', 'value'),
+            ('--celery-help', '--help', 'flag'),
+        )
+        for opt, celery_opt, kind in celery_opts:
+            if self.args.get(opt):
+                celery_cmds += [celery_opt]
+                if kind == 'value':
+                    celery_cmds += [self.args.get(opt)]
+        celery_cmds += self.args.get('<celery-command>')
+        celery_cmds += self.args.get('--flags')
+        om.runtime.celeryapp.start(celery_cmds)
+

@@ -193,7 +193,7 @@ class OmegaStore(object):
                                  password=password,
                                  connect=False,
                                  authentication_source='admin',
-                                 serverSelectionTimeoutMS=2500,
+                                 serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
                                  **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
                                  )
         self._db = get_db(alias)
@@ -429,7 +429,8 @@ class OmegaStore(object):
 
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
-                                   timestamp=None, chunksize=None):
+                                   timestamp=None, chunksize=None,
+                                   ensure_compat=True):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -446,6 +447,9 @@ class OmegaStore(object):
            value is a boolean or datetime, uses _created as the field name.
            The timestamp is always datetime.datetime.utcnow(). May be overriden
            by specifying the tuple (col, datetime).
+        :param ensure_compat: if True attempt to convert obj to mongodb compatibility,
+           set to False only if you are sure to have only compatible values in dataframe.
+           defaults to True. False may reduce memory and increase speed on large dataframes.
         :return: the Metadata object created
         """
         from .queryops import MongoQueryOps
@@ -513,7 +517,11 @@ class OmegaStore(object):
         # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
         #    pymongo raises Cannot Encode object for int64 types
-        obj = obj.astype('O')
+        if ensure_compat:
+            for col, col_dtype in dtypes.items():
+                if 'datetime' in col_dtype:
+                    obj[col].fillna('', inplace=True)
+        obj = obj.astype('O', errors='ignore')
         fast_insert(obj, self, name, chunksize=chunksize)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series

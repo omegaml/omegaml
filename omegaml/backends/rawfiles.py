@@ -1,5 +1,6 @@
-import os
 from os.path import dirname, basename
+
+import os
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -35,7 +36,7 @@ class PythonRawFileBackend(BaseDataBackend):
 
     def get(self, name, local=None, mode='wb', open_kwargs=None, **kwargs):
         """
-        get a stored file as a file handler with binary contents or a local file
+        get a stored file as a file-like object with binary contents or a local file
 
         Args:
             name (str): the name of the file
@@ -43,11 +44,17 @@ class PythonRawFileBackend(BaseDataBackend):
                stored there. If local does not have an extension it is assumed
                to be a directory name, in which case the file is stored as the
                same name.
-            **kwargs:
+            mode (str): the mode to use on .open() for the local file
+            open_kwargs (dict): the kwargs to use .open() for the local file
+            **kwargs: any kwargs passed to datasets.metadata()
 
         Returns:
             the file-like output handler (local is None)
             the path to the local file (local is given)
+
+        See also:
+            https://docs.python.org/3/glossary.html#term-file-object
+            https://docs.python.org/3/glossary.html#term-binary-file
         """
         outf = self.data_store.metadata(name, **kwargs).gridfile
         if local:
@@ -58,7 +65,7 @@ class PythonRawFileBackend(BaseDataBackend):
             with open(local, mode=mode, **open_kwargs) as flocal:
                 flocal.write(outf.read())
             return local
-        return outf
+        return filelike(outf)
 
     def put(self, obj, name, attributes=None, encoding=None, **kwargs):
         self.data_store.drop(name, force=True)
@@ -71,3 +78,9 @@ class PythonRawFileBackend(BaseDataBackend):
             kind=self.KIND,
             attributes=attributes,
             gridfile=gridfile).save()
+
+
+def filelike(obj):
+    actual = obj.get()
+    __doc__ = actual.__doc__
+    return actual

@@ -198,7 +198,7 @@ class JobSchedule(object):
         specs = {}
         # ensure single whitespace
         orig_text = text
-        text = ' '.join(text.split()).lower()
+        text = ' '.join(text.split(' ')).lower()
         # try placing commas
         text = text.replace(' ', ',')
         text = text.replace('every,', 'every ')

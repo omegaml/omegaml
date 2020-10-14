@@ -20,7 +20,7 @@ def uploadtutorial(ctx, nbname):
     # now run the notebook
     userid = getattr(om.runtime.auth, 'userid', '')
     br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='tree'))
-    assert br.is_text_present(nbname)
+    assert br.is_text_present(nbname, wait_time=30)
 
 
 @when('we run the notebook {nbname}')

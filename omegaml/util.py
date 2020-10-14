@@ -490,7 +490,14 @@ class PickableCollection(object):
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
         url = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(**state, **state['credentials'])
-        client = MongoClient(url, authSource=state['credentials']['source'], **state['options'])
+        # ClientOptions calls it serverselectiontimeoutms, but stores seconds
+        # MongoClient however, on recreating in unpickling, requires milliseconds
+        # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html?highlight=serverSelectionTimeoutMS#pymongo.mongo_client.MongoClient
+        # https://github.com/mongodb/mongo-python-driver/blob/7a539f227a9524b27ef469826ef9ee5bd4533773/pymongo/common.py
+        # https://github.com/mongodb/mongo-python-driver/blob/master/pymongo/client_options.py#L157
+        options = state['options']
+        options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
+        client = MongoClient(url, authSource=state['credentials']['source'], **options)
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
