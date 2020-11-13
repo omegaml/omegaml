@@ -1,6 +1,7 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 PIPVERSION=$(shell cat omegaml/VERSION | sed 's/-//')
+FINAL_VERSION=$(shell cat omegaml/VERSION | sed -r 's/(.*)-rc.*$/\1//')
 
 test:
 	unset DJANGO_SETTINGS_MODULE && nosetests -v
@@ -30,24 +31,21 @@ release-test: dist sanity
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository testpypi dist/*
+	twine upload --repository testpypi dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
 release-prod: test dist sanity
-	: "twine upload to pypi prod"
+	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository pypi dist/*
-	sleep 5
-	scripts/livetest.sh
-
-release-docker: dist
-	: "docker push image sto dockerhub"
 	scripts/livetest.sh --local --build --tag ${VERSION}
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
+	twine upload --repository pypi dist/*gz dist/*whl
+	sleep 5
+	scripts/livetest.sh
 
 candidate-docker: sanity dist
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
@@ -81,6 +79,8 @@ bumpminor:
 bumpbuild:
 	bumpversion build
 
+bumpfinal:
+	bumpversion final --new-version ${FINAL_VERSION}
 
 help:
 		@echo -n "Common make targets"
