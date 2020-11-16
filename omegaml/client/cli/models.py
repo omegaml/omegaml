@@ -8,6 +8,7 @@ class ModelsCommandBase(CommandBase):
     """
     Usage:
       om models put <module.callable> <name>
+      om models drop <name>
       om models list [<pattern>] [--raw] [-E|--regexp] [options]
       om models metadata <name>
 
@@ -36,6 +37,11 @@ class ModelsCommandBase(CommandBase):
         modelfn = getattr(mod, modelfn)
         model = modelfn()
         self.logger.info(om.models.put(model, name))
+
+    def drop(self):
+        om = get_omega(self.args)
+        name = self.args.get('<name>')
+        self.logger.info(om.models.drop(name))
 
     def metadata(self):
         om = get_omega(self.args)

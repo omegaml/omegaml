@@ -18,7 +18,7 @@ is_test_run = any(m in [basename(arg) for arg in ' '.join(sys.argv).split(' ')]
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 #: the temp directory used by omegaml processes
-OMEGA_TMP = '/tmp'
+OMEGA_TMP = os.environ.get('OMEGA_TMP', '/tmp')
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
                    os.environ.get('MONGO_URL') or

@@ -50,11 +50,12 @@ class PythonPackageData(BaseDataBackend):
             attributes=attributes,
             gridfile=gridfile).save()
 
-    def get(self, name, **kwargs):
+    def get(self, name, keep=False, **kwargs):
         """
         Load package from store, install it locally and load.
 
         :param name: the name of the package
+        :param keep: keep the packages load path in sys.path, defaults to False
         :param kwargs:
         :return: the loaded module
         """
@@ -68,9 +69,9 @@ class PythonPackageData(BaseDataBackend):
             outf = meta.gridfile
             with open(packagefname, 'wb') as pkgf:
                 pkgf.write(outf.read())
-            mod = install_and_import(packagefname, pkgname, dstdir)
+            mod = install_and_import(packagefname, pkgname, dstdir, keep=keep)
         else:
-            mod = load_from_path(pkgname, dstdir)
+            mod = load_from_path(pkgname, dstdir, keep=keep)
         return mod
 
     @property

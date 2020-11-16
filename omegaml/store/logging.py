@@ -54,21 +54,23 @@ class OmegaLoggingHandler(logging.Handler):
 
     @classmethod
     def setup(cls, store=None, dataset=None, level=None, logger=None,
-              fmt=None, reset=False, size=10 * 1024 * 1024, defaults=None):
+              fmt=None, reset=False, size=10 * 1024 * 1024, defaults=None, exit_hook=False):
         """
         Args:
             dataset (str): the name of the dataset
-            level (int): set any logging.INFO, logging.ERROR, logging.DEBUG
+            level (int): set any logging.INFO, logging.ERROR, logging.DEBUG, defaults to NOTSET
             size (int): maxium size in bytes (defaults to 1MB)
             target (Omega): omega instance to create the dataset in, defaults to the default om
             size (int): the maximum size of the log in bytes (capped), defaults to 1MB, set to -1
                for
             reset (bool): recreate the logging dataset
             fmt (str): the format specification
+            exit_hook (bool): when True attach the logger to the system exception handler
         """
         import omegaml as om
         import logging
-        level = level or logging.INFO
+        effective_level = logger.getEffectiveLevel() if logger else logging.NOTSET
+        level = level or effective_level
         store = store or om.setup().datasets
         defaults = defaults or store.defaults
         dataset = dataset or defaults.OMEGA_LOG_DATASET
@@ -80,6 +82,8 @@ class OmegaLoggingHandler(logging.Handler):
         handler = OmegaLoggingHandler(store, dataset, collection, level=level)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+        if exit_hook:
+            _attach_sysexcept_hook(logger)
         return handler
 
 
@@ -234,6 +238,9 @@ class OmegaSimpleLogger:
                                                collection=self.collection)
         return self._dataset
 
+    def exit_hook(self):
+        _attach_sysexcept_hook(self)
+
 
 class TailableLogDataset:
     """
@@ -368,3 +375,8 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
         if idx not in idxs:
             collection.create_index(idx)
     return collection
+
+
+def _attach_sysexcept_hook(logger):
+    import traceback, sys
+    sys.excepthook = lambda t, v, tb: [logger.error(l) for l in traceback.format_tb(tb)]

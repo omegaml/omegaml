@@ -26,7 +26,7 @@ class CliScriptsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         pkgpath = self.get_package_path()
         self.cli(f'scripts put {pkgpath} helloworld', new_start=True)
         self.assertIn('helloworld', self.om.scripts.list())
-        self.cli(f'scripts delete helloworld', new_start=True)
+        self.cli(f'scripts drop helloworld', new_start=True)
         self.assertNotIn('helloworld', self.om.scripts.list())
 
     def test_cli_scripts_put_pypi(self):
