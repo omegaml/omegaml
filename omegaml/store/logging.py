@@ -1,14 +1,14 @@
 import atexit
+import platform
 
 import logging
 import os
 import signal
-import platform
-
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-LOGGER_HOSTNAME=os.environ.get('HOSTNAME') or platform.node()
+LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
+
 
 class OmegaLoggingHandler(logging.Handler):
     """
@@ -111,6 +111,12 @@ class OmegaSimpleLogger:
         $ om runtime log
         $ om runtime log -f
 
+        # get a named logger
+        # -- by default the logger's name is "simple", you can specify any other name
+        om.logger.name = 'myname'
+        # or get different loggers for differt names, e.g. by module
+        logger = om.logger.getLogger('myname')
+
     Notes:
         The log contents is written to the omegaml dataset .omega/logs. You
         should not need to interact with this dataset.
@@ -127,12 +133,14 @@ class OmegaSimpleLogger:
         Tailing the log is based on querying the latest message created, and
         then subsequently returning all newer messages. The tailing is
         implemented by TailableLogDataset and runs in a separate thread. To
-        run the tailing as a blocking command use om.logger.dataset.tail(wait=True).
+        run the tailing as a blocking command use
+
+        om.logger.dataset.tail(wait=True).
     """
     levels = 'QUIET,CRITICAL,ERROR,WARNING,INFO,DEBUG'.split(',')
 
     def __init__(self, store=None, dataset=None, collection=None, level='INFO',
-                 size=1 * 1024 * 1024, defaults=None):
+                 size=1 * 1024 * 1024, defaults=None, name='simple'):
         import omegaml as om
 
         self.store = store or om.setup().datasets
@@ -144,6 +152,7 @@ class OmegaSimpleLogger:
         self._is_setup = False
         self._collection = collection
         self.size = size
+        self._name = name
 
     @property
     def collection(self):
@@ -152,6 +161,19 @@ class OmegaSimpleLogger:
                                                       collection=self._collection, size=self.size)
             self._is_setup = True
         return self._collection
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    def getLogger(self, name, **kwargs):
+        return self.__class__(store=kwargs.get('store', self.store),
+                              defaults=kwargs.get('defaults', self.defaults),
+                              name=name)
 
     def setLevel(self, level):
         """
@@ -186,7 +208,7 @@ class OmegaSimpleLogger:
             return
         # insert a log message
         fmt = '{created} {level} {message}'
-        log_entry = _make_record(level, levelno, 'simple', message, fmt=fmt)
+        log_entry = _make_record(level, levelno, self._name, message, fmt=fmt)
         self.collection.insert_one(log_entry)
 
     def info(self, message, **kwargs):

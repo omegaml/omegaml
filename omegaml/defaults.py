@@ -32,7 +32,7 @@ OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
-    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH') or None,
+    'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
@@ -142,7 +142,8 @@ OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
 OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
+#: MongoClient ServerSelectionTimeoutMS
+OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----

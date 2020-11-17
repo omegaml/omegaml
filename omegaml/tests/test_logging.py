@@ -87,5 +87,23 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
                 self.assertIn('{} message'.format(level).lower(), df.iloc[0].text)
 
 
-
+    def test_named_simplelogger(self):
+        """
+        test we can get a named logger
+        """
+        # get a named logger
+        logger = self.om.logger.getLogger('foo')
+        self.assertIsInstance(logger, OmegaSimpleLogger)
+        self.assertNotEqual(logger, self.om.logger)
+        self.assertNotEqual(logger.name, self.om.logger.name)
+        logger.info('foo')
+        df = logger.dataset.get(levelname='INFO')
+        self.assertTrue(len(df) == 1)
+        self.assertEqual(df.iloc[0]['name'], 'foo')
+        # change logger name of the default logger
+        self.om.logger.name = 'myname'
+        self.om.logger.info('foo')
+        df = self.om.logger.dataset.get(filter=dict(levelname='INFO', name='myname'))
+        self.assertTrue(len(df) == 1)
+        self.assertEqual(df.iloc[-1]['name'], 'myname')
 

@@ -473,3 +473,7 @@ class JobTests(TestCase):
         self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
         sched = JobSchedule('every 2nd hour, 5 minute, weekdays')
         self.assertEqual(sched.text, 'At 5 minutes past the hour, every 2 hours, Monday through Friday')
+        sched = JobSchedule('every 5 minutes, from monday to friday, in april')
+        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
+        sched = JobSchedule('every 4 hours, at 0 minutes, Monday through Friday')
+        self.assertEqual(sched.text, 'Every 4 hours, Monday through Friday')

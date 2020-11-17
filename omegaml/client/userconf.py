@@ -30,7 +30,7 @@ def session_backoff(retries=5):
     return s
 
 
-def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view=False):
+def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, qualifier=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
     from omegaml import settings
     defaults = settings()
@@ -42,6 +42,8 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
         query.append('user={}'.format(requested_userid))
     if view:
         query.append('view={}'.format(int(view)))
+    if qualifier:
+        query.append('qualifier={}'.format(qualifier))
     api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
     if api_url.startswith('http'):
@@ -54,6 +56,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
         import json
         from tastypie.test import TestApiClient
         server = TestApiClient()
+        server.close = lambda : None
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
     else:
@@ -65,6 +68,7 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, view
     resp = server.get(api_url, **server_kwargs)
     assert resp.status_code == 200, fail_msg.format(**locals())
     configs = deserialize(resp)
+    server.close()
     return configs
 
 
@@ -92,16 +96,13 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
         api_auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(api_auth, api_url=api_url,
                                            requested_userid=requested_userid,
-                                           view=view)
+                                           view=view, qualifier=qualifier)
         configs = configs['objects'][0]['data']
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
         raise ValueError('invalid api_url {}'.format(api_url))
-    if qualifier == 'default':
-        config = configs.get(qualifier, configs)
-    else:
-        config = configs[qualifier]
+    config = configs.get(qualifier, configs)
     # update
     _base_config.update_from_dict(config, attrs=defaults)
     _base_config.load_framework_support(defaults)

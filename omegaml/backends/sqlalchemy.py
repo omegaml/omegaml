@@ -58,7 +58,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table='mytable', sql='select ...', copy=True)
         om.datasets.get('mysqlalchemy') # read from {bucket}_myname
         # -- to use a specific table, without bucket information use table=':myname'
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table='mytable', sql='select ...', copy=True)
+        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table=':mytable', sql='select ...', copy=True)
         om.datasets.get('mysqlalchemy') # read from myname
 
         Insert data via the connection
@@ -201,7 +201,8 @@ class SQLAlchemyBackend(BaseDataBackend):
         Inserting via connection, specify insert=True:
             insert (bool): specify True to insert via connection
             table (str): the table name to use for inserting data
-            append (bool): if False will replace any existing table
+            append (bool): if False will replace any existing table, defaults to True
+            index (bool): if False will not attempt to create an index in target, defaults to False
 
         Returns:
             metadata
@@ -337,7 +338,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         # from https://stackoverflow.com/a/39495229
         chunksize = chunksize if chunksize is not None else 10000
         def chunker(seq, size):
-            return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+            return (seq.iloc[pos:pos + size] for pos in range(0, len(seq), size))
 
         def to_sql(df, table, connection, pbar=False):
             for i, cdf in enumerate(chunker(df, chunksize)):
