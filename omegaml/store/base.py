@@ -419,7 +419,7 @@ class OmegaStore(object):
                                            **kwargs)
         elif isinstance(obj, (dict, list, tuple)):
             if kwargs.pop('as_hdf', False):
-                self.put_pyobj_as_hdf(obj, name,
+                return self.put_pyobj_as_hdf(obj, name,
                                       attributes=attributes, **kwargs)
             return self.put_pyobj_as_document(obj, name,
                                               attributes=attributes,

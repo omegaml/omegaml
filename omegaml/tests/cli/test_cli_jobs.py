@@ -48,6 +48,17 @@ class CliJobsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         self.assertLogContains('info', 'name=test')
         self.assertIn('test.ipynb', self.om.jobs.list())
 
+    def test_cli_jobs_drop(self):
+        cells = []
+        code = "print 'hello'"
+        cells.append(nbformat.v4.new_code_cell(source=code))
+        notebook = nbformat.v4.new_notebook(cells=cells)
+        self.om.jobs.put(notebook, 'testnb')
+        self.cli(f'jobs drop testnb')
+        expected = self.pretend_log('True')
+        self.assertLogContains('info', expected)
+        self.assertNotIn('testnb', self.om.jobs.list())
+
     def test_cli_jobs_metadata(self):
         self.create_job('test')
         self.cli('jobs metadata test')

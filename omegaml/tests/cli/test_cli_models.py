@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from sklearn.linear_model import LinearRegression
+
 from omegaml import Omega
 from omegaml.tests.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
@@ -31,6 +33,13 @@ class CliModelsTest(CliTestScenarios, OmegaTestMixin, TestCase):
     def test_cli_models_put(self):
         self.cli(f'models put omegaml.example.demo.modelfn.create_model testmodel')
         expected = self.pretend_log('Metadata(name=testmodel')
+        self.assertLogContains('info', expected)
+
+    def test_cli_models_drop(self):
+        reg = LinearRegression()
+        self.om.models.put(reg, 'testmodel')
+        self.cli(f'models drop testmodel')
+        expected = self.pretend_log('True')
         self.assertLogContains('info', expected)
 
     def test_cli_models_metadata(self):

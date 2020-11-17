@@ -12,6 +12,7 @@ class JobsCommandBase(CommandBase):
       om jobs list [<pattern>] [--raw] [options]
       om jobs put <path> <name> [options]
       om jobs get <name> <path> [options]
+      om jobs drop <name>
       om jobs metadata <name> [options]
       om jobs schedule <name> [show|delete|<interval>] [options]
       om jobs status <name>
@@ -75,6 +76,11 @@ class JobsCommandBase(CommandBase):
         om = get_omega(self.args)
         for kind, plugincls in om.defaults.OMEGA_STORE_BACKENDS.items():
             self.logger.info(kind, plugincls.__doc__)
+
+    def drop(self):
+        om = get_omega(self.args)
+        name = self.args.get('<name>')
+        self.logger.info(om.jobs.drop(name))
 
     def schedule(self):
         # FIXME this is a mess

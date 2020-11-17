@@ -70,11 +70,12 @@ class PythonPipSourcedPackageData(BaseDataBackend):
             kind_meta=kind_meta,
             attributes=attributes).save()
 
-    def get(self, name, **kwargs):
+    def get(self, name, keep=False, **kwargs):
         """
         Load package from store, install it locally and load.
 
         :param name: the name of the package
+        :param keep: keep the packages load path in sys.path, defaults to False
         :param kwargs:
         :return: the loaded module
         """
@@ -84,7 +85,7 @@ class PythonPipSourcedPackageData(BaseDataBackend):
         pip_source = meta.kind_meta['pip_source']
         # pip does not know about pypi
         pip_name = pip_source.replace('pypi://', '')
-        mod = install_and_import(pip_name, pkgname, dstdir)
+        mod = install_and_import(pip_name, pkgname, dstdir, keep=keep)
         return mod
 
     @property

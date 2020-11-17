@@ -49,7 +49,7 @@ def install_package(src, dst):
               '--target', dst)
 
 
-def load_from_path(name, path):
+def load_from_path(name, path, keep=False):
     import importlib
     sys.path.insert(0, path)
     try:
@@ -59,18 +59,21 @@ def load_from_path(name, path):
             del globals()[name]
         mod = importlib.import_module(name)
     finally:
-        sys.path.remove(path)
+        # remove the import path -- this is to avoid
+        # however comes at the cust
+        if not keep:
+            sys.path.remove(path)
     return mod
 
 
-def install_and_import(pkgfilename, package, installdir):
+def install_and_import(pkgfilename, package, installdir, keep=False):
     """
 
     Returns:
         object:
     """
     install_package(pkgfilename, installdir)
-    mod = load_from_path(package, installdir)
+    mod = load_from_path(package, installdir, keep=keep)
     return mod
 
 
