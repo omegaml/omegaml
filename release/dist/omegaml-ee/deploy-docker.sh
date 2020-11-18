@@ -22,14 +22,18 @@ if [[ ! -z $clean ]]; then
     echo "Services removed."
 fi
 echo "Starting services"
-docker-compose up -d
-waiton "Waiting for services to have initialised" http://localhost:5000
-docker-compose up -d nginx
-
-# apply configurations
+# -- core service first, this starts rabbitmq, mongodb, mysql
+docker-compose up -d omegaml
 echo "Securing mongodb"
 cat scripts/mongoinit.js | compose_exec mongodb mongo
 docker-compose exec omegaml scripts/initlocal.sh
+# -- worker services, connecting back to omegaml
+docker-compose up -d worker omegaops
+# -- UI applications
+docker-compose up -d apphub omjobs
+# - finally
+docker-compose up -d nginx
+waiton "Waiting for services to have initialised" http://localhost:5000
 
 # finalize
 popd

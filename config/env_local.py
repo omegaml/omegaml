@@ -30,8 +30,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoConstance,
                         Config_FileEmail,
                         Config_DjangoGrappelli,
-                        #Config_Airbrake,
-                        #Config_DebugToolbar,
+                        # Config_Airbrake,
+                        # Config_DebugToolbar,
                         Config_Cities_Light,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
@@ -102,27 +102,32 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
             {
                 "name": "pylib-base",
                 "persistentVolumeClaim": {
-                    "claimName": "pvc-omegaml-pylib-base-omegaml",
-                    "readOnly": False
-                }},
-            {
-                "name": "pylib-user",
-                "persistentVolumeClaim": {
-                    "claimName": "pvc-omegaml-pylib-user",
+                    "claimName": "pvc-omegaml-pylib-base",
                     "readOnly": False
                 }
-            }
+            },
+            # we have a choice between:
+            # 1. using pvc-omegaml-pylib-user, mapped to nfs
+            # 2  hostPath, mapped to a per-node directory, can be easily shared among multiple pods
+            # 3. local-path (plugin), which is also per-node, however cannot easily share among pods
+            # hostPath is the most flexible as every node gets its own local directory which can be shared across pods
+            {
+                "name": "pylib-user",
+                "hostPath": {
+                    "type": "DirectoryOrCreate",
+                    "path": "/mnt/local/{username}"
+            }}
         ],
         "volumeMounts": [
             {
                 "name": "pylib-base",
                 "mountPath": "/app/pylib/base",
-                "readOnly": True
+                "readOnly": False
             },
             {
                 "name": "pylib-user",
                 "mountPath": "/app/pylib/user",
-                "readOnly": True
+                "readOnly": False
             }
         ]
     })
@@ -135,7 +140,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     jupyter_image = os.environ.get('OMEGA_JUPYTER_IMAGE', 'omegaml/omegaml-ee:latest')
     runtime_image = os.environ.get('OMEGA_RUNTIME_IMAGE', 'omegaml/omegaml-ee:latest')
-    use_ssl = True if os.environ.get('OMEGA_USESSL') else False
+    use_ssl = truefalse(os.environ.get('OMEGA_USESSL'))
+    use_ssl_services = use_ssl if 'OMEGA_USESSL_VIEW' not in os.environ else truefalse(os.environ.get('OMEGA_USESSL_VIEW'))
 
     StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': (mongo_host, 'mongo db host name'),
@@ -154,7 +160,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
         'OMEGA_DEFAULTS': (_default_omega_defaults, 'json omegaml defaults'),
         'JUPYTER_CONFIG': (_default_jupyter_config_overrides, 'json jupyter config overrides'),
         'SERVICE_USESSL': (use_ssl, 'use ssl for public service hosts'),
-        'SERVICE_USESSL_VIEW': (use_ssl, 'use ssl in internal view'),
+        'SERVICE_USESSL_VIEW': (use_ssl_services, 'use ssl in internal view'),
     })
 
     DEBUG = truefalse(os.environ.get('DJANGO_DEBUG', False))
@@ -181,8 +187,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     # stripe
     STRIPE_APIKEY = os.environ.get('STRIPE_APIKEY', 'invalid-token')
-    STRIPE_REGISTER_ON_SIGNUP = (True if 'STRIPE_KEY' in os.environ
-                                 else os.environ.get('STRIPE_REGISTER', False))
+    STRIPE_REGISTER_ON_SIGNUP = True if 'STRIPE_APIKEY' in os.environ else False
+
 
     # fernet encryption fields
     # https://django-fernet-fields.readthedocs.io/en/latest/#keys

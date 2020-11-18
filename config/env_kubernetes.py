@@ -45,8 +45,5 @@ class EnvSettings_kubernetes(Config_Dokku,
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    # stripe
-    STRIPE_APIKEY = os.environ.get('STRIPE_APIKEY', 'invalid-stripe-token')
-    STRIPE_REGISTER_ON_SIGNUP = True
 
 

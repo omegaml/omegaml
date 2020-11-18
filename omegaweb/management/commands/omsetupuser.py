@@ -57,6 +57,7 @@ class Command(BaseCommand):
         if options.get('nodeploy') is False:
             if options.get('force') or not user.services.filter(offering__name='omegaml').exists():
                 config = omegaops.add_user(user, dbpassword, deploy_vhost=True)
+                omegaops.update_service_deployment(user, config)
                 print("User services {} deployed. Apikey {}. Is staff {}".format(user, user.api_key.key, user.is_staff))
                 if options.get('verbose'):
                     print("Config", config)

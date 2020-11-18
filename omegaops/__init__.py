@@ -249,6 +249,13 @@ def add_service_deployment(user, config):
     return deployment
 
 
+def update_service_deployment(user, config):
+    deployment = user.services.filter(user=user, offering__name='omegaml').first()
+    dict_merge(deployment.settings, config)
+    deployment.save()
+    return deployment
+
+
 def complete_service_deployment(deployment, status):
     deployment.status = status
     deployment.save()

@@ -13,6 +13,7 @@ dev_deps = [
     'ipdb==0.13.2',
     'jupyterhub-simplespawner==0.1',
     'gil',
+    'sphinx-django-command',
 ]
 
 web_deps = [

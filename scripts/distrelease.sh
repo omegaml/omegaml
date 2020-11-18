@@ -146,6 +146,10 @@ if [[ -z $nolivetest ]]; then
     scripts/livetest.sh --url http://localhost:5000 --headless --cacert $cacert
     success=$?
 
+    echo "Logging docker logs from $distdir/docker-staging/build"
+    mkdir -p /tmp/logs
+    docker-compose logs --no-color > /tmp/logs/services.log
+
     echo "Stopping docker services from $distdir/docker-staging/build"
     docker-compose -f $distdir/docker-staging/build/docker-compose.yml stop
 fi

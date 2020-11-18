@@ -60,6 +60,8 @@ jobs:
         shell: /bin/bash -l -eo pipefail
     - store_artifacts:
         path: /tmp/screenshots
+    - store_artifacts:
+        path: /tmp/logs
   release:
     working_directory: /home/circleci
     machine:

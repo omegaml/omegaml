@@ -94,11 +94,19 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCase, AsyncTestC
         self.assertEqual(manifest['spec']['containers'][0]['volume_mounts'][1]['name'], 'pylib-user')
         self.assertEqual(manifest['spec']['containers'][0]['volume_mounts'][1]['mount_path'], '/app/pylib/user')
         self.assertEqual(manifest['spec']['volumes'][0]['persistent_volume_claim']['claimName'],
-                         'pvc-omegaml-pylib-base-omegaml')
+                         'pvc-omegaml-pylib-base')
         self.assertEqual(manifest['spec']['volumes'][0]['persistent_volume_claim']['readOnly'], False)
-        self.assertEqual(manifest['spec']['volumes'][1]['persistent_volume_claim']['claimName'],
-                         'pvc-omegaml-pylib-user')
-        self.assertEqual(manifest['spec']['volumes'][1]['persistent_volume_claim']['readOnly'], False)
+        # see env_local, CONSTANCE_CONFIG.CLUSTER_STORAGE
+        if manifest['spec']['volumes'][1]['persistent_volume_claim'] is not None:
+            # pvc for pylib user
+            self.assertEqual(manifest['spec']['volumes'][1]['persistent_volume_claim']['claimName'],
+                             'pvc-omegaml-pylib-user')
+            self.assertEqual(manifest['spec']['volumes'][1]['persistent_volume_claim']['readOnly'], False)
+        else:
+            # hostPath for pylib user
+            self.assertEqual(manifest['spec']['volumes'][1]['name'], 'pylib-user')
+            self.assertEqual(manifest['spec']['volumes'][1]['host_path']['path'], f"/mnt/local/{self.user.username}")
+
 
     def test_makepod_userspecified_jupyter_volumes(self):
         # update user config
