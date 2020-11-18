@@ -64,6 +64,7 @@ else
     image_pysite=$(find / -name omegajobs | grep site-packages)/..
     cp -r $image_pysite/omegajobs /app/pylib/base
     cp -r $image_pysite/omegaee /app/pylib/base
+    cp $image_pysite/omegaweb/static/logo.jpg /app/logo.jpg
     CONFIGPROXY_AUTH_TOKEN=12345678 jupyterhub --ip $ip --port $port --config $omegajobs_dir/jupyterhub_config.py $jydebug
 fi
 

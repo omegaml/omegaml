@@ -17,6 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('--admin', action='store_true', help='is admin flag', default=False)
         parser.add_argument('--apikey', type=str, help='apikey', default=None)
         parser.add_argument('--stripe', action='store_true', help='register user with stripe')
+        parser.add_argument('--shovel', action='store_true', help='create vhost shovel')
         parser.add_argument('--verbose', action='store_true', help='verbose', default=False)
         parser.add_argument('--nodeploy', action='store_true', help='verbose', default=False)
         parser.add_argument('--force', action='store_true', help='verbose', default=False)
@@ -63,8 +64,9 @@ class Command(BaseCommand):
                     print("Config", config)
             else:
                 print("No database deployed due to deployment exists already. Specify --force to redeploy (may result in data loss!)")
-            omegaops.create_ops_forwarding_shovel(user)
         else:
             print("No database deployed due to --nodeploy. Re-run without --nodeploy to create a database")
+        if options.get('shovel'):
+            omegaops.create_ops_forwarding_shovel(user)
         if options.get('stripe'):
             create_stripe_customer(user)

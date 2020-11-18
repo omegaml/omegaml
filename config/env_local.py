@@ -187,8 +187,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     # stripe
     STRIPE_APIKEY = os.environ.get('STRIPE_APIKEY', 'invalid-token')
-    STRIPE_REGISTER_ON_SIGNUP = True if 'STRIPE_APIKEY' in os.environ else False
-
+    STRIPE_REGISTER_ON_SIGNUP = truefalse(os.environ.get('STRIPE_REGISTER', False))
 
     # fernet encryption fields
     # https://django-fernet-fields.readthedocs.io/en/latest/#keys
