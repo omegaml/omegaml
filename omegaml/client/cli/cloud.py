@@ -46,7 +46,7 @@ class CloudCommandBase(CommandBase):
 
     @property
     def om(self):
-        return get_omega(self.args)
+        return get_omega(self.args, require_config=True)
 
     def login(self):
         userid = self.args.get('<userid>') or self.args.get('--userid')

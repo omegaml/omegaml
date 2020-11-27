@@ -1,6 +1,5 @@
-from pprint import pprint
-
 import os
+from pprint import pprint
 from time import sleep
 
 from omegaml.client.docoptparser import CommandBase
@@ -17,7 +16,8 @@ class RuntimeCommandBase(CommandBase):
       om runtime ping [options]
       om runtime env <action> [<package>] [--file <requirements.txt>] [--require <label>] [--every] [options]
       om runtime log [-f]
-      om runtime status [labels|stats]
+      om runtime status [workers|labels|stats]
+      om runtime restart app <name> [options]
       om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...]
 
     Options:
@@ -33,8 +33,8 @@ class RuntimeCommandBase(CommandBase):
       --every          if specified runs task on all workers
 
     Description:
-      model commands
-      --------------
+      model, job and script commands
+      ------------------------------
 
       <model-action> can be any valid model action like fit, predict, score,
       transform, decision_function etc.
@@ -45,6 +45,28 @@ class RuntimeCommandBase(CommandBase):
       Examples:
         om runtime model <name> fit <X> <Y>
         om runtime model <name> predict <X>
+        om runtime job <name>
+        om runtime script <name>
+        om runtime script <name> run myparam="value"
+
+      running asynchronously
+      ----------------------
+
+      model, job, script commands accept the --async paramter. This will submit
+      the a task and return the task id. To wait for and get the result run use
+      the result command
+
+      Examples:
+            om runtime model <name> fit <X> <Y> --async
+            => <task id>
+            om runtime result <task id>
+            => result of the task
+
+      restart app
+      -----------
+
+      This will restart the app on omegaml apphub. Requires a login to omegaml cloud.
+
 
       status
       ------
@@ -52,7 +74,8 @@ class RuntimeCommandBase(CommandBase):
       Prints workers, labels, list of active tasks per worker, count of tasks
 
       Examples:
-        om runtime status
+        om runtime status             # defaults to workers
+        om runtime status workers
         om runtime status labels
         om runtime status stats
 
@@ -267,13 +290,14 @@ class RuntimeCommandBase(CommandBase):
         om = get_omega(self.args)
         labels = self.args.get('labels')
         stats = self.args.get('stats')
-        if not (labels or stats):
+        workers = not (labels or stats)
+        if workers:
             pprint(om.runtime.workers())
         elif labels:
             queues = om.runtime.queues()
             pprint({worker: [q.get('name') for q in details
-                            if not q.get('name').startswith('amq')]
-                   for worker, details in queues.items()})
+                             if not q.get('name').startswith('amq')]
+                    for worker, details in queues.items()})
         elif stats:
             stats = om.runtime.stats()
             pprint({worker: {
@@ -283,3 +307,15 @@ class RuntimeCommandBase(CommandBase):
                 }
             } for worker, details in stats.items()})
 
+    def restart(self):
+        import requests
+        om = get_omega(self.args)
+        name = self.args.get('<name>')
+        user = om.runtime.auth.userid
+        auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
+        url = om.defaults.OMEGA_RESTAPI_URL
+        stop = requests.get(f'{url}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
+                            auth=auth)
+        start = requests.get(f'{url}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
+                             auth=auth)
+        self.logger.info(f'stop: {stop} start: {start}')

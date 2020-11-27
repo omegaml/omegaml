@@ -11,10 +11,8 @@ class ScriptsCommandBase(CommandBase):
         om scripts list [<pattern>] [options]
         om scripts put <path> <name> [options]
         om scripts drop <name> [options]
-        om scripts restart app <name> [options]
 
     Description:
-        restart requires a login to omega-ml cloud
     """
     command = 'scripts'
 
@@ -45,15 +43,3 @@ class ScriptsCommandBase(CommandBase):
         name = self.args.get('<name>')
         om.scripts.drop(name, force=True)
 
-    def restart(self):
-        import requests
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        user = om.runtime.auth.userid
-        auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
-        url = om.defaults.OMEGA_RESTAPI_URL
-        stop = requests.get(f'{url}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
-                            auth=auth)
-        start = requests.get(f'{url}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
-                             auth=auth)
-        self.logger.info(f'stop: {stop} start: {start}')
