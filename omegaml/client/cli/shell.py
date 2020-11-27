@@ -7,12 +7,24 @@ from omegaml.client.util import get_omega
 class ShellCommandBase(CommandBase):
     """
     Usage:
-        om shell [options]
+        om shell [<command>] [options]
+
+    Description:
+        Without a command will start an IPython shell with omega|ml ready to use
+
+        $ om shell
+        [] om.runtime.ping()
+        => { ... }
+
+        By passing a command, run arbitrary Python code
+
+        $ om shell "om.runtime.ping()"
     """
     command = 'shell'
 
     def shell(self):
         use_ipython = False
+        command = self.args.get('<command>') or ''
         try:
             import IPython
         except:
@@ -28,7 +40,9 @@ class ShellCommandBase(CommandBase):
                 'print("omegaml is available as the om variable")',
             ]
             c.TerminalIPythonApp.display_banner = False
-            IPython.start_ipython([], config=c, user_ns=dict(shell_args=self.args))
+            argv = f'-c {command}'.split(' ') if command else []
+            IPython.start_ipython(argv,
+                                  config=c, user_ns=dict(shell_args=self.args))
             return
         # default console
         import code

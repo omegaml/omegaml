@@ -1,3 +1,8 @@
+from pprint import pprint
+
+import os
+from time import sleep
+
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
@@ -5,12 +10,14 @@ from omegaml.client.util import get_omega
 class RuntimeCommandBase(CommandBase):
     """
     Usage:
-      om runtime model <name> <model-action> [<X>] [<Y>] [--result=<output-name>] [--param=<kw=value>]... [options]
+      om runtime model <name> <model-action> [<X>] [<Y>] [--result=<output-name>] [--param=<kw=value>]... [--async] [options]
       om runtime script <name> [<script-action>] [<kw=value>...] [--async] [options]
       om runtime job <name> [<job-action>] [<args...>] [--async] [options]
       om runtime result <taskid> [options]
       om runtime ping [options]
+      om runtime env <action> [<package>] [--file <requirements.txt>] [--require <label>] [--every] [options]
       om runtime log [-f]
+      om runtime status [labels|stats]
       om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...]
 
     Options:
@@ -21,6 +28,9 @@ class RuntimeCommandBase(CommandBase):
       --worker=VALUE   celery worker
       --queue=VALUE    celery queue
       --celery-help    show celery help
+      --file=VALUE     path/to/requirements.txt
+      --local          if specified the task will run locally. Use this for testing
+      --every          if specified runs task on all workers
 
     Description:
       model commands
@@ -35,6 +45,16 @@ class RuntimeCommandBase(CommandBase):
       Examples:
         om runtime model <name> fit <X> <Y>
         om runtime model <name> predict <X>
+
+      status
+      ------
+
+      Prints workers, labels, list of active tasks per worker, count of tasks
+
+      Examples:
+        om runtime status
+        om runtime status labels
+        om runtime status stats
 
       celery commands
       ---------------
@@ -53,6 +73,41 @@ class RuntimeCommandBase(CommandBase):
       Examples:
             om runtime celery inspect active
             om runtime celery control pool_grow N
+
+
+      env commands
+      ------------
+
+      This talks to an omegaml worker's pip environment
+
+      a) install a specific package
+
+         env install <package>    install the specified package, use name==version pip syntax for specific versions
+         env uninstall <package>  uninstall the specified package
+
+      b) use a requirements file
+
+         env install --file requirements.txt
+         env uninstall --file requirements.txt
+
+      c) list currently installed packages
+
+         env freez
+
+      d) install on all or a specific worker
+
+         env install --require gpu package
+         env install --every package
+
+         By default the installation runs on the default worker only. If there are multiple nodes where you
+         want to install the package(s) worker nodes, be sure to specify --every
+
+      Examples:
+            om runtime env install pandas
+            om runtime env uninstall pandas
+            om runtime env install --file requirements.txt
+            om runtime env install --file gpu-requirements.txt --require gpu
+            om runtime env install --file requirements.txt --every
     """
     command = 'runtime'
 
@@ -140,7 +195,7 @@ class RuntimeCommandBase(CommandBase):
 
     def log(self):
         import pandas as pd
-        tail  = self.args.get('-f')
+        tail = self.args.get('-f')
         om = get_omega(self.args)
         if not tail:
             df = om.logger.dataset.get()
@@ -169,4 +224,62 @@ class RuntimeCommandBase(CommandBase):
         celery_cmds += self.args.get('<celery-command>')
         celery_cmds += self.args.get('--flags')
         om.runtime.celeryapp.start(celery_cmds)
+
+    def env(self):
+        om = get_omega(self.args)
+        action = self.args.get('<action>')
+        package = self.args.get('<package>')
+        reqfile = self.args.get('--file')
+        every = self.args.get('--every')
+        require = self.args.get('--require') or ''
+        if reqfile:
+            with open(reqfile, 'rb') as fin:
+                om.scripts.put(fin, '.system/requirements.txt')
+        if not om.scripts.exists('.system/envinstall', hidden=True):
+            import omegaml as om_module
+            envinstall_path = os.path.join(os.path.dirname(om_module.__file__), 'runtimes', 'envinstall')
+            om.scripts.put(f'pkg://{envinstall_path}', '.system/envinstall')
+        if every:
+            labels = om.runtime.enable_hostqueues()
+        else:
+            labels = require.split(',')
+        results = []
+        for label in labels:
+            result = (om.runtime.require(label)
+                      .script('.system/envinstall')
+                      .run(action=action, package=package, file=reqfile,
+                           __format='python'))
+            results.append((label, result))
+        all_results = om.runtime.celeryapp.ResultSet([r[1] for r in results])
+        from tqdm import tqdm
+        with tqdm() as progress:
+            while all_results.waiting():
+                progress.update(1)
+                sleep(1)
+            all_results.get()
+        for label, result in results:
+            if label:
+                print(f'** result of worker require={label}:')
+            data = result.get()  # resolve AsyncResult => dict
+            print(str(data.get('result', data)))  # get actual result object, pip stdout
+
+    def status(self):
+        om = get_omega(self.args)
+        labels = self.args.get('labels')
+        stats = self.args.get('stats')
+        if not (labels or stats):
+            pprint(om.runtime.workers())
+        elif labels:
+            queues = om.runtime.queues()
+            pprint({worker: [q.get('name') for q in details
+                            if not q.get('name').startswith('amq')]
+                   for worker, details in queues.items()})
+        elif stats:
+            stats = om.runtime.stats()
+            pprint({worker: {
+                'size': details['pool']['max-concurrency'],
+                'tasks': {
+                    task: count for task, count in details['total'].items()
+                }
+            } for worker, details in stats.items()})
 

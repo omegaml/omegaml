@@ -3,7 +3,7 @@ Usage: om <command> [<action>] [<args>...] [options]
        om (models|datasets|scripts|jobs) [<args>...] [--replace] [--csv...] [options]
        om runtime [<args>...] [--async] [--result] [--param] [options]
        om cloud [<args>...] [options]
-       om shell [options]
+       om shell [<args>...] [options]
        om help [<command>]
 
 [usage:datasets]
@@ -31,6 +31,7 @@ Options:
 [options:cloud]
 [options:scripts]
 [options:jobs]
+[options:shell]
 
 [description:datasets]
 [description:models]
@@ -38,6 +39,7 @@ Options:
 [description:cloud]
 [description:scripts]
 [description:jobs]
+[description:shell]
 """
 import sys
 

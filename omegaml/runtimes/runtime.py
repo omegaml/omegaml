@@ -104,6 +104,10 @@ class OmegaRuntime(object):
         common['routing'].update(self._require_kwargs['routing'])
         return common
 
+    @property
+    def _inspect(self):
+        return self.celeryapp.control.inspect()
+
     def mode(self, local=False):
         self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
         return self
@@ -219,3 +223,53 @@ class OmegaRuntime(object):
         """
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs).get()
+
+    def enable_hostqueues(self):
+        """ enable a worker-specific queue on every worker host
+
+        Returns:
+
+        """
+        control = self.celeryapp.control
+        inspect = control.inspect()
+        active = inspect.active()
+        queues = []
+        for worker in active.keys():
+            hostname = worker.split('@')[-1]
+            control.cancel_consumer(hostname)
+            control.add_consumer(hostname, destination=[worker])
+            queues.append(hostname)
+        return queues
+
+    def workers(self):
+        """ list of workers
+
+        Returns:
+            dict of workers => list of active tasks
+
+        See Also:
+            celery Inspect.active()
+        """
+        return self._inspect.active()
+
+    def queues(self):
+        """ list queues
+
+        Returns:
+            dict of workers => list of queues
+
+        See Also:
+            celery Inspect.active_queues()
+        """
+        return self._inspect.active_queues()
+
+    def stats(self):
+        """ worker statistics
+
+        Returns:
+            dict of workers => dict of stats
+
+        See Also:
+            celery Inspect.stats()
+        """
+        return self._inspect.stats()
