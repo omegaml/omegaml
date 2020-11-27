@@ -5,6 +5,7 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from six.moves import range
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
@@ -17,6 +18,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 
 from omegaml import Omega
+from omegaml.backends.virtualobj import virtualobj
 from omegaml.util import delete_database, reshaped
 
 
@@ -324,6 +326,9 @@ class RuntimeTests(TestCase):
         lr.fit(X, Y)
         scores = lr.score(X, Y)
         om.models.put(lr, 'mymodel')
+        # fit in omegaml
+        r_scores = om.runtime.model('mymodel').score('datax', 'datay').get()
+        self.assertEqual(scores, r_scores)
 
     def test_gridsearch(self):
         X, y = make_classification()
@@ -352,5 +357,66 @@ class RuntimeTests(TestCase):
         self.assertIn('message', result)
         self.assertIn('worker', result)
         self.assertEqual(result['kwargs'], dict(fox='bar'))
+
+    def test_task_sequence(self):
+        om = Omega()
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        om.datasets.put(df, 'sample')
+        om.models.put(lr, 'regmodel')
+        with om.runtime.sequence() as ctr:
+            ctr.model('regmodel').fit('sample[x]', 'sample[y]')
+            ctr.model('regmodel').predict('sample[x]')
+            result = ctr.run()
+
+        data = result.get()
+        assert_array_almost_equal(df['y'].values, data[:, 0])
+
+    def test_task_parallel(self):
+        om = Omega()
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        om.datasets.put(df, 'sample')
+        om.models.put(lr, 'regmodel')
+        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+        with om.runtime.parallel() as ctr:
+            ctr.model('regmodel').predict('sample[x]')
+            ctr.model('regmodel').predict('sample[x]')
+            result = ctr.run()
+
+        data = result.get()
+        assert_array_almost_equal(df['y'].values, data[0][:, 0])
+        assert_array_almost_equal(df['y'].values, data[1][:, 0])
+
+    def test_task_mapreduce(self):
+        om = Omega()
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        om.datasets.put(df, 'sample')
+        om.models.put(lr, 'regmodel')
+        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+
+        @virtualobj
+        def combined(data=None, method=None, meta=None, store=None, **kwargs):
+            # data is the list of results from the previous tasks
+            return data
+
+        om.models.put(combined, 'combined')
+        with om.runtime.mapreduce() as ctr:
+            # two tasks to map
+            ctr.model('regmodel').predict('sample[x]')
+            ctr.model('regmodel').predict('sample[x]')
+            # one task to reduce
+            ctr.model('combined').reduce()
+            result = ctr.run()
+
+        data = result.get()
+        assert_array_almost_equal(df['y'].values, data[0][:, 0])
+        assert_array_almost_equal(df['y'].values, data[1][:, 0])
+
+
 
 

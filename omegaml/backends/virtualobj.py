@@ -90,6 +90,29 @@ class VirtualObjectBackend(BaseDataBackend):
         X = self.data_store.get(xName)
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName, **kwargs)
 
+    def reduce(self, modelname, results, rName=None, **kwargs):
+        """
+        reduce a list of results to a single result
+
+        Use this as the last step in a task canvas
+
+        Args:
+            modelname (str): the name of the virtualobj
+            results (list): the list of results forwarded by task canvas
+            rName (result): the name of the result object
+            **kwargs:
+
+        Returns:
+            result of the virtualobj handler
+
+        See Also
+            om.runtime.mapreduce
+        """
+        meta = self.model_store.metadata(modelname)
+        handler = self.get(modelname)
+        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName, **kwargs)
+
+
 def virtualobj(fn):
     """
     function decorator to create a virtual object handler from any
@@ -114,6 +137,7 @@ def virtualobj(fn):
     """
     setattr(fn, '_omega_virtual', True)
     return fn
+
 
 class VirtualObjectHandler(object):
     """

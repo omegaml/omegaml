@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
 import logging
+import six
 from uuid import uuid4
 
-import six
-
-from omegaml.util import is_dataframe, settings, is_ndarray, extend_instance
+from omegaml.util import is_dataframe, is_ndarray
 
 logger = logging.getLogger(__file__)
 
@@ -160,6 +159,10 @@ class ModelMixin(object):
         omega_decision_function = self.task('omegaml.tasks.omega_decision_function')
         Xname = self._ensure_data_is_stored(Xname)
         return omega_decision_function.delay(self.modelname, Xname, rName=rName, **kwargs)
+
+    def reduce(self, rName=None, **kwargs):
+        omega_reduce = self.task('omegaml.tasks.omega_reduce')
+        return omega_reduce.delay(modelName=self.modelname, rName=rName, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
         if is_dataframe(name_or_data):

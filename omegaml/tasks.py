@@ -3,10 +3,9 @@ omega runtime model tasks
 """
 from __future__ import absolute_import
 
+import datetime
 import os
 import sys
-
-import datetime
 from celery import shared_task
 from celery.signals import worker_process_init
 
@@ -27,6 +26,12 @@ if os.path.basename(sys.argv[0]) == 'celery':
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).predict(*self.delegate_args, **self.delegate_kwargs)
+    return sanitized(result)
+
+
+@shared_task(base=OmegamlTask, bind=True)
+def omega_reduce(self, results, modelName=None, rName=None, pure_python=True, **kwargs):
+    result = self.get_delegate(modelName).reduce(modelName, results, **self.delegate_kwargs)
     return sanitized(result)
 
 
