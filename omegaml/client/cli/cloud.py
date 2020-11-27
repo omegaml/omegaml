@@ -1,12 +1,13 @@
-from time import sleep
-
+import pandas as pd
 import requests
+from datetime import datetime, timedelta
+from tabulate import tabulate
+from time import sleep
 
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.userconf import save_userconfig_from_apikey
 from omegaml.client.util import get_omega
-from omegaml.defaults import update_from_config
 
 
 class CloudCommandBase(CommandBase):
@@ -15,6 +16,9 @@ class CloudCommandBase(CommandBase):
       om cloud login [<userid>] [<apikey>] [options]
       om cloud config [options]
       om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [--specs <specs>] [options]
+      om cloud status [runtime|pods|nodes|dbsize]
+      om cloud log <pod> [--since <time>]
+      om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot]
 
     Options:
       --userid=USERID   the userid at hub.omegaml.io (see account profile)
@@ -23,6 +27,20 @@ class CloudCommandBase(CommandBase):
       --count=NUMBER    how many instances to set up [default: 1]
       --node-type=TYPE  the type of node [default: small]
       --specs=SPECS     the service specifications as "key=value[,...]"
+      --since=TIME      recent log time, defaults to 5m (5 minutes)
+      --start=DATETIME  start datetime of range query
+      --end=DATETIME    end datetime of range query
+      --step=UNIT       step in seconds or duration unit (s=seconds, m=minutes)
+      --plot            if specified use plotext library to plot (preliminary)
+
+    Description:
+      The following metrics are available
+
+      * node-cpu-usage      node cpu usage in percent
+      * node-memory-usage   node memory usage in percent
+      * node-disk-uage      node disk usage in percent
+      * pod-cpu-usage       pod cpu usage in percent
+      * pod-memory-usage    pod memory usage in bytes
     """
     command = 'cloud'
 
@@ -134,3 +152,181 @@ class CloudCommandBase(CommandBase):
         else:
             msg = "Error {status} occurred on {uri}".format(**locals())
             self.logger.error(msg)
+
+    def status(self):
+        # self.status_nodes()
+        kinds = ('runtime', 'pods', 'nodes', 'dbsize')
+        om = self.om
+        auth = OmegaRestApiAuth.make_from(om)
+        for kind in (filter(lambda k: self.args.get(k), kinds)):
+            status_meth = getattr(self, f'status_{kind}')
+            status_meth(kind, auth)
+            break
+        else:
+            print(f"status is available for {kinds}")
+
+    def metrics(self):
+        # available metrics
+        metrics = ('node_cpu_usage', 'node_memory_usage', 'node_disk_usage',
+                   'pod_memory_usage', 'pod_cpu_usage')
+        # column in prom2df dataframe for given metric group
+        metric_group_column = {
+            'node': 'node',
+            'pod': 'pod_name',
+        }
+        metric_name = (self.args.get('<metric_name>') or '').replace('-', '_')
+        since = self.args.get('--since') or None
+        start = self.args.get('--start') or None
+        end = self.args.get('--end') or None
+        step = self.args.get('--step') or None
+        should_plot = self.args.get('--plot')
+        # check if we have a valid metric
+        if metric_name in metrics:
+            # get default range, if any
+            if since:
+                if any(since.endswith(v) for v in 'hms'):
+                    # a relative time spec
+                    unit = dict(h='hours', m='minutes', s='seconds').get(since[-1])
+                    delta = int(since[0:-1])
+                    start = datetime.utcnow() - timedelta(**{unit: delta})
+                else:
+                    # absolute time
+                    start = pd.to_datetime(since, utc=True)
+            if start:
+                start = pd.to_datetime(start, utc=True)
+            if end:
+                end = pd.to_datetime(end, utc=True)
+            if start and not end:
+                end = datetime.utcnow()
+            if end and not start:
+                start = (end - timedelta(minutes=10)).isoformat()
+            if (start or end) and not step:
+                step = '5m'
+            # query
+            om = self.om
+            auth = OmegaRestApiAuth.make_from(om)
+            data = self._get_metric(metric_name, auth, start=start, end=end, step=step)
+            df = prom2df(data['objects'], metric_name)
+            if should_plot:
+                import plotext as plx
+                # as returned by plx.get_colors
+                colors = 'red', 'green', 'yellow', 'organge', 'blue', 'violet', 'cyan'
+                metric_group = metric_group_column[metric_name.split('_', 1)[0]]
+                for i, (g, gdf) in enumerate(df.groupby(metric_group)):
+                    import pdb; pdb.set_trace()
+                    x = range(0, len(gdf))
+                    y = gdf['value'].values
+                    plx.plot(x, y, line_color=colors[i])
+                plx.show()
+            else:
+                print(tabulate(df, headers='keys'))
+        else:
+            print("Available metrics:", metrics)
+
+    def _get_metric(self, name, auth, **query):
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/metrics/{name}'
+        resp = requests.get(url, auth=auth, params=query)
+        data = resp.json()
+        return data
+
+    def _get_status(self, kind, auth):
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/status/{kind}'
+        resp = requests.get(url, auth=auth)
+        data = resp.json()
+        return data
+
+    def _get_logs(self, podname, since, auth):
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/logs/{podname}?since={since}'
+        resp = requests.get(url, auth=auth)
+        data = resp.json()
+        return data
+
+    def status_runtime(self, kind, auth):
+        data = self._get_status(kind, auth)
+        active_tasks = data['objects'][0]['active']
+        queues = data['objects'][0]['queues']
+        workers = [{'worker': k,
+                    'tasks': len(v),
+                    'labels': ','.join(q['name']
+                                       for q in queues.get(k, [])
+                                       # filter amq internal queues
+                                       if not q['name'].startswith('amq.')),
+                    } for k, v in active_tasks.items()]
+        print(tabulate(workers, headers='keys', showindex=False))
+
+    def status_pods(self, kind, auth):
+        data = self._get_status(kind, auth)
+        pods = data.get('objects')
+        df = pd.DataFrame.from_dict(pods)
+        print(tabulate(df, headers='keys', showindex=False))
+
+    def status_nodes(self, kind, auth):
+        data = self._get_status(kind, auth)
+        nodes = data.get('objects')
+        df = pd.DataFrame.from_dict(nodes)
+
+        def convert_units(v, to_unit='Mi'):
+            # convert a value like '452456Ki' to '452Mi'
+            # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+            CONVERSION = {
+                'Ki': 1024,
+                'Mi': 1024 ** 2,
+            }
+            if v[-2:] in CONVERSION:
+                value, unit = int(v[0:-3]), v[-2:]
+                value = int(value * CONVERSION[unit] * 1 / CONVERSION[to_unit])
+            else:
+                # assume bytes
+                value = int(v) * 1
+                to_unit = ''
+            return f'{value}{to_unit}'
+
+        def node_summary(row):
+            capacity = {k: convert_units(v) for k, v in row['capacity'].items()}
+            status = row['status']
+            row['cpu'] = capacity['cpu']
+            row['memory'] = f"{capacity['memory']}"
+            row['disk'] = f"{capacity['ephemeral-storage']}"
+            row['status'] = 'running' if status['Ready'] == 'True' else 'not ready'
+            return row
+
+        df = df.apply(node_summary, axis=1)
+        cols = 'name,status,role,cpu,memory,disk'.split(',')
+        print(tabulate(df[cols], headers='keys', showindex=False))
+
+    def status_dbsize(self, kind, auth):
+        data = self._get_status(kind, auth)
+        dbsize = data.get('objects')
+        df = pd.DataFrame([dbsize])
+        cols = ['kind', 'size', 'status']
+        print(tabulate(df[cols], headers='keys', showindex=False))
+
+    def log(self):
+        om = self.om
+        podname = self.args.get('<pod>', 'missing')
+        since = self.args.get('--since', '5m')
+        auth = OmegaRestApiAuth.make_from(om)
+        data = self._get_logs(podname, since, auth)
+        entries = data.get('entries')
+        print(entries)
+
+
+def prom2df(data, metric_name):
+    """ convert prom response to pandas dataframe
+    """
+    import pandas as pd
+    def parse_vector(metrics):
+        for item in metrics:
+            data = item['metric']
+            values = [item.get('value')] if 'value' in item else item.get('values')
+            for ts, value in values:
+                entry = dict(**data, ts=ts, value=float(value))
+                yield entry
+
+    metrics = data['data']['result']
+    df = pd.DataFrame(parse_vector(metrics))
+    df['ts'] = pd.to_datetime(df['ts'], unit='s')
+    df['metric_name'] = metric_name
+    base_cols = ['metric_name', 'ts']
+    cols = base_cols + [c for c in df.columns if c not in base_cols]
+    return df[cols]

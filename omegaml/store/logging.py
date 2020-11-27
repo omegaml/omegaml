@@ -381,4 +381,4 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
 
 def _attach_sysexcept_hook(logger):
     import traceback, sys
-    sys.excepthook = lambda t, v, tb: [logger.error(l) for l in traceback.format_tb(tb)]
+    sys.excepthook = lambda t, v, tb: logger.errro('{t} {v} {tb}'.format(t=t, v=v, tb=traceback.format_tb(tb)))
