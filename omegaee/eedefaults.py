@@ -47,7 +47,7 @@ OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
 #: additional SSL kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
-    'ssl_ca_certs': os.environ.get('CA_CERTS_PATH') or None,
+    'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
 }
 #: admin broker
 OMEGA_BROKERAPI_URL = (os.environ.get('OMEGA_BROKERAPI_URL') or

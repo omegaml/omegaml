@@ -110,6 +110,9 @@ def run_user_scheduler():
             execute_scripts.delay()
         except Exception as e:
             logger.error(f'error scheduling for {user}, exception {e}')
+        else:
+            del execute_scripts
+            del user_om
         # avoid excessive task bursts on rabbitmq
         sleep(1)
 
@@ -123,6 +126,10 @@ def ensure_user_broker_ready(self, *args, **kwargs):
     """
     users = User.objects.filter(is_active=True)
     for user in users:
+        if user.username in ['omops']:
+            # shovels to itself cause endless forwarding with increasing message volumes
+            # no shovel to itself
+            continue
         try:
             user_settings = user.services.get(offering__name='omegaml').settings
         except:

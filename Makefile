@@ -60,4 +60,5 @@ help:
 
 circleci:
 	# put this into the BEHAVE_YML env variable to decode in circleci config.yml
-	@cat /home/patrick/.omegaml/behave.yml | grep -A3 -E "localhost|snowflake" | sed '/^--$$/d' | base64 -w0 && echo
+	@cat /home/patrick/.omegaml/behave.yml | grep -A3 -E "localhost|snowflake" | sed '/^--$$/d' | base64 -w0 | xargs -l1 echo BEHAVE_YML
+	@cat /home/patrick/.pypirc | base64 -w0 | xargs -l1 echo PYPIRC_INI

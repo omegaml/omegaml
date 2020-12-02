@@ -1,6 +1,7 @@
+from os.path import basename
+
 import os
 import sys
-from os.path import basename
 
 from omegaml import _base_config as omdefaults
 
@@ -16,6 +17,8 @@ OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 DEPLOY_SCHEDULE_RATE = int(os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 15))
 #: user scheduler rate. adjust to worker load
 USER_SCHEDULER_RATE = int(os.environ.get('OMEGA_USER_SCHEDULER_RATE', 15 * 60))
+#: task time limit
+TASK_TIME_LIMIT = int(os.environ.get('OMEGA_TASK_TIMELIMIT', 30 * 60))
 
 OMEGA_CELERY_CONFIG = {
     'CELERYBEAT_SCHEDULE': {
@@ -41,6 +44,17 @@ OMEGA_CELERY_CONFIG = {
             }
         }
     },
+    # avoid indefinite waits on task publishing if broker is down
+    # -- without this we had indef waits in run_user_scheduler
+    # -- see https://github.com/celery/celery/issues/4627
+    'BROKER_TRANSPORT_OPTIONS': {
+        "max_retries": 3,
+        "interval_start": 0,
+        "interval_step": 1,
+        "interval_max": 5,
+    },
+    # avoid tasks run forever
+    'CELERYD_TIME_LIMIT': TASK_TIME_LIMIT,
 }
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['paasdeploy', 'omegaops']
