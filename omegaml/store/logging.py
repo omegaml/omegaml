@@ -53,7 +53,7 @@ class OmegaLoggingHandler(logging.Handler):
         return TailableLogDataset(dataset=self.dataset, collection=self.collection).tail(wait=wait)
 
     @classmethod
-    def setup(cls, store=None, dataset=None, level=None, logger=None,
+    def setup(cls, store=None, dataset=None, level=None, logger=None, name=None,
               fmt=None, reset=False, size=10 * 1024 * 1024, defaults=None, exit_hook=False):
         """
         Args:
@@ -63,6 +63,7 @@ class OmegaLoggingHandler(logging.Handler):
             target (Omega): omega instance to create the dataset in, defaults to the default om
             size (int): the maximum size of the log in bytes (capped), defaults to 1MB, set to -1
                for
+            name (str): the logger name, defaults to omegaml, set to __name__ for current module
             reset (bool): recreate the logging dataset
             fmt (str): the format specification
             exit_hook (bool): when True attach the logger to the system exception handler
@@ -70,13 +71,14 @@ class OmegaLoggingHandler(logging.Handler):
         import omegaml as om
         import logging
         effective_level = logger.getEffectiveLevel() if logger else logging.NOTSET
+        logger_name = name or 'omegaml'
         level = level or effective_level
         store = store or om.setup().datasets
         defaults = defaults or store.defaults
         dataset = dataset or defaults.OMEGA_LOG_DATASET
         fmt = fmt or defaults.OMEGA_LOG_FORMAT
         # setup handler and logger
-        logger = logger or logging.getLogger('omegaml')
+        logger = logger or logging.getLogger(logger_name)
         collection = _setup_logging_dataset(store, dataset, logger=logger, size=size, reset=reset)
         formatter = logging.Formatter(fmt)
         handler = OmegaLoggingHandler(store, dataset, collection, level=level)
