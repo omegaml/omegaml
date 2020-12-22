@@ -486,6 +486,7 @@ class CommandParser:
         Returns:
             answer as str
         """
+        value = default
         if self._askfn:
             return self._askfn(prompt, hide=hide, options=options, default=default,
                                parser=self)
@@ -494,12 +495,13 @@ class CommandParser:
             prompt = f'{prompt} {options_text}'
             if hide:
                 value = getpass(prompt=prompt)
-            value = input(prompt)
+            else:
+                value = input(prompt)
             if not value and default:
                 return default
             if options:
                 assert value.lower() in options.lower()
-        return default
+        return value
 
 
 class CommandBase:
