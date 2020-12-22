@@ -3,6 +3,7 @@ import sys
 import yaml
 from urllib3 import Retry
 
+import omegaml
 from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
 
 
@@ -84,7 +85,10 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     :param requested_userid: the userid to request config for. in this case userid
       and apikey must for a staff user for the request to succeed
     :param qualifier: the database qualifier requested. defaults to 'default'
-    :returns: the Omega instance configured for the given user
+    :returns: OmegaCloud instance configured for the given user
+
+    Returns:
+        OmegaCloud
     """
     from omegaml.client.cloud import OmegaCloud
     from omegaml import settings, _base_config

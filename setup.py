@@ -1,22 +1,21 @@
 import glob
+
 import os
 import sys
-
 from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).read()
 
-
 # extras
 hdf_deps = ['tables>=3.2.2']
-graph_deps = ['matplotlib>=3.1.0', 'seaborn>=0.9.0', 'imageio>=2.6.1']
+graph_deps = ['matplotlib>=3.1.0', 'seaborn>=0.9.0', 'imageio>=2.6.1', 'plotext>=1.0.11']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['smart_open', 'boto>=2.49.0']
 streaming_deps = ['minibatch[all]']
-jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0'] # jupyterhub-0.11 has breaking changes
+jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaking changes
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
@@ -39,7 +38,6 @@ else:
 all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
             + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
 all_client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
-
 
 setup(
     name='omegaml',
@@ -76,7 +74,7 @@ setup(
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
         'mongoengine>=0.18.2,<0.19',
-        'pandas>=0.17.1,<1.1', # 1.1 fails on storing multi-indexes
+        'pandas>=0.17.1,<1.1',  # 1.1 fails on storing multi-indexes
         'numpy>=1.16.4,<1.18',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
@@ -99,6 +97,7 @@ setup(
         'absl-py>=0.8.1',
         'tqdm>=4.32.2',
         'honcho>=1.0.1',  # not strictly required, but used in docker compose
+        'tabulate>=0.8.2',  # required in cli
     ],
     extras_require={
         'graph': graph_deps,

@@ -2,7 +2,7 @@ from unittest.case import TestCase
 
 import numpy as np
 from sklearn.datasets import make_regression
-from sklearn.linear_model.stochastic_gradient import SGDRegressor
+from sklearn.linear_model import SGDRegressor
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
