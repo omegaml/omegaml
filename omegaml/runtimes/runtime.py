@@ -273,3 +273,9 @@ class OmegaRuntime(object):
             celery Inspect.stats()
         """
         return self._inspect.stats()
+
+# apply mixins
+from omegaml.runtimes.mixins.taskcanvas import canvas_chain, canvas_group, canvas_chord
+OmegaRuntime.sequence = canvas_chain
+OmegaRuntime.parallel = canvas_group
+OmegaRuntime.mapreduce = canvas_chord
