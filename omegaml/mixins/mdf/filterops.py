@@ -1,9 +1,6 @@
-from functools import partial
-
-from omegaml.mdataframe import MDataFrame, MSeries
+from omegaml.mdataframe import MSeries
 from omegaml.store import Filter
 from omegaml.store import MongoQ
-from omegaml.store.filtered import FilteredCollection
 
 
 class FilterOpsMixin(object):
@@ -30,6 +27,7 @@ class FilterOpsMixin(object):
                 q = q | qq
         return Filter(self.collection, q)
 
+    # see https://docs.mongodb.com/manual/reference/operator/query/
     __eq__ = __getfltop('eq')
     __ne__ = __getfltop('ne')
     __lt__ = __getfltop('lt')
