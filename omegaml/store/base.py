@@ -1010,6 +1010,9 @@ class OmegaStore(object):
         files = self._Metadata.objects.no_cache()(q_search)
         return [f if raw else str(f.name).replace('.omm', '') for f in files]
 
+    def exists(self, name, hidden=False):
+        return name in self.list(name, hidden=hidden)
+
     def object_store_key(self, name, ext, hashed=False):
         """
         Returns the store key
