@@ -13,7 +13,7 @@ from omegaml.util import tensorflow_available, keras_available, module_available
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = any(m in [basename(arg) for arg in ' '.join(sys.argv).split(' ')]
                   for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
-                            '_jb_nosetest_runner.py'))
+                            '_jb_nosetest_runner.py')) or os.environ.get('OMEGA_TEST_MODE')
 
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
@@ -52,7 +52,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
-    'CELERY_TASK_RESULT_EXPIRES': 3600, # expire results within 1 hour
+    'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
     'CELERY_DEFAULT_QUEUE': os.environ.get('CELERY_Q', 'default'),
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
@@ -136,6 +136,10 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyString', 'MDataFrame,MSeries'),
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
+#: jobs mixins
+OMEGA_JOBPROXY_MIXINS = [
+    'omegaml.runtimes.mixins.nbtasks.JobTasks',
+]
 #: user extensions
 OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
 #: log dataset
@@ -144,6 +148,7 @@ OMEGA_LOG_DATASET = '.omega/logs'
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 #: MongoClient ServerSelectionTimeoutMS
 OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
+
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
@@ -211,7 +216,8 @@ def update_from_obj(obj, vars=globals(), attrs=None):
     has_k = lambda o, k: hasattr(o, k) if as_attrs(o) else k in o
     get_k = lambda o, k: getattr(o, k) if as_attrs(o) else o[k]
     set_k = lambda o, k, v: setattr(o, k, v) if as_attrs(o) else o.__setitem__(k, v)
-    set_default = lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k, o.get(k) or d)
+    set_default = lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k,
+                                                                                                         o.get(k) or d)
     # update any
     target = attrs or vars
     for k in [k for k in keys(obj) if k.isupper()]:
