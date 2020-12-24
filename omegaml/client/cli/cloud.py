@@ -273,7 +273,7 @@ class CloudCommandBase(CommandBase):
                 'Mi': 1024 ** 2,
             }
             if v[-2:] in CONVERSION:
-                value, unit = int(v[0:-3]), v[-2:]
+                value, unit = int(v[0:-2]), v[-2:]
                 value = int(value * CONVERSION[unit] * 1 / CONVERSION[to_unit])
             else:
                 # assume bytes
