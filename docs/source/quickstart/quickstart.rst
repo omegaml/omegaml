@@ -1,5 +1,35 @@
-Quick start
-===========
+Start here
+==========
+
+
+.. code:: python
+
+   import omegaml as om
+
+The :code:`om` module is readily configured to work with your local omega|ml
+server, or with the cloud instance configured using the :code:`om cloud login`
+command.
+
+Once loaded :code:`om` provides several storage areas that are immediately usable:
+
+* :code:`om.datasets` - storage area for Python and Pandas objects
+* :code:`om.models` - storage area for models
+* :code:`om.scripts` - storage area for custom modules (a.k.a. lambda modules)
+* :code:`om.jobs`- storage area for jobs (ipython notebooks)
+
+In addition, your cluster or cloud resources are available as
+
+* :code:`om.runtime` - the omega|ml remote execution environment
+
+
+Run in the cloud
+++++++++++++++++
+
+
+.. python::
+
+Run locally
++++++++++++
 
 Start the omega|ml server right from your laptop or virtual machine
 
@@ -9,7 +39,7 @@ Start the omega|ml server right from your laptop or virtual machine
     $ docker-compose up -d
 
 Jupyter Notebook is immediately available at http://localhost:8899 (`omegamlisfun` to login).
-Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+Any notebook you create will automatically be stored in the integrated omega|ml database (backed by MongoDB), making collaboration a breeze.
 The REST API is available at http://localhost:5000.
 
 Already have a Python environment (e.g. Jupyter Notebook)?
@@ -22,7 +52,7 @@ Leverage the power of omega|ml by installing as follows:
 
 
 DataOps & MLOps for humans
-==========================
+--------------------------
 
 with just a single line of code you can
 
@@ -30,11 +60,11 @@ with just a single line of code you can
 - implement data pipelines quickly, without memory limitation, all from a Pandas-like API
 - serve models and data from an easy to use REST API
 
-Further, omega|ml is the fastest way to
+Further, omega|ml is one of the fastest, most straight forward ways to
 
-- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
-- collaborate on data science projects easily, sharing Jupyter Notebooks
-- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
+- leverage cloud resources to scale model training in a dynamic compute cluster
+- collaborate on data science projects easily, sharing Jupyter Notebooks, datasets, models, scripts
+- deploy dashboards and applications right from your Jupyter Notebook
 
 .. info::
 
@@ -43,7 +73,7 @@ Further, omega|ml is the fastest way to
    * Contributions: http://bit.ly/omegaml-contribute
 
 Examples
-========
+--------
 
 Get more information at https://omegaml.github.io/omegaml/
 
@@ -67,7 +97,6 @@ Get more information at https://omegaml.github.io/omegaml/
     requests.put('/v1/dataset/stats', json={...})
     requests.get('/v1/dataset/stats?sales__gte=100')
     requests.put('/v1/model/forecast', json={...})
-
 
 Use Cases
 =========
@@ -116,3 +145,4 @@ https://omegaml.io
 omega|ml Enterprise Edition provides security on every level and is ready made for Kubernetes
 deployment. It is licensed separately for on-premise, private or hybrid cloud.
 Sign up at https://omegaml.io
+

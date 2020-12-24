@@ -1,5 +1,5 @@
 Keras
-+++++
+=====
 
 The Keras backend implements the `.fit()` method with the following Keras-specific extensions:
 

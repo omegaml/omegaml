@@ -1,8 +1,6 @@
 Lambda Modules
 ==============
 
-*Enterprise Edition*
-
 omega|ml supports execution of arbitrary modules packaged by pip on the runtime cluster. This
 is the equivalent of AWS Lambda with the added bonus of having the full set of omega|ml capabilities
 available to your modules.
@@ -21,13 +19,18 @@ code's top-level package must contain a :code:`run()` method:
 
 .. code::
 
-   def run(*args, **kwargs):
+   def run(om, *args, **kwargs):
         ...
+
+
+The :code:`om` argument is the omega instance. Inside a lambda module you should always
+use this instance instead of importing omegaml explicitely. This is to ensure the instance
+is properly initialized.
 
 
 :code:`kwargs` will contain the key/value pair passed to the module on execution.
 
-The simplest :code:`setup.py` is as simple as follows (:
+The simplest :code:`setup.py` is as simple as follows:
 
 .. code::
 

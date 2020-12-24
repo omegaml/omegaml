@@ -11,7 +11,7 @@ omega|ml provides three concepts to work with multiple environments, each focuss
   same runtime as any other bucket within the same context. Think of this a a top-level folder in
   an other-wise shared environment.
 
-* :code:`runtime routing` - tasks submitted to the runtime can specify resource requirements, which
+* :code:`routing` - tasks submitted to the runtime can specify resource requirements, which
   effectively route tasks to different workers. Multiple contexts can use the same runtime resources.
   Think of this as compute cluster segregation e.g. by client or project.
 
@@ -71,3 +71,43 @@ Object promotion copies objects from one context to another, more specifically f
 
     om_dev.datasets.promote('sales', om_prod.datasets)
     om_dev.models.promote('sales-prediction', om_prod.models)
+
+
+Working with runtime routing
+----------------------------
+
+When using :code:`om.runtime` tasks are submitted to a runtime worker. A runtime worker is any compute
+node that runs an omegaml worker. Tasks are submitted by sending a message to a celery queue, by default all tasks
+are routed to the :code:'default` queue. Any other queue can be specified:
+
+.. code:: python
+
+    # this will route the fit task to a gpu node
+    om.runtime.require('gpu').model('mymodel').fit(...)
+
+The same can be achieved on the command line:
+
+.. code:: bash
+
+    $ om runtime --require gpu model mymodel fit ...
+
+Similarly, the runtime provides a local option which means the task is run locally. This is useful for debugging, e.g.
+when running a script.
+
+.. code:: python
+
+    om.runtime.mode(local=True).model('mymodel').fit(...)
+
+Models can be permanently bound to a particular route by specifying the queue name in the model's metadata
+attributes:
+
+.. code:: python
+
+    # specify the .require() value as part of the metadata
+    specs = {
+       'label': 'gpu'
+    }
+    om.models.put(reg, 'mymodel', attributes=dict(require=specs))
+
+    # using the runtime will automatically apply .require('gpu')
+    om.runtime.model('regmodel').fit()
