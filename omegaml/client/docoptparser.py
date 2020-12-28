@@ -1,16 +1,15 @@
 """
 A parser/processor to simplify modular docopt cli
 """
-import inspect
+from getpass import getpass
 
+import inspect
 import logging
 import os
 import re
 import sys
-from getpass import getpass
-from textwrap import dedent
-
 from docopt import docopt, DocoptExit, DocoptLanguageError
+from textwrap import dedent
 
 
 class CommandParser:
@@ -369,7 +368,8 @@ class CommandParser:
             if self.should_debug:
                 # see
                 left = inspect.trace()[-1][0].f_locals.get('left')
-                print("*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
+                print(
+                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
                 print(f"*** The following arguments were not parsed: {left}")
                 raise e
             # by specifying docopt(help=False) we get to control what happens on parse failure
@@ -594,6 +594,7 @@ class CommandBase:
     usage_header = 'Usage of {self.command}'
     options_header = 'Options for {self.command}'
     description_header = 'Working with {self.command}'
+    options_label = 'Options:'
 
     def __init__(self, docs, argv=None, logger=None, parser=None):
         # initialize, if this class contains a __doc__ header
@@ -660,8 +661,11 @@ class CommandBase:
                 if opt.strip().split('  ')[0] not in self.docs:
                     to_add.append(opt)
             # extend local options with global options
-            pos_options = docs.index('Options:') + 1
-            docs[pos_options:pos_options] = to_add
+            if self.options_label in docs:
+                pos_options = docs.index(self.options_label) + 1
+                docs[pos_options:pos_options] = to_add
+            else:
+                docs.extend(to_add)
 
             def section(line):
                 section_headers = 'options', 'description'
