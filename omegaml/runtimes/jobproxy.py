@@ -1,16 +1,13 @@
 from __future__ import absolute_import
 
 import logging
-from uuid import uuid4
 
-import six
+from omegaml.util import extend_instance
 
-from omegaml.util import is_dataframe, settings, is_ndarray
 logger = logging.getLogger(__file__)
 
 
 class OmegaJobProxy(object):
-
     """
     proxy to a remote job in a celery worker
 
@@ -27,9 +24,11 @@ class OmegaJobProxy(object):
             result = om.runtime.job('foojob').schedule()
             result.get()
     """
+
     def __init__(self, jobname, runtime=None):
         self.jobname = jobname
         self.runtime = runtime
+        self._apply_mixins()
 
     def run(self, **kwargs):
         """
@@ -46,3 +45,10 @@ class OmegaJobProxy(object):
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.schedule_omegaml_job')
         return job_run.delay(self.jobname, **kwargs)
+
+    def _apply_mixins(self):
+        """
+        apply mixins in defaults.OMEGA_STORE_MIXINS
+        """
+        for mixin in self.runtime.omega.defaults.OMEGA_JOBPROXY_MIXINS:
+            extend_instance(self, mixin)
