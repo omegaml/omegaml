@@ -15,7 +15,7 @@ Usage: om <command> [<action>] [<args>...] [options]
 [usage:shell]
 
 Options:
-  -h, --help          Show this screen
+  -h, --help         Show this screen
   --version          Show version.
   --loglevel=LEVEL   INFO,ERROR,DEBUG [default: INFO]
   --copyright        Show copyright

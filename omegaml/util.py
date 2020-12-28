@@ -21,8 +21,11 @@ except:
 # support pandas < 1.0
 try:
     from pandas import json_normalize
-except:
-    from pandas.io.json import json_normalize
+except Exception as e:
+    try:
+        from pandas.io.json import json_normalize
+    except:
+        raise e
 json_normalize = json_normalize
 
 # reset global settings
