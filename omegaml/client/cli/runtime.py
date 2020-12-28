@@ -309,7 +309,7 @@ class RuntimeCommandBase(CommandBase):
 
     def restart(self):
         import requests
-        om = get_omega(self.args)
+        om = get_omega(self.args, require_config=True)
         name = self.args.get('<name>')
         user = om.runtime.auth.userid
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)

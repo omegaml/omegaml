@@ -15,7 +15,7 @@ class CloudCommandBase(CommandBase):
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
       om cloud config [show] [options]
-      om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [--specs <specs>] [options]
+      om cloud (add|update|remove) <kind> [--specs <specs>] [options]
       om cloud status [runtime|pods|nodes|dbsize] [options]
       om cloud log <pod> [--since <time>] [options]
       om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot] [options]
@@ -34,6 +34,34 @@ class CloudCommandBase(CommandBase):
       --plot            if specified use plotext library to plot (preliminary)
 
     Description:
+      om cloud is available for the omega|ml managed service at https://hub.omegaml.io
+
+      Logging in
+      ----------
+
+      $ om cloud login <userid> <apikey>
+
+      Showing the configuration
+      -------------------------
+
+      $ om cloud config
+
+      Building a cluster
+      ------------------
+
+      Set up a cluster
+
+      $ om cloud add nodepool --specs "node-type=<node-type>,role=worker,size=1"
+      $ om cloud add runtime --specs "role=worker,label=worker,size=1"
+
+      Switch nodes on and off
+
+      $ om cloud update worker --specs "node-name=<name>,scale=0" # off
+      $ om cloud update worker --specs "node-name=<name>,scale=1" # on
+
+      Using Metrics
+      -------------
+
       The following metrics are available
 
       * node-cpu-usage      node cpu usage in percent
@@ -41,6 +69,12 @@ class CloudCommandBase(CommandBase):
       * node-disk-uage      node disk usage in percent
       * pod-cpu-usage       pod cpu usage in percent
       * pod-memory-usage    pod memory usage in bytes
+
+      Get the specific metrics as follows, e.g.
+
+      $ om cloud metrics node-cpu-usage
+      $ om cloud metrics pod-cpu-usage --since 30m
+      $ om cloud metrics pod-memory-usage --start 20dec2020T0100 --end20dec2020T0800
     """
     command = 'cloud'
 
@@ -208,7 +242,11 @@ class CloudCommandBase(CommandBase):
             om = self.om
             auth = OmegaRestApiAuth.make_from(om)
             data = self._get_metric(metric_name, auth, start=start, end=end, step=step)
-            df = prom2df(data['objects'], metric_name)
+            try:
+                df = prom2df(data['objects'], metric_name)
+            except:
+                print("No data could be found. Check the time range.")
+                return
             if should_plot:
                 import plotext as plx
                 # as returned by plx.get_colors

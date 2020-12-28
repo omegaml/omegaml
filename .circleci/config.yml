@@ -35,20 +35,40 @@ jobs:
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
             sleep 10
+            # run tests
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-            for TF_VERSION in 1.15.3 2.2.0 2.3.0
-            do
-              for VER in 3.6 3.7 3.8
-              do
-                conda env remove -q -y -n omenv$VER || echo ""
-                echo "Testing with python $VER"
-                conda create -q -y -n omenv$VER python=$VER
-                conda activate omenv$VER
-                pip install --progress-bar off .[all,dev]
-                make test
-                conda deactivate
+            function dotest() {
+              export VER=$1
+              export TF_VERSION=$2
+              conda env remove -q -y -n omenv$VER || echo ""
+              echo "Testing with python $VER tensorflow $TF_VERSION"
+              conda create -q -y -n omenv$VER python=$VER
+              conda activate omenv$VER
+              pip install --progress-bar off .[all,dev]
+              make test
+              conda deactivate
+            }
+            # due to different allowed combinations we need several loops
+            # we dont use tox because tox assumes python version is installed already
+            # py36
+            for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
+              dotest 3.6 $TF_VERSION
+            done
+            # py37
+            for PYVER in 3.7 3.8; do
+              for TF_VERSION in 2.2.0 2.3.0 2.3.1 2.4.0; do
+                dotest $PYVER $TF_VERSION
               done
             done
+            # py39
+            # tensorflow does not support 3.9 yet
+            # see https://github.com/tensorflow/tensorflow/issues/44485
+            #     https://github.com/tensorflow/tensorflow/issues/44400
+            # PYVER=3.9
+            # for TF_VERSION in 2.2.0 2.3.0 2.3.1; do
+            #  dotest $PYVER $TF_VERSION
+            # done
+            # end tests
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
       - run:
