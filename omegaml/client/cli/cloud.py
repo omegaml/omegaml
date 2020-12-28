@@ -14,11 +14,11 @@ class CloudCommandBase(CommandBase):
     """
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
-      om cloud config [options]
+      om cloud config [show] [options]
       om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [--specs <specs>] [options]
-      om cloud status [runtime|pods|nodes|dbsize]
-      om cloud log <pod> [--since <time>]
-      om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot]
+      om cloud status [runtime|pods|nodes|dbsize] [options]
+      om cloud log <pod> [--since <time>] [options]
+      om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot] [options]
 
     Options:
       --userid=USERID   the userid at hub.omegaml.io (see account profile)
@@ -46,7 +46,9 @@ class CloudCommandBase(CommandBase):
 
     @property
     def om(self):
-        return get_omega(self.args, require_config=True)
+        without_config =('config', 'login')
+        require_config = not any(self.args.get(k) for k in without_config)
+        return get_omega(self.args, require_config=require_config)
 
     def login(self):
         userid = self.args.get('<userid>') or self.args.get('--userid')
@@ -213,7 +215,6 @@ class CloudCommandBase(CommandBase):
                 colors = 'red', 'green', 'yellow', 'organge', 'blue', 'violet', 'cyan'
                 metric_group = metric_group_column[metric_name.split('_', 1)[0]]
                 for i, (g, gdf) in enumerate(df.groupby(metric_group)):
-                    import pdb; pdb.set_trace()
                     x = range(0, len(gdf))
                     y = gdf['value'].values
                     plx.plot(x, y, line_color=colors[i])
@@ -243,7 +244,7 @@ class CloudCommandBase(CommandBase):
 
     def status_runtime(self, kind, auth):
         data = self._get_status(kind, auth)
-        active_tasks = data['objects'][0]['active']
+        active_tasks = data['objects'][0].get('active') or {}
         queues = data['objects'][0]['queues']
         workers = [{'worker': k,
                     'tasks': len(v),
@@ -252,7 +253,10 @@ class CloudCommandBase(CommandBase):
                                        # filter amq internal queues
                                        if not q['name'].startswith('amq.')),
                     } for k, v in active_tasks.items()]
-        print(tabulate(workers, headers='keys', showindex=False))
+        if workers:
+            print(tabulate(workers, headers='keys', showindex=False))
+        else:
+            print("No runtime workers found.")
 
     def status_pods(self, kind, auth):
         data = self._get_status(kind, auth)
