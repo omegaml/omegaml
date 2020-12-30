@@ -19,22 +19,15 @@ jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaki
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
-tf_version = os.environ.get('TF_VERSION', '2.3.1')
+tf_version = os.environ.get('TF_VERSION', '2.2.0')
 tf_match = os.environ.get('TF_VERSION_MATCH', '==')
 if tf_version.startswith('1.15'):
     assert sys.version_info <= (3, 7), "TF < 2.x requires Python <= 3.7"
     tf_deps = ['tensorflow=={}'.format(tf_version)]
-    tf_deps = tf_deps + ['tensorflow-gpu==1.15.0', 'h5py==2.10.0']
+    tf_deps = tf_deps + ['tensorflow-gpu==1.15.0']
     keras_deps = ['keras==2.2.4']
-elif (3, 8) <= sys.version_info < (3, 9) :
-    major, minor, *_ = (int(v) for v in tf_version.split('.'))
-    assert (major, minor) >= (2, 2), "Python version 3.8 only supported by TF >= 2.2"
-    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras>=2.4.3']
-elif sys.version_info >= (3, 9):
-    major, minor, *_ = (int(v) for v in tf_version.split('.'))
-    assert (major, minor) <= (2, 4), "Python version 3.9 only supported by TF < 2.4"
-    assert (major, minor) >= (2, 2), "Python version 3.9 only supported by TF >= 2.2"
+elif sys.version_info >= (3, 8):
+    assert tf_version.startswith('2'), "Python version 3.8 only supported by TF >= 2.2"
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras>=2.4.3']
 else:
@@ -82,7 +75,7 @@ setup(
         'pymongo>=3.2.2',
         'mongoengine>=0.18.2,<0.19',
         'pandas>=0.17.1,<1.1',  # 1.1 fails on storing multi-indexes
-        'numpy>=1.16.4',
+        'numpy>=1.16.4,<1.18',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
         'PyYAML>=5.1',
