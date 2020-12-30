@@ -216,26 +216,64 @@ class OmegaJobs(BackendBaseCommon):
         """
         Run a job immediately
 
-        The job is run and the results are stored in the given filename
+        The job is run and the results are stored in om.jobs('results/name <timestamp>') and
+        the result's Metadata is returned.
 
-        :param name: the name of the jobfile
-        :return: the metadata of the job
+        Metadata.attributes of the original job as given by name is updated:
+
+        * attributes['job_runs'] (list) - list of status of each run. Status is
+             a dict as below
+        * attributes['job_results'] (list) - list of results job names in same
+             index-order as job_runs
+
+        The status of each job run is a dict with keys:
+
+        * status (str): the status of the job run, OK or ERROR
+        * ts (datetime): time of execution
+        * message (str): error mesasge in case of ERROR, else blank
+        * results (str): name of results in case of OK, else blank
+
+        Usage:
+            # directly (sync)
+            meta = om.jobs.run('mynb')
+
+            # via runtime (async)
+            job = om.runtime.job('mynb')
+            result = job.run()
+
+        Args:
+            name (str): the name of the jobfile
+
+        Returns:
+             Metadata of the results entry
         """
         return self.run_notebook(name)
 
     def run_notebook(self, name, event=None):
         """
         run a given notebook immediately.
+
         the job parameter is the name of the job script as in ipynb.
         Inserts and returns the Metadata document for the job.
         """
         notebook = self.get(name)
         meta_job = self.metadata(name)
         ts = datetime.datetime.now()
-        # execute
+        # execute kwargs
+        # -- see ExecuteProcessor class
+        # -- see https://nbconvert.readthedocs.io/en/latest/execute_api.html
         ep_kwargs = {
-            'timeout': None
+            # avoid timeouts to stop kernel
+            'timeout': None,
+            # avoid kernel at exit functions
+            # -- this stops ipykernel AttributeError 'send_multipart'
+            'shutdown_kernel': 'immediate',
+            # set kernel name, blank is default
+            # -- e.g. python3, ir
+            # -- see https://stackoverflow.com/a/47053020/890242
+            'kernel_name': '',
         }
+        # other interesting options
         ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
         try:
             if not meta_job.kind_meta.get('keep_output', False):

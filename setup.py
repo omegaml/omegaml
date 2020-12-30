@@ -19,7 +19,7 @@ jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaki
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
-tf_version = os.environ.get('TF_VERSION', '2.3.1')
+tf_version = os.environ.get('TF_VERSION') or '2.3.1'
 tf_match = os.environ.get('TF_VERSION_MATCH', '==')
 if tf_version.startswith('1.15'):
     assert sys.version_info <= (3, 7), "TF < 2.x requires Python <= 3.7"

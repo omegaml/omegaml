@@ -14,7 +14,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime job <name> [<job-action>] [<args...>] [--async] [options]
       om runtime result <taskid> [options]
       om runtime ping [options]
-      om runtime env <action> [<package>] [--file <requirements.txt>] [--require <label>] [--every] [options]
+      om runtime env <action> [<package>] [--file <requirements.txt>] [--every] [options]
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [options]

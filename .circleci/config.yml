@@ -48,39 +48,44 @@ jobs:
               make test
               conda deactivate
             }
-            # due to different allowed combinations we need several loops
-            # we dont use tox because tox assumes python version is installed already
-            # py36
-            for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
-              dotest 3.6 $TF_VERSION
-            done
-            # py37
-            for PYVER in 3.7 3.8; do
-              for TF_VERSION in 2.2.0 2.3.0 2.3.1 2.4.0; do
-                dotest $PYVER $TF_VERSION
+            if [[ $CIRCLE_BRANCH = "release-build" ]]; then
+              # due to different allowed combinations we need several loops
+              # we dont use tox because tox assumes python version is installed already
+              # py36
+              for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
+                dotest 3.6 $TF_VERSION
               done
-            done
-            # py39
-            # tensorflow does not support 3.9 yet
-            # see https://github.com/tensorflow/tensorflow/issues/44485
-            #     https://github.com/tensorflow/tensorflow/issues/44400
-            # PYVER=3.9
-            # for TF_VERSION in 2.2.0 2.3.0 2.3.1; do
-            #  dotest $PYVER $TF_VERSION
-            # done
-            # end tests
+              # py37
+              for PYVER in 3.7 3.8; do
+                for TF_VERSION in 2.2.0 2.3.0 2.3.1 2.4.0; do
+                  dotest $PYVER $TF_VERSION
+                done
+              done
+              # py39
+              # tensorflow does not support 3.9 yet
+              # see https://github.com/tensorflow/tensorflow/issues/44485
+              #     https://github.com/tensorflow/tensorflow/issues/44400
+              # PYVER=3.9
+              # for TF_VERSION in 2.2.0 2.3.0 2.3.1; do
+              #  dotest $PYVER $TF_VERSION
+              # done
+              # end tests
+            else
+              # if this is not a release build, do a quick build for speed
+              dotest 3.7
+            fi
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
       - run:
           name: Run live tests
           command: |
             source miniconda3/etc/profile.d/conda.sh
-            conda activate omenv3.8
+            conda activate omenv3.7
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             ls -lart ~/.omegaml
             cd omegaml-ce
-            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras" make livetest
+            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" make livetest
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
           path: /tmp/screenshots
@@ -120,11 +125,10 @@ workflows:
     jobs:
       - test:
           context: omegaml
-          filters:
-            branches:
-              ignore: release-build
       - release:
           context: omegaml
+          requires:
+            - test
           filters:
             branches:
               only: release-build
