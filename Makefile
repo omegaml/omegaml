@@ -6,13 +6,16 @@ clean:
 	rm -rf ./build/*
 
 bumppatch:
-	bumpversion patch
+	pip install bumpversion
+	bumpversion patch ${BUMPARGS}
 
 bumpminor:
-	bumpversion minor
+	pip install bumpversion
+	bumpversion minor ${BUMPARGS}
 
 bumpbuild:
-	bumpversion build
+	pip install bumpversion
+	bumpversion build ${BUMPARGS}
 
 dist-prod: test clean
 	: "build a release"
@@ -30,7 +33,7 @@ candidate-dist: clean
 	rm -rf ./dist/*
 	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE` --nolivetest
 
-test:
+test: bumpbuild
 	-docker-compose up -d || echo "assuming docker-compose environment already running"
 	# note we use --exe to make this work with circleci, where all files are executable due to a uid/gid quirk
 	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2 --exe"

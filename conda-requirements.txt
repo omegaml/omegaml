@@ -3,3 +3,10 @@
 # platform: linux-64
 python=3.7
 configurable-http-proxy
+# FIXME upgrade pip, caused error on django-allauth resolution
+# due to https://pip.pypa.io/en/latest/user_guide/#changes-to-the-pip-dependency-resolver-in-20-3-2020
+# we use either pip 20.2.4 without --use-deprecated=legacy-resolver option
+# or we use pip 20.3.1 with --use-deprecated=legacy-resolver option
+# it is much easier to stick with 20.2.4 to keep legacy behavior than to instlal 20.3.1 and change all
+# pip installations to use the legacy-resolver
+pip==20.2.4

@@ -14,6 +14,7 @@ dev_deps = [
     'jupyterhub-simplespawner==0.1',
     'gil',
     'sphinx-django-command',
+    'bumpversion',
 ]
 
 web_deps = [

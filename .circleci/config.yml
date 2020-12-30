@@ -3,10 +3,11 @@ jobs:
   test:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202010-01
     resource_class: xlarge
     environment:
         CURRENT_USER: omegadev
+        BUMPARGS: --allow-dirty --no-commit
     steps:
     - run:
         name: Install system packages
