@@ -1,7 +1,5 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
-PIPVERSION=$(shell cat omegaml/VERSION | sed 's/-//')
-FINAL_VERSION=$(shell cat omegaml/VERSION | sed -r 's/(.*)-rc.*$/\1//')
 
 test:
 	unset DJANGO_SETTINGS_MODULE && nosetests -v
@@ -15,7 +13,7 @@ dist:
 	rm -rf ./dist/*
 	rm -rf ./build/*
 	python setup.py sdist bdist_wheel
-	twine check dist/omegaml-${PIPVERSION}-py3-none-any.whl
+	twine check dist/*.whl
 
 livetest: dist
 	scripts/livetest.sh --local --build
@@ -39,6 +37,12 @@ release-prod: test dist sanity
 	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
+	twine upload --repository pypi dist/*gz dist/*whl
+	sleep 5
+	scripts/livetest.sh
+
+release-docker: dist
+	: "docker push image sto dockerhub"
 	scripts/livetest.sh --local --build --tag ${VERSION}
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
@@ -80,7 +84,7 @@ bumpbuild:
 	bumpversion build
 
 bumpfinal:
-	bumpversion final --new-version ${FINAL_VERSION}
+	bumpversion release
 
 help:
 		@echo -n "Common make targets"

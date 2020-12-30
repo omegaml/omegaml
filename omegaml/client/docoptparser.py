@@ -1,14 +1,15 @@
 """
 A parser/processor to simplify modular docopt cli
 """
+from getpass import getpass
+
+import inspect
 import logging
 import os
 import re
 import sys
-from getpass import getpass
-from textwrap import dedent
-
 from docopt import docopt, DocoptExit, DocoptLanguageError
+from textwrap import dedent
 
 
 class CommandParser:
@@ -203,6 +204,38 @@ class CommandParser:
         command's options section is added to the global Options: if
         there is a corresponding [foo:<command>] placeholder.
 
+    Options are not parsed:
+        If you have applied Options either at the top-level or a sub command
+        and still find the parser does not accept it, make sure that your
+        command includes the [options] parameter. Otherwise the parser may
+        not recognize the option.
+
+        E.g. the following will not work:
+
+        # pgm.py
+        '''
+        Usage:
+            pgm foo --baz
+
+        Options:
+            --baz    some flag
+        '''
+
+        # foo.py
+        '''
+        Usage:
+            pgm foo
+        '''
+
+        To make it work, add [options] to the pgm foo statement in foo.py:
+
+        # foo.py
+        '''
+        Usage:
+            pgm foo [options]
+        '''
+
+        Now the parser will accept the --baz option.
 
     Debugging:
         To debug the parser, set DOCOPT_DEBUG=1. This will print the parsed
@@ -331,7 +364,14 @@ class CommandParser:
         """
         try:
             self.args = safe_docopt(self.docs, argv=self.argv, version=self.version, help=False)
-        except DocoptExit:
+        except DocoptExit as e:
+            if self.should_debug:
+                # see
+                left = inspect.trace()[-1][0].f_locals.get('left')
+                print(
+                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
+                print(f"*** The following arguments were not parsed: {left}")
+                raise e
             # by specifying docopt(help=False) we get to control what happens on parse failure
             if self.argv:
                 # if help requested, show help. this simulates a valid Usage: help <action>
@@ -554,6 +594,7 @@ class CommandBase:
     usage_header = 'Usage of {self.command}'
     options_header = 'Options for {self.command}'
     description_header = 'Working with {self.command}'
+    options_label = 'Options:'
 
     def __init__(self, docs, argv=None, logger=None, parser=None):
         # initialize, if this class contains a __doc__ header
@@ -619,10 +660,16 @@ class CommandBase:
                     break
                 if opt.strip().split('  ')[0] not in self.docs:
                     to_add.append(opt)
-            docs.extend(to_add)
+            # extend local options with global options
+            if self.options_label in docs:
+                pos_options = docs.index(self.options_label) + 1
+                docs[pos_options:pos_options] = to_add
+            else:
+                docs.extend(to_add)
 
             def section(line):
-                if line.lower().startswith('options'):
+                section_headers = 'options', 'description'
+                if any(line.lower().startswith(v) for v in section_headers):
                     line = '\n' + line
                 return line
 
