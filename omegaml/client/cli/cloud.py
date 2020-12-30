@@ -14,11 +14,11 @@ class CloudCommandBase(CommandBase):
     """
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
-      om cloud config [show] [options]
-      om cloud (add|update|remove) <kind> [--specs <specs>] [options]
-      om cloud status [runtime|pods|nodes|dbsize] [options]
-      om cloud log <pod> [--since <time>] [options]
-      om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot] [options]
+      om cloud config [options]
+      om cloud (add|update|remove) <kind> [--node-type <type>] [--count <n>] [--specs <specs>] [options]
+      om cloud status [runtime|pods|nodes|dbsize]
+      om cloud log <pod> [--since <time>]
+      om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot]
 
     Options:
       --userid=USERID   the userid at hub.omegaml.io (see account profile)
@@ -34,34 +34,6 @@ class CloudCommandBase(CommandBase):
       --plot            if specified use plotext library to plot (preliminary)
 
     Description:
-      om cloud is available for the omega|ml managed service at https://hub.omegaml.io
-
-      Logging in
-      ----------
-
-      $ om cloud login <userid> <apikey>
-
-      Showing the configuration
-      -------------------------
-
-      $ om cloud config
-
-      Building a cluster
-      ------------------
-
-      Set up a cluster
-
-      $ om cloud add nodepool --specs "node-type=<node-type>,role=worker,size=1"
-      $ om cloud add runtime --specs "role=worker,label=worker,size=1"
-
-      Switch nodes on and off
-
-      $ om cloud update worker --specs "node-name=<name>,scale=0" # off
-      $ om cloud update worker --specs "node-name=<name>,scale=1" # on
-
-      Using Metrics
-      -------------
-
       The following metrics are available
 
       * node-cpu-usage      node cpu usage in percent
@@ -69,20 +41,12 @@ class CloudCommandBase(CommandBase):
       * node-disk-uage      node disk usage in percent
       * pod-cpu-usage       pod cpu usage in percent
       * pod-memory-usage    pod memory usage in bytes
-
-      Get the specific metrics as follows, e.g.
-
-      $ om cloud metrics node-cpu-usage
-      $ om cloud metrics pod-cpu-usage --since 30m
-      $ om cloud metrics pod-memory-usage --start 20dec2020T0100 --end20dec2020T0800
     """
     command = 'cloud'
 
     @property
     def om(self):
-        without_config =('config', 'login')
-        require_config = not any(self.args.get(k) for k in without_config)
-        return get_omega(self.args, require_config=require_config)
+        return get_omega(self.args, require_config=True)
 
     def login(self):
         userid = self.args.get('<userid>') or self.args.get('--userid')
@@ -242,17 +206,14 @@ class CloudCommandBase(CommandBase):
             om = self.om
             auth = OmegaRestApiAuth.make_from(om)
             data = self._get_metric(metric_name, auth, start=start, end=end, step=step)
-            try:
-                df = prom2df(data['objects'], metric_name)
-            except:
-                print("No data could be found. Check the time range.")
-                return
+            df = prom2df(data['objects'], metric_name)
             if should_plot:
                 import plotext as plx
                 # as returned by plx.get_colors
                 colors = 'red', 'green', 'yellow', 'organge', 'blue', 'violet', 'cyan'
                 metric_group = metric_group_column[metric_name.split('_', 1)[0]]
                 for i, (g, gdf) in enumerate(df.groupby(metric_group)):
+                    import pdb; pdb.set_trace()
                     x = range(0, len(gdf))
                     y = gdf['value'].values
                     plx.plot(x, y, line_color=colors[i])
@@ -282,7 +243,7 @@ class CloudCommandBase(CommandBase):
 
     def status_runtime(self, kind, auth):
         data = self._get_status(kind, auth)
-        active_tasks = data['objects'][0].get('active') or {}
+        active_tasks = data['objects'][0]['active']
         queues = data['objects'][0]['queues']
         workers = [{'worker': k,
                     'tasks': len(v),
@@ -291,10 +252,7 @@ class CloudCommandBase(CommandBase):
                                        # filter amq internal queues
                                        if not q['name'].startswith('amq.')),
                     } for k, v in active_tasks.items()]
-        if workers:
-            print(tabulate(workers, headers='keys', showindex=False))
-        else:
-            print("No runtime workers found.")
+        print(tabulate(workers, headers='keys', showindex=False))
 
     def status_pods(self, kind, auth):
         data = self._get_status(kind, auth)

@@ -15,22 +15,22 @@ class RuntimeCommandBase(CommandBase):
       om runtime result <taskid> [options]
       om runtime ping [options]
       om runtime env <action> [<package>] [--file <requirements.txt>] [--require <label>] [--every] [options]
-      om runtime log [-f] [options]
-      om runtime status [workers|labels|stats] [options]
+      om runtime log [-f]
+      om runtime status [workers|labels|stats]
       om runtime restart app <name> [options]
-      om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
+      om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...]
 
     Options:
-      --async           don't wait for results, will print taskid
-      -f                tail log
-      --require=VALUE   worker label
-      --flags=VALUE     celery flags, list as "--flag VALUE"
-      --worker=VALUE    celery worker
-      --queue=VALUE     celery queue
-      --celery-help     show celery help
-      --file=VALUE      path/to/requirements.txt
-      --local           if specified the task will run locally. Use this for testing
-      --every           if specified runs task on all workers
+      --async          don't wait for results, will print taskid
+      -f               tail log
+      --require=VALUE  worker label
+      --flags=VALUE    celery flags, list as "--flag VALUE"
+      --worker=VALUE   celery worker
+      --queue=VALUE    celery queue
+      --celery-help    show celery help
+      --file=VALUE     path/to/requirements.txt
+      --local          if specified the task will run locally. Use this for testing
+      --every          if specified runs task on all workers
 
     Description:
       model, job and script commands
@@ -309,7 +309,7 @@ class RuntimeCommandBase(CommandBase):
 
     def restart(self):
         import requests
-        om = get_omega(self.args, require_config=True)
+        om = get_omega(self.args)
         name = self.args.get('<name>')
         user = om.runtime.auth.userid
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
