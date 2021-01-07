@@ -397,11 +397,20 @@ class CommandParser:
                 raise
         # if we get here it means docopt has decided all the arguments are valid
         # -- see if we have a command
-        self.command = self.parse_command()
-        # -- no command?!
-        if not self.command:
-            self.help()
-            raise DocoptExit()
+        try:
+            self.command = self.parse_command()
+            # -- no command?!
+            if not self.command:
+                self.help()
+                raise DocoptExit()
+        except DocoptExit as e:
+            if self.should_debug:
+                # see
+                left = inspect.trace()[-1][0].f_locals.get('left')
+                print(
+                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
+                print(f"*** The following arguments were not parsed: {left}")
+            raise e
         if self.should_debug:
             print("*** docopt parsed args", self.args)
             print("*** docopt using command class {}".format(repr(self.command)))

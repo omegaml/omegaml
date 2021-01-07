@@ -1,3 +1,5 @@
+import os
+
 import unittest
 
 from omegaml import Omega
@@ -7,10 +9,12 @@ from omegaml.util import settings as omegaml_settings
 
 class JobTasksTests(unittest.TestCase):
     def setUp(self):
-        import os
+        super().setUp()
         # ensure that sub tasks run in test mode
         os.environ['OMEGA_TEST_MODE'] = '1'
-        super().setUp()
+        # ensure that sub tasks don't use authenticated runtime
+        os.environ['OMEGA_ALLOW_TASK_DEFAULT_AUTH'] = 'yes'
+
         for omx in (self.om, self.om['bucket']):
             for fn in omx.jobs.list():
                 omx.jobs.drop(fn)
@@ -74,6 +78,8 @@ class JobTasksTests(unittest.TestCase):
 
     def test_map_groups(self):
         """ test runtime.job.map() works with multiple groups """
+        import os
+
         om = self.om
         meta = om.jobs.create("print('hello')", 'main')
         job = om.runtime.job('main')

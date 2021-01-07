@@ -129,6 +129,7 @@ class CliTestScenarios:
         if isinstance(argv, str):
             argv = argv.split(' ')
         self.cli_parser = cli.main(argv=argv, logger=self.cli_logger, **kwargs)
+        return self.cli_parser
 
     def make_model(self, name):
         """

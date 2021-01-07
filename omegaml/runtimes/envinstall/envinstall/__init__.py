@@ -39,8 +39,8 @@ def run(om, *args, package=None, file=None, action='install', options=None, **kw
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
                                      encoding='utf-8')
-    except IOError:
-        result = 'another envinstall process is running on this node'
+    except IOError as e :
+        result = f'another envinstall process is running on this node: {e}'
     else:
         result = str(process.stdout)
     finally:
