@@ -1,9 +1,9 @@
+import os
 from uuid import uuid4
 
 from ._version import version
 from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
-from omegaml.store.streams import StreamsProxy
 
 
 class Omega(CombinedOmegaStoreMixin):
@@ -80,7 +80,6 @@ class Omega(CombinedOmegaStoreMixin):
 
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
-
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def __getitem__(self, bucket):
@@ -121,12 +120,42 @@ class OmegaDeferredInstance(object):
         self.base = base
         self.attribute = attribute
 
-    def setup(self, mongo_url=None, bucket=None, celeryconf=None):
-        from omegaml.client.cloud import setup_from_config
-        try:
-            omega = setup_from_config()
-        except SystemError:
-            omega = Omega(mongo_url=mongo_url, bucket=bucket, celeryconf=celeryconf)
+    def setup(self, *args, **kwargs):
+        """loads omegaml
+
+        Loading order
+            - cloud using environment
+            - cloud using config file
+            - local instance
+
+        Returns:
+            omega instance
+        """
+
+        def setup_config():
+            from omegaml.client.cloud import setup_from_config
+            return setup_from_config()
+
+        def setup_env():
+            from omegaml.client.cloud import setup
+            return setup(os.environ['OMEGA_USERID'], os.environ['OMEGA_APIKEY'])
+
+        def setup_base():
+            return Omega(*args, **kwargs)
+
+        from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
+        from_config = 'OMEGA_CONFIG' in os.environ
+        loaders = setup_env, setup_config, setup_base
+        must_load = (from_env, setup_env), (from_config, setup_config)
+        for loader in loaders:
+            try:
+                omega = loader()
+            except:
+                if any(condition and loader is expected for condition, expected in must_load):
+                    raise
+            else:
+                break
+
         if not self.initialized:
             self.initialized = True
             self.omega = omega

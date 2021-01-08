@@ -83,12 +83,20 @@ class OmegaCloudRuntime(OmegaRuntime):
 
 
 def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
-    # from now on, link OmegaCloud implementation as the default
-    import omegaml as om
-    api_url = ensure_api_url(api_url, om.defaults)
+    import omegaml as om_mod
+    api_url = ensure_api_url(api_url, om_mod._base_config)
+    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=False)
+    # prepare om to be linked to default
     om.Omega = OmegaCloud
     om.get_omega_for_task = lambda task: setup(userid=userid, apikey=apikey, qualifier=qualifier, bucket=bucket)
-    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=False)
+    om.setup = lambda *args, **kwargs: setup(
+        **{**dict(userid=userid, apikey=apikey, qualifier=qualifier, bucket=bucket),
+           **kwargs})
+    om._om = om
+    # ensure link to deferred instance
+    om_mod.get_omega_for_task = om.get_omega_for_task
+    om_mod.Omega = OmegaCloud
+    om_mod.link(om)
     return om[bucket]
 
 
@@ -102,7 +110,7 @@ def setup_from_config(config_file=None):
                 try:
                     omega = setup(userid=userconfig['OMEGA_USERID'],
                                   apikey=userconfig['OMEGA_APIKEY'],
-                                  api_url=userconfig['OMEGA_RESTAPI_URL'])
+                                  api_url=userconfig.get('OMEGA_RESTAPI_URL'))
                 except Exception as e:
                     # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
                     raise ValueError('Could not login using config file {}, error={}'.format(config_file, str(e)))

@@ -16,7 +16,7 @@ class CloudCommandBase(CommandBase):
       om cloud login [<userid>] [<apikey>] [options]
       om cloud config [show] [options]
       om cloud (add|update|remove) <kind> [--specs <specs>] [options]
-      om cloud status [runtime|pods|nodes|dbsize] [options]
+      om cloud status [runtime|pods|nodes|storage] [options]
       om cloud log <pod> [--since <time>] [options]
       om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot] [options]
 
@@ -191,7 +191,7 @@ class CloudCommandBase(CommandBase):
 
     def status(self):
         # self.status_nodes()
-        kinds = ('runtime', 'pods', 'nodes', 'dbsize')
+        kinds = ('runtime', 'pods', 'nodes', 'storage')
         om = self.om
         auth = OmegaRestApiAuth.make_from(om)
         for kind in (filter(lambda k: self.args.get(k), kinds)):
@@ -336,8 +336,8 @@ class CloudCommandBase(CommandBase):
         cols = 'name,status,role,cpu,memory,disk'.split(',')
         print(tabulate(df[cols], headers='keys', showindex=False))
 
-    def status_dbsize(self, kind, auth):
-        data = self._get_status(kind, auth)
+    def status_storage(self, kind, auth):
+        data = self._get_status('dbsize', auth)
         dbsize = data.get('objects')
         df = pd.DataFrame([dbsize])
         cols = ['kind', 'size', 'status']
