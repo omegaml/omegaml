@@ -364,15 +364,22 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
     Returns:
         None
     """
+    from omegaml.store.queryops import ensure_index_limit
+
     idx_keys = list(dict(dict(v)['key']).keys() for v in coll.list_indexes())
     index_exists = any(all(k in keys for k in dict(idx_specs).keys()) for keys in idx_keys)
     idx_specs_SON = list(dict(idx_specs).items())
+    # finally create or replace index
     created = False
-    if index_exists and replace:
-        coll.drop_index(idx_specs_SON, **kwargs)
-        index_exists = False
-    if not index_exists:
-        coll.create_index(idx_specs_SON, **kwargs)
+    should_drop = index_exists and replace
+    should_create = not index_exists
+    if should_drop or should_create:
+        idx_specs, idx_kwargs = ensure_index_limit(idx_specs_SON, **kwargs)
+    if should_drop:
+        coll.drop_index(idx_specs, **idx_kwargs)
+        should_create = True
+    if should_create:
+        coll.create_index(idx_specs, **kwargs)
         created = True
     return created
 
@@ -868,9 +875,37 @@ def reorder(df, specs):
     selector = []
     for c in specs.split(','):
         if c == '*':
-          selector.extend(sorted(set(df.columns) - set(selector)))
+            selector.extend(sorted(set(df.columns) - set(selector)))
         else:
-          if c in selector:
-              selector.remove(c)
-          selector.append(c)
+            if c in selector:
+                selector.remove(c)
+            selector.append(c)
     return selector
+
+
+def migrate_unhashed_datasets(store):
+    """ Migrate the names of previously unhashed datasets (collections)
+
+    Args:
+        store: the OmegaStore instance, e.g. om.datasets
+
+    Returns:
+        list of migrated dataset tuples(name, unhashed_collection_name,
+        hashed_collection_name)
+    """
+    assert store.defaults.OMEGA_STORE_HASHEDNAMES, "OMEGA_STORE_HASEHDNAMES must be set to True for this to work"
+    migrated = []
+    for dsmeta in store.list(hidden=True, raw=True):
+        dsname = dsmeta.name
+        ext = dsname.split('.')[-1]
+        hashed_name = store.object_store_key(dsname, ext)
+        if dsmeta.collection is not None:
+            unhashed_coll_name = dsmeta.collection
+            unhashed_coll = store.mongodb[unhashed_coll_name]
+            # get the new collection name, rename
+            unhashed_coll.rename(hashed_name)
+            # remember new name
+            dsmeta.collection = hashed_name
+            dsmeta.save()
+            migrated.append((dsname, unhashed_coll_name, hashed_name))
+    return migrated

@@ -73,13 +73,12 @@ as follows:
 """
 from __future__ import absolute_import
 
-import warnings
-
 import bson
 import gridfs
 import os
 import six
 import tempfile
+import warnings
 from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
@@ -227,7 +226,9 @@ class OmegaStore(object):
 
         FIXME: version attribute does not do anything
         FIXME: metadata should be stored in a bucket-specific collection
-        to enable access control, see https://docs.mongodb.com/manual/reference/method/db.createRole/#db.createRole
+        to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
+
+        Role/#db.createRole
         """
         db = self.mongodb
         fs = self.fs
@@ -331,7 +332,7 @@ class OmegaStore(object):
         meta = self.metadata(name, bucket=bucket, prefix=prefix)
         collection = meta.collection if meta else None
         if not collection:
-            collection = self._get_obj_store_key(name, '.datastore')
+            collection = self.object_store_key(name, '.datastore')
             collection = collection.replace('..', '.')
         # return the collection
         try:
@@ -420,7 +421,7 @@ class OmegaStore(object):
         elif isinstance(obj, (dict, list, tuple)):
             if kwargs.pop('as_hdf', False):
                 return self.put_pyobj_as_hdf(obj, name,
-                                      attributes=attributes, **kwargs)
+                                             attributes=attributes, **kwargs)
             return self.put_pyobj_as_document(obj, name,
                                               attributes=attributes,
                                               **kwargs)
@@ -508,7 +509,6 @@ class OmegaStore(object):
         df_idxcols = [col for col in obj.columns if col.startswith('_idx')]
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
-            # name is given to avoid oversized generated names
             ensure_index(collection, keys, **idx_kwargs)
         # create index on row id
         keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
@@ -574,7 +574,7 @@ class OmegaStore(object):
                                    collection=datastore.name).save()
 
     def put_dataframe_as_hdf(self, obj, name, attributes=None):
-        filename = self._get_obj_store_key(name, '.hdf')
+        filename = self.object_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname, 'rb') as fhdf:
             fileid = self.fs.put(fhdf, filename=filename)
@@ -922,8 +922,9 @@ class OmegaStore(object):
         :raises: gridfs.errors.NoFile
         """
         df = None
-        filename = self._get_obj_store_key(name, '.hdf')
-        if filename.endswith('.hdf') and self.fs.exists(filename=filename):
+        meta = self.metadata(name)
+        filename = getattr(meta.gridfile, 'name', self.object_store_key(name, '.hdf'))
+        if self.fs.exists(filename=filename):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
@@ -1013,7 +1014,7 @@ class OmegaStore(object):
     def exists(self, name, hidden=False):
         return name in self.list(name, hidden=hidden)
 
-    def object_store_key(self, name, ext, hashed=False):
+    def object_store_key(self, name, ext, hashed=None):
         """
         Returns the store key
 
@@ -1021,14 +1022,15 @@ class OmegaStore(object):
 
         :param name: The name of object
         :param ext: The extension of the filename
-        :param hashed: hash the key to support arbitrary name length, defaults to False,
-           will default to True in future versions
+        :param hashed: hash the key to support arbitrary name length, defaults
+           to defaults.OMEGA_STORE_HASHEDNAMES, True by default since 0.13.7
 
         :return: A filename with relative bucket, prefix and name
         """
         # byte string
         _u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
         key = self._get_obj_store_key(name, ext)
+        hashed = hashed if hashed is not None else self.defaults.OMEGA_STORE_HASHEDNAMES
         if hashed:
             from hashlib import sha1
             hasher = sha1()
