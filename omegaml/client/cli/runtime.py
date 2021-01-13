@@ -1,3 +1,5 @@
+import logging
+
 import os
 from pprint import pprint
 from time import sleep
@@ -18,7 +20,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [options]
-      om runtime celery [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
+      om runtime [control|inspect|celery] [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
 
     Options:
       --async           don't wait for results, will print taskid
@@ -92,6 +94,7 @@ class RuntimeCommandBase(CommandBase):
 
       control pool_shrink N  shrink worker pool by N, specify 99 to remove all
       control pool_grow N    grow worker poool by N
+      control shutdown       stop and restart the worker
 
       Examples:
             om runtime celery inspect active
@@ -108,6 +111,11 @@ class RuntimeCommandBase(CommandBase):
          env install <package>    install the specified package, use name==version pip syntax for specific versions
          env uninstall <package>  uninstall the specified package
 
+         <package> is in pip install syntax, e.g.
+
+         env install "six==1.0.0"
+         env install "git+https://github.com/user/repo.git"
+
       b) use a requirements file
 
          env install --file requirements.txt
@@ -115,7 +123,8 @@ class RuntimeCommandBase(CommandBase):
 
       c) list currently installed packages
 
-         env freez
+         env freeze
+         env list
 
       d) install on all or a specific worker
 
@@ -229,9 +238,18 @@ class RuntimeCommandBase(CommandBase):
         else:
             om.logger.dataset.tail()
 
-    def celery(self):
+    def inspect(self):
+        self.celery('inspect')
+
+    def control(self):
+        self.celery('control')
+
+    def celery(self, action=None):
         om = get_omega(self.args)
-        celery_cmds = ['celery']
+        # giving om command here changes celery help output
+        celery_cmds = ['om runtime celery']
+        if action:
+            celery_cmds += action.split(' ')
         # convert omega terms into celery terms
         celery_opts = (
             # omega term, celery term, value|flag
@@ -246,6 +264,11 @@ class RuntimeCommandBase(CommandBase):
                     celery_cmds += [self.args.get(opt)]
         celery_cmds += self.args.get('<celery-command>')
         celery_cmds += self.args.get('--flags')
+        if len(celery_cmds) == 1 + int(action is not None):
+            celery_cmds += ['--help']
+        # start in-process for speed
+        # -- disable command logging to avoid curses problems in celery events
+        self.logger.setLevel(logging.CRITICAL + 1)
         om.runtime.celeryapp.start(celery_cmds)
 
     def env(self):

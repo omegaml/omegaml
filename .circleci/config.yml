@@ -112,13 +112,20 @@ jobs:
             echo $PYPIRC_INI | base64 -d > ~/.pypirc
             ls -lart ~/.omegaml
             cd omegaml-ce
+            VERSION=`cat omegaml/VERSION`
             pip install --progress-bar off .[all,dev]
             docker login -u omegaml -p $DOCKER_PASS
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
             sleep 10
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-            make release-prod
+            if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
+              make release-test
+            else
+              make release-prod
+            fi
+      - store_artifacts:
+          path: /tmp/screenshots
 workflows:
   version: 2
   workflow:
