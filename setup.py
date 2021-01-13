@@ -13,7 +13,7 @@ graph_deps = ['matplotlib>=3.1.0', 'seaborn>=0.9.0', 'imageio>=2.6.1', 'plotext>
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
-iotools_deps = ['smart_open', 'boto>=2.49.0']
+iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.4.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaking changes
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
@@ -106,6 +106,7 @@ setup(
         'tqdm>=4.32.2',
         'honcho>=1.0.1',  # not strictly required, but used in docker compose
         'tabulate>=0.8.2',  # required in cli
+        'smart_open', # required in cli
     ],
     extras_require={
         'graph': graph_deps,
