@@ -109,6 +109,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     config = configs.get(qualifier, configs)
     # update
     _base_config.update_from_dict(config, attrs=defaults)
+    _base_config.update_from_config(defaults)
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
     auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
@@ -138,10 +139,12 @@ def get_omega_from_config(configfile, qualifier=None):
 
 
 def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
-                                view=False):
+                                view=False, keys=None):
     from omegaml import settings
     defaults = settings()
     api_url = ensure_api_url(api_url, defaults)
+    required_keys = ['OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_RESTAPI_URL']
+    keys = keys or []
     with open(configfile, 'w') as fconfig:
         auth = OmegaRestApiAuth(userid, apikey)
         configs = get_user_config_from_api(auth,
@@ -150,5 +153,8 @@ def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, reques
                                            view=view)
         config = configs['objects'][0]['data']
         config['OMEGA_RESTAPI_URL'] = api_url
+        config = {
+            k: v for k, v in config.items() if k in (required_keys + keys)
+        }
         yaml.safe_dump(config, fconfig, default_flow_style=False)
         print("Config is in {configfile}".format(**locals()))

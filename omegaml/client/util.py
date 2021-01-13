@@ -23,7 +23,7 @@ def get_omega(args, require_config=False):
         om = setup()
     if local:
         om.runtime.mode(local=True)
-    return om[bucket]
+    return om[bucket] if bucket else om # for speed
 
 
 class AttrDict(dict):

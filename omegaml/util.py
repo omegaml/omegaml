@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import warnings
 from copy import deepcopy
 from importlib import import_module
 
@@ -10,6 +9,7 @@ import six
 import sys
 import tempfile
 import uuid
+import warnings
 from shutil import rmtree
 from six import string_types
 
@@ -17,6 +17,8 @@ try:
     import urlparse
 except:
     from urllib import parse as urlparse
+
+logger = logging.getLogger(__name__)
 
 # support pandas < 1.0
 try:
@@ -638,6 +640,9 @@ class DefaultsContext(object):
                 value = getattr(source, k)
                 setattr(self, k, deepcopy(value))
 
+    def keys(self):
+        return dir(self)
+
     def __iter__(self):
         for k in dir(self):
             if k.startswith('OMEGA') and k.isupper():
@@ -685,13 +690,33 @@ def mkdirs(path):
 
 
 def base_loader(_base_config):
-    try:
+    # load base classes
+    # -- this does not instantiate, only setup env
+    # -- om.setup() does actual loading
+    _omega = None
+
+    def load_ee():
         from omegaee import omega as _omega
         from omegaee import eedefaults as _base_config_ee
-    except Exception as e:
-        from omegaml import omega as _omega
-    else:
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
+        return _omega, 'enterprise'
+
+    def load_base():
+        from omegaml import omega as _omega
+        return _omega, 'base configuration'
+
+    loaders = load_ee, load_base
+    for loader in loaders:
+        try:
+            logger.debug(f'attempting to load omegaml from {loader}')
+            _omega, source = loader()
+        except Exception as e:
+            logger.debug(f'failed to load omegaml from {loader}, {e}')
+        else:
+            logger.debug(f'succeeded to load omegaml from {loader}')
+            logger.info(f'loaded omegaml from {source}')
+            break
+
     settings(reload=True)
     return _omega
 
@@ -832,3 +857,20 @@ def ensure_base_collection(collection):
         collection = collection.collection
         is_real_collection = isinstance(collection, Collection)
     return collection
+
+
+def reorder(df, specs):
+    """ build reordered column selector given specs
+
+    Takes a dataframe and returns a column selector accordingly.
+    This is convenient to reorder a large number of
+    """
+    selector = []
+    for c in specs.split(','):
+        if c == '*':
+          selector.extend(sorted(set(df.columns) - set(selector)))
+        else:
+          if c in selector:
+              selector.remove(c)
+          selector.append(c)
+    return selector

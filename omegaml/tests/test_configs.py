@@ -85,6 +85,7 @@ class ConfigurationTests(TestCase):
             # link callbacks used by get_omega_from_api_key
             _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
             defaults.update_from_dict = _real_base_config.update_from_dict
+            defaults.update_from_config = _real_base_config.update_from_config
             defaults.load_user_extensions = lambda *args, **kwargs: None
             defaults.load_framework_support = lambda *args, **kwargs: None
             setup = om.setup
@@ -151,6 +152,7 @@ class ConfigurationTests(TestCase):
                 # link callbacks used by get_omega_from_api_key
                 _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
                 defaults.update_from_dict = _real_base_config.update_from_dict
+                defaults.update_from_config = _real_base_config.update_from_config
                 defaults.load_user_extensions = _real_base_config.load_user_extensions
                 defaults.load_framework_support = lambda *args, **kwargs: None
                 defaults.OMEGA_MY_OWN_SETTING = 'foo'

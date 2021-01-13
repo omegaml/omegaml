@@ -52,7 +52,7 @@ class DatasetsCommandBase(CommandBase):
             img = imread(local)
             meta = om.datasets.put(img, name)
         else:
-            meta = self.logger.info(om.datasets.put(local, name, append=not replace))
+            meta = om.datasets.put(local, name, append=not replace)
         self.logger.info(meta)
 
     def load(self):
