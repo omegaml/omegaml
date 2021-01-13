@@ -1,12 +1,11 @@
+from urllib.parse import urlparse
+
 import logging
-
 import os
-from pprint import pprint
-from time import sleep
-
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
-
+from pprint import pprint
+from time import sleep
 
 class RuntimeCommandBase(CommandBase):
     """
@@ -19,7 +18,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime env <action> [<package>] [--file <requirements.txt>] [--every] [options]
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
-      om runtime restart app <name> [options]
+      om runtime restart app <name> [--insecure] [options]
       om runtime [control|inspect|celery] [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
 
     Options:
@@ -33,6 +32,7 @@ class RuntimeCommandBase(CommandBase):
       --file=VALUE      path/to/requirements.txt
       --local           if specified the task will run locally. Use this for testing
       --every           if specified runs task on all workers
+      --insecure        allow insecure connections (disables verification of ssl certificates)
 
     Description:
       model, job and script commands
@@ -334,11 +334,14 @@ class RuntimeCommandBase(CommandBase):
         import requests
         om = get_omega(self.args, require_config=True)
         name = self.args.get('<name>')
+        insecure = self.args.get('--insecure', False)
         user = om.runtime.auth.userid
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
-        url = om.defaults.OMEGA_RESTAPI_URL
+        parsed = urlparse(om.defaults.OMEGA_MONGO_URL)
+        url = f'https://{parsed.hostname}'
         stop = requests.get(f'{url}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
-                            auth=auth)
+                            auth=auth, verify=not insecure)
         start = requests.get(f'{url}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
-                             auth=auth)
+                             auth=auth, verify=not insecure)
         self.logger.info(f'stop: {stop} start: {start}')
+
