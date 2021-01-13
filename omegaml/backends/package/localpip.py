@@ -14,7 +14,19 @@ class PythonPackageData(BaseDataBackend):
     This supports any local setup.py
 
     Usage:
-        om.scripts.put('pkg://path/to/setup.py')
+        om.scripts.put('pkg://path/to/setup.py', 'myname')
+        om.scripts.get('myname')
+
+        Note that setup.py must minimally specify the following. The
+        name and packages kwargs must specify the same name as given
+        in put(..., name)
+
+            # setup.py
+            from setuptools import setup
+            setup(name='myname', packages=['myname'])
+
+    See Also:
+        https://packaging.python.org/tutorials/packaging-projects/
     """
     KIND = 'python.package'
 
@@ -26,7 +38,11 @@ class PythonPackageData(BaseDataBackend):
         """
         save a python package
 
-        :param obj: full path to package file or directory, sytanx as
+        This takes the full path to a setuptools setup.py, or a directory
+        containing a setup.py file. It then executes `python setup.py sdist`
+        and stores the resulting .tar.gz file in om.scripts
+
+        :param obj: full path to package file or directory, syntax as
                     pkg://path/to/dist.tar.gz or pkg://path/to/setup.py
         :param name: name of package. must be the actual name of the package
                      as specified in setup.py
@@ -53,6 +69,9 @@ class PythonPackageData(BaseDataBackend):
     def get(self, name, keep=False, **kwargs):
         """
         Load package from store, install it locally and load.
+
+        This copies the package's .tar.gz file from om.scripts to a local temp
+        path and runs `pip install` on it.
 
         :param name: the name of the package
         :param keep: keep the packages load path in sys.path, defaults to False

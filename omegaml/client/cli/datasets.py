@@ -1,11 +1,12 @@
 import imghdr
 import pandas as pd
 
+from omegaml.client.cli.stores import StoresCommandMixin
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class DatasetsCommandBase(CommandBase):
+class DatasetsCommandBase(StoresCommandMixin, CommandBase):
     """
     Usage:
       om datasets list [<pattern>] [--raw] [-E|--regexp] [options]
@@ -23,15 +24,6 @@ class DatasetsCommandBase(CommandBase):
          and df.to_csv methods (on get)
     """
     command = 'datasets'
-
-    def list(self):
-        om = get_omega(self.args)
-        raw = self.args.get('--raw', False)
-        regexp = self.args.get('--regexp') or self.args.get('-E')
-        pattern = self.args.get('<pattern>')
-        kwargs = dict(regexp=pattern) if regexp else dict(pattern=pattern)
-        entries = om.datasets.list(raw=raw, **kwargs)
-        self.logger.info(entries)
 
     def put(self):
         om = get_omega(self.args)
@@ -54,12 +46,6 @@ class DatasetsCommandBase(CommandBase):
             meta = om.datasets.put(local, name, append=not replace)
         self.logger.info(meta)
 
-    def load(self):
-        return self.put()
-
-    def export(self):
-        return self.get()
-
     def get(self):
         om = get_omega(self.args)
         local = self.args['<path>']
@@ -77,18 +63,3 @@ class DatasetsCommandBase(CommandBase):
                     fout.write(data)
         self.logger.debug(local)
 
-    def drop(self):
-        om = get_omega(self.args)
-        name = self.args['<name>']
-        force = self.args['--force']
-        om.datasets.drop(name, force=force)
-
-    def metadata(self):
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        self.logger.info(om.datasets.metadata(name).to_json())
-
-    def plugins(self):
-        om = get_omega(self.args)
-        for kind, plugincls in om.defaults.OMEGA_STORE_BACKENDS.items():
-            self.logger.info(kind, plugincls.__doc__)
