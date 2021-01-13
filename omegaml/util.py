@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from copy import deepcopy
 from importlib import import_module
 
+import json
 import logging
 import os
 import six
@@ -924,3 +925,24 @@ def migrate_unhashed_datasets(store):
             dsmeta.save()
             migrated.append((dsname, unhashed_coll_name, hashed_name))
     return migrated
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types
+
+    adopted from https://stackoverflow.com/a/49677241/890242
+    """
+
+    def default(self, obj):
+        import numpy as np
+
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+
+json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or NumpyEncoder)
