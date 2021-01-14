@@ -14,6 +14,8 @@ is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = any(m in [basename(arg) for arg in ' '.join(sys.argv).split(' ')]
                   for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
                             '_jb_nosetest_runner.py')) or os.environ.get('OMEGA_TEST_MODE')
+truefalse = lambda v: (v if isinstance(v, bool) else
+                       any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
 
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
@@ -104,7 +106,7 @@ OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
     OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras', 'dash')
 #: disable framework preloading, e.g. for web, jupyter
-OMEGA_DISABLE_FRAMEWORKS = os.environ.get('OMEGA_DISABLE_FRAMEWORKS')
+OMEGA_DISABLE_FRAMEWORKS = truefalse(os.environ.get('OMEGA_DISABLE_FRAMEWORKS'))
 #: storage mixins
 OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.ProjectedMixin',
@@ -115,6 +117,8 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.mdf.iotools.IOToolsStoreMixin',
     'omegaml.mixins.store.modelversion.ModelVersionMixin',
 ]
+#: set hashed or clear names
+OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
     'omegaml.runtimes.mixins.ModelMixin',

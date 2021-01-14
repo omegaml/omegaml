@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
-from hashlib import md5
-
 import json
 import pymongo
 import six
 import sys
-import uuid
+from hashlib import md5
 
 from omegaml.util import make_tuple
 
@@ -352,9 +350,7 @@ class MongoQueryOps(object):
         idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
                 direction(col))
                for col in sort_cols]
-        # ensure the same index gets the same name, but limit name length
-        name = md5(str(idx).encode('utf8')).hexdigest()
-        kwargs.setdefault('name', name)
+        idx, kwargs = ensure_index_limit(idx, **kwargs)
         return idx, kwargs
 
     def make_sortkey(self, columns):
@@ -390,6 +386,27 @@ def humanize_index(idxs):
     }
     return '_'.join('{}_{}'.format(SORT_MAP.get(sort), var)
                     for idx, spec in idxs.items() for var, sort in spec['key'])
+
+
+def ensure_index_limit(idx, **kwargs):
+    """ ensure the same index gets the same name, but limit name length
+
+    solves pymongo.errors.OperationFailure: namespace name generated from index name
+    is too long (127 byte max).
+
+    Args:
+        idx (dict): index spec as per collection.create_index
+        **kwargs (kwargs): kwargs to collection.create_index
+
+    Returns:
+        idx, kwargs
+           kwargs['name'] is set to the md5 of the index spec
+    """
+    # avoid generating a name if already given
+    if not 'name' in kwargs:
+        name = md5(str(idx).encode('utf8')).hexdigest()
+        kwargs.setdefault('name', name)
+    return idx, kwargs
 
 
 # convenience accessors
