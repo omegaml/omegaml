@@ -1,5 +1,4 @@
 import imghdr
-
 import pandas as pd
 
 from omegaml.client.docoptparser import CommandBase

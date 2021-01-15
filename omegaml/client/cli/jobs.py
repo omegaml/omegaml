@@ -1,8 +1,8 @@
 import datetime
 import nbformat
 from cron_descriptor import get_description
-from omegaml.client.docoptparser import CommandBase
 
+from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
