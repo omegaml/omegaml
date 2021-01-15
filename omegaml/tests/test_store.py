@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 
-import unittest
-import uuid
-from datetime import timedelta
 from unittest import skip
 
 import gridfs
 import joblib
 import pandas as pd
+import unittest
+import uuid
+from datetime import timedelta
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.util import testing
@@ -26,7 +26,7 @@ from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
-from omegaml.util import delete_database, json_normalize
+from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
 
 
 class StoreTests(unittest.TestCase):
@@ -513,7 +513,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
         self.assertIn(
-            'omegaml.dfgroup.datastore', store.mongodb.collection_names())
+            meta.collection, store.mongodb.collection_names())
         # note column order can differ due to insertion order since pandas 0.25.1
         # hence using [] to ensure same column order for both expected, result
         df2 = store.get('dfgroup', kwargs={'b': 1})
@@ -533,17 +533,19 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'foo', as_hdf=True)
         self.assertEqual(meta.kind, 'pandas.hdf')
         # make sure the hdf file is actually there
-        self.assertIn('omegaml.foo.hdf', store.fs.list())
+        meta = store.metadata('foo')
+        self.assertIn(meta.gridfile.name, store.fs.list())
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2), "dataframes differ")
         # test for non-existent file raises exception
         meta = store.put(df2, 'foo_will_be_removed', as_hdf=True)
+        meta = store.metadata('foo_will_be_removed')
         file_id = store.fs.get_last_version(
-            'omegaml.foo_will_be_removed.hdf')._id
+            meta.gridfile.name)._id
         store.fs.delete(file_id)
-        self.assertRaises(
-            gridfs.errors.NoFile, store.get, 'foo_will_be_removed')
         store2 = OmegaStore()
+        with self.assertRaises(gridfs.errors.NoFile):
+            store2.get('foo_will_be_removed')
         # test hdf file is not there
         self.assertNotIn('hdfdf.hdf', store2.fs.list())
 
@@ -591,14 +593,14 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame(data)
         store = OmegaStore()
         # store the object, no attributes
-        meta = store.put(df, 'foo', append=False)
+        store.put(df, 'foo', append=False)
         meta = store.metadata('foo')
         self.assertEqual(meta.attributes, {})
         # update attributes
-        meta = store.put(df, 'foo', append=False, attributes={'foo': 'bar'})
+        store.put(df, 'foo', append=False, attributes={'foo': 'bar'})
         meta = store.metadata('foo')
         self.assertEqual(meta.attributes, {'foo': 'bar'})
-        meta = store.put(
+        store.put(
             df, 'foo', append=False, attributes={'foo': 'bax',
                                                  'foobar': 'barbar'})
         meta = store.metadata('foo')
@@ -928,5 +930,113 @@ class StoreTests(unittest.TestCase):
             self.assertEqual(meta.kind, 'python.data')
             self.assertEqual(meta.name, member.split('/', 1)[1])
 
+    def test_long_index_name(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        df = pd.DataFrame({'xyz'*100: range(100), 'yyz'*300: range(100)})
+        df = df.set_index('yyz'*300)
+        # name is limited by index key limit in MongoDB
+        # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
+        long_name = 'a' * 990
+        raised = False
+        error = ''
+        try:
+            store.put(df, long_name)
+        except Exception as e:
+            raised = True
+            error = str(e)
+        self.assertFalse(raised, error)
 
+    def test_long_dataset_name(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        df = pd.DataFrame({'xyz'*100: range(100)})
+        # limited by index key limit in MongoDB
+        # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
+        long_name = 'a' * 990
+        raised = False
+        error = ''
+        # hashed names
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        try:
+            store.put(df, long_name)
+        except Exception as e:
+            raised = True
+            error = str(e)
+        self.assertFalse(raised, error)
+        # unhashed names
+        store.defaults.OMEGA_STORE_HASHEDNAMES = False
+        long_name = 'a' * 200
+        with self.assertRaises(Exception):
+            store.put(df, long_name)
+
+    def test_long_dataset_name_hdf(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        df = pd.DataFrame({'xyz'*100: range(100)})
+        # limited by index key limit in MongoDB
+        # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
+        long_name = 'a' * 990
+        raised = False
+        error = ''
+        # hashed names
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        meta = store.put(df, long_name, as_hdf=True)
+        meta = store.metadata(long_name)
+        self.assertNotEqual(meta.gridfile.name, long_name)
+        self.assertFalse(raised, error)
+        # unhashed names
+        store.defaults.OMEGA_STORE_HASHEDNAMES = False
+        long_name = 'a' * 200
+        store.put(df, long_name, as_hdf=True)
+        meta = store.metadata(long_name)
+        self.assertEqual(meta.gridfile.name, store._get_obj_store_key(long_name, '.hdf'))
+
+
+    def test_migrate_unhashed_name(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        df = pd.DataFrame({'x': range(100)})
+        long_name = 'a' * 10
+        raised = False
+        error = ''
+        # save as unhashed (old version)
+        store.defaults.OMEGA_STORE_HASHEDNAMES = False
+        meta_unhashed = store.put(df, long_name)
+        # simulate upgrade, no migration
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        # check we can still retrieve
+        dfx = store.get(long_name)
+        assert_frame_equal(df, dfx)
+        # migrate
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        migrate_unhashed_datasets(store)
+        meta_migrated = store.metadata(long_name)
+        # check we can still retrieve after migration
+        dfx = store.get(long_name)
+        assert_frame_equal(df, dfx)
+        # stored hashed
+        meta_hashed = store.put(df, long_name, append=False)
+        # check migration worked as expected
+        self.assertNotEqual(meta_unhashed.collection, meta_hashed.collection)
+        self.assertEqual(meta_migrated.collection, meta_hashed.collection)
+
+    def test_migrate_unhashed_name_hdf(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        df = pd.DataFrame({'x': range(100)})
+        long_name = 'a' * 10
+        raised = False
+        error = ''
+        # save as unhashed (old version)
+        store.defaults.OMEGA_STORE_HASHEDNAMES = False
+        store.put(df, long_name, as_hdf=True)
+        meta_unhashed = store.metadata(long_name)
+        # retrieve should still work
+        store.defaults.OMEGA_STORE_HASHEDNAMES = True
+        dfx = store.get(long_name)
+        assert_frame_equal(df, dfx)
+        # stored hashed
+        store.put(df, long_name, replace=True, as_hdf=True)
+        meta_hashed = store.metadata(long_name)
+        dfx = store.get(long_name)
+        assert_frame_equal(df, dfx)
+        # check hashing actually worked
+        self.assertNotEqual(meta_unhashed.gridfile.name, meta_hashed.gridfile.name)
 

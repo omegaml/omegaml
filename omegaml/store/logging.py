@@ -3,9 +3,12 @@ import platform
 
 import logging
 import os
+import pymongo
 import signal
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
+
+from omegaml.util import ensure_index
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
 
@@ -372,10 +375,8 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
         collection.insert_one(record)
         store.mongodb.command('convertToCapped', collection.name, size=size)
     # ensure indexed
-    idxs = collection.index_information()
     for idx in ('levelname', 'levelno', 'created'):
-        if idx not in idxs:
-            collection.create_index(idx)
+        ensure_index(collection, {idx: pymongo.ASCENDING}, replace=False)
     return collection
 
 

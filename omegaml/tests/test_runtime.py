@@ -116,8 +116,8 @@ class RuntimeTests(TestCase):
         meta = om.models.metadata('mymodel2')
         self.assertIn('metaX', meta.attributes)
         self.assertIn('metaY', meta.attributes)
-        self.assertIn('_fitX', meta.attributes.get('metaX').get('collection'))
-        self.assertIn('_fitY', meta.attributes.get('metaY').get('collection'))
+        self.assertIn('_fitX', meta.attributes.get('metaX').get('name'))
+        self.assertIn('_fitY', meta.attributes.get('metaY').get('name'))
         self.assertTrue(
             (pred == pred1).all(), "runtimes prediction is different(1)")
         self.assertTrue(
