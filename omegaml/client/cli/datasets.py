@@ -54,12 +54,6 @@ class DatasetsCommandBase(CommandBase):
             meta = om.datasets.put(local, name, append=not replace)
         self.logger.info(meta)
 
-    def load(self):
-        return self.put()
-
-    def export(self):
-        return self.get()
-
     def get(self):
         om = get_omega(self.args)
         local = self.args['<path>']
@@ -83,12 +77,4 @@ class DatasetsCommandBase(CommandBase):
         force = self.args['--force']
         om.datasets.drop(name, force=force)
 
-    def metadata(self):
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        self.logger.info(om.datasets.metadata(name).to_json())
 
-    def plugins(self):
-        om = get_omega(self.args)
-        for kind, plugincls in om.defaults.OMEGA_STORE_BACKENDS.items():
-            self.logger.info(kind, plugincls.__doc__)

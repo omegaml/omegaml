@@ -18,6 +18,7 @@ def run(om, *args, package=None, file=None, action='install', options=None, **kw
     """
     lockfile = '/app/pylib/user/envinstall.lock'
     reqfile = '.system/requirements.txt'
+    package = package or ' '
     try:
         with open(lockfile, 'x') as flock:
             # only run if we can get an exclusive lock

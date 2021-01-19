@@ -1,25 +1,26 @@
 import os
 
 from omegaml.backends.package import PythonPipSourcedPackageData
+from omegaml.client.cli.stores import StoresCommandMixin
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class ScriptsCommandBase(CommandBase):
+class ScriptsCommandBase(StoresCommandMixin, CommandBase):
     """
     Usage:
-        om scripts list [<pattern>] [options]
+        om scripts list [<pattern>] [--raw] [--hidden] [-E|--regexp] [options]
         om scripts put <path> <name> [options]
         om scripts drop <name> [options]
+        om scripts metadata <name>
+
+    Options:
+        --hidden   list hidden entries
 
     Description:
+        Work with scripts
     """
     command = 'scripts'
-
-    def list(self):
-        om = get_omega(self.args)
-        raw = self.args.get('--raw', False)
-        self.logger.info(om.scripts.list(raw=raw))
 
     def put(self):
         om = get_omega(self.args)
@@ -37,9 +38,4 @@ class ScriptsCommandBase(CommandBase):
         else:
             raise ValueError('{} is not a valid path'.format(script_path))
         self.logger.info(meta)
-
-    def drop(self):
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        om.scripts.drop(name, force=True)
 
