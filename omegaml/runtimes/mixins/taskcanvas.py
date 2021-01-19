@@ -26,12 +26,11 @@ class CanvasTask:
 
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
         task = self.sigs[-1]
-        task._apply_kwargs(kwargs, celery_kwargs)
         if self.canvasfn is chord:
-            sig = task.task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=False)
+            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=False)
         else:
             # immutable means results are not passed on from task to task
-            sig = task.task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=True)
+            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=True)
         self.sigs[-1] = sig
         return sig
 

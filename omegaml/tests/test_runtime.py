@@ -1,16 +1,17 @@
 from __future__ import absolute_import
 
-import os
 from unittest import TestCase
 
 import numpy as np
+import os
 import pandas as pd
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+import sys
+from numpy.testing import assert_array_almost_equal
 from six.moves import range
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import SGDRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
@@ -390,7 +391,7 @@ class RuntimeTests(TestCase):
         assert_array_almost_equal(df['y'].values, data[0][:, 0])
         assert_array_almost_equal(df['y'].values, data[1][:, 0])
 
-    def test_task_mapreduce(self):
+    def test_task_mapreduce_virtualfn(self):
         om = Omega()
         df = pd.DataFrame({'x': range(1, 10),
                            'y': range(5, 14)})
@@ -402,7 +403,8 @@ class RuntimeTests(TestCase):
         @virtualobj
         def combined(data=None, method=None, meta=None, store=None, **kwargs):
             # data is the list of results from the previous tasks
-            return data
+            # we scale results to verify combined actually runs
+            return [y * 5 for y in data]
 
         om.models.put(combined, 'combined')
         with om.runtime.mapreduce() as ctr:
@@ -414,9 +416,83 @@ class RuntimeTests(TestCase):
             result = ctr.run()
 
         data = result.get()
-        assert_array_almost_equal(df['y'].values, data[0][:, 0])
-        assert_array_almost_equal(df['y'].values, data[1][:, 0])
+        assert_array_almost_equal(df['y'].values * 5, data[0][:, 0])
+        assert_array_almost_equal(df['y'].values * 5, data[1][:, 0])
 
+        @virtualobj
+        def combined(data=None, method=None, meta=None, store=None, **kwargs):
+            # data is the list of results from the previous tasks
+            # we return only one result, simulating selection
+            return data[0][:, 0]
 
+        om.models.put(combined, 'combined', replace=True)
+        with om.runtime.mapreduce() as ctr:
+            # two tasks to map
+            ctr.model('regmodel').predict('sample[x]')
+            ctr.model('regmodel').predict('sample[x]')
+            # one task to reduce
+            ctr.model('combined').reduce()
+            result = ctr.run()
 
+        data = result.get()
+        assert_array_almost_equal(df['y'].values, data)
 
+    def test_task_mapreduce_script(self):
+        om = Omega()
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        om.datasets.put(df, 'sample')
+        om.models.put(lr, 'regmodel')
+        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+
+        om = Omega()
+        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
+        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
+        pkgsrc = 'pkg://{}'.format(pkgpath)
+        om.scripts.put(pkgsrc, 'callback')
+        with om.runtime.mapreduce() as ctr:
+            # two tasks to map
+            ctr.model('regmodel').predict('sample[x]')
+            ctr.model('regmodel').predict('sample[x]')
+            # one task to reduce
+            ctr.script('callback').run(as_callback=True)
+            result = ctr.run()
+
+        result.get()
+        self.assertEqual(len(om.datasets.get('callback_results')), 2)
+
+        with om.runtime.mapreduce() as ctr:
+            # two tasks to map
+            ctr.model('regmodel').predict('sample[x]')
+            # one task to reduce
+            ctr.script('callback').run(as_callback=True)
+            result = ctr.run()
+
+        result.get()
+        self.assertEqual(len(om.datasets.get('callback_results')), 3)
+
+    def test_task_callback(self):
+        om = Omega()
+        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
+        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
+        pkgsrc = 'pkg://{}'.format(pkgpath)
+        om.scripts.put(pkgsrc, 'callback')
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        lr.fit(df[['x']], df['y'])
+        om.datasets.put(df, 'sample')
+        om.models.put(lr, 'regmodel')
+        result = (om.runtime
+                  .callback('callback')
+                  .model('regmodel')
+                  .predict('sample[x]')
+                  .get())
+        self.assertEqual(len(om.datasets.get('callback_results')), 1)
+        result = (om.runtime
+                  .callback('callback')
+                  .model('regmodel')
+                  .predict('sample[x]')
+                  .get())
+        self.assertEqual(len(om.datasets.get('callback_results')), 2)

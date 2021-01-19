@@ -4,10 +4,10 @@ omega runtime script tasks
 from __future__ import absolute_import
 
 import datetime
-import json
 from celery import shared_task
 
 from omegaml.celery_util import OmegamlTask
+from omegaml.util import json_dumps_np
 
 
 class NotebookTask(OmegamlTask):
@@ -16,7 +16,7 @@ class NotebookTask(OmegamlTask):
     def on_success(self, retval, task_id, *args, **kwargs):
         om = self.om
         args, kwargs = args[0:2]
-        scriptname = args[0]
+        scriptname = args[-1]
         meta = om.scripts.metadata(scriptname)
         attrs = meta.attributes
         attrs['state'] = 'SUCCESS'
@@ -36,7 +36,7 @@ class NotebookTask(OmegamlTask):
               retval, task_id, args, kwargs)
         om = self.om
         args, kwargs = args[0:2]
-        scriptname = args[0]
+        scriptname = args[-1]
         meta = om.scripts.metadata(scriptname)
         attrs = meta.attributes
         attrs['state'] = 'FAILURE'
@@ -58,9 +58,10 @@ def run_omega_script(self, scriptname, **kwargs):
     runs omegaml job
     """
     SERIALIZER = {
-        'json': json.dumps,
+        'json': json_dumps_np,
         'python': lambda v: v,
     }
+
     format = kwargs.get('__format') or 'json'
     mod = self.om.scripts.get(scriptname)
     dtstart = datetime.datetime.now()
@@ -80,3 +81,19 @@ def run_omega_script(self, scriptname, **kwargs):
         'ended': dtend.isoformat(),
     }
     return SERIALIZER[format](data)
+
+
+@shared_task(bind=True, base=NotebookTask)
+def run_omega_callback_script(self, *args, **kwargs):
+    """
+    runs omegaml job
+    """
+    if len(args) >= 3:
+        results = args[0:-2]
+        state = args[-2]
+        scriptname = args[-1]
+    else:
+        results = args[0]
+        state = 'SUCCESS'
+        scriptname = args[-1]
+    return run_omega_script(scriptname, state=state, results=results, **kwargs)

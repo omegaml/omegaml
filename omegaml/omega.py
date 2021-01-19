@@ -150,7 +150,7 @@ class OmegaDeferredInstance(object):
         for loader in loaders:
             try:
                 omega = loader()
-            except:
+            except Exception as e:
                 if any(condition and loader is expected for condition, expected in must_load):
                     raise
             else:

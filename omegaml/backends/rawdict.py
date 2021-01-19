@@ -26,8 +26,8 @@ class PandasRawDictBackend(BaseDataBackend):
     KIND = 'pandas.rawdict'
 
     @classmethod
-    def supports(self, obj, name, as_raw=None, **kwargs):
-        return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection))
+    def supports(self, obj, name, **kwargs):
+        return (isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection))
 
     def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, **kwargs):
         collection = self.data_store.collection(name)
