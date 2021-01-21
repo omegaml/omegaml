@@ -3,7 +3,7 @@ import pandas as pd
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_almost_equal
 from sklearn.linear_model import SGDRegressor, LogisticRegression
-from sklearn.linear_model.base import LinearRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from tastypie.test import ResourceTestCase

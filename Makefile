@@ -15,7 +15,7 @@ bumpminor:
 
 bumpbuild:
 	pip install bumpversion
-	bumpversion build ${BUMPARGS}
+	bumpversion build ${BUMPARGS} --allow-dirty --no-commit
 
 dist-prod: test clean
 	: "build a release"
@@ -38,6 +38,16 @@ test: bumpbuild
 	# note we use --exe to make this work with circleci, where all files are executable due to a uid/gid quirk
 	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2 --exe"
 	scripts/rundev.sh --docker --cmd "python manage.py test omegaml --debug-config --verbosity=2 --exe"
+
+shell:
+	scripts/rundev.sh --docker --shell
+
+shellbuild:
+	scripts/rundev.sh --docker --shell --clean
+
+requirements:
+	# https://stackoverflow.com/a/62886215/890242
+	scripts/rundev.sh --docker --cmd "pip list --format=freeze --exclude-editable | grep -f nonrequirements.txt -v > pip-requirements.txt "
 
 devtest:
 	scripts/devtest.sh --headless

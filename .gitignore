@@ -233,4 +233,4 @@ fabric.properties
 
 # End of https://www.gitignore.io/api/pycharm
 /LICENSE.html
-/Miniconda3-4.5.12-Linux-x86_64.sh
+/Miniconda3*sh

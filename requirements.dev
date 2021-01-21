@@ -3,7 +3,7 @@
 -e ../omegaml-ce[all]
 -e ../stackable
 -e ../landingpage[paasdeploy]
--e ../ccbackend
+# -e ../ccbackend
 -e ../django-tastypie-swagger
 -e ../tastypiex
 jupyterhub-kubespawner==0.12.0

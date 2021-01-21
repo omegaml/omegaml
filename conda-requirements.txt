@@ -9,4 +9,4 @@ configurable-http-proxy
 # or we use pip 20.3.1 with --use-deprecated=legacy-resolver option
 # it is much easier to stick with 20.2.4 to keep legacy behavior than to instlal 20.3.1 and change all
 # pip installations to use the legacy-resolver
-pip==20.2.4
+pip=20.2.4

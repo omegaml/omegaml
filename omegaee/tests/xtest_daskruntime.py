@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from six.moves import range
 from sklearn.exceptions import NotFittedError
-from sklearn.linear_model.base import LinearRegression
-from sklearn.linear_model.stochastic_gradient import SGDRegressor
-from sklearn.metrics.regression import mean_squared_error
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDRegressor
+from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 

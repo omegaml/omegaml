@@ -15,6 +15,7 @@ dev_deps = [
     'gil',
     'sphinx-django-command',
     'bumpversion',
+    'sphinx_rtd_theme',
 ]
 
 web_deps = [
@@ -27,7 +28,6 @@ web_deps = [
 jupyter_deps = [
     'jupyterhub-kubespawner==0.12.0', # required or only dev
     'jupyterhub>1.0',  # required or only dev?
-    'notebook==5.7.6',  # required or only dev?
     'jupyter-client>=4.1.1',
 ]
 

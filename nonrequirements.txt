@@ -1,0 +1,3 @@
+# must not have a new line at end
+conda
+pyminifier

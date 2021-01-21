@@ -30,7 +30,7 @@ services:
       working_dir: /app
       command: scripts/startweb.sh
       volumes:
-         - pythonlib:/app/pylib
+         - pythonlib:/app/pylib/user
       environment:
          - APP=omegaml
          - APP_CONFIG=EnvSettings_docker
@@ -49,6 +49,7 @@ services:
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - CELERY_Q=default
+         - PYTHONUSERBASE="/app/pylib/user"
    apphub:
       image: omegaml/apphub:latest
       container_name: apphub
@@ -61,7 +62,7 @@ services:
       working_dir: /app
       command: scripts/startapphub.sh
       volumes:
-         - pythonlib:/app/pylib
+         - pythonlib:/app/pylib/user
          - ./etc-dev/mongo/certs/ca_certificate.pem:/app/etc-dev/mongo/certs/ca_certificate.pem
       environment:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
@@ -74,6 +75,7 @@ services:
          - SESSION_REDIS=redis://:dei5oy1YMeeghae3@redis
          - APPHUB_REGISTRY=apphub.contrib.registry.omegareg.OmegaCloudRegistry
          - APPHUB_URL_PREFIX=/apps
+         - PYTHONUSERBASE="/app/pylib/user"
    # apphub caching
    redis:
       image: redis
@@ -89,7 +91,7 @@ services:
       working_dir: /app
       command: scripts/omegajobs.sh
       volumes:
-         - pythonlib:/app/pylib
+         - pythonlib:/app/pylib/user
       environment:
          - APP=omjobs
          - OMEGA_RESTAPI_URL=http://omegaml:5000/
@@ -101,6 +103,7 @@ services:
          - OMEGA_JYHUB_TOKEN=PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - PYTHONUSERBASE="/app/pylib/user"
    worker:
       image: omegaml/omegaml-ee:latest
       container_name: worker
@@ -112,7 +115,7 @@ services:
       working_dir: /app
       command: honcho start worker
       volumes:
-         - pythonlib:/app/pylib
+         - pythonlib:/app/pylib/user
       environment:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
@@ -122,6 +125,7 @@ services:
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - CELERY_Q=default
+         - PYTHONUSERBASE="/app/pylib/user"
    omegaops:
       image: omegaml/omegaml-ee:latest
       container_name: omegaops
@@ -133,7 +137,7 @@ services:
       working_dir: /app
       command: honcho start scheduler omegaops
       volumes:
-         - pythonlib:/app/pylib
+         - pythonlib:/app/pylib/user
       environment:
          - OMEGA_USERID=omops
          - OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
@@ -147,6 +151,7 @@ services:
          - MYSQL_PASSWORD=mysql
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - PYTHONUSERBASE="/app/pylib/user"
    rabbitmq:
       image: rabbitmq
       container_name: rabbitmq

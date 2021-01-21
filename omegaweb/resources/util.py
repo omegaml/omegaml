@@ -25,6 +25,7 @@ def get_omega_for_user(user, qualifier=None, view=False):
     defaults = settings(reload=False)
     config = get_client_config(user, qualifier=qualifier, view=view)
     _base_config.update_from_dict(config, attrs=defaults)
+    _base_config.update_from_config(defaults)
     _base_config.load_user_extensions(defaults)
     auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)
     om = Omega(defaults=defaults, auth=auth)

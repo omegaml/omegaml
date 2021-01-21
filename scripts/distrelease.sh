@@ -65,7 +65,7 @@ $release $use_nominify --source .
 $release $use_nominify --source ../landingpage
 $release $use_nominify --source ../stackable
 $release $use_nominify --source ../django-tastypie-swagger
-$release $use_nominify --source ../ccbackend
+#$release $use_nominify --source ../ccbackend
 $release $use_nominify --source ../tastypiex
 $release $use_nominify --source ../omegaml-deploy/cloudmgr
 $release $use_nominify --source ../minibatch
@@ -76,7 +76,7 @@ pushd $distdir
 unzip landingpage.zip "*whl"
 unzip stackable.zip "*whl"
 unzip django-tastypie-swagger.zip "*whl"
-unzip ccbackend.zip "*whl"
+#unzip ccbackend.zip "*whl"
 unzip tastypiex.zip "*whl"
 unzip omegaml.zip "*whl"
 unzip minibatch.zip "*whl"
