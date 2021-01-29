@@ -86,6 +86,7 @@ jobs:
             ls -lart ~/.omegaml
             cd omegaml-ce
             LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" make livetest
+            sudo chmod 777 -R /tmp/screenshots
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
           path: /tmp/screenshots
