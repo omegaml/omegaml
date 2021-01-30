@@ -2,11 +2,12 @@ import datetime
 import nbformat
 from cron_descriptor import get_description
 
+from omegaml.client.cli.stores import StoresCommandMixin
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 
 
-class JobsCommandBase(CommandBase):
+class JobsCommandBase(StoresCommandMixin, CommandBase):
     """
     Usage:
       om jobs list [<pattern>] [--raw] [options]
@@ -42,13 +43,6 @@ class JobsCommandBase(CommandBase):
     """
     command = 'jobs'
 
-    def list(self):
-        om = get_omega(self.args)
-        raw = self.args.get('--raw', False)
-        pattern = self.args.get('<pattern>')
-        entries = om.jobs.list(pattern=pattern, raw=raw)
-        self.logger.info(entries)
-
     def put(self):
         from nbformat import read as nbread
 
@@ -66,21 +60,6 @@ class JobsCommandBase(CommandBase):
         notebook = om.jobs.get(name)
         nbformat.write(notebook, local)
         self.logger.debug(local)
-
-    def metadata(self):
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        self.logger.info(om.jobs.metadata(name).to_json())
-
-    def plugins(self):
-        om = get_omega(self.args)
-        for kind, plugincls in om.defaults.OMEGA_STORE_BACKENDS.items():
-            self.logger.info(kind, plugincls.__doc__)
-
-    def drop(self):
-        om = get_omega(self.args)
-        name = self.args.get('<name>')
-        self.logger.info(om.jobs.drop(name))
 
     def schedule(self):
         # FIXME this is a mess

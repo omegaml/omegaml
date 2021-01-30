@@ -783,7 +783,7 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
                 yield f
         elif isinstance(filein, str):  # some other string, make a file-like
             yield StringIO(filein)
-        else:
+        elif hasattr(filein, 'read'):
             # file-like object
             yield filein
 
