@@ -3,6 +3,7 @@ from unittest import TestCase
 from mock import patch
 from six import StringIO
 
+from omegaml import Omega
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
 
 
@@ -164,3 +165,15 @@ class ConfigurationTests(TestCase):
                     self.assertIn(real_k, om.defaults.OMEGA_STORE_BACKENDS)
                 # restore defaults
             defaults = settings(reload=True)
+
+    def test_defaults_repr(self):
+        # ensure accessing defaults in shell does not cause RecursionError
+        om = Omega()
+        not_raised = False
+        try:
+            context_repr = repr(om.defaults)
+        except RecursionError as e:
+            pass
+        else:
+            not_raised = True
+        self.assertTrue(not_raised)

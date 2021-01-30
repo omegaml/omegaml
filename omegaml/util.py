@@ -648,7 +648,7 @@ class DefaultsContext(object):
                 setattr(self, k, deepcopy(value))
 
     def keys(self):
-        return dir(self)
+        return [v for v in dir(self) if v.isupper()]
 
     def __iter__(self):
         for k in dir(self):
@@ -670,7 +670,8 @@ class DefaultsContext(object):
             return default
 
     def __repr__(self):
-        return 'DefaultsContext({})'.format(dict(self))
+        d = {k: self[k] for k in self.keys()}
+        return 'DefaultsContext({})'.format(repr(d))
 
 
 def ensure_json_serializable(v):
