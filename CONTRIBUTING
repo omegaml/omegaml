@@ -1,5 +1,33 @@
+Creating a release
+==================
+
+Preparing the release
+
+1. bumpversion patch (this creates a -dev version)
+2. create a release-branch release-x.x.x (should be feature complete, taken from master)
+3. create a release-build branch, to PR merge into release-x.x.x
+
+On release-build branch:
+
+Testing dev versions
+
+4. bumpversion release (this creates a -dev1 version)
+5. ensure everything builds & tests, apply minor fixes, bumpversion build (this increases -devN)
+
+Publishing the release
+
+Still on release-build branch
+
+6. bumpversion release (this creates a -rc version)
+7. ensure all tests build successfully, including livetest, deployment to testpypi works ok
+8. bumpversion release (this removes the -rc & builds into pypi)
+9. merge into release-x.x.x (this builds on master)
+10. merge into master
+
+
 bumpversion flow
 ----------------
+
 adopted from https://github.com/c4urself/bump2version/pull/177
 
 # how to get from version => new version
@@ -67,3 +95,5 @@ values =
 first_value = 1
 
 [bumpversion:file:./VERSION]
+
+
