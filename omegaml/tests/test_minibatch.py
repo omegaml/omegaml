@@ -64,7 +64,7 @@ class MiniBatchTests(TestCase):
         self.assertEqual(len(windows), 5)
         self.assertTrue(all(len(w['data']) == 2 for w in windows))
 
-    def test_timed_window(self):
+    def test_timed_window_relaxed(self):
         """
         Test timed windows work ok
         """
@@ -76,6 +76,7 @@ class MiniBatchTests(TestCase):
             om = Omega(mongo_url=url)
 
             @streaming('test', interval=1, keep=True, url=url, queue=q,
+                       relaxed=True,
                        sink=DatasetSink(om, 'consumer'))
             def myprocess(window):
                 return {'myprocess': True, 'data': window.data}
@@ -88,18 +89,20 @@ class MiniBatchTests(TestCase):
         # fill stream
         for i in range(10):
             s.append({'index': i})
-            sleep(.5)
+            sleep(1)
         # give it some time to process
-        sleep(5)
+        sleep(2)
         q.put(True)
         proc.join()
         # expect at least 5 entries (10 x .5 = 5 seconds), each of length 1-2
         windows = list(doc for doc in self.om.datasets.collection('consumer').find())
         self.assertGreater(len(windows), 5)
-        print(windows)
-        self.assertTrue(all(len(w['data']) >= 1 for w in windows))
+        # most windows have one or more entries
+        self.assertTrue(sum(len(w['data']) >= 1 for w in windows) >= 4)
+        # all messages were processed
+        self.assertEqual(sum(len(w['data']) for w in windows), 10)
 
-    def test_timed_window_relaxed(self):
+    def test_timed_window_fixed(self):
         """
         Test relaxed time windows work ok
         """
@@ -110,7 +113,7 @@ class MiniBatchTests(TestCase):
             # function asynchronously upon the window criteria is satisfied
             om = Omega(mongo_url=url)
 
-            @streaming('test', interval=1, relaxed=True,
+            @streaming('test', interval=1, relaxed=False,
                        keep=True, url=url, queue=q,
                        sink=DatasetSink(om, 'consumer'))
             def myprocess(window):
@@ -124,12 +127,15 @@ class MiniBatchTests(TestCase):
         # fill stream
         for i in range(10):
             s.append({'index': i})
-            sleep(.5)
+            sleep(1)
         # give it some time to process
-        sleep(5)
+        sleep(1)
         q.put(True)
         proc.join()
         # expect at least 5 entries (10 x .5 = 5 seconds), each of length 1-2
         windows = list(doc for doc in self.om.datasets.collection('consumer').find())
         self.assertGreater(len(windows), 5)
-        self.assertTrue(all(len(w['data']) >= 1 for w in windows))
+        # most windows have one or more entries
+        self.assertTrue(sum(len(w['data']) >= 1 for w in windows) >= 4)
+        # all messages were processed
+        self.assertEqual(sum(len(w['data']) for w in windows), 10)

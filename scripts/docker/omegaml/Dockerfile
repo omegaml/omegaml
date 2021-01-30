@@ -1,4 +1,4 @@
-FROM jupyter/scipy-notebook
+FROM jupyter/scipy-notebook:703d8b2dcb88
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
 USER root
