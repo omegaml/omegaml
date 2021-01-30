@@ -34,6 +34,9 @@ class PythonPipSourcedPackageData(BaseDataBackend):
 
     Notes:
         the package specification is stored as meta.kind_meta['pip_source']
+
+    See Also
+        https://packaging.python.org/tutorials/packaging-projects/
     """
     KIND = 'pipsrc.package'
 
@@ -53,7 +56,12 @@ class PythonPipSourcedPackageData(BaseDataBackend):
         """
         save a python package
 
-        :param obj: full path to package file or directory, sytanx as
+        This stores a PIP-sourceable package specification in the objects
+        Metadata.kind_meta:
+
+             { 'pip_source': '<obj:package spec>' }
+
+        :param obj: full path to package file or directory, syntax as
                     pkg://path/to/dist.tar.gz or pkg://path/to/setup.py
         :param name: name of package. must be the actual name of the package
                      as specified in setup.py
@@ -73,6 +81,9 @@ class PythonPipSourcedPackageData(BaseDataBackend):
     def get(self, name, keep=False, **kwargs):
         """
         Load package from store, install it locally and load.
+
+        This runs `pip install <package spec>`, taking the package specification
+        from Metadata.kind_meta['pip-source']. See the put() method for details.
 
         :param name: the name of the package
         :param keep: keep the packages load path in sys.path, defaults to False
