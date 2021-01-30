@@ -6,8 +6,8 @@ class PythonPackageMixin(object):
         """
         install and load packages
 
-        This is a convenience function to installs one or more packages using
-        om.scripts.get to install each. It is the equivalent of
+        This is a convenience function to install one or more packages at once.
+        It is the equivalent of
 
             for pkg in ['name1', 'name2']:
                 om.scripts.get(pkg)
