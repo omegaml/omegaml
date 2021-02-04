@@ -1,5 +1,4 @@
 import os
-
 import unittest
 
 from omegaml import Omega
@@ -47,6 +46,24 @@ class JobTasksTests(unittest.TestCase):
             self.assertEqual(result['status'], 'OK')
             self.assertEqual(status.loc[t.name, 'run_status'], 'OK')
 
+    def test_list(self):
+        """ test runtime.job.map() works ok """
+        om = self.om
+        meta = om.jobs.create("print('hello')", 'mymain')
+        job = om.runtime.job('mymain')
+        # generate a task group
+        tasks = job.map(range(2))
+        task_list = job.list()
+        self.assertEqual(len(task_list), 2)
+        # specify a task group
+        job = om.runtime.job('mymain')
+        tasks = job.map(range(2), task_group='foo')
+        task_list = job.list()
+        self.assertEqual(len(task_list), 2)
+        # list tasks in all task groups
+        task_list = job.list('*')
+        self.assertEqual(len(task_list), 4)
+
     def test_map_fail(self):
         """ test runtime.job.map() works with erronous jobs """
         om = self.om
@@ -78,7 +95,6 @@ class JobTasksTests(unittest.TestCase):
 
     def test_map_groups(self):
         """ test runtime.job.map() works with multiple groups """
-        import os
 
         om = self.om
         meta = om.jobs.create("print('hello')", 'main')
@@ -87,7 +103,7 @@ class JobTasksTests(unittest.TestCase):
         def check(tasks):
             self.assertEqual(len(tasks), 2)
             self.assertTrue(all(isinstance(t, Metadata) for t in tasks))
-            status = job.status().set_index('name')
+            status = job.status('*').set_index('name')
             for t in tasks:
                 self.assertIn('task_id', t.attributes)
                 task_name = t.attributes['job']['task_name']

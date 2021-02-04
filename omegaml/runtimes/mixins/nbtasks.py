@@ -73,12 +73,49 @@ class JobTasks:
       calculation(job)
     """
 
+    def _init_mixin(self, *args, **kwargs):
+        self.task_group = None
+
     def map(self, jobs, job_ids=None, require=None, reset=False, task_group=None):
+        """
+        Generate any number of parallel jobs executed through om.runtime
+
+        Args:
+            jobs (iterable): an iterable to yield job parameters, each parameter
+              can be any native object or container (e.g. int, float, dict, list)
+            job_ids (str): optional, list of job ids. If passed, the
+               job id will be used to name the task id, else
+               it is the current count
+            require (str): optional, passed on to om.runtime.require()
+            reset (bool): optional, if True will resubmit finished jobs
+            task_group (str): optional, a specified task group, if not given
+               will generate a unique id
+
+        Returns:
+            list of started tasks
+        """
         nbname = self.jobname
         # generate metadata
         self._generate_jobs(nbname, jobs, job_ids=job_ids, task_group=task_group)
         tasks = self.restart(require=require, reset=reset, task_group=task_group)
         return tasks
+
+    def list(self, task_group=None, **kwargs):
+        """
+        List all generated tasks for this map call
+
+        Args:
+            task_group (str): optional, the task group
+            **kwargs (kwargs): kwargs to om.jobs.list()
+
+        Returns:
+            list of tasks generated for map call
+        """
+        om = self.runtime.omega
+        task_group = task_group or self.task_group
+        nbname = self.jobname
+        nbname += f'/{task_group}' if task_group else ''
+        return om.jobs.list(f'tasks/{nbname}*', **kwargs)
 
     def restart(self, task_group=None, reset=False, require=None):
         """
@@ -145,6 +182,7 @@ class JobTasks:
         """
         om = self.runtime.omega
         AsyncResult = self.runtime.celeryapp.AsyncResult
+        task_group = task_group or self.task_group
         nbname = self.jobname
         nbname += f'/{task_group}' if task_group else ''
         tasks_nb = om.jobs.list(f'tasks/{nbname}*')
@@ -195,13 +233,13 @@ class JobTasks:
 
         om = self.runtime.omega
         job_ids = list(job_ids) if job_ids is not None else None
-        task_group = task_group or self._make_task_group()
+        self.task_group = task_group = task_group or self._make_task_group()
         tasks = []
         om.jobs.create('#do not delete', 'results/.placeholder')
         om.jobs.create('#do not delete', 'tasks/.placeholder')
         om.jobs.create('#do not delete', 'results/tasks/.placeholder')
         for i, job in enumerate(jobs):
-            main_nb = om.jobs.get('main')
+            main_nb = om.jobs.get(nb)
             job_id = i if job_ids is None else job_ids[i]
             task_name = f'tasks/{nb}/{task_group}-{job_id}'
             print(f'generating task {task_name}')
@@ -237,11 +275,6 @@ class JobTasks:
             if candidate not in existing:
                 break
         return candidate
-
-    def _jobproxy_map(self, *args, **kwargs):
-        self.task_group = kwargs.get('task_group') or self._make_task_group()
-        kwargs.update(task_group=self.task_group)
-        return self.map(self.jobname, *args, **kwargs)
 
 
 JobTasks.map.__doc__ = JobTasks.__doc__

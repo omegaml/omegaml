@@ -91,7 +91,7 @@ class ModelMixin(object):
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname)
         return omega_fit_transform.delay(self.modelname, Xname, Yname,
-                                         rName=rName, transform=True, **kwargs)
+                                         rName=rName, **kwargs)
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
         """

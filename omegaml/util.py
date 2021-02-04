@@ -1,16 +1,16 @@
 from __future__ import absolute_import
 
+from copy import deepcopy
+from importlib import import_module
+
 import logging
 import os
+import six
 import sys
 import tempfile
 import uuid
 import warnings
-from copy import deepcopy
-from importlib import import_module
 from shutil import rmtree
-
-import six
 from six import string_types
 
 try:
@@ -541,7 +541,6 @@ def extend_instance(obj, cls, *args, **kwargs):
     base_mro = obj.__class__.mro()
     if cls not in base_mro:
         base_cls = obj.__class__
-        base_cls_name = 'Extended{}'.format(obj.__class__.__name__.split('.')[0])
         base_cls_name = base_mro[-2].__name__
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
     if hasattr(obj, '_init_mixin'):
