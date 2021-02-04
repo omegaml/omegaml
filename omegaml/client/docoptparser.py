@@ -497,7 +497,7 @@ class CommandParser:
         """
         command_requested = self.args.get(self.command_tag)
         help_requested = command_requested == 'help' or self.args.get('help')
-        action_requested = self.args.get('<any-command>')
+        action_requested = self.args.get('<action>')
         closest_command = None
         # if help was actually requested, see if we can find a command
         if help_requested:

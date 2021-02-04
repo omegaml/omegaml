@@ -658,12 +658,10 @@ class OmegaStore(object):
         if meta:
             if meta.collection:
                 self.mongodb.drop_collection(meta.collection)
-                self._drop_metadata(name)
-                return True
             if meta and meta.gridfile is not None:
                 meta.gridfile.delete()
-                self._drop_metadata(name)
-                return True
+            self._drop_metadata(name)
+            return True
         return False
 
     def get_backend_bykind(self, kind, model_store=None, data_store=None,
