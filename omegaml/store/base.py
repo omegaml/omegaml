@@ -744,7 +744,9 @@ class OmegaStore(object):
                                         model_store=model_store, **kwargs):
                     warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
             else:
-                warnings.warn('Backend {kind} not found {objtype}. Reverting to default'.format(**locals()))
+                pass
+                # TODO refactor pandas and numpy handling into proper backend to avoid misleading warning
+                # warnings.warn('Backend {kind} not found {objtype}. Reverting to default'.format(**locals()))
         else:
             for backend_kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
                 backend = self.get_backend_bykind(backend_kind)

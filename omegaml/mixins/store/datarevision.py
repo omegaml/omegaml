@@ -1,3 +1,4 @@
+# TODO implement drop for revisions!
 from datetime import datetime
 
 import pandas as pd
