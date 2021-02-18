@@ -55,7 +55,7 @@ setup(
         ('omegaml/docs/', glob.glob('./docs/source/nb/*.ipynb')),
     ],
     scripts=glob.glob('./scripts/runtime/*'),
-    license='Apache 2.0',
+    license='Apache 2.0 + "No Sell, Consulting Yes" License Condition',
     description='An open source DataOps, MLOps platform for humans',
     long_description=README,
     long_description_content_type='text/x-rst',
