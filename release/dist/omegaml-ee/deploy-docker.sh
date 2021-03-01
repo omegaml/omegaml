@@ -24,6 +24,7 @@ fi
 echo "Starting services"
 # -- core service first, this starts rabbitmq, mongodb, mysql
 docker-compose up -d omegaml
+countdown 30
 echo "Securing mongodb"
 cat scripts/mongoinit.js | compose_exec mongodb mongo
 docker-compose exec omegaml scripts/initlocal.sh

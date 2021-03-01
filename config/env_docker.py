@@ -11,7 +11,7 @@ class EnvSettings_docker(Config_Dokku,
     # must match docker-compose configuration
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']
 
-    if 'MYSQL_ROOT_USER' in os.environ:
+    if 'MYSQL_USER' in os.environ:
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.mysql',

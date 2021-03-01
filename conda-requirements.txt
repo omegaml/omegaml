@@ -10,3 +10,5 @@ configurable-http-proxy
 # it is much easier to stick with 20.2.4 to keep legacy behavior than to instlal 20.3.1 and change all
 # pip installations to use the legacy-resolver
 pip=20.2.4
+# explicit need mysql support for Django
+mysqlclient=2.0.3

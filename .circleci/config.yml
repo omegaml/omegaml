@@ -37,7 +37,10 @@ jobs:
           cd omegaml
           scripts/initlocal.sh --deps --setup --noinit
           # quick fix for allowing docker user to deal with circleci-owned files
-          chmod -f -R 777 ~ || true
+          sudo chmod -f -R 777 ~ || true
+          mkdir -p ~/.omegaml
+          sudo chown -R circleci:circleci ~/.omegaml/
+          echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
           scripts/rundev.sh --docker --clean --cmd "python -m site"
     - run:
         name: Run unit tests
@@ -51,13 +54,11 @@ jobs:
         command: |
           source ~/miniconda3/etc/profile.d/conda.sh
           conda activate base
-          mkdir -p ~/.omegaml
-          sudo chown -R circleci.circleci ~/.omegaml/
-          echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
           cd omegaml
+          sudo chmod -f -R 777 ~ || true
           scripts/initlocal.sh --install --noinit
           docker login -u omegaml -p $DOCKER_PASS
-          LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest" make dist
+          LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make dist
         shell: /bin/bash -l -eo pipefail
     - store_artifacts:
         path: /tmp/screenshots
@@ -85,36 +86,36 @@ jobs:
             scripts/initlocal.sh --deps --setup --noinit
             # quick fix for allowing docker user to deal with circleci-owned files
             sudo chmod -f -R 777 ~ || true
-            sudo chown -R circleci:circleci ~ ~ || true
-            scripts/rundev.sh --docker --clean --cmd "python -m site"
+            sudo chmod -f -R 777 . || true
+            mkdir -p ~/.omegaml
+            sudo chown -R circleci:circleci ~/.omegaml/
+            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
       - run:
           name: Build release docker
           command: |
             source ~/miniconda3/etc/profile.d/conda.sh
             conda activate base
-            mkdir -p ~/.omegaml
-            sudo chown -R circleci.circleci ~/.omegaml/
-            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
-            sudo chmod -f -R 777 ~ || true
-            sudo chown -R circleci:circleci ~ ~ || true
             cd omegaml
+            sudo chmod -f -R 777 ~ || true
             scripts/initlocal.sh --install --noinit
             docker login -u omegaml -p $DOCKER_PASS
-            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~apphub --tags ~snowflake" make release-docker
+            LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make release-docker
           shell: /bin/bash -l -eo pipefail
+      - store_artifacts:
+          path: /tmp/screenshots
+      - store_artifacts:
+          path: /tmp/logs
 workflows:
   version: 2
   workflow:
     jobs:
     - test:
         context: omegaml
-        filters:
-          branches:
-            ignore: release-build
     - release:
         context: omegaml
+        requires:
+          - test
         filters:
           branches:
-            only: release-build
-
+            only: /release.*/
 

@@ -202,7 +202,7 @@ scipy==1.6.0
 seaborn==0.11.1
 selenium==3.141.0
 Send2Trash==1.5.0
-setuptools==51.1.2.post20210112
+setuptools==51.1.2
 six==1.15.0
 smart-open==4.1.2
 sniffio==1.2.0

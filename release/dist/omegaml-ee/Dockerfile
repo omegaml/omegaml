@@ -1,7 +1,7 @@
 FROM continuumio/miniconda3
 ADD . /app
 RUN apt-get update -y && \
-    apt-get install -y --fix-missing default-mysql-client default-libmysqlclient-dev python-dev build-essential  && \
+    apt-get install -y --fix-missing python3-dev default-libmysqlclient-dev build-essential  && \
     apt-get install -y procps htop curl && \
     apt-get clean
 RUN conda install -y conda=4.9.2 && \
