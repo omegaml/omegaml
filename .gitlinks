@@ -7,8 +7,7 @@ omegaml ../omegaml-ce https://github.com/omegaml/omegaml 0.13.7
 cloudmgr ../omegaml-deploy/cloudmgr https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr 1.1.2
 stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable 0.3.2
 landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage 0.9.0
-# ccbackend ../ccbackend https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/ccbackend master
 minibatch ../minibatch https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch 0.4.0
-django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger master
-tastypiex ../tastypiex https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex master
+django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger 0.1.5
+tastypiex ../tastypiex https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex 0.3
 apps ../omegaml-apps https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps master
