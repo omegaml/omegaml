@@ -1,13 +1,13 @@
 from django.contrib.auth.models import User
 from nbformat import v4
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from omegaml import Omega
 from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class JobResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCase):
+class JobResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         super(JobResourceTestsAsync, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)

@@ -8,17 +8,24 @@ from unittest import skip
 import tornado
 from django.contrib.auth.models import User
 from kubespawner.spawner import MockObject
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 from tornado.testing import AsyncTestCase
+from django.test.testcases import TestCase
 
 from omegajobs.kubespawner import OmegaKubeSpawner
 from omegaml import settings
 from omegaweb.tests.util import OmegaResourceTestMixin
 
+# It looks like AsyncTestCase is not compatible with Django 2.2. After each test, Django will not
+# tear down or recreate its database. For that reason, I made this become a regular TestCase.  My
+# understanding is that nothing is lost after the change, and all tests still run properly. There
+# is a skipped test `test_start()` that does async stuff; but this test also used to be skipped
+# under the old Django, so no change here either. If `test_start()` is going to be utilized in the
+# future, it might need to be refactored into a separate class.
 
-class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCase, AsyncTestCase):
+class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
     def setUp(self):
-        super().setUp()
+        super(OmegaKubeSpawnerTests, self).setUp()
         defaults = settings()
         # setup django user
         self.username = username = 'test'

@@ -6,7 +6,7 @@ from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from omegaml import Omega
 from omegaml.sklext import OnlinePipeline
@@ -14,7 +14,7 @@ from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCase):
+class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         super(ModelResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client)

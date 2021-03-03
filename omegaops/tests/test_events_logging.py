@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from mock import Mock
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from landingpage.models import ServicePlan
 from omegaml import Omega
@@ -10,7 +10,7 @@ from omegaops import get_client_config, tasks
 from omegaweb.middleware import EventsLoggingMiddleware
 
 
-class EventsLoggingTests(OmegaTestMixin, ResourceTestCase):
+class EventsLoggingTests(OmegaTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         super(EventsLoggingTests, self).setUp()
         # setup omega credentials

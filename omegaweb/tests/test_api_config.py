@@ -1,13 +1,13 @@
 from landingpage.models import ServicePlan
 
 from django.contrib.auth.models import User
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 from omegaops import add_service_deployment, get_client_config
 
 
-class ClientConfigResourceTests(ResourceTestCase):
+class ClientConfigResourceTests(ResourceTestCaseMixin):
     def setUp(self):
-        ResourceTestCase.setUp(self)
+        super(ClientConfigResourceTests, self).setUp()
         ServicePlan.objects.create(name='omegaml')
         self.create_user()
         self.create_admin_user()
@@ -45,7 +45,7 @@ class ClientConfigResourceTests(ResourceTestCase):
         add_service_deployment(self.admin_user, self.admin_config)
 
     def tearDown(self):
-        ResourceTestCase.tearDown(self)
+        super(ClientConfigResourceTests, self).tearDown()
 
     def url(self, pk=None, query=None):
         url = '/api/v1/config/'

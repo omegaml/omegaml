@@ -2,7 +2,7 @@ import os
 
 import sys
 from django.contrib.auth.models import User
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from omegaml import Omega
 from omegaops import get_client_config
@@ -10,7 +10,7 @@ from omegaweb.tests.util import OmegaResourceTestMixin
 from tastypiex.requesttrace import ClientRequestTracer
 
 
-class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCase):
+class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         super(ScriptResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)

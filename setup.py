@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 dev_deps = [
-    'django-nose==1.4.5',
+    'django-nose==1.4.7',
     'mock==3.0.5',
     'behave==1.2.6',
     'jupyterhub',
@@ -19,7 +19,7 @@ dev_deps = [
 ]
 
 web_deps = [
-   'Django>=1.8,<1.9',
+   'Django==2.2',
    'honcho==1.0.1',
    'gunicorn==19.7.1',
    'pyrabbit2==1.0.7',

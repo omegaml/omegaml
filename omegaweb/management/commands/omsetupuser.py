@@ -34,8 +34,8 @@ class Command(BaseCommand):
             user = User.objects.get(username=username)
         except:
             user_password = options.get('password') or User.objects.make_random_password(length=36)
-            user = User.objects._create_user(username, email, user_password,
-                                             is_staff, is_superuser)
+            user = User.objects._create_user(username, email=email, password=user_password,
+                                             is_staff=is_staff, is_superuser=is_superuser)
             user_signed_up.send(self, user=user)
             print('Password set', user_password)
             user.emailaddress_set.create(email=email, verified=True, primary=True)

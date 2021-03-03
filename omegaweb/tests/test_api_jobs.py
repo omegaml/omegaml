@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from nbformat import v4
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from landingpage.models import ServicePlan
 from omegaml import Omega
@@ -8,7 +8,7 @@ from omegaops import add_user, add_service_deployment, get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class JobResourceTests(OmegaResourceTestMixin, ResourceTestCase):
+class JobResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         super(JobResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)

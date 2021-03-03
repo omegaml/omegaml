@@ -9,6 +9,7 @@ class FailsafeCompressedManifestStaticFilesStorage(
     """
     originally from landingpage
     """
+    manifest_strict=False
 
     def post_process(self, *args, **kwargs):
         """

@@ -5,14 +5,14 @@ import pandas as pd
 from django.contrib.auth.models import User
 from pandas.util.testing import assert_frame_equal
 from six import iteritems
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from landingpage.models import ServicePlan
 from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCase):
+class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin):
     def setUp(self):
         from omegaml import Omega
 

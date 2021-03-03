@@ -1,6 +1,6 @@
 import re
 
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import DictField, CharField
