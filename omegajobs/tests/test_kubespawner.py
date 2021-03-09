@@ -1,20 +1,20 @@
-from traitlets import Instance
-from traitlets.config import Config
-from unittest.mock import patch
-
-from time import sleep
 from unittest import skip
 
 import tornado
 from django.contrib.auth.models import User
+from django.test.testcases import TestCase
 from kubespawner.spawner import MockObject
 from tastypie.test import ResourceTestCaseMixin
+from time import sleep
 from tornado.testing import AsyncTestCase
-from django.test.testcases import TestCase
+from traitlets import Instance
+from traitlets.config import Config
+from unittest.mock import patch
 
 from omegajobs.kubespawner import OmegaKubeSpawner
 from omegaml import settings
 from omegaweb.tests.util import OmegaResourceTestMixin
+
 
 # It looks like AsyncTestCase is not compatible with Django 2.2. After each test, Django will not
 # tear down or recreate its database. For that reason, I made this become a regular TestCase.  My

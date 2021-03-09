@@ -39,7 +39,11 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoLogging,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
-    _prefix_apps = ('omegaweb', 'landingpage', 'paasdeploy', 'orders')
+    _prefix_apps = ('omegaweb',
+                    'landingpage',
+                    'paasdeploy',
+                    'orders',
+                    'secretsvault')
     _addl_apps = ('tastypie',
                   'tastypie_swagger',
                   'tastypiex',
@@ -144,23 +148,23 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     use_ssl_services = use_ssl if 'OMEGA_USESSL_VIEW' not in os.environ else truefalse(os.environ.get('OMEGA_USESSL_VIEW'))
 
     StackableSettings.patch_dict('CONSTANCE_CONFIG', {
-        'MONGO_HOST': (mongo_host, 'mongo db host name'),
-        'JYHUB_HOST': (jyhub_host, 'jupyter hub public host name'),
-        'BROKER_URL': (broker_url, 'rabbitmq broker url (deprecated)'),
-        'BROKER_HOST': (broker_host, 'rabbitmq broker host'),
+        'MONGO_HOST': (mongo_host, 'mongodb host:port (public)'),
+        'JYHUB_HOST': (jyhub_host, 'jupyterhub host:port (public)'),
+        'BROKER_URL': (broker_url, 'rabbitmq url amqp://user:pass@host:port/vhost (internal)'),
+        'BROKER_HOST': (broker_host, 'rabbitmq host:port (public)'),
         'JUPYTER_IMAGE': (jupyter_image, 'jupyter image'),
         'JUPYTER_AFFINITY_ROLE': ('worker', 'jupyter k8s affinity role'),
         'JUPYTER_NODE_SELECTOR': ('omegaml.io/role=worker', 'jupyter k8s node selector'),
-        'JUPYTER_NAMESPACE': ('default', 'jupyter k8s cluster namespace'),
+        'JUPYTER_NAMESPACE': ('default', 'jupyter k8s default namespace'),
         'RUNTIME_IMAGE': (runtime_image, 'runtime image'),
         'RUNTIME_AFFINITY_ROLE': ('worker', 'runtime k8s affinity role'),
         'RUNTIME_NODE_SELECTOR': ('omegaml.io/role=worker', 'runtime k8s node selector'),
-        'RUNTIME_NAMESPACE': ('default', 'runtime k8s cluster namespace'),
-        'CLUSTER_STORAGE': (_default_cluster_storage, 'json cluster storage specs, applied to all services'),
+        'RUNTIME_NAMESPACE': ('default', 'runtime k8s default namespace'),
+        'CLUSTER_STORAGE': (_default_cluster_storage, 'json cluster storage specs, applied to Jupyter services'),
         'OMEGA_DEFAULTS': (_default_omega_defaults, 'json omegaml defaults'),
         'JUPYTER_CONFIG': (_default_jupyter_config_overrides, 'json jupyter config overrides'),
         'SERVICE_USESSL': (use_ssl, 'use ssl for public service hosts'),
-        'SERVICE_USESSL_VIEW': (use_ssl_services, 'use ssl in internal view'),
+        'SERVICE_USESSL_VIEW': (use_ssl_services, 'use ssl in internal'),
     })
 
     DEBUG = truefalse(os.environ.get('DJANGO_DEBUG', False))
@@ -195,3 +199,6 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     # if you don't specify FERNET_KEYS env, SECRET_KEY will be used
     _fernet_keys = os.environ.get('FERNET_KEYS', '').split(':') + [EnvSettingsGlobal.SECRET_KEY]
     FERNET_KEYS = [k for k in _fernet_keys if k]
+
+    # secretsvault audit
+    SECRETS_AUDIT = True
