@@ -55,7 +55,7 @@ jobs:
               for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
                 dotest 3.6 $TF_VERSION
               done
-              # py37
+              # py37 py38
               for PYVER in 3.7 3.8; do
                 for TF_VERSION in 2.2.0 2.3.0 2.3.1 2.4.0; do
                   dotest $PYVER $TF_VERSION
@@ -65,10 +65,10 @@ jobs:
               # tensorflow does not support 3.9 yet
               # see https://github.com/tensorflow/tensorflow/issues/44485
               #     https://github.com/tensorflow/tensorflow/issues/44400
-              # PYVER=3.9
-              # for TF_VERSION in 2.2.0 2.3.0 2.3.1; do
-              #  dotest $PYVER $TF_VERSION
-              # done
+              PYVER=3.9
+              for TF_VERSION in 2.4.0; do
+                dotest $PYVER $TF_VERSION
+              done
               # end tests
             else
               # if this is not a release build, do a quick build for speed

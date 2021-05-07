@@ -33,10 +33,11 @@ elif (3, 8) <= sys.version_info < (3, 9) :
     keras_deps = ['keras>=2.4.3']
 elif sys.version_info >= (3, 9):
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
-    assert (major, minor) <= (2, 4), "Python version 3.9 only supported by TF < 2.4"
-    assert (major, minor) >= (2, 2), "Python version 3.9 only supported by TF >= 2.2"
-    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras>=2.4.3']
+    tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
+    print("WARNING tensorflow is not supported in python 3.9, see {}".format(tf_issue))
+    print("WARNING removing tensorflow and keras from requirements {}".format(tf_issue))
+    tf_deps = []
+    keras_deps = []
 else:
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras>=2.4.3']
@@ -81,7 +82,7 @@ setup(
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
         'mongoengine>=0.18.2,<0.19',
-        'pandas>=0.17.1,<1.1',  # 1.1 fails on storing multi-indexes
+        'pandas>1.1',  # 1.1 fails on storing multi-indexes
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
