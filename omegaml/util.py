@@ -1,16 +1,16 @@
 from __future__ import absolute_import
 
-from copy import deepcopy
-from importlib import import_module
-
 import logging
 import os
-import six
 import sys
 import tempfile
 import uuid
 import warnings
+from copy import deepcopy
+from importlib import import_module
 from shutil import rmtree
+
+import six
 from six import string_types
 
 try:
@@ -21,8 +21,10 @@ except:
 logger = logging.getLogger(__name__)
 
 # support pandas < 1.0
+import pandas as pd
+
 try:
-    from pandas import json_normalize
+    from pandas import json_normalize, DatetimeIndex
 except Exception as e:
     try:
         from pandas.io.json import json_normalize
@@ -262,6 +264,10 @@ def unravel_index(df, row_count=0):
     unravelled_df['_om#rowid'] = unravelled_df.index.values + row_count
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
+    # treat particular index types
+    if isinstance(df.index, DatetimeIndex):
+        if getattr(df.index, 'freq') is not None:
+            idx_meta['freq'] = getattr(df.index.freq, 'name', None)
     return unravelled_df, idx_meta
 
 
@@ -305,6 +311,15 @@ def restore_index(df, idx_meta, rowid_sort=True):
     result = df.set_index(index_cols) if index_cols else df
     if index_cols:
         result.index.names = idx_meta.get('names', [None] * len(index_cols))
+    if isinstance(result.index, DatetimeIndex):
+        # restore datetime frequency, if possible
+        if 'freq' in idx_meta:
+            try:
+                freq = idx_meta.get('freq')
+                freq = freq or pd.infer_freq(result.index)
+                result = result.asfreq(freq)
+            except:
+                pass
     return result
 
 

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from datetime import datetime
+
 import random
 import string
 
@@ -392,17 +394,17 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
     def test_locindexer_timeseries_index(self):
         om = self.om
         # create some dataframe
-        tsidx = pd.date_range(pd.datetime(2016, 1, 1), pd.datetime(2016, 4, 1))
+        tsidx = pd.date_range(datetime(2016, 1, 1), datetime(2016, 4, 1))
         df = pd.DataFrame({
             'a': list(range(0, len(tsidx))),
             'b': list(range(0, len(tsidx)))
         }, index=tsidx)
         om.datasets.put(df, 'foo', append=False)
         # by label
-        dfx = om.datasets.getl('foo').loc[pd.datetime(2016, 2, 3)].value
-        assert_series_equal(dfx, df.loc[pd.datetime(2016, 2, 3)])
+        dfx = om.datasets.getl('foo').loc[datetime(2016, 2, 3)].value
+        assert_series_equal(dfx, df.loc[datetime(2016, 2, 3)])
         # by slice
-        start, end = pd.datetime(2016, 2, 3), pd.datetime(2016, 2, 8)
+        start, end = datetime(2016, 2, 3), datetime(2016, 2, 8)
         dfx = om.datasets.getl('foo').loc[start:end].value
         assert_frame_equal(df.loc[start:end], dfx)
 
@@ -425,15 +427,15 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         series = pd.Series(range(10),
                            name='foo',
-                           index=pd.date_range(pd.datetime(2016, 1, 1),
-                                               pd.datetime(2016, 1, 10)))
+                           index=pd.date_range(datetime(2016, 1, 1),
+                                               datetime(2016, 1, 10)))
         om.datasets.put(series, 'fooseries', append=False)
         # try data range
-        daterange = slice(pd.datetime(2016, 1, 5), pd.datetime(2016, 1, 10))
+        daterange = slice(datetime(2016, 1, 5), datetime(2016, 1, 10))
         series2 = om.datasets.getl('fooseries').loc[daterange].value
         assert_series_equal(series2, series.loc[daterange])
         # try single date
-        daterange = pd.datetime(2016, 1, 5)
+        daterange = datetime(2016, 1, 5)
         series2 = om.datasets.getl('fooseries').loc[daterange].value
         self.assertEqual(series2, series.loc[daterange])
 

@@ -812,10 +812,13 @@ class OmegaStore(object):
 
         """
         collection = self.collection(name)
+        meta = self.metadata(name)
         if lazy or chunksize:
             from ..mdataframe import MDataFrame
             filter = filter or kwargs
-            df = MDataFrame(collection, columns=columns).query(**filter)
+            df = MDataFrame(collection,
+                            metadata=meta.kind_meta,
+                            columns=columns).query(**filter)
             if is_series:
                 df = df[0]
             if chunksize is not None and chunksize > 0:
@@ -834,7 +837,6 @@ class OmegaStore(object):
             df = cursor_to_dataframe(cursor)
             if '_id' in df.columns:
                 del df['_id']
-            meta = self.metadata(name)
             if hasattr(meta, 'kind_meta'):
                 df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
             # -- restore columns

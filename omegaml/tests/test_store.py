@@ -7,7 +7,7 @@ import joblib
 import pandas as pd
 import unittest
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.util import testing
@@ -343,7 +343,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe_timeseries(self):
         # create some dataframe
-        tsidx = pd.date_range(pd.datetime(2016, 1, 1), pd.datetime(2016, 4, 1))
+        tsidx = pd.date_range(datetime(2016, 1, 1), datetime(2016, 4, 1))
         df = pd.DataFrame({
             'a': list(range(0, len(tsidx))),
             'b': list(range(0, len(tsidx)))
@@ -694,8 +694,8 @@ class StoreTests(unittest.TestCase):
         """ test storing a pandas series with it's own index """
         series = pd.Series(range(10),
                            name='foo',
-                           index=pd.date_range(pd.datetime(2016, 1, 1),
-                                               pd.datetime(2016, 1, 10)))
+                           index=pd.date_range(datetime(2016, 1, 1),
+                                               datetime(2016, 1, 10)))
         store = OmegaStore()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
@@ -712,8 +712,8 @@ class StoreTests(unittest.TestCase):
     def test_store_datetime(self):
         """ test storing naive datetimes """
         df = pd.DataFrame({
-            'x': pd.date_range(pd.datetime(2016, 1, 1),
-                               pd.datetime(2016, 1, 10))
+            'x': pd.date_range(datetime(2016, 1, 1),
+                               datetime(2016, 1, 10))
         })
         store = OmegaStore()
         store.put(df, 'test-date', append=False)
