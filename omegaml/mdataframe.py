@@ -338,7 +338,7 @@ class MDataFrame(object):
                  force_columns=None, immediate_loc=False, auto_inspect=False,
                  normalize=False, raw=False,
                  parser=None,
-                 preparefn=None, from_loc_range=False, **kwargs):
+                 preparefn=None, from_loc_range=False, metadata=None, **kwargs):
         self.collection = PickableCollection(collection)
         # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields(raw=raw)
@@ -382,6 +382,8 @@ class MDataFrame(object):
         self._preparefn = preparefn
         # keep technical fields like _id, _idx etc
         self._raw = raw
+        # metadata stored by omegaml (equiv. of metadata.kind_meta)
+        self.metadata = metadata or dict()
 
     def _apply_mixins(self, *args, **kwargs):
         """
@@ -424,6 +426,7 @@ class MDataFrame(object):
                       from_loc_indexer=self.from_loc_indexer,
                       from_loc_range=self.from_loc_range,
                       immediate_loc=self.immediate_loc,
+                      metadata=self.metadata,
                       query=self.filter_criteria,
                       auto_inspect=self.auto_inspect,
                       preparefn=self._preparefn)
@@ -644,8 +647,12 @@ class MDataFrame(object):
         df = self._restore_dataframe_proper(df)
         return df
 
+    @property
+    def _index_meta(self):
+        return self.metadata.get('idx_meta') or dict()
+
     def _restore_dataframe_proper(self, df):
-        df = restore_index(df, dict())
+        df = restore_index(df, self._index_meta)
         if '_id' in df.columns and not self._raw:
             df.drop('_id', axis=1, inplace=True)
         if self.force_columns:
