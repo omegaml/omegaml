@@ -1,9 +1,8 @@
+import callable_pip as cpip
 import logging
 import os
 import sys
 import threading
-
-import callable_pip as cpip
 from tee import tee
 
 sync_lock = threading.Lock()
