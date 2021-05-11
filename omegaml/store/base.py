@@ -415,10 +415,13 @@ class OmegaStore(object):
                 obj, name, append=append, attributes=attributes, index=index,
                 timestamp=timestamp, chunksize=chunksize)
         elif is_ndarray(obj):
-            return self.put_ndarray_as_hdf(obj, name,
-                                           attributes=attributes,
+            if kwargs.pop('as_pydata', False):
+                return self.put_pyobj_as_document(obj.tolist(), name,
+                                                  attributes=attributes, **kwargs)
+            return self.put_ndarray_as_hdf(obj, name, attributes=attributes,
                                            **kwargs)
         elif isinstance(obj, (dict, list, tuple)):
+            kwargs.pop('as_pydata', None)
             if kwargs.pop('as_hdf', False):
                 return self.put_pyobj_as_hdf(obj, name,
                                              attributes=attributes, **kwargs)
@@ -729,19 +732,27 @@ class OmegaStore(object):
         data_store = data_store or self
         meta = self.metadata(name)
         kind = kind or (meta.kind if meta is not None else None)
-        if kind and kind in self.defaults.OMEGA_STORE_BACKENDS:
-            backend = self.get_backend_bykind(kind)
-            if not backend.supports(obj, name, attributes=attributes,
-                                    data_store=data_store,
-                                    model_store=model_store, **kwargs):
-                objtype = str(type(obj))
-                warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
-            return backend
-        for kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
-            backend = self.get_backend_bykind(kind)
-            if backend.supports(obj, name, attributes=attributes, **kwargs):
-                return backend
-        return None
+        backend = None
+        if kind:
+            objtype = str(type(obj))
+            if kind in self.defaults.OMEGA_STORE_BACKENDS:
+                backend = self.get_backend_bykind(kind)
+                if not backend.supports(obj, name, attributes=attributes,
+                                        data_store=data_store,
+                                        model_store=model_store, **kwargs):
+                    warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
+            else:
+                warnings.warn('Backend {kind} not found {objtype}. Reverting to default'.format(**locals()))
+        else:
+            for backend_kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+                backend = self.get_backend_bykind(backend_kind)
+                if backend.supports(obj, name, attributes=attributes,
+                                    data_store=data_store, model_store=model_store,
+                                    **kwargs):
+                    break
+            else:
+                backend = None
+        return backend
 
     def getl(self, *args, **kwargs):
         """ return a lazy MDataFrame for a given object

@@ -17,8 +17,8 @@ class NumpyNDArrayBackend(BaseDataBackend):
     _save_method = 'np.save'
 
     @classmethod
-    def supports(self, obj, name, **kwargs):
-        return isinstance(obj, np.ndarray)
+    def supports(self, obj, name, as_pydata=False, **kwargs):
+        return not as_pydata and isinstance(obj, np.ndarray)
 
     def put(self, obj, name, attributes=None, allow_pickle=False, **kwargs):
         # TODO associate meta.gridfile with actual fs file

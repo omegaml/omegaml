@@ -224,10 +224,14 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         """
         store dataframe via connection
         """
+        self.clean('mybucket')
         om = self.om['mybucket']
         cnx = 'sqlite:///test.db'
         om.datasets.put(cnx, 'testsqlite', table='foo',
                         kind=SQLAlchemyBackend.KIND)
+        meta = om.datasets.metadata('testsqlite')
+        self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
+        # try inserting via connection
         df = pd.DataFrame({
             'x': range(10)
         })

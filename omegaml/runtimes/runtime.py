@@ -55,6 +55,13 @@ class CeleryTask(object):
         """
         return self.apply_async(args=args, kwargs=kwargs)
 
+    def signature(self, args=None, kwargs=None, immutable=False, **celery_kwargs):
+        """ return the task signature with all kwargs and celery_kwargs applied
+        """
+        self._apply_kwargs(kwargs, celery_kwargs)
+        sig = self.task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=immutable)
+        return sig
+
     def run(self, *args, **kwargs):
         return self.delay(*args, **kwargs)
 
@@ -155,6 +162,7 @@ class OmegaRuntime(object):
             self._task_default_kwargs['routing'].update(kwargs)
         else:
             self._require_kwargs['routing'].update(kwargs)
+            self._require_kwargs = dict(task={}, routing={})
         return self
 
     def model(self, modelname, require=None):
@@ -274,8 +282,48 @@ class OmegaRuntime(object):
         """
         return self._inspect.stats()
 
+    def callback(self, script_name, always=False, **kwargs):
+        """ Add a callback to a registered script
+
+        The callback will be triggered upon successful or failed
+        execution of the runtime tasks. The script syntax is:
+
+        # script.py
+        def run(om, state=None, result=None, **kwargs):
+            # state (str): 'SUCCESS'|'ERROR'
+            # result (obj): the task's serialized result
+
+        Args:
+            script_name (str): the name of the script (in om.scripts)
+            always (bool): if True always apply this callback, defaults to False
+            **kwargs: and other kwargs to pass on to the script
+
+        Returns:
+            self
+        """
+        success_sig = (self.script(script_name)
+                       .task(as_callback=True)
+                       .signature(args=['SUCCESS', script_name],
+                                  kwargs=kwargs,
+                                  immutable=False))
+        error_sig = (self.script(script_name)
+                     .task(as_callback=True)
+                     .signature(args=['ERROR', script_name],
+                                kwargs=kwargs,
+                                immutable=False))
+
+        if always:
+            self._task_default_kwargs['routing']['link'] = success_sig
+            self._task_default_kwargs['routing']['link_error'] = error_sig
+        else:
+            self._require_kwargs['routing']['link'] = success_sig
+            self._require_kwargs['routing']['link_error'] = error_sig
+        return self
+
+
 # apply mixins
 from omegaml.runtimes.mixins.taskcanvas import canvas_chain, canvas_group, canvas_chord
+
 OmegaRuntime.sequence = canvas_chain
 OmegaRuntime.parallel = canvas_group
 OmegaRuntime.mapreduce = canvas_chord
