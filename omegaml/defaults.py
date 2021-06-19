@@ -116,6 +116,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.promotion.PromotionMixin',
     'omegaml.mixins.mdf.iotools.IOToolsStoreMixin',
     'omegaml.mixins.store.modelversion.ModelVersionMixin',
+    'omegaml.mixins.store.datarevision.DataRevisionMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))

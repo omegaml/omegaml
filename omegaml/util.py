@@ -1,17 +1,17 @@
 from __future__ import absolute_import
 
-from copy import deepcopy
-from importlib import import_module
-
 import json
 import logging
 import os
-import six
 import sys
 import tempfile
 import uuid
 import warnings
+from copy import deepcopy
+from importlib import import_module
 from shutil import rmtree
+
+import six
 from six import string_types
 
 try:
@@ -534,13 +534,14 @@ class PickableCollection(object):
         return 'PickableCollection({})'.format(repr(self.collection))
 
 
-def extend_instance(obj, cls, *args, **kwargs):
+def extend_instance(obj, cls, *args, conditional=None, **kwargs):
     """Apply mixins to a class instance after creation"""
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
     cls = load_class(cls)
     base_mro = obj.__class__.mro()
-    if cls not in base_mro:
+    should_apply = True if not callable(conditional) else conditional(cls, obj)
+    if should_apply and cls not in base_mro:
         base_cls = obj.__class__
         base_cls_name = base_mro[-2].__name__
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
@@ -946,3 +947,11 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or NumpyEncoder)
+
+
+def tryOr(fn, else_fn):
+    # try fn(), if exception call else_fn() if callable, return its value otherwise
+    try:
+        return fn()
+    except:
+        return else_fn() if callable(else_fn) else else_fn

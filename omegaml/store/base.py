@@ -73,20 +73,21 @@ as follows:
 """
 from __future__ import absolute_import
 
-import bson
-import gridfs
 import os
-import six
 import tempfile
 import warnings
 from datetime import datetime
+from uuid import uuid4
+
+import bson
+import gridfs
+import six
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
 from six import iteritems
-from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -346,7 +347,9 @@ class OmegaStore(object):
         apply mixins in defaults.OMEGA_STORE_MIXINS
         """
         for mixin in self.defaults.OMEGA_STORE_MIXINS:
-            extend_instance(self, mixin)
+            conditional = lambda cls, obj: cls.supports(obj) if hasattr(cls, 'supports') else True
+            extend_instance(self, mixin,
+                            conditional=conditional)
 
     def register_backends(self):
         """
@@ -407,13 +410,13 @@ class OmegaStore(object):
             elif groupby:
                 return self.put_dataframe_as_dfgroup(
                     obj, name, groupby, attributes)
-            append = kwargs.get('append', None)
-            timestamp = kwargs.get('timestamp', None)
-            index = kwargs.get('index', None)
-            chunksize = kwargs.get('chunksize', default_chunksize)
+            append = kwargs.pop('append', None)
+            timestamp = kwargs.pop('timestamp', None)
+            index = kwargs.pop('index', None)
+            chunksize = kwargs.pop('chunksize', default_chunksize)
             return self.put_dataframe_as_documents(
                 obj, name, append=append, attributes=attributes, index=index,
-                timestamp=timestamp, chunksize=chunksize)
+                timestamp=timestamp, chunksize=chunksize, **kwargs)
         elif is_ndarray(obj):
             if kwargs.pop('as_pydata', False):
                 return self.put_pyobj_as_document(obj.tolist(), name,
@@ -434,7 +437,8 @@ class OmegaStore(object):
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
                                    timestamp=None, chunksize=None,
-                                   ensure_compat=True):
+                                   ensure_compat=True, _fast_insert=fast_insert,
+                                   **kwargs):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -525,7 +529,7 @@ class OmegaStore(object):
                 if 'datetime' in col_dtype:
                     obj[col].fillna('', inplace=True)
         obj = obj.astype('O', errors='ignore')
-        fast_insert(obj, self, name, chunksize=chunksize)
+        _fast_insert(obj, self, name, chunksize=chunksize)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series
                 else MDREGISTRY.PANDAS_DFROWS)
