@@ -14,23 +14,24 @@ from omegaml.tests.util import clear_om
 
 @fixture
 def splinter_browser(context):
+    from selenium.webdriver import ChromeOptions
+
     headless = istrue(os.environ.get('CHROME_HEADLESS'))
     screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp/screenshots')
     os.makedirs(screenshot_path, exist_ok=True)
-    options = None
+    options = ChromeOptions()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-setuid-sandbox')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=800,600')
+    options.add_argument('--remote-debugging-port=9222')
+    options.add_argument('--remote-debugging-address=0.0.0.0')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--verbose')
     if headless:
-        from selenium.webdriver import ChromeOptions
         print("Running headless, debug at http://localhost:9222")
-        options = ChromeOptions()
-        options.add_argument('--no-sandbox')
         options.add_argument('--headless')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=800,600')
-        options.add_argument('--remote-debugging-port=9222')
-        options.add_argument('--remote-debugging-address=0.0.0.0')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--verbose')
     context.browser = Browser('chrome', options=options)
     context.browser.driver.set_window_size(1024, 768)
     context.screenshot_path = screenshot_path
