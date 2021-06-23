@@ -182,7 +182,7 @@ def get_admin_secrets(scope=None, keys=None):
     secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
     with open(secrets) as fin:
         secrets = yaml.safe_load(fin)
-        secrets = secrets[scope] if scope else secrets
+        secrets = secrets.get(scope, {}) if scope else secrets
     if keys:
         result = [secrets.get(k) for k in keys]
     else:

@@ -162,7 +162,6 @@ class OmegaRuntime(object):
             self._task_default_kwargs['routing'].update(kwargs)
         else:
             self._require_kwargs['routing'].update(kwargs)
-            self._require_kwargs = dict(task={}, routing={})
         return self
 
     def model(self, modelname, require=None):

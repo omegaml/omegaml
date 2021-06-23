@@ -143,18 +143,23 @@ class OmegaDeferredInstance(object):
         def setup_base():
             return Omega(*args, **kwargs)
 
+        omega = None
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
         from_config = 'OMEGA_CONFIG' in os.environ
         loaders = setup_env, setup_config, setup_base
         must_load = (from_env, setup_env), (from_config, setup_config)
+        errors = []
         for loader in loaders:
             try:
                 omega = loader()
             except Exception as e:
+                errors.append((loader, e))
                 if any(condition and loader is expected for condition, expected in must_load):
                     raise
             else:
                 break
+        else:
+            assert omega is not None, f"failed to load omega due to {errors}"
 
         if not self.initialized:
             self.initialized = True
