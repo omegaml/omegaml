@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_restplus import Api
+from flask_restx import Api
 from werkzeug.utils import redirect
 
 app = Flask(__name__)
@@ -9,7 +9,7 @@ api = Api(app)
 # see https://stackoverflow.com/a/33285603/890242
 app.url_map.strict_slashes = True
 # use Flask json encoder to support datetime
-app.config['RESTPLUS_JSON'] = {'cls': app.json_encoder}
+app.config['RESTX_JSON'] = {'cls': app.json_encoder}
 
 
 @app.route('/docs')

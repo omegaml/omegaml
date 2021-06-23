@@ -87,8 +87,8 @@ setup(
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
         'PyYAML>=5.1',
-        'flask-restplus>=0.12.1',
-        'werkzeug<1.0.0',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
+        'flask-restx>=0.4.0',
+        'werkzeug<2.0.0',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
         'six>=1.11.0',
         'croniter>=0.3.30',
         'nbformat>=4.0.1',

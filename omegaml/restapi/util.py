@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from flask_restplus import Model
+from flask_restx import Model
 
 
 class StrictModel(Model):
