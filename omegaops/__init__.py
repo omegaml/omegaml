@@ -156,7 +156,7 @@ def add_user_vhost(vhost_name, vhost_username, vhost_password):
     import pyrabbit2 as rmq
     defaults = get_settings()
     parsed = urlparse.urlparse(defaults.OMEGA_BROKERAPI_URL)
-    host = '{}:{}'.format(parsed.hostname, parsed.port)
+    host = '{}:{}/rmq'.format(parsed.hostname, parsed.port)
     username = parsed.username
     password = parsed.password
     client = rmq.Client(host, username, password)
@@ -173,7 +173,7 @@ def authorize_user_vhost(grant_user, grantee_user, username, password):
     # build admin broker url
     settings = get_settings()
     parsed = urlparse.urlparse(settings.OMEGA_BROKERAPI_URL)
-    host = '{}:{}'.format(parsed.hostname, parsed.port)
+    host = '{}:{}/rmq'.format(parsed.hostname, parsed.port)
     client = rmq.Client(host, parsed.username, parsed.password)
     # add user to other db
     vhost_name = grant_settings['qualifiers'].get('default', grant_settings).get('brokervhost')
@@ -217,9 +217,9 @@ def create_ops_forwarding_shovel(user):
     user_host, user_vhost, _ = get_broker_host_vhost(user_config['broker_url'])
     _, ops_vhost, _ = get_broker_host_vhost(ops_config['broker_url'])
     # add user to other db
-    ops_host, _, parsed = get_broker_host_vhost(ops_config['broker_api_url'])
+    ops_host, uri, parsed = get_broker_host_vhost(ops_config['broker_api_url'])
     # see https://www.rabbitmq.com/shovel-dynamic.html
-    client = rmq.Client(ops_host, parsed.username, parsed.password)
+    client = rmq.Client(f'{ops_host}/{uri}', parsed.username, parsed.password)
     shovel_kwargs = {"src-uri": user_config['broker_url'],
                      "src-queue": "omegaops",
                      "dest-uri": ops_config['broker_url'],
