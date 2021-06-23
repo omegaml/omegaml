@@ -97,9 +97,11 @@ cp $sourcedir/LICENSE .
 cp $sourcedir/NOTICE .
 cp $sourcedir/THIRDPARTY .
 cp $sourcedir/manage.py .
+cp -r $sourcedir/app .
+cp -r $sourcedir/config .
 cp -r $sourcedir/scripts .
 cp -r $sourcedir/release/dist/omegaml-dev/etc/ ./etc-dev
-zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev
+zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev app config
 popd
 
 # add distribution files

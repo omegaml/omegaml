@@ -179,9 +179,10 @@ def log_event_task(self, log_data):
     do(self, log_data)
 
 
-@worker_init.connect
-def initialise_omega_connection(*args, **kwargs):
-    BaseLoggingTask().events
+# disabled due to initialisation issue at startup
+# @worker_init.connect
+# def initialise_omega_connection(*args, **kwargs):
+#     BaseLoggingTask().events
 
 
 @worker_process_init.connect

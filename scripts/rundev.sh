@@ -51,6 +51,7 @@ cmd=${cmd:-"scripts/rundev.sh"}
 
 # run process
 export CURRENT_USER=${CURRENT_USER:-omegadev}
+export JY_HUB_VERSION=1.0.0
 # task routing means the default queue is $account-default
 # by enabling task routing we can have a central worker serve multiple accounts
 # on separate queues
@@ -100,6 +101,7 @@ if [[ ! -z $docker ]]; then
     fi
 else
     # run with local software installed
+    echo "running locally"
     export DJANGO_DEBUG=1
     ./scripts/initlocal.sh --noinit
     python manage.py migrate

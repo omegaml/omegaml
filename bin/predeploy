@@ -1,3 +1,0 @@
-if [[ -f /app/Procfile.$APP ]]; then
-   cp /app/Procfile.$APP /app/Procfile
-fi

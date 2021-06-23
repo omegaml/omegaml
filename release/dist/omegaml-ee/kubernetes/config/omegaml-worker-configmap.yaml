@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: default
-  name: omegaml-worker
-data:
-  C_FORCE_ROOT: "yes"
-  OMEGA_BROKER: rabbitmq
-  OMEGA_RESTAPI_URL: http://omegaml:5000/

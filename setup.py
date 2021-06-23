@@ -27,7 +27,7 @@ web_deps = [
 
 jupyter_deps = [
     'jupyterhub-kubespawner==0.12.0', # required or only dev
-    'jupyterhub>1.0',  # required or only dev?
+    'jupyterhub==1.0.0',  # required or only dev?
     'jupyter-client>=4.1.1',
 ]
 
@@ -42,7 +42,7 @@ from omegaee._version import version
 setup(
     name='omegamlee',
     version=version,
-    packages=find_packages(),
+    packages=find_packages(exclude=['app', 'config']),
     include_package_data=True,
     license='commercial',  # example license
     description='Enterprise DataOps, MLOps platform for humans',
@@ -72,6 +72,7 @@ setup(
         'celery>4,<=4.2.1',
         'dj_database_url',
         'six',
+        'Flask<2',
     ],
     dependency_links=[
     ],

@@ -1,2 +1,0 @@
-apache-libcloud==2.4.0
-toml==0.10.0
