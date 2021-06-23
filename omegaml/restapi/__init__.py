@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import six
 from flask import request
-from flask_restplus import Resource, fields
+from flask_restx import Resource, fields
 from mongoengine import DoesNotExist
 from werkzeug.exceptions import NotFound, BadRequest
 
