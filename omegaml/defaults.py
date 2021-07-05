@@ -30,7 +30,7 @@ OMEGA_MONGO_COLLECTION = 'omegaml'
 #: bucket backwards compatibility
 OMEGA_BUCKET_FS_LEGACY = False
 #: determine if we should use SSL for mongodb and rabbitmq
-OMEGA_USESSL = True if os.environ.get('OMEGA_USESSL') else False
+OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
