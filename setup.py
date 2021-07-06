@@ -36,8 +36,8 @@ elif sys.version_info >= (3, 9):
     tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
     print("WARNING tensorflow is not supported in python 3.9, see {}".format(tf_issue))
     print("WARNING removing tensorflow and keras from requirements {}".format(tf_issue))
-    tf_deps = []
-    keras_deps = []
+    tf_deps = ['tensorflow>=2.5']
+    keras_deps = ['keras>=2.4.3']
 else:
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras>=2.4.3']

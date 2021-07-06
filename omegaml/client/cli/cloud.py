@@ -159,6 +159,8 @@ class CloudCommandBase(CommandBase):
         if resp.status_code == requests.codes.created:
             # always request the actual object
             url = resp.headers['Location']
+            if not url.startswith(restapi_url):
+                url = f'{restapi_url}{url}'
             resp = requests.get(url, auth=auth)
             resp.raise_for_status()
         return resp.json()

@@ -12,7 +12,8 @@ dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
-	python setup.py sdist bdist_wheel
+	# set DISTTAGS to specify eg --python-tag for bdist
+	python setup.py sdist bdist_wheel ${DISTTAGS}
 	twine check dist/*.whl
 
 livetest: dist
@@ -29,15 +30,15 @@ release-test: dist sanity
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository testpypi dist/*gz dist/*whl
+	twine upload --skip-existing --repository testpypi dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
-release-prod: test dist sanity
+release-prod: dist sanity
 	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository pypi dist/*gz dist/*whl
+	twine upload --skip-existing --repository pypi dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh
 
@@ -47,7 +48,7 @@ release-docker: dist
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-	twine upload --repository pypi dist/*gz dist/*whl
+	twine upload --skip-existing --repository pypi dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh
 
