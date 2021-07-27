@@ -13,7 +13,7 @@ class ScriptsCommandBase(StoresCommandMixin, CommandBase):
         om scripts put <path> <name> [options]
         om scripts get <name>
         om scripts drop <name> [options]
-        om scripts metadata <name>
+        om scripts metadata <name> [--set <key>=<value>]...
 
     Options:
         --hidden   list hidden entries

@@ -1,0 +1,37 @@
+vars:
+  provider: &provider exo
+  registry_username: &reguser "{GITLAB_USERNAME}"
+  registry_password: &regpass "{GITLAB_PASSWORD}"
+
+scripts:
+  - name: apps/helloworld
+    local: "{om-baseapp}"
+    metadata:
+      appdef:
+        image: nginxdemos/hello
+        command: '"nginx", "-g", "daemon off;"'
+        pullPolicy: IfNotPresent
+        pullSecret: foobar
+
+runtime:
+  - action: restart
+    kind: app
+    name: helloworld
+
+cloud:
+  - kind: registry
+    specs:
+      registry: gitlab
+      username: *reguser
+      password: *regpass
+      provider: *provider
+  - kind: xappingress
+    specs:
+      appname: helloworld
+      hostname: helloworld.foo.com
+      provider: *provider
+    depends: scripts
+
+
+
+

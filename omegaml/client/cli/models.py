@@ -11,7 +11,7 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
       om models list [<pattern>] [--raw] [-E|--regexp] [options]
       om models put <module.callable> <name>
       om models drop <name>
-      om models metadata <name>
+      om models metadata <name> [--set <key>=<value>]...
 
     Description:
         Work with models
