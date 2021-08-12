@@ -44,7 +44,7 @@ else:
 # all deps
 all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
             + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
-all_client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
+client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
 
 setup(
     name='omegaml',
@@ -118,7 +118,7 @@ setup(
         'iotools': iotools_deps,
         'streaming': streaming_deps,
         'all': all_deps,
-        'all-client': all_client_deps,
+        'client': client_deps,
         'dev': dev_deps,
     },
     entry_points={
