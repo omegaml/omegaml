@@ -108,6 +108,7 @@ class OmegaRuntime(object):
     def _common_kwargs(self):
         common = dict(self._task_default_kwargs)
         common['task'].update(pure_python=self.pure_python, __bucket=self.bucket)
+        common['task'].update(self._require_kwargs['task'])
         common['routing'].update(self._require_kwargs['routing'])
         return common
 
@@ -115,9 +116,10 @@ class OmegaRuntime(object):
     def _inspect(self):
         return self.celeryapp.control.inspect()
 
-    def mode(self, local=False, logging=False):
-        self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
-        self._task_default_kwargs['task']['logging'] = logging
+    def mode(self, local=None, logging=False):
+        if local is not None:
+            self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
+        self._task_default_kwargs['task']['__logging'] = logging
         return self
 
     def _client_is_pure_python(self):
@@ -139,7 +141,7 @@ class OmegaRuntime(object):
             return dict(*value)
         return value
 
-    def require(self, label=None, always=False, **kwargs):
+    def require(self, label=None, always=False, routing=None, task=None, **kwargs):
         """
         specify requirements for the task execution
 
@@ -150,6 +152,7 @@ class OmegaRuntime(object):
         Args:
             always (bool): if True requirements will persist across task calls. defaults to False
             label (str): the label required by the worker to have a runtime task dispatched to it
+            task (dict): if specified applied to the task kwargs
             kwargs: requirements specification that the runtime understands
 
         Usage:
@@ -158,11 +161,16 @@ class OmegaRuntime(object):
         Returns:
             self
         """
-        kwargs.update({'label': label or self._default_label})
+        routing = routing or {
+            'label': label or self._default_label
+        }
+        task = task or {}
         if always:
-            self._task_default_kwargs['routing'].update(kwargs)
+            self._task_default_kwargs['routing'].update(routing)
+            self._task_default_kwargs['task'].update(task)
         else:
-            self._require_kwargs['routing'].update(kwargs)
+            self._require_kwargs['routing'].update(routing)
+            self._require_kwargs['task'].update(task)
         return self
 
     def model(self, modelname, require=None):
@@ -199,6 +207,18 @@ class OmegaRuntime(object):
 
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
+
+    def experiment(self, experiment, provider=None):
+        """ set the tracking backend and experiment
+
+        Args:
+            experiment (str): the name of the experiment
+            provider (str): the name of the provider
+        """
+        from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
+        # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
+        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=True)
+        return tracker
 
     def task(self, name):
         """

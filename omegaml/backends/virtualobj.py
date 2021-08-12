@@ -88,7 +88,8 @@ class VirtualObjectBackend(BaseDataBackend):
         meta = self.model_store.metadata(modelname)
         handler = self.get(modelname)
         X = self.data_store.get(xName)
-        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName, **kwargs)
+        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
 
     def reduce(self, modelname, results, rName=None, **kwargs):
         """
@@ -110,7 +111,8 @@ class VirtualObjectBackend(BaseDataBackend):
         """
         meta = self.model_store.metadata(modelname)
         handler = self.get(modelname)
-        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName, **kwargs)
+        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
 
 
 def virtualobj(fn):
@@ -157,7 +159,7 @@ class VirtualObjectHandler(object):
     def predict(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
-    def __call__(self, data=None, method=None, meta=None, store=None, **kwargs):
+    def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
         MAP = {
             'drop': self.drop,
             'get': self.get,
@@ -165,4 +167,4 @@ class VirtualObjectHandler(object):
             'predict': self.predict,
         }
         methodfn = MAP[method]
-        return methodfn(data=data, meta=meta, store=store, **kwargs)
+        return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)

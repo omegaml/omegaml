@@ -2,17 +2,18 @@ from omegaml.backends.basecommon import BackendBaseCommon
 
 
 class BaseDataBackend(BackendBaseCommon):
-
     """
     OmegaML BaseDataBackend to be subclassed by other arbitrary backends
 
     This provides the abstract interface for any data backend to be implemented
     """
-    def __init__(self, model_store=None, data_store=None, **kwargs):
+
+    def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
         self.model_store = model_store
         self.data_store = data_store
+        self.tracking = tracking
 
     @classmethod
     def supports(self, obj, name, **kwargs):
@@ -57,3 +58,6 @@ class BaseDataBackend(BackendBaseCommon):
         :return: the proxy to the object as it was originally stored
         """
         return self.get(*args, lazy=True, **kwargs)
+
+    def drop(self, name, force=False, version=-1):
+        return self.data_store._drop(name, force=force, version=version)

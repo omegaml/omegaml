@@ -7,14 +7,14 @@ from tornado.web import HTTPError
 
 from omegaml import Omega
 from omegaml.notebook.omegacontentsmgr import OmegaStoreContentsManager
+from omegaml.tests.util import OmegaTestMixin
 
 
-class OmegaContentsManagerTests(TestCase):
+class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
     def setUp(self):
         self.om = Omega()
         self.mgr = OmegaStoreContentsManager(omega=self.om)
-        [self.om.jobs.drop(fn) for fn in self.om.jobs.list()]
-        [self.om.datasets.drop(fn) for fn in self.om.datasets.list()]
+        self.clean()
 
     def _create_notebook(self, name):
         code = """
@@ -146,6 +146,8 @@ class OmegaContentsManagerTests(TestCase):
 
     def test_create_directory(self):
         # test creating directory on top level
+        model = self.mgr.get('/')
+        self.assertEqual(len(model['content']), 0)
         model = self.mgr._base_model('sub', kind='directory')
         self.mgr.save(model, 'sub')
         model = self.mgr.get('/')
