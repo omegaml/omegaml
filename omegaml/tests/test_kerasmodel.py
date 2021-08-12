@@ -13,11 +13,19 @@ class KerasBackendTests(TestCase):
 
     def _build_model(self, fit=False):
         # build a dummy model for testing. does not need to make sense
-        import keras
-        from keras.models import Sequential
-        from keras.layers import Dense, Dropout
-        from keras.optimizers import SGD
-
+        try:
+            import keras
+            from keras import Sequential, Model
+            from keras.layers import Dense, Dropout
+            from keras.optimizers import SGD
+        except AttributeError:
+            # keras 2.4.3, python 3.9 is not compatible
+            # https://github.com/keras-team/keras/issues/14632
+            from tensorflow import keras
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense, Dropout
+            from tensorflow.keras.optimizers import SGD
+            
         # Generate dummy data
         import numpy as np
         x_train = np.random.random((1000, 20))
@@ -54,7 +62,7 @@ class KerasBackendTests(TestCase):
         self.assertTrue(np.all(np.equal(model_.get_weights()[0], (model.get_weights()[0]))))
 
     def test_fit(self):
-        import keras
+        from tensorflow import keras
         om = self.om
         model = self._build_model(fit=False)
         om.models.put(model, 'keras-model')

@@ -9,8 +9,17 @@ class KerasBackend(BaseModelBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        from keras import Sequential, Model
-        return isinstance(obj, (Sequential, Model))
+        from tensorflow.keras import Sequential as tfSequential, Model as tfModel
+        is_tf_keras = isinstance(obj, (tfSequential, tfModel))
+        try:
+            from keras import Sequential, Model
+        except AttributeError:
+            # keras 2.4.3, python 3.9 is not compatible
+            # https://github.com/keras-team/keras/issues/14632
+            is_keras_native = False
+        else:
+            is_keras_native = isinstance(obj, (Sequential, Model))
+        return is_tf_keras or is_keras_native
 
     def _package_model(self, model, key, tmpfn):
         # https://www.tensorflow.org/api_docs/python/tf/keras/models/save_model

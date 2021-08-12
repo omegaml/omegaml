@@ -106,25 +106,32 @@ jobs:
           name: Make image and pypi
           command: |
             source miniconda3/etc/profile.d/conda.sh
-            conda create -q -y -n omenv python=3.7
-            conda activate omenv
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             echo $PYPIRC_INI | base64 -d > ~/.pypirc
             ls -lart ~/.omegaml
             cd omegaml-ce
             VERSION=`cat omegaml/VERSION`
-            pip install --progress-bar off .[all,dev]
             docker login -u omegaml -p $DOCKER_PASS
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
             sleep 10
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
-            if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
-              make release-test
-            else
-              make release-prod
-            fi
+            # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
+            for PYVER in 3.7 3.8 3.9; do
+              echo "Building distribution for $PYVER"
+              # setup pyenv and build
+              conda create -q -y -n omenv$PYVER python=$PYVER
+              conda activate omenv$PYVER
+              pip install --progress-bar off .[all,dev]
+              # set bdist_wheel options, see Makefile:dist
+              export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
+              if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
+                make release-test
+              else
+                make release-prod
+              fi
+            done
       - store_artifacts:
           path: /tmp/screenshots
 workflows:
