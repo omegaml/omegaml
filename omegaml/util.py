@@ -1,17 +1,17 @@
 from __future__ import absolute_import
 
+from copy import deepcopy
+from importlib import import_module
+
 import json
 import logging
 import os
+import six
 import sys
 import tempfile
 import uuid
 import warnings
-from copy import deepcopy
-from importlib import import_module
 from shutil import rmtree
-
-import six
 from six import string_types
 
 try:
@@ -21,12 +21,12 @@ except:
 
 logger = logging.getLogger(__name__)
 
-# support pandas < 1.0
 import pandas as pd
 
 try:
-    from pandas import json_normalize, DatetimeIndex
+    from pandas import json_normalize
 except Exception as e:
+    # support pandas < 1.0
     try:
         from pandas.io.json import json_normalize
     except:
@@ -266,7 +266,7 @@ def unravel_index(df, row_count=0):
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
     # treat particular index types
-    if isinstance(df.index, DatetimeIndex):
+    if isinstance(df.index, pd.DatetimeIndex):
         if getattr(df.index, 'freq') is not None:
             idx_meta['freq'] = getattr(df.index.freq, 'name', None)
     return unravelled_df, idx_meta
@@ -312,7 +312,7 @@ def restore_index(df, idx_meta, rowid_sort=True):
     result = df.set_index(index_cols) if index_cols else df
     if index_cols:
         result.index.names = idx_meta.get('names', [None] * len(index_cols))
-    if isinstance(result.index, DatetimeIndex):
+    if isinstance(result.index, pd.DatetimeIndex):
         # restore datetime frequency, if possible
         if 'freq' in idx_meta:
             try:
@@ -475,11 +475,13 @@ class PickableCollection(object):
     Usage:
         from multiprocessing import Pool
 
-        def process(coll):
-            coll.insert(...)
+        def process(job):
+            data, coll = job
+            coll.insert(data)
 
+        coll = PickableCollection(coll)
         p = Pool()
-        p.map(process, range(1000),
+        p.map(process, zip(range(1000), repeat(coll))
     """
 
     def __init__(self, collection):
@@ -692,7 +694,7 @@ class DefaultsContext(object):
 
 def ensure_json_serializable(v):
     import numpy as np
-    import pandas as  pd
+    import pandas as pd
     if isinstance(v, np.ndarray):
         return v.flatten().tolist()
     if isinstance(v, pd.Series):

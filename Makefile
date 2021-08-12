@@ -2,7 +2,7 @@
 VERSION=$(shell cat omegaml/VERSION)
 
 test:
-	unset DJANGO_SETTINGS_MODULE && nosetests -v
+	unset DJANGO_SETTINGS_MODULE && nosetests -v -sx
 
 sanity:
 	# quick sanity check -- avoid easy mistakes
