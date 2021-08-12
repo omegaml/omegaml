@@ -8,8 +8,9 @@ def MongoClient(*args, **kwargs):
     """
     from omegaml import settings
     defaults = settings()
-    kwargs.update(defaults.OMEGA_MONGO_SSL_KWARGS)
-    return RealMongoClient(*args, **sanitize_mongo_kwargs(kwargs))
+    mongo_kwargs = dict(defaults.OMEGA_MONGO_SSL_KWARGS)
+    mongo_kwargs.update(kwargs)
+    return RealMongoClient(*args, **sanitize_mongo_kwargs(mongo_kwargs))
 
 
 def sanitize_mongo_kwargs(kwargs):
