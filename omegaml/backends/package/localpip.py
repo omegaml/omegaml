@@ -76,6 +76,7 @@ class PythonPackageData(BaseDataBackend):
         :param name: the name of the package
         :param keep: keep the packages load path in sys.path, defaults to False
         :param localpath: the local path to store the package
+        :param install: if True call pip install on the retrieved package
         :param kwargs:
         :return: the loaded module
         """
