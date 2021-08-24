@@ -30,14 +30,14 @@ class OmegaJobProxy(object):
         self.runtime = runtime
         self._apply_mixins()
 
-    def run(self, **kwargs):
+    def run(self, timeout=None, **kwargs):
         """
         run the job
 
         :return: the result
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.run_omegaml_job')
-        return job_run.delay(self.jobname, **kwargs)
+        return job_run.delay(self.jobname, timeout=timeout, **kwargs)
 
     def schedule(self, **kwargs):
         """
