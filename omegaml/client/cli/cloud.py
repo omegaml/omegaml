@@ -32,6 +32,7 @@ class CloudCommandBase(CommandBase):
       --end=DATETIME    end datetime of range query
       --step=UNIT       step in seconds or duration unit (s=seconds, m=minutes)
       --plot            if specified use plotext library to plot (preliminary)
+      --provider=VALUE  the cloud provider, exo/azu/aws
 
     Description:
       om cloud is available for the omega|ml managed service at https://hub.omegaml.io
@@ -125,8 +126,10 @@ class CloudCommandBase(CommandBase):
         node_type = self.args.get('--node-type')
         specs = self.args.get('--specs')
         user = getattr(om.defaults, 'OMEGA_USERID')
-        default_specs = "size={size},node-type={node_type}".format(**locals())
+        default_specs = f"size={size},node-type={node_type},provider={self.provider}"
         params = specs or default_specs
+        if 'provider=' not in params:
+            params = f'provider={self.provider},{params}'
         data = {
             'offering': offering,
             'user': user,
@@ -264,20 +267,24 @@ class CloudCommandBase(CommandBase):
         else:
             print("Available metrics:", metrics)
 
+    @property
+    def _provider(self):
+        return self.args.get('--provider') or ''
+
     def _get_metric(self, name, auth, **query):
-        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/metrics/{name}'
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/metrics/{name}?provider={self._provider}'
         resp = requests.get(url, auth=auth, params=query)
         data = resp.json()
         return data
 
     def _get_status(self, kind, auth):
-        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/status/{kind}'
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/status/{kind}?provider={self._provider}'
         resp = requests.get(url, auth=auth)
         data = resp.json()
         return data
 
     def _get_logs(self, podname, since, auth):
-        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/logs/{podname}?since={since}'
+        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/logs/{podname}?since={since}&provider={self._provider}'
         resp = requests.get(url, auth=auth)
         data = resp.json()
         return data
@@ -347,8 +354,8 @@ class CloudCommandBase(CommandBase):
 
     def log(self):
         om = self.om
-        podname = self.args.get('<pod>', 'missing')
-        since = self.args.get('--since', '5m')
+        podname = self.args.get('<pod>') or 'missing'
+        since = self.args.get('--since') or '5m'
         auth = OmegaRestApiAuth.make_from(om)
         data = self._get_logs(podname, since, auth)
         entries = data.get('entries')
