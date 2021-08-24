@@ -97,7 +97,7 @@ def omega_settings(self, *args, **kwargs):
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_ping(task, *args, **kwargs):
+def omega_ping(task, *args, logging=False, **kwargs):
     import socket
     hostname = task.request.hostname or socket.gethostname()
     # resolve standard kwargs
@@ -106,14 +106,25 @@ def omega_ping(task, *args, **kwargs):
     kwargs = task.delegate_kwargs
     kwargs.pop('pure_python', None)
     # return ping
-    return {
+    data = {
         'message': 'ping return message',
         'time': datetime.datetime.now().isoformat(),
         'args': args,
         'kwargs': kwargs,
         'worker': hostname,
     }
-
+    logname, level = task.logging
+    if logname:
+        import logging as logmod
+        pylevel = getattr(logmod, level)
+        # test omega, task and package level loggers
+        om.logger.log(level, f'omega log: running ping task {data}')
+        task_logger = task.app.log.get_default_logger()
+        task_logger.log(pylevel, f'python log: running ping task {data}')
+        package_logger = task.app.log.get_default_logger('omegaml')
+        package_logger.log(pylevel, f'omegaml log: running ping task {data}')
+        print(f"print log: running ping task {data}")
+    return data
 
 @worker_process_init.connect
 def fix_multiprocessing(**kwargs):
