@@ -1,10 +1,11 @@
 import atexit
-import platform
 
 import logging
 import os
+import platform
 import pymongo
 import signal
+from contextlib import contextmanager
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
@@ -135,7 +136,7 @@ class OmegaSimpleLogger:
 
             levelname (str): the log level, e.g. INFO, DEBUG, WARNING, ERROR
             levelno (int): the level as a numberic, where DEBUG is highest.
-            message (str): the message as passed to the logger methods
+            msg (str): the message as passed to the logger methods
             text (str): the formatted message, including timestamp
             created (datetime): the UTC datetime of the log message
 
@@ -179,6 +180,10 @@ class OmegaSimpleLogger:
     def name(self, name):
         self._name = name
 
+    def reset(self):
+        self._collection = _setup_logging_dataset(self.store, self.dsname, self,
+                                                  collection=self._collection, size=self.size, reset=True)
+
     def getLogger(self, name, **kwargs):
         return self.__class__(store=kwargs.get('store', self.store),
                               defaults=kwargs.get('defaults', self.defaults),
@@ -217,7 +222,8 @@ class OmegaSimpleLogger:
             return
         # insert a log message
         fmt = '{created} {level} {message}'
-        log_entry = _make_record(level, levelno, self._name, message, fmt=fmt)
+        log_entry = _make_record(level, levelno, self._name, message, fmt=fmt,
+                                 hostname=LOGGER_HOSTNAME)
         self.collection.insert_one(log_entry)
 
     def info(self, message, **kwargs):
@@ -245,6 +251,20 @@ class OmegaSimpleLogger:
 
     def exit_hook(self):
         _attach_sysexcept_hook(self)
+
+    @contextmanager
+    def capture(self, logger, exit_hook=True):
+        """ convenience python log rerouting
+
+        # this reroutes the request's loggers output to om.logger
+        with om.logger.capture(logging.getLogger('request')):
+            ...
+        """
+        handler = OmegaLoggingHandler.setup(logger=logger, exit_hook=exit_hook)
+        try:
+            yield
+        finally:
+            del logger.handlers[logger.handlers.index(handler)]
 
 
 class TailableLogDataset:

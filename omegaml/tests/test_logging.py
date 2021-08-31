@@ -107,3 +107,18 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertTrue(len(df) == 1)
         self.assertEqual(df.iloc[-1]['name'], 'myname')
 
+    def test_python_logger_capture(self):
+        om = self.om
+        # -- get a python logger and add message
+        # -- expect message is not in om logger dataset
+        logger = logging.getLogger('mytestlogger')
+        logger.info('foo')
+        df = om.logger.dataset.get(levelname='INFO')
+        self.assertTrue(len(df) == 0)
+        # -- capture python logger
+        # -- expect message is in om logger dataset
+        with om.logger.capture(logger):
+            logger.info('foo')
+        df = om.logger.dataset.get(levelname='INFO')
+        self.assertTrue(len(df) == 1)
+

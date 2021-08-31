@@ -54,11 +54,11 @@ class NotebookTask(OmegamlTask):
 
 
 @shared_task(bind=True, base=NotebookTask)
-def run_omegaml_job(self, nb_file, event=None, **kwargs):
+def run_omegaml_job(self, nb_file, event=None, timeout=None, **kwargs):
     """
     runs omegaml job
     """
-    result = self.om.jobs.run_notebook(nb_file, event=event)
+    result = self.om.jobs.run_notebook(nb_file, event=event, timeout=timeout)
     return sanitized(result)
 
 

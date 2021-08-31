@@ -31,7 +31,7 @@ class LazyGetMixin:
         return super().metadata(name, *args, **kwargs)
 
     def get(self, name, *args, **kwargs):
-        name, opspec = self._extract_opspec(name)
+        name, opspec = self._extract_opspec(name or '')
         if opspec is not None:
             kwargs = {**kwargs, **dict(lazy=True)}
             lazy = super().get(name, *args, **kwargs)

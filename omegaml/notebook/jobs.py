@@ -212,7 +212,7 @@ class OmegaJobs(BackendBaseCommon):
             config['run-at'] = JobSchedule.from_cron(config.get('run-at')).cron
         return config
 
-    def run(self, name):
+    def run(self, name, timeout=None):
         """
         Run a job immediately
 
@@ -247,9 +247,9 @@ class OmegaJobs(BackendBaseCommon):
         Returns:
              Metadata of the results entry
         """
-        return self.run_notebook(name)
+        return self.run_notebook(name, timeout=timeout)
 
-    def run_notebook(self, name, event=None):
+    def run_notebook(self, name, event=None, timeout=None):
         """
         run a given notebook immediately.
 
@@ -264,7 +264,7 @@ class OmegaJobs(BackendBaseCommon):
         # -- see https://nbconvert.readthedocs.io/en/latest/execute_api.html
         ep_kwargs = {
             # avoid timeouts to stop kernel
-            'timeout': None,
+            'timeout': timeout,
             # avoid kernel at exit functions
             # -- this stops ipykernel AttributeError 'send_multipart'
             'shutdown_kernel': 'immediate',

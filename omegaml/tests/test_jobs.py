@@ -119,16 +119,17 @@ class JobTests(TestCase):
         self.assertTrue(om.jobs.exists(resultnb))
         self.assertEqual(runs[0]['results'], resultnb)
 
-    def test_run_job_timeout(self):
+    def test_run_job_timeout_meta(self):
         """
-        test running a job that times out
+        test running a job that times out (kind_meta)
         """
         om = self.om
         # create a long-running notebook
         cells = []
-        code = "import time; time.sleep(15)"
+        code = "import time; time.sleep(10)"
         cells.append(v4.new_code_cell(source=code))
         notebook = v4.new_notebook(cells=cells)
+        om.jobs.drop('testjob', force=True)
         meta = om.jobs.put(notebook, 'testjob')
         # -- execute with default timeout, expect to succeed
         meta_job = om.jobs.run('testjob')
@@ -142,7 +143,7 @@ class JobTests(TestCase):
         self.assertTrue(om.jobs.exists(resultnb))
         self.assertEqual(runs[0]['results'], resultnb)
         # -- put the notebook with a timeout less than expected running time
-        # -- expect run to fail due to timeout
+        # -- expect run to fail due to timeout in kind_meta
         om.jobs.drop('testjob', force=True)
         meta = om.jobs.put(notebook, 'testjob')
         meta.kind_meta['ep_kwargs'] = dict(timeout=5)
@@ -172,6 +173,57 @@ class JobTests(TestCase):
         resultnb = results[0]
         self.assertTrue(om.jobs.exists(resultnb))
         self.assertEqual(runs[0]['results'], resultnb)
+
+    def test_run_job_timeout_kwargs(self):
+        """
+        test running a job that times out (kwargs)
+        """
+        om = self.om
+        # create a long-running notebook
+        cells = []
+        code = "import time; time.sleep(10)"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        om.jobs.drop('testjob', force=True)
+        meta = om.jobs.put(notebook, 'testjob')
+        # -- execute with default timeout, expect to succeed
+        meta_job = om.jobs.run('testjob')
+        self.assertIsInstance(meta_job, Metadata)
+        meta = om.jobs.metadata('testjob')
+        runs = meta.attributes['job_runs']
+        results = meta.attributes['job_results']
+        self.assertIn('job_runs', meta.attributes)
+        self.assertEqual(len(results), 1)
+        resultnb = results[0]
+        self.assertTrue(om.jobs.exists(resultnb))
+        self.assertEqual(runs[0]['results'], resultnb)
+        # -- put the notebook with a timeout less than expected running time
+        # -- expect run to fail due to timeout as kwarg
+        om.jobs.drop('testjob', force=True)
+        meta = om.jobs.put(notebook, 'testjob')
+        meta_job = om.jobs.run('testjob', timeout=5)
+        self.assertIsInstance(meta_job, Metadata)
+        meta = om.jobs.metadata('testjob')
+        self.assertIn('job_runs', meta.attributes)
+        runs = meta.attributes['job_runs']
+        this_run = runs[0]
+        self.assertEqual(this_run['status'], 'ERROR')
+        self.assertIn('execution timed out', this_run['message'])
+        self.assertEqual(len(runs), 1)
+        # -- retry with no timeout
+        om.jobs.drop('testjob', force=True)
+        meta = om.jobs.put(notebook, 'testjob')
+        meta_job = om.jobs.run('testjob', timeout=None)
+        self.assertIsInstance(meta_job, Metadata)
+        meta = om.jobs.metadata('testjob')
+        runs = meta.attributes['job_runs']
+        results = meta.attributes['job_results']
+        self.assertIn('job_runs', meta.attributes)
+        self.assertEqual(len(results), 1)
+        resultnb = results[0]
+        self.assertTrue(om.jobs.exists(resultnb))
+        self.assertEqual(runs[0]['results'], resultnb)
+
 
     def test_run_job_invalid(self):
         """

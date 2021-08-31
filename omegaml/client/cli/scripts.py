@@ -11,12 +11,13 @@ class ScriptsCommandBase(StoresCommandMixin, CommandBase):
     Usage:
         om scripts list [<pattern>] [--raw] [--hidden] [-E|--regexp] [options]
         om scripts put <path> <name> [options]
-        om scripts get <name>
+        om scripts get <name> [<local>] [--noinstall] [options]
         om scripts drop <name> [options]
-        om scripts metadata <name>
+        om scripts metadata <name> [options]
 
     Options:
-        --hidden   list hidden entries
+        --hidden        list hidden entries
+        --noinstall     do not install the package
 
     Description:
         Work with scripts
@@ -43,4 +44,6 @@ class ScriptsCommandBase(StoresCommandMixin, CommandBase):
     def get(self):
         om = get_omega(self.args)
         name = self.args.get('<name>')
-        om.scripts.get(name)
+        localpath = self.args.get('<local>')
+        noinstall = self.args.get('--noinstall')
+        print(om.scripts.get(name, localpath=localpath, install=not noinstall))

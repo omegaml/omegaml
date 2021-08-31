@@ -34,13 +34,12 @@ elif (3, 8) <= sys.version_info < (3, 9) :
 elif sys.version_info >= (3, 9):
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
-    print("WARNING tensorflow is not supported in python 3.9, see {}".format(tf_issue))
-    print("WARNING removing tensorflow and keras from requirements {}".format(tf_issue))
     tf_deps = ['tensorflow>=2.5']
     keras_deps = ['keras>=2.4.3']
 else:
+    # python 3.6, tensorflow 2.3.1 only supported with keras<2.6
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras>=2.4.3']
+    keras_deps = ['keras<2.6.0']
 
 # all deps
 all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps

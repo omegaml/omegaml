@@ -47,7 +47,7 @@ class JobTasksTests(unittest.TestCase):
             self.assertEqual(status.loc[t.name, 'run_status'], 'OK')
 
     def test_list(self):
-        """ test runtime.job.map() works ok """
+        """ test runtime.job.list() works ok """
         om = self.om
         meta = om.jobs.create("print('hello')", 'mymain')
         job = om.runtime.job('mymain')

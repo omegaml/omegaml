@@ -1,9 +1,12 @@
+from contextlib import contextmanager
 from copy import deepcopy
 
 import six
 from celery import Task
 from kombu.serialization import registry
 from kombu.utils import cached_property
+
+from omegaml.store.logging import OmegaLoggingHandler
 
 
 class EagerSerializationTaskMixin(object):
@@ -92,9 +95,38 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def delegate_kwargs(self):
         return {k: v for k, v in six.iteritems(self.request.kwargs) if not k.startswith('__')}
 
+    @property
+    def logging(self):
+        kwargs = self.request.kwargs or {}
+        logging = kwargs.get('logging', False)
+        if isinstance(logging, tuple):
+            logname, level = logging
+        else:
+            logname, level = logging, 'INFO'
+        logname = 'omegaml' if logging is True else logname
+        return logname, level
+
     def __call__(self, *args, **kwargs):
-        self.reset()
-        return super().__call__(*args, **kwargs)
+        @contextmanager
+        def task_logging():
+            logname, level = self.logging
+            if logname:
+                logger = self.app.log.get_default_logger(name=logname)
+                self.app.log.redirect_stdouts(name=logger, loglevel=level)
+                handler = OmegaLoggingHandler.setup(logger=logger, exit_hook=True, level=level)
+                logger.setLevel(level)
+            else:
+                logger = None
+            try:
+                yield
+            finally:
+                if logger:
+                    del logger.handlers[logger.handlers.index(handler)]
+
+        with task_logging():
+            self.reset()
+            result = super().__call__(*args, **kwargs)
+        return result
 
     def reset(self):
         # ensure next call will start over and get a new om instance
@@ -111,6 +143,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def on_success(self, *args, **kwargs):
         self.reset()
         return super().on_success(*args, **kwargs)
+
 
 
 def get_dataset_representations(items):

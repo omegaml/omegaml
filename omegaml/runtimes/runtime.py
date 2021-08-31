@@ -115,8 +115,9 @@ class OmegaRuntime(object):
     def _inspect(self):
         return self.celeryapp.control.inspect()
 
-    def mode(self, local=False):
+    def mode(self, local=False, logging=False):
         self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
+        self._task_default_kwargs['task']['logging'] = logging
         return self
 
     def _client_is_pure_python(self):

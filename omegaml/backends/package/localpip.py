@@ -66,7 +66,7 @@ class PythonPackageData(BaseDataBackend):
             attributes=attributes,
             gridfile=gridfile).save()
 
-    def get(self, name, keep=False, **kwargs):
+    def get(self, name, localpath=None, keep=False, install=True, **kwargs):
         """
         Load package from store, install it locally and load.
 
@@ -75,22 +75,29 @@ class PythonPackageData(BaseDataBackend):
 
         :param name: the name of the package
         :param keep: keep the packages load path in sys.path, defaults to False
+        :param localpath: the local path to store the package
+        :param install: if True call pip install on the retrieved package
         :param kwargs:
         :return: the loaded module
         """
         pkgname = basename(name)
-        packagefname = '{}.tar.gz'.format(os.path.join(self.data_store.tmppath, pkgname))
+        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.data_store.tmppath, pkgname))
         os.makedirs(dirname(packagefname), exist_ok=True)
         self.path = self.packages_path
-        dstdir = self.path
+        dstdir = localpath or self.path
         if not os.path.exists(os.path.join(dstdir, pkgname)):
             meta = self.data_store.metadata(name)
             outf = meta.gridfile
             with open(packagefname, 'wb') as pkgf:
                 pkgf.write(outf.read())
-            mod = install_and_import(packagefname, pkgname, dstdir, keep=keep)
-        else:
+            if install:
+                mod = install_and_import(packagefname, pkgname, dstdir, keep=keep)
+            else:
+                mod = packagefname
+        elif install:
             mod = load_from_path(pkgname, dstdir, keep=keep)
+        else:
+            mod = os.path.join(dstdir, pkgname)
         return mod
 
     @property

@@ -43,7 +43,7 @@ OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
                 'amqp://admin:foobar@localhost:5672//')
 #: is the worker considered inside the same cluster as the client
-OMEGA_WORKER_INCLUSTER = False
+OMEGA_WORKER_INCLUSTER = truefalse(os.environ.get('OMEGA_WORKER_INCLUSTER', False))
 #: (deprecated) the collection used to store ipython notebooks
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
