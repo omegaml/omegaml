@@ -166,6 +166,7 @@ class OmegaStore(object):
         self.parsed_url = urlparse.urlparse(self.mongo_url)
         self.database_name = self.parsed_url.path[1:]
         host = self.parsed_url.netloc
+        scheme = self.parsed_url.scheme
         username, password = None, None
         if '@' in host:
             creds, host = host.split('@', 1)
@@ -184,11 +185,11 @@ class OmegaStore(object):
         # QueryCache must pass the very same alias
         self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
         # always disconnect before registering a new connection because
-        # connect forgets all connection settings upon disconnect WTF?!
+        # mongoengine.connect() forgets all connection settings upon disconnect
         if alias not in _connections:
             disconnect(alias)
             connection = connect(alias=alias, db=self.database_name,
-                                 host=host,
+                                 host=f'{scheme}://{host}',
                                  username=username,
                                  password=password,
                                  connect=False,
