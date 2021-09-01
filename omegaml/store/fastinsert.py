@@ -21,10 +21,11 @@ def insert_chunk(job):
                 should include the database name, as the collection is taken
                 from the default database of the connection.
     """
-
     sdf, collection = job
-    result = collection.insert_many(sdf.to_dict(orient='records'))
-    collection.database.client.close()
+    try:
+        result = collection.insert_many(sdf.to_dict(orient='records'))
+    finally:
+        collection.database.client.close()
     return len(result.inserted_ids)
 
 
@@ -66,6 +67,7 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         jobs = zip(dfchunker(df, size=chunksize),
                    repeat(collection))
         approx_jobs = int(len(df) / chunksize)
+        # we use multiprocessing backend because
         with Parallel(n_jobs=cores, backend='omegaml', verbose=False) as p:
             runner = delayed(insert_chunk)
             p_jobs = (runner(job) for job in jobs)
