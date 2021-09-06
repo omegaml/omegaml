@@ -69,8 +69,8 @@ def deploy_user_service(user_id):
     password = User.objects.make_random_password(length=36)
     config = omops.add_user(user, password)
     deplm = omops.add_service_deployment(user, config)
-    if user.username != 'omops' and User.objects.filter(username='omops').exists():
-        omops.create_ops_forwarding_shovel(user)
+    # if user.username != 'omops' and User.objects.filter(username='omops').exists():
+    #   omops.create_ops_forwarding_shovel(user)
     omops.complete_service_deployment(deplm, DEPLOY_COMPLETED)
 
 
