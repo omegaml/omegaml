@@ -68,7 +68,7 @@ $release $use_nominify --source ../django-tastypie-swagger
 #$release $use_nominify --source ../ccbackend
 $release $use_nominify --source ../tastypiex
 $release $use_nominify --source ../omegaml-deploy/cloudmgr
-$release $use_nominify --source ../minibatch
+#$release $use_nominify --source ../minibatch
 $release $use_nominify --source ../omegaml-ce
 
 # repackage into one zip file

@@ -100,7 +100,7 @@ def add_userdb(dbname, username, password):
         'db': dbname,
     }]
     # create the db but NEVER return this db. it will have admin rights.
-    client = MongoClient(settings.MONGO_ADMIN_URL)
+    client = MongoClient(settings.MONGO_ADMIN_URL, ssl=config.SERVICE_USESSL_VIEW)
     _admin_newdb = client['admin']
     # add user and reset password in case the user was there already
     _admin_newdb.add_user(username, password)
