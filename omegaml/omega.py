@@ -1,4 +1,5 @@
 import os
+import sys
 from uuid import uuid4
 
 from ._version import version
@@ -145,7 +146,7 @@ class OmegaDeferredInstance(object):
 
         omega = None
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
-        from_config = 'OMEGA_CONFIG' in os.environ
+        from_config = 'OMEGA_CONFIG' in os.environ or os.path.exists('config.yml')
         loaders = setup_env, setup_config, setup_base
         must_load = (from_env, setup_env), (from_config, setup_config)
         errors = []

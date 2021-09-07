@@ -126,10 +126,10 @@ class CloudCommandBase(CommandBase):
         node_type = self.args.get('--node-type')
         specs = self.args.get('--specs')
         user = getattr(om.defaults, 'OMEGA_USERID')
-        default_specs = f"size={size},node-type={node_type},provider={self.provider}"
+        default_specs = f"size={size},node-type={node_type},provider={self._provider}"
         params = specs or default_specs
         if 'provider=' not in params:
-            params = f'provider={self.provider},{params}'
+            params = f'provider={self._provider},{params}'
         data = {
             'offering': offering,
             'user': user,
