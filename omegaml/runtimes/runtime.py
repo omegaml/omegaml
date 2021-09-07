@@ -220,7 +220,7 @@ class OmegaRuntime(object):
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
-    def ping(self, require=None, *args, **kwargs):
+    def ping(self, *args, require=None, **kwargs):
         """
         ping the runtimes
 
