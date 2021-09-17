@@ -112,6 +112,7 @@ setup(
         'hdf': hdf_deps,
         'tensorflow': tf_deps,
         'keras': keras_deps,
+        'jupyter': jupyter_deps,
         'dashserve': dashserve_deps,
         'sql': sql_deps,
         'snowflake': snowflake_deps,

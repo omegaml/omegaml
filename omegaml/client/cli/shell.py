@@ -1,3 +1,4 @@
+import os
 from traitlets.config import Config
 
 from omegaml.client.docoptparser import CommandBase
@@ -7,6 +8,7 @@ from omegaml.client.util import get_omega
 class ShellCommandBase(CommandBase):
     """
     Usage:
+        om shell jupyter
         om shell [<command>] [options]
 
     Description:
@@ -19,6 +21,9 @@ class ShellCommandBase(CommandBase):
         By passing a command, run arbitrary Python code
 
         $ om shell "om.runtime.ping()"
+
+        By specifying the jupyter command, will launch a Jupyter Lab session
+        connected to your omegaml instance
     """
     command = 'shell'
 
@@ -55,3 +60,10 @@ class ShellCommandBase(CommandBase):
         variables.update(locals())
         shell = code.InteractiveConsole(locals=variables)
         shell.interact()
+
+    def jupyter(self):
+        from omegaml.notebook import jupyter
+        omega_root = os.path.dirname(jupyter.__file__)
+        cfg = os.path.join(omega_root, 'jupyter_notebook_config.py')
+        cmd = f'jupyter lab --config {cfg}'
+        os.system(cmd)
