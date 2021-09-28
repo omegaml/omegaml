@@ -909,6 +909,18 @@ class StoreTests(unittest.TestCase):
         self.assertIsInstance(backend_name, ScikitLearnBackend)
         self.assertIsInstance(backend_obj, ScikitLearnBackend)
 
+    def test_help_docs(self):
+        foo_store = OmegaStore(bucket='foo')
+        reg = LinearRegression()
+        foo_store.put(reg, 'regmodel', attributes={
+            'docs': 'this is some text'
+        })
+        # get backend for different signatures
+        backend = foo_store._resolve_help_backend('regmodel')
+        self.assertEqual(backend.__doc__, 'this is some text')
+        backend = foo_store._resolve_help_backend('regmodel', raw=True)
+        self.assertIsInstance(backend, ScikitLearnBackend)
+
     def test_combined_store(self):
         foo_store = OmegaStore(bucket='foo', prefix='foo/')
         bar_store = OmegaStore(bucket='bar', prefix='bar/')
@@ -933,8 +945,8 @@ class StoreTests(unittest.TestCase):
     def test_long_index_name(self):
         store = OmegaStore(bucket='foo', prefix='foo/')
         store.defaults.OMEGA_STORE_HASHEDNAMES = True
-        df = pd.DataFrame({'xyz'*100: range(100), 'yyz'*300: range(100)})
-        df = df.set_index('yyz'*300)
+        df = pd.DataFrame({'xyz' * 100: range(100), 'yyz' * 300: range(100)})
+        df = df.set_index('yyz' * 300)
         # name is limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
         long_name = 'a' * 990
@@ -949,7 +961,7 @@ class StoreTests(unittest.TestCase):
 
     def test_long_dataset_name(self):
         store = OmegaStore(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'xyz'*100: range(100)})
+        df = pd.DataFrame({'xyz' * 100: range(100)})
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
         long_name = 'a' * 990
@@ -971,7 +983,7 @@ class StoreTests(unittest.TestCase):
 
     def test_long_dataset_name_hdf(self):
         store = OmegaStore(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'xyz'*100: range(100)})
+        df = pd.DataFrame({'xyz' * 100: range(100)})
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
         long_name = 'a' * 990
@@ -989,7 +1001,6 @@ class StoreTests(unittest.TestCase):
         store.put(df, long_name, as_hdf=True)
         meta = store.metadata(long_name)
         self.assertEqual(meta.gridfile.name, store._get_obj_store_key(long_name, '.hdf'))
-
 
     def test_migrate_unhashed_name(self):
         store = OmegaStore(bucket='foo', prefix='foo/')
@@ -1039,4 +1050,3 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(df, dfx)
         # check hashing actually worked
         self.assertNotEqual(meta_unhashed.gridfile.name, meta_hashed.gridfile.name)
-

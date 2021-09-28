@@ -73,21 +73,20 @@ as follows:
 """
 from __future__ import absolute_import
 
+import bson
+import gridfs
 import os
+import six
 import tempfile
 import warnings
 from datetime import datetime
-from uuid import uuid4
-
-import bson
-import gridfs
-import six
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
 from six import iteritems
+from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -703,16 +702,30 @@ class OmegaStore(object):
                                            data_store=data_store)
         return None
 
-    def help(self, name_or_obj=None, kind=None):
-        """
-        get help for an object by lookup its backend and calling help() on it
+    def help(self, name_or_obj=None, kind=None, raw=False):
+        """ get help for an object by looking up its backend and calling help() on it
+
+        Retrieves the object's metadata and looks up its corresponding backend. If the
+        metadata.attributes['docs'] is a string it will display this as the help() contents.
+        If the string starts with 'http://' or 'https://' it will open the web page.
+
+        Args:
+            name_or_obj (str|obj): the name or actual object to get help for
+            kind (str): optional, if specified forces retrieval of backend for the given kind
+            raw (bool): optional, if True forces help to be the backend type of the object.
+                If False returns the attributes[docs] on the object's metadata, if available.
+                Defaults to False
 
         Returns:
-
+            help(obj)
         """
-        return help(self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind))
+        obj = self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind, raw=raw)
+        if any(str(obj.__doc__).startswith(v) for v in ('https://', 'http://')):
+            import webbrowser
+            return webbrowser.open(obj.__doc__)
+        return help(obj)
 
-    def _resolve_help_backend(self, name_or_obj=None, kind=None):
+    def _resolve_help_backend(self, name_or_obj=None, kind=None, raw=False):
         # helper so we can test help
         meta = self.metadata(name_or_obj) if name_or_obj else None
         if kind:
@@ -721,6 +734,14 @@ class OmegaStore(object):
             backend = self.get_backend(name_or_obj) or self.get_backend_byobj(name_or_obj)
         if backend is None:
             backend = self
+        if not raw and meta is not None and 'docs' in meta.attributes:
+            def UserDocumentation():
+                pass
+
+            basedoc = backend.__doc__ or ''
+            UserDocumentation.__doc__ = (basedoc +
+                                         meta.attributes['docs'])
+            backend = UserDocumentation
         return backend
 
     def get_backend_byobj(self, obj, name=None, kind=None, attributes=None,
