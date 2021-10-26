@@ -8,7 +8,7 @@ import logging
 import os
 import re
 import sys
-from docopt import docopt, DocoptExit, DocoptLanguageError
+from docopt import docopt
 from textwrap import dedent
 
 
@@ -364,7 +364,7 @@ class CommandParser:
         """
         try:
             self.args = safe_docopt(self.docs, argv=self.argv, version=self.version, help=False)
-        except DocoptExit as e:
+        except SystemExit as e:
             if self.should_debug:
                 # see
                 left = inspect.trace()[-1][0].f_locals.get('left')
@@ -402,8 +402,8 @@ class CommandParser:
             # -- no command?!
             if not self.command:
                 self.help()
-                raise DocoptExit()
-        except DocoptExit as e:
+                raise SystemExit()
+        except SystemExit as e:
             if self.should_debug:
                 # see
                 left = inspect.trace()[-1][0].f_locals.get('left')
@@ -724,10 +724,11 @@ class CommandBase:
               the method or self if none was found. Returning self
               means __call__() will be called
         """
-        #
-        #
-        #
-        for k, v in self.args.items():
+        # all sub commands first, main command last
+        ordered_args = [(k, v) for k, v in self.args.items() if k != self.command]
+        if self.command in self.args:
+            ordered_args += [(self.command, self.args[self.command])]
+        for k, v in ordered_args:
             lookup = str(v if k == self.action_tag else k)
             if v:
                 meth = getattr(self, lookup, None)
@@ -860,7 +861,7 @@ def safe_docopt(doc, argv=None, help=True, version=None, options_first=False):
     """
     try:
         args = docopt(doc, argv=argv, help=help, version=version, options_first=options_first)
-    except DocoptLanguageError as e:
+    except Exception as e:
         print("*** ERROR {}, check below".format(e))
         print("arguments to doctopt were")
         print("   argv=", argv)
