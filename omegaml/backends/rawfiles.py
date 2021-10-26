@@ -62,6 +62,7 @@ class PythonRawFileBackend(BaseDataBackend):
             target_dir = dirname(local) if is_filename else local
             local = local if is_filename else '{local}/{name}'.format(**locals())
             os.makedirs(target_dir, exist_ok=True)
+            open_kwargs = open_kwargs or {}
             with open(local, mode=mode, **open_kwargs) as flocal:
                 flocal.write(outf.read())
             return local
