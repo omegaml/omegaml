@@ -9,12 +9,12 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 
 # extras
 hdf_deps = ['tables>=3.2.2']
-graph_deps = ['matplotlib>=3.1.0', 'seaborn>=0.9.0', 'imageio>=2.6.1', 'plotext>=1.0.11']
+graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
-streaming_deps = ['minibatch[all]>=0.4.0']
+streaming_deps = ['minibatch[all]>0.4.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaking changes
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
@@ -30,16 +30,16 @@ elif (3, 8) <= sys.version_info < (3, 9) :
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     assert (major, minor) >= (2, 2), "Python version 3.8 only supported by TF >= 2.2"
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras>=2.4.3']
+    keras_deps = ['keras~=2.4.3']
 elif sys.version_info >= (3, 9):
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
     tf_deps = ['tensorflow>=2.5']
-    keras_deps = ['keras>=2.4.3']
+    keras_deps = ['keras~=2.4.3']
 else:
-    # python 3.6, tensorflow 2.3.1 only supported with keras<2.6
+    # python 3.6, tensorflow 2.3.1 only supported with keras<=2.5
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras<2.6.0']
+    keras_deps = ['keras<=2.5']
 
 # all deps
 all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
@@ -80,7 +80,7 @@ setup(
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
-        'mongoengine>=0.18.2,<0.19',
+        'mongoengine~=0.23.1',
         'pandas>1.1',  # 1.1 fails on storing multi-indexes
         'numpy>=1.16.4',
         'scipy>=0.17.0',
@@ -119,6 +119,7 @@ setup(
         'streaming': streaming_deps,
         'all': all_deps,
         'client': client_deps,
+        'all-client': client_deps,
         'dev': dev_deps,
     },
     entry_points={
