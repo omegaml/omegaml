@@ -26,7 +26,7 @@ class CustomBackendTests(TestCase):
 
     def test_custom_model_backend(self):
         """
-        test custom model type 
+        test custom model type
         """
         om.models.register_backend('custom.foo', CustomModelBackend)
         foo = dict(foo='bar')
@@ -36,12 +36,12 @@ class CustomBackendTests(TestCase):
         meta_stored = om.models.metadata('footest')
         self.assertIn('footest', om.models.list())
         self.assertEqual(meta, meta_stored)
-        with self.assertRaises(NotImplementedError):
-            om.models.get('footest')
+        foox = om.models.get('footest')
+        self.assertEqual(foox, foo)
 
     def test_custom_dataset_backend(self):
         """
-        test custom dataset type 
+        test custom dataset type
         """
         om.datasets.register_backend('custom.bar', CustomDataBackend)
         foo = dict(bar='foo')
@@ -60,17 +60,11 @@ class CustomModelBackend(BaseModelBackend):
     """
     Minimalist model backend
     """
+    KIND = 'custom.foo'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         return isinstance(obj, dict) and 'foo' in obj
-
-    def put_model(self, obj, name, attributes=None):
-        kind = 'custom.foo'
-        return self.model_store.make_metadata(name, kind, bucket=None,
-                                              prefix=None,
-                                              attributes=attributes).save()
-
 
 class CustomDataBackend(BaseDataBackend):
 

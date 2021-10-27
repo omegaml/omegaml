@@ -227,6 +227,9 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         result = process(maybe_chunked(model.score,
                                        lambda X, Y: as_args(reshaped(X), reshaped(Y)),
                                        X, Y, **kwargs), fn=store, keep_last=True)
+
+        with self.tracking as exp:
+            exp.log_metric('score', result)
         return result
 
     def fit_transform(

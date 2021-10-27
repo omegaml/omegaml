@@ -308,7 +308,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if path:
             pattern = r'{path}/{pattern}'.format(path=path, pattern=pattern)
         pattern = r'^{}'.format(pattern)
-        entries = self.omega.jobs.list(regexp=pattern, raw=True)
+        entries = self.omega.jobs.list(regexp=pattern, raw=True, hidden=True, include_temp=True)
         if path and not entries:
             raise HTTPError(400, "Directory not found {}".format(path))
         # by default assume the current path is listed already

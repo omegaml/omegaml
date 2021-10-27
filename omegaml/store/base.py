@@ -90,7 +90,7 @@ from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -628,7 +628,7 @@ class OmegaStore(object):
         elif append is None and collection.count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        objid = collection.insert({'data': obj})
+        objid = collection.insert(mongo_compatible({'data': obj}))
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -649,6 +649,12 @@ class OmegaStore(object):
                     If force is True and
                     the object does not exist it will still return True
         """
+        backend = self.get_backend(name)
+        if backend is not None:
+            return backend.drop(name, force=force, version=version)
+        return self._drop(name, force=force, version=version)
+
+    def _drop(self, name, force=False, version=-1):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
             raise DoesNotExist()
@@ -699,7 +705,8 @@ class OmegaStore(object):
         if meta is not None and meta.kind in self.defaults.OMEGA_STORE_BACKENDS:
             return self.get_backend_bykind(meta.kind,
                                            model_store=model_store,
-                                           data_store=data_store)
+                                           data_store=data_store,
+                                           **kwargs)
         return None
 
     def help(self, name_or_obj=None, kind=None, raw=False):
@@ -1036,6 +1043,7 @@ class OmegaStore(object):
             searchkeys['name'] = regex(f'^{re_pattern}$')
         if not include_temp:
             q_excludes &= Q(name__not__startswith='_')
+            q_excludes &= Q(name__not=regex(r'(.{1,*}\/?_.*)'))
         if not hidden:
             q_excludes &= Q(name__not__startswith='.')
         if kind or self.force_kind:

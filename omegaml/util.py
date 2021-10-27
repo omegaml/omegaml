@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
+from base64 import b64encode
 from copy import deepcopy
+from datetime import datetime
 from importlib import import_module
 
 import json
@@ -930,10 +932,11 @@ def migrate_unhashed_datasets(store):
     return migrated
 
 
-class NumpyEncoder(json.JSONEncoder):
+class MongoEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types
 
     adopted from https://stackoverflow.com/a/49677241/890242
+                 https://stackoverflow.com/a/11875813/890242
     """
 
     def default(self, obj):
@@ -945,11 +948,19 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, pd.DataFrame):
+            return obj.to_dict(orient='records')
+        elif isinstance(obj, pd.Series):
+            return obj.tolist()
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, bytes):
+            return b64encode(obj).decode('utf8')
         return json.JSONEncoder.default(self, obj)
 
 
-json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or NumpyEncoder)
-
+json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
+mongo_compatible = lambda *args: json.loads(json_dumps_np(*args))
 
 def tryOr(fn, else_fn):
     # try fn(), if exception call else_fn() if callable, return its value otherwise

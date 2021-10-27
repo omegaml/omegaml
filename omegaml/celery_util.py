@@ -1,8 +1,6 @@
-from contextlib import contextmanager
-from copy import deepcopy
-
 import six
 from celery import Task
+from contextlib import contextmanager
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -72,20 +70,22 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     def __init__(self, *args, **kwargs):
         super(OmegamlTask, self).__init__(*args, **kwargs)
-        self._om = None
 
     @property
     def om(self):
         # TODO do some more intelligent caching, i.e. by client/auth
-        if self._om is None:
+        kwargs = self.request.kwargs or {}
+        if not hasattr(self.request, '_om'):
+            self.request._om = None
+        if self.request._om is None:
             from omegaml import get_omega_for_task
-            bucket = self.request.kwargs.pop('__bucket', None)
-            self._om = get_omega_for_task(self)[bucket]
-        return self._om
+            bucket = kwargs.pop('__bucket', None)
+            self.request._om = get_omega_for_task(self)[bucket]
+        return self.request._om
 
     def get_delegate(self, name, kind='models'):
         get_delegate_provider = getattr(self.om, kind)
-        return get_delegate_provider.get_backend(name, data_store=self.om.datasets)
+        return get_delegate_provider.get_backend(name, data_store=self.om.datasets, tracking=self.tracking)
 
     @property
     def delegate_args(self):
@@ -96,9 +96,18 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         return {k: v for k, v in six.iteritems(self.request.kwargs) if not k.startswith('__')}
 
     @property
+    def tracking(self):
+        kwargs = self.request.kwargs or {}
+        experiment = kwargs.get('__experiment', 'notrack')
+        tracker = self.om.runtime.experiment(experiment)
+        # we reuse the currently active run, i.e. with block will NOT call exp.start()
+        tracker.implied_run = False
+        return tracker
+
+    @property
     def logging(self):
         kwargs = self.request.kwargs or {}
-        logging = kwargs.get('logging', False)
+        logging = kwargs.pop('__logging', False)
         if isinstance(logging, tuple):
             logname, level = logging
         else:
@@ -113,7 +122,10 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             if logname:
                 logger = self.app.log.get_default_logger(name=logname)
                 self.app.log.redirect_stdouts(name=logger, loglevel=level)
-                handler = OmegaLoggingHandler.setup(logger=logger, exit_hook=True, level=level)
+                handler = OmegaLoggingHandler.setup(store=self.om.datasets,
+                                                    logger=logger,
+                                                    exit_hook=True,
+                                                    level=level)
                 logger.setLevel(level)
             else:
                 logger = None
@@ -124,26 +136,41 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     del logger.handlers[logger.handlers.index(handler)]
 
         with task_logging():
-            self.reset()
-            result = super().__call__(*args, **kwargs)
+            with self.tracking as exp:
+                exp.log_event(f'task_call', self.name, {'args': args, 'kwargs': kwargs})
+                result = super().__call__(*args, **kwargs)
         return result
 
     def reset(self):
         # ensure next call will start over and get a new om instance
-        self._om = None
+        self.request._om = None
 
-    def on_failure(self, *args, **kwargs):
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        with self.tracking as exp:
+            exp.log_event(f'task_failure', self.name, {
+                'exception': repr(exc),
+                'task_id': task_id,
+            })
         self.reset()
-        return super().on_failure(*args, **kwargs)
+        return super().on_failure(exc, task_id, args, kwargs, einfo)
 
-    def on_retry(self, *args, **kwargs):
+    def on_retry(self, exc, task_id, args, kwargs):
+        with self.tracking as exp:
+            exp.log_event(f'task_retry', self.name, {
+                'exception': repr(exc),
+                'task_id': task_id,
+            })
         self.reset()
-        return super().on_retry(*args, **kwargs)
+        return super().on_retry(exc, task_id, args, kwargs)
 
-    def on_success(self, *args, **kwargs):
+    def on_success(self, retval, task_id, args, kwargs):
+        with self.tracking as exp:
+            exp.log_event(f'task_success', self.name, {
+                'result': sanitized(retval),
+                'task_id': task_id,
+            })
         self.reset()
-        return super().on_success(*args, **kwargs)
-
+        return super().on_success(retval, task_id, args, kwargs)
 
 
 def get_dataset_representations(items):

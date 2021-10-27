@@ -1,3 +1,5 @@
+import joblib
+
 from omegaml.backends.basecommon import BackendBaseCommon
 
 
@@ -19,11 +21,14 @@ class BaseModelBackend(BackendBaseCommon):
     for get() and put().
 
     Methods to implement:
-
         # for model serialization (mandatory)
         @classmethod supports() - determine if backend supports given model instance
         _package_model() - serialize a model instance into a temporary file
         _extract_model() - deserialize the model from a file-like
+
+        By default BaseModelBackend uses joblib.dumps/loads to store the model as serialized
+        Python objects. If this is not sufficient or applicable to your type models, override these
+        methods.
 
         Both methods provide readily set up temporary file names so that all you have to do is actually
         save the model to the given output file and restore the model from the given input file, respectively.
@@ -43,11 +48,12 @@ class BaseModelBackend(BackendBaseCommon):
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
 
-    def __init__(self, model_store=None, data_store=None, **kwargs):
+    def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
         self.model_store = model_store
         self.data_store = data_store
+        self.tracking = tracking
 
     @classmethod
     def supports(self, obj, name, **kwargs):
@@ -77,6 +83,9 @@ class BaseModelBackend(BackendBaseCommon):
         # support new backend architecture while keeping back compatibility
         return self.put_model(obj, name, **kwargs)
 
+    def drop(self, name, force=False, version=-1):
+        return self.model_store._drop(name, force=force, version=version)
+
     def _package_model(self, model, key, tmpfn, **kwargs):
         """
         implement this method to serialize a model to the given tmpfn
@@ -90,7 +99,10 @@ class BaseModelBackend(BackendBaseCommon):
         Returns:
             tmpfn or absolute path of serialized file
         """
-        raise NotImplementedError
+        with open(tmpfn, 'wb') as outf:
+            joblib.dump(model, outf)
+        return tmpfn
+
 
     def _extract_model(self, infile, key, tmpfn, **kwargs):
         """
@@ -106,7 +118,8 @@ class BaseModelBackend(BackendBaseCommon):
         Returns:
             model instance
         """
-        raise NotImplementedError
+        obj = joblib.load(infile)
+        return obj
 
     def get_model(self, name, version=-1, **kwargs):
         """
@@ -243,3 +256,5 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the score result
         """
         raise NotImplementedError
+
+

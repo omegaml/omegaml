@@ -77,6 +77,7 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.backends.package']
 #: storage backends
 OMEGA_STORE_BACKENDS = {
+    'experiment.tracker': 'omegaml.backends.experiment.ExperimentBackend',
     'sklearn.joblib': 'omegaml.backends.scikitlearn.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
@@ -153,7 +154,12 @@ OMEGA_LOG_DATASET = '.omega/logs'
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 #: MongoClient ServerSelectionTimeoutMS
 OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
-
+#: tracking providers
+OMEGA_TRACKING_PROVIDERS = {
+    'simple': 'omegaml.backends.experiment.OmegaSimpleTracker',
+    'default': 'omegaml.backends.experiment.OmegaSimpleTracker',
+    'notrack': 'omegaml.backends.experiment.NoTrackTracker',
+}
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----

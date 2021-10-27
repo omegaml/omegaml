@@ -497,6 +497,32 @@ class RuntimeTests(TestCase):
                   .get())
         self.assertEqual(len(om.datasets.get('callback_results')), 2)
 
+    def test_task_callback_bucket(self):
+        om = Omega()
+        omb = om['test']
+        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
+        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
+        pkgsrc = 'pkg://{}'.format(pkgpath)
+        omb.scripts.put(pkgsrc, 'callback')
+        df = pd.DataFrame({'x': range(1, 10),
+                           'y': range(5, 14)})
+        lr = LinearRegression()
+        lr.fit(df[['x']], df['y'])
+        omb.datasets.put(df, 'sample')
+        omb.models.put(lr, 'regmodel')
+        result = (omb.runtime
+                  .callback('callback')
+                  .model('regmodel')
+                  .predict('sample[x]')
+                  .get())
+        self.assertEqual(len(omb.datasets.get('callback_results')), 1)
+        result = (omb.runtime
+                  .callback('callback')
+                  .model('regmodel')
+                  .predict('sample[x]')
+                  .get())
+        self.assertEqual(len(omb.datasets.get('callback_results')), 2)
+
     def test_task_logging(self):
         """ test task python output can be logged per-request """
         om = Omega()
@@ -506,14 +532,33 @@ class RuntimeTests(TestCase):
         self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 0)
         # python log capture, we get om.logger, omegaml + stdout log
         om.logger.reset()
-        om.runtime.ping(fox='bar', logging=True)
+        om.runtime.mode(logging=True).ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 3)
         # specific python logger, we get om.logger, celery + stdout log
         om.logger.reset()
-        om.runtime.ping(fox='bar', logging='celery')
+        om.runtime.mode(logging='celery').ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 3)
         # request a different level, we get celery + stdout
-        om.runtime.ping(fox='bar', logging=('celery', 'DEBUG'))
+        om.runtime.mode(logging=('celery', 'DEBUG')).ping(fox='bar')
+        self.assertEqual(len(om.logger.dataset.get(levelname='DEBUG')), 2)
+
+    def test_task_logging_bucket(self):
+        """ test task python output can be logged per-request """
+        om = Omega()['test']
+        om.logger.reset()
+        # no python logging, only om.logger
+        om.runtime.ping(fox='bar', logging=False)
+        self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 0)
+        # python log capture, we get om.logger, omegaml + stdout log
+        om.logger.reset()
+        om.runtime.mode(logging=True).ping(fox='bar')
+        self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 3)
+        # specific python logger, we get om.logger, celery + stdout log
+        om.logger.reset()
+        om.runtime.mode(logging='celery').ping(fox='bar')
+        self.assertEqual(len(om.logger.dataset.get(levelname='INFO')), 3)
+        # request a different level, we get celery + stdout
+        om.runtime.mode(logging=('celery', 'DEBUG')).ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(levelname='DEBUG')), 2)
 
     def test_logging_mode(self):

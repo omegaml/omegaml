@@ -38,15 +38,15 @@ class ModelVersionMixin(object):
     def put(self, obj, name, tag=None, commit=None, previous='latest', noversion=False, **kwargs):
         # create a new version
         meta = super().put(obj, name, **kwargs)
-        if self._model_version_applies() and not noversion:
+        if self._model_version_applies(name) and not noversion:
             self._ensure_versioned(meta)
             meta = self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, **kwargs)
         return meta
 
     def get(self, name, commit=None, tag=None, version=-1, **kwargs):
-        if not self._model_version_applies():
+        if not self._model_version_applies(name):
             return super().get(name, **kwargs)
-        meta = self.metadata(name, commit=commit, tag=tag, version=version, **kwargs)
+        meta = self.metadata(name, commit=commit, tag=tag, version=version)
         actual_name = name
         if meta:
             self._ensure_versioned(meta)
@@ -57,28 +57,30 @@ class ModelVersionMixin(object):
 
     def drop(self, name, force=False, version=-1, commit=None, tag=None):
         # TODO implement drop to support deletion of specific versions
-        if False and self._model_version_applies():
+        if False and self._model_version_applies(name):
             # this messes up the version history of the base object!
             name = self._model_version_actual_name(name, tag=tag, commit=commit, version=version)
         return super().drop(name, force=force)
 
-    def metadata(self, name, commit=None, tag=None, version=None, raw=False, **kwargs):
-        if not self._model_version_applies():
-            return super().metadata(name, **kwargs)
-        base_meta, base_commit, base_version = self._base_metadata(name, **kwargs)
+    def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False):
+        if not self._model_version_applies(name):
+            return super().metadata(name)
+        base_meta, base_commit, base_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
         commit = commit or base_commit
         version = base_version or version or -1
         if raw and base_meta and 'versions' in base_meta.attributes:
             actual_name = self._model_version_actual_name(name, tag=tag,
                                                           commit=commit,
-                                                          version=version)
-            meta = super().metadata(actual_name, **kwargs)
+                                                          version=version,
+                                                          bucket=bucket,
+                                                          prefix=prefix)
+            meta = super().metadata(actual_name, bucket=bucket, prefix=prefix)
         else:
             meta = base_meta
         return meta
 
     def revisions(self, name):
-        if self._model_version_applies():
+        if self._model_version_applies(name):
             meta = self.metadata(name)
             versions = meta.attributes.get('versions', {})
             commits = versions.get('commits')
@@ -106,8 +108,8 @@ class ModelVersionMixin(object):
         return meta, tag, version
 
     def _model_version_actual_name(self, name, tag=None, commit=None,
-                                   version=None, **kwargs):
-        meta, name_tag, name_version = self._base_metadata(name, **kwargs)
+                                   version=None, bucket=None, prefix=None):
+        meta, name_tag, name_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
         tag = tag or name_tag
         commit = commit or tag
         version = name_version or version or -1
@@ -136,7 +138,7 @@ class ModelVersionMixin(object):
     def _model_version_store_key(self, name, version_hash):
         return '_versions/{}/{}'.format(name, version_hash)
 
-    def _model_version_applies(self):
+    def _model_version_applies(self, name):
         return self.prefix.startswith('models/')
 
     def _ensure_versioned(self, meta):
