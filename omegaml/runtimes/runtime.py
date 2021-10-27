@@ -143,8 +143,7 @@ class OmegaRuntime(object):
         """
         if local is not None:
             self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
-        if logging is not None:
-            self._task_default_kwargs['task']['__logging'] = logging
+        self._task_default_kwargs['task']['__logging'] = logging
         return self
 
     def _client_is_pure_python(self):

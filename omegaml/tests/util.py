@@ -4,6 +4,11 @@ from http import HTTPStatus
 
 
 class OmegaTestMixin(object):
+    def shortDescription(self):
+        # always print method name instead of docstring
+        # see unittest.TestCase for details
+        return None
+
     def clean(self, bucket=None):
         om = self.om[bucket] if bucket is not None else self.om
         for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):

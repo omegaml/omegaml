@@ -18,14 +18,14 @@ class KerasBackendTests(TestCase):
             from keras import Sequential, Model
             from keras.layers import Dense, Dropout
             from keras.optimizers import SGD
-        except AttributeError:
+        except (ImportError, AttributeError):
             # keras 2.4.3, python 3.9 is not compatible
             # https://github.com/keras-team/keras/issues/14632
             from tensorflow import keras
             from tensorflow.keras.models import Sequential
             from tensorflow.keras.layers import Dense, Dropout
             from tensorflow.keras.optimizers import SGD
-            
+
         # Generate dummy data
         import numpy as np
         x_train = np.random.random((1000, 20))

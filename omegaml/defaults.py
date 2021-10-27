@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import shutil
 from os.path import basename
 from pathlib import Path
 
@@ -108,6 +109,10 @@ OMEGA_STORE_BACKENDS_MLFLOW = {
     'mlflow.project': 'omegaml.backends.mlflow.localprojects.MLFlowProjectBackend',
     'mlflow.gitproject': 'omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend',
     'mlflow.registrymodel': 'omegaml.backends.mlflow.registrymodels.MLFlowRegistryBackend',
+}
+OMEGA_STORE_BACKENDS_R = {
+    'model.r': 'omegaml.backends.rsystem.rmodels.RModelBackend',
+    'package.r': 'omegaml.backends.rsystem.rscripts.RPackageData',
 }
 #: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
@@ -373,6 +378,9 @@ def load_framework_support(vars=globals()):
     #: dash backend
     if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_DASH'])
+    #: r environment
+    if shutil.which('R') is not None:
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
     #: mlflow backends
     if module_available('mlflow'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])

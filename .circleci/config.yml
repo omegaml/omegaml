@@ -44,6 +44,7 @@ jobs:
               echo "Testing with python $VER tensorflow $TF_VERSION"
               conda create -q -y -n omenv$VER python=$VER
               conda activate omenv$VER
+              scripts/setup-r.sh
               pip install --progress-bar off .[all,dev,mlflow]
               make test
               conda deactivate

@@ -1,7 +1,6 @@
 import os
 import unittest
 import warnings
-from mlflow.exceptions import MlflowException
 from shutil import rmtree
 from unittest import TestCase
 
@@ -20,6 +19,8 @@ try:
 except:
     warnings.warn("mlflow is not installed")
 else:
+    from mlflow.exceptions import MlflowException
+
     @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
     class TestMLFlowModels(OmegaTestMixin, TestCase):
         def setUp(self):

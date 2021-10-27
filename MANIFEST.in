@@ -2,6 +2,7 @@ include docs
 recursive-include docs/source *.rst *.css *.py *.png *.gif *.svg *.jpg
 recursive-include omegaml/tests/features *.feature
 recursive-include omegaml/notebook/jupyterhub *.jpg
+recursive-include omegaml/runtimes/rsystem *.R
 include scripts
 include LICENSE
 include NOTICE
