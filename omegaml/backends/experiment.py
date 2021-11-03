@@ -1,6 +1,8 @@
 import dill
 import os
 import pandas as pd
+import pkg_resources
+import platform
 import warnings
 from base64 import b64encode, b64decode
 from datetime import datetime
@@ -9,6 +11,7 @@ from uuid import uuid4
 
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.documents import Metadata
+from omegaml.util import _raise
 
 
 class ExperimentBackend(BaseModelBackend):
@@ -26,15 +29,34 @@ class ExperimentBackend(BaseModelBackend):
                 exp.log_artifact(Y, 'Y')
                 exp.log_artifact(om.models.metadata('mymodel'), 'mymodel')
 
-        Get back experiment data
+        Log data and automatically profile system data
 
+            with om.runtime.experiment('myexp', provider='profiling') as exp:
+                om.runtime.model('mymodel').fit(X, Y)
+                om.runtime.model('mymodel').score(X, Y) # automatically log score result
+                exp.log_metric('mymetric', value)
+                exp.log_param('myparam', value)
+                exp.log_artifact(X, 'X')
+                exp.log_artifact(Y, 'Y')
+                exp.log_artifact(om.models.metadata('mymodel'), 'mymodel')
+
+            # profiling data contains metrics for cpu, memory and disk use
+            data = exp.data(event='profile')
+
+        Get back experiment data without running an experiment
+
+            # recommended way
+            exp = om.runtime.experiment('myexp').use()
+            exp_df = exp.data()
+
+            # experiments exist in the models store
             exp = om.models.get('experiments/myexp')
             exp_df = exp.data()
 
     See Also:
 
-        TrackingProvider
-        TrackingProxy
+        OmegaSimpleTracker
+        OmegaProfilingTracker
     """
     KIND = 'experiment.tracker'
     exp_prefix = 'experiments/'
@@ -180,10 +202,18 @@ class OmegaSimpleTracker(TrackingProvider):
     _startdt = None
     _stopdt = None
 
+    _ensure_active = lambda self, r: r if r is not None else _raise(ValueError('no active run, call .start() or .use() '))
+
     def active_run(self):
         self._run = self._latest_run or self.start()
         self._experiment = self._experiment or uuid4().hex
         return self
+
+    def use(self):
+        """ reuse the latest run instead of starting a new one
+
+        semantic sugar for self.active_run() """
+        return self.active_run()
 
     @property
     def _latest_run(self):
@@ -191,25 +221,33 @@ class OmegaSimpleTracker(TrackingProvider):
         run = data[-1]['run'] if data is not None and len(data) > 0 else None
         return run
 
+    @property
+    def status(self, run=None):
+        data = self.data(event=('start', 'stop'), run=run, raw=True)
+        return 'STARTED' if len(data) > 1 else 'STOPPED'
+
     def start(self):
         self._run = (self._latest_run or 0) + 1
         self._startdt = datetime.utcnow()
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'event': 'start',
             'dt': self._startdt,
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         self._store.put(data, self._data_name, noversion=True)
+        self.log_system()
         return self._run
 
     def stop(self):
         self._stopdt = datetime.utcnow()
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'event': 'stop',
             'dt': self._stopdt,
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         self._store.put(data, self._data_name, noversion=True)
 
@@ -239,7 +277,7 @@ class OmegaSimpleTracker(TrackingProvider):
                 format = 'repr'
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'step': step,
             'event': 'artifact',
             'key': name,
@@ -249,18 +287,20 @@ class OmegaSimpleTracker(TrackingProvider):
                 'format': format
             },
             'dt': datetime.utcnow(),
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         self._store.put(data, self._data_name, noversion=True)
 
     def log_event(self, event, key, value, step=None, **extra):
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'step': step,
             'event': event,
             'key': key,
             'value': value,
             'dt': datetime.utcnow(),
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
             data['step'] = step
@@ -270,12 +310,13 @@ class OmegaSimpleTracker(TrackingProvider):
     def log_param(self, key, value, step=None, **extra):
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'step': step,
             'event': 'param',
             'key': key,
             'value': value,
             'dt': datetime.utcnow(),
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
             data['step'] = step
@@ -285,15 +326,38 @@ class OmegaSimpleTracker(TrackingProvider):
     def log_metric(self, key, value, step=None, **extra):
         data = {
             'experiment': self._experiment,
-            'run': self._run,
+            'run': self._ensure_active(self._run),
             'step': step,
             'event': 'metric',
             'key': key,
             'value': value,
             'dt': datetime.utcnow(),
+            'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
             data['step'] = step
+        data.update(extra)
+        self._store.put(data, self._data_name)
+
+    def log_system(self, key=None, value=None, step=None, **extra):
+        key = key or 'system'
+        value = value or {
+            'platform': platform.uname()._asdict(),
+            'python': '-'.join((platform.python_implementation(),
+                                platform.python_version())),
+            'packages': ['=='.join((d.project_name, d.version))
+                         for d in pkg_resources.working_set]
+        }
+        data = {
+            'experiment': self._experiment,
+            'run': self._ensure_active(self._run),
+            'step': step,
+            'event': 'system',
+            'key': key,
+            'value': value,
+            'dt': datetime.utcnow(),
+            'node': os.environ.get('HOSTNAME', platform.node()),
+        }
         data.update(extra)
         self._store.put(data, self._data_name)
 
@@ -337,6 +401,64 @@ class OmegaSimpleTracker(TrackingProvider):
         else:
             obj = data['data']
         return obj
+
+
+class OmegaProfilingTracker(OmegaSimpleTracker):
+    """ A metric tracker that runs a system profiler while the experiment is active
+
+    Will record 'profile' events that contain cpu, memory and disk profilings.
+    See BackgroundProfiler.profile() for details of the profiling metrics collected.
+
+    Usage:
+        with om.runtime.experiment('myexp', provider='profiling') as exp:
+            ...
+
+        data = exp.data(event='profile')
+
+    Properties:
+        exp.profiler.interval = n.m # interval of n.m seconds to profile, defaults to 3 seconds
+        exp.profiler.metrics = ['cpu', 'memory', 'disk'] # all or subset of metrics to collect
+        exp.max_buffer = n # number of items in buffer before tracking
+
+    Notes:
+        - the profiling data is buffered to reduce the number of database writes, by
+          default the data is written on every 6 profiling events (default: 6 * 10 = every 60 seconds)
+        - the step reported in the tracker counts the profiling event since the start, it is not
+          related to the step (epoch) reported by e.g. tensorflow
+        - For every step there is a event=profile, key=profile_dt entry which you can use
+          to relate profiling events to a specific wall-clock time. Use the profile_dt to relate profiling
+          metrics to other metrics
+        - It usually sufficient to report system metrics in intervals > 10 seconds since machine
+          learning algorithms tend to use CPU and memory over longer periods of time and are not
+          typically prone to short term fluctuations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.profile_logs = []
+        self.max_buffer = 6
+
+    def log_profile(self, data):
+        """ the callback for BackgroundProfiler """
+        self.profile_logs.append(data)
+        if len(self.profile_logs) >= (self.max_buffer or 1):
+            self.flush()
+
+    def flush(self):
+        for step, data in enumerate(self.profile_logs):
+            for k, v in data.items():
+                self.log_event('profile', k, v, step=step)
+        self.profile_logs = []
+
+    def start(self):
+        self.profiler = BackgroundProfiler(callback=self.log_profile)
+        self.profiler.start()
+        super().start()
+
+    def stop(self):
+        self.profiler.stop()
+        self.flush()
+        super().stop()
 
 
 try:
@@ -387,3 +509,94 @@ else:
 
             setattr(cls, method, inner)
             return inner
+
+
+class BackgroundProfiler:
+    """ Profile CPU, Memory and Disk use in a background thread
+    """
+
+    def __init__(self, interval=10, callback=print):
+        self._stop = False
+        self._interval = interval
+        self._callback = callback
+        self._metrics = ['cpu', 'memory', 'disk']
+
+    def profile(self):
+        """
+        returns memory and cpu data as a dict
+            memory_load (float): percent of total memory used
+            memory_total (float): total memory in bytes
+            cpu_load (list): cpu load in percent, per cpu
+            cpu_count (int): logical cpus,
+            cpu_freq (float): MHz of current cpu frequency
+            cpu_avg (list): list of cpu load over last 1, 5, 15 minutes
+            disk_use (float): percent of disk used
+            disk_total (int): total size of disk, bytes
+        """
+        import psutil
+        from datetime import datetime as dt
+        p = psutil
+        disk = p.disk_usage('/')
+        cpu_count = p.cpu_count()
+        data = {'profile_dt': dt.utcnow()}
+        if 'memory' in self._metrics:
+            data.update(memory_load=p.virtual_memory().percent,
+                        memory_total=p.virtual_memory().total)
+        if 'cpu' in self._metrics:
+            data.update(cpu_load=p.cpu_percent(percpu=True),
+                        cpu_count=cpu_count,
+                        cpu_freq=[f.current for f in p.cpu_freq(percpu=True)],
+                        cpu_avg=[x / cpu_count for x in p.getloadavg()])
+        if 'disk' in self._metrics:
+            data.update(disk_use=disk.percent,
+                        disk_total=disk.total)
+        return data
+
+    @property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, interval):
+        self._interval = interval
+        self.stop()
+        self.start()
+
+    @property
+    def metrics(self):
+        return self._metrics
+
+    @metrics.setter
+    def metrics(self, metrics):
+        self._metrics = metrics
+
+    def start(self):
+        """ runs a background thread that reports stats every interval seconds
+
+        Every interval, calls callback(data), where data is the output of BackgroundProfiler.profile()
+        Stop by BackgroundProfiler.stop()
+        """
+        import atexit
+        from threading import Thread
+        from time import sleep
+
+        def runner():
+            cb = self._callback
+            try:
+                while not self._stop:
+                    cb(self.profile())
+                    sleep(self._interval)
+            except (KeyboardInterrupt, SystemExit):
+                pass
+
+        # handle exits by stopping the profiler
+        atexit.register(self.stop)
+        # start the profiler
+        self._stop = False
+        t = Thread(target=runner)
+        t.start()
+        # clean up
+        atexit.unregister(self.stop)
+
+    def stop(self):
+        self._stop = True

@@ -1,10 +1,14 @@
+from time import sleep
+
+import platform
+
 import pandas as pd
 import unittest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
 from omegaml import Omega
-from omegaml.backends.experiment import ExperimentBackend, OmegaSimpleTracker
+from omegaml.backends.experiment import ExperimentBackend, OmegaSimpleTracker, OmegaProfilingTracker
 from omegaml.documents import Metadata
 from omegaml.tests.util import OmegaTestMixin
 
@@ -14,6 +18,35 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.om = om = Omega()
         self.clean()
         om.models.register_backend(ExperimentBackend.KIND, ExperimentBackend)
+
+    def test_ensure_active(self):
+        # explicit start
+        om = self.om
+        exp = om.runtime.experiment('test')
+        with self.assertRaises(ValueError):
+            exp.log_param('foo', 'bar')
+        run = exp.start()
+        exp.log_param('foo', 'bar')
+        data = exp.data(run=run)
+        self.assertIsNotNone(run)
+        self.assertEqual(len(data), 3)
+        # reuse latest run
+        exp = om.runtime.experiment('test')
+        with self.assertRaises(ValueError):
+            exp.log_param('foo', 'bar')
+        exp.use()
+        exp.log_param('foo', 'bar')
+        data = exp.data(run=run)
+        self.assertIsNotNone(run)
+        self.assertEqual(len(data), 4)
+        # implied run should be NOT set in with block if use() was called previously
+        # rationale: with exp should always start a new run
+        with exp as xexp:
+            xexp.log_param('foo', 'bar')
+        data = xexp.data()
+        self.assertEqual(len(data), 4)
+        self.assertEqual(set(data['event']), set(['start', 'stop', 'param', 'system']))
+        self.assertEqual(data['run'].iloc[-1], run + 1)
 
     def test_simple_tracking(self):
         # create a model
@@ -34,8 +67,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(exp, OmegaSimpleTracker)
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 1)
-        self.assertEqual(data.iloc[0]['key'], 'accuracy')
-        self.assertEqual(data.iloc[0]['value'], score)
+        self.assertEqual(data.iloc[-1]['key'], 'accuracy')
+        self.assertEqual(data.iloc[-1]['value'], score)
         # get back the tracker as an object
         tracker = om.models.get('experiments/myexp', raw=True, data_store=om.datasets)
         self.assertIsInstance(tracker, OmegaSimpleTracker)
@@ -52,7 +85,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.models.get('experiments/myexp', raw=True, data_store=om.datasets)
         data = tracker.data()
         self.assertIsInstance(data, pd.DataFrame)
-        self.assertEqual(len(data), 15)  # includes runtime task events
+        self.assertEqual(len(data), 17)  # includes runtime task events
         self.assertEqual(len(data[data.event == 'start']), 2)
         self.assertEqual(len(data[data.event == 'stop']), 2)
         self.assertEqual(len(data[data.event == 'artifact']), 4)
@@ -92,7 +125,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 5)
+        self.assertEqual(len(data), 6)
 
     def test_tracking_predictions(self):
         # create a model
@@ -112,15 +145,16 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 4)
+        self.assertEqual(len(data), 5)
 
     def test_empty_experiment_data(self):
         om = self.om
         with om.runtime.experiment('myexp') as exp:
             pass
         exp = om.models.get('experiments/myexp', data_store=om.datasets)
+        # we have at least a 'system' event
         self.assertEqual(len(exp.data(event='metric')), 0)
-        self.assertEqual(len(exp.data()), 2)  # start and stop events
+        self.assertEqual(len(exp.data()), 3)  # start and stop events
 
     def test_experiment_explicit_logging(self):
         om = self.om
@@ -180,7 +214,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # create experiment, add some data
         with om.runtime.experiment('foo') as exp:
             exp.log_metric(5, 'accuracy')
-        self.assertEqual(len(exp.data()), 3)
+        self.assertEqual(len(exp.data()), 4)
         # check experiment and data where created
         self.assertIn('experiments/foo', om.models.list())
         meta = om.models.metadata('experiments/foo')
@@ -190,7 +224,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIn('experiments/foo', om.models.list())
         # add a metric, then clean
         exp.log_metric(5, 'accuracy')
-        self.assertEqual(len(exp.data()), 4)
+        self.assertEqual(len(exp.data()), 5)
         # explicit drop
         om.models.drop('experiments/foo', data_store=om.datasets)
         self.assertNotIn(dataset, om.datasets.list(hidden=True))
@@ -236,6 +270,24 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
                   batch_size=128, callbacks=[tracking_cb])
         return model, x_train, y_train
 
+    def test_log_system(self):
+        om = self.om
+        with om.runtime.experiment('test') as exp:
+            exp.log_system()
+        data = exp.data(key='system')
+        system = data.iloc[0]['value']
+        self.assertEqual(system['platform'], platform.uname()._asdict())
+        self.assertEqual(system['platform']['node'], platform.node())
+
+    def test_profiling(self):
+        om = self.om
+        with om.runtime.experiment('proftest', provider='profiling') as exp:
+            exp.profiler.interval = 0.1
+            sleep(1.5)
+        data = exp.data(event='profile')
+        self.assertGreaterEqual(len(data), 10)
+        xexp = om.runtime.experiment('proftest')
+        self.assertIsInstance(xexp.experiment, OmegaProfilingTracker)
 
 if __name__ == '__main__':
     unittest.main()

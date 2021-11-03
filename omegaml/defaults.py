@@ -158,6 +158,7 @@ OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
 OMEGA_TRACKING_PROVIDERS = {
     'simple': 'omegaml.backends.experiment.OmegaSimpleTracker',
     'default': 'omegaml.backends.experiment.OmegaSimpleTracker',
+    'profiling': 'omegaml.backends.experiment.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.experiment.NoTrackTracker',
 }
 
