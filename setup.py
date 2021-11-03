@@ -16,6 +16,7 @@ snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>0.4.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaking changes
+mlflow_deps = ['mlflow~=1.21.0']
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
@@ -118,6 +119,7 @@ setup(
         'dashserve': dashserve_deps,
         'sql': sql_deps,
         'snowflake': snowflake_deps,
+        'mlflow': mlflow_deps,
         'iotools': iotools_deps,
         'streaming': streaming_deps,
         'all': all_deps,

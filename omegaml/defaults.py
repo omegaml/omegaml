@@ -102,6 +102,11 @@ OMEGA_STORE_BACKENDS_DASH = {
 OMEGA_STORE_BACKENDS_SQL = {
     'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
 }
+OMEGA_STORE_BACKENDS_MLFLOW = {
+    'mlflow.model': 'omegaml.backends.mlflow.models.MLFlowModelBackend',
+    'mlflow.project': 'omegaml.backends.mlflow.localprojects.MLFlowProjectBackend',
+    'mlflow.gitproject': 'omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend',
+}
 #: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
@@ -161,6 +166,7 @@ OMEGA_TRACKING_PROVIDERS = {
     'profiling': 'omegaml.backends.experiment.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.experiment.NoTrackTracker',
 }
+
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
@@ -361,6 +367,9 @@ def load_framework_support(vars=globals()):
     #: dash backend
     if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_DASH'])
+    #: mlflow backends
+    if module_available('mlflow'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
 
 
 # -- test support

@@ -4,7 +4,7 @@ import logging
 import six
 from uuid import uuid4
 
-from omegaml.util import is_dataframe, is_ndarray
+from omegaml.util import is_dataframe, is_ndarray, is_series
 
 logger = logging.getLogger(__file__)
 
@@ -165,7 +165,7 @@ class ModelMixin(object):
         return omega_reduce.delay(modelName=self.modelname, rName=rName, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
-        if is_dataframe(name_or_data):
+        if is_dataframe(name_or_data) or is_series(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif is_ndarray(name_or_data):
