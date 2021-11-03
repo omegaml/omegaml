@@ -56,10 +56,10 @@ class OmegaTrackingProxy:
         # specify a permanent task argument
         OmegaTrackingProxy.__nested += 1
         self.runtime.require(task=dict(__experiment=self._experiment), always=True)
-        self._with_experiment = experimemt = self.experiment
+        self._with_experiment = experiment = self.experiment
         if self.implied_run:
-            experimemt.start()
-        return experimemt
+            experiment.start()
+        return experiment
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.implied_run:

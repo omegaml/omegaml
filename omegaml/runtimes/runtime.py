@@ -116,10 +116,11 @@ class OmegaRuntime(object):
     def _inspect(self):
         return self.celeryapp.control.inspect()
 
-    def mode(self, local=None, logging=False):
+    def mode(self, local=None, logging=None):
         if local is not None:
             self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
-        self._task_default_kwargs['task']['__logging'] = logging
+        if logging is not None:
+            self._task_default_kwargs['task']['__logging'] = logging
         return self
 
     def _client_is_pure_python(self):
@@ -208,7 +209,7 @@ class OmegaRuntime(object):
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
-    def experiment(self, experiment, provider=None):
+    def experiment(self, experiment, provider=None, implied_run=True):
         """ set the tracking backend and experiment
 
         Args:
@@ -217,7 +218,7 @@ class OmegaRuntime(object):
         """
         from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
-        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=True)
+        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run)
         return tracker
 
     def task(self, name):

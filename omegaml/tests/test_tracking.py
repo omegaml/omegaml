@@ -52,15 +52,21 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.models.get('experiments/myexp', raw=True, data_store=om.datasets)
         data = tracker.data()
         self.assertIsInstance(data, pd.DataFrame)
-        self.assertEqual(len(data), 13)  # includes runtime task events
+        self.assertEqual(len(data), 15)  # includes runtime task events
         self.assertEqual(len(data[data.event == 'start']), 2)
         self.assertEqual(len(data[data.event == 'stop']), 2)
-        self.assertEqual(len(data[data.event == 'artifact']), 2)
+        self.assertEqual(len(data[data.event == 'artifact']), 4)
         artifacts = data[data.event == 'artifact']['value'].to_list()
-        obj = exp.restore_artifact(value=artifacts[0])
+        obj = exp.restore_artifact(key='mymodel')
         self.assertIsInstance(obj, LogisticRegression)
-        obj = exp.restore_artifact(value=artifacts[1])
+        obj = exp.restore_artifact(key='mymodel_meta')
         self.assertIsInstance(obj, Metadata)
+        # related is stored by runtime automatically as the delegate's metadata
+        obj = exp.restore_artifact(key='related')
+        self.assertIsInstance(obj, Metadata)
+        # check that the current metadata lists the experiment for tracability
+        meta = om.models.metadata('mymodel')
+        self.assertIn('myexp', meta.attributes['tracking']['experiments'])
 
     def test_tracking_from_metadata(self):
         # create a model
@@ -86,7 +92,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 4)
+        self.assertEqual(len(data), 5)
 
     def test_tracking_predictions(self):
         # create a model
@@ -106,7 +112,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
 
     def test_empty_experiment_data(self):
         om = self.om
