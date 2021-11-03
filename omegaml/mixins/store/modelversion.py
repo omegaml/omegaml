@@ -55,12 +55,12 @@ class ModelVersionMixin(object):
                                                           version=version)
         return super().get(actual_name, **kwargs)
 
-    def drop(self, name, force=False, version=-1, commit=None, tag=None):
+    def drop(self, name, force=False, version=-1, commit=None, tag=None, **kwargs):
         # TODO implement drop to support deletion of specific versions
         if False and self._model_version_applies(name):
             # this messes up the version history of the base object!
             name = self._model_version_actual_name(name, tag=tag, commit=commit, version=version)
-        return super().drop(name, force=force)
+        return super().drop(name, force=force, **kwargs)
 
     def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False):
         if not self._model_version_applies(name):

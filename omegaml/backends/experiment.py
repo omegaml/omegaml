@@ -1,10 +1,10 @@
-from base64 import b64encode, b64decode
-
 import dill
-import joblib
 import os
 import pandas as pd
+import warnings
+from base64 import b64encode, b64decode
 from datetime import datetime
+from itertools import product
 from uuid import uuid4
 
 from omegaml.backends.basemodel import BaseModelBackend
@@ -48,10 +48,12 @@ class ExperimentBackend(BaseModelBackend):
         # FIXME use proper pickle magic to avoid storing the store
         store = obj._store
         obj._store = None
+        obj._model_store = None
         meta = super().put(obj, name, **kwargs)
         meta.attributes['dataset'] = obj._data_name
         meta.save()
         obj._store = store
+        obj._model_store = self.model_store
         return meta
 
     def get(self, name, raw=False, data_store=None, **kwargs):
@@ -59,13 +61,15 @@ class ExperimentBackend(BaseModelBackend):
         tracker = super().get(name, **kwargs)
         name = os.path.basename(name)
         tracker._store = data_store
+        tracker._model_store = self.model_store
         return tracker.experiment(name) if not raw else tracker
 
-    def drop(self, name, force=False, version=-1):
+    def drop(self, name, force=False, version=-1, data_store=None, **kwargs):
+        data_store = data_store or self.data_store
         meta = self.model_store.metadata(name)
         dataset = meta.attributes.get('dataset')
-        self.data_store.drop(dataset, force=True) if dataset else None
-        return self.model_store._drop(name, force=force, version=version)
+        data_store.drop(dataset, force=True)
+        return self.model_store._drop(name, force=force, version=version, **kwargs)
 
 
 class TrackingProvider:
@@ -97,10 +101,11 @@ class TrackingProvider:
            for an example.
     """
 
-    def __init__(self, experiment, store=None):
+    def __init__(self, experiment, store=None, model_store=None):
         self._experiment = experiment
         self._run = None
         self._store = store
+        self._model_store = model_store
 
     def experiment(self, name=None):
         self._experiment = name or self._experiment
@@ -128,14 +133,8 @@ class TrackingProvider:
     def log_param(self, key, value, step=None, **extra):
         raise NotImplementedError
 
-    def tensorboard_callback(self):
-        raise NotImplementedError
-
-    def mlflow_callback(self):
-        raise NotImplementedError
-
-    def neptune_callback(self):
-        raise NotImplementedError
+    def tensorflow_callback(self):
+        return TensorflowCallback(self)
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
         raise NotImplementedError
@@ -147,6 +146,7 @@ class TrackingProvider:
 
 class NoTrackTracker(TrackingProvider):
     """ A default tracker that does not record anything """
+
     def start(self):
         pass
 
@@ -170,6 +170,11 @@ class NoTrackTracker(TrackingProvider):
 
 
 class OmegaSimpleTracker(TrackingProvider):
+    """ A tracking provider that logs to an omegaml dataset
+
+    Usage:
+        with
+    """
     _provider = 'simple'
     _experiment = None
     _startdt = None
@@ -215,12 +220,27 @@ class OmegaSimpleTracker(TrackingProvider):
         elif isinstance(obj, Metadata):
             format = 'metadata'
             rawdata = obj.to_json()
+        elif self._model_store.get_backend_byobj(obj) is not None:
+            objname = uuid4().hex
+            meta = self._model_store.put(obj, f'experiments/.artefacts/{objname}')
+            format = 'model'
+            rawdata = meta.name
+        elif self._store.get_backend_by_obj(obj) is not None:
+            objname = uuid4().hex
+            meta = self._store.put(obj, f'.experiments/.artefacts/{objname}')
+            format = 'dataset'
+            rawdata = meta.name
         else:
-            rawdata = b64encode(dill.dumps(obj)).decode('utf8')
-            format = 'pickle'
+            try:
+                rawdata = b64encode(dill.dumps(obj)).decode('utf8')
+                format = 'pickle'
+            except TypeError as e:
+                rawdata = repr(obj)
+                format = 'repr'
         data = {
             'experiment': self._experiment,
             'run': self._run,
+            'step': step,
             'event': 'artifact',
             'key': name,
             'value': {
@@ -236,6 +256,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data = {
             'experiment': self._experiment,
             'run': self._run,
+            'step': step,
             'event': event,
             'key': key,
             'value': value,
@@ -250,6 +271,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data = {
             'experiment': self._experiment,
             'run': self._run,
+            'step': step,
             'event': 'param',
             'key': key,
             'value': value,
@@ -264,6 +286,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data = {
             'experiment': self._experiment,
             'run': self._run,
+            'step': step,
             'event': 'metric',
             'key': key,
             'value': value,
@@ -278,16 +301,18 @@ class OmegaSimpleTracker(TrackingProvider):
         filter = {}
         experiment = experiment or self._experiment
         run = run or self._run
-        if experiment:
-            filter['data.experiment'] = experiment
-        if run:
-            filter['data.run'] = run
-        if event:
-            filter['data.event'] = event
-        if step:
-            filter['data.step'] = step
-        if key:
-            filter['data.key'] = key
+        valid = lambda s: s is not None and str(s).lower() != 'all'
+        op = lambda s: {'$in': list(s)} if isinstance(s, (list, tuple)) else s
+        if valid(experiment):
+            filter['data.experiment'] = op(experiment)
+        if valid(run):
+            filter['data.run'] = op(run)
+        if valid(event):
+            filter['data.event'] = op(event)
+        if valid(step):
+            filter['data.step'] = op(step)
+        if valid(key):
+            filter['data.key'] = op(key)
         data = self._store.get(self._data_name, filter=filter)
         data = pd.DataFrame.from_records(data) if data is not None and not raw else data
         return data
@@ -303,6 +328,62 @@ class OmegaSimpleTracker(TrackingProvider):
         elif data['format'] == 'metadata':
             meta = self._store._Metadata
             obj = meta.from_json(data['data'])
-        else:
+        elif data['format'] == 'dataset':
+            obj = self._store.get(data['data'])
+        elif data['format'] == 'model':
+            obj = self._model_store.get(data['data'])
+        elif data['format'] == 'pickle':
             obj = dill.loads(b64decode((data['data']).encode('utf8')))
+        else:
+            obj = data['data']
         return obj
+
+
+try:
+    from tensorflow import keras
+except:
+    warnings.warn("tensorflow.keras could not be imported. Tracking support for Tensorflow is disabled. ")
+else:
+    class TensorflowCallback(keras.callbacks.Callback):
+        # https://www.tensorflow.org/guide/keras/custom_callback
+        def __new__(cls, *args, **kwargs):
+            # generate methods as per specs
+            for action, phase in product(['train', 'test', 'predict'], ['begin', 'end']):
+                cls.wrap(f'on_{action}_{phase}', 'on_global')
+                cls.wrap(f'on_{action}_batch_{phase}', 'on_batch')
+            for phase in ['begin', 'end']:
+                cls.wrap(f'on_epoch_{phase}', 'on_epoch')
+            return super().__new__(cls)
+
+        def __init__(self, tracker):
+            self.tracker = tracker
+            self.model = None
+
+        def set_model(self, model):
+            self.tracker.log_artifact(model, 'model')
+
+        def set_params(self, params):
+            for k, v in params.items():
+                self.tracker.log_param(k, v)
+
+        def on_global(self, action, logs=None):
+            for k, v in logs.items():
+                self.tracker.log_metric(k, v)
+
+        def on_batch(self, action, batch, logs=None):
+            for k, v in logs.items():
+                self.tracker.log_metric(k, v, step=batch)
+
+        def on_epoch(self, action, epoch, logs=None):
+            for k, v in logs.items():
+                self.tracker.log_metric(k, v, step=epoch)
+
+        @classmethod
+        def wrap(cls, method, fn):
+            fn = getattr(cls, fn)
+
+            def inner(self, *args, **kwargs):
+                return fn(self, method, *args, **kwargs)
+
+            setattr(cls, method, inner)
+            return inner

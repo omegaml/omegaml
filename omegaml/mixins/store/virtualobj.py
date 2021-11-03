@@ -58,7 +58,7 @@ class VirtualObjectMixin(object):
             result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, **kwargs)
         return result
 
-    def drop(self, name, force=False, version=-1):
+    def drop(self, name, force=False, version=-1, **kwargs):
         if self._isvirtual(name):
             try:
                 handler = self._getvirtualobjfn(name)
@@ -69,5 +69,5 @@ class VirtualObjectMixin(object):
             else:
                 if result is False:
                     return False
-        return super(VirtualObjectMixin, self).drop(name, force=force)
+        return super(VirtualObjectMixin, self).drop(name, force=force, **kwargs)
 

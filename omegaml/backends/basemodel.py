@@ -83,7 +83,7 @@ class BaseModelBackend(BackendBaseCommon):
         # support new backend architecture while keeping back compatibility
         return self.put_model(obj, name, **kwargs)
 
-    def drop(self, name, force=False, version=-1):
+    def drop(self, name, force=False, version=-1, **kwargs):
         return self.model_store._drop(name, force=force, version=version)
 
     def _package_model(self, model, key, tmpfn, **kwargs):

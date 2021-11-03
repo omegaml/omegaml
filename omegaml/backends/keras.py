@@ -63,6 +63,8 @@ class KerasBackend(BaseModelBackend):
             if isinstance(Y, six.string_types):
                 valY = self.data_store.get(valY)
             keras_kwargs['validation_data'] = (valX, valY)
+        callbacks = keras_kwargs.setdefault('callbacks', [])
+        callbacks.append(self.tracking.experiment.tensorflow_callback())
         history = model.fit(X, Y, **keras_kwargs)
         meta = self.model_store.put(model, modelname, attributes={
             'history': serializable_history(history)

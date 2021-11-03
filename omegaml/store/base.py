@@ -637,7 +637,7 @@ class OmegaStore(object):
                                    attributes=attributes,
                                    objid=objid).save()
 
-    def drop(self, name, force=False, version=-1):
+    def drop(self, name, force=False, version=-1, **kwargs):
         """
         Drop the object
 
@@ -651,7 +651,7 @@ class OmegaStore(object):
         """
         backend = self.get_backend(name)
         if backend is not None:
-            return backend.drop(name, force=force, version=version)
+            return backend.drop(name, force=force, version=version, **kwargs)
         return self._drop(name, force=force, version=version)
 
     def _drop(self, name, force=False, version=-1):
@@ -761,7 +761,7 @@ class OmegaStore(object):
         """
         model_store = model_store or self
         data_store = data_store or self
-        meta = self.metadata(name)
+        meta = self.metadata(name) if name else None
         kind = kind or (meta.kind if meta is not None else None)
         backend = None
         if kind:

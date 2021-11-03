@@ -59,5 +59,5 @@ class BaseDataBackend(BackendBaseCommon):
         """
         return self.get(*args, lazy=True, **kwargs)
 
-    def drop(self, name, force=False, version=-1):
-        return self.data_store._drop(name, force=force, version=version)
+    def drop(self, name, force=False, version=-1, **kwargs):
+        return self.data_store._drop(name, force=force, version=version, **kwargs)

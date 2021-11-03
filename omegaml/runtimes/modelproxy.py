@@ -50,10 +50,14 @@ class OmegaModelProxy(object):
     def apply_require(self):
         meta = self.runtime.omega.models.metadata(self.modelname)
         assert meta is not None, "model {self.modelname} does not exist".format(**locals())
+        # get common require kwargs
         require_kwargs = meta.attributes.get('require', {})
-        if 'experiment' in meta.attributes:
+        # enable default model tracking, unless explicitly tracked
+        should_track = 'default' in meta.attributes.get('tracking', {})
+        already_tracked = '__experiment' in self.runtime._common_kwargs['task']
+        if not already_tracked and should_track:
             require_kwargs.update({
-                'task': dict(__experiment=meta.attributes.get('experiment'))
+                'task': dict(__experiment=meta.attributes['tracking'].get('default'))
             })
         self.runtime.require(**require_kwargs) if require_kwargs else None
 
