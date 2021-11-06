@@ -7,5 +7,5 @@
 -e ../django-tastypie-swagger
 -e ../tastypiex
 jupyterhub-kubespawner==0.12.0
-git+https://github.com/liftoff/pyminifier.git
+#git+https://github.com/liftoff/pyminifier.git
 

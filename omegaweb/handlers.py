@@ -10,7 +10,8 @@ from omegaops.tasks import deploy_user_service
 
 
 @receiver(pre_save, sender=User)
-def handle_username(sender, user, **kwargs):
+def handle_username(sender, instance, **kwargs):
+    user = instance
     # do not allow special characters in username
     if set(string.punctuation) & set(user.username):
         user.username = re.sub(f'[{string.punctuation}]', '', user.username)
