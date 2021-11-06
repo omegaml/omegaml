@@ -78,14 +78,35 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIsNone(data)
         # implicit tracking via metadata
         om.models.put(lr, 'mymodel', attributes={
-            'experiment': 'expfoo'
-        })
+            'tracking': {
+                'default': 'expfoo2',
+            }})
         om.runtime.model('mymodel').score(X, Y)
-        tracker = om.runtime.experiment('expfoo')
+        tracker = om.runtime.experiment('expfoo2')
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 4)
+
+    def test_tracking_predictions(self):
+        # create a model
+        om = self.om
+        iris = load_iris()
+        X = iris.data
+        Y = iris.target
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr.fit(X, Y)
+        om.models.put(lr, 'mymodel', attributes={
+            'tracking': {
+                'default': 'expfoo'
+            }
+        })
+        om.runtime.model('mymodel').predict(X)
+        tracker = om.runtime.experiment('expfoo')
+        exp = tracker.experiment
+        data = exp.data()
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 3)
 
     def test_empty_experiment_data(self):
         om = self.om
@@ -136,6 +157,78 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # no tracking, no data
         data = exp.data()
         self.assertIsNone(data)
+
+    def test_experiment_existing_model(self):
+        om = self.om
+        iris = load_iris()
+        X = iris.data
+        Y = iris.target
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        om.models.put(lr, 'foo')
+        with om.runtime.experiment('experiments/foo') as exp:
+            exp.log_metric(5, 'accuracy')
+        self.assertIn('experiments/foo', om.models.list())
+
+    def test_drop_experiment(self):
+        om = self.om
+        # create experiment, add some data
+        with om.runtime.experiment('foo') as exp:
+            exp.log_metric(5, 'accuracy')
+        self.assertEqual(len(exp.data()), 3)
+        # check experiment and data where created
+        self.assertIn('experiments/foo', om.models.list())
+        meta = om.models.metadata('experiments/foo')
+        dataset = meta.attributes.get('dataset')
+        self.assertIsNotNone(dataset)
+        self.assertIn(dataset, om.datasets.list(hidden=True))
+        self.assertIn('experiments/foo', om.models.list())
+        # add a metric, then clean
+        exp.log_metric(5, 'accuracy')
+        self.assertEqual(len(exp.data()), 4)
+        # explicit drop
+        om.models.drop('experiments/foo', data_store=om.datasets)
+        self.assertNotIn(dataset, om.datasets.list(hidden=True))
+        # no more data present
+        self.assertIsNone(exp.data())
+
+    def test_tensorflow_callback(self):
+        om = self.om
+        # fit locally
+        with om.runtime.experiment('myexp') as exp:
+            model, X, Y = self._create_model(exp.tensorflow_callback())
+        self.assertIsInstance(exp.data(), pd.DataFrame)
+        self.assertEqual(len(exp.data(key='loss')), 10)
+        self.assertEqual(len(exp.data(key='accuracy')), 10)
+        model_ = exp.restore_artifact('model')
+        self.assertIsInstance(model, type(model_))
+        # fit via runtime
+        om.models.put(model, 'mymodel')
+        with om.runtime.experiment('myexp2') as exp:
+            om.runtime.model('mymodel').fit(X, Y, epochs=1,
+                                            batch_size=128).get()
+        self.assertIsNotNone(exp.data())
+        self.assertEqual(len(exp.data(key='accuracy')), 10)
+
+    def _create_model(self, tracking_cb):
+        import numpy as np
+        from tensorflow import keras
+        from tensorflow.keras.optimizers import SGD
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Dense
+
+        x_train = np.random.random((1000, 20))
+        y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
+
+        model = Sequential()
+        model.add(Dense(10, activation='softmax', input_shape=x_train.shape))
+        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=sgd,
+                      metrics=['accuracy'])
+        model.fit(x_train, y_train,
+                  epochs=1,
+                  batch_size=128, callbacks=[tracking_cb])
+        return model, x_train, y_train
 
 
 if __name__ == '__main__':
