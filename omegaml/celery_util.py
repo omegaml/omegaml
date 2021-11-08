@@ -85,7 +85,18 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     def get_delegate(self, name, kind='models'):
         get_delegate_provider = getattr(self.om, kind)
-        return get_delegate_provider.get_backend(name, data_store=self.om.datasets, tracking=self.tracking)
+        self.enable_delegate_tracking(name, kind, get_delegate_provider)
+        result = get_delegate_provider.get_backend(name, data_store=self.om.datasets, tracking=self.tracking)
+        return result
+
+    def enable_delegate_tracking(self, name, kind, delegate_provider):
+        exp = self.tracking.experiment
+        meta = delegate_provider.metadata(name)
+        exp.log_artifact(meta, 'related')
+        tracking = meta.attributes.setdefault('tracking', {})
+        tracking['experiments'] = set(tracking.get('experiments', []) + [exp._experiment])
+        meta.save()
+        return meta
 
     @property
     def delegate_args(self):
@@ -97,12 +108,16 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def tracking(self):
-        kwargs = self.request.kwargs or {}
-        experiment = kwargs.get('__experiment', 'notrack')
-        tracker = self.om.runtime.experiment(experiment)
-        # we reuse the currently active run, i.e. with block will NOT call exp.start()
-        tracker.implied_run = False
-        return tracker
+        if not hasattr(self.request, '_om_tracking'):
+            self.request._om_tracking = None
+        if self.request._om_tracking is None:
+            kwargs = self.request.kwargs or {}
+            experiment = kwargs.pop('__experiment', 'notrack')
+            # we reuse implied_run=False to use the currently active run,
+            # i.e. with block will NOT call exp.start()
+            tracker = self.om.runtime.experiment(experiment, implied_run=False)
+            self.request._om_tracking = tracker
+        return self.request._om_tracking
 
     @property
     def logging(self):
