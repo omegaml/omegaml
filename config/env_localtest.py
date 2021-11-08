@@ -1,9 +1,12 @@
 import os
 
+from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
+
 from config.env_local import EnvSettings_Local
 
 
-class EnvSettings_LocalTest(EnvSettings_Local):
+class EnvSettings_LocalTest(Config_DjangoNoseTests,
+                            EnvSettings_Local):
     NOSE_ARGS = '--nologcapture --verbosity 2 -s'.split(' ')
 
     BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'

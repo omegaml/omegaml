@@ -73,6 +73,7 @@ setup(
         'dj_database_url',
         'six',
         'Flask<2',
+        'gunicorn>=19.7.1',
     ],
     dependency_links=[
     ],
