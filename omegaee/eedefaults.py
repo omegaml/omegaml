@@ -37,7 +37,7 @@ OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'b7b034f57d442e605ab91
 #: allow a task to use the local default configuration (potentially insecure)
 OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', False)
 #: is the worker considered inside the same cluster as the client
-OMEGA_WORKER_INCLUSTER = True
+OMEGA_WORKER_INCLUSTER = os.environ.get('OMGEA_WORKER_INCLUSTER', True)
 
 #: imports that the celery runtime will load dynamically
 OMEGA_CELERY_IMPORTS = ['omegaml',
@@ -55,6 +55,6 @@ OMEGA_MONGO_SSL_KWARGS = {
 OMEGA_BROKERAPI_URL = (os.environ.get('OMEGA_BROKERAPI_URL') or
                        'http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@localhost:15672')
 parsed = urlparse(OMEGA_BROKERAPI_URL)
-port = 5671 if OMEGA_USESSL and not OMEGA_WORKER_INCLUSTER else 5672
+port = 5671 if OMEGA_USESSL and (not OMEGA_WORKER_INCLUSTER or is_test_run) else 5672
 OMEGA_BROKER_HOST = '{}:{}'.format(parsed.hostname, port)
 
