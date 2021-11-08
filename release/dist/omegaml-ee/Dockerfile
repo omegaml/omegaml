@@ -11,5 +11,5 @@ RUN conda install -y --file /app/conda-requirements.txt && \
 RUN cd /app && \
     ls -1 *whl > /app/requirements.whl && \
     sed -i -r 's/^(landing.*)/\1\[all\]/g' /app/requirements.whl && \
-    pip install -U --no-cache-dir -r /app/requirements.whl -r /app/requirements.txt && \
+    pip install -U --no-cache-dir -r /app/requirements.whl && \
     rm *whl
