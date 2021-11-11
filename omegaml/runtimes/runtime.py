@@ -117,6 +117,30 @@ class OmegaRuntime(object):
         return self.celeryapp.control.inspect()
 
     def mode(self, local=None, logging=None):
+        """ specify runtime modes
+
+        Args:
+            local (bool): if True, all execution will run locally, else on
+               the configured remote cluster
+            logging (bool|str|tuple): if True, will set the root logger output
+               at INFO level; a single string is the name of the logger,
+               typically a module name; a tuple (logger, level) will select
+               logger and the level. Valid levels are INFO, WARNING, ERROR,
+               CRITICAL, DEBUG
+
+        Usage:
+            # run all runtime tasks locally
+            om.runtime.mode(local=True)
+
+            # enable logging both in local and remote mode
+            om.runtime.mode(logging=True)
+
+            # select a specific module and level)
+            om.runtime.mode(logging=('sklearn', 'DEBUG'))
+
+            # disable logging
+            om.runtime.mode(logging=False)
+        """
         if local is not None:
             self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
         if logging is not None:
