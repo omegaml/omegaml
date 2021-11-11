@@ -968,3 +968,7 @@ def tryOr(fn, else_fn):
         return fn()
     except:
         return else_fn() if callable(else_fn) else else_fn
+
+
+# https://stackoverflow.com/a/58466875/890242
+_raise = lambda ex: (_ for _ in ()).throw(ex)
