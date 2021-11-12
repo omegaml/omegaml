@@ -40,17 +40,16 @@ class OmegaLoggingHandler(logging.Handler):
     """
 
     def __init__(self, store, dataset, collection, level=None):
-        super().__init__()
         level = level or logging.INFO
+        super().__init__(level=level)
         self.store = store
         self.collection = collection
         self.dataset = dataset
-        self.setLevel(level)
 
     def emit(self, record):
-        log_entry = _make_record(record.levelname, record.levelno, record.name,
-                                 record.msg, text=self.format(record),
-                                 hostname=getattr(record, 'hostname', LOGGER_HOSTNAME))
+        log_entry = _make_log_entry(record.levelname, record.levelno, record.name,
+                                    record.msg, text=self.format(record),
+                                    hostname=getattr(record, 'hostname', LOGGER_HOSTNAME))
         self.collection.insert_one(log_entry)
 
     def tail(self, wait=False):
@@ -62,7 +61,7 @@ class OmegaLoggingHandler(logging.Handler):
         """
         Args:
             dataset (str): the name of the dataset
-            level (int): set any logging.INFO, logging.ERROR, logging.DEBUG, defaults to NOTSET
+            level (int): set any logging.INFO, logging.ERROR, logging.DEBUG, defaults to INFO
             size (int): maxium size in bytes (defaults to 1MB)
             target (Omega): omega instance to create the dataset in, defaults to the default om
             size (int): the maximum size of the log in bytes (capped), defaults to 1MB, set to -1
@@ -74,7 +73,7 @@ class OmegaLoggingHandler(logging.Handler):
         """
         import omegaml as om
         import logging
-        effective_level = logger.getEffectiveLevel() if logger else logging.NOTSET
+        effective_level = logger.getEffectiveLevel() if logger else logging.INFO
         logger_name = name or 'omegaml'
         level = level or effective_level
         store = store or om.setup().datasets
@@ -83,6 +82,7 @@ class OmegaLoggingHandler(logging.Handler):
         fmt = fmt or defaults.OMEGA_LOG_FORMAT
         # setup handler and logger
         logger = logger or logging.getLogger(logger_name)
+        logger.setLevel(level)
         collection = _setup_logging_dataset(store, dataset, logger=logger, size=size, reset=reset)
         formatter = logging.Formatter(fmt)
         handler = OmegaLoggingHandler(store, dataset, collection, level=level)
@@ -112,7 +112,7 @@ class OmegaSimpleLogger:
         df = om.logger.dataset.get() # returns a DataFrame of the log
 
         # filter on specific levels
-        df = om.logger.dataset.get(levelname='INFO')
+        df = om.logger.dataset.get(level='INFO')
 
         # tail the log
         om.logger.dataset.tail()
@@ -222,8 +222,8 @@ class OmegaSimpleLogger:
             return
         # insert a log message
         fmt = '{created} {level} {message}'
-        log_entry = _make_record(level, levelno, self._name, message, fmt=fmt,
-                                 hostname=LOGGER_HOSTNAME)
+        log_entry = _make_log_entry(level, levelno, self._name, message, fmt=fmt,
+                                    hostname=LOGGER_HOSTNAME)
         self.collection.insert_one(log_entry)
 
     def info(self, message, **kwargs):
@@ -363,17 +363,18 @@ class TailableLogDataset:
         return stdout
 
 
-def _make_record(level, levelno, name, message, text=None, fmt='{message}', hostname=None):
+def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', hostname=None):
     from datetime import datetime
     created = datetime.utcnow()
     text = text if text is not None else fmt.format(**locals())
     hostname = hostname or LOGGER_HOSTNAME
     return {
-        'levelname': level,
+        'level': level,
         'levelno': levelno,
-        'name': name,
+        'logger': name,
         'msg': message,
         'text': text,
+        'hostname': hostname,
         'created': created,
     }
 
@@ -391,7 +392,7 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
     store.put(collection, dsname)
     if collection.estimated_document_count() == 0:
         # initialize. we insert directly into the collection because the logger instance is not set up yet
-        record = _make_record('SYSTEM', 999, 'system', 'log init', 'log init')
+        record = _make_log_entry('SYSTEM', 999, 'system', 'log init', 'log init')
         collection.insert_one(record)
         store.mongodb.command('convertToCapped', collection.name, size=size)
     # ensure indexed

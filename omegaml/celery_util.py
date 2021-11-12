@@ -1,3 +1,5 @@
+import sys
+
 import six
 from celery import Task
 from contextlib import contextmanager
@@ -5,6 +7,7 @@ from kombu.serialization import registry
 from kombu.utils import cached_property
 
 from omegaml.store.logging import OmegaLoggingHandler
+from omegaml.util import tryOr
 
 
 class EagerSerializationTaskMixin(object):
@@ -125,30 +128,45 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         logging = kwargs.pop('__logging', False)
         if isinstance(logging, tuple):
             logname, level = logging
+            if logname is True:
+                logname = 'root'
+        elif isinstance(logging, str):
+            if logging.lower() in ('info', 'warn', 'fatal', 'error', 'debug', 'critical'):
+                logname, level = 'root', logging.upper()
+            else:
+                logname, level = logging, 'INFO'
+        elif logging is True:
+            logname, level = 'root', 'INFO'
         else:
-            logname, level = logging, 'INFO'
-        logname = 'omegaml' if logging is True else logname
+            logname, level = None, 'NOTSET'
         return logname, level
 
     def __call__(self, *args, **kwargs):
+        import logging
         @contextmanager
         def task_logging():
             logname, level = self.logging
             if logname:
-                logger = self.app.log.get_default_logger(name=logname)
-                self.app.log.redirect_stdouts(name=logger, loglevel=level)
+                self.om.logger.setLevel(level)
+                logger = logging.getLogger(name=logname if logname != 'root' else None)
+                logger.setLevel(level)
+                save_stdout, save_stderr = sys.stdout, sys.stderr
+                self.app.log.redirect_stdouts_to_logger(logger, loglevel=level)
                 handler = OmegaLoggingHandler.setup(store=self.om.datasets,
                                                     logger=logger,
                                                     exit_hook=True,
                                                     level=level)
-                logger.setLevel(level)
             else:
                 logger = None
             try:
                 yield
             finally:
                 if logger:
-                    del logger.handlers[logger.handlers.index(handler)]
+                    handler.flush()
+                    handler.close()
+                    logger.removeHandler(handler)
+                    # reset stdout redirects
+                    sys.stdout, sys.stderr = save_stdout, save_stderr
 
         with task_logging():
             with self.tracking as exp:

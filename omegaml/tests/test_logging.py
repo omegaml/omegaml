@@ -29,7 +29,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         logger.critical('critical message')
         for level in OmegaSimpleLogger.levels:
             expected = 1 if level != 'QUIET' else 0
-            df = logger.dataset.get(levelname=level)
+            df = logger.dataset.get(level=level)
             self.assertTrue(len(df) == expected, 'level {} did not have a record'.format(level))
             if expected:
                 # msg contains the exact message as passed in
@@ -44,9 +44,9 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         logger.setLevel('INFO')
         logger.info('info message')
         logger.debug('error message')
-        df = logger.dataset.get(levelname='DEBUG')
+        df = logger.dataset.get(level='DEBUG')
         self.assertTrue(len(df) == 0)
-        df = logger.dataset.get(levelname='INFO')
+        df = logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 1)
 
     def test_simple_logger_quiet(self):
@@ -56,11 +56,11 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         logger.setLevel('QUIET')
         logger.error('info message')
         logger.debug('error message')
-        df = logger.dataset.get(levelname='INFO')
+        df = logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 1)
-        df = logger.dataset.get(levelname='DEBUG')
+        df = logger.dataset.get(level='DEBUG')
         self.assertTrue(len(df) == 0)
-        df = logger.dataset.get(levelname='ERROR')
+        df = logger.dataset.get(level='ERROR')
         self.assertTrue(len(df) == 0)
 
     def test_loghandler(self):
@@ -77,7 +77,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         pylogger.handlers.remove(handler)
         # msg contains the exact message as passed in
         for level in ['INFO', 'ERROR', 'WARNING', 'DEBUG']:
-            df = omlogger.dataset.get(filter=dict(levelname=level, name='root'))
+            df = omlogger.dataset.get(filter=dict(level=level, logger='root'))
             expected = 1
             self.assertEqual(len(df), expected, 'expected 1 message for level {}'.format(level))
             if expected:
@@ -97,15 +97,15 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertNotEqual(logger, self.om.logger)
         self.assertNotEqual(logger.name, self.om.logger.name)
         logger.info('foo')
-        df = logger.dataset.get(levelname='INFO')
+        df = logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 1)
-        self.assertEqual(df.iloc[0]['name'], 'foo')
+        self.assertEqual(df.iloc[0]['logger'], 'foo')
         # change logger name of the default logger
         self.om.logger.name = 'myname'
         self.om.logger.info('foo')
-        df = self.om.logger.dataset.get(filter=dict(levelname='INFO', name='myname'))
+        df = self.om.logger.dataset.get(filter=dict(level='INFO', logger='myname'))
         self.assertTrue(len(df) == 1)
-        self.assertEqual(df.iloc[-1]['name'], 'myname')
+        self.assertEqual(df.iloc[-1]['logger'], 'myname')
 
     def test_python_logger_capture(self):
         om = self.om
@@ -113,12 +113,12 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         # -- expect message is not in om logger dataset
         logger = logging.getLogger('mytestlogger')
         logger.info('foo')
-        df = om.logger.dataset.get(levelname='INFO')
+        df = om.logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 0)
         # -- capture python logger
         # -- expect message is in om logger dataset
         with om.logger.capture(logger):
             logger.info('foo')
-        df = om.logger.dataset.get(levelname='INFO')
+        df = om.logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 1)
 

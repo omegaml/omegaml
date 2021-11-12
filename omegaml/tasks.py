@@ -118,11 +118,12 @@ def omega_ping(task, *args, logging=False, **kwargs):
         import logging as logmod
         pylevel = getattr(logmod, level)
         # test omega, task and package level loggers
+        om.logger.setLevel(level)
         om.logger.log(level, f'omega log: running ping task {data}')
         task_logger = task.app.log.get_default_logger()
         task_logger.log(pylevel, f'python log: running ping task {data}')
         package_logger = task.app.log.get_default_logger('omegaml')
-        package_logger.log(pylevel, f'omegaml log: running ping task {data}')
+        package_logger.log(pylevel, f'package log: running ping task {data}')
         print(f"print log: running ping task {data}")
     return data
 
