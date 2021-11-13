@@ -49,8 +49,8 @@ function setup() {
 function install() {
     activate_conda
     conda install -y --file conda-requirements.txt
-    pip install --progress-bar off -e $omegamlcore_dir[all]
-    pip install --progress-bar off -e $omegamlee_dir[all]
+    pip install --progress-bar off -e $omegamlcore_dir[client,dev]
+    pip install --progress-bar off -e $omegamlee_dir[all,dev]
     pip install --progress-bar off -U -r requirements.dev
 }
 

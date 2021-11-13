@@ -54,6 +54,8 @@ if [[ $singleuser ]]; then
     fi
     cd $APPBASE/.jupyter
     nohup honcho -d $APPBASE start worker >> worker.log 2>&1 &
+    # ensure USER_SITE exists, otherwise it is not in sys.path
+    mkdir -p $(python -m site --user-site)
     jupyter serverextension enable jupyterlab
     jupyterhub-singleuser --ip $ip --port $port --allow-root $jydebug
 else

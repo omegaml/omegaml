@@ -3,7 +3,7 @@
 # see https://github.com/chronoxor/gil
 # format:
 # name relpath git-repo-url branch
-omegaml ../omegaml-ce https://github.com/omegaml/omegaml tracking-metadata-link
+omegaml ../omegaml-ce https://github.com/omegaml/omegaml master
 cloudmgr ../omegaml-deploy/cloudmgr https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr 1.1.3
 stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable 0.4
 landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage add-secrets

@@ -55,6 +55,6 @@ OMEGA_MONGO_SSL_KWARGS = {
 OMEGA_BROKERAPI_URL = (os.environ.get('OMEGA_BROKERAPI_URL') or
                        'http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@localhost:15672')
 parsed = urlparse(OMEGA_BROKERAPI_URL)
-port = 5671 if OMEGA_USESSL and (not OMEGA_WORKER_INCLUSTER or is_test_run) else 5672
+port = 5671 if OMEGA_USESSL else 5672
 OMEGA_BROKER_HOST = '{}:{}'.format(parsed.hostname, port)
 

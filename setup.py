@@ -7,35 +7,23 @@ dev_deps = [
     'django-nose==1.4.7',
     'mock==3.0.5',
     'behave==1.2.6',
-    'jupyterhub',
     'selenium==3.141.0',
     'splinter==0.11.0',
     'ipdb==0.13.2',
-    'jupyterhub-simplespawner==0.1',
     'gil',
     'sphinx-django-command',
     'bumpversion',
     'sphinx_rtd_theme',
 ]
 
-web_deps = [
-   'Django==2.2',
-   'honcho==1.0.1',
-   'gunicorn==19.7.1',
-   'pyrabbit2==1.0.7',
-]
-
 jupyter_deps = [
     'jupyterhub-kubespawner==0.12.0', # required or only dev
     'jupyterhub==1.0.0',  # required or only dev?
     'jupyter-client>=4.1.1',
+    'jupyterhub-simplespawner==0.1',
 ]
 
-airbrake_deps = [
-    'pybrake',
-]
-
-all_deps = web_deps + jupyter_deps + dev_deps + airbrake_deps
+all_deps = [] + jupyter_deps
 
 from omegaee._version import version
 
@@ -64,16 +52,14 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'omegaml>=0.13.4',
-        'croniter>=0.3.30',
-        'appdirs==1.4.3',
-        'cron-descriptor==1.2.24',
+        'Django==2.2',
+        'honcho==1.0.1',
+        'pyrabbit2==1.0.7',
         'cachetools',
-        'celery>4,<=4.2.1',
         'dj_database_url',
-        'six',
-        'Flask<2',
         'gunicorn>=19.7.1',
+        'omegaml>=0.13.4',
+
     ],
     dependency_links=[
     ],

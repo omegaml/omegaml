@@ -1,9 +1,7 @@
 # keep shippable happy
--e ../minibatch[all]
--e ../omegaml-ce[all]
+-e ../omegaml-ce[client]
 -e ../stackable
 -e ../landingpage[paasdeploy]
-# -e ../ccbackend
 -e ../django-tastypie-swagger
 -e ../tastypiex
 jupyterhub-kubespawner==0.12.0

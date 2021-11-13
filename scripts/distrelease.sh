@@ -12,6 +12,7 @@
 ##    --dockertag       docker image tag. defaults to $dockertag
 ##    --makebase        re-create the base image
 ##    --nolivetest      do not run a livetest
+##    --nodist          do not build dist files
 ##
 ##
 
@@ -46,85 +47,87 @@ if ! [[ -z $nominify ]]; then
 fi
 msgfile=$distdir/.messages
 
-# message container
-echo "[INFO] Starting build of $distname (version=$version nominify=$nominify nodocker=$nodocker)" > $msgfile
+if [[ -z $nodist ]]; then
+  # message container
+  echo "[INFO] Starting build of $distname (version=$version nominify=$nominify nodocker=$nodocker)" > $msgfile
 
-# prepare, cleanup
-for fn in "*zip" "*whl" "*tgz" "*tar" "*tar.gz"
-do
-    find . -name $fn | xargs rm -rf
-done
-rm -rf $distdir/build
-rm -rf $distdir/docker-staging
+  # prepare, cleanup
+  for fn in "*zip" "*whl" "*tgz" "*tar" "*tar.gz"
+  do
+      find . -name $fn | xargs rm -rf
+  done
 
-# clean requirements
-$script_dir/consolidate-requirements.py -w pip-requirements.txt
+  rm -rf $distdir/build
+  # clean requirements
+  $script_dir/consolidate-requirements.py -w pip-requirements.txt
 
-# build
-$release $use_nominify --source .
-$release $use_nominify --source ../landingpage
-$release $use_nominify --source ../stackable
-$release $use_nominify --source ../django-tastypie-swagger
-#$release $use_nominify --source ../ccbackend
-$release $use_nominify --source ../tastypiex
-$release $use_nominify --source ../omegaml-deploy/cloudmgr
-#$release $use_nominify --source ../minibatch
-$release $use_nominify --source ../omegaml-ce
+  # build
+  $release $use_nominify --source .
+  $release $use_nominify --source ../landingpage
+  $release $use_nominify --source ../stackable
+  $release $use_nominify --source ../django-tastypie-swagger
+  #$release $use_nominify --source ../ccbackend
+  $release $use_nominify --source ../tastypiex
+  $release $use_nominify --source ../omegaml-deploy/cloudmgr
+  #$release $use_nominify --source ../minibatch
+  $release $use_nominify --source ../omegaml-ce
 
-# repackage into one zip file
-pushd $distdir
-unzip landingpage.zip "*whl"
-unzip stackable.zip "*whl"
-unzip django-tastypie-swagger.zip "*whl"
-#unzip ccbackend.zip "*whl"
-unzip tastypiex.zip "*whl"
-unzip omegaml.zip "*whl"
-unzip minibatch.zip "*whl"
-unzip omegaml-ce.zip "*whl"
-unzip cloudmgr.zip "*whl"
-rm -rf ./docs
-unzip omegaml.zip "docs/*"
-zip -r $releasezip *whl docs
-popd
+  # repackage into one zip file
+  pushd $distdir
+  unzip landingpage.zip "*whl"
+  unzip stackable.zip "*whl"
+  unzip django-tastypie-swagger.zip "*whl"
+  #unzip ccbackend.zip "*whl"
+  unzip tastypiex.zip "*whl"
+  unzip omegaml.zip "*whl"
+  unzip minibatch.zip "*whl"
+  unzip omegaml-ce.zip "*whl"
+  unzip cloudmgr.zip "*whl"
+  rm -rf ./docs
+  unzip omegaml.zip "docs/*"
+  zip -r $releasezip *whl docs
+  popd
 
-# add requirements and stuff
-pushd $distdir
-cp $sourcedir/conda-requirements.txt .
-cp $sourcedir/pip-requirements.txt ./requirements.txt
-cp $sourcedir/Procfile .
-cp $sourcedir/README.rst .
-cp $sourcedir/LICENSE .
-cp $sourcedir/NOTICE .
-cp $sourcedir/THIRDPARTY .
-cp $sourcedir/manage.py .
-cp -r $sourcedir/app .
-cp -r $sourcedir/config .
-cp -r $sourcedir/scripts .
-cp -r $sourcedir/release/dist/omegaml-dev/etc/ ./etc-dev
-zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev app config
-popd
+  # add requirements and stuff
+  pushd $distdir
+  cp $sourcedir/conda-requirements.txt .
+  cp $sourcedir/pip-requirements.txt ./requirements.txt
+  cp $sourcedir/Procfile .
+  cp $sourcedir/README.rst .
+  cp $sourcedir/LICENSE .
+  cp $sourcedir/NOTICE .
+  cp $sourcedir/THIRDPARTY .
+  cp $sourcedir/manage.py .
+  cp -r $sourcedir/app .
+  cp -r $sourcedir/config .
+  cp -r $sourcedir/scripts .
+  cp -r $sourcedir/release/dist/omegaml-dev/etc/ ./etc-dev
+  zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev app config
+  popd
 
-# add distribution files
-pushd $distdir
-for d in $sourcedir/release/dist/_global_ $sourcedir/release/dist/$distname
-do
- if [[ -d $d ]]; then
-   echo "[INFO] Adding distribution files from $d" >> $msgfile
-   pushd $d
-   zip -r $releasezip *
-   popd
- fi
-done
-popd
-echo "[INFO] Release built in $releasezip" >> $msgfile
+  pushd $distdir
+  for d in $sourcedir/release/dist/_global_ $sourcedir/release/dist/$distname
+  do
+   if [[ -d $d ]]; then
+     echo "[INFO] Adding distribution files from $d" >> $msgfile
+     pushd $d
+     zip -r $releasezip *
+     popd
+   fi
+  done
+  popd
+  echo "[INFO] Release built in $releasezip" >> $msgfile
+fi
 
 # build docker image from release zip
 if [[ -z $nodocker ]]; then
+  rm -rf $distdir/docker-staging
+
   mkdir -p $distdir/docker-staging
   pushd $distdir/docker-staging
   unzip $releasezip -d build
   pushd build
-  docker-compose down
+  docker-compose down --volumes
   docker images | grep "$dockertag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
 
   if [[ ! -z $makebase ]]; then
