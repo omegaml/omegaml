@@ -1,6 +1,7 @@
 import joblib
 
 from omegaml.backends.basecommon import BackendBaseCommon
+from omegaml.util import reshaped
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -164,7 +165,18 @@ class BaseModelBackend(BackendBaseCommon):
         :param kwargs: kwargs passed to the model's predict method
         :return: return the predicted outcome
         """
-        raise NotImplementedError
+        model = self.model_store.get(modelname)
+        data = self.data_store.get(Xname)
+        if not hasattr(model, 'predict'):
+            raise NotImplementedError
+        result = model.predict(reshaped(data))
+        if pure_python:
+            result = result.tolist()
+        if rName:
+            meta = self.data_store.put(result, rName)
+            result = meta
+        return result
+
 
     def predict_proba(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):

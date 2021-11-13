@@ -21,7 +21,7 @@ class PythonRawFileBackend(BaseDataBackend):
         is_filelike = hasattr(obj, 'read')
         open_kwargs = dict(open_kwargs or {})
         if kwargs.get('kind') == self.KIND:
-            is_filelike = self._is_openable(obj, **open_kwargs)
+            is_filelike = self._is_openable(self, obj, **open_kwargs)
         return is_filelike or self._is_path(self, obj)
 
     def _is_openable(self, obj, **kwargs):
