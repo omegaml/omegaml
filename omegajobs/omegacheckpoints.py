@@ -20,6 +20,8 @@ class OmegaStoreContentsCheckpoints(GenericCheckpointsMixin, Checkpoints):
         Returns a checkpoint model for the new checkpoint.
         """
         coll = self.parent.store.collection('{}.ckp'.format(path))
+        # FIXME transform content into base64, or store as a file
+        #       this is because content can contain keys with . which are not supported by mongodb
         checkpoint = {
             'path': path,
             'last_modified': datetime.datetime.utcnow(),

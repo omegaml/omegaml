@@ -1,6 +1,6 @@
 import os
 
-from omegajobs.omegacheckpoints import OmegaStoreContentsCheckpoints
+from omegaml.notebook.checkpoints import NoOpCheckpoints
 from omegaml.notebook.omegacontentsmgr import OmegaStoreContentsManager
 
 
@@ -14,7 +14,8 @@ class OmegaStoreAuthenticatedContentsManager(OmegaStoreContentsManager):
     """
 
     def _checkpoints_class_default(self):
-        return OmegaStoreContentsCheckpoints
+        return NoOpCheckpoints
+        # return OmegaStoreContentsCheckpoints
 
     @property
     def omega(self):

@@ -51,7 +51,7 @@ services:
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
    apphub:
-      image: omegaml/apphub:latest
+      image: omegaml/apphub:0.3.2-dev13
       container_name: apphub
       hostname: apphub
       links:
