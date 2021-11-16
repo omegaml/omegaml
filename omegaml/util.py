@@ -84,7 +84,36 @@ def is_spark_mllib(obj):
 
 
 def settings(reload=False):
-    """ wrapper to get omega settings from either django or omegaml.defaults """
+    """ wrapper to get omega settings from either django or omegaml.defaults
+
+    This is a settings (defaults) loader. It returns a cached DefaultsContext
+    that is initialised from omegaml.defaults. When running in Django, the
+    Django settings will be used to override omegaml.defaults values.
+
+    Usage:
+        # on first call, intialise a DefaultsContext
+        # on subsequent calls, return this DefaultsContext as is
+        defaults = settings()
+
+        # reload DefaultsContext from environment
+        defaults = settings(reload=True)
+
+        Note reload=True is 2.5x slower than reload=False. You should only
+        reload=True if you need to ensure a fresh environment is loaded, e.g.
+        when switching users in the same python process.
+
+        %timeit settings()
+        490 ns ± 13.1 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+        %timeit settings(reload=True)
+        1.31 ms ± 10.7 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+    Caution:
+        If your code uses DefaultsContext based on user configuration you MUST
+        ensure to call settings(reload=True) before switching the configuration.
+        Not doing so risks leaking information from the old user configuration
+        to the new.
+    """
     from omegaml import _base_config as omdefaults
     global __settings
     if not reload and __settings is not None:

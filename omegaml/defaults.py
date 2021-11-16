@@ -43,7 +43,7 @@ OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
                 'amqp://admin:foobar@localhost:5672//')
 #: is the worker considered inside the same cluster as the client
-OMEGA_WORKER_INCLUSTER = truefalse(os.environ.get('OMEGA_WORKER_INCLUSTER', False))
+OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', False))
 #: (deprecated) the collection used to store ipython notebooks
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
@@ -196,7 +196,8 @@ def update_from_env(vars=globals()):
     # simple override from env vars
     # -- top-level OMEGA_*
     for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
-        vars[k] = os.environ.get(k, None) or vars[k]
+        nv = os.environ.get(k, None) or vars[k]
+        vars[k] = (truefalse(nv) if isinstance(vars[k], bool) else nv)
     # -- OMEGA_CELERY_CONFIG updates
     for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')

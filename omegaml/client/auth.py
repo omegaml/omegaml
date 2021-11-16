@@ -98,7 +98,7 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
                 userid, apikey, qualifier = auth
                 # by default assume worker is in cluster
                 # TODO refactor this setting to eedefaults
-                view = defaults.OMEGA_WORKER_INCLUSTER
+                view = defaults.OMEGA_SERVICES_INCLUSTER
                 om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier, view=view)
             else:
                 raise ValueError(
