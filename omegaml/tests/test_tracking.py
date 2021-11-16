@@ -67,8 +67,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(exp, OmegaSimpleTracker)
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 1)
-        self.assertEqual(data.iloc[-1]['key'], 'accuracy')
-        self.assertEqual(data.iloc[-1]['value'], score)
+        self.assertEqual(data.iloc[0]['key'], 'accuracy')
+        self.assertEqual(data.iloc[0]['value'], score)
         # get back the tracker as an object
         tracker = om.models.get('experiments/myexp', raw=True, data_store=om.datasets)
         self.assertIsInstance(tracker, OmegaSimpleTracker)
@@ -140,12 +140,12 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
                 'default': 'expfoo'
             }
         })
-        om.runtime.model('mymodel').predict(X)
+        om.runtime.model('mymodel').score(X, Y)
         tracker = om.runtime.experiment('expfoo')
         exp = tracker.experiment
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 5)
+        self.assertEqual(len(data), 6)
 
     def test_empty_experiment_data(self):
         om = self.om
@@ -154,7 +154,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = om.models.get('experiments/myexp', data_store=om.datasets)
         # we have at least a 'system' event
         self.assertEqual(len(exp.data(event='metric')), 0)
-        self.assertEqual(len(exp.data()), 3)  # start and stop events
+        self.assertEqual(len(exp.data()), 3)  # system, start, stop events
 
     def test_experiment_explicit_logging(self):
         om = self.om
@@ -288,6 +288,19 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertGreaterEqual(len(data), 10)
         xexp = om.runtime.experiment('proftest')
         self.assertIsInstance(xexp.experiment, OmegaProfilingTracker)
+
+    def test_track_then_notracking(self):
+        # test experiments are stopped afterwards
+        om = self.om
+        # start an experiment
+        with om.runtime.experiment('myexp') as exp:
+            pass
+        exp = om.models.get('experiments/myexp', data_store=om.datasets)
+        # check that it is removed afterwards
+        om.runtime.ping()
+        self.assertEqual(len(exp.data(event='metric')), 0)
+        self.assertEqual(len(exp.data()), 3)  # includes system, start, stop
+
 
 if __name__ == '__main__':
     unittest.main()

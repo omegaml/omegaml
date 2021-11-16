@@ -701,12 +701,14 @@ def ensure_json_serializable(v):
         return v.flatten().tolist()
     if isinstance(v, pd.Series):
         return ensure_json_serializable(v.to_dict())
+    elif isinstance(v, range):
+        v = list(v)
     elif isinstance(v, dict):
         vv = {
             k: ensure_json_serializable(v)
             for k, v in six.iteritems(v)
         }
-        return vv
+        v = vv
     return v
 
 
@@ -956,6 +958,8 @@ class MongoEncoder(json.JSONEncoder):
             return obj.isoformat()
         elif isinstance(obj, bytes):
             return b64encode(obj).decode('utf8')
+        elif isinstance(obj, range):
+            return list(obj)
         return json.JSONEncoder.default(self, obj)
 
 

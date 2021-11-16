@@ -513,7 +513,7 @@ class OmegaStore(object):
         # ensure column names to be strings
         obj.columns = stored_columns
         # create mongon indicies for data frame index columns
-        df_idxcols = [col for col in obj.columns if col.startswith('_idx')]
+        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             ensure_index(collection, keys, **idx_kwargs)

@@ -464,7 +464,7 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
 try:
     from tensorflow import keras
 except:
-    warnings.warn("tensorflow.keras could not be imported. Tracking support for Tensorflow is disabled. ")
+    pass
 else:
     class TensorflowCallback(keras.callbacks.Callback):
         # https://www.tensorflow.org/guide/keras/custom_callback

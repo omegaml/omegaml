@@ -281,7 +281,7 @@ class OmegaJobs(BackendBaseCommon):
                 cp = ClearOutputPreprocessor()
                 cp.preprocess(notebook, resources)
             ep = ExecutePreprocessor(**ep_kwargs)
-            ep.preprocess(notebook, {'metadata': {'path': '/'}})
+            ep.preprocess(notebook, {'metadata': {'path': '.'}})
         except Exception as e:
             status = 'ERROR'
             message = str(e)

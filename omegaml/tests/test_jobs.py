@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
-from datetime import timedelta
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import gridfs
+import os
+from datetime import timedelta
 from nbformat import v4
 
 from omegaml import Omega
@@ -529,3 +530,74 @@ class JobTests(TestCase):
         self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
         sched = JobSchedule('every 4 hours, at 0 minutes, Monday through Friday')
         self.assertEqual(sched.text, 'Every 4 hours, Monday through Friday')
+
+    def test_export_job_html(self):
+        """
+        test export a job to HTML
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjob-html')
+        om.jobs.run('testjob-html')
+        # get results and output
+        meta = om.jobs.metadata('testjob-html')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.html'
+        om.jobs.export(resultnb_name, outpath)
+        self.assertTrue(os.path.exists(outpath))
+
+    def test_export_job_slides(self):
+        """
+        test export a job to slides HTML (reveal.js)
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook with slides
+        # see https://github.com/jupyter/nbconvert/blob/master/nbconvert/templates/html/slides_reveal.tpl#L1:14
+        cells = []
+        code = "print('slide 1')"
+        cells.append(v4.new_markdown_cell('Slide 1', metadata=dict(slide_start=True)))
+        cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
+        code = "print('slide 2')"
+        cells.append(v4.new_markdown_cell('Slide 2', metadata=dict(slide_start=True)))
+        cells.append(v4.new_code_cell(source=code))
+        cells.append(v4.new_markdown_cell('***', metadata=dict(slide_end=True)))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjob-html')
+        om.jobs.run('testjob-html')
+        # get results and output
+        meta = om.jobs.metadata('testjob-html')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.html'
+        om.jobs.export(resultnb_name, outpath, format='slides')
+        self.assertTrue(os.path.exists(outpath))
+
+    @skip("require pdf latex to run which is not installed in base image")
+    def test_export_job_pdf(self):
+        """
+        test export a job to PDF
+        """
+        fs = self.fs
+        om = self.om
+        # create a notebook
+        cells = []
+        code = "print('hello')"
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        # put and run the notebook
+        meta = om.jobs.put(notebook, 'testjobx')
+        om.jobs.run('testjobx')
+        # get results and output
+        meta = om.jobs.metadata('testjobx')
+        resultnb_name = meta.attributes['job_results'][0]
+        outpath = '/tmp/test.pdf'
+        om.jobs.export(resultnb_name, outpath, 'pdf')
+        self.assertTrue(os.path.exists(outpath))

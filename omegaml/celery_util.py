@@ -115,11 +115,14 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             self.request._om_tracking = None
         if self.request._om_tracking is None:
             kwargs = self.request.kwargs or {}
-            experiment = kwargs.pop('__experiment', 'notrack')
-            # we reuse implied_run=False to use the currently active run,
-            # i.e. with block will NOT call exp.start()
-            tracker = self.om.runtime.experiment(experiment, implied_run=False)
-            self.request._om_tracking = tracker
+            experiment = kwargs.pop('__experiment', None)
+            if experiment is not None:
+                # we reuse implied_run=False to use the currently active run,
+                # i.e. with block will NOT call exp.start()
+                tracker = self.om.runtime.experiment(experiment, implied_run=False)
+                self.request._om_tracking = tracker
+            else:
+                self.request._om_tracking = self.om.runtime.experiment('.notrack', provider='notrack')
         return self.request._om_tracking
 
     @property
