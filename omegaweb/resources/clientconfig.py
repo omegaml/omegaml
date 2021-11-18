@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
+from tastypie.authentication import ApiKeyAuthentication
 from tastypie.fields import DictField
 from tastypie.resources import Resource
-from tastypie.authentication import ApiKeyAuthentication
+
 from omegaops import get_client_config
-from tastypiex.selfauth import SelfAuthorization
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
