@@ -27,7 +27,7 @@ class OmegaNotebookSpawnerMixin:
         if reload or self._omega_configs is None:
             self.log.info("*** requesting config for user {}".format(self.user.name))
             from omegaml import settings
-            defaults = settings()
+            defaults = settings(reload=True)
             admin_user = defaults.OMEGA_JYHUB_USER
             admin_apikey = defaults.OMEGA_JYHUB_APIKEY
             api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
@@ -69,7 +69,7 @@ class OmegaNotebookSpawnerMixin:
 
         configs = self._get_omega_config()
 
-        defaults = settings()
+        defaults = settings(reload=True)
         admin_user = defaults.OMEGA_JYHUB_USER
         admin_apikey = defaults.OMEGA_JYHUB_APIKEY
         api_auth = OmegaRestApiAuth(admin_user, admin_apikey)

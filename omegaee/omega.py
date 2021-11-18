@@ -154,7 +154,7 @@ def make_enterprise():
                 authenticted Omega instance
         """
         from omegaml import settings, load_class
-        task_kwargs = task.request.kwargs
+        task_kwargs = task.request.kwargs or {} # request.kwargs can be None
         auth = task_kwargs.pop('__auth', None)
         defaults = settings()
         auth_env = load_class(defaults.OMEGA_AUTH_ENV)

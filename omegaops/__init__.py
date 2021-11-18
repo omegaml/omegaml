@@ -1,7 +1,21 @@
 import json
 
 from omegaml.mongoshim import MongoClient
-from omegaml.util import urlparse, settings as get_settings, markup, dict_merge
+from omegaml.util import urlparse, markup, dict_merge
+
+
+def get_settings():
+    # FIXME we need to move all per-session configurations into constance
+    # always reload settings since we might run in a different user context each time
+    # -- not reloading can interfere in user sessions
+    #    e.g. first call requests view=False => settings.OMEGA_MONGO_URL is set to external host (correct)
+    #         next call requests view=True => settings.OMEGA_MONGO_URL is used as the basis for the internal host (correct)
+    #         however, if we don't reload=True on each request, the first requests leaks through to the second,
+    #         i.e. OMEGA_MONGO_URL is the public host and is then used as the internal host
+    #         this only happens when subsequent requests are processed in the same python process, which
+    #         however is common for omegaops(!)
+    from omegaml.util import settings
+    return settings(reload=True)
 
 
 # note no global imports from Django to avoid settings sequence issue
@@ -660,7 +674,8 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
                 'mongopassword': qualifier_settings.get('mongopassword'),
                 'mongodbname': qualifier_settings.get('mongodbname'),
                 'brokerhost': broker_host_ext,
-                'brokerhost.in': qualifier_settings.get('brokerhost.in') or broker_defaults.netloc,
+                'brokerhost.in': qualifier_settings.get(
+                'brokerhost.in') or f'{broker_defaults.host}:{broker_defaults.port}',
                 'brokeruser': qualifier_settings.get('brokeruser', broker_defaults.username),
                 'brokerpassword': qualifier_settings.get('brokerpassword', broker_defaults.password),
                 'brokervhost': qualifier_settings.get('brokervhost', sanitize_vhost(broker_defaults.path)),

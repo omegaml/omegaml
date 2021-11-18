@@ -22,7 +22,7 @@ def get_omega_for_user(user, qualifier=None, view=False):
 
     # this is the server-side equivalent of omegaml.client.userconf.get_omega_from_apikey
     # note however we don't load any frameworks as omegaweb is supposed to use the runtime
-    defaults = settings(reload=False)
+    defaults = settings()
     config = get_client_config(user, qualifier=qualifier, view=view)
     _base_config.update_from_dict(config, attrs=defaults)
     _base_config.update_from_config(defaults)
