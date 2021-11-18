@@ -345,7 +345,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             'C': [0.1, 0.5, 1.0]
         }
         # gridsearch on runtimes
-        om.runtime.model('logreg').gridsearch(X, y, parameters=params)
+        om.runtime.model('logreg').gridsearch(X, y, parameters=params).get()
         meta = om.models.metadata('logreg')
         # check gridsearch was saved
         self.assertIn('gridsearch', meta.attributes)
@@ -354,6 +354,24 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # check we can get back the gridsearch model
         gs_model = om.models.get(meta.attributes['gridsearch'][0]['gsModel'])
         self.assertIsInstance(gs_model, GridSearchCV)
+
+    def test_gridsearch_iris(self):
+        om = Omega()
+        from sklearn.datasets import load_iris
+        X, y = load_iris(return_X_y=True)
+        df = pd.DataFrame(X)
+        df['y'] = y
+        om.datasets.put(df, 'iris', append=False)
+        from sklearn.cluster import KMeans
+        model = KMeans(n_clusters=8)
+        # fit & predict remote
+        om.models.drop('iris-model', True)
+        om.models.put(model, 'iris-model')
+        om.runtime.model('iris-model').fit(X, y).get()
+        params = {
+            'n_clusters': range(1, 8),
+        }
+        om.runtime.model('iris-model').gridsearch('iris[^y]', 'iris[y]', parameters=params).get()
 
     def test_ping(self):
         om = Omega()
@@ -584,4 +602,3 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
         om.runtime.ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(level='DEBUG')), 3)
-

@@ -2,6 +2,7 @@
 from datetime import datetime
 
 import pandas as pd
+from tqdm import tqdm
 
 from omegaml.util import tryOr
 
@@ -217,7 +218,12 @@ class DataRevisionMixin:
         collection = self.collection(name)
 
         def upsert(obj, store, name, chunksize=1):  # noqa
-            for i, row in obj.iterrows():
+            from pymongo import DeleteOne, UpdateOne
+
+            ops_updates = []
+            ops_deletions = []
+
+            for i, row in tqdm(obj.iterrows(), total=len(obj)):
                 data = row.to_dict()
                 # om rowid is re-added on insert only to preserve existing row id
                 del data['_om#rowid']
@@ -229,9 +235,15 @@ class DataRevisionMixin:
                 }
                 key = {k: v for k, v in data.items() if k.startswith('_idx#')}
                 if data.get('_delete_', delete):
-                    collection.delete_one(key)
+                    # collection.delete_one(key)
+                    ops_deletions.append(DeleteOne(key))
                 else:
-                    collection.update_one(key, updates, upsert=True)
+                    # collection.update_one(key, updates, upsert=True)
+                    ops_updates.append(UpdateOne(key, updates, upsert=True))
+
+            # do all updates in one step
+            collection.bulk_write(ops_deletions + ops_updates)
+
         return upsert
 
     def _clean(self, df, trace_revisions=False):
