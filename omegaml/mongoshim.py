@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from pymongo import MongoClient as RealMongoClient
 
 
@@ -23,3 +25,8 @@ def sanitize_mongo_kwargs(kwargs):
     if 'ssl_ca_certs' in kwargs and not kwargs.get('ssl'):
         del kwargs['ssl_ca_certs']
     return kwargs
+
+def mongo_url(om):
+    mongo_url = (om.datasets.mongo_url + '?authSource=admin&' +
+                 urlencode(sanitize_mongo_kwargs(om.defaults.OMEGA_MONGO_SSL_KWARGS)))
+    return mongo_url

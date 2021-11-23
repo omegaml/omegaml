@@ -85,7 +85,8 @@ class OmegaCloudRuntime(OmegaRuntime):
 def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
     import omegaml as om_mod
     api_url = ensure_api_url(api_url, om_mod._base_config)
-    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=False)
+    view = getattr(om_mod._base_config, 'OMEGA_SERVICES_INCLUSTER', False)
+    om = get_omega_from_apikey(userid, apikey, api_url=api_url, qualifier=qualifier, view=view)
     # prepare om to be linked to default
     om.Omega = OmegaCloud
     om.get_omega_for_task = lambda task: setup(userid=userid, apikey=apikey, qualifier=qualifier, bucket=bucket)

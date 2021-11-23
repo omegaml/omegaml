@@ -1,9 +1,11 @@
 import pandas as pd
 import requests
+import subprocess
 from datetime import datetime, timedelta
 from tabulate import tabulate
 from time import sleep
 
+from omegaml import mongoshim
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.client.docoptparser import CommandBase
 from omegaml.client.userconf import save_userconfig_from_apikey
@@ -14,25 +16,30 @@ class CloudCommandBase(CommandBase):
     """
     Usage:
       om cloud login [<userid>] [<apikey>] [options]
-      om cloud config [show] [options]
+      om cloud config [show] [--services] [options]
       om cloud (add|update|remove) <kind> [--specs <specs>] [options]
       om cloud status [runtime|pods|nodes|storage] [options]
       om cloud log <pod> [--since <time>] [options]
+      om cloud database [backup|restore] [--archive <file>] [--mongo-args <args>] [--dry] [options]
       om cloud metrics [<metric_name>] [--since <time>] [--start <start>] [--end <end>] [--step <step>] [--plot] [options]
 
     Options:
-      --userid=USERID   the userid at hub.omegaml.io (see account profile)
-      --apikey=APIKEY   the apikey at hub.omegaml.io (see account profile)
-      --apiurl=URL      the cloud URL [default: https://hub.omegaml.io]
-      --count=NUMBER    how many instances to set up [default: 1]
-      --node-type=TYPE  the type of node [default: small]
-      --specs=SPECS     the service specifications as "key=value[,...]"
-      --since=TIME      recent log time, defaults to 5m (5 minutes)
-      --start=DATETIME  start datetime of range query
-      --end=DATETIME    end datetime of range query
-      --step=UNIT       step in seconds or duration unit (s=seconds, m=minutes)
-      --plot            if specified use plotext library to plot (preliminary)
-      --provider=VALUE  the cloud provider, exo/azu/aws
+      --userid=USERID     the userid at hub.omegaml.io (see account profile)
+      --apikey=APIKEY     the apikey at hub.omegaml.io (see account profile)
+      --apiurl=URL        the cloud URL [default: https://hub.omegaml.io]
+      --count=NUMBER      how many instances to set up [default: 1]
+      --node-type=TYPE    the type of node [default: small]
+      --specs=SPECS       the service specifications as "key=value[,...]"
+      --since=TIME        recent log time, defaults to 5m (5 minutes)
+      --start=DATETIME    start datetime of range query
+      --end=DATETIME      end datetime of range query
+      --step=UNIT         step in seconds or duration unit (s=seconds, m=minutes)
+      --plot              if specified use plotext library to plot (preliminary)
+      --provider=VALUE    the cloud provider, exo/azu/aws
+      --archive=VALUE     name of mongodb archive file
+      --mongo-args=VALUE  mongodump/mongorestore options
+      --dry               print mongodump/mongorestore commands, do not execute
+      --services          print services URIs
 
     Description:
       om cloud is available for the omega|ml managed service at https://hub.omegaml.io
@@ -102,13 +109,18 @@ class CloudCommandBase(CommandBase):
         if config_file is None:
             config_file = print("No configuration file identified, assuming defaults")
         # print config
+        services = self.args.get('--services')
         restapi_url = getattr(om.defaults, 'OMEGA_RESTAPI_URL', 'not configured')
         runtime_url = om.runtime.celeryapp.conf['BROKER_URL']
+        mongo_url = mongoshim.mongo_url(om)
         userid = getattr(om.defaults, 'OMEGA_USERID', 'not configured')
         self.logger.info('Config file: {config_file}'.format(**locals()))
         self.logger.info('User id: {userid}'.format(**locals()))
-        self.logger.info('REST API URL: {restapi_url}'.format(**locals()))
-        self.logger.info('Runtime broker: {runtime_url}'.format(**locals()))
+        self.logger.info(f'REST API URL: {restapi_url}')
+        if services:
+            self.logger.info('Services:')
+            self.logger.info(f'  Runtime broker: {runtime_url}')
+            self.logger.info(f'  MongoDB: {mongo_url}')
 
     def add(self):
         command_url = self._issue_command('install')
@@ -360,6 +372,30 @@ class CloudCommandBase(CommandBase):
         data = self._get_logs(podname, since, auth)
         entries = data.get('entries')
         print(entries)
+
+    def database(self):
+        om = self.om
+        userid = getattr(om.defaults, 'OMEGA_USERID', 'omegaml')
+        restore = self.args.get('restore')
+        backup = self.args.get('backup')
+        archive = self.args.get('--archive')
+        options = self.args.get('--mongo-args') or ''
+        dry = self.args.get('--dry')
+        nowdt = datetime.utcnow().isoformat()
+        mongo_url = mongoshim.mongo_url(om)
+        path = archive or f'{userid}-{nowdt}.mongodump.archive'
+        dump_cmd = f'mongodump --uri {mongo_url} --gzip --archive={path} {options}'
+        restore_cmd = f'mongorestore --uri {mongo_url} --gzip --archive={path} --drop {options}'
+        cmd = dump_cmd if backup else restore_cmd
+        if restore:
+            answer = self.ask(f"Are you sure to restore to {mongo_url} from {path}?", options="Yes,No")
+            if not answer.lower().startswith('y'):
+                print("*** aborted")
+                return
+        print(f"Running {cmd}")
+        if not dry:
+            result = subprocess.run(cmd.strip().split(' '))
+            print(result)
 
 
 def prom2df(data, metric_name):
