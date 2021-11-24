@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from os.path import basename
+from pathlib import Path
 
 import logging
 import os
@@ -106,6 +107,7 @@ OMEGA_STORE_BACKENDS_MLFLOW = {
     'mlflow.model': 'omegaml.backends.mlflow.models.MLFlowModelBackend',
     'mlflow.project': 'omegaml.backends.mlflow.localprojects.MLFlowProjectBackend',
     'mlflow.gitproject': 'omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend',
+    'mlflow.registrymodel': 'omegaml.backends.mlflow.registrymodels.MLFlowRegistryBackend',
 }
 #: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
@@ -259,7 +261,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
     locate the configuration file, if any
 
     Will search the following locations for the config file:
-        1. current directory
+        1. current directory and all paths up to root
         2. user configuration directory
         3. site configuration directory
 
@@ -293,7 +295,10 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
     if os.path.exists(configfile):
         return configfile
     appdirs_args = ('omegaml', 'omegaml')
-    for cfgdir in (os.getcwd(), user_config_dir(*appdirs_args), site_config_dir(*appdirs_args)):
+    cur_dir_tree = lambda *args: Path(os.getcwd()).parents
+    all_dirs = (cur_dir_tree(), [user_config_dir(*appdirs_args)], [site_config_dir(*appdirs_args)])
+    flatten = lambda l: (item for sl in l for item in sl)
+    for cfgdir in flatten(all_dirs):
         cfgfile = os.path.join(cfgdir, os.path.basename(configfile))
         if os.path.exists(cfgfile):
             return cfgfile
