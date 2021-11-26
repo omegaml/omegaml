@@ -16,8 +16,8 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
         self.mgr = OmegaStoreContentsManager(omega=self.om)
         self.clean()
 
-    def _create_notebook(self, name):
-        code = """
+    def _create_notebook(self, name, content=None):
+        code = content or """
         print('hello world')
         """.strip()
         self.om.jobs.create(code, name)
@@ -293,3 +293,17 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
             model = self.mgr.get('/')
             contents = [e['name'] for e in model['content']]
             self.assertIn(expected_fn, contents)
+
+    def test_save_file_1MB_text(self):
+        model = self.mgr._base_model('textfile.txt', kind='file')
+        very_large = 'abc' * 1024 * 1024
+        model['content'] = very_large
+        model['format'] = 'text'
+        self.mgr.save(model, 'textfile.txt')
+        model = self.mgr.get('textfile.txt', type='file')
+        self.assertEqual(model['content'], very_large)
+
+    def test_save_notebook_1MB(self):
+        very_large = 'abc' * 1024 * 1024
+        self._create_notebook('foo', content=very_large)
+        nbmodel = self.mgr.get('foo.ipynb', type='notebook')

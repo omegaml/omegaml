@@ -44,7 +44,7 @@ jobs:
               echo "Testing with python $VER tensorflow $TF_VERSION"
               conda create -q -y -n omenv$VER python=$VER
               conda activate omenv$VER
-              pip install --progress-bar off .[all,dev]
+              pip install --progress-bar off .[all,dev,mlflow]
               make test
               conda deactivate
             }
@@ -123,7 +123,7 @@ jobs:
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
               conda activate omenv$PYVER
-              pip install --progress-bar off .[all,dev]
+              pip install --progress-bar off .[all,dev,mlflow]
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
               if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
