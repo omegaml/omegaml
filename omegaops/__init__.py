@@ -675,7 +675,7 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
                 'mongodbname': qualifier_settings.get('mongodbname'),
                 'brokerhost': broker_host_ext,
                 'brokerhost.in': qualifier_settings.get(
-                'brokerhost.in') or f'{broker_defaults.host}:{broker_defaults.port}',
+                'brokerhost.in') or f'{broker_defaults.hostname}:{broker_defaults.port}',
                 'brokeruser': qualifier_settings.get('brokeruser', broker_defaults.username),
                 'brokerpassword': qualifier_settings.get('brokerpassword', broker_defaults.password),
                 'brokervhost': qualifier_settings.get('brokervhost', sanitize_vhost(broker_defaults.path)),

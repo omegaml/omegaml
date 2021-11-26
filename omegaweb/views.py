@@ -8,7 +8,7 @@ from omegaweb.resources.util import get_omega_for_user
 
 @login_required
 def dashboard(request):
-    om = get_omega_for_user(request.user, view=True)
+    om = get_omega_for_user(request.user)
     datasets = om.datasets.list()
     protocol = 'https' if request.is_secure() else 'http'
     nbhost_url = f'{protocol}://{config.JYHUB_HOST}'

@@ -7,7 +7,7 @@ isTrue = lambda v: v if isinstance(v, bool) else (
       v.lower() in ['yes', 'y', 't', 'true', '1'])
 
 
-def get_omega_for_user(user, qualifier=None, view=False):
+def get_omega_for_user(user, qualifier=None, view=None):
     """
     Return an Omega instance configured for the user
 
@@ -22,7 +22,8 @@ def get_omega_for_user(user, qualifier=None, view=False):
 
     # this is the server-side equivalent of omegaml.client.userconf.get_omega_from_apikey
     # note however we don't load any frameworks as omegaweb is supposed to use the runtime
-    defaults = settings()
+    defaults = settings(reload=True)
+    view = view if view is not None else defaults.OMEGA_SERVICES_INCLUSTER
     config = get_client_config(user, qualifier=qualifier, view=view)
     _base_config.update_from_dict(config, attrs=defaults)
     _base_config.update_from_config(defaults)

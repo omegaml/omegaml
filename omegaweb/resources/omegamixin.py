@@ -20,8 +20,7 @@ class OmegaResourceMixin(object):
         request = getattr(bundle_or_request, 'request', bundle_or_request)
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
-            # always request the public view so we can serve any environment
-            om = get_omega_for_user(request.user, view=False)[bucket]
+            om = get_omega_for_user(request.user)[bucket]
             self.celeryapp = om.runtime.celeryapp
             self._omega_instance = om
         return self._omega_instance
