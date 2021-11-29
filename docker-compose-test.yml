@@ -1,0 +1,81 @@
+# same as docker-compose but using mysql as the db
+version: '3'
+services:
+  omegaml-dev:
+    image: omegaml/omegaml-dev
+    working_dir: /home/projects/omegaml
+    volumes:
+      - ..:/home/projects
+      - .:/app
+      - ~/.omegaml:/home/omegadev/.omegaml
+    environment:
+      - MONGO_HOST=mongodb:27017
+      - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb:27017/admin
+      - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb:27017/userdb
+      - BROKER_URL=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+      - BROKER_HOST=rabbitmq:5671
+      - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/
+      - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
+      - OMEGA_JYHUB_TOKEN=b7b034f57d442e605ab91f88a8936149e968e12e
+      - C_FORCE_ROOT=true
+      - CA_CERTS_PATH=/home/projects/omegaml/release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem
+      - OMEGA_USESSL=yes
+      - CELERY_Q=default
+      - DJANGO_DEBUG=1
+      - HOME=/home/omegadev
+      - APP_CONFIG=EnvSettings_docker
+      - MYSQL_DATABASE=omegaml
+      - MYSQL_USER=omegaml
+      - MYSQL_PASSWORD=mysql
+      - FERNET_KEYS=nq9OWzyzUsvYouzDZcchYKmuBbcjKnVeWu_RC0gQDYQ=
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - mysql
+    command: tail -f /dev/null
+    ports:
+      - "8000:8000"
+      - "5000:5000"
+      - "9222:9222"
+    user: "${CURRENT_USER}"
+
+  mongodb:
+    image: mongo:3.6.8-stretch
+    ports:
+      - "27017:27017"
+      - "28017:28017"
+    volumes:
+      - ./release/dist/omegaml-dev/etc/mongo/certs/server_key.pem:/etc/mongo/server_key.pem
+    command:
+      - "--auth"
+      - "--sslMode"
+      - "preferSSL"
+      - "--sslPEMKeyFile"
+      - "etc/mongo/server_key.pem"
+      - "--oplogSize"
+      - "100"
+
+  rabbitmq:
+    image: rabbitmq:3.8.9
+    ports:
+      - "5672:5672"
+      - "5671:5671"
+      - "15672:15672"
+    hostname: rabbitmq
+    volumes:
+      - ./release/dist/omegaml-dev/etc/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./release/dist/omegaml-dev/etc/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./release/dist/omegaml-dev/etc/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./release/dist/omegaml-dev/etc/rabbitmq/certs:/etc/rabbitmq/certs
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootadmin
+      - MYSQL_DATABASE=omegaml
+      - MYSQL_USER=omegaml
+      - MYSQL_PASSWORD=mysql
+    volumes:
+      - /home/patrick/projects/omegaml-deploy/omdev:/home/projects
+
+

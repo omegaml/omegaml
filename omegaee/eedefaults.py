@@ -37,7 +37,7 @@ OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'b7b034f57d442e605ab91
 #: allow a task to use the local default configuration (potentially insecure)
 OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', False)
 #: is the worker considered inside the same cluster as the client
-OMEGA_WORKER_INCLUSTER = os.environ.get('OMGEA_WORKER_INCLUSTER', True)
+OMEGA_WORKER_INCLUSTER = truefalse(os.environ.get('OMEGA_WORKER_INCLUSTER', True))
 
 #: imports that the celery runtime will load dynamically
 OMEGA_CELERY_IMPORTS = ['omegaml',

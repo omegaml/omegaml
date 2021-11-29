@@ -107,7 +107,7 @@ def run_user_scheduler():
         try:
             user_om = get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
             execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
-            execute_scripts.delay()
+            execute_scripts.apply_async()
         except Exception as e:
             logger.error(f'error scheduling for {user}, exception {e}')
         else:
@@ -145,7 +145,7 @@ def ensure_user_broker_ready(self, *args, **kwargs):
                                          cnx_config['brokerpassword'])
                     omops.create_ops_forwarding_shovel(user)
                 except Exception as e:
-                    logger.error('error recreating user vhost {}'.format(str(e)))
+                    logger.error(f'error recreating user {user} vhost due to {e}')
                     # avoid excessive task bursts on rabbitmq
                 sleep(.1 + random())
 

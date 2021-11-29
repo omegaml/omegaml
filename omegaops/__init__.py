@@ -207,7 +207,7 @@ def create_ops_forwarding_shovel(user):
     # build broker urls and get vhosts
     def get_broker_host_vhost(full_url):
         parsed = urlparse.urlparse(full_url)
-        host = '{}:{}'.format(parsed.hostname, parsed.port)
+        host = '{}:{}/rmq'.format(parsed.hostname, parsed.port)
         vhost = parsed.path.strip('/')
         return host, vhost, parsed
 
@@ -293,7 +293,8 @@ def get_client_config(user, qualifier=None, view=False):
         "OMEGA_APIKEY": user.api_key.key,
         "OMEGA_MONGO_SSL_KWARGS": {
             "ssl": omega_config['use_ssl'],
-        }
+        },
+        "OMEGA_USESSL": omega_config['use_ssl'],
     }
     # allow any updates to effectively omegaml.defaults
     dict_merge(client_config,

@@ -28,11 +28,12 @@
 ##       This means you can use your favorite IDE to develop
 ##
 ## Options:
-##      --docker     if specified uses docker to run, otherwise runs from local command line
-##      --shell      if specified will invoke the shell in docker, other runs apps
-##      --build      if specified builds the omegaml-dev image
-##      --clean      if specified restarts the docker containers a fresh and runs initlocal
-##      --cmd=VALUE  if specified passed on to shell
+##      --docker        if specified uses docker to run, otherwise runs from local command line
+##      --shell         if specified will invoke the shell in docker, other runs apps
+##      --build         if specified builds the omegaml-dev image
+##      --clean         if specified restarts the docker containers a fresh and runs initlocal
+##      --cmd=VALUE     if specified passed on to shell
+##      --dcfile=VALUE  if specified sets the DOCKER_COMPOSE env variable
 # script setup to parse options
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
@@ -59,6 +60,7 @@ export JY_HUB_VERSION=1.0.0
 export CELERY_Q=default
 #export OMEGA_USERID=omops
 #export OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
+export COMPOSE_FILE=${dcfile:-docker-compose.yml}
 
 if [[ ! -z $build ]]; then
    function dobuild() {
