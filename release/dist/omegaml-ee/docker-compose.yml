@@ -39,7 +39,7 @@ services:
          - MYSQL_PASSWORD=mysql
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - BROKER_URL=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
-         - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/
+         - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/rmq
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_JYHUB_USER=jyadmin
@@ -51,7 +51,7 @@ services:
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
    apphub:
-      image: omegaml/apphub:latest
+      image: omegaml/apphub:0.3.2-dev13
       container_name: apphub
       hostname: apphub
       links:

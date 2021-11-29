@@ -43,7 +43,7 @@ class UserSignupTests(TestCase):
         }
         resp = self.client.post('/accounts/signup/', data)
         user = User.objects.get(email=data['email'])
-        self.assertEqual(user.username, data['email'].split('@')[0])
+        self.assertEqual(user.username, data['email'].split('@')[0].replace('.', ''))
         service = user.services.first()
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))

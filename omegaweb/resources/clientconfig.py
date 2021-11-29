@@ -38,6 +38,7 @@ class ClientConfigResource(Resource):
         qualifier = bundle.request.GET.get('qualifier', 'default')
         view = isTrue(bundle.request.GET.get('view', False))
         # allow admin users to request some other user's config
+        # FIXME only allow query for members in admin's organization
         if bundle.request.user.is_staff:
             if 'user' in bundle.request.GET:
                 username = bundle.request.GET.get('user')
