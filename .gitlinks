@@ -9,6 +9,6 @@ helmcharts ../omegaml-deploy/helmcharts https://7e7710a308996277fc9d448719d078f3
 stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable 0.4
 landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage add-secrets
 minibatch ../minibatch https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch master
-django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger master
+django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger 0.2.0
 tastypiex ../tastypiex https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex 0.4
 apps ../omegaml-apps https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps master
