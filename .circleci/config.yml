@@ -23,14 +23,14 @@ jobs:
               echo "Not a PR build."
             fi
       - run:
-          name: Install Miniconda
+          name: Install Miniforge
           command: |
-            curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
-            sh Miniconda3-py39_4.9.2-Linux-x86_64.sh -b
+            curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+            bash Miniforge3-Linux-x86_64.sh -b
       - run:
           name: Run unit tests
           command: |
-            source miniconda3/etc/profile.d/conda.sh
+            source miniforge3/etc/profile.d/conda.sh
             cd omegaml-ce
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
@@ -79,7 +79,7 @@ jobs:
       - run:
           name: Run live tests
           command: |
-            source miniconda3/etc/profile.d/conda.sh
+            source miniforge3/etc/profile.d/conda.sh
             conda activate omenv3.7
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
@@ -98,14 +98,14 @@ jobs:
       - checkout:
           path: /home/circleci/omegaml-ce
       - run:
-          name: Install Miniconda
+          name: Install Miniforge
           command: |
-            curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-            sh Miniconda3-4.5.12-Linux-x86_64.sh -b
+            curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+            bash Miniforge3-Linux-x86_64.sh -b
       - run:
           name: Make image and pypi
           command: |
-            source miniconda3/etc/profile.d/conda.sh
+            source miniforge3/etc/profile.d/conda.sh
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             echo $PYPIRC_INI | base64 -d > ~/.pypirc
