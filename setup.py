@@ -82,7 +82,7 @@ setup(
         'jupyter-client>=4.1.1',
         'pymongo>=3.2.2',
         'mongoengine~=0.23.1',
-        'pandas>1.1',  # 1.1 fails on storing multi-indexes
+        'pandas>1.1,<1.4',  # 1.1 fails on indexes, 1.4 fails some libraries, e.g. yfinance
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',

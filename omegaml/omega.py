@@ -151,7 +151,6 @@ class OmegaDeferredInstance(object):
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
         for loader in loaders:
-            print(f"Trying loader {loader}")
             try:
                 omega = loader()
             except Exception as e:

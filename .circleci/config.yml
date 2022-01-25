@@ -52,8 +52,9 @@ jobs:
               # due to different allowed combinations we need several loops
               # we dont use tox because tox assumes python version is installed already
               # py36
+              PYVER=3.6
               for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
-                dotest 3.6 $TF_VERSION
+                dotest $PYVER $TF_VERSION
               done
               # py37 py38
               for PYVER in 3.7 3.8; do
@@ -71,7 +72,8 @@ jobs:
               # end tests
             else
               # if this is not a release build, do a quick build for speed
-              dotest 3.9
+              PYVER=3.9
+              dotest $PYVER
             fi
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
@@ -79,7 +81,7 @@ jobs:
           name: Run live tests
           command: |
             source miniforge3/etc/profile.d/conda.sh
-            conda activate omenv3.7
+            conda activate omenv3.9
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             ls -lart ~/.omegaml

@@ -80,14 +80,14 @@ class Notebook:
         br.find_by_id('password_input').first.fill(self.password)
         br.click_link_by_id('login_submit')
         br.visit(jburl(br.url, self.user, nbstyle='tree'))
-        assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
+        assert br.is_element_present_by_id('jupyter-main-app', wait_time=60)
         # check that there is actually a connection
         assert not br.is_text_present('Server error: Traceback', wait_time=15)
         assert not br.is_text_present('Connection refuse', wait_time=15)
 
     def login_nb(self):
         br = self.browser
-        assert br.is_element_present_by_id('ipython-main-app', wait_time=10)
+        assert br.is_element_present_by_id('jupyter-main-app', wait_time=10)
         br.find_by_id('password_input').fill(self.password)
         br.find_by_id('login_submit').click()
         br.visit(jburl(br.url, '', nbstyle='tree'))
@@ -112,7 +112,7 @@ class Notebook:
         br = self.browser
         self.jupyter_home
         br.find_by_id('new-dropdown-button').click()
-        br.find_by_text('Python 3').click()
+        br.find_by_text('Python 3 (ipykernel)').click()
         sleep(2)
         self.last_notebook
         return self
