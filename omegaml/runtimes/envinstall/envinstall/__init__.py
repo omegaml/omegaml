@@ -23,7 +23,7 @@ def run(om, *args, package=None, file=None, action='install', options=None, **kw
         with open(lockfile, 'x') as flock:
             # only run if we can get an exclusive lock
             reqfn = '/tmp/envreq.txt'
-            if not package:
+            if file:
                 with open(reqfn, 'wb') as fout:
                     reqs = om.scripts.get(reqfile).read()
                     fout.write(reqs)
