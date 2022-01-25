@@ -62,17 +62,16 @@ jobs:
                 done
               done
               # py39
-              # tensorflow does not support 3.9 yet
               # see https://github.com/tensorflow/tensorflow/issues/44485
               #     https://github.com/tensorflow/tensorflow/issues/44400
               PYVER=3.9
-              for TF_VERSION in 2.4.0; do
+              for TF_VERSION in 2.5 2.6 2.7; do
                 dotest $PYVER $TF_VERSION
               done
               # end tests
             else
               # if this is not a release build, do a quick build for speed
-              dotest 3.7
+              dotest 3.9
             fi
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
