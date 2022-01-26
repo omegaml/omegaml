@@ -1,5 +1,6 @@
 import os
 import sys
+import warnings
 from uuid import uuid4
 
 from ._version import version
@@ -132,23 +133,22 @@ class OmegaDeferredInstance(object):
         Returns:
             omega instance
         """
-
-        def setup_config():
-            from omegaml.client.cloud import setup_from_config
-            return setup_from_config()
+        def setup_base():
+            return Omega(*args, **kwargs)
 
         def setup_env():
             from omegaml.client.cloud import setup
             return setup(os.environ['OMEGA_USERID'], os.environ['OMEGA_APIKEY'])
 
-        def setup_base():
-            return Omega(*args, **kwargs)
+        def setup_cloud_config():
+            from omegaml.client.cloud import setup_from_config
+            return setup_from_config(fallback=setup_base)
 
         omega = None
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
-        from_config = 'OMEGA_CONFIG' in os.environ or os.path.exists('config.yml')
-        loaders = setup_env, setup_config, setup_base
-        must_load = (from_env, setup_env), (from_config, setup_config)
+        from_config = 'OMEGA_CONFIG_FILE' in os.environ or os.path.exists('config.yml')
+        loaders = setup_env, setup_cloud_config, setup_base
+        must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
         for loader in loaders:
             try:

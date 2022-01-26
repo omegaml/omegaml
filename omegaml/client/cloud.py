@@ -101,7 +101,12 @@ def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
     return om[bucket]
 
 
-def setup_from_config(config_file=None):
+def setup_from_config(config_file=None, fallback=None):
+    """ setup from a cloud configuration file
+
+    If the configuration files does not contain OMEGA_USERID and OMEGA_APIKEY,
+    will use given fallback.
+    """
     from omegaml import _base_config
     config_file = config_file or _base_config.OMEGA_CONFIG_FILE
     if isinstance(config_file, six.string_types) and os.path.exists(config_file):
@@ -114,9 +119,11 @@ def setup_from_config(config_file=None):
                                   api_url=userconfig.get('OMEGA_RESTAPI_URL'))
                 except Exception as e:
                     # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
-                    raise ValueError('Could not login using config file {}, error={}'.format(config_file, str(e)))
+                    raise SystemError('Could not login using config file {}, error={}'.format(config_file, str(e)))
+            elif fallback:
+                # if alternative loading was provided, use that
+                omega = fallback()
             else:
-                _base_config.OMEGA_CONFIG_FILE = config_file
-                raise SystemError
+                raise SystemError('No cloud cloud userid/apikey found in config file {}.'.format(config_file))
             return omega
     raise SystemError('Config file {} does not exist'.format(config_file))

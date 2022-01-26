@@ -29,7 +29,7 @@ brokerurl="amqp://rabbitmq:5672//"
 docker_network="--network omegaml-ce_default"
 docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/usr/local/omegaml/docs"
 docker_image="omegaml/livetest"
-behave_features="/usr/local/lib/python3.7/site-packages/omegaml/tests/features"
+behave_features="/usr/local/lib/python3.9/site-packages/omegaml/tests/features"
 chrome_debug_port="9222:9222/tcp"
 docker_tag=$(cat omegaml/VERSION)
 docker_tag=${tag:-$docker_tag}
