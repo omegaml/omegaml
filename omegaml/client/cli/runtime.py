@@ -1,3 +1,5 @@
+from subprocess import call
+
 from urllib.parse import urlparse
 
 import logging
@@ -257,6 +259,7 @@ class RuntimeCommandBase(CommandBase):
             ('--queue', '--queue', 'value'),
             ('--celery-help', '--help', 'flag'),
         )
+        is_r_worker = 'rworker' in self.args.get('<celery-command>')
         for opt, celery_opt, kind in celery_opts:
             if self.args.get(opt):
                 celery_cmds += [celery_opt]
@@ -269,7 +272,15 @@ class RuntimeCommandBase(CommandBase):
         # start in-process for speed
         # -- disable command logging to avoid curses problems in celery events
         self.logger.setLevel(logging.CRITICAL + 1)
-        om.runtime.celeryapp.start(celery_cmds)
+        if is_r_worker:
+            # start r runtime
+            from omegaml.runtimes import rsystem
+            rworker = os.path.join(os.path.dirname(rsystem.__file__), 'omworker.R')
+            rcmd = f'Rscript {rworker}'.split(' ')
+            call(rcmd)
+        else:
+            # start python runtime
+            om.runtime.celeryapp.start(celery_cmds)
 
     def env(self):
         om = get_omega(self.args)

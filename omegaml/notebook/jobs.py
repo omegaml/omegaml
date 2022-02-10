@@ -276,12 +276,17 @@ class OmegaJobs(BackendBaseCommon):
         # other interesting options
         ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
         try:
+            resources = {
+                'metadata': {
+                    'path': self.defaults.OMEGA_TMP,
+                }
+            }
             if not meta_job.kind_meta.get('keep_output', False):
-                resources = {}  # https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html
+                # https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html
                 cp = ClearOutputPreprocessor()
                 cp.preprocess(notebook, resources)
             ep = ExecutePreprocessor(**ep_kwargs)
-            ep.preprocess(notebook, {'metadata': {'path': '.'}})
+            ep.preprocess(notebook, resources)
         except Exception as e:
             status = 'ERROR'
             message = str(e)
