@@ -260,7 +260,7 @@ class OmegaSimpleTracker(TrackingProvider):
             rawdata = obj.to_json()
         elif self._model_store.get_backend_byobj(obj) is not None:
             objname = uuid4().hex
-            meta = self._model_store.put(obj, f'experiments/.artefacts/{objname}')
+            meta = self._model_store.put(obj, f'.experiments/.artefacts/{objname}')
             format = 'model'
             rawdata = meta.name
         elif self._store.get_backend_by_obj(obj) is not None:
@@ -489,15 +489,15 @@ else:
                 self.tracker.log_param(k, v)
 
         def on_global(self, action, logs=None):
-            for k, v in logs.items():
-                self.tracker.log_metric(k, v)
+            for k, v in (logs or {}).items():
+                self.tracker.log_metric(k, v, step=0)
 
         def on_batch(self, action, batch, logs=None):
-            for k, v in logs.items():
+            for k, v in (logs or {}).items():
                 self.tracker.log_metric(k, v, step=batch)
 
         def on_epoch(self, action, epoch, logs=None):
-            for k, v in logs.items():
+            for k, v in (logs or {}).items():
                 self.tracker.log_metric(k, v, step=epoch)
 
         @classmethod

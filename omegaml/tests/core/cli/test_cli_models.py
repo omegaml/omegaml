@@ -3,7 +3,7 @@ from unittest import TestCase
 from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
-from omegaml.tests.cli.scenarios import CliTestScenarios
+from omegaml.tests.core.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
 
 

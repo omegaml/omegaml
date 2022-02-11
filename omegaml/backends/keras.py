@@ -13,7 +13,7 @@ class KerasBackend(BaseModelBackend):
         is_tf_keras = isinstance(obj, (tfSequential, tfModel))
         try:
             from keras import Sequential, Model
-        except AttributeError:
+        except (ImportError, AttributeError):
             # keras 2.4.3, python 3.9 is not compatible
             # https://github.com/keras-team/keras/issues/14632
             is_keras_native = False

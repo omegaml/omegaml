@@ -26,7 +26,7 @@ class RSystemTester(OmegaTestMixin, unittest.TestCase):
         """
         from omegaml.runtimes import rsystem
         appdir = os.path.dirname(rsystem.__file__)
-        rcmd = fr'Rscript -e source("{appdir}/unittest.R") -e omtests$rsystem$rtestutil$R_unittests()'
+        rcmd = fr'Rscript -e source("{appdir}/unittest.R")'
         output = run(rcmd.split(' '), capture_output=True)
         messages = output.stderr.decode('utf8')
         output = output.stdout.decode('utf8')

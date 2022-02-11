@@ -1,43 +1,95 @@
 Creating a release
 ==================
 
-Preparing the release
+Release path
+------------
 
-1. bumpversion patch (this creates a -dev version)
-2. create a release-branch release-x.x.x (should be feature complete, taken from master)
-3. create a release-build branch, to PR merge into release-x.x.x
+omega-ml uses semantic versioning.
+Format: major.minor.patch[-build]
 
-On release-build branch:
-
-Testing dev versions
-
-4. bumpversion release (this creates a -dev1 version)
-5. ensure everything builds & tests, apply minor fixes, bumpversion build (this increases -devN)
-
-Publishing the release
-
-Still on release-build branch
-
-6. bumpversion release (this creates a -rc version)
-7. ensure all tests build successfully, including livetest, deployment to testpypi works ok
-8. bumpversion release (this removes the -rc & builds into pypi)
-9. merge into release-x.x.x (this builds on master)
-10. merge into master
-
-
-bumpversion flow
-----------------
-
-adopted from https://github.com/c4urself/bump2version/pull/177
-
-# how to get from version => new version
-# $ bumpversion <patch|build|release>
+# adopted from https://github.com/c4urself/bump2version/pull/177
 1.4.1 => 1.4.2-dev1 => 1.4.2-dev2 = > 1.4.2-rc1 => 1.4.2-rc2 => 1.4.2
          patch         build          release      build        release
 
+Preparing the release
+---------------------
 
-Details
--------
+how to get from current-version => new-version
+(assume current 1.4.1 => new 1.4.2)
+
+1. Create a release-branch. This will receive the release before merging to master
+
+   # should be feature complete, taken from master
+   $ git checkout -b release-x.x.x
+   $ git reset --hard origin/master
+
+2. Create a release-build branch. This will get all fixes and other changes,
+   is used for testing.
+
+    $ git checkout -b release-build
+    $ git reset --hard origin/master
+
+3. Create a dev release (example: 1.4.2-dev1)
+
+    $ bumpversion patch (this creates a -dev version)
+    $ git push
+
+4.  Check this builds ok, all tests are fine.
+    If not ok => Making changes & testing
+    If ok => Publishing the release
+
+
+Making changes & testing
+------------------------
+
+On release-build branch:
+
+5. Add your changes, create a PR to merge into release-build branch
+
+   $ git commit
+
+6. Bump the build (this increases -devN, example: 1.4.2-dev2)
+
+   $ bumpversion build
+   $ git push
+
+7. Ensure everything builds & tests, apply minor fixes.
+   If not ok => Making changes & testing
+   If ok => Publishing the release
+
+
+Publishing the release
+----------------------
+
+Still on release-build branch
+
+8. Prepare the rc
+
+   $ bumpversion release (this creates a -rc version, example: 1.4.2-rc1)
+   $ git push
+
+9. If tests fail, apply fix, go to next rc
+
+   $ bumpversion build (this creates a -rc version, example: 1.4.2-rc2)
+   $ git push
+
+   Repeat until all tests build successfully.
+
+10. Once all tests build successfully (including livetest, deployment to testpypi works ok)
+
+   $ bumpversion release (this removes the -rc & builds into pypi, example: 1.4.2)
+   $ git push
+   => PR merge into release-x.x.x (this builds on master)
+
+11. Finally, cut the release
+
+   => merge into master
+   => add a tag
+   => add a new release
+
+
+A full example
+--------------
 
 Start with an initial release, say 1.4.1
 
@@ -70,10 +122,25 @@ Note once the final release has been reached it is not possible to bump the rele
 before bumping patch again. Trying to bump the release while in final release state will
 issue "ValueError: The part has already the maximum value among ['dev', 'rc', 'ga'] and cannot be bumped"
 
+bumpversion summary
+-------------------
+
+while developing (unstable):
+
+    - $ bumpversion patch => major.minor.(patch + 1)-dev1
+    - $ bumpversion build => major.minor.patch-dev(+1)
+
+for releasing (stable):
+
+- $ bumpversion release => major.minor.patch-rc1
+- $ bumpversion build => major.minor.patch-(rc+1)
+- $ bumpversion release => major.minor.patch
+
 
 Configuration file
 ------------------
 
+# .bumpversion.cfg
 [bumpversion]
 current_version = 1.4.1
 commit = True

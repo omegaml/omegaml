@@ -726,11 +726,14 @@ class OmegaStore(object):
         Returns:
             help(obj)
         """
+        import sys
+        import pydoc
+
         obj = self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind, raw=raw)
         if any(str(obj.__doc__).startswith(v) for v in ('https://', 'http://')):
             import webbrowser
             return webbrowser.open(obj.__doc__)
-        return help(obj)
+        return help(obj) if sys.flags.interactive else pydoc.render_doc(obj, renderer=pydoc.plaintext)
 
     def _resolve_help_backend(self, name_or_obj=None, kind=None, raw=False):
         # helper so we can test help

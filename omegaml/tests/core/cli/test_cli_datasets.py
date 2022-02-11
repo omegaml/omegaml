@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 from pandas.util.testing import assert_frame_equal
 
 from omegaml import Omega
-from omegaml.tests.cli.scenarios import CliTestScenarios
+from omegaml.tests.core.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import temp_filename
 

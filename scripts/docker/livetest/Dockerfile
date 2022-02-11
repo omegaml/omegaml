@@ -6,6 +6,6 @@ ENV  pypi=$pypi
 WORKDIR /root
 COPY ./packages /var/packages
 RUN  pip install --upgrade pip -q
-RUN  pip install /var/packages/*whl -i $pypi -U --upgrade-strategy only-if-needed omegaml[all] && \
+RUN  pip install $(find /var/packages -type f -name "*.whl") -i $pypi --extra-index-url https://pypi.org/simple --progress-bar off --pre omegaml && \
      pip install behave splinter ipdb
 

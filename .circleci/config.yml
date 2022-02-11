@@ -3,21 +3,24 @@ jobs:
   test:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce
       - run:
+          # https://discuss.circleci.com/t/show-test-results-for-prospective-merge-of-a-github-pr/1662/14
+          # adopted from https://gist.github.com/amacneil/f14db753919e0af2d7d2f5a8da7fce65
+          # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/checking-out-pull-requests-locally
           name: Merge current master into PR branch
           command: |
             pr_number=${CI_PULL_REQUEST//*pull\//}
             if [ -n "$pr_number" ]
             then
-              echo "Building PR #$pr_number. Try to merge current master."
               cd omegaml-ce
-              git fetch
-              git checkout origin/master
-              git pull --ff-only origin "refs/pull/$pr_number/head" || \
+              echo "Building PR #$pr_number on target branch."
+              (git checkout --force $CIRCLE_BRANCH && \
+               git fetch --force origin pull/208/merge:circleci-build && \
+               git checkout circleci-build) || \
                 (echo "Merge failed. Please merge manually into your branch."; exit 1)
             else
               echo "Not a PR build."
@@ -39,38 +42,18 @@ jobs:
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             function dotest() {
               export VER=$1
-              export TF_VERSION=$2
+              export EXTRAS=all,dev,mlflow
               conda env remove -q -y -n omenv$VER || echo ""
-              echo "Testing with python $VER tensorflow $TF_VERSION"
+              echo "Testing with python $VER"
               conda create -q -y -n omenv$VER python=$VER
               conda activate omenv$VER
-              scripts/setup-r.sh
-              pip install --progress-bar off .[all,dev,mlflow]
+              make install
               make test
               conda deactivate
             }
             if [[ $CIRCLE_BRANCH = "release-build" ]]; then
-              # due to different allowed combinations we need several loops
-              # we dont use tox because tox assumes python version is installed already
-              # py36
-              PYVER=3.6
-              for TF_VERSION in 1.15.3 2.2.0 2.3.0 2.3.1 2.4.0; do
-                dotest $PYVER $TF_VERSION
-              done
-              # py37 py38
-              for PYVER in 3.7 3.8; do
-                for TF_VERSION in 2.2.0 2.3.0 2.3.1 2.4.0; do
-                  dotest $PYVER $TF_VERSION
-                done
-              done
-              # py39
-              # see https://github.com/tensorflow/tensorflow/issues/44485
-              #     https://github.com/tensorflow/tensorflow/issues/44400
-              PYVER=3.9
-              for TF_VERSION in 2.5 2.6 2.7; do
-                dotest $PYVER $TF_VERSION
-              done
-              # end tests
+              # actual specs are in scripts/docker/test_images.txt
+              scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
             else
               # if this is not a release build, do a quick build for speed
               PYVER=3.9
@@ -82,7 +65,10 @@ jobs:
           name: Run live tests
           command: |
             source miniforge3/etc/profile.d/conda.sh
-            conda activate omenv3.9
+            PYVER=3.9
+            conda create -q -y -n omenv$VER python=$VER
+            conda activate omenv$VER
+            pip install twine
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             ls -lart ~/.omegaml
@@ -92,6 +78,8 @@ jobs:
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
           path: /tmp/screenshots
+      - store_artifacts:
+          path: /tmp/testlogs
   release:
     working_directory: /home/circleci
     machine:
@@ -120,18 +108,21 @@ jobs:
             sleep 10
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
+            # TODO consider using https://cibuildwheel.readthedocs.io
             for PYVER in 3.7 3.8 3.9; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
               conda activate omenv$PYVER
-              pip install --progress-bar off .[all,dev,mlflow]
+              pip install -e .[dev]
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
+              export LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" make livetest
               if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
                 make release-test
               else
                 make release-prod
+                make release-docker
               fi
             done
       - store_artifacts:
