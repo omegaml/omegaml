@@ -32,6 +32,24 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         large['y'] = large['x'] * 2
         assert_frame_equal(dfx, large)
 
+    def test_parallel_process_implicit(self):
+        """
+        parallel processing of mdf, persisting to a dataset
+        """
+        om = self.om
+        large = pd.DataFrame({
+            'x': range(1000)
+        })
+
+        def myfunc(df):
+            df['y'] = df['x'] * 2
+
+        om.datasets.put(large, 'largedf', append=False)
+        mdf = om.datasets.getl('largedf')
+        dfx = mdf.transform(myfunc).persist('largedf_transformed').value
+        large['y'] = large['x'] * 2
+        assert_frame_equal(dfx, large)
+
     def test_parallel_process_direct(self):
         """
         parallel processing of mdf, persisting to a dataset
