@@ -7,10 +7,10 @@ class CanvasTask:
     """
     support for canvas tasks
 
-    See Also
-        om.runtime.sequence
-        om.runtime.parallel
-        om.runtime.mapreduce
+    See Also:
+        * om.runtime.sequence
+        * om.runtime.parallel
+        * om.runtime.mapreduce
     """
 
     def __init__(self, canvasfn):
@@ -48,7 +48,8 @@ def make_canvased(canvasfn):
         """
         context manager to support sequenced, parallel and mapreduce tasks
 
-        Usage:
+        Usage::
+
             # run tasks async, in sequence
             with om.runtime.sequence() as crt:
                 crt.model('mymodel').fit(...)
@@ -84,7 +85,7 @@ def make_canvased(canvasfn):
             self: the runtime
 
         Returns:
-            None
+            OmegaRuntime, for use within context
         """
         canvas = CanvasTask(canvasfn)
         _orig_task = self.task

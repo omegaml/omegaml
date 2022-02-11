@@ -35,6 +35,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    #'sphinx.ext.viewcode',
     'nbsphinx',
     #'sphinx.ext.githubpages',
 ]
@@ -120,7 +122,7 @@ nbsphinx_execute = 'never'
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'default'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -364,7 +366,7 @@ print(sys.path)
 
 def setup(app):
     from omegaml import settings
-    app.add_stylesheet('custom.css')
+    # app.add_stylesheet('custom.css')
     del os.environ['DJANGO_SETTINGS_MODULE']
     defaults = settings()
 

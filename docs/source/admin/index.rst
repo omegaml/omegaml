@@ -7,7 +7,4 @@ Administration
 
    kickstart
    configuration
-   spark
-   putget
    design
-   

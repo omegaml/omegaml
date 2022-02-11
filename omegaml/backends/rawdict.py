@@ -9,7 +9,8 @@ class PandasRawDictBackend(BaseDataBackend):
     """
     OmegaStore backend to support arbitrary collections
 
-    Usage:
+    Usage::
+
         # store any collection as part of metadata
         coll = db['some_collection']
         om.datasets.put(coll, 'foo')

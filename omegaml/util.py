@@ -906,7 +906,7 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
                 del destination[key]
             else:
                 destination[key] = value
-
+    return destination
 
 def ensure_base_collection(collection):
     """ get base from pymongo.Collection subclass instance """

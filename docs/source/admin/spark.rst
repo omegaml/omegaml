@@ -1,5 +1,5 @@
 Using omega|ml on private Spark Clusters
----------------------------------------
+----------------------------------------
 
 omega|ml can be installed on any machine of your preference following below steps:
 

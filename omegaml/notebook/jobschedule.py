@@ -18,7 +18,8 @@ class JobSchedule(object):
     by a comma. To specify multiple times for a part, use / instead
     of comma.
 
-    Examples:
+    Examples::
+
         # using text
         JobSchedule('friday, at 06:00/08:00/10:00')
         JobSchedule('Mondays and Fridays, at 06:00')
@@ -37,21 +38,18 @@ class JobSchedule(object):
         JobSchedule('Mondays and Fridays, at 06:00').cron
 
     Args:
-        text: the natural language specification, with time parts
+        text (str): the natural language specification, with time parts
               separated by comma
-        at: the hh:mm specification, equal to hour=hh, minute=mm
-        minute: run on 0-59th minute in every specified hour
-        hour: run on 0-23th hour on every specified day
-        weekday: run on 0-6th day in every week (0 is Sunday),
+        at (str): the hh:mm specification, equal to hour=hh, minute=mm
+        minute (str): run on 0-59th minute in every specified hour
+        hour (str): run on 0-23th hour on every specified day
+        weekday (str): run on 0-6th day in every week (0 is Sunday),
                  can also be specified as mon/tue/wed/thu/fri/sat/sun
-        monthday: run on 1-31th day in every month
-        month: run on 1-12th day of every year
+        monthday (str): run on 1-31th day in every month
+        month (str): run on 1-12th day of every year
 
     Raises:
         ValueError if the given specification is not correct
-
-    Returns:
-        the cron specificiation, use for run_at in self.schedule()
     """
 
     def __init__(self, text=None, minute='*', hour='*', weekday='*',
@@ -94,16 +92,19 @@ class JobSchedule(object):
 
     @classmethod
     def from_cron(cls, cronspec):
+        """ initialize JobSchedule from a cron specifier"""
         (minute, hour, monthday, month, weekday) = cronspec.split(' ')
         return JobSchedule(minute=minute, hour=hour, monthday=monthday,
                            month=month, weekday=weekday)
 
     @classmethod
     def from_text(cls, text):
+        """ initialize JobSchedule from a weekday, hour, month specifier"""
         return JobSchedule(text=text)
 
     @property
     def cron(self):
+        """ return the cron representation of the schedule """
         # adopted from https://docs.celeryproject.org/en/latest/_modules/celery/schedules.html#schedule
         cron_repr = ('{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
                      '{0._orig_month_of_year} {0._orig_day_of_week}')
@@ -111,10 +112,26 @@ class JobSchedule(object):
 
     @property
     def text(self):
+        """ return the human readable representation of the schedule """
         from cron_descriptor import get_description
         return get_description(self.cron)
 
     def next_times(self, n=None, last_run=None):
+        """ return the n next times of this schedule, staring from the last run
+
+        Args:
+            n (int): the n next times
+            last_run (datetime): the last time this was run
+
+        Notes:
+            if n is None returns a never ending iterator
+
+        Returns:
+            iterator of next times
+
+        See Also:
+            * croniter.get_next()
+        """
         iter_next = croniter(self.cron, start_time=last_run)
         while n > 0 or n is None:
             yield iter_next.get_next(datetime.datetime)

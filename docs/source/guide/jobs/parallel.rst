@@ -1,7 +1,7 @@
 Parallel Execution
 ==================
 
-The runtime.job.map() API let's you run a Jupyter notebook many times with
+The :code:`runtime.job.map()` API let's you run a Jupyter notebook many times with
 a different set of parameters. Essentially this works like Python's
 multiprocessing Pool.map(), however runs Jupyter Notebooks across a node
 of clusters.

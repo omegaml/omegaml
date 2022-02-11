@@ -1,5 +1,5 @@
-Design
-======
+Runtime Architecture
+====================
 
 The runtime implements remote execution of models and jobs. The runtime
 is implemented as follows:
@@ -18,7 +18,7 @@ A :code:`OmegaRuntime` instance is available as :code:`om.runtime`:
     # call methods on OmegaModelProxy, effecting remote task execution
     model.fit('X', 'Y')
     pred = model.predict('X')
-    
+
 Note that any method called on the :code:`model` are translated into calls
 to respective celery tasks. A celery task lives in a celery worker at a remote
 note. On execution a task will re-create the :code:`Omega` instance to retrieve
@@ -29,7 +29,7 @@ Security concerns
 -----------------
 
 Note that the open source `omega|ml Core` does not implement any security by default.
-The omega|ml Enterprise Edition however addresses all security concerns:
+The omega|ml Commercial Edition however addresses all security concerns:
 
 * **user authentication**. Users authenticate to REST endpoints by username +
   Apikey. Communication is protected by HTTPS.

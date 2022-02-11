@@ -35,15 +35,15 @@ get_omega_for_task = _omega.get_omega_for_task
 Omega = _omega.Omega
 _omega.OmegaDeferredInstance = getattr(_omega, 'OmegaDeferredInstance', OmegaDeferredInstance)
 # setup API
-#: the OmegaStore for datasets
+#: the :class:`omegaml.store.base.OmegaStore` store for datasets
 datasets = _omega.OmegaDeferredInstance(_omega._om, 'datasets')
-#: the OmegaStore for models
+#: the :class:`omegaml.store.base.OmegaStore` store for models
 models = _omega.OmegaDeferredInstance(_omega._om, 'models')
-#: the jobs API
+#: the :class:`omegaml.notebook.jobs.OmegaJobs` store for jobs
 jobs = _omega.OmegaDeferredInstance(_omega._om, 'jobs')
-#: the OmegaStore for lambda scripts
+#: the :class:`omegaml.store.base.OmegaStore` store for scripts
 scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')
-#: the OmegaRuntime for cluster execution
+#: the :class:`omegaml.runtimes.runtime.OmegaRuntime` runtime
 runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
 #: stream helper
 streams = _omega.OmegaDeferredInstance(_omega._om, 'streams')

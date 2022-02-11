@@ -18,7 +18,8 @@ class ExperimentBackend(BaseModelBackend):
     """ ExperimentBackend provides storage of tracker configurations
 
     Usage:
-        Log data
+
+        To log metrics and other data::
 
             with om.runtime.experiment('myexp') as exp:
                 om.runtime.model('mymodel').fit(X, Y)
@@ -29,7 +30,7 @@ class ExperimentBackend(BaseModelBackend):
                 exp.log_artifact(Y, 'Y')
                 exp.log_artifact(om.models.metadata('mymodel'), 'mymodel')
 
-        Log data and automatically profile system data
+        To log data and automatically profile system data::
 
             with om.runtime.experiment('myexp', provider='profiling') as exp:
                 om.runtime.model('mymodel').fit(X, Y)
@@ -43,7 +44,7 @@ class ExperimentBackend(BaseModelBackend):
             # profiling data contains metrics for cpu, memory and disk use
             data = exp.data(event='profile')
 
-        Get back experiment data without running an experiment
+        To get back experiment data without running an experiment::
 
             # recommended way
             exp = om.runtime.experiment('myexp').use()
@@ -55,8 +56,8 @@ class ExperimentBackend(BaseModelBackend):
 
     See Also:
 
-        OmegaSimpleTracker
-        OmegaProfilingTracker
+        * :class:`omegaml.backends.experiment.OmegaSimpleTracker`
+        * :class:`omegaml.backends.experiment.OmegaProfilingTracker`
     """
     KIND = 'experiment.tracker'
     exp_prefix = 'experiments/'
@@ -103,23 +104,22 @@ class TrackingProvider:
 
     How it works:
 
-        1. Experiments created using om.runtime.experiment() are stored as
+        1. Experiments created using ``om.runtime.experiment()`` are stored as
            instances of a TrackingProvider concrete implementation
 
         2. Upon retrieval of an experiment, any call to its API is proxied to the
            actual implementation, e.g. MLFlow
 
-        3. On calling a model method via the runtime, e.g. om.runtime.model().fit(),
+        3. On calling a model method via the runtime, e.g. ``om.runtime.model().fit()``,
            the TrackingProvider information is passed on to the runtime worker,
            and made available as the backend.tracking property. Thus within a
-           model backend, you can always log to the tracker by using:
+           model backend, you can always log to the tracker by using::
 
                 with self.tracking as exp:
                     exp.log_metric() # call any TrackingProvider method
 
-        4. To avoid complexity at project start, omega-ml provides the
-           OmegaSimpleTracker, which provides a tracking interface similar
-           to MLFlow and Sacred, however without the complexity. See ExperimentBackend
+        4. omega-ml provides the OmegaSimpleTracker, which implements a tracking
+           interface similar to packages like MLFlow, Sacred. See ExperimentBackend
            for an example.
     """
 
@@ -194,8 +194,11 @@ class NoTrackTracker(TrackingProvider):
 class OmegaSimpleTracker(TrackingProvider):
     """ A tracking provider that logs to an omegaml dataset
 
-    Usage:
-        with
+    Usage::
+
+        with om.runtime.experiment(provider='default') as exp:
+            ...
+            exp.log_metric('accuracy', .78)
     """
     _provider = 'simple'
     _experiment = None
@@ -205,15 +208,25 @@ class OmegaSimpleTracker(TrackingProvider):
     _ensure_active = lambda self, r: r if r is not None else _raise(ValueError('no active run, call .start() or .use() '))
 
     def active_run(self):
+        """ set the lastest run as the active run
+
+        Returns:
+            current run (int)
+        """
         self._run = self._latest_run or self.start()
         self._experiment = self._experiment or uuid4().hex
-        return self
+        return self._run
 
     def use(self):
         """ reuse the latest run instead of starting a new one
 
-        semantic sugar for self.active_run() """
-        return self.active_run()
+        semantic sugar for self.active_run()
+
+        Returns:
+            self
+        """
+        self.active_run()
+        return self
 
     @property
     def _latest_run(self):
@@ -223,10 +236,22 @@ class OmegaSimpleTracker(TrackingProvider):
 
     @property
     def status(self, run=None):
+        """ status of a run
+
+        Args:
+            run (int): the run number, defaults to the currently active run
+
+        Returns:
+            status in 'STARTED', 'STOPPED'
+        """
         data = self.data(event=('start', 'stop'), run=run, raw=True)
         return 'STARTED' if len(data) > 1 else 'STOPPED'
 
     def start(self):
+        """ start a new run
+
+        This starts a new run and logs the start event
+        """
         self._run = (self._latest_run or 0) + 1
         self._startdt = datetime.utcnow()
         data = {
@@ -241,6 +266,10 @@ class OmegaSimpleTracker(TrackingProvider):
         return self._run
 
     def stop(self):
+        """ stop the current run
+
+        This stops the current run and records the stop event
+        """
         self._stopdt = datetime.utcnow()
         data = {
             'experiment': self._experiment,
@@ -252,6 +281,29 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name, noversion=True)
 
     def log_artifact(self, obj, name, step=None, **extra):
+        """ log any object to the current run
+
+        Usage::
+
+            # log an artifact
+            exp.log_artifact(mydict, 'somedata')
+
+            # retrieve back
+            mydict_ = exp.restore_artifact('somedata')
+
+        Args:
+            obj (obj): any object to log
+            name (str): the name of artifact
+            step (int): the step, if any
+            **extra: any extra data to log
+
+        Notes:
+            * bool, str, int, float, list, dict are stored as ``format=type``
+            * Metadata is stored as ``format=metadata``
+            * objects supported by ``om.models`` are stored as ``format=model``
+            * objects supported by ``om.datasets`` are stored as ``format=dataset``
+            * all other objects are pickled and stored as ``format=pickle``
+        """
         if isinstance(obj, (bool, str, int, float, list, dict)):
             format = 'type'
             rawdata = obj
@@ -292,6 +344,15 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name, noversion=True)
 
     def log_event(self, event, key, value, step=None, **extra):
+        """ log some event
+
+        Args:
+            event (str): the event name (e.g. start, stop, metric, param)
+            key (str): a key to relate the value (e.g. metric name)
+            value (str|float|int|bool|dict): the actual event value
+            step (int): the step
+            **extra: any other values to store with event
+        """
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
@@ -308,6 +369,17 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name, noversion=True)
 
     def log_param(self, key, value, step=None, **extra):
+        """ log an experiment parameter
+
+        Args:
+            key (str): the parameter name
+            value (str|float|int|bool|dict): the parameter value
+            step (int): the step
+            **extra: any other values to store with event
+
+        Notes:
+            * logged as ``event=param``
+        """
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
@@ -324,6 +396,17 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name, noversion=True)
 
     def log_metric(self, key, value, step=None, **extra):
+        """ log a metric value
+
+        Args:
+            key (str): the metric name
+            value (str|float|int|bool|dict): the metric value
+            step (int): the step
+            **extra: any other values to store with event
+
+        Notes:
+            * logged as ``event=metric``
+        """
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
@@ -340,6 +423,18 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name)
 
     def log_system(self, key=None, value=None, step=None, **extra):
+        """ log system data
+
+        Args:
+            key (str): the key to use, defaults to 'system'
+            value (str|float|int|bool|dict): the parameter value
+            step (int): the step
+            **extra: any other values to store with event
+
+        Notes:
+            * logged as ``event=system``
+            * logs platform, python version and list of installed packages
+        """
         key = key or 'system'
         value = value or {
             'platform': platform.uname()._asdict(),
@@ -362,6 +457,20 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.put(data, self._data_name)
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
+        """ build a dataframe of all stored data
+
+        Args:
+            experiment (str): the name of the experiment, defaults to its current value
+            run (int|list): the run(s) to get data back, defaults to current run, use 'all' for all
+            event (str|list): the event(s) to include
+            step (int|list): the step(s) to include
+            key (str|list): the key(s) to include
+            raw (bool): if True returns the raw data instead of a DataFrame
+
+        Returns:
+            * data (DataFrame) if raw == False
+            * data (list of dicts) if raw == True
+        """
         filter = {}
         experiment = experiment or self._experiment
         run = run or self._run
@@ -382,6 +491,20 @@ class OmegaSimpleTracker(TrackingProvider):
         return data
 
     def restore_artifact(self, key=None, experiment=None, run=None, step=None, value=None):
+        """ restore a logged artificat
+
+        Args:
+            key (str): the name of the artifact as provided in log_artifact
+            run (int): the run for which to query, defaults to current run
+            step (int): the step for which to query, defaults to all steps in run
+            value (dict): this value is used instead of querying data, use to
+               retrieve an artifact from contents of ``.data()``
+
+        Notes:
+            * this will restore the artifact according to its type assigned
+              by ``.log_artifact()``. If the type cannot be determined, the
+              actual data is returned
+        """
         if value is None:
             data = self.data(experiment=experiment, run=run, event='artifact', step=step, key=key, raw=True)
             data = data[-1]['value']
@@ -399,23 +522,27 @@ class OmegaSimpleTracker(TrackingProvider):
         elif data['format'] == 'pickle':
             obj = dill.loads(b64decode((data['data']).encode('utf8')))
         else:
-            obj = data['data']
+            obj = data.get('data', data)
         return obj
 
 
 class OmegaProfilingTracker(OmegaSimpleTracker):
     """ A metric tracker that runs a system profiler while the experiment is active
 
-    Will record 'profile' events that contain cpu, memory and disk profilings.
+    Will record ``profile`` events that contain cpu, memory and disk profilings.
     See BackgroundProfiler.profile() for details of the profiling metrics collected.
 
     Usage:
-        with om.runtime.experiment('myexp', provider='profiling') as exp:
-            ...
 
-        data = exp.data(event='profile')
+        To log metrics and system performance data::
 
-    Properties:
+            with om.runtime.experiment('myexp', provider='profiling') as exp:
+                ...
+
+            data = exp.data(event='profile')
+
+    Properties::
+
         exp.profiler.interval = n.m # interval of n.m seconds to profile, defaults to 3 seconds
         exp.profiler.metrics = ['cpu', 'memory', 'disk'] # all or subset of metrics to collect
         exp.max_buffer = n # number of items in buffer before tracking
@@ -425,12 +552,10 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
           default the data is written on every 6 profiling events (default: 6 * 10 = every 60 seconds)
         - the step reported in the tracker counts the profiling event since the start, it is not
           related to the step (epoch) reported by e.g. tensorflow
-        - For every step there is a event=profile, key=profile_dt entry which you can use
-          to relate profiling events to a specific wall-clock time. Use the profile_dt to relate profiling
-          metrics to other metrics
+        - For every step there is a ``event=profile``, ``key=profile_dt`` entry which you can use
+          to relate profiling events to a specific wall-clock time.
         - It usually sufficient to report system metrics in intervals > 10 seconds since machine
-          learning algorithms tend to use CPU and memory over longer periods of time and are not
-          typically prone to short term fluctuations.
+          learning algorithms tend to use CPU and memory over longer periods of time.
     """
 
     def __init__(self, *args, **kwargs):
@@ -467,7 +592,16 @@ except:
     pass
 else:
     class TensorflowCallback(keras.callbacks.Callback):
-        # https://www.tensorflow.org/guide/keras/custom_callback
+        """ A callback for Tensorflow Keras models
+
+        Implements the callback protocol according to Tensorflow Keras
+        semantics and linking to a :class:`omegaml.backends.experiment.TrackingProvider`
+
+        See Also:
+
+            * https://www.tensorflow.org/guide/keras/custom_callback
+        """
+        #
         def __new__(cls, *args, **kwargs):
             # generate methods as per specs
             for action, phase in product(['train', 'test', 'predict'], ['begin', 'end']):

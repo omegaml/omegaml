@@ -13,7 +13,8 @@ class MLFlowProjectBackend(BaseDataBackend):
     """
     Backend to support storage of MLFlow projects
 
-    Usage:
+    Usage::
+
         om.scripts.put('mlflow://path/to/MLProject', 'myproject')
         om.scripts.get('myproject')
 

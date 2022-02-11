@@ -25,81 +25,98 @@ class SQLAlchemyBackend(BaseDataBackend):
     sqlalchemy plugin for omegaml
 
     Usage:
-        # define your sqlalchemy connection
-        sqlalchemy_constr = f'sqlalchemy://{user}:{password}@{account}/'
 
-        Store in any of three ways:
+        Define your sqlalchemy connection::
 
-        # -- just the connection
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy')
-        om.datasets.get('mysqlalchemy', raw=True)
-        => the sql connection object
+            sqlalchemy_constr = f'sqlalchemy://{user}:{password}@{account}/'
 
-        # -- store connection with a predefined sql
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', sql='select ....')
-        om.datasets.get('mysqlalchemy')
-        => will return a pandas dataframe using the specified sql to run.
-           specify chunksize= to return an interable of dataframes
+        Store the connection in any of three ways::
 
-        # -- predefined sqls can contain variables to be resolved at access time
-        #    if you miss to specify required variables in sqlvars, a KeyError is raised
-        om.datasets.put(sqlaclhemy_constr, 'myview', sql='select ... from col="{var}"')
-        om.datasets.get('mysqlalchemy', sqlvars=dict(var="value"))
+            # -- just the connection
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy')
+            om.datasets.get('mysqlalchemy', raw=True)
+            => the sql connection object
 
-        Copy to an omega dataset from the connection
+            # -- store connection with a predefined sql
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy',
+                            sql='select ....')
+            om.datasets.get('mysqlalchemy')
+            => will return a pandas dataframe using the specified sql to run.
+               specify chunksize= to return an interable of dataframes
 
-        # -- copy the result of the sqlalchemy query to omegaml
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', sql='select ...', copy=True)
-        om.datasets.get('mysqlalchemy')
-        => will return a pandas dataframe (without executing any additional queries)
-        => can also use with om.datasets.getl('mysqlalchemy') to return a MDataFrame
+            # -- predefined sqls can contain variables to be resolved at access time
+            #    if you miss to specify required variables in sqlvars, a KeyError is raised
+            om.datasets.put(sqlaclhemy_constr, 'myview',
+                            sql='select ... from col="{var}"')
+            om.datasets.get('mysqlalchemy', sqlvars=dict(var="value"))
 
-        # -- the default table when storing data is {bucket}_{name}, override using table='myname'
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table='mytable', sql='select ...', copy=True)
-        om.datasets.get('mysqlalchemy') # read from {bucket}_myname
-        # -- to use a specific table, without bucket information use table=':myname'
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy', table=':mytable', sql='select ...', copy=True)
-        om.datasets.get('mysqlalchemy') # read from myname
+        Query data from a connection and store into an omega-ml dataset::
 
-        Insert data via the connection
+            # -- copy the result of the sqlalchemy query to omegaml
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy',
+                            sql='select ...', copy=True)
+            om.datasets.get('mysqlalchemy')
+            => will return a pandas dataframe (without executing any additional queries)
+            => can also use with om.datasets.getl('mysqlalchemy') to return a MDataFrame
 
-        # -- store data back through the connection
-        om.datasets.put(sqlalchemy_constr, 'mysqlalchemy')
-        om.datasets.put(df, 'mysqlalchemy', table='SOMETABLE')
+        Controlling the table used in the connection::
 
-        Connection strings can contain variables, e.g. userid and password.
+            # -- the default table is {bucket}_{name}, override using table='myname'
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy',
+                            table='mytable',
+                            sql='select ...',
+                            copy=True)
+            om.datasets.get('mysqlalchemy') # read from {bucket}_myname
+
+            # -- to use a specific table, without bucket information use table=':myname'
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy',
+                            table=':mytable',
+                            sql='select ...',
+                            copy=True)
+            om.datasets.get('mysqlalchemy') # read from myname
+
+        Inserting data via a previously stored connection::
+
+            # -- store data back through the connection
+            om.datasets.put(sqlalchemy_constr, 'mysqlalchemy')
+            om.datasets.put(df, 'mysqlalchemy',
+                            table='SOMETABLE')
+
+        Using variables in connection strings:
+
+        Connection strings may contain variables, e.g. userid and password.
         By default variables are resolved from the os environment. Can also
-        specify using any dict.
+        specify using any dict.::
 
-        # -- use connection string with variables
-        sqlalchemy_constr = 'sqlite:///{dbname}.db'
-        om.datasets.put(sqlalchemy_constr, 'userdb')
-        om.datasets.get('userdb', secrets=dict(dbname='chuckdb'))
+            # -- use connection string with variables
+            sqlalchemy_constr = 'sqlite:///{dbname}.db'
+            om.datasets.put(sqlalchemy_constr, 'userdb')
+            om.datasets.get('userdb', secrets=dict(dbname='chuckdb'))
 
-        # -- alternatively, create a vault dataset:
-        secrets = dict(userid='chuck', dbname='chuckdb')
-        om.datasets.put(secrets, '_omega/vault')
-        om.datasets.get('userdb')
+            # -- alternatively, create a vault dataset:
+            secrets = dict(userid='chuck', dbname='chuckdb')
+            om.datasets.put(secrets, '_omega/vault')
+            om.datasets.get('userdb')
 
-        the '_omega/vault' dataset will be queried using the current userid as
-        the secret name,ad the dbname retrieved from the document. This is
-        experimental and the vault is not encrypted.
+            the '_omega/vault' dataset will be queried using the current userid as
+            the secret name,ad the dbname retrieved from the document. This is
+            experimental and the vault is not encrypted.
 
     Advanced:
 
-        om.datasets.put() supports the following additional keyword arguments
+        ``om.datasets.put()`` supports the following additional keyword arguments
 
-        chunksize=int   specify the number of rows to read from sqlalchemy in one chunk.
-                        defaults to 10000
+        * ``chunksize=int`` - specify the number of rows to read from sqlalchemy in one chunk.
+          defaults to 10000
 
-        parse_dates=['col', ...] list of column names to parse for date, time or datetime.
-                        see pd.read_sql for details
+        * ``parse_dates=['col', ...]`` - list of column names to parse for date, time or datetime.
+          see pd.read_sql for details
 
-        transform=callable  a callable, is passed the DataFrame of each chunk before it
-                        is inserted into the database. use to provide custom transformations.
-                        only works on copy=True
+        * ``transform=callable`` - a callable, is passed the DataFrame of each chunk before it
+          is inserted into the database. use to provide custom transformations.
+          only works on copy=True
 
-        as well as other kwargs supported by pd.read_sql
+        * any other kwargs supported by ``pandas.read_sql``
 
     """
     KIND = 'sqlalchemy.conx'
@@ -117,33 +134,42 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
             secrets=None, index=True, keep=False, lazy=False, table=None, *args, **kwargs):
-        """
-        retrieve connection or query data from connection
+        """ retrieve a stored connection or query data from connection
 
         Args:
             name (str): the name of the connection
             secrets (dict): dict to resolve variables in the connection string
             keep (bool): if True connection is kept open.
-            table (str): the name of the table, will be prefixed with the store's bucket
-               unless it is specified as ':name'
-
-        Query data, specify sql='select ...':
-            sql (str): the sql query, defaults to the query specific on .put()
-            chunksize (int): the number of records for each chunk, if
-               specified returns an iterator
-            sqlvars (dict): optional, if specified will be used to format sql
-
-        Get connection:
-            raw (bool): the raw sql alchemy connection
-
-        To reuse connections:
-            specify keep=True. Note this is potentially unsafe in a multi-user
-            environment where connection strings contain user-specific secrets.
-            If you want to always keep connections open, specify
-            om.datasets.defaults.SQLALCHEMY_ALWAYS_CACHE=True
+            table (str): the name of the table, will be prefixed with the
+               store's bucket name unless the table is specified as ':name'
 
         Returns:
-            connection or pd.DataFrame
+            connection
+
+        To query data and return a DataFrame, specify ``sql='select ...'``:
+
+        Args:
+                sql (str): the sql query, defaults to the query specific on .put()
+                chunksize (int): the number of records for each chunk, if
+                   specified returns an iterator
+                sqlvars (dict): optional, if specified will be used to format sql
+
+        Returns:
+            pd.DataFrame
+
+        To get the connection for a data query, instead of a DataFrame:
+
+        Args:
+
+                raw (bool): if True, returns the raw sql alchemy connection
+                keep (bool): option, if True keeps the connection open. This
+                  is potentially unsafe in a multi-user environment where
+                  connection strings contain user-specific secrets. To always
+                  keep connections open, set
+                  ``om.datasets.defaults.SQLALCHEMY_ALWAYS_CACHE=True``
+
+        Returns:
+            connection
         """
         meta = self.data_store.metadata(name)
         connection_str = meta.kind_meta.get('sqlalchemy_connection')
@@ -180,32 +206,43 @@ class SQLAlchemyBackend(BaseDataBackend):
     def put(self, obj, name, sql=None, copy=False, append=True, chunksize=None,
             transform=None, table=None, attributes=None, insert=False,
             secrets=None, *args, **kwargs):
-        """
-        store sqlalchemy connection or data into an existing connection
+        """ store sqlalchemy connection or insert data into an existing connection
 
         Args:
             obj (str|pd.DataFrame): the sqlalchemy connection string or a dataframe object
             name (str): the name of the object
             table (str): optional, if specified is stored along connection
             sql (str): optional, if specified is stored along connection
-            copy (bool): optional, if True the connection is queried using sql and the resulting data is stored instead,
-                see Copying
+            copy (bool): optional, if True the connection is queried using sql
+                and the resulting data is stored instead, see below
             attributes (dict): optional, set or update metadata.attributes
 
-        Copying data, specify copy=True:
+        Returns:
+            metadata of the stored connection
+
+        Instead of inserting the connection specify ``copy=True`` to query data
+        and store it as a DataFrame dataset given by ``name``:
+
+        Args:
             sql (str): sql to query
             append (bool): if True the data is appended if exists already
-            chunksize (int): number of records to use
+            chunksize (int): number of records to query in each chunk
             transform (callable): passed as DataFrame.to_sql(method=)
 
-        Inserting via connection, specify insert=True:
-            insert (bool): specify True to insert via connection
+        Returns:
+            metadata of the inserted dataframe
+
+        To insert data via a previously stored connection, specify ``insert=True``:
+
+        Args:
+            insert (bool): specify True to insert via the connection
             table (str): the table name to use for inserting data
             append (bool): if False will replace any existing table, defaults to True
             index (bool): if False will not attempt to create an index in target, defaults to False
+            chunksize (int): number of records to insert in each chunk
 
         Returns:
-            metadata
+            metadata of the connection
         """
         meta = self.data_store.metadata(name)
         if not insert and self._is_valid_url(obj):
@@ -217,9 +254,9 @@ class SQLAlchemyBackend(BaseDataBackend):
                                                table=table, attributes=attributes, **kwargs)
             if copy:
                 secrets = self._get_secrets(metadata, secrets)
-                self._put_as_data(url, name, cnx_name,
+                metadata = self._put_as_data(url, name, cnx_name,
                                   sql=sql, chunksize=chunksize,
-                                  append=append, transform=None,
+                                  append=append, transform=transform,
                                   secrets=secrets,
                                   **kwargs)
         elif meta is not None:

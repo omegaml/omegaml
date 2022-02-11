@@ -9,16 +9,17 @@ class LazyGetMixin:
     OmegaStore mixin to support chunked lazy get via name
 
     Usage:
-        equivalent of om.datasets.get('foo', lazy=True).iterchunks()
+
+        equivalent of ``om.datasets.get('foo', lazy=True).iterchunks()``::
 
             mdf = om.datasets.get('foo#')
             mdf = om.datasets.get('foo#iterchunks')
 
-        equivalent of om.datasets.get('foo', lazy=True).iterchunks(chunksize=10)
+        equivalent of ``om.datasets.get('foo', lazy=True).iterchunks(chunksize=10)``::
 
             mdf = om.datasets.get('foo#iterchunks:chunksize=10')
 
-        equivalent of om.datasets.get('foo', lazy=True).iloc[0:10]
+        equivalent of ``om.datasets.get('foo', lazy=True).iloc[0:10]``::
 
             mdf = om.datasets.get('foo#rows:start=1,end=10')
     """

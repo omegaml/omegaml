@@ -2,7 +2,7 @@ Getting Started with omega|ml
 =============================
 
 omega|ml is the data science integration platform that consists of a compute cluster,
-a highly scalable distributed NoSQL database and a REST API. The omega|ml Enterprise Edition
+a highly scalable distributed NoSQL database and a REST API. The omega|ml Commercial Edition
 in addition provides a web dashboard, user profile management and security features.
 
 omega|ml enables data scientists to offload all the heavy-lifting involved
@@ -69,10 +69,10 @@ omega|ml supports two types of clients:
 .. note::
 
    The Data Science workstation directly connects to RabbitMQ and MongoDB.
-   The Enterprise Edition comes with respective security built in, including
+   The Commercial Edition comes with respective security built in, including
    user management, secured RabbitMQ channels and per-user MongoDB instances.
 
-   If you have security needs you should subscribe to Enterprise Edition to
+   If you have security needs you should subscribe to Commercial Edition to
    avoid the cost of managing this complexity.
 
 

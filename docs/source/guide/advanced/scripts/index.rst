@@ -5,6 +5,7 @@ Working with scripts
    :maxdepth: 2
 
    lambda
+   mlflow
 
 
 

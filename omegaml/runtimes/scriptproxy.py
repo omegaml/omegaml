@@ -27,16 +27,17 @@ class OmegaScriptProxy(object):
         """
         run the script
 
-        Runs the script and returns its result as
+        Runs the script and returns its result as::
 
-        {"runtimes": 7.4e-05,
-          "started": "2018-04-07T17:57:52.451012",
-          "kwargs": {},
-          "result": {},
-          "script": "helloworld"
-        }
+            {"runtimes": 7.4e-05,
+              "started": "2018-04-07T17:57:52.451012",
+              "kwargs": {},
+              "result": {},
+              "script": "helloworld"
+            }
 
-        :return: the result
+        Returns:
+            AsyncResult
         """
         script_run = self.task(as_callback=as_callback)
         return script_run.delay(self.scriptname, **kwargs)
