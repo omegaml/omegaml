@@ -77,6 +77,8 @@ OMEGA_TASK_ROUTING_ENABLED = os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False)
 OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.notebook',
                         'omegaml.backends.package']
+#: REST API available objects
+OMEGA_RESTAPI_FILTER = os.environ.get('OMEGA_RESTAPI_FILTER', '.*/.*/.*')
 #: storage backends
 OMEGA_STORE_BACKENDS = {
     'experiment.tracker': 'omegaml.backends.experiment.ExperimentBackend',

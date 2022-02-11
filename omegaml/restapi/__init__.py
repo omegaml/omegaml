@@ -109,6 +109,11 @@ class OmegaResourceMixin(object):
         payload = api.payload or {}
         return query, payload
 
+    def check_object_authorization(self, pattern):
+        if resource_filter and not any(rx.match(pattern) for rx in resource_filter):
+            return False
+        return True
+
     def create_response_from_resource(self, generic_resource, resource_method, resource_name, resource_pk, *args,
                                       **kwargs):
         query, payload = self.get_query_payload()
@@ -116,6 +121,9 @@ class OmegaResourceMixin(object):
             resource_name: resource_pk,
             'result': 'pending',
         }
+        pattern = rf'{resource_name}/{resource_pk}/{resource_method}/'
+        if not self.check_object_authorization(pattern):
+            raise BadRequest(f'{pattern} is not available')
         try:
             meth = self._get_resource_method(generic_resource, resource_method)
             result = meth(resource_pk, query, payload)
@@ -304,3 +312,12 @@ class DatasetResource(OmegaResourceMixin, Resource):
         else:
             status = 200
         return '', status
+
+# list of regex to filter available resources in format
+#   resource/name/action
+#   e.g. model/.*/.* => allow all models
+#   e.g. model/foo/predict => allow only prediction
+# only regex that match at least one regex can succeed
+# empty list means all objects and actions are allowed
+# see OmegaResourceMixin.check_object_authorization()
+resource_filter = []

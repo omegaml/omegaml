@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_restx import Api
 from werkzeug.utils import redirect
@@ -15,3 +17,14 @@ app.config['RESTX_JSON'] = {'cls': app.json_encoder}
 @app.route('/docs')
 def docs():
     return redirect("https://omegaml.github.io/omegaml/", code=302)
+
+
+def serve_objects():
+    from omegaml.restapi import resource_filter
+    import re
+
+    specs = os.environ.get('OMEGA_RESTAPI_FILTER')
+    if specs:
+        respecs = [re.compile(s) for s in specs.split(';') if s]
+        resource_filter.extend(respecs)
+    return app

@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 from subprocess import call
 
@@ -26,6 +27,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [options]
+      om runtime serve [<rule>...] [--rules=<rulefile>] [options]
       om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
 
@@ -41,6 +43,7 @@ class RuntimeCommandBase(CommandBase):
       --local           if specified the task will run locally. Use this for testing
       --every           if specified runs task on all workers
       --insecure        allow insecure connections (disables verification of ssl certificates)
+      --rules=VALUE     /path/to/specs.txt, where each line is a <spec>
       --compress        if specified the archive will be compress (tgz format) [default: True]
       --path=PATH       path to directory where the archive should be written [default: ./mlops-export]
       --list            if specified, print members of archive
@@ -152,6 +155,31 @@ class RuntimeCommandBase(CommandBase):
             om runtime env install --file requirements.txt
             om runtime env install --file gpu-requirements.txt --require gpu
             om runtime env install --file requirements.txt --every
+
+      serve command
+      -------------
+
+      Start a local omega-ml server for models, scripts, jobs. Each <rule> is
+      a regex in format <resource>/<name>/<action>. If you provide a <rulefile>,
+      each line is a <rule>, lines that start by # are ignored.
+
+      * resource: model|script|job
+      * name: name or pattern of existing objects
+      * action: resource actions
+
+      Examples:
+          # allow all models, scripts, jobs
+          om runtime serve
+          om runtime serve .*/.*/.*
+
+          # allow all models, all actions, but no other resources
+          om runtime serve model/.*/.*
+
+          # allow only model foo and dataset xyz
+          om runtime serve "model/foo/.*" "dataset/xyz/.*"
+
+          # allow only predictions by model foo
+          om runtime serve model/foo/predict
     """
     command = 'runtime'
 
@@ -365,6 +393,16 @@ class RuntimeCommandBase(CommandBase):
         start = requests.get(f'{url}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
                              auth=auth, verify=not insecure)
         self.logger.info(f'stop: {stop} start: {start}')
+
+    def serve(self):
+        om = get_omega(self.args, require_config=False)
+        specs = self.args.get('<rule>')
+        specfile = self.args.get('--rules')
+        if specfile:
+            with open(specfile, 'r') as fin:
+                specs = [s.replace('\n', '') for s in fin.readlines() if not s.startswith('#')]
+        os.environ['OMEGA_RESTAPI_FILTER'] = ';'.join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
+        subprocess.run("gunicorn 'omegaml.restapi.app:serve_objects()'", shell=True)
 
     def do_export(self):
         om = get_omega(self.args)
