@@ -143,6 +143,6 @@ class RScript:
             output = run(rcmd.split(' '), capture_output=True)
             output = output.stdout
         else:
-            r.source(f'./{self.appdir}/app.R')
+            r.source(f'{self.appdir}/app.R')
             output = r.omega_run(om, kwargs)
         return tryOr(lambda: json.loads(output), output)

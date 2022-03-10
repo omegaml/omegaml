@@ -1,9 +1,25 @@
 .PHONY: dist image help
 VERSION=$(shell cat omegaml/VERSION)
 
+# run using make -e to override by env variables
+EXTRAS:=dev
+PIPREQ:=pip
+
+install:
+	# in some images pip is outdated, some packages are system-level installed
+	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
+	pip install --ignore-installed -U pip
+	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}"
+	(which R && scripts/setup-r.sh) || echo "R is not installed"
+
 test:
 	# add -x to fail on first error
-	unset DJANGO_SETTINGS_MODULE && nosetests -v -s
+	# PATH is required for tensorflow images
+	unset DJANGO_SETTINGS_MODULE && PATH=${HOME}/.local/bin:${PATH} nosetests -v -s ${TESTS}
+
+freeze:
+	echo "Writing pip requirements to pip-requirements.lst"
+	pip list --format freeze
 
 sanity:
 	# quick sanity check -- avoid easy mistakes
@@ -40,8 +56,6 @@ release-prod: dist sanity
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
 	twine upload --skip-existing --repository pypi dist/*gz dist/*whl
-	sleep 5
-	scripts/livetest.sh
 
 release-docker: dist
 	: "docker push image sto dockerhub"
@@ -49,7 +63,6 @@ release-docker: dist
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-	twine upload --skip-existing --repository pypi dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh
 
@@ -89,6 +102,6 @@ bumpfinal:
 	bumpversion release
 
 help:
-		@echo -n "Common make targets"
-		@echo ":"
-		@cat Makefile | grep -A1 -E -e ".*:.*"
+	@echo -n "Common make targets"
+	@echo ":"
+	@cat Makefile | grep -A1 -E -e ".*:.*"

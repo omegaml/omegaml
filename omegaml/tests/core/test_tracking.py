@@ -231,45 +231,6 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # no more data present
         self.assertIsNone(exp.data())
 
-    def test_tensorflow_callback(self):
-        om = self.om
-        # fit locally
-        with om.runtime.experiment('myexp') as exp:
-            model, X, Y = self._create_model(exp.tensorflow_callback())
-        self.assertIsInstance(exp.data(), pd.DataFrame)
-        self.assertEqual(len(exp.data(key='loss')), 10)
-        self.assertEqual(len(exp.data(key='accuracy')), 10)
-        model_ = exp.restore_artifact('model')
-        self.assertIsInstance(model, type(model_))
-        # fit via runtime
-        om.models.put(model, 'mymodel')
-        with om.runtime.experiment('myexp2') as exp:
-            om.runtime.model('mymodel').fit(X, Y, epochs=1,
-                                            batch_size=128).get()
-        self.assertIsNotNone(exp.data())
-        self.assertEqual(len(exp.data(key='accuracy')), 10)
-
-    def _create_model(self, tracking_cb):
-        import numpy as np
-        from tensorflow import keras
-        from tensorflow.keras.optimizers import SGD
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Dense
-
-        x_train = np.random.random((1000, 20))
-        y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
-
-        model = Sequential()
-        model.add(Dense(10, activation='softmax', input_shape=x_train.shape))
-        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=sgd,
-                      metrics=['accuracy'])
-        model.fit(x_train, y_train,
-                  epochs=1,
-                  batch_size=128, callbacks=[tracking_cb])
-        return model, x_train, y_train
-
     def test_log_system(self):
         om = self.om
         with om.runtime.experiment('test') as exp:
@@ -285,7 +246,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             exp.profiler.interval = 0.1
             sleep(1.5)
         data = exp.data(event='profile')
-        self.assertGreaterEqual(len(data), 10)
+        self.assertGreaterEqual(len(data), 9)
         xexp = om.runtime.experiment('proftest')
         self.assertIsInstance(xexp.experiment, OmegaProfilingTracker)
 

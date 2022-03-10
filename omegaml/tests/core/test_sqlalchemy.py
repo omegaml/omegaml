@@ -16,7 +16,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.om = Omega()
         self.om.models.register_backend(SQLAlchemyBackend.KIND, SQLAlchemyBackend)
         self.clean()
-        os.remove('test.db') if os.path.exists('test.db') else None
+        os.remove('../test.db') if os.path.exists('../test.db') else None
 
     def test_put_connection(self):
         """

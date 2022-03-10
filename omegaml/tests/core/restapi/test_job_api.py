@@ -6,7 +6,7 @@ from nbformat import v4
 from omegaml import Omega
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.restapi.app import app
-from omegaml.restapi.tests.util import RequestsLikeTestClient
+from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
 

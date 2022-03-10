@@ -1,13 +1,15 @@
 import os
+import unittest
 from unittest import TestCase
 
 from omegaml import Omega
 from omegaml.backends.tensorflow.protobufobj import ProtobufDataBackend
 from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
-
-
 # tensorflow example adopted from https://www.tensorflow.org/tutorials/load_data/tf_records
+from omegaml.util import module_available
 
+
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 class ProtobufDataBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         self.om = Omega()

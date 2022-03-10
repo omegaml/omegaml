@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 
 from omegaml import Omega
-from omegaml.tests.cli.scenarios import CliTestScenarios
+from omegaml.tests.core.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
 
 
