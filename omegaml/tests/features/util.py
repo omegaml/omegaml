@@ -112,7 +112,7 @@ class Notebook:
         br = self.browser
         self.jupyter_home
         br.find_by_id('new-dropdown-button').click()
-        br.find_by_text('Python 3 (ipykernel)').click()
+        br.links.find_by_partial_text('Python 3').click()
         sleep(2)
         self.last_notebook
         return self

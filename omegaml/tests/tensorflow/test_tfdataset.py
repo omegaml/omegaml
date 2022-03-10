@@ -1,11 +1,15 @@
 import pathlib
-from unittest import TestCase, skipIf, skip
+import unittest
+from unittest import TestCase, skip
 
 from omegaml import Omega
 from omegaml.backends.tensorflow.tfdataset import TFDatasetBackend
-from omegaml.tests.util import tf_in_eager_execution, tf_perhaps_eager_execution, OmegaTestMixin
-
+from omegaml.tests.util import tf_perhaps_eager_execution, OmegaTestMixin
 # check https://www.tensorflow.org/datasets/api_docs/python/tfds/testing/run_in_graph_and_eager_modes
+from omegaml.util import module_available
+
+
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 @skip("requires eager mode which must be enabled once for the whole python session")
 class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
@@ -37,7 +41,6 @@ class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
         return image_ds
 
     def test_save_dataset(self):
-        import tensorflow as tf
         ds = self.get_image_ds()
         for img in ds.take(1):
             print(img.numpy())

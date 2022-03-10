@@ -264,7 +264,7 @@ class OmegaRuntime(object):
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
-    def ping(self, *args, require=None, **kwargs):
+    def ping(self, *args, require=None, wait=True, **kwargs):
         """
         ping the runtimes
 
@@ -274,7 +274,8 @@ class OmegaRuntime(object):
             kwargs (dict): task kwargs
         """
         self.require(**require) if require else None
-        return self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs).get()
+        promise = self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs)
+        return promise.get() if wait else promise
 
     def enable_hostqueues(self):
         """ enable a worker-specific queue on every worker host

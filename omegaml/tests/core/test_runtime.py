@@ -388,6 +388,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
         with om.runtime.sequence() as ctr:
+            ctr.ping(wait=False)
             ctr.model('regmodel').fit('sample[x]', 'sample[y]')
             ctr.model('regmodel').predict('sample[x]')
             result = ctr.run()

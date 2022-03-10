@@ -20,22 +20,23 @@ mlflow_deps = ['mlflow~=1.21.0']
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
+#    see https://www.tensorflow.org/install/source
 tf_version = os.environ.get('TF_VERSION') or '2.3.1'
 tf_match = os.environ.get('TF_VERSION_MATCH', '==')
 if tf_version.startswith('1.15'):
-    assert sys.version_info <= (3, 7), "TF < 2.x requires Python <= 3.7"
+    assert sys.version_info[:2] <= (3, 7), "TF < 2.x requires Python <= 3.7"
     tf_deps = ['tensorflow=={}'.format(tf_version)]
     tf_deps = tf_deps + ['tensorflow-gpu==1.15.0', 'h5py==2.10.0']
     keras_deps = ['keras==2.2.4']
-elif (3, 8) <= sys.version_info < (3, 9) :
+elif (3, 8) <= sys.version_info[:2] < (3, 9) :
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     assert (major, minor) >= (2, 2), "Python version 3.8 only supported by TF >= 2.2"
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
     keras_deps = ['keras~=2.4.3']
-elif sys.version_info >= (3, 9):
+elif sys.version_info[:2] >= (3, 9):
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
-    tf_deps = ['tensorflow>=2.5,<2.8']
+    tf_deps = ['tensorflow>=2.5,<2.9']
     keras_deps = ['keras~=2.4.3']
 else:
     # python 3.6, tensorflow 2.3.1 only supported with keras<=2.5
@@ -43,8 +44,8 @@ else:
     keras_deps = ['keras<=2.5']
 
 # all deps
-all_deps = (hdf_deps + tf_deps + keras_deps + graph_deps + dashserve_deps
-            + sql_deps + iotools_deps + streaming_deps + jupyter_deps + snowflake_deps)
+all_deps = (hdf_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps
+            + streaming_deps + jupyter_deps + snowflake_deps)
 client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
 
 setup(
@@ -81,15 +82,14 @@ setup(
         'celery==4.2.1',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
-        'pymongo>=3.2.2',
+        'pymongo>=3.2.2,<4.0', # 4.x is not compatiblie with mongoengine 0.23.1
         'mongoengine~=0.23.1',
         'pandas>1.1,<1.4',  # 1.1 fails on indexes, 1.4 fails some libraries, e.g. yfinance
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
-        'PyYAML>=5.1',
+        'PyYAML>=3.12',
         'flask-restx>=0.4.0',
-        'werkzeug<2.0.0',  # https://github.com/noirbizarre/flask-restplus/issues/777#issuecomment-584365577
         'six>=1.11.0',
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
@@ -108,7 +108,7 @@ setup(
         'honcho>=1.0.1',  # not strictly required, but used in docker compose
         'tabulate>=0.8.2',  # required in cli
         'smart_open', # required in cli
-        'imageio>=2.6.1', # require to store images
+        'imageio>=2.3.0', # require to store images
         'psutil>=5.8' # required for profiling tracker
     ],
     extras_require={
@@ -132,3 +132,4 @@ setup(
         'console_scripts': ['om=omegaml.client.cli:climain'],
     }
 )
+

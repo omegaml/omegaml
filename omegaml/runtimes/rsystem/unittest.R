@@ -4,5 +4,4 @@ library(reticulate)
 print("starting unittest for omegaml inside R")
 omtests <- import("omegaml.tests")
 om <- import("omegaml")
-om$runtimes$rsystem$load()
-
+omtests$rsystem$rtestutil$R_unittests()

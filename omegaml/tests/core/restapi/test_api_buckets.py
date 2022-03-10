@@ -4,8 +4,8 @@ from sklearn.linear_model import LinearRegression
 from omegaml import Omega
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.restapi.app import app
-from omegaml.restapi.tests.test_model_api import OmegaRestApiTests
-from omegaml.restapi.tests.util import RequestsLikeTestClient
+from omegaml.tests.core.restapi.test_model_api import OmegaRestApiTests
+from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 
 
 class OmegaRestApiTestsWithBuckets(OmegaRestApiTests):

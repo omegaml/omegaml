@@ -1,12 +1,16 @@
+import unittest
 from unittest import TestCase, skipIf
 
 from omegaml import Omega
-from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelBackend, TensorflowSavedModelPredictor
 from omegaml.tests.util import OmegaTestMixin, tf_in_eager_execution
+from omegaml.util import module_available
 
 
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
+        from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelBackend
+
         self.om = Omega()
         self.om.models.register_backend(TensorflowSavedModelBackend.KIND, TensorflowSavedModelBackend)
         self.clean()
@@ -54,8 +58,10 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
         est_model.train(train_input_fn)
         return est_model
 
-    @skipIf(tf_in_eager_execution(), "cannot run in eager mode")
+    @skipIf(module_available('tensorflow') and tf_in_eager_execution(), "cannot run in eager mode")
     def test_save_load_tf_example(self):
+        from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelPredictor
+
         import tensorflow as tf
         import numpy as np
 
@@ -92,10 +98,11 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
             yhat_ = model_.predict([example.SerializeToString()])
             self.assertTrue(np.allclose(yhat_, yhat[i][model_.output_names[0]]))
 
-    @skipIf(tf_in_eager_execution(), "cannot run in eager mode")
+    @skipIf(module_available('tensorflow') and tf_in_eager_execution(), "cannot run in eager mode")
     def test_save_load_native(self):
         import tensorflow as tf
         import numpy as np
+        from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelPredictor
 
         om = self.om
         model = self._build_model()
