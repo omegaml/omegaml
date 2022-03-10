@@ -63,6 +63,8 @@ See Also
 
     https://github.com/rstudio/reticulate
 """
+import shutil
+
 from pathlib import Path
 
 import sys
@@ -117,3 +119,8 @@ def start_worker(om, queue=None):
     if queue:
         argv.extend(f'-Q {queue}'.split(' '))
     om.runtime.celeryapp.worker_main(argv=argv)
+
+#: determine if R is installed
+r_available = shutil.which('Rscript') is not None
+#: determine if we are running inside R reticulate
+inside_r = rhelper() is not None

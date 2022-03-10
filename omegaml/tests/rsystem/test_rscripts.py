@@ -5,9 +5,11 @@ from pathlib import Path
 
 from omegaml import Omega
 from omegaml.backends.rsystem.rscripts import RPackageData, RScript
+from omegaml.runtimes.rsystem import r_available, inside_r
 from omegaml.tests.util import OmegaTestMixin
 
 
+@unittest.skipUnless(r_available or inside_r, "results consolidated as RSystemTestCase.test_inside_r result")
 class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
     """ test running R functionality from within Python
     """

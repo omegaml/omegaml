@@ -4,10 +4,8 @@ from unittest import TestSuite, TestLoader, TextTestRunner
 from omegaml.runtimes.rsystem import rhelper
 from omegaml.util import temp_filename, remove_temp_filename
 
-RE_TEST_CASES = [
-    'omegaml.tests.rsystem.test_rmodels.RSystemModelTests',
-]
-
+RE_TEST_CASES = ['omegaml.tests.rsystem.test_rmodels.RSystemModelTests',
+                 'omegaml.tests.rsystem.test_rscripts.RSystemScriptTests']
 
 def R_unittests():
     # -- build test suite, adopted from https://docs.python.org/3/library/unittest.html#load-tests-protocol
