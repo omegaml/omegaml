@@ -19,7 +19,7 @@ jobs:
               cd omegaml-ce
               echo "Building PR #$pr_number on target branch."
               (git checkout --force $CIRCLE_BRANCH && \
-               git fetch --force origin pull/208/merge:circleci-build && \
+               git fetch --force origin pull/$pr_number/merge:circleci-build && \
                git checkout circleci-build) || \
                 (echo "Merge failed. Please merge manually into your branch."; exit 1)
             else
@@ -42,13 +42,13 @@ jobs:
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             function dotest() {
               export VER=$1
-              export EXTRAS=all,dev,mlflow
+              export EXTRAS=all,dev,mlflow,tensorflow
               conda env remove -q -y -n omenv$VER || echo ""
               echo "Testing with python $VER"
               conda create -q -y -n omenv$VER python=$VER
               conda activate omenv$VER
-              make install
-              make test
+              make -e install
+              make -e test
               conda deactivate
             }
             if [[ $CIRCLE_BRANCH = "release-build" ]]; then
