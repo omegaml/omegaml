@@ -1,80 +1,38 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Lambda Modules &mdash; omega|ml 1.1 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using pip-installable modules &mdash; omega|ml 1.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../../genindex.html"/>
-        <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="omega|ml 1.1 documentation" href="../../../index.html"/>
-        <link rel="up" title="Working with scripts" href="index.html"/>
-        <link rel="next" title="Working with streams" href="../streams/index.html"/>
-        <link rel="prev" title="Working with scripts" href="index.html"/> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Using mlflow projects" href="mlflow.html" />
+    <link rel="prev" title="Working with scripts" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
+        <div class="wy-side-nav-search" >
             <a href="../../../index.html" class="icon icon-home"> omega|ml
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 1.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -82,28 +40,20 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">User Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/index.html">Working with datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../models/index.html">Working with models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../jobs/index.html">Working with notebooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Advanced features</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Working with scripts</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">Lambda Modules</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Using pip-installable modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlflow.html">Using mlflow projects</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../streams/index.html">Working with streams</a></li>
@@ -111,6 +61,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../customizing/index.html">Customizing omega|ml</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../integration/index.html">Integration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
@@ -118,87 +69,48 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moreinfo.html">More information</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">omega|ml</a>
-        
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">User Guide</a> &raquo;</li>
-        
           <li><a href="../index.html">Advanced features</a> &raquo;</li>
-        
           <li><a href="index.html">Working with scripts</a> &raquo;</li>
-        
-      <li>Lambda Modules</li>
-    
-    
+      <li>Using pip-installable modules</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../../_sources/guide/advanced/scripts/lambda.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS overrides for sphinx_rtd_theme */
 
 /* 24px margin */
-.nbinput.nblast,
-.nboutput.nblast {
+.nbinput.nblast.container,
+.nboutput.nblast.container {
     margin-bottom: 19px;  /* padding has already 5px */
 }
 
 /* ... except between code cells! */
-.nblast + .nbinput {
+.nblast.container + .nbinput.container {
     margin-top: -19px;
 }
 
@@ -211,14 +123,14 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="lambda-modules">
-<h1>Lambda Modules<a class="headerlink" href="#lambda-modules" title="Permalink to this headline">¶</a></h1>
+<section id="using-pip-installable-modules">
+<h1>Using pip-installable modules<a class="headerlink" href="#using-pip-installable-modules" title="Permalink to this headline">¶</a></h1>
 <p>omega|ml supports execution of arbitrary modules packaged by pip on the runtime cluster. This
-is the equivalent of AWS Lambda with the added bonus of having the full set of omega|ml capabilities
+is the equivalent of <a href="#id1"><span class="problematic" id="id2">`serverless functions`_</span></a> with the bonus of having the full set of omega|ml capabilities
 available to your modules.</p>
-<div class="section" id="writing-a-lambda-module">
-<h2>Writing a Lambda Module<a class="headerlink" href="#writing-a-lambda-module" title="Permalink to this headline">¶</a></h2>
-<p>Creating a Lambda Module is straight forward:</p>
+<section id="writing-a-pip-installable-module">
+<h2>Writing a pip-installable Module<a class="headerlink" href="#writing-a-pip-installable-module" title="Permalink to this headline">¶</a></h2>
+<p>Creating a pip-installable Module is straight forward:</p>
 <ol class="arabic simple">
 <li><p>write your code</p></li>
 <li><p>add <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code></p></li>
@@ -242,19 +154,41 @@ is properly initialized.</p>
       <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;helloworld&#39;</span><span class="p">],)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="deploying-a-module">
+</section>
+<section id="deploying-a-module">
 <h2>Deploying a module<a class="headerlink" href="#deploying-a-module" title="Permalink to this headline">¶</a></h2>
-<p>To deploy a Lambda module use <code class="code docutils literal notranslate"><span class="pre">om.scripts.put()</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pkg://path/to/helloworld`, &#39;</span><span class="n">helloworld</span><span class="s1">&#39;)</span>
+<p>To deploy a script programmatically use <code class="code docutils literal notranslate"><span class="pre">om.scripts.put()</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the pkg:// prefix triggers the python.package plugin</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pkg://path/to/helloworld`, &#39;</span><span class="n">helloworld</span><span class="s1">&#39;)</span>
+</pre></div>
+</div>
+<p>Alternatively use the cli to achieve the same:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om scripts put ./path/to/helloworld helloworld
 </pre></div>
 </div>
 <p>This will build the package and store it in omega|ml. It is automatically
 available for execution using the REST API or <code class="code docutils literal notranslate"><span class="pre">om.runtime.script()</span></code>.</p>
-</div>
-<div class="section" id="executing-a-module">
+</section>
+<section id="learning-more-about-pip-and-setuptools">
+<h2>Learning more about pip and setuptools<a class="headerlink" href="#learning-more-about-pip-and-setuptools" title="Permalink to this headline">¶</a></h2>
+<p>While the above provides a concise introduction to wrinting pip-installable
+modules, this can be a complex topic. More information can be found at the
+following locations:</p>
+<p><em>Official tutorials</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://packaging.python.org/en/latest/tutorials/packaging-projects/">https://packaging.python.org/en/latest/tutorials/packaging-projects/</a></p></li>
+<li><p><a class="reference external" href="https://setuptools.pypa.io/en/latest/userguide/quickstart.html">https://setuptools.pypa.io/en/latest/userguide/quickstart.html</a></p></li>
+</ul>
+<p><em>Community guides</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://the-hitchhikers-guide-to-packaging.readthedocs.io/en/latest/quickstart.html">https://the-hitchhikers-guide-to-packaging.readthedocs.io/en/latest/quickstart.html</a></p></li>
+<li><p><a class="reference external" href="https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html">https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html</a></p></li>
+<li><p><a class="reference external" href="https://flask.palletsprojects.com/en/2.0.x/patterns/distribute/">https://flask.palletsprojects.com/en/2.0.x/patterns/distribute/</a></p></li>
+</ul>
+</section>
+<section id="executing-a-module">
 <h2>Executing a module<a class="headerlink" href="#executing-a-module" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="using-the-rest-api">
+<section id="using-the-rest-api">
 <h3>Using the REST API<a class="headerlink" href="#using-the-rest-api" title="Permalink to this headline">¶</a></h3>
 <p>Use the <code class="code docutils literal notranslate"><span class="pre">/api/script/</span></code> REST API to execute a module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>POST /api/script/hellworld/?param=value
@@ -268,8 +202,8 @@ available for execution using the REST API or <code class="code docutils literal
 }
 </pre></div>
 </div>
-</div>
-<div class="section" id="using-the-runtime-api">
+</section>
+<section id="using-the-runtime-api">
 <h3>Using the runtime API<a class="headerlink" href="#using-the-runtime-api" title="Permalink to this headline">¶</a></h3>
 <p>Use the <code class="code docutils literal notranslate"><span class="pre">om.runtime.script(&lt;name&gt;)</span></code> API to run a module on the cluster:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;helloworld&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
@@ -284,81 +218,39 @@ available for execution using the REST API or <code class="code docutils literal
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../streams/index.html" class="btn btn-neutral float-right" title="Working with streams" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral" title="Working with scripts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Working with scripts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mlflow.html" class="btn btn-neutral float-right" title="Using mlflow projects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
-
-    </p>
+    <p>&#169; Copyright 2020 (c) omegaml.io by one2seven GmbH.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../../',
-            VERSION:'1.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../../_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

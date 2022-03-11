@@ -1,6 +1,8 @@
 Debugging
 ---------
 
+.. contents::
+
 Understanding the actual MongoDB query
 ++++++++++++++++++++++++++++++++++++++
 

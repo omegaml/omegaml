@@ -1,80 +1,38 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Introduction to models &mdash; omega|ml 1.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-
-  
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../genindex.html"/>
-        <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="omega|ml 1.1 documentation" href="../../index.html"/>
-        <link rel="up" title="Working with models" href="index.html"/>
-        <link rel="next" title="Tensorflow" href="tensorflow.html"/>
-        <link rel="prev" title="Working with models" href="index.html"/> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Capturing model metrics" href="metrics.html" />
+    <link rel="prev" title="Working with models" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
+        <div class="wy-side-nav-search" >
             <a href="../../index.html" class="icon icon-home"> omega|ml
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 1.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -82,21 +40,11 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Working with models</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Introduction to models</a><ul>
@@ -106,13 +54,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#using-the-compute-cluster">Using the compute cluster</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="tensorflow.html">Tensorflow</a></li>
-<li class="toctree-l3"><a class="reference internal" href="keras.html">Keras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="metrics.html">Capturing model metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="frameworks/index.html">Working with ML frameworks</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
@@ -120,85 +70,47 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">omega|ml</a>
-        
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">User Guide</a> &raquo;</li>
-        
           <li><a href="index.html">Working with models</a> &raquo;</li>
-        
       <li>Introduction to models</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/guide/models/modelstore.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS overrides for sphinx_rtd_theme */
 
 /* 24px margin */
-.nbinput.nblast,
-.nboutput.nblast {
+.nbinput.nblast.container,
+.nboutput.nblast.container {
     margin-bottom: 19px;  /* padding has already 5px */
 }
 
 /* ... except between code cells! */
-.nblast + .nbinput {
+.nblast.container + .nbinput.container {
     margin-top: -19px;
 }
 
@@ -211,7 +123,7 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="introduction-to-models">
+<section id="introduction-to-models">
 <h1>Introduction to models<a class="headerlink" href="#introduction-to-models" title="Permalink to this headline">¶</a></h1>
 <p>omega|ml currently implements the following machine learning frameworks out of the box. More backends are planned.
 Any backend can be implemented using the backend API.</p>
@@ -222,7 +134,7 @@ Any backend can be implemented using the backend API.</p>
 <li><p>Apache Spark MLLib</p></li>
 </ul>
 <p>Note that support for Keras, Tensorflow and Apache Spark is experimental at this time.</p>
-<div class="section" id="storing-models">
+<section id="storing-models">
 <h2>Storing models<a class="headerlink" href="#storing-models" title="Permalink to this headline">¶</a></h2>
 <p>Storing models and pipelines is as straight forward as storing Pandas DataFrames and Series.
 Simply create the model, then use <code class="code docutils literal notranslate"><span class="pre">om.models.put()</span></code> to store:</p>
@@ -243,8 +155,8 @@ Simply create the model, then use <code class="code docutils literal notranslate
 <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="s1">&#39;lrmodel&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="using-models-to-predict">
+</section>
+<section id="using-models-to-predict">
 <h2>Using models to predict<a class="headerlink" href="#using-models-to-predict" title="Permalink to this headline">¶</a></h2>
 <p>Retrieving a model is equally straight forward:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lrmodel&#39;</span><span class="p">)</span>
@@ -271,8 +183,8 @@ to predict using new data:</p>
    <span class="p">[</span> <span class="mf">99.</span><span class="p">]])</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="model-versioning">
+</section>
+<section id="model-versioning">
 <h2>Model versioning<a class="headerlink" href="#model-versioning" title="Permalink to this headline">¶</a></h2>
 <p>By default all models are versioned automatically. A model is a saved instance of the model
 that is connected to the same name. The following example will store two model versions, the first is not
@@ -322,10 +234,10 @@ $ om runtime model &#39;mymodel@experiment&#39; fit ...
 $ curl http://hostname/api/v1/model/mymodel@experiment/fit?datax=...&amp;datay...
 </pre></div>
 </div>
-</div>
-<div class="section" id="using-the-compute-cluster">
+</section>
+<section id="using-the-compute-cluster">
 <h2>Using the compute cluster<a class="headerlink" href="#using-the-compute-cluster" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="prediction">
+<section id="prediction">
 <h3>Prediction<a class="headerlink" href="#prediction" title="Permalink to this headline">¶</a></h3>
 <p>omega|ml provides a state-of-the art compute cluster, called the <em>runtime</em>. Using
 the runtime you can delegate model tasks to the cluster:</p>
@@ -357,8 +269,8 @@ in omegaml:</p>
 <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="model-fitting">
+</section>
+<section id="model-fitting">
 <h3>Model Fitting<a class="headerlink" href="#model-fitting" title="Permalink to this headline">¶</a></h3>
 <p>To train a model using the runtime, use the <code class="code docutils literal notranslate"><span class="pre">fit</span></code> method on the runtime’s model, as you would
 on a local model:</p>
@@ -370,8 +282,8 @@ on a local model:</p>
 <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gridsearch">
+</section>
+<section id="gridsearch">
 <h3>GridSearch<a class="headerlink" href="#gridsearch" title="Permalink to this headline">¶</a></h3>
 <p><strong>currently supported for sckit-learn</strong></p>
 <p>To use cross validated grid search on a model, use the <code class="code docutils literal notranslate"><span class="pre">gridsearch</span></code> method on the runtime’s model. This
@@ -383,7 +295,7 @@ GridSearchCV model to evaluate the performance of multiple parameter settings.</
 own <code class="code docutils literal notranslate"><span class="pre">GridSearchCV</span></code> instance locally and then fit it using the runtime. In this case
 be sure to link the model used for grid searching and the original model by changing the
 attributes on the model’s metadata.</p>
-</div>
+</aside>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">()</span>
 <span class="n">logreg</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
 <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">logreg</span><span class="p">,</span> <span class="s1">&#39;logreg&#39;</span><span class="p">)</span>
@@ -402,8 +314,8 @@ attributes on the model’s metadata.</p>
 <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">gs_model</span><span class="p">,</span> <span class="n">GridSearchCV</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="other-model-tasks">
+</section>
+<section id="other-model-tasks">
 <h3>Other Model tasks<a class="headerlink" href="#other-model-tasks" title="Permalink to this headline">¶</a></h3>
 <p>The runtime provides more than just model training and prediction. The runtime implements
 a common API to all supported backends that follows the scikit-learn estimator model. That is the
@@ -416,81 +328,39 @@ runtime supports the following methods on a model:</p>
 <li><p><code class="code docutils literal notranslate"><span class="pre">gridsearch</span></code></p></li>
 </ul>
 <p>For details refer to the API reference.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="tensorflow.html" class="btn btn-neutral float-right" title="Tensorflow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral" title="Working with models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Working with models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="metrics.html" class="btn btn-neutral float-right" title="Capturing model metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
-
-    </p>
+    <p>&#169; Copyright 2020 (c) omegaml.io by one2seven GmbH.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'1.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

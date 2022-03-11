@@ -1,80 +1,38 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Working with notebooks &mdash; omega|ml 1.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-
-  
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../genindex.html"/>
-        <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="omega|ml 1.1 documentation" href="../../index.html"/>
-        <link rel="up" title="Working with notebooks" href="index.html"/>
-        <link rel="next" title="Scheduling notebooks" href="scheduling.html"/>
-        <link rel="prev" title="Working with notebooks" href="index.html"/> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parallel Execution" href="parallel.html" />
+    <link rel="prev" title="Working with notebooks" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
+        <div class="wy-side-nav-search" >
             <a href="../../index.html" class="icon icon-home"> omega|ml
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 1.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -82,21 +40,11 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Working with notebooks</a><ul class="current">
@@ -109,11 +57,14 @@
 <li class="toctree-l4"><a class="reference internal" href="#retrieving-results">Retrieving results</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="parallel.html">Parallel Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scheduling.html">Scheduling notebooks</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
@@ -121,85 +72,47 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">omega|ml</a>
-        
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">User Guide</a> &raquo;</li>
-        
           <li><a href="index.html">Working with notebooks</a> &raquo;</li>
-        
       <li>Working with notebooks</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/guide/jobs/working.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS overrides for sphinx_rtd_theme */
 
 /* 24px margin */
-.nbinput.nblast,
-.nboutput.nblast {
+.nbinput.nblast.container,
+.nboutput.nblast.container {
     margin-bottom: 19px;  /* padding has already 5px */
 }
 
 /* ... except between code cells! */
-.nblast + .nbinput {
+.nblast.container + .nbinput.container {
     margin-top: -19px;
 }
 
@@ -212,17 +125,17 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="working-with-notebooks">
+<section id="working-with-notebooks">
 <h1>Working with notebooks<a class="headerlink" href="#working-with-notebooks" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="integrated-jupyterlab">
+<section id="integrated-jupyterlab">
 <h2>Integrated JupyterLab<a class="headerlink" href="#integrated-jupyterlab" title="Permalink to this headline">¶</a></h2>
 <p>omega|ml comes pre-configured to run with JupyterLab. In this mode, every
 notebook that you create is automatically stored in the omega|ml <code class="code docutils literal notranslate"><span class="pre">jobs</span></code>
 storage. The advantage is that you can share notebooks instantly with your
 colleagues - their JupyterLab workspace will show the same notebooks as you have,
 no matter from where they work.</p>
-</div>
-<div class="section" id="local-jupyterlab">
+</section>
+<section id="local-jupyterlab">
 <h2>Local JupyterLab<a class="headerlink" href="#local-jupyterlab" title="Permalink to this headline">¶</a></h2>
 <p>If you prefer to work within your own JupyterLab environment, you can still
 use omega|ml to deploy your notebooks and run the on the cloud. This is
@@ -231,13 +144,13 @@ Then you can prepare your notebooks locally and only run them on the GPU when
 it is ready.</p>
 <p>In this case you have to store your notebook to <code class="code docutils literal notranslate"><span class="pre">jobs</span></code> as follows. See
 the next section for running it on the cloud.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span># store your notebook (if no
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span># store a notebook in omegaml
 $ om jobs put /path/to/notebook.ipynb mynotebook
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="running-notebooks-on-the-cloud">
+</section>
+</section>
+<section id="running-notebooks-on-the-cloud">
 <h1>Running notebooks on the cloud<a class="headerlink" href="#running-notebooks-on-the-cloud" title="Permalink to this headline">¶</a></h1>
 <p>To run the notebook, waiting for its result, and store the result in <cite>jobs/result</cite>, execute
 the following command:</p>
@@ -253,7 +166,7 @@ $ om runtime result 77e50b76-b4bb-4411-a407-fa1cf2162f81
 &lt;Metadata: Metadata<span class="o">(</span><span class="nv">name</span><span class="o">=</span>results/Untitled_2020-10-06 <span class="m">18</span>:41:00.060559.ipynb,bucket<span class="o">=</span>omegaml,prefix<span class="o">=</span>jobs/,kind<span class="o">=</span>script.ipynb,created<span class="o">=</span><span class="m">2020</span>-10-06 <span class="m">18</span>:41:01.942656<span class="o">)</span>&gt;
 </pre></div>
 </div>
-<div class="section" id="retrieving-results">
+<section id="retrieving-results">
 <h2>Retrieving results<a class="headerlink" href="#retrieving-results" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ om <span class="nb">jobs</span> list results
 <span class="o">[</span><span class="s1">&#39;mynotebook.ipynb&#39;</span>, <span class="s1">&#39;mynotebook2.ipynb&#39;</span>, <span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span><span class="o">]</span>
@@ -263,80 +176,38 @@ $ om runtime result 77e50b76-b4bb-4411-a407-fa1cf2162f81
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ om <span class="nb">jobs</span> get <span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span> mynotebook_results.ipynb
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="scheduling.html" class="btn btn-neutral float-right" title="Scheduling notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral" title="Working with notebooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Working with notebooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parallel.html" class="btn btn-neutral float-right" title="Parallel Execution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
-
-    </p>
+    <p>&#169; Copyright 2020 (c) omegaml.io by one2seven GmbH.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'1.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

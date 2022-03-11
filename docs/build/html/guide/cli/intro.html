@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using the command-line interface &mdash; omega|ml 1.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Working with models" href="models.html" />
+    <link rel="prev" title="Command-line interface" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> omega|ml
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Command-line interface</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Using the command-line interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#getting-help">Getting help</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="models.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html">Working with datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scripts.html">Working with scripts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html">Working with notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Working with the runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega|ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">User Guide</a> &raquo;</li>
+          <li><a href="index.html">Command-line interface</a> &raquo;</li>
+      <li>Using the command-line interface</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/cli/intro.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="using-the-command-line-interface">
+<h1>Using the command-line interface<a class="headerlink" href="#using-the-command-line-interface" title="Permalink to this headline">¶</a></h1>
+<p>Open your command line shell to run commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ om
+Usage: om &lt;command&gt; <span class="o">[</span>&lt;action&gt;<span class="o">]</span> <span class="o">[</span>&lt;args&gt;...<span class="o">]</span> <span class="o">[</span>options<span class="o">]</span>
+    om <span class="o">(</span>models<span class="p">|</span>datasets<span class="p">|</span>scripts<span class="p">|</span><span class="nb">jobs</span><span class="o">)</span> <span class="o">[</span>&lt;args&gt;...<span class="o">]</span> <span class="o">[</span>--replace<span class="o">]</span> <span class="o">[</span>--csv...<span class="o">]</span> <span class="o">[</span>options<span class="o">]</span>
+    om runtime <span class="o">[</span>&lt;args&gt;...<span class="o">]</span> <span class="o">[</span>--async<span class="o">]</span> <span class="o">[</span>--result<span class="o">]</span> <span class="o">[</span>--param<span class="o">]</span> <span class="o">[</span>options<span class="o">]</span>
+    om cloud <span class="o">[</span>&lt;args&gt;...<span class="o">]</span> <span class="o">[</span>options<span class="o">]</span>
+    om shell <span class="o">[</span>&lt;args&gt;...<span class="o">]</span> <span class="o">[</span>options<span class="o">]</span>
+    om <span class="nb">help</span> <span class="o">[</span>&lt;command&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p>Similar in structure to the Python API the command-line interface provides
+access to the</p>
+<ul class="simple">
+<li><p>storages - access datasets, models, scripts, jobs</p></li>
+<li><p>runtime - interact with the omega|ml runtime</p></li>
+<li><p>cloud - managed service configuration and access</p></li>
+<li><p>shell - the Python shell with omegaml initialized</p></li>
+</ul>
+<p>See the respective section in this guide to learn more about the various
+commands.</p>
+<section id="getting-help">
+<h2>Getting help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h2>
+<p>The cli provides built-in help</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ om help
+Usage: om &lt;command&gt; [&lt;action&gt;] [&lt;args&gt;...] [options]
+       om (models|datasets|scripts|jobs) [&lt;args&gt;...] [--replace] [--csv...] [options]
+       om runtime [&lt;args&gt;...] [--async] [--result] [--param] [options]
+       om cloud [&lt;args&gt;...] [options]
+       om shell [&lt;args&gt;...] [options]
+       om help [&lt;command&gt;]
+
+Usage of datasets
+  om datasets list [&lt;pattern&gt;] [--raw] [-E|--regexp] [options]
+  om datasets put &lt;path&gt; &lt;name&gt; [--replace] [--csv=&lt;param=value&gt;]... [options]
+  om datasets get &lt;name&gt; &lt;path&gt; [--csv &lt;param&gt;=&lt;value&gt;]... [options]
+  om datasets drop &lt;name&gt; [--force] [options]
+  om datasets metadata &lt;name&gt; [options]
+
+Usage of models
+  om models list [&lt;pattern&gt;] [--raw] [-E|--regexp] [options]
+  om models put &lt;module.callable&gt; &lt;name&gt;
+  om models drop &lt;name&gt;
+  om models metadata &lt;name&gt;
+
+Usage of runtime
+  om runtime model &lt;name&gt; &lt;model-action&gt; [&lt;X&gt;] [&lt;Y&gt;] [--result=&lt;output-name&gt;] [--param=&lt;kw=value&gt;]... [--async] [options]
+  om runtime script &lt;name&gt; [&lt;script-action&gt;] [&lt;kw=value&gt;...] [--async] [options]
+  om runtime job &lt;name&gt; [&lt;job-action&gt;] [&lt;args...&gt;] [--async] [options]
+  om runtime result &lt;taskid&gt; [options]
+  om runtime ping [options]
+  om runtime env &lt;action&gt; [&lt;package&gt;] [--file &lt;requirements.txt&gt;] [--every] [options]
+  om runtime log [-f] [options]
+  om runtime status [workers|labels|stats] [options]
+  om runtime restart app &lt;name&gt; [options]
+  om runtime [control|inspect|celery] [&lt;celery-command&gt;...] [--worker=&lt;worker&gt;] [--queue=&lt;queue&gt;] [--celery-help] [--flags &lt;celery-flags&gt;...] [options]
+
+Usage of scripts
+    om scripts list [&lt;pattern&gt;] [--raw] [--hidden] [-E|--regexp] [options]
+    om scripts put &lt;path&gt; &lt;name&gt; [options]
+    om scripts get &lt;name&gt;
+    om scripts drop &lt;name&gt; [options]
+    om scripts metadata &lt;name&gt;
+
+Usage of jobs
+  om jobs list [&lt;pattern&gt;] [--raw] [options]
+  om jobs put &lt;path&gt; &lt;name&gt; [options]
+  om jobs get &lt;name&gt; &lt;path&gt; [options]
+  om jobs drop &lt;name&gt;
+  om jobs metadata &lt;name&gt; [options]
+  om jobs schedule &lt;name&gt; [show|delete|&lt;interval&gt;] [options]
+  om jobs status &lt;name&gt;
+
+Usage of cloud
+  om cloud login [&lt;userid&gt;] [&lt;apikey&gt;] [options]
+  om cloud config [show] [options]
+  om cloud (add|update|remove) &lt;kind&gt; [--specs &lt;specs&gt;] [options]
+  om cloud status [runtime|pods|nodes|storage] [options]
+  om cloud log &lt;pod&gt; [--since &lt;time&gt;] [options]
+  om cloud metrics [&lt;metric_name&gt;] [--since &lt;time&gt;] [--start &lt;start&gt;] [--end &lt;end&gt;] [--step &lt;step&gt;] [--plot] [options]
+
+Usage of shell
+    om shell [&lt;command&gt;] [options]
+
+Options:
+  -h, --help         Show this screen
+  --version          Show version.
+  --loglevel=LEVEL   INFO,ERROR,DEBUG [default: INFO]
+  --copyright        Show copyright
+  --config=CONFIG    configuration file
+  --bucket=BUCKET    the bucket to use
+  --local-runtime    use local runtime
+  -q, --noinput      don&#39;t ask for user input, assume yes
+  -E                 treat patterns as regular expressions
+
+Options for datasets
+  --raw   return metadata
+
+Options for runtime
+  --async           don&#39;t wait for results, will print taskid
+  -f                tail log
+  --require=VALUE   worker label
+  --flags=VALUE     celery flags, list as &quot;--flag VALUE&quot;
+  --worker=VALUE    celery worker
+  --queue=VALUE     celery queue
+  --celery-help     show celery help
+  --file=VALUE      path/to/requirements.txt
+  --local           if specified the task will run locally. Use this for testing
+  --every           if specified runs task on all workers
+
+Options for cloud
+  --userid=USERID   the userid at hub.omegaml.io (see account profile)
+  --apikey=APIKEY   the apikey at hub.omegaml.io (see account profile)
+  --apiurl=URL      the cloud URL [default: https://hub.omegaml.io]
+  --count=NUMBER    how many instances to set up [default: 1]
+  --node-type=TYPE  the type of node [default: small]
+  --specs=SPECS     the service specifications as &quot;key=value[,...]&quot;
+  --since=TIME      recent log time, defaults to 5m (5 minutes)
+  --start=DATETIME  start datetime of range query
+  --end=DATETIME    end datetime of range query
+  --step=UNIT       step in seconds or duration unit (s=seconds, m=minutes)
+  --plot            if specified use plotext library to plot (preliminary)
+
+Options for scripts
+    --hidden   list hidden entries
+
+Options for jobs
+  --cron &lt;spec&gt;       the cron spec, use https://crontab.guru/
+  --weekday &lt;wday&gt;    a day number 0-6 (0=Sunday)
+  --monthday &lt;mday&gt;   a day of the month 1-31
+  --month &lt;month&gt;     a month number 1-12
+  --at &lt;hh:mm&gt;        the time (same as --hour hh --minute mm)
+  --hour &lt;hour&gt;       the hour 0-23
+  --minute &lt;minute&gt;   the minute 0-59
+  --next &lt;n&gt;          show next n triggers according to interval
+
+Working with datasets
+     For csv files, put and get accept the --csv option multiple times.
+     The &lt;param&gt;=&lt;value&gt; pairs will be used as kwargs to pd.read_csv (on put)
+     and df.to_csv methods (on get)
+
+Working with models
+    Work with models
+
+Working with runtime
+  model, job and script commands
+  ------------------------------
+
+  &lt;model-action&gt; can be any valid model action like fit, predict, score,
+  transform, decision_function etc.
+
+  &lt;script-action&gt; defaults to run
+  &lt;job-action&gt; defaults to run
+
+  Examples:
+    om runtime model &lt;name&gt; fit &lt;X&gt; &lt;Y&gt;
+    om runtime model &lt;name&gt; predict &lt;X&gt;
+    om runtime job &lt;name&gt;
+    om runtime script &lt;name&gt;
+    om runtime script &lt;name&gt; run myparam=&quot;value&quot;
+
+  running asynchronously
+  ----------------------
+
+  model, job, script commands accept the --async paramter. This will submit
+  the a task and return the task id. To wait for and get the result run use
+  the result command
+
+  Examples:
+        om runtime model &lt;name&gt; fit &lt;X&gt; &lt;Y&gt; --async
+        =&gt; &lt;task id&gt;
+        om runtime result &lt;task id&gt;
+        =&gt; result of the task
+
+  restart app
+  -----------
+
+  This will restart the app on omegaml apphub. Requires a login to omegaml cloud.
+
+  status
+  ------
+
+  Prints workers, labels, list of active tasks per worker, count of tasks
+
+  Examples:
+    om runtime status             # defaults to workers
+    om runtime status workers
+    om runtime status labels
+    om runtime status stats
+
+  celery commands
+  ---------------
+
+  This is the same as calling celery -A omegaml.celeryapp &lt;commands&gt;. Command
+  commands include:
+
+  inspect active         show currently running tasks
+  inspect active_queues  show active queues for each worker
+  inspect stats          show stats of each worker, including pool size (processes)
+  inspect ping           confirm that worker is connected
+
+  control pool_shrink N  shrink worker pool by N, specify 99 to remove all
+  control pool_grow N    grow worker poool by N
+  control shutdown       stop and restart the worker
+
+  Examples:
+        om runtime celery inspect active
+        om runtime celery control pool_grow N
+
+  env commands
+  ------------
+
+  This talks to an omegaml worker&#39;s pip environment
+
+  a) install a specific package
+
+     env install &lt;package&gt;    install the specified package, use name==version pip syntax for specific versions
+     env uninstall &lt;package&gt;  uninstall the specified package
+
+     &lt;package&gt; is in pip install syntax, e.g.
+
+     env install &quot;six==1.0.0&quot;
+     env install &quot;git+https://github.com/user/repo.git&quot;
+
+  b) use a requirements file
+
+     env install --file requirements.txt
+     env uninstall --file requirements.txt
+
+  c) list currently installed packages
+
+     env freeze
+     env list
+
+  d) install on all or a specific worker
+
+     env install --require gpu package
+     env install --every package
+
+     By default the installation runs on the default worker only. If there are multiple nodes where you
+     want to install the package(s) worker nodes, be sure to specify --every
+
+  Examples:
+        om runtime env install pandas
+        om runtime env uninstall pandas
+        om runtime env install --file requirements.txt
+        om runtime env install --file gpu-requirements.txt --require gpu
+        om runtime env install --file requirements.txt --every
+
+Working with cloud
+  om cloud is available for the omega|ml managed service at https://hub.omegaml.io
+
+  Logging in
+  ----------
+
+  $ om cloud login &lt;userid&gt; &lt;apikey&gt;
+
+  Showing the configuration
+  -------------------------
+
+  $ om cloud config
+
+  Building a cluster
+  ------------------
+
+  Set up a cluster
+
+  $ om cloud add nodepool --specs &quot;node-type=&lt;node-type&gt;,role=worker,size=1&quot;
+  $ om cloud add runtime --specs &quot;role=worker,label=worker,size=1&quot;
+
+  Switch nodes on and off
+
+  $ om cloud update worker --specs &quot;node-name=&lt;name&gt;,scale=0&quot; # off
+  $ om cloud update worker --specs &quot;node-name=&lt;name&gt;,scale=1&quot; # on
+
+  Using Metrics
+  -------------
+
+  The following metrics are available
+
+  * node-cpu-usage      node cpu usage in percent
+  * node-memory-usage   node memory usage in percent
+  * node-disk-uage      node disk usage in percent
+  * pod-cpu-usage       pod cpu usage in percent
+  * pod-memory-usage    pod memory usage in bytes
+
+  Get the specific metrics as follows, e.g.
+
+  $ om cloud metrics node-cpu-usage
+  $ om cloud metrics pod-cpu-usage --since 30m
+  $ om cloud metrics pod-memory-usage --start 20dec2020T0100 --end20dec2020T0800
+
+Working with scripts
+    Work with scripts
+
+Working with jobs
+    Specify the schedule either as
+
+    * a natural language-like text, with any time components separated
+      by comma
+
+      om jobs schedule myjob &quot;every 5 minutes, on fridays, in april&quot;
+      om jobs schedule myjob &quot;at 6:00, on fridays&quot;
+      om jobs schedule myjob &quot;at 6:00/10:00, on fridays&quot;
+      om jobs schedule myjob &quot;every 2nd hour, every 15 minutes, weekdays&quot;
+
+
+
+Working with shell
+    Without a command will start an IPython shell with omega|ml ready to use
+
+    $ om shell
+    [] om.runtime.ping()
+    =&gt; { ... }
+
+    By passing a command, run arbitrary Python code
+
+    $ om shell &quot;om.runtime.ping()&quot;
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Command-line interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-right" title="Working with models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

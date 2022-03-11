@@ -158,3 +158,35 @@ To specify a query to be run on retrieving the dataset, specify the :code:`sql=`
 Further possibilites include specifying variables for the connection string (e.g. userid, password) or
 the sql statement. Details see :py:class:`omegaml.backends.sqlalchemy.SQLAlchemyBackend`
 
+
+Storing and retrieving files
+----------------------------
+
+Files can be stored and retrieved natively in several ways :
+
+1. Use a Python file-like object as input and output:
+
+    .. code::
+
+        # .put() will call file_in.read()
+        with open('myfile.bin', 'rb') as file_in:
+            om.datasets.put(file_in, 'myfile.bin')
+
+        # .get() returns a file-like object
+        data = om.datasets.get('myfile.bin').read()
+
+
+2. Directly use a local path:
+
+    .. code::
+
+        om.datasets.put('myfile.bin', 'testfile')
+        om.datasets.get('testfile', local='myfile.bin')
+
+
+
+
+
+
+
+

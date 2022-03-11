@@ -1,80 +1,38 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Large, Out of Core-sized DataFrames &mdash; omega|ml 1.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-
-  
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../../genindex.html"/>
-        <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="omega|ml 1.1 documentation" href="../../../index.html"/>
-        <link rel="up" title="Working with datasets" href="../index.html"/>
-        <link rel="next" title="Introduction" href="mdataframe.html"/>
-        <link rel="prev" title="Filtering Data" href="../filterdf.html"/> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Working with MDataFrame" href="mdfguide.html" />
+    <link rel="prev" title="Filtering Data" href="../filterdf.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
+        <div class="wy-side-nav-search" >
             <a href="../../../index.html" class="icon icon-home"> omega|ml
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 1.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -82,30 +40,17 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">User Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Getting started</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Working with datasets</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../store_retrieve.html">Storing and retrieving data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../filterdf.html">Filtering Data</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Large, Out of Core-sized DataFrames</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="mdataframe.html">Introduction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#selection">Selection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#filtering-data">Filtering data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#ordering-operations">Ordering operations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="mdataframe.html#aggregation">Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdfguide.html">Working with MDataFrame</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdataframe.html">MDataFrame Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mdfapply.html">Aggregation Framework</a></li>
 <li class="toctree-l4"><a class="reference internal" href="mdfdebug.html">Debugging</a></li>
 </ul>
@@ -114,8 +59,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../models/index.html">Working with models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../jobs/index.html">Working with notebooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../integration/index.html">Integration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
@@ -123,85 +70,47 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moreinfo.html">More information</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">omega|ml</a>
-        
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">User Guide</a> &raquo;</li>
-        
           <li><a href="../index.html">Working with datasets</a> &raquo;</li>
-        
       <li>Large, Out of Core-sized DataFrames</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../../_sources/guide/datasets/outofcore/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS overrides for sphinx_rtd_theme */
 
 /* 24px margin */
-.nbinput.nblast,
-.nboutput.nblast {
+.nbinput.nblast.container,
+.nboutput.nblast.container {
     margin-bottom: 19px;  /* padding has already 5px */
 }
 
 /* ... except between code cells! */
-.nblast + .nbinput {
+.nblast.container + .nbinput.container {
     margin-top: -19px;
 }
 
@@ -214,32 +123,32 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="large-out-of-core-sized-dataframes">
+<section id="large-out-of-core-sized-dataframes">
 <h1>Large, Out of Core-sized DataFrames<a class="headerlink" href="#large-out-of-core-sized-dataframes" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="mdataframe.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mdataframe.html#selection">Selection</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#column-projection">Column projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#masked-style-selection">Masked-style selection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#index-row-selection">Index-Row selection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#numeric-row-selection">Numeric row selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdfguide.html">Working with MDataFrame</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#what-is-mdataframe">What is MDataFrame?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#concepts">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#storing-data-as-an-mdataframe">Storing data as an MDataFrame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#getting-an-mdataframe">Getting an MDataFrame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#executing-a-query">Executing a query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#persisting-the-result-of-a-query">Persisting the result of a query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#slicing">Slicing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#filtering">Filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#aggregation-and-transformation">Aggregation and transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#in-database-transformations">In-database transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#parallel-transformations">Parallel transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#customized-chunking">Customized chunking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#lazy-evaluation">Lazy evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdfguide.html#what-wont-work">What won’t work</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="mdataframe.html#filtering-data">Filtering data</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#geo-proximity-filtering">Geo proximity filtering</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#permanently-setting-a-filter">Permanently setting a filter</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="mdataframe.html#ordering-operations">Ordering operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#sorting">Sorting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#limiting-and-skipping-rows">Limiting and skipping rows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#merging-data">Merging data</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="mdataframe.html#aggregation">Aggregation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#statistics">Statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#grouping-data">Grouping data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdataframe.html">MDataFrame Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#selection">Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#filtering-data">Filtering data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#ordering-operations">Ordering operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html#aggregation">Aggregation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mdfapply.html">Aggregation Framework</a><ul>
@@ -259,79 +168,37 @@
 </li>
 </ul>
 </div>
-</div>
+</section>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="mdataframe.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="../filterdf.html" class="btn btn-neutral" title="Filtering Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../filterdf.html" class="btn btn-neutral float-left" title="Filtering Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdfguide.html" class="btn btn-neutral float-right" title="Working with MDataFrame" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020 (c) omegaml.io by one2seven GmbH.
-
-    </p>
+    <p>&#169; Copyright 2020 (c) omegaml.io by one2seven GmbH.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../../',
-            VERSION:'1.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../../_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

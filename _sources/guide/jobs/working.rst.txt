@@ -24,7 +24,7 @@ the next section for running it on the cloud.
 
 .. code:: python
 
-    # store your notebook (if no
+    # store a notebook in omegaml
     $ om jobs put /path/to/notebook.ipynb mynotebook
 
 

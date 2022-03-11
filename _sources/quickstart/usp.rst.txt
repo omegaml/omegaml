@@ -1,10 +1,11 @@
 Key features
-------------
+============
 
 .. contents::
+    :local:
 
 Ready to be productive
-++++++++++++++++++++++
+----------------------
 
 It is an integrated, Python-native yet open data science platform with
 
@@ -14,7 +15,7 @@ It is an integrated, Python-native yet open data science platform with
 
 For example,
 
-.. code:: python
+.. code-block:: python
 
     # store data, anyone on the team can retrieve it immediately
     # -- Joe stores the data
@@ -44,7 +45,7 @@ For example,
 
 
 Start small, scale easily
-+++++++++++++++++++++++++
+-------------------------
 
 omega|ml's philosophy is to provide both novice and expert users a fast start while enabling them
 to scale easily and at any time. It does so by providing a ready-made environment
@@ -67,8 +68,9 @@ same command (with one parameter specifying the environment):
     # all commands return a Metadata entry and store a new version of the regmodel
     <Metadata: Metadata(name=regmodel,bucket=omegaml,prefix=models/,kind=sklearn.joblib,created=2020-09-09 23:27:29.676000)>
 
+
 No-hassle data access, storage & processing
-+++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------
 
 Data scientists spend a large part of their time accessing and processing data, and
 as any team will confirm, setting up data storage is a major effort any organization. Yet it is not
@@ -82,7 +84,7 @@ Today, omega|ml includes support for MongoDB, MySQL, PostgreSQL, Oracle and any 
 DBMS or filesystems can be integrated using custom plugins.
 
 Instant deployment
-++++++++++++++++++
+------------------
 
 Datasets, models and pipelines are instantly deployed and promoted from one environment to another.
 Instantly means "in seconds". There are no build scripts to run, no handover to DevOps, no docker images
@@ -104,7 +106,7 @@ systems can access:
     $ curl https://hub.omegaml.io/api/v1/model/mymodel/predict --data {...}
 
 Models as data, not code
-++++++++++++++++++++++++
+------------------------
 
 A machine learning model essentially consists of a given algorithm + weights + hyper parameters.
 Weights and parameters are data, not code, while the algorithm of any particular model is a reference
@@ -123,7 +125,7 @@ in productive ML systems we want to:
 Read more about this in http://bit.ly/omegaml-models-as-data
 
 Multi-environment
-+++++++++++++++++
+-----------------
 
 omega|ml integrates facilities for both logical and physical segregation of environments. Promotion
 between environments is, again, a single line of code.
@@ -146,10 +148,10 @@ Promoting objects from one environment to another, whether logically or physical
     om_prod = ... # production environemnt
 
     om_dev.datasets.promote('mydataset', om_prod.datasets)
-    om_dev.models.promote('mymodel', om_dev.models)
+    om_dev.models.promote('mymodel', om_prod.models)
 
 Straight-forward to integrate & operate
-+++++++++++++++++++++++++++++++++++++++
+---------------------------------------
 
 One key feature is that omega|ml integrates easily with well-known components in the PyData and Python fullstack.
 At the core designed as an open framework, it works with your existing
@@ -177,15 +179,15 @@ In fact, most of omega|ml is built from plugins.
     backends can be effectively provided to data product teams so they can move fast, while specialist
     DevOps providers can concentrate on efficient platform operations.
 
-Built on simple core concepts
-++++++++++++++++++++++++++++++
+Built on a small set of core concepts
+-------------------------------------
 
 All of the above features are really based on just four core concepts:
 
-* *OmegaStore*  - A metadata-driven storage model, providing object and filesystem-storage, enabling storing any object (models, datasets, pipelines, streams, logs, metadata etc.)
-* *OmegaRuntime* - A task-based runtime model that does not assume any particular backend
-* *Metadata* - Keeping track of every object, each object is assigned a unique type identifier (aka *kind*)
-* *Plugins* - A straight-forward plugin system ties in with all of the above, leveraging each object's
+* **OmegaStore**  - A metadata-driven storage model, providing object and filesystem-storage, enabling storing any object (models, datasets, pipelines, streams, logs, metadata etc.)
+* **OmegaRuntime** - A task-based runtime model that does not assume any particular backend
+* **Metadata** - Keeping track of every object, each object is assigned a unique type identifier (aka *kind*)
+* **Plugins** - A straight-forward plugin system ties in with all of the above, leveraging each object's
   *kind*, stored in Metadata, to inform plugin selection and task delegation
 
 These four concepts are applied to provide the full scope of the features described above. Most of omega|ml is based on

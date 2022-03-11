@@ -5,5 +5,7 @@ Working with notebooks
    :maxdepth: 2
 
    working
+   parallel
    scheduling
+
 
