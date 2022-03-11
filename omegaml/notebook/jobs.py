@@ -55,18 +55,47 @@ class OmegaJobs(BackendBaseCommon):
         return self.store.collection(name)
 
     def drop(self, name, force=False):
+        """ remove the notebook
+
+        Args:
+            name (str): the name of the notebook
+            force (bool): if True does not raise
+
+        Returns:
+            True if object was deleted, False if not.
+            If force is True and the object does not exist it will still return True
+
+        Raises:
+            DoesNotExist if the notebook does not exist and ```force=False```
+        """
         meta = self.metadata(name)
         name = meta.name if meta is not None else name
         return self.store.drop(name, force=force)
 
-    def metadata(self, name):
-        meta = self.store.metadata(name)
+    def metadata(self, name, **kwargs):
+        """ retrieve metadata of a notebook
+
+        Args:
+            name (str): the name of the notebook
+
+        Returns:
+            Metadata
+        """
+        meta = self.store.metadata(name, **kwargs)
         if meta is None and not name.endswith('.ipynb'):
             name += '.ipynb'
             meta = self.store.metadata(name)
         return meta
 
     def exists(self, name):
+        """ check if the notebook exists
+
+        Args:
+            name (str): the name of the notebook
+
+        Returns:
+            Metadata
+        """
         return len(self.store.list(name)) + len(self.store.list(name + '.ipynb')) > 0
 
     def put(self, obj, name, attributes=None):
@@ -179,11 +208,43 @@ class OmegaJobs(BackendBaseCommon):
 
     def get_notebook_config(self, nb_filename):
         """
-        returns the omegaml script config on
-        the notebook's first cell
+        returns the omegaml script config on the notebook's first cell
 
-        If there is no config cell or the config cell is invalid raises
-        a ValueError
+        The config cell is in any of the following formats:
+
+        *Option 1*::
+
+            # omega-ml:
+            #    run-at: "<cron schedule>"
+
+        *Option 2*::
+
+            # omega-ml:
+            #   schedule: "weekday(s), hour[, month]"
+
+        *Option 3*::
+
+            # omega-ml:
+            #   cron: "<cron schedule>"
+
+        You may optionally specify only ``run-at``, ``schedule`` or ``cron``,
+        i.e. without the ``omega-ml`` header::
+
+            # run-at: "<cron schedule>"
+            # cron: "<cron schedule>"
+            # schedule: "weekday(s), hour[, month]"
+
+        Args:
+            nb_filename (str): the name of the notebook
+
+        Returns:
+            config(dict) => ``{ 'run-at': <specifier> }``
+
+        Raises:
+            ValueError, if there is no config cell or the config cell is invalid
+
+        See Also:
+            * JobSchedule
         """
         notebook = self.get(nb_filename)
         config_cell = None
@@ -212,28 +273,30 @@ class OmegaJobs(BackendBaseCommon):
             config['run-at'] = JobSchedule.from_cron(config.get('run-at')).cron
         return config
 
-    def run(self, name, timeout=None):
+    def run(self, name, event=None, timeout=None):
         """
         Run a job immediately
 
         The job is run and the results are stored in om.jobs('results/name <timestamp>') and
         the result's Metadata is returned.
 
-        Metadata.attributes of the original job as given by name is updated:
+        ``Metadata.attributes`` of the original job as given by name is updated:
 
-        * attributes['job_runs'] (list) - list of status of each run. Status is
+        * ``attributes['job_runs']`` (list) - list of status of each run. Status is
              a dict as below
-        * attributes['job_results'] (list) - list of results job names in same
+        * ``attributes['job_results']`` (list) - list of results job names in same
              index-order as job_runs
+        * ``attributes['trigger']`` (list) - list of triggers
 
         The status of each job run is a dict with keys:
 
-        * status (str): the status of the job run, OK or ERROR
-        * ts (datetime): time of execution
-        * message (str): error mesasge in case of ERROR, else blank
-        * results (str): name of results in case of OK, else blank
+        * ``status`` (str): the status of the job run, OK or ERROR
+        * ``ts`` (datetime): time of execution
+        * ``message`` (str): error mesasge in case of ERROR, else blank
+        * ``results`` (str): name of results in case of OK, else blank
 
-        Usage:
+        Usage::
+
             # directly (sync)
             meta = om.jobs.run('mynb')
 
@@ -243,18 +306,30 @@ class OmegaJobs(BackendBaseCommon):
 
         Args:
             name (str): the name of the jobfile
+            event (str): an event name
+            timeout (int): timeout in seconds, None means no timeout
 
         Returns:
              Metadata of the results entry
+
+        See Also:
+            * OmegaJobs.run_notebook
         """
-        return self.run_notebook(name, timeout=timeout)
+        return self.run_notebook(name, event=event, timeout=timeout)
 
     def run_notebook(self, name, event=None, timeout=None):
-        """
-        run a given notebook immediately.
+        """ run a given notebook immediately.
 
-        the job parameter is the name of the job script as in ipynb.
-        Inserts and returns the Metadata document for the job.
+        Args:
+            name (str): the name of the jobfile
+            event (str): an event name
+            timeout (int): timeout in seconds
+
+        Returns:
+            Metadata of results
+
+        See Also:
+            * nbconvert https://nbconvert.readthedocs.io/en/latest/execute_api.html
         """
         notebook = self.get(name)
         meta_job = self.metadata(name)
@@ -328,6 +403,26 @@ class OmegaJobs(BackendBaseCommon):
         """
         Schedule a processing of a notebook as per the interval
         specified on the job script
+
+        Notes:
+            This updates the notebook's Metadata entry by adding the
+            next scheduled run in ``attributes['triggers']```
+
+        Args:
+            nb_file (str): the name of the notebook
+            run_at (str|dict|JobSchedule): the schedule specified in a format
+               suitable for JobSchedule. If not specified, this value is
+               extracted from the first cell of the notebook
+            last_run (datetime): the last time this job was run, use this to
+               reschedule the job for the next run. Defaults to the last
+               timestamp listed in ``attributes['job_runs']``, or datetime.utcnow()
+               if no previous run exists.
+
+        See Also:
+            * croniter.get_next()
+            * JobSchedule
+            * OmegaJobs.get_notebook_config
+            * cron expression - https://en.wikipedia.org/wiki/Cron#CRON_expression
         """
         meta = self.metadata(nb_file)
         attrs = meta.attributes
@@ -479,3 +574,19 @@ class OmegaJobs(BackendBaseCommon):
             with open(localpath, 'w' + fmode) as fout:
                 fout.write(data)
         return data, resources
+
+    def help(self, name_or_obj=None, kind=None, raw=False):
+        """ get help for a notebook
+
+        Args:
+            name_or_obj (str|obj): the name or actual object to get help for
+            kind (str): optional, if specified forces retrieval of backend for the given kind
+            raw (bool): optional, if True forces help to be the backend type of the object.
+                If False returns the attributes[docs] on the object's metadata, if available.
+                Defaults to False
+
+        Returns:
+            * help(obj) if python is in interactive mode
+            * text(str) if python is in not interactive mode
+        """
+        return self.store.help(name_or_obj, kind=kind, raw=raw)

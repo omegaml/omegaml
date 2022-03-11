@@ -31,7 +31,8 @@ class JobTasks:
 
     Parallel execution of notebooks with parameters on the omegaml runtime
 
-    Usage:
+    Usage::
+
       # submit tasks
       # -- creates 10 tasks as copies of the main notebook in om.jobs.list('tasks')
       # -- runs each task using omegaml runtime
@@ -125,7 +126,7 @@ class JobTasks:
         there is a result yet. If not, will call om.runtime.job().run()
         for the given notebook.
 
-        Usage:
+        Usage::
 
             generate_jobs(...)
             restart()
@@ -135,10 +136,10 @@ class JobTasks:
 
         Notes:
 
-            metadata.attributes['job'] will record the task status:
+            ``metadata.attributes['job']`` will record the task status::
 
-              'task_id': the celery task id
-              'status': will set to pending
+            * ``task_id``: the celery task id
+            * ``status``: task status, initialized to PENDING
         """
         om = self.runtime.omega
         nbname = self.jobname
@@ -173,7 +174,8 @@ class JobTasks:
         Args:
             task_group (str): the task group id, defaults to None
 
-        Returns:
+        Returns::
+
             pd.DataFrame
                 name: task name
                 task_id: runtime task id
@@ -214,7 +216,8 @@ class JobTasks:
         trace, including graphs and logs of the notebook, and can be accessed
         from Python or Jupyter.
 
-        Usage:
+        Usage::
+
             generate_jobs('main', range(10))
 
             This will create 10 copies of main, storing each
@@ -223,9 +226,9 @@ class JobTasks:
             Use restart() to start the tasks on the om runtime
 
         Args:
-            nb: the name of the notebook
-            jobs: an interable of objects to pass as a job
-            job_ids: optional, list of job ids. If passed, the
+            nb (str): the name of the notebook
+            jobs (iter): an interable of objects to pass as a job
+            job_ids (list): optional, list of job ids. If passed, the
                job id will be used to name the task id, else
                it is the current count
         """

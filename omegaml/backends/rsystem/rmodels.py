@@ -32,6 +32,11 @@ class RModelBackend(BaseModelBackend):
 
 
 class RModelProxy:
+    """ a Python proxy to the R process that runs a model
+
+    This provides the ``model.predict()`` interface for R models so that
+    we can use the same semantics for R and python scripts.
+    """
     def __init__(self, key):
         self.key = key
 
@@ -40,6 +45,11 @@ class RModelProxy:
         return rhelper()
 
     def predict(self, X_or_name):
+        """ call $model.predict()
+
+        Args:
+            X_or_name (str): the X object or name of the dataset
+        """
         if isinstance(X_or_name, str):
             result = self.r.om_model_predict(self, X_or_name)
         else:

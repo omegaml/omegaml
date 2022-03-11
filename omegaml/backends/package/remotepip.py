@@ -14,29 +14,27 @@ class PythonPipSourcedPackageData(BaseDataBackend):
 
     This supports any pip-installable remote source like git, hg, svn, bzr
 
-    Usage:
+    Usage::
+
         # pypi package
         om.scripts.put('pypi://<pkgname>', '<pkgname>')
-        # github hosted
+
+        # git hosted
         om.scripts.put('git+https://github.com/account/repo/<pkgname>', '<pkgname>')
 
-        Upon om.scripts.get() pip install will be called to retrieve, build and load
-        the package.
-
-        # equiv. to pip install. Note for pypi, the pypi:// part is trimmed before calling pip.
-        module = om.scripts.get('<pkgname>')
-
-        Note you can use any specification supported by pip, e.g. to specify a
-        particular version:
-
-        om.scripts.put('pypi://<pkgname==version>', ...)
-        om.scripts.put('git+https://....@tag#egg=<pkgname>', ...)
+        # retrieve the package and call pip install
+        om.scripts.get('name')
 
     Notes:
-        the package specification is stored as meta.kind_meta['pip_source']
+        * `pypi://<pkgname>` can be any specification supported by pip, e.g.::
 
-    See Also
-        https://packaging.python.org/tutorials/packaging-projects/
+            om.scripts.put('pypi://<pkgname==version>', ...)
+            om.scripts.put('git+https://....@tag#egg=<pkgname>', ...)
+
+        * the package specification is stored as ``metadata.kind_meta['pip_source']``
+
+    See Also:
+        * https://packaging.python.org/tutorials/packaging-projects/
     """
     KIND = 'pipsrc.package'
 
@@ -57,7 +55,7 @@ class PythonPipSourcedPackageData(BaseDataBackend):
         save a python package
 
         This stores a PIP-sourceable package specification in the objects
-        Metadata.kind_meta:
+        ``Metadata.kind_meta``::
 
              { 'pip_source': '<obj:package spec>' }
 

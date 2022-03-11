@@ -7,24 +7,25 @@ class OmegaTrackingProxy:
     """ OmegaTrackingProxy provides the runtime context for experiment tracking
 
     Usage:
-        With implied start()/stop() semantics, creating experiment runs:
+
+        Using implied start()/stop() semantics, creating experiment runs::
 
             with om.runtime.experiment('myexp') as exp:
                 ...
                 exp.log_metric('accuracy', score)
 
 
-        With explicit start()/stop() semantics:
+        Using explicit start()/stop() semantics::
 
             exp = om.runtime.experiment('myexp')
             exp.start()
             ...
             exp.stop()
 
-    See Also
+    See Also:
 
-        OmegaSimpleTracker
-        ExperimentBackend
+        * OmegaSimpleTracker
+        * ExperimentBackend
     """
     # test support, does not actually track nesting
     __nested = 0

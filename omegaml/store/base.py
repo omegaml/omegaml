@@ -648,6 +648,7 @@ class OmegaStore(object):
         :return:    True if object was deleted, False if not.
                     If force is True and
                     the object does not exist it will still return True
+        :raises: DoesNotExist if the object does not exist and ```force=False```
         """
         backend = self.get_backend(name)
         if backend is not None:
@@ -724,7 +725,8 @@ class OmegaStore(object):
                 Defaults to False
 
         Returns:
-            help(obj)
+            * help(obj) if python is in interactive mode
+            * text(str) if python is in not interactive mode
         """
         import sys
         import pydoc
@@ -1063,6 +1065,15 @@ class OmegaStore(object):
         return [f if raw else str(f.name).replace('.omm', '') for f in files]
 
     def exists(self, name, hidden=False):
+        """ check if object exists
+
+        Args:
+            name (str): name of object
+            hidden (bool): if True, include hidden files
+
+        Returns:
+            bool, True if object exists
+        """
         return name in self.list(name, hidden=hidden)
 
     def object_store_key(self, name, ext, hashed=None):

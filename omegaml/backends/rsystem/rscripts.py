@@ -15,24 +15,16 @@ from omegaml.util import tryOr
 
 class RPackageData(BaseDataBackend):
     """
-    Backend to support locally sourced custom scripts deployment to runtimes cluster
+    Backend to support R packages
 
-    This supports any local setup.py
+    Usage::
 
-    Usage:
         om.scripts.put('R://path/to/app.R', 'myname')
         om.scripts.get('myname')
 
-        Note that setup.py must minimally specify the following. The
-        name and packages kwargs must specify the same name as given
-        in put(..., name)
-
-            # setup.py
-            from setuptools import setup
-            setup(name='myname', packages=['myname'])
-
     See Also:
-        https://packaging.python.org/tutorials/packaging-projects/
+        * Rscript
+        * https://mastering-shiny.org/scaling-packaging.html (CC BY-NC-ND 4.0)
     """
     KIND = 'package.r'
 
@@ -83,7 +75,7 @@ class RPackageData(BaseDataBackend):
         :param localpath: the local path to store the package
         :param install: if True call pip install on the retrieved package
         :param kwargs:
-        :return: the loaded module
+        :return: the loaded module (RScript)
         """
         pkgname = basename(name)
         dstdir = localpath or self.data_store.tmppath
@@ -108,7 +100,7 @@ class RPackageData(BaseDataBackend):
 class RScript:
     """ a Python proxy to the R process that runs a script
 
-    This provides the mod.run() interface for scripts so that
+    This provides the ``mod.run()`` interface for scripts so that
     we can use the same semantics for R and python scripts.
     """
     def __init__(self, appdir):
@@ -118,23 +110,25 @@ class RScript:
         """ run the script in R session
 
         Usage:
-            The script must exist as {self.appdir}/app.R. It must implement
-            the omega_run()
+            The script must exist as ``{self.appdir}/app.R``. It must implement
+            the ``omega_run()`` function.
 
-            Example script:
-            # app.R
-            library(jsonlite)
-            omega_run <- function(x, kwargs) {
-               s <- fromJSON(rawToChar(base64_dec(kwargs)))
-               s$message <- "hello from R"
-               return(toJSON(s))
-            }
+            Example::
 
-        How it works:
+                # app.R
+                library(jsonlite)
+                omega_run <- function(om, kwargs) {
+                   # if om was passed as "0", this means we're in a local mode, i.e. must import omegaml
+                   om <- if (om == "0") import("omegaml") else om
+                   s <- fromJSON(rawToChar(base64_dec(kwargs)))
+                   s$message <- "hello from R"
+                   return(toJSON(s))
+                }
+
+        Notes:
             - If an R session is active, will run the script by calling the script's omega_run function
             - If no R session is active, will use RScript to source the script and run omega_run function
             - Expects the output to be in JSON format
-
         """
         r = rhelper()
         if r is None:

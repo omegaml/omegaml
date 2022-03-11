@@ -1,42 +1,7 @@
-Introduction
-------------
+MDataFrame Operations
+=====================
 
-
-Using lazy evaluation we can get back a proxy DataFrame, an :code:`MDataFrame`,
-which provides many of the features of a Pandas DataFrame including :code:`.loc`
-indexing and slicing, column projection and aggregation. All of these
-operations, however, are executed by the database and thus support out-of-core
-sized DataFrames, that is DataFrames of arbitrary size.
-
-.. code::
-
-   # ask for a reference to the dfx dataset with lazy evaluation
-   om.datasets.get('dfx', lazy=True)
-   =>
-   <omegaml.mdataframe.MDataFrame at 0x7fa3e991ee48>
-
-   # same thing, getl is convenience method that automatically specifies lazy=True
-   om.datasets.getl('dfx')
-   =>
-   <omegaml.mdataframe.MDataFrame at 0x7fa3e991ee48>
-
-:code:`MDataFrame` in many ways behaves like a normal dataframe, however the
-evaluation of operations is _lazy_ and is executed by the database as opposed
-to in-memory. This allows us to process data that is larger than memory.
-
-In order to evaluate :code:`MDataFrame` and return an actual
-:code:`pandas.DataFrame` just access the :code:`.value` property:
-
-.. code::
-
-   om.datasets.get('dfx', lazy=True).value
-   =>
-       x  y
-    0  0  0
-    1  1  1
-    2  2  2
-    3  3  3
-    4  4  4
+.. contents::
 
 Selection
 ---------
@@ -147,7 +112,6 @@ method, by specifying the filter as the keyword arguments:
 Geo proximity filtering
 +++++++++++++++++++++++
 
-If you have licensed the geo location proximity extensions,
 :code:`MDataFrame` supports filtering on geodesic proximity by specifying
 the :code:`__near` operator and a pair of (lat, lon) coordinates. The result
 is the list of matching locations sorted by distance from the given coordinates.

@@ -3,8 +3,17 @@ Reference
 
 .. toctree::
     :maxdepth: 3
-    
-    public
+
+    core
+    datasets
+    models
+    jobs
+    scripts
+    runtimes
+    mdataframe
+    tracking
     developer
+
+
 
 

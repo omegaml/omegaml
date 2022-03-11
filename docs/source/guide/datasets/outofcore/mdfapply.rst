@@ -1,6 +1,8 @@
 Aggregation Framework
 ---------------------
 
+.. contents::
+
 .. _MongoDB's aggregate: https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/#db.collection.aggregate
 
 omega|ml provides a rich aggregation framework that leverages `MongoDB's aggregate`_ operator while keeping

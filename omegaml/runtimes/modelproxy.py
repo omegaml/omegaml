@@ -15,20 +15,25 @@ class OmegaModelProxy(object):
     execute the methods using celery tasks and return celery
     AsyncResult objects
 
-    Usage:
+    Usage::
 
-        .. code::
+        om = Omega()
+        # train a model
+        # result is AsyncResult, use .get() to return it's result
+        result = om.runtime.model('foo').fit('datax', 'datay')
+        result.get()
 
-            om = Omega()
-            # train a model
-            # result is AsyncResult, use .get() to return it's result
-            result = om.runtime.model('foo').fit('datax', 'datay')
-            result.get()
+        # predict
+        result = om.runtime.model('foo').predict('datax')
+        # result is AsyncResult, use .get() to return it's result
+        print result.get()
 
-            # predict
-            result = om.runtime.model('foo').predict('datax')
-            # result is AsyncResult, use .get() to return it's result
-            print result.get()
+    Notes:
+        The actual methods of ModelProxy are defined in its mixins
+
+    See Also:
+        * ModelMixin
+        * GridSearchMixin
     """
     #     Implementation note:
     #

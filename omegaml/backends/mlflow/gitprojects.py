@@ -8,11 +8,12 @@ class MLFlowGitProjectBackend(BaseDataBackend):
 
     This supports any git remote source that MLFlow supports
 
-    Usage:
+    Usage::
+
         om.scripts.put('mlflow+git://<user>/<repo>', '<pkgname>')
 
-    See Also
-        https://packaging.python.org/tutorials/packaging-projects/
+    See Also:
+        * https://packaging.python.org/tutorials/packaging-projects/
     """
     KIND = 'mlflow.gitproject'
     MLFLOW_GIT_PREFIX = 'mlflow+git'

@@ -16,7 +16,7 @@ configuration file (:code:`$HOME/.omegaml/config.yml`)
   The configuration file in Yaml format is read automatically on omega|ml
   startup, if available.
 
-  .. note:: `Enterprise Edition`
+  .. note:: `Commercial Edition`
       A user-specific configuration file can be obtained by
       any authorized user by running the :code:`python -m omegacli init` command.
       To override defaults, specify the corresponding variable in Yaml format.

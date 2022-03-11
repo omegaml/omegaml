@@ -10,6 +10,28 @@ from omegaml.backends.basedata import BaseDataBackend
 
 
 class DashAppBackend(BaseDataBackend):
+    """ Backend to support storing ``dash`` applications inside notebooks
+
+    .. warning::
+
+        **deprecated** prefer to build a proper Pip package.
+
+    Usage::
+
+        # in Jupyter Notebook
+        from dashserve import JupyterDash
+
+        app = JupyterDash(__name__)
+        app.layout = html.Div(children=[
+           ...
+        ]
+
+        # save
+        om.scripts.put(app, 'apps/myapp')
+
+    See Also::
+        * dashserve - https://github.com/omegaml/dashserve
+    """
     KIND = 'python.dash'
 
     @classmethod

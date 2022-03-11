@@ -10,6 +10,8 @@ logger = logging.getLogger(__file__)
 
 
 class ModelMixin(object):
+    """ mixin methods to OmegaModelProxy
+    """
     def fit(self, Xname, Yname=None, **kwargs):
         """
         fit the model

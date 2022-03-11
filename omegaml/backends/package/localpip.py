@@ -13,7 +13,8 @@ class PythonPackageData(BaseDataBackend):
 
     This supports any local setup.py
 
-    Usage:
+    Usage::
+    
         om.scripts.put('pkg://path/to/setup.py', 'myname')
         om.scripts.get('myname')
 

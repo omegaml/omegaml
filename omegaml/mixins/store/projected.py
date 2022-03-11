@@ -21,12 +21,12 @@ class ProjectedMixin(object):
 
         colspec can be any of
 
-        * a comma separated list of columns, e.g. foo[a,b]
-        * an open-ended slice, e.g. foo[a:] => all columns following a, inclusive
-        * an closed slice, e.g. foo[a:b] => all columns between a,b, inclusive
-        * a close-ended slice, e.g. foo[:b] => all columns up to b, inclusive
-        * an empty slice, e.g. foo[:] => all columns
-        * a list of columns to exclude, e.g. foo[^b] => all columns except b
+        * a comma separated list of columns, e.g. ``foo[a,b]``
+        * an open-ended slice, e.g. ``foo[a:]`` => all columns following a, inclusive
+        * an closed slice, e.g. ``foo[a:b]`` => all columns between a,b, inclusive
+        * a close-ended slice, e.g. ``foo[:b]`` => all columns up to b, inclusive
+        * an empty slice, e.g. ``foo[:]`` => all columns
+        * a list of columns to exclude, e.g. ``foo[^b]`` => all columns except b
 
         :param name: (str) the name of the dataset, optionally including a
            column specification

@@ -2,7 +2,10 @@ Introduction
 ============
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   quickstart
-   usp
+    whatisit
+    usp
+    quickstart
+
+

@@ -18,6 +18,8 @@ jobs:
             then
               cd omegaml-ce
               echo "Building PR #$pr_number on target branch."
+              echo "Waiting for github to merge..."
+              sleep 60
               (git checkout --force $CIRCLE_BRANCH && \
                git fetch --force origin pull/$pr_number/merge:circleci-build && \
                git checkout circleci-build) || \

@@ -1,12 +1,14 @@
-Working with the cloud
-======================
+Deploying models and pipelines
+==============================
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   runtimes
-   restapi
-
+    intro
+    mlops
+    restapi
+    logging
+    monitoring
 
 
 

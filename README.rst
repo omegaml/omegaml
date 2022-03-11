@@ -1,5 +1,5 @@
-omega|ml - DataOps & MLOps for humans
-=====================================
+omega|ml - MLOps for humans
+===========================
 
 with just a single line of code you can
 

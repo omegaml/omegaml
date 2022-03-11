@@ -9,9 +9,7 @@ class VirtualObjectBackend(BaseDataBackend):
     Support arbitrary functions as object handlers
 
     Virtual object functions can be any callable that provides a __omega_virtual__
-    attribute. The callable must support the following signature:
-
-    .. code::
+    attribute. The callable must support the following signature::
 
         @virtualobj
         def virtualobjfn(data=None, method='get|put|drop',
@@ -27,7 +25,8 @@ class VirtualObjectBackend(BaseDataBackend):
     As a convenience virtual object handlers can be implemented as a subclass of
     VirtualObjectHandler
 
-    Usage:
+    Usage::
+    
         # create the 'foo' virtual object
         om.datasets.put(virtualobjfn, 'foo')
 

@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import logging
 from celery import Celery
 
+from omegaml.util import dict_merge
+
 logger = logging.getLogger(__name__)
 
 
@@ -128,7 +130,8 @@ class OmegaRuntime(object):
                logger and the level. Valid levels are INFO, WARNING, ERROR,
                CRITICAL, DEBUG
 
-        Usage:
+        Usage::
+
             # run all runtime tasks locally
             om.runtime.mode(local=True)
 
@@ -202,7 +205,11 @@ class OmegaRuntime(object):
         return a model for remote execution
 
         Args:
+            modelname (str): the name of the object in om.models
             require (dict): routing requirements for this job
+
+        Returns:
+            OmegaModelProxy
         """
         from omegaml.runtimes.modelproxy import OmegaModelProxy
         self.require(**self._sanitize_require(require)) if require else None
@@ -210,10 +217,14 @@ class OmegaRuntime(object):
 
     def job(self, jobname, require=None):
         """
-        return a job for remote exeuction
+        return a job for remote execution
 
         Args:
+            jobname (str): the name of the object in om.jobs
             require (dict): routing requirements for this job
+
+        Returns:
+            OmegaJobProxy
         """
         from omegaml.runtimes.jobproxy import OmegaJobProxy
 
@@ -225,7 +236,11 @@ class OmegaRuntime(object):
         return a script for remote execution
 
         Args:
+            scriptname (str): the name of object in om.scripts
             require (dict): routing requirements for this job
+
+        Returns:
+            OmegaScriptProxy
         """
         from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 
@@ -238,40 +253,53 @@ class OmegaRuntime(object):
         Args:
             experiment (str): the name of the experiment
             provider (str): the name of the provider
+
+        Returns:
+            OmegaTrackingProxy
         """
         from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
         tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run)
         return tracker
 
-    def task(self, name):
+    def task(self, name, **kwargs):
         """
         retrieve the task function from the celery instance
 
         Args:
+            name (str): a registered celery task as ``module.tasks.task_name``
             kwargs (dict): routing keywords to CeleryTask.apply_async
+
+        Returns:
+            CeleryTask
         """
         taskfn = self.celeryapp.tasks.get(name)
         assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
-        task = CeleryTask(taskfn, self._common_kwargs)
+        kwargs = dict_merge(self._common_kwargs, dict(routing=kwargs))
+        task = CeleryTask(taskfn, kwargs)
         self._require_kwargs = dict(routing={}, task={})
         return task
 
     def settings(self, require=None):
-        """
-        return the runtimes's cluster settings
+        """ return the runtimes's cluster settings
         """
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
     def ping(self, *args, require=None, wait=True, **kwargs):
         """
-        ping the runtimes
+        ping the runtime
 
         Args:
-            require (dict): routing requirements for this job
             args (tuple): task args
+            require (dict): routing requirements for this job
+            wait (bool): if True, wait for the task to return, else return
+                AsyncResult
             kwargs (dict): task kwargs
+
+        Returns:
+            * response (dict) for wait=True
+            * AsyncResult for wait=False
         """
         self.require(**require) if require else None
         promise = self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs)
@@ -281,7 +309,7 @@ class OmegaRuntime(object):
         """ enable a worker-specific queue on every worker host
 
         Returns:
-
+            list of labels (one entry for each hostname)
         """
         control = self.celeryapp.control
         inspect = control.inspect()
@@ -331,12 +359,12 @@ class OmegaRuntime(object):
         """ Add a callback to a registered script
 
         The callback will be triggered upon successful or failed
-        execution of the runtime tasks. The script syntax is:
+        execution of the runtime tasks. The script syntax is::
 
-        # script.py
-        def run(om, state=None, result=None, **kwargs):
-            # state (str): 'SUCCESS'|'ERROR'
-            # result (obj): the task's serialized result
+            # script.py
+            def run(om, state=None, result=None, **kwargs):
+                # state (str): 'SUCCESS'|'ERROR'
+                # result (obj): the task's serialized result
 
         Args:
             script_name (str): the name of the script (in om.scripts)

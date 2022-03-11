@@ -32,16 +32,24 @@ class OmegaJobProxy(object):
 
     def run(self, timeout=None, **kwargs):
         """
-        run the job
+        submit the job for immediate execution
 
-        :return: the result
+        Args:
+            timeout (int): optional, timeout in seconds
+            **kwargs: kwargs to CeleryTask.delay
+
+        Returns:
+            AsyncResult
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.run_omegaml_job')
         return job_run.delay(self.jobname, timeout=timeout, **kwargs)
 
     def schedule(self, **kwargs):
         """
-        schedule the job
+        schedule the job for repeated execution
+
+        Args:
+            **kwargs: see OmegaJob.schedule()
         """
         job_run = self.runtime.task('omegaml.notebook.tasks.schedule_omegaml_job')
         return job_run.delay(self.jobname, **kwargs)
