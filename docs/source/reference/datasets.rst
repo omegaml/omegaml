@@ -23,6 +23,7 @@ om.datasets
         - :py:class:`omegaml.mixins.store.virtualobj.VirtualObjectMixin`
         - :py:class:`omegaml.mixins.store.promotion.PromotionMixin`
         - :py:class:`omegaml.mixins.mdf.iotools.IOToolsStoreMixin`
+        - :py:class:`omegaml.mixins.store.extdmeta.ExtendedMetadataMixin`
 
     Backends:
 
@@ -77,3 +78,7 @@ Mixins
 
 .. autoclass:: omegaml.mixins.mdf.iotools.IOToolsStoreMixin
    :members:
+
+.. autoclass:: omegaml.mixins.store.extdmeta.ExtendedMetadataMixin
+   :members:
+

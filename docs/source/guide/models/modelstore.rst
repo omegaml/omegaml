@@ -226,6 +226,49 @@ GridSearchCV model to evaluate the performance of multiple parameter settings.
         self.assertIsInstance(gs_model, GridSearchCV)
 
 
+Model Metadata
+++++++++++++++
+
+Whenever you fit a model using the runtime, it's `Metadata.attributes` will
+automatically record the parameters used for fitting.
+
+.. code:: Python
+
+    result = om.runtime.model('mymodel').fit('sample[x]', 'sample[y]').get()
+    meta = om.models('mymodel')
+    meta.attributes['dataset']
+    =>
+    {
+        'Xname': 'sample[x]',  # the X dataset
+        'Yname': 'sample[y]',  # the Y dataset
+        'metaX': { ... }, # Metadata for this model (at time of fit)
+        'metaY': { ... }, # Metadata for this model (at time of fit)
+        ...
+    }
+
+This information is also used in prediction when no dataset is provided as
+input.
+
+.. code:: Python
+
+    om.runtime.model('mymodel').predict('*')
+    # is equivalent to using meta.attributes['dataset']['Xname']
+    om.runtime.model('mymodel').predict('sample[x]')
+
+If you want a different dataset for prediction than the one you used for
+training, you may change it at any time:
+
+.. code:: Python
+
+    # set the name of the dataset to a different name
+    om.models.link_dataset('mymodel', Xname='live[x]')
+
+    # live[x] will now be used as the default dataset for prediction
+    om.runtime.model('mymodel').predict('*')
+    # is equivalent to
+    om.runtime.model('mymodel').predict('live[x]')
+
+
 Other Model tasks
 +++++++++++++++++
 
