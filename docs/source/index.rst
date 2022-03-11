@@ -16,5 +16,4 @@ from laptop to cloud.
    nb/index
    screenshots
    moreinfo
-
-
+   changes/index

@@ -237,15 +237,23 @@ fix:
 	find . -name "*rst" | xargs sed -i 's/omegaml$$/omega\|ml/'
 	find . -name "*rst" | xargs sed -i 's/import omega.ml as om/import omegaml as om/'
 	find . -name "*rst" | xargs sed -i "s/from omega.ml import /from omegaml import /"
-	
-publish:
-	make clean html    
+
+multihtml:
+	git tag -d latest; git tag latest
+	git tag -d stable; cat ../omegaml/VERSION | xargs | xargs -I {} git tag stable release/{}
+	sphinx-multiversion source build/html
+	cp -r source/_templates/fixed/. build/html
+
+pre-publish:
+	make clean changes multihtml
+	echo "view at file://${PWD}/build/html/index.html"
+
+publish: pre-publish
 	cd build/html && tar -czf /tmp/omegamldocs.tgz . 
 	git checkout gh-pages
 	cd ../ && find . -name "*pyc" | xargs rm
-	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "updates ghpages" 
+	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "docs: updates ghpages"
 	echo "Done. git push and go back to your original branch"
 
-        
-  
-	
+changes:
+	scripts/mkchanges.sh

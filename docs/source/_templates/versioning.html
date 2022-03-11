@@ -1,0 +1,10 @@
+<!-- version plugin for templates that support sidebars -->
+<!-- https://holzhaus.github.io/sphinx-multiversion/master/quickstart.html -->
+{% if versions %}
+<h3>{{ _('Versions') }}</h3>
+<ul>
+  {%- for item in versions %}
+  <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+  {%- endfor %}
+</ul>
+{% endif %}
