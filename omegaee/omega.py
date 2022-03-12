@@ -60,7 +60,7 @@ def make_enterprise():
             qualifier = qualifier or 'default'
             from omegaml.util import settings, load_class
             # load defaults
-            defaults = settings(reload=True)
+            defaults = settings()
             # get userid, apikey and api url
             username = username or defaults.OMEGA_USERID
             apikey = apikey or defaults.OMEGA_APIKEY
@@ -87,7 +87,7 @@ def make_enterprise():
                 self.initialized = True
             return self
 
-    def setup(username=None, apikey=None, api_url=None, qualifier=None, bucket=None, view=True):
+    def setup(username=None, apikey=None, api_url=None, qualifier=None, bucket=None, view=None):
         """
         configure and return the omega client instance
 
@@ -122,6 +122,9 @@ def make_enterprise():
         :param view: if True returns cluster-internal URLs
         :return: the Omega instance
         """
+        from omegaml import settings
+        defaults = settings()
+        view = view if view is None else defaults.OMEGA_SERVICES_INCLUSTER
         kwargs = dict(username=username,
                       apikey=apikey,
                       api_url=api_url,
@@ -154,7 +157,7 @@ def make_enterprise():
                 authenticted Omega instance
         """
         from omegaml import settings, load_class
-        task_kwargs = task.request.kwargs
+        task_kwargs = task.request.kwargs or {} # request.kwargs can be None
         auth = task_kwargs.pop('__auth', None)
         defaults = settings()
         auth_env = load_class(defaults.OMEGA_AUTH_ENV)

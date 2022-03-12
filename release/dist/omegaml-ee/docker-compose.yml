@@ -45,13 +45,15 @@ services:
          - OMEGA_JYHUB_USER=jyadmin
          - OMEGA_JYHUB_APIKEY=b7b034f57d442e605ab91f88a8936149e968e12e
          - JYHUB_HOST=localhost:8899
-         - MONGODB_SERVICE_HOST=mongodb
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
+         - OMEGA_SERVICES_INCLUSTER=yes
+         - MONGO_HOST=localhost:27017
+         - MONGO_SERVICE_HOST=mongodb:27017
    apphub:
-      image: omegaml/apphub:0.3.2-dev13
+      image: omegaml/apphub:0.4.0-dev29
       container_name: apphub
       hostname: apphub
       links:
@@ -66,7 +68,7 @@ services:
          - ./etc-dev/mongo/certs/ca_certificate.pem:/app/etc-dev/mongo/certs/ca_certificate.pem
       environment:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
-         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - OMEGA_RESTAPI_URL=http://omegaml:5000
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - CELERY_Q=default
          - APP_CONFIG=EnvSettings_omegacloud_compose
@@ -76,6 +78,7 @@ services:
          - APPHUB_REGISTRY=apphub.contrib.registry.omegareg.OmegaCloudRegistry
          - APPHUB_URL_PREFIX=/apps
          - PYTHONUSERBASE="/app/pylib/user"
+         - OMEGA_SERVICES_INCLUSTER=yes
    # apphub caching
    redis:
       image: redis
@@ -94,7 +97,7 @@ services:
          - pythonlib:/app/pylib/user
       environment:
          - APP=omjobs
-         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - OMEGA_RESTAPI_URL=http://omegaml:5000
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
@@ -104,6 +107,7 @@ services:
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - PYTHONUSERBASE="/app/pylib/user"
+         - OMEGA_SERVICES_INCLUSTER=yes
    worker:
       image: omegaml/omegaml-ee:latest
       container_name: worker
@@ -120,12 +124,13 @@ services:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
-         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - OMEGA_RESTAPI_URL=http://omegaml:5000
          - C_FORCE_ROOT=yes
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
+         - OMEGA_SERVICES_INCLUSTER=yes
    omegaops:
       image: omegaml/omegaml-ee:latest
       container_name: omegaops
@@ -144,7 +149,7 @@ services:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - MONGO_ADMIN_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/admin
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
-         - OMEGA_RESTAPI_URL=http://omegaml:5000/
+         - OMEGA_RESTAPI_URL=http://omegaml:5000
          - C_FORCE_ROOT=yes
          - MYSQL_DATABASE=omegaml
          - MYSQL_USER=omegaml
@@ -152,6 +157,7 @@ services:
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - PYTHONUSERBASE="/app/pylib/user"
+         - OMEGA_SERVICES_INCLUSTER=yes
    rabbitmq:
       image: rabbitmq
       container_name: rabbitmq

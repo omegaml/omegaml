@@ -47,7 +47,7 @@ OMEGA_CELERY_CONFIG = {
     # avoid indefinite waits on task publishing if broker is down
     # -- without this we had indef waits in run_user_scheduler
     # -- see https://github.com/celery/celery/issues/4627
-    'CELERY_TASK_PUBLISH_RETRY_POLICY': {
+    'BROKER_TRANSPORT_OPTIONS': {
         "max_retries": 3,
         "interval_start": 0,
         "interval_step": 1,

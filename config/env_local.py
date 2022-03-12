@@ -70,7 +70,10 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'
     BASE_BROKER_URL = 'amqp://{brokeruser}:{brokerpassword}@{brokerhost}/{brokervhost}'
 
-    mongo_host = os.environ.get('MONGO_HOST', 'localhost:27017')
+    # MONGO_HOST is the default public hostname set in env_local/constance (view=False)
+    mongo_service_host = os.environ.get('MONGODB_SERVICE_HOST', 'localhost')
+    mongo_service_port = os.environ.get('MONGODB_SERVICE_PORT', '27017')
+    mongo_host = os.environ.get('MONGO_HOST', f'{mongo_service_host}:{mongo_service_port}')
     MONGO_ADMIN_URL = (os.environ.get('MONGO_ADMIN_URL') or
                        BASE_MONGO_URL.format(mongouser='admin',
                                              mongohost=mongo_host,

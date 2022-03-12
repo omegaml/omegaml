@@ -1,7 +1,21 @@
 import json
 
 from omegaml.mongoshim import MongoClient
-from omegaml.util import urlparse, settings as get_settings, markup, dict_merge
+from omegaml.util import urlparse, markup, dict_merge
+
+
+def get_settings():
+    # FIXME we need to move all per-session configurations into constance
+    # always reload settings since we might run in a different user context each time
+    # -- not reloading can interfere in user sessions
+    #    e.g. first call requests view=False => settings.OMEGA_MONGO_URL is set to external host (correct)
+    #         next call requests view=True => settings.OMEGA_MONGO_URL is used as the basis for the internal host (correct)
+    #         however, if we don't reload=True on each request, the first requests leaks through to the second,
+    #         i.e. OMEGA_MONGO_URL is the public host and is then used as the internal host
+    #         this only happens when subsequent requests are processed in the same python process, which
+    #         however is common for omegaops(!)
+    from omegaml.util import settings
+    return settings(reload=True)
 
 
 # note no global imports from Django to avoid settings sequence issue
@@ -613,9 +627,8 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
     if '@' in host:
         creds, host = host.split('@', 1)
     mongohost_in = qualifier_settings.get('mongohost.in') or host
-    # FIXME this is a hack to support an old-style default broker. Must simplify, resolve duplicate OMEGA_BROKER/BROKER_HOST
+    # default internal broker settings
     broker_defaults = urlparse.urlparse(config.BROKER_URL)
-    broker_host_in = qualifier_settings.get('brokerhost.in') or settings.OMEGA_BROKER_HOST
     # note we specify parsers for clarity, values can be overriden below
     parsed = {
         'services': {
@@ -662,7 +675,8 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
                 'mongopassword': qualifier_settings.get('mongopassword'),
                 'mongodbname': qualifier_settings.get('mongodbname'),
                 'brokerhost': broker_host_ext,
-                'brokerhost.in': broker_host_in,
+                'brokerhost.in': qualifier_settings.get(
+                'brokerhost.in') or f'{broker_defaults.hostname}:{broker_defaults.port}',
                 'brokeruser': qualifier_settings.get('brokeruser', broker_defaults.username),
                 'brokerpassword': qualifier_settings.get('brokerpassword', broker_defaults.password),
                 'brokervhost': qualifier_settings.get('brokervhost', sanitize_vhost(broker_defaults.path)),

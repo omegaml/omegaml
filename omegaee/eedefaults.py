@@ -35,9 +35,9 @@ OMEGA_JYHUB_URL = os.environ.get('OMEGA_JYHUB_URL', 'http://localhost:8001')
 #: omegaweb's API key user by JYHUB_USER to get another users config. Use omsetupuser to set this key
 OMEGA_JYHUB_APIKEY = os.environ.get('OMEGA_JYHUB_APIKEY', 'b7b034f57d442e605ab91f88a8936149e968e12e')
 #: allow a task to use the local default configuration (potentially insecure)
-OMEGA_ALLOW_TASK_DEFAULT_AUTH = os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', False)
-#: is the worker considered inside the same cluster as the client
-OMEGA_WORKER_INCLUSTER = truefalse(os.environ.get('OMEGA_WORKER_INCLUSTER', True))
+OMEGA_ALLOW_TASK_DEFAULT_AUTH = truefalse(os.environ.get('OMEGA_ALLOW_TASK_DEFAULT_AUTH', False))
+#: is this client considered inside the same cluster as the omega services
+OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', False))
 
 #: imports that the celery runtime will load dynamically
 OMEGA_CELERY_IMPORTS = ['omegaml',
