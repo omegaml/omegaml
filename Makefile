@@ -9,6 +9,7 @@ install:
 	# in some images pip is outdated, some packages are system-level installed
 	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
 	pip install --ignore-installed -U pip
+	[ -f .gitlinks ] && pip install gil && gil clone && pip install -r requirements.dev
 	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}"
 	(which R && scripts/setup-r.sh) || echo "R is not installed"
 

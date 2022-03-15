@@ -1,3 +1,7 @@
+import shutil
+
+from pathlib import Path
+
 import os
 import unittest
 import warnings
@@ -20,6 +24,7 @@ except:
     warnings.warn("mlflow is not installed")
 else:
     from mlflow.exceptions import MlflowException
+    import mlflow
 
     @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
     class TestMLFlowModels(OmegaTestMixin, TestCase):
@@ -28,6 +33,15 @@ else:
             self.clean()
             om.models.register_backend(MLFlowModelBackend.KIND, MLFlowModelBackend)
             om.models.register_backend(MLFlowRegistryBackend.KIND, MLFlowRegistryBackend)
+            self.mlflow_tracking_db = 'sqlite:////tmp/mlflow-t.sqlite'
+            self.mlflow_registry_db = 'sqlite:////tmp/mlflow-r.sqlite'
+            self._clean_mlruns()
+            self._clean_mlflowdbs()
+
+        def tearDown(self):
+            # comment for debugging mlflow artifacts
+            self._clean_mlruns()
+            self._clean_mlflowdbs()
 
         def test_save_mlflow_saved_model_path(self):
             """ test deploying a model saved by MLflow, from path """
@@ -115,20 +129,26 @@ else:
             """ test deploying an MLModel from a tracking server URI """
             import mlflow
 
-            mlflow.set_tracking_uri('sqlite:///mlflow.sqlite')
+            mlflow.set_tracking_uri(self.mlflow_tracking_db)
+            mlflow.set_registry_uri(self.mlflow_registry_db)
+
             with mlflow.start_run() as run:
                 model = LinearRegression()
                 X = pd.Series(range(0, 10))
                 Y = pd.Series(X) * 2 + 3
                 model.fit(reshaped(X), reshaped(Y))
-                mlflow.sklearn.log_model(sk_model=model,
-                                         artifact_path='sklearn-model',
-                                         registered_model_name='sklearn-model')
+            mlflow.sklearn.log_model(sk_model=model,
+                                     artifact_path='sklearn-model',
+                                     registered_model_name='sklearn-model')
+
+            # simulate a new session on another device (tracking URI comes from repo)
+            mlflow.set_tracking_uri(None)
 
             om = self.om
-            # store with just the model path, specify the kind because paths can be other files too
+            # use the tracking URI to store the model as a reference to a MLFlow tracking server
             meta = om.models.put('mlflow+models://sklearn-model/1', 'sklearn-model')
             self.assertEqual(meta.kind, MLFlowRegistryBackend.KIND)
+            # simulate a new mlflow session
             model_ = om.models.get('sklearn-model')
             self.assertIsInstance(model_, mlflow.pyfunc.PyFuncModel)
             yhat_direct = model_.predict(reshaped(X))
@@ -143,7 +163,19 @@ else:
             # note we don't set a tracking uri so mlflow uses a local file path and refused to
             # work with the file path as a model registry
             mlflow.set_tracking_uri(None)
+            mlflow.set_registry_uri(None)
             with self.assertRaises(MlflowException):
                 meta = om.models.put('mlflow+models://sklearn-model/1', 'sklearn-model')
             self.assertNotIn('sklearn-model', om.models.list())
+
+        def _clean_mlflowdbs(self):
+            Path(self.mlflow_tracking_db.split('sqlite:///')[-1]).unlink(missing_ok=True)
+            Path(self.mlflow_registry_db.split('sqlite:///')[-1]).unlink(missing_ok=True)
+
+        def _clean_mlruns(self):
+            from mlflow.store import tracking
+            mlruns_path = Path(__file__).parent / tracking.DEFAULT_LOCAL_FILE_AND_ARTIFACT_PATH
+            shutil.rmtree(mlruns_path, ignore_errors=True)
+            mlruns_path.mkdir(parents=True)
+
 

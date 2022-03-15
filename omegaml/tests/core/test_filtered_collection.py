@@ -69,7 +69,7 @@ class FilteredCollectionTests(TestCase):
     def test_count(self):
         query = {'x': 9}
         fcoll = FilteredCollection(self.coll, query=query)
-        result = fcoll.count()
+        result = fcoll.count_documents()
         self.assertEqual(result, 2)
 
     def test_distinct(self):
@@ -78,35 +78,3 @@ class FilteredCollectionTests(TestCase):
         result = fcoll.distinct('x')
         self.assertEqual(result, [9])
 
-    def test_group(self):
-        query = {'x': 9}
-        fcoll = FilteredCollection(self.coll, query=query)
-        result = fcoll.group({'x': 1},
-                             {'count': 0},
-                             'function(curr, result) { result.count += 1; }')
-        self.assertIsInstance(result, list)
-        self.assertEqual(result[0].get('count'), 2)
-
-    def test_map_reduce(self):
-        query = {'x': 9}
-        fcoll = FilteredCollection(self.coll, query=query)
-        # calculate sum as a test value (values are random)
-        ysum = sum(v.get('y') for v in fcoll.find())
-        # use map reduce for the same sum calculation
-        mapf = 'function() { emit(this.x, this.y); }'
-        reducef = 'function(x, values) { return Array.sum(values); }'
-        result = list(fcoll.map_reduce(mapf, reducef, 'mr_out').find())
-        self.assertIsInstance(result, list)
-        self.assertEqual(result[0].get('value'), ysum)
-
-    def test_map_reduce_inline(self):
-        query = {'x': 9}
-        fcoll = FilteredCollection(self.coll, query=query)
-        # calculate sum as a test value (values are random)
-        ysum = sum(v.get('y') for v in fcoll.find())
-        # use map reduce for the same sum calculation
-        mapf = 'function() { emit(this.x, this.y); }'
-        reducef = 'function(x, values) { return Array.sum(values); }'
-        result = fcoll.inline_map_reduce(mapf, reducef)
-        self.assertIsInstance(result, list)
-        self.assertEqual(result[0].get('value'), ysum)

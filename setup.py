@@ -8,7 +8,7 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).read()
 
 # extras
-hdf_deps = ['tables>=3.2.2']
+tables = ['tables>=3.7.0']
 graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
 dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
@@ -44,9 +44,9 @@ else:
     keras_deps = ['keras<=2.5']
 
 # all deps
-all_deps = (hdf_deps + graph_deps + dashserve_deps + sql_deps + iotools_deps
+all_deps = (tables + graph_deps + dashserve_deps + sql_deps + iotools_deps
             + streaming_deps + jupyter_deps + snowflake_deps)
-client_deps = (hdf_deps + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
+client_deps = (tables + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
 
 setup(
     name='omegaml',
@@ -79,22 +79,24 @@ setup(
         'License :: OSI Approved :: Apache Software License',
     ],
     install_requires=[
-        'celery==4.2.1',
+        'celery<5.0',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
-        'pymongo>=3.2.2,<4.0', # 4.x is not compatiblie with mongoengine 0.23.1
-        'mongoengine~=0.23.1',
+        'mongoengine~=0.24.1',
+        'pymongo~=4.0.2',  # mongoengine 0.24.1 compatibility
         'pandas>1.1,<1.4',  # 1.1 fails on indexes, 1.4 fails some libraries, e.g. yfinance
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
         'flask-restx>=0.4.0',
+        'werkzeug<2.1.0', # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
-        'Jinja2<=3.0', # due to nbconvert   
-        'ipython_genutils', # due tro nbconvert needing it, https://github.com/jupyter/nbconvert/pull/1726
+        'jsonschema<4', # due to nbconvert, https://github.com/executablebooks/jupyter-book/issues/1483
+        'Jinja2<=3.0' # due to nbconvert, https://github.com/jupyter/nbconvert/issues/1605
+        'ipython_genutils', # due to nbconvert, https://github.com/jupyter/nbconvert/pull/1726
         'dill>=0.3.2',
         'tee>=0.0.3',
         'callable-pip>=1.0.0',
@@ -114,7 +116,7 @@ setup(
     ],
     extras_require={
         'graph': graph_deps,
-        'hdf': hdf_deps,
+        'tables': tables,
         'tensorflow': tf_deps,
         'keras': keras_deps,
         'jupyter': jupyter_deps,

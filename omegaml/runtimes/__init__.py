@@ -5,4 +5,3 @@ from .daskruntime import OmegaRuntimeDask
 from .jobproxy import  OmegaJobProxy
 from .loky import OmegaRuntimeBackend
 
-

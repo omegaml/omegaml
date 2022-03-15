@@ -36,6 +36,7 @@ OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
 OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
     'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
+    'uuidRepresentation': 'standard',
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
@@ -48,7 +49,7 @@ OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', 
 #: (deprecated) the collection used to store ipython notebooks
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
-OMEGA_RESULT_BACKEND = 'amqp'
+OMEGA_RESULT_BACKEND = 'rpc://'
 #: the celery configurations
 OMEGA_CELERY_CONFIG = {
     # FIXME should work with json (the default celery serializer)

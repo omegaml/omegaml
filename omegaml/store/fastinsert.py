@@ -23,11 +23,15 @@ def insert_chunk(job):
                 should include the database name, as the collection is taken
                 from the default database of the connection.
     """
-    sdf, collection = job
+    sdf, collection, cpid = job
     try:
         result = collection.insert_many(sdf.to_dict(orient='records'))
     finally:
-        collection.database.client.close()
+        if getattr(collection, '_pkl_cloned', True):
+            # only close if this is a cloned connection
+            # this to avoid invalidating original calling MongoClient
+            # (InvalidOperation: Cannot use MongoClient after close)
+            collection.database.client.close()
     return len(result.inserted_ids)
 
 
@@ -65,12 +69,13 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         collection = PickableCollection(omstore.collection(name))
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
-        cores = max(1, math.ceil(os.cpu_count() / 2))
+        # use at least 2 processes for parallelism, at most half of available cores
+        n_jobs = max(2, math.ceil(os.cpu_count() / 2))
         jobs = zip(dfchunker(df, size=chunksize),
-                   repeat(collection))
+                   repeat(collection), repeat(id(collection)))
         approx_jobs = int(len(df) / chunksize)
         # we use multiprocessing backend because
-        with Parallel(n_jobs=cores, backend='omegaml', verbose=False) as p:
+        with Parallel(n_jobs=n_jobs, backend='omegaml', verbose=False) as p:
             runner = delayed(insert_chunk)
             p_jobs = (runner(job) for job in jobs)
             p._job_count = approx_jobs
@@ -78,3 +83,7 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
     else:
         # still within bounds for single threaded inserts
         omstore.collection(name).insert_many(df.to_dict(orient='records'))
+
+# ensure loky backend is registered
+from omegaml.runtimes.loky import OmegaRuntimeBackend  # noqa
+OmegaRuntimeBackend = OmegaRuntimeBackend

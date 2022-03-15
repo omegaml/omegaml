@@ -63,6 +63,8 @@ jobs:
               conda deactivate
             }
             if [[ $CIRCLE_BRANCH = "release-build" ]]; then
+              # remove .gitlinks so we only use released packages (see Makefile:install)
+              rm .gitlinks
               # actual specs are in scripts/docker/test_images.txt
               scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
             else
@@ -71,21 +73,6 @@ jobs:
               dotest $PYVER
             fi
             docker-compose down --remove-orphans
-          shell: /bin/bash -l -eo pipefail
-      - run:
-          name: Run live tests
-          command: |
-            source miniforge3/etc/profile.d/conda.sh
-            PYVER=3.9
-            conda create -q -y -n omenv$VER python=$VER
-            conda activate omenv$VER
-            pip install twine
-            mkdir -p ~/.omegaml
-            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
-            ls -lart ~/.omegaml
-            cd omegaml-ce
-            LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" make livetest
-            sudo chmod 777 -R /tmp/screenshots
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
           path: /tmp/screenshots

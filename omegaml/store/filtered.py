@@ -113,10 +113,13 @@ class FilteredCollection:
                                                    update,
                                                    **kwargs)
 
-    def count(self, filter=None, **kwargs):
+    def estimated_document_count(self, **kwargs):
+        return self.collection.estimated_document_count(**kwargs)
+
+    def count_documents(self, filter=None, **kwargs):
         query = dict(self.query)
         query.update(filter or {})
-        return self.collection.count(filter=query, **kwargs)
+        return self.collection.count_documents(query, **kwargs)
 
     def distinct(self, key, filter=None, **kwargs):
         query = dict(self.query)
@@ -128,27 +131,6 @@ class FilteredCollection:
 
     def list_indexes(self, **kwargs):
         return self.collection.list_indexes(**kwargs)
-
-    def group(self, key, initial, reduce, condition=None, **kwargs):
-        condition = dict(self.query)
-        condition.update(condition or {})
-        return self.collection.group(key, condition, initial,
-                                     reduce,
-                                     **kwargs)
-
-    def map_reduce(self, m, r, out, full_response=False, query=None, **kwargs):
-        _query = dict(self.query)
-        _query.update(query or {})
-        return self.collection.map_reduce(m, r, out,
-                                          full_response=False,
-                                          query=_query, **kwargs)
-
-    def inline_map_reduce(self, m, r, full_response=False,
-                          query=None, **kwargs):
-        _query = dict(self.query)
-        _query.update(query or {})
-        return self.collection.inline_map_reduce(m, r,
-                                                 full_response=False, query=_query, **kwargs)
 
     def insert(self, *args, **kwargs):
         raise NotImplementedError(

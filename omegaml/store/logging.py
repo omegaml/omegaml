@@ -384,7 +384,7 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
     assert dsname, 'need a valid dsname, got {}'.format(dsname)
     if reset:
         store.drop(dsname, force=True)
-    collection = collection or store.collection(dsname)
+    collection = collection if collection is not None else store.collection(dsname)
     # https://api.mongodb.com/python/current/api/pymongo/write_concern.html#pymongo.write_concern.WriteConcern
     FireAndForget = WriteConcern(w=0)
     ReadFast = ReadConcern('local')
