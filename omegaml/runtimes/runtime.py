@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 
-from socket import gethostname
-
 import logging
 from celery import Celery
+from socket import gethostname
 
 from omegaml.util import dict_merge
 

@@ -6,9 +6,8 @@ from tabulate import tabulate
 from time import sleep
 
 from omegaml import mongoshim
-from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.auth import AuthenticationEnv
 from omegaml.client.docoptparser import CommandBase
-from omegaml.client.userconf import save_userconfig_from_apikey
 from omegaml.client.util import get_omega
 
 
@@ -89,22 +88,25 @@ class CloudCommandBase(CommandBase):
 
     @property
     def om(self):
-        without_config =('config', 'login')
-        require_config = not any(self.args.get(k) for k in without_config)
-        return get_omega(self.args, require_config=require_config)
+        if not hasattr(self, '_om'):
+            without_config = ('config', 'login')
+            require_config = not any(self.args.get(k) for k in without_config)
+            self._om = get_omega(self.args, require_config=require_config)
+        return self._om
 
     def login(self):
         userid = self.args.get('<userid>') or self.args.get('--userid')
         apikey = self.args.get('<apikey>') or self.args.get('--apikey')
-        qualifier = self.args.get('<qualifier>') or self.args.get('--apikey')
+        qualifier = self.args.get('<qualifier>') or 'default'
         api_url = self.args.get('--apiurl')
         configfile = self.args.get('--config') or 'config.yml'
         if not userid:
             userid = self.ask('Userid:')
         if not apikey:
             apikey = self.ask('Apikey:')
-        save_userconfig_from_apikey(configfile, userid, apikey, qualifier=qualifier,
-                                    api_url=api_url)
+        auth_env = AuthenticationEnv().secure()
+        auth_env.save_userconfig_from_apikey(configfile, userid, apikey, qualifier=qualifier,
+                                             api_url=api_url)
 
     def config(self):
         om = self.om
@@ -169,10 +171,10 @@ class CloudCommandBase(CommandBase):
         Returns:
             The response json
         """
-        auth = OmegaRestApiAuth.make_from(om)
         restapi_url = getattr(om.defaults, 'OMEGA_RESTAPI_URL', 'not configured')
         uri = uri or '/admin/api/v2/service/{service}'.format(**locals())
         service_url = '{restapi_url}{uri}'.format(**locals())
+        auth = self._restapi_auth()
         method = getattr(requests, method)
         resp = method(service_url, json=data, auth=auth)
         resp.raise_for_status()
@@ -215,7 +217,7 @@ class CloudCommandBase(CommandBase):
         # self.status_nodes()
         kinds = ('runtime', 'pods', 'nodes', 'storage')
         om = self.om
-        auth = OmegaRestApiAuth.make_from(om)
+        auth = self._restapi_auth()
         for kind in (filter(lambda k: self.args.get(k), kinds)):
             status_meth = getattr(self, f'status_{kind}')
             status_meth(kind, auth)
@@ -262,7 +264,7 @@ class CloudCommandBase(CommandBase):
                 step = '5m'
             # query
             om = self.om
-            auth = OmegaRestApiAuth.make_from(om)
+            auth = self._restapi_auth()
             data = self._get_metric(metric_name, auth, start=start, end=end, step=step)
             try:
                 df = prom2df(data['objects'], metric_name)
@@ -373,7 +375,7 @@ class CloudCommandBase(CommandBase):
         om = self.om
         podname = self.args.get('<pod>') or 'missing'
         since = self.args.get('--since') or '5m'
-        auth = OmegaRestApiAuth.make_from(om)
+        auth = self._restapi_auth()
         data = self._get_logs(podname, since, auth)
         entries = data.get('entries')
         print(entries)
@@ -401,6 +403,9 @@ class CloudCommandBase(CommandBase):
         if not dry:
             result = subprocess.run(cmd.strip().split(' '))
             print(result)
+
+    def _restapi_auth(self):
+        return AuthenticationEnv.active().get_restapi_auth(om=self.om)
 
 
 def prom2df(data, metric_name):

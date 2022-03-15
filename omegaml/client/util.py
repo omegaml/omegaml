@@ -15,9 +15,9 @@ def get_omega(args, require_config=False):
     if config_file or require_config:
         try:
             om = setup_from_config(config_file)
-        except:
-            msg = ('Config file could not be found. Specify as --config or set '
-                   'OMEGA_CONFIG_FILE env variable')
+        except Exception as e:
+            msg = (f'Config file could not be found due to {e}. Specify as --config or set '
+                    'OMEGA_CONFIG_FILE env variable')
             raise ValueError(msg)
     else:
         om = setup()

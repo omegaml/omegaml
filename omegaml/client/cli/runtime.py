@@ -35,7 +35,7 @@ class RuntimeCommandBase(CommandBase):
       --async           don't wait for results, will print taskid
       -f                tail log
       --require=VALUE   worker label
-      --flags=VALUE     celery flags, list as "--flag VALUE"
+      --flags=VALUES    celery flags, e.g. --flags "--queues=A,B,C -E --loglevel=INFO"
       --worker=VALUE    celery worker
       --queue=VALUE     celery queue
       --celery-help     show celery help
@@ -303,8 +303,10 @@ class RuntimeCommandBase(CommandBase):
                 celery_cmds += [celery_opt]
                 if kind == 'value':
                     celery_cmds += [self.args.get(opt)]
+        # prepare celery command args, remove empty parts
         celery_cmds += self.args.get('<celery-command>')
-        celery_cmds += self.args.get('--flags').split(' ')
+        celery_cmds += (self.args.get('--flags') or '').split(' ')
+        celery_cmds = [cmd for cmd in celery_cmds if cmd]
         if len(celery_cmds) == 1 + int(action is not None):
             celery_cmds += ['--help']
         # start in-process for speed
