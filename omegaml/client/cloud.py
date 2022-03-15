@@ -116,6 +116,7 @@ def setup_from_config(config_file=None, fallback=None):
                 try:
                     omega = setup(userid=userconfig['OMEGA_USERID'],
                                   apikey=userconfig['OMEGA_APIKEY'],
+                                  qualifier=userconfig.get('OMEGA_QUALIFIER'),
                                   api_url=userconfig.get('OMEGA_RESTAPI_URL'))
                 except Exception as e:
                     # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults

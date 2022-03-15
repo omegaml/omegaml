@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 ##
+## TODO: consider using tox-docker instead
+##       https://tox-docker.readthedocs.io/en/latest/
+##
 ## run tests in multiple environments
 ##    @script.name [option]
 ##

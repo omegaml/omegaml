@@ -97,7 +97,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     qualifier = qualifier or 'default'
     api_url = ensure_api_url(api_url, defaults)
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
-        api_auth = OmegaRestApiAuth(userid, apikey)
+        api_auth = OmegaRestApiAuth(userid, apikey, qualifier=qualifier)
         configs = get_user_config_from_api(api_auth, api_url=api_url,
                                            requested_userid=requested_userid,
                                            view=view, qualifier=qualifier)
@@ -118,6 +118,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     om.defaults.OMEGA_RESTAPI_URL = api_url
     om.defaults.OMEGA_USERID = userid
     om.defaults.OMEGA_APIKEY = apikey
+    om.defaults.OMEGA_QUALIFIER = qualifier
     return om
 
 
@@ -139,20 +140,24 @@ def get_omega_from_config(configfile, qualifier=None):
 
 
 def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
-                                view=False, keys=None):
+                                view=False, keys=None, qualifier=None):
     from omegaml import settings
     defaults = settings()
     api_url = ensure_api_url(api_url, defaults)
-    required_keys = ['OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_RESTAPI_URL']
+    required_keys = ['OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_RESTAPI_URL', 'OMEGA_QUALIFIER']
     keys = keys or []
     with open(configfile, 'w') as fconfig:
-        auth = OmegaRestApiAuth(userid, apikey)
+        auth = OmegaRestApiAuth(userid, apikey, qualifier=qualifier)
         configs = get_user_config_from_api(auth,
                                            api_url=api_url,
                                            requested_userid=requested_userid,
+                                           qualifier=qualifier,
                                            view=view)
         config = configs['objects'][0]['data']
         config['OMEGA_RESTAPI_URL'] = api_url
+        config['OMEGA_QUALIFIER'] = qualifier or 'default'
+        config['OMEGA_USERID'] = userid
+        config['OMEGA_APIKEY'] = apikey
         config = {
             k: v for k, v in config.items() if k in (required_keys + keys)
         }

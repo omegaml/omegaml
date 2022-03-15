@@ -15,7 +15,7 @@ from omegaml.client.util import get_omega
 class CloudCommandBase(CommandBase):
     """
     Usage:
-      om cloud login [<userid>] [<apikey>] [options]
+      om cloud login [<userid>] [<apikey>] [<qualifier>] [options]
       om cloud config [show] [--services] [options]
       om cloud (add|update|remove) <kind> [--specs <specs>] [options]
       om cloud status [runtime|pods|nodes|storage] [options]
@@ -27,6 +27,7 @@ class CloudCommandBase(CommandBase):
       --userid=USERID     the userid at hub.omegaml.io (see account profile)
       --apikey=APIKEY     the apikey at hub.omegaml.io (see account profile)
       --apiurl=URL        the cloud URL [default: https://hub.omegaml.io]
+      --qualifier=VALUE   the account qualifier [default: default]
       --count=NUMBER      how many instances to set up [default: 1]
       --node-type=TYPE    the type of node [default: small]
       --specs=SPECS       the service specifications as "key=value[,...]"
@@ -95,13 +96,15 @@ class CloudCommandBase(CommandBase):
     def login(self):
         userid = self.args.get('<userid>') or self.args.get('--userid')
         apikey = self.args.get('<apikey>') or self.args.get('--apikey')
+        qualifier = self.args.get('<qualifier>') or self.args.get('--apikey')
         api_url = self.args.get('--apiurl')
         configfile = self.args.get('--config') or 'config.yml'
         if not userid:
             userid = self.ask('Userid:')
         if not apikey:
             apikey = self.ask('Apikey:')
-        save_userconfig_from_apikey(configfile, userid, apikey, api_url=api_url)
+        save_userconfig_from_apikey(configfile, userid, apikey, qualifier=qualifier,
+                                    api_url=api_url)
 
     def config(self):
         om = self.om
@@ -113,8 +116,10 @@ class CloudCommandBase(CommandBase):
         restapi_url = getattr(om.defaults, 'OMEGA_RESTAPI_URL', 'not configured')
         runtime_url = om.runtime.celeryapp.conf['BROKER_URL']
         mongo_url = mongoshim.mongo_url(om)
-        userid = getattr(om.defaults, 'OMEGA_USERID', 'not configured')
+        userid = getattr(om.defaults, 'OMEGA_USERID', '(missing)')
+        qualifier = getattr(om.defaults, 'OMEGA_QUALIFIER', 'default')
         self.logger.info('Config file: {config_file}'.format(**locals()))
+        self.logger.info('Qualifier: {qualifier}'.format(**locals()))
         self.logger.info('User id: {userid}'.format(**locals()))
         self.logger.info(f'REST API URL: {restapi_url}')
         if services:
