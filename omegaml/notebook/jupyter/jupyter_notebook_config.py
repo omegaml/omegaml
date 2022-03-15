@@ -2,14 +2,7 @@
 import os
 import sys
 
-
-def setup():
-    # avoid IDE error
-    global c
-    return c
-
-
-c = setup()
+c = get_config()  # noqa: F821
 
 # ------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
@@ -68,9 +61,6 @@ c = setup()
 #
 #  Ignored if allow_origin is set.
 # c.NotebookApp.allow_origin_pat = ''
-
-# Whether to allow the user to run the notebook as root.
-c.NotebookApp.allow_root = True if os.environ.get('JY_ALLOW_ROOT') else False
 
 # DEPRECATED use base_url
 # c.NotebookApp.base_project_url = '/'
@@ -211,9 +201,6 @@ c.NotebookApp.default_url = os.environ.get('JY_DEFAULT_URL') or '/lab'
 #  will be loaded in alphabetical order.
 # c.NotebookApp.nbserver_extensions = {}
 
-# The directory to use for notebooks and kernels.
-c.NotebookApp.notebook_dir = os.getcwd()
-
 # Whether to open in a browser after starting. The specific browser used is
 #  platform dependent and determined by the python standard library `webbrowser`
 #  module, unless it is overridden using the --browser (NotebookApp.browser)
@@ -227,10 +214,6 @@ c.NotebookApp.notebook_dir = os.getcwd()
 #    from notebook.auth import passwd; passwd()
 #
 #  The string should be of the form type:salt:hashed-password.
-if 'JUPYTER_PASSWORD' in os.environ:
-    # unless it is actually a value in environ we must not set the attribute, as None is not a valid value
-    # if the value is not set a token is generated which is what we want in this case
-    c.NotebookApp.password = os.environ.get('JUPYTER_PASSWORD')
 
 # Forces users to use a password for the Notebook server. This is useful in a
 #  multi user environment, for instance when everybody in the LAN can access each
@@ -238,7 +221,7 @@ if 'JUPYTER_PASSWORD' in os.environ:
 #
 #  In such a case, server the notebook server on localhost is not secure since
 #  any user can connect to the notebook server via ssh.
-c.NotebookApp.password_required = 'JUPYTER_PASSWORD' in os.environ
+# c.NotebookApp.password_required = 'JUPYTER_PASSWORD' in os.environ
 
 # The port the notebook server will listen on.
 # c.NotebookApp.port = 8888
@@ -622,11 +605,8 @@ c.Session.debug = False
 
 
 # omegaml setup
-default_contents_manager = 'omegaml.notebook.omegacontentsmgr.OmegaStoreContentsManager'
-contents_manager = os.environ.get('JY_CONTENTS_MANAGER') or default_contents_manager
-c.NotebookApp.contents_manager_class = contents_manager
-
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(c.NotebookApp.__class__.__name__)
 handler = logging.FileHandler(os.path.expanduser('~/jupyter.log'))
@@ -639,4 +619,6 @@ if 'OMEGA_ROOT' in os.environ:
 else:
     sys.path.insert(0, '/app')
 
-
+# always read server config
+server_config = Path(__file__).parent / 'jupyter_server_config.py'
+load_subconfig(str(server_config)) # noqa

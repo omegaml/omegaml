@@ -55,7 +55,7 @@ else:
             self.assertIn('output', data['result'])
             self.assertIn('hello', data['result']['output']['stdout'])
 
-        def test_mlflow_project_remote(self):
+        def test_mlflow_project_remote_https(self):
             # store a local MLFlow project
             project_path = 'https://github.com/mlflow/mlflow#examples/quickstart'
             om = self.om
@@ -70,9 +70,24 @@ else:
             self.assertIn('output', data['result'])
             self.assertIn('succeeded', data['result']['output']['stderr'])
 
-        def test_mlflow_gitproject_remote(self):
+        def test_mlflow_gitproject_remote_ssh(self):
             # store a local MLFlow project
-            project_path = 'mlflow+git://github.com/mlflow/mlflow#examples/quickstart'
+            project_path = 'mlflow+ssh://git@github.com/mlflow/mlflow.git#examples/quickstart'
+            om = self.om
+            meta = om.scripts.put(str(project_path), 'myproject')
+            self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
+            # get it back
+            mod = om.scripts.get('myproject')
+            self.assertIsInstance(mod, MLFlowProject)
+            # run it on omegaml runtime
+            result = om.runtime.script('myproject').run(entry_point='mlflow_tracking.py', conda=False).get()
+            data = json.loads(result)
+            self.assertIn('output', data['result'])
+            self.assertIn('succeeded', data['result']['output']['stderr'])
+
+        def test_mlflow_gitproject_remote_https(self):
+            # store a local MLFlow project
+            project_path = 'mlflow+https://github.com/mlflow/mlflow.git#examples/quickstart'
             om = self.om
             meta = om.scripts.put(str(project_path), 'myproject')
             self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
