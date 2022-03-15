@@ -56,17 +56,16 @@ class StreamsProxy(OmegaStore):
         cnx_kwargs.update(kwargs)
         self._stream_kwargs = dict(url=self.mongo_url, **cnx_kwargs)
 
-    def _apply_mixins(self):
-        # TODO enable mixins
-        # disabled to avoid interference with custom get(), put()
-        pass
+    def _mixins_conditional(self, cls, obj):
+        # only allow mixins that do not interfere with streams get/put
+        return cls.supports(obj, prefix='streams/') if hasattr(cls, 'supports') else False
 
     def register_backends(self):
         # TODO enable custom backends
         # disabled to avoid interference with custom get(), put()
         pass
 
-    def object_store_key(self, name, *args, **kwargs):
+    def _qualified_stream(self, name, *args, **kwargs):
         return f'{self.bucket}.{self.prefix}.{name}.stream'
 
     def get(self, name, lazy=False, **kwargs):
@@ -74,7 +73,7 @@ class StreamsProxy(OmegaStore):
         meta = self.metadata(name)
         if meta is None:
             kind_meta = {
-                'stream': self.object_store_key(name),
+                'stream': self._qualified_stream(name),
                 'kwargs': {
                     'batchsize': kwargs.get('batchsize')
                 },

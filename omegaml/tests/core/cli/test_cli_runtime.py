@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_almost_equal
+from pathlib import Path
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
@@ -81,3 +82,46 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         df_pred2 = self.om.datasets.get('pred2').flatten()
         assert_almost_equal(df_expect1, df_pred1, decimal=1)
         assert_almost_equal(df_expect2, df_pred2, decimal=1)
+
+    def test_cli_export_import_compressed(self):
+        om = self.om
+        self.make_model('reg')
+        self.make_dataset_from_dataframe('sample')
+        # export into a compressed archive
+        self.cli('runtime export --compress --path=/tmp/testcli')
+        expfile = self.get_log('info', as_text=True)[-1]
+        self.assertTrue(Path(expfile).exists())
+        # delete everything, import
+        self.clean()
+        self.cli(f'runtime import --path={expfile}')
+        self.assertIn('reg', om.models.list())
+        self.assertIn('sample', om.datasets.list())
+        # import and promote model (twice to get 2 versions)
+        self.clean()
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.assertEqual(len(om.models.revisions('reg')), 2)
+
+    def test_cli_export_import_path(self):
+        om = self.om
+        self.make_model('reg')
+        self.make_dataset_from_dataframe('sample')
+        # export into a compressed archive
+        self.cli('runtime export --path=/tmp/testcli')
+        expfile = self.get_log('info', as_text=True)[-1]
+        self.assertTrue(Path(expfile).exists())
+        # delete everything, import
+        self.clean()
+        self.cli(f'runtime import --path={expfile}')
+        self.assertIn('reg', om.models.list())
+        self.assertIn('sample', om.datasets.list())
+        # import and promote model (twice to get 2 versions)
+        self.clean()
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.assertEqual(len(om.models.revisions('reg')), 2)
+
+
+
+
+

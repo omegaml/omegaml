@@ -78,5 +78,4 @@ class DatasetsCommandBase(StoresCommandMixin, CommandBase):
                     fout.write(data)
         self.logger.debug(local)
 
-
 anyext = lambda n, exts: any(n.endswith(ext) for ext in exts.split(','))

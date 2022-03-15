@@ -103,6 +103,10 @@ class Omega(CombinedOmegaStoreMixin):
         Returns:
             Omega instance configured for the given bucket
         """
+        return self._get_bucket(bucket)
+
+    def _get_bucket(self, bucket):
+        # enable patching in testing
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)
@@ -133,6 +137,7 @@ class OmegaDeferredInstance(object):
         Returns:
             omega instance
         """
+
         def setup_base():
             return Omega(*args, **kwargs)
 

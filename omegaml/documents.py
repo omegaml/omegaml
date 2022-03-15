@@ -115,6 +115,9 @@ def make_Metadata(db_alias='omega', collection=None):
             self.modified = datetime.datetime.now()
             return super(Metadata_base, self).save(*args, **kwargs)
 
+        def to_dict(self):
+            return self.to_mongo().to_dict()
+
     return Metadata
 
 
