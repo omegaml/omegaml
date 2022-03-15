@@ -535,6 +535,9 @@ class PickableCollection(object):
         host, port = list(client.nodes)[0]
         # options contains ssl settings
         options = self.database.client._MongoClient__options._options
+        # FIXME from pymongo 4.1, __all_credentials no longer exists, moved to options.pool_options._credentials
+        #       https://github.com/mongodb/mongo-python-driver/commit/c94a3ad1dff4716f70989a46b126604e46e2e419
+        #       https://jira.mongodb.org/browse/PYTHON-2585
         creds = self.database.client._MongoClient__all_credentials[options['username']]
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')

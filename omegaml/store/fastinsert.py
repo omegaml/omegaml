@@ -78,7 +78,3 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
     else:
         # still within bounds for single threaded inserts
         omstore.collection(name).insert_many(df.to_dict(orient='records'))
-
-# ensure loky backend is registered
-from omegaml.runtimes.loky import OmegaRuntimeBackend  # noqa
-OmegaRuntimeBackend = OmegaRuntimeBackend
