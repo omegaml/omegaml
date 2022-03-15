@@ -1,17 +1,20 @@
 # source https://djangosnippets.org/snippets/2727/
-import os
 
 from requests.auth import AuthBase
+
+from omegaml import session_cache
 
 
 class AuthenticationEnv(object):
     @classmethod
+    @session_cache  # PERFTUNED
     def get_omega_for_task(cls, auth=None):
         from omegaml import Omega
         om = Omega()
         return om
 
     @classmethod
+    @session_cache  # PERFTUNED
     def get_omega_from_apikey(cls, *args, **kwargs):
         from omegaml import Omega
         om = Omega()
@@ -69,6 +72,7 @@ class OmegaRuntimeAuthentication:
 
 class OmegaSecureAuthenticationEnv(AuthenticationEnv):
     @classmethod
+    @session_cache
     def get_omega_for_task(cls, auth=None):
         """
         Get Omega instance configured for user in auth
@@ -116,9 +120,10 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
         return om
 
     @classmethod
+    @session_cache  # PERFTUNED
     def get_omega_from_apikey(cls, *args, **kwargs):
         from omegaml.client.userconf import get_omega_from_apikey
         return get_omega_from_apikey(*args, **kwargs)
 
-isTrue = lambda v: v if isinstance(v, bool) else (
-    v.lower() in ['yes', 'y', 't', 'true', '1'])
+
+isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])

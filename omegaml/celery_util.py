@@ -12,7 +12,6 @@ class EagerSerializationTaskMixin(object):
     # adopted from https://github.com/celery/celery/issues/4008#issuecomment-330292405
     abstract = True
 
-    @cached_property
     def _not_eager(self):
         app = self._app
         return not app.conf.CELERY_ALWAYS_EAGER
@@ -79,7 +78,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             self.request._om = None
         if self.request._om is None:
             from omegaml import get_omega_for_task
-            bucket = kwargs.pop('__bucket', None)
+            bucket = kwargs.get('__bucket')
             self.request._om = get_omega_for_task(self)[bucket]
         return self.request._om
 
@@ -104,7 +103,13 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def delegate_kwargs(self):
-        return {k: v for k, v in self.request.kwargs.items() if not k.startswith('__')}
+        kwargs = self.request.kwargs or {}
+        return {k: v for k, v in kwargs.items() if not k.startswith('__')}
+
+    @property
+    def system_kwargs(self):
+        kwargs = self.request.kwargs or {}
+        return {k: v for k, v in kwargs.items() if k.startswith('__')}
 
     @property
     def tracking(self):
@@ -112,7 +117,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             self.request._om_tracking = None
         if self.request._om_tracking is None:
             kwargs = self.request.kwargs or {}
-            experiment = kwargs.pop('__experiment', None)
+            experiment = kwargs.get('__experiment')
             if experiment is not None:
                 # we reuse implied_run=False to use the currently active run,
                 # i.e. with block will NOT call exp.start()
@@ -125,7 +130,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     @property
     def logging(self):
         kwargs = self.request.kwargs or {}
-        logging = kwargs.pop('__logging', False)
+        logging = kwargs.get('__logging', False)
         if isinstance(logging, tuple):
             logname, level = logging
             if logname is True:
@@ -171,7 +176,18 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         with task_logging():
             with self.tracking as exp:
                 exp.log_event(f'task_call', self.name, {'args': args, 'kwargs': kwargs})
-                result = super().__call__(*args, **kwargs)
+                if self.request.id is not None:
+                    # PERFTUNED
+                    # if we have a request, avoid super().__call__()
+                    # calling super() removes the request.id, which means our request._om caching does not work
+                    # Rationale: https://github.com/celery/celery/issues/2633#issuecomment-286694356
+                    result = self.run(*args, **self.delegate_kwargs)
+                else:
+                    # PERFISSUE new task cannot access the request cache, new omega instance is created
+                    # if we don't have a request.id it means we don't have a proper callstack
+                    # so we need to create one using super().__call__
+                    # this may happen when calling tasks directly, such as in run_omega_callback_script
+                    result = super().__call__(*args, **kwargs)
         return result
 
     def reset(self):

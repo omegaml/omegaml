@@ -113,6 +113,7 @@ setup(
         'smart_open', # required in cli
         'imageio>=2.3.0', # require to store images
         'psutil>=5.8' # required for profiling tracker
+        'cachetools>=5.0.0' # required for session caching
     ],
     extras_require={
         'graph': graph_deps,

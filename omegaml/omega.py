@@ -1,6 +1,4 @@
 import os
-import sys
-import warnings
 from uuid import uuid4
 
 from ._version import version
@@ -153,10 +151,12 @@ class OmegaDeferredInstance(object):
         omega = None
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
         from_config = 'OMEGA_CONFIG_FILE' in os.environ or os.path.exists('config.yml')
-        loaders = setup_env, setup_cloud_config, setup_base
+        loaders = (from_env, setup_env), (from_config, setup_cloud_config), (True, setup_base)
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
-        for loader in loaders:
+        for condition, loader in loaders:
+            if not condition:
+                continue
             try:
                 omega = loader()
             except Exception as e:
@@ -204,7 +204,7 @@ def setup(*args, **kwargs):
 
 
 # dynamic lookup of Omega instance in a task context
-get_omega_for_task = lambda task: _om.setup()
+get_omega_for_task = (lambda task: _om.setup())
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance

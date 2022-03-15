@@ -197,18 +197,23 @@ class OmegaRuntime(object):
         Returns:
             self
         """
-        if label == 'local':
-            return self.mode(local=True)
-        routing = routing or {
-            'label': label or self._default_label
-        }
-        task = task or {}
-        if always:
-            self._task_default_kwargs['routing'].update(routing)
-            self._task_default_kwargs['task'].update(task)
-        else:
-            self._require_kwargs['routing'].update(routing)
-            self._require_kwargs['task'].update(task)
+        if label is not None:
+            if label == 'local':
+                self.mode(local=True)
+            else:
+                self.mode(local=False)
+            routing = routing or {
+                'label': label or self._default_label
+            }
+        if task or routing:
+            task = task or {}
+            routing = routing or {}
+            if always:
+                self._task_default_kwargs['routing'].update(routing)
+                self._task_default_kwargs['task'].update(task)
+            else:
+                self._require_kwargs['routing'].update(routing)
+                self._require_kwargs['task'].update(task)
         return self
 
     def model(self, modelname, require=None):

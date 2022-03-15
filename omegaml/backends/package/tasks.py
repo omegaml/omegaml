@@ -62,7 +62,7 @@ def run_omega_script(self, scriptname, **kwargs):
         'python': lambda v: v,
     }
 
-    format = kwargs.get('__format') or 'json'
+    format = self.system_kwargs.get('__format') or 'json'
     mod = self.om.scripts.get(scriptname)
     dtstart = datetime.datetime.now()
     try:
@@ -96,4 +96,8 @@ def run_omega_callback_script(self, *args, **kwargs):
         results = args[0]
         state = 'SUCCESS'
         scriptname = args[-1]
-    return run_omega_script(scriptname, state=state, results=results, **kwargs)
+    # include hidden (__key=value) kwargs, e.g. for logging, bucket, experiment
+    # so that the run_omega_script task context sets up a proper omega instance
+    full_kwargs = kwargs
+    full_kwargs.update(self.system_kwargs)
+    return run_omega_script(scriptname, state=state, results=results, **full_kwargs)
