@@ -19,11 +19,19 @@ jobs:
               cd omegaml-ce
               echo "Building PR #$pr_number on target branch."
               echo "Waiting for github to merge..."
-              sleep 60
-              (git checkout --force $CIRCLE_BRANCH && \
-               git fetch --force origin pull/$pr_number/merge:circleci-build && \
-               git checkout circleci-build) || \
-                (echo "Merge failed. Please merge manually into your branch."; exit 1)
+              # check that there is a valid merge
+              while [[ -z $(git ls-remote -q | grep refs/pull/$pr_number/merge) ]]; do
+                echo "waiting for merge to be ready"
+                sleep 5
+              done
+              # fetch the merged pr to determine target branch
+              git checkout --force $CIRCLE_BRANCH
+              git fetch --force origin pull/$pr_number/merge:circleci-build
+              git checkout circleci-build
+              # find base branch, then actually merge
+              base_branch=$(git rev-parse HEAD HEAD^ | xargs git merge-base | xargs git name-rev | cut -d ' ' -f 2 | head -n1)
+              git reset --hard $base_branch
+              git pull --ff-only origin pull/$pr_number/head
             else
               echo "Not a PR build."
             fi
@@ -85,7 +93,7 @@ jobs:
   release:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce

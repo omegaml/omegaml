@@ -1,3 +1,5 @@
+import re
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.mlflow.localprojects import MLFlowProject
 
@@ -10,18 +12,21 @@ class MLFlowGitProjectBackend(BaseDataBackend):
 
     Usage::
 
-        om.scripts.put('mlflow+git://<user>/<repo>', '<pkgname>')
+        om.scripts.put('mlflow+ssh://git@github.com/<user>/<repo>.git', '<pkgname>')
+        om.scripts.put('mlflow+https://git@github.com/<user>/<repo>.git', '<pkgname>')
+        om.scripts.put('https://github.com/<user>/<repo>', '<pkgname>', kind='mlflow.project')
 
     See Also:
         * https://packaging.python.org/tutorials/packaging-projects/
+        * https://docs.github.com/en/get-started/getting-started-with-git/managing-remote-repositories#changing-a-remote-repositorys-url
     """
     KIND = 'mlflow.gitproject'
-    MLFLOW_GIT_PREFIX = 'mlflow+git'
+    MLFLOW_GIT_PREFIX = re.compile(r'^mlflow\+(git|ssh|https).*')
     GIT_PREFIX = 'https'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        is_mlflow_git = isinstance(obj, str) and obj.startswith(self.MLFLOW_GIT_PREFIX)
+        is_mlflow_git = isinstance(obj, str) and self.MLFLOW_GIT_PREFIX.match(obj)
         is_git = isinstance(obj, str) and obj.startswith(self.GIT_PREFIX) and kwargs.get('kind') == self.KIND
         return is_mlflow_git or is_git
 
