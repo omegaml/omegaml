@@ -2,9 +2,7 @@ include README.rst
 include LICENSE
 include omegaee/RELEASE
 include omegaee/VERSION
-recursive-include omdash/demo *
 recursive-include omegaweb/static *
 recursive-include omegaweb/templates *
 recursive-include omegaweb/fixtures *
-recursive-include tastypiex/static *
-recursive-include tastypiex/templates *
+recursive-include omegajobs/resources *

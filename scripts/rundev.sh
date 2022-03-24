@@ -52,7 +52,7 @@ cmd=${cmd:-"scripts/rundev.sh"}
 
 # run process
 export CURRENT_USER=${CURRENT_USER:-omegadev}
-export JY_HUB_VERSION=1.0.0
+export JYHUB_DEGUG=1
 # task routing means the default queue is $account-default
 # by enabling task routing we can have a central worker serve multiple accounts
 # on separate queues

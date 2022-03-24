@@ -4,6 +4,7 @@ from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.client.userconf import get_user_config_from_api
 from omegaml.util import dict_merge
 
+yesno = lambda v: 'yes' if v else 'no'
 
 class OmegaNotebookSpawnerMixin:
     def __init__(self, *args, **kwargs):
@@ -20,6 +21,7 @@ class OmegaNotebookSpawnerMixin:
     def get_args(self):
         args = super().get_args()
         args.append('--singleuser')
+        args.append(f'--port={self.port}')
         return args
 
     def _get_omega_config(self, reload=False):
@@ -44,7 +46,7 @@ class OmegaNotebookSpawnerMixin:
         result = super()._load_config(cfg, section_names=section_names, traits=traits)
         try:
             self._get_omega_config()
-        except Exception as e :
+        except Exception as e:
             self.log.error(f'Error loading user configuration {e}')
         return result
 
@@ -64,6 +66,8 @@ class OmegaNotebookSpawnerMixin:
         import jupyterhub
         import omegaee
 
+        self.log.info("*** get_env for user {}".format(self.user.name))
+
         def env_or_config(key, default=None):
             return configs.get(key) or os.environ.get(key) or default
 
@@ -76,32 +80,36 @@ class OmegaNotebookSpawnerMixin:
         configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
                                            view=True)
         configs = configs['objects'][0]['data']
-        env['USER'] = self.user.name
-        env['HOME'] = self.home_path
-        env['SHELL'] = '/bin/bash'
-        env['PYTHONPATH'] = '/app/pylib/user:/app/pylib/base'
-        env['JY_CONTENTS_MANAGER'] = env_or_config('JY_CONTENTS_MANAGER',
-                                                   'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager')
-        env['JY_DEFAULT_URL'] = os.environ.get('JY_DEFAULT_URL') or '/lab'
-        env['JY_ALLOW_ROOT'] = 'yes'
-        env['OMEGA_ROOT'] = os.path.join(os.path.dirname(omegaee.__file__), '..')
-        env['OMEGA_APIKEY'] = configs['OMEGA_APIKEY']
-        env['OMEGA_USERID'] = configs['OMEGA_USERID']
-        env['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
-        env['CA_CERTS_PATH'] = os.environ.get('CA_CERTS_PATH')
-        self.log.info("***within user_env {}".format(os.getpid()))
-        env['JY_HUB_VERSION'] = jupyterhub.__version__
+        # define additional env vars
+        om_env = {
+            'USER': self.user.name,
+            'HOME': self.home_path,
+            'SHELL': '/bin/bash',
+            'PYTHONPATH': '/app/pylib/user:/app/pylib/base',
+            'JY_CONTENTS_MANAGER': env_or_config('JY_CONTENTS_MANAGER',
+                                                 'omegajobs.omegacontentsmgr.OmegaStoreAuthenticatedContentsManager'),
+            'JY_DEFAULT_URL': os.environ.get('JY_DEFAULT_URL') or '/lab',
+            'JY_ALLOW_ROOT': 'yes',
+            'OMEGA_ROOT': os.path.join(os.path.dirname(omegaee.__file__), '..'),
+            'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
+            'OMEGA_USERID': configs['OMEGA_USERID'],
+            'OMEGA_RESTAPI_URL': defaults.OMEGA_RESTAPI_URL,
+            'OMEGA_SERVICES_INCLUSTER': yesno(defaults.OMEGA_SERVICES_INCLUSTER),
+            'CA_CERTS_PATH': os.environ.get('CA_CERTS_PATH'),
+            'JYHUB_VERSION': jupyterhub.__version__,
+        }
         custom_envs = configs.get('JUPYTER_CONFIG', {}).get('ENVS', {})
-        dict_merge(env, custom_envs)
+        dict_merge(om_env, custom_envs)
+        # ensure additional env vars are kept
+        env.update(om_env)
         env_keep = list(self.env_keep)
-        env_keep.extend(list(env.keys()))
+        env_keep.extend(list(om_env.keys()))
         self.env_keep = env_keep
         # pass user configuration to preexecfn
         self._config_env = {
             'OMEGA_USERID': configs['OMEGA_USERID'],
             'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
         }
-        self.log.info("***get_env for user {}".format(self.user.name))
         return env
 
 

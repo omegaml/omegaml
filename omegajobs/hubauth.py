@@ -1,14 +1,13 @@
 import requests
 from jupyterhub.auth import Authenticator
+
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.client.userconf import get_user_config_from_api
-from tornado import gen
 
 APIKEYS = {}
 
 class OmegaAuthenticator(Authenticator):
-    @gen.coroutine
-    def authenticate(self, handler, data):
+    async def authenticate(self, handler, data):
         username = data['username']
         password = data['password']
         APIKEYS[username] = password

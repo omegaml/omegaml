@@ -1,8 +1,6 @@
 import os
-
 from jupyterhub.traitlets import Command, Unicode
 from kubespawner import KubeSpawner
-from tornado import gen
 
 from omegajobs.spawnermixin import OmegaNotebookSpawnerMixin, PodWatchingMixin
 
@@ -149,10 +147,9 @@ class OmegaKubeSpawner(OmegaNotebookSpawnerMixin, PodWatchingMixin, KubeSpawner)
         self.add_poll_callback(self._cleanup_on_stop)
         return super().start()
 
-    @gen.coroutine
-    def stop(self, *args, **kwargs):
+    async def stop(self, *args, **kwargs):
         self._cleanup_on_stop()
-        result = yield from super().stop(*args, **kwargs)
+        result = await super().stop(*args, **kwargs)
         return result
 
     def get_options_form(self):
@@ -196,15 +193,14 @@ class OmegaKubeSpawner(OmegaNotebookSpawnerMixin, PodWatchingMixin, KubeSpawner)
         if self.profile_list:
             self.options_form = self._render_options_form(self.profile_list)
 
-    @gen.coroutine
-    def get_pod_manifest(self):
+    async def get_pod_manifest(self):
         # hook for custom manifest processing. still needed?
         self.log.info('generating pod manifest for {}'.format(self.user.name))
-        result = yield from super().get_pod_manifest()
+        result = await super().get_pod_manifest()
         return result
 
     def get_env(self):
         # called before make_pod
-        self.log.info('OmegaKubeSpawner: user environment created')
+        self.log.info('OmegaKubeSpawner: get_env')
         env = super().get_env()
         return self._omega_get_env(env)

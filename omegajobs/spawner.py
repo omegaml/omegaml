@@ -9,6 +9,7 @@ from omegaml.client.userconf import save_userconfig_from_apikey
 
 singleuser_starter = '/app/scripts/omegajobs.sh'
 
+
 class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
     """
     Adopted from jupyterhub-simplespawner
@@ -82,6 +83,5 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
 
     def user_env(self, env):
         # we don't call super because super assumes a local OS user. we don't
-        self.log.info('SimpleLocalProcessSpawner: user environment created')
+        self.log.info('SimpleLocalProcessSpawner: in user_env')
         return self._omega_get_env(env)
-

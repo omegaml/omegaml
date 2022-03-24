@@ -3,7 +3,7 @@ jobs:
   test:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-1604:202010-01
+      image: ubuntu-2004:202107-02
     resource_class: xlarge
     environment:
         CURRENT_USER: omegadev
@@ -52,11 +52,12 @@ jobs:
         # TODO replace with a livetest image instead of local installation
         name: Build image and run live tests
         command: |
-          source ~/miniconda3/etc/profile.d/conda.sh
+          source ~/miniforge3/etc/profile.d/conda.sh
           conda activate base
           cd omegaml
           sudo chmod -f -R 777 ~ || true
           scripts/initlocal.sh --install --noinit
+          scripts/updatechromedriver.sh
           docker login -u omegaml -p $DOCKER_PASS
           LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make dist
         shell: /bin/bash -l -eo pipefail
@@ -67,7 +68,7 @@ jobs:
   release:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     resource_class: xlarge
     environment:
       CURRENT_USER: omegadev
@@ -93,7 +94,7 @@ jobs:
       - run:
           name: Build release docker
           command: |
-            source ~/miniconda3/etc/profile.d/conda.sh
+            source ~/miniforge3/etc/profile.d/conda.sh
             conda activate base
             cd omegaml
             sudo chmod -f -R 777 ~ || true

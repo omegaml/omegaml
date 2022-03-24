@@ -22,6 +22,8 @@ services:
       - CELERY_Q=default
       - DJANGO_DEBUG=1
       - HOME=/home/omegadev
+      - PORT=8000
+      - JYHUB_DEBUG=1
     depends_on:
       - mongodb
       - rabbitmq

@@ -28,7 +28,7 @@ function installdeps() {
 }
 
 function activate_conda() {
-    source ~/miniconda3/etc/profile.d/conda.sh
+    source ~/miniforge3/etc/profile.d/conda.sh
     cur_env=`conda info | grep "active environment" | cut -d ":" -f 2 | xargs`
     if [ $cur_env == "None" ]; then
        echo "conda setting up base env"
@@ -40,9 +40,9 @@ function activate_conda() {
 }
 
 function setup() {
-    curl -O --silent --show-error https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
-    sh Miniconda3-py39_4.9.2-Linux-x86_64.sh -b
-    cat ~/miniconda3/etc/profile.d/conda.sh >> ~/.bashrc
+    curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+    bash Miniforge3-Linux-x86_64.sh -b
+    cat ~/miniforge3/etc/profile.d/conda.sh >> ~/.bashrc
     activate_conda
 }
 

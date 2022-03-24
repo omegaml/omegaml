@@ -124,7 +124,7 @@ def make_enterprise():
         """
         from omegaml import settings
         defaults = settings()
-        view = view if view is None else defaults.OMEGA_SERVICES_INCLUSTER
+        view = view if view is not None else defaults.OMEGA_SERVICES_INCLUSTER
         kwargs = dict(username=username,
                       apikey=apikey,
                       api_url=api_url,

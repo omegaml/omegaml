@@ -235,3 +235,4 @@ fabric.properties
 /LICENSE.html
 /Miniconda3*sh
 /config.yml
+/.jupyter

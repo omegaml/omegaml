@@ -1,12 +1,9 @@
-from unittest import skip
+from unittest import IsolatedAsyncioTestCase
 
-import tornado
 from django.contrib.auth.models import User
-from django.test.testcases import TestCase
+from django.db import transaction
 from kubespawner.spawner import MockObject
 from tastypie.test import ResourceTestCaseMixin
-from time import sleep
-from tornado.testing import AsyncTestCase
 from traitlets import Instance
 from traitlets.config import Config
 from unittest.mock import patch
@@ -23,9 +20,10 @@ from omegaweb.tests.util import OmegaResourceTestMixin
 # under the old Django, so no change here either. If `test_start()` is going to be utilized in the
 # future, it might need to be refactored into a separate class.
 
-class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
-    def setUp(self):
+class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
         super(OmegaKubeSpawnerTests, self).setUp()
+        transaction.set_autocommit(False)
         defaults = settings()
         # setup django user
         self.username = username = 'test'
@@ -45,6 +43,9 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         # setup omega credentials
         self.setup_initconfig()
 
+    async def asyncTearDown(self):
+        transaction.rollback()
+
     def _make_spawner(self):
         user = MockObject()
         user.name = self.user.username
@@ -53,9 +54,9 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         spawner = OmegaKubeSpawner(_mock=True, user=user)
         return spawner
 
-    def test_makepod_default(self):
+    async def test_makepod_default(self):
         spawner = self._make_spawner()
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         self.assertTrue('affinity' in manifest['spec'])
         self.assertDictEqual(manifest['spec']['node_selector'], {'omegaml.io/role': 'worker'})
@@ -72,7 +73,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         #                              ]}}
         #                      )
 
-    def test_makepod_userspecified_jupyter_nodeselector(self):
+    async def test_makepod_userspecified_jupyter_nodeselector(self):
         # update user config
         jpy_settings = self.deployment.settings['services'].get('jupyter', {})
         jpy_settings['image'] = 'omegaml/omegaml-user-image:latest'
@@ -82,18 +83,18 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         self.deployment.save()
         # test pod creation
         spawner = self._make_spawner()
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         # ensure pod manifest contains user specified values
         self.assertDictEqual(manifest['spec']['node_selector'], {'omegaml.io/role': self.user.username})
         self.assertEqual(manifest['spec']['containers'][0]['image'], 'omegaml/omegaml-user-image:latest')
         self.assertEqual(spawner.namespace, 'user-namespace')
 
-    def test_makepod_volumes_default(self):
+    async def test_makepod_volumes_default(self):
         spawner = self._make_spawner()
         spawner.user.name = self.user.username
         # test pod creation
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         # ensure pod manifest contains user specified values
         self.assertEqual(manifest['spec']['containers'][0]['volume_mounts'][0]['name'], 'pylib-base')
@@ -115,7 +116,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
             self.assertEqual(manifest['spec']['volumes'][1]['host_path']['path'], f"/mnt/local/{self.user.username}")
 
 
-    def test_makepod_userspecified_jupyter_volumes(self):
+    async def test_makepod_userspecified_jupyter_volumes(self):
         # update user config
         storage_settings = {}
         storage_settings['volumes'] = [dict(name='pylib-user',
@@ -125,7 +126,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         self.deployment.save()
         # test pod creation
         spawner = self._make_spawner()
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         # ensure pod manifest contains user specified values
         self.assertEqual(manifest['spec']['containers'][0]['volume_mounts'][0]['name'], 'pylib-user')
@@ -133,7 +134,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         self.assertEqual(manifest['spec']['volumes'][0]['persistent_volume_claim']['claimName'], 'worker-user')
         self.assertEqual(manifest['spec']['volumes'][0]['persistent_volume_claim']['readOnly'], False)
 
-    def test_makepod_userspecified_jupyter_config(self):
+    async def test_makepod_userspecified_jupyter_config(self):
         # update user config
         # https: // zero - to - jupyterhub.readthedocs.io / en / latest / customizing / user - resources.html
         jupyter_config = {}
@@ -170,18 +171,18 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         spawner.user_options = spawner.options_from_form({'profile': ['training']})
         # note jupyterhub prior to 0.11 worked differently (used index, not slugs, did not need call to load_user_options)
         # see see https://github.com/jupyterhub/kubespawner/commit/ba5171ebb4046d9e82e7f2868b6cc5351c17d2b7#diff-3082573191d96b79e2ec71986d4ef3e2R1823
-        spawner.load_user_options()
+        await spawner.load_user_options()
         # -- build the manifest from user selection
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         # ensure pod manifest contains user specified values
         self.assertEqual(manifest['spec']['containers'][0]['image'], 'training/python:label')
         # -- simulate user selecting the oteher profile
         spawner._render_options_form(spawner.profile_list)
         spawner.user_options = spawner.options_from_form({'profile': ['gpu']})
-        spawner.load_user_options()
+        await spawner.load_user_options()
         # -- build the manifest from user selection
-        manifest = spawner.get_pod_manifest().result()
+        manifest = await spawner.get_pod_manifest()
         manifest = manifest.to_dict()
         # ensure pod manifest contains user specified values
         self.assertEqual(manifest['spec']['containers'][0]['image'], 'gpu/python:label')
@@ -193,30 +194,8 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         post_options_form = spawner.options_form
         self.assertNotEqual(prev_options_form, post_options_form)
 
-    @skip("use this for interative testing only")
-    @tornado.testing.gen_test()
-    def test_start(self):
-        user = MockObject()
-        user.name = self.user.username
-        user.id = 'mock_id'
-        user.url = 'mock_url'
-        hub = MockObject()
-        hub.public_host = 'localhost'
-        hub.api_url = '/api'
-        hub.base_url = '/hub'
 
-        spawner = OmegaKubeSpawner(user=user, hub=hub, _mock=False)
-        spawner.user = user
-        spawner.events_enabled = False
-
-        future = yield spawner.start()
-        while not future.done():
-            print("waiting")
-            sleep(1)
-        print("done")
-
-
-    def test_startup_failed_load_config(self):
+    async def test_startup_failed_load_config(self):
         # https://github.com/omegaml/omegaml-enterprise/issues/254
         with patch('omegajobs.spawnermixin.get_user_config_from_api',
                    side_effect=AssertionError('problem')) as mock:

@@ -23,7 +23,7 @@ RUN conda install -y --file /app/conda-requirements.txt && \
     conda clean --all
 RUN cd /app && \
     ls -1 *whl > /app/requirements.whl && \
-    sed -i -r 's/^(landing.*|omegaml.*|omegaee.*)/\1\[all\]/g' /app/requirements.whl && \
+    sed -i -r 's/^(landing.*|omegamlee.*)/\1\[all\]/g' /app/requirements.whl && \
     pip install -U --no-cache-dir -r /app/requirements.whl && \
     rm *whl && \
     fix-permissions "${CONDA_DIR}" && \

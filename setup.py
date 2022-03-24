@@ -17,9 +17,9 @@ dev_deps = [
 ]
 
 jupyter_deps = [
-    'jupyterhub-kubespawner==0.12.0', # required or only dev
-    'jupyterhub==1.0.0',  # required or only dev?
-    'jupyter-client>=4.1.1',
+    'jupyterhub-kubespawner==2.0.1', # required or only dev
+    'jupyterhub==2.2.1',  # required or only dev?
+    'jupyter-client>=7.0.6',
     'jupyterhub-simplespawner==0.1',
 ]
 

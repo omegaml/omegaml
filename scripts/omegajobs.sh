@@ -18,10 +18,11 @@ source $script_dir/easyoptions || exit
 # set defaults
 ip=${ip:-0.0.0.0}
 port=${port:-5000}
+debug=${debug:-$JYHUB_DEBUG}
 omegaml_dir=$(python -W ignore -c  "import omegaml; print(omegaml.__path__[0])")
+omegaee_dir=$(python -W ignore -c  "import omegaee; print(omegaee.__path__[0])")
 omegajobs_dir=$(python -W ignore -c  "import omegajobs; print(omegajobs.__path__[0])")
 runtimelabel="${label:-$(hostname)},$CELERY_Q"
-
 if [[ ! -z $debug ]]; then
   jydebug="--debug"
 fi
@@ -29,7 +30,10 @@ fi
 # TODO env vars should come from runtime/worker configmap
 export C_FORCE_ROOT=1
 export CELERY_Q=$runtimelabel
-pip install -U jupyterhub==$JY_HUB_VERSION jupyterlab
+# upgrade of jupyter hub requested
+if [[ ! -z $JYHUB_VERSION ]]; then
+  pip install -U jupyterhub==$JYHUB_VERSION jupyterlab
+fi
 # -- running in container, use /app as a shared home
 if [[ -d "/app" ]]; then
   export APPBASE="/app"
@@ -46,6 +50,7 @@ if [[ $singleuser ]]; then
     if [[ ! -f $APPBASE/.jupyter/.omegaml.ok ]]; then
         mkdir -p $APPBASE/.jupyter
         cp $omegaml_dir/notebook/jupyter/* $APPBASE/.jupyter/
+        touch $APPBASE/.jupyter/.omegaml.ok
     fi
     # -- if there is no config file, create one
     if [[ ! -f $OMEGA_CONFIG_FILE ]]; then
@@ -63,10 +68,9 @@ else
     # make sure we have the proper env setup
     # TODO move this to the runtime setup for the omegaml deployment
     pip install postgres
-    image_pysite=$(find / -name omegajobs | grep site-packages)/..
-    cp -r $image_pysite/omegajobs /app/pylib/base
-    cp -r $image_pysite/omegaee /app/pylib/base
-    cp $image_pysite/omegaweb/static/logo.jpg /app/logo.jpg
+    cp -r $omegajobs_dir /app/pylib/base
+    cp -r $omegaee_dir /app/pylib/base
+    cp $omegajobs_dir/resources/logo.jpg /app/logo.jpg
     CONFIGPROXY_AUTH_TOKEN=12345678 jupyterhub --ip $ip --port $port --config $omegajobs_dir/jupyterhub_config.py $jydebug
 fi
 
