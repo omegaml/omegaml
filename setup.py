@@ -94,6 +94,7 @@ setup(
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
+        'Jinja2<=3.0', # due to nbconvert   
         'ipython_genutils', # due tro nbconvert needing it, https://github.com/jupyter/nbconvert/pull/1726
         'dill>=0.3.2',
         'tee>=0.0.3',
