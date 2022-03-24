@@ -153,7 +153,13 @@ class ParallelApplyMixin:
                     name = coll.name
             options.update(dict(outname=name, append=append))
             coll = self._do_transform()
-            result = meta or self.__class__(coll, **self._getcopy_kwargs())
+            if meta is None:
+                # create a new MDataFrame, force reread of columns
+                mdf_kwargs = self._getcopy_kwargs()
+                mdf_kwargs.pop('columns', None)
+                result = self.__class__(coll, **mdf_kwargs)
+            else:
+                result = meta
         # -- run with noop in parallel
         elif not local and getattr(self, 'apply_fn', None) is None and name:
             # convenience, instead of .value call mdf.persist('name', store=om.datasets)
