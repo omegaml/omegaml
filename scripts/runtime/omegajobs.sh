@@ -18,15 +18,19 @@ source $script_dir/easyoptions || exit
 # set defaults
 ip=${ip:-0.0.0.0}
 port=${port:-5000}
+debug=${debug:-$JYHUB_DEBUG}
 omegaml_dir=$(python -W ignore -c  "import omegaml; print(omegaml.__path__[0])")
-runtimelabel=${label:-$(hostname)}
+runtimelabel=${label:-$(hostname)},$CELERY_Q
 if [[ ! -z $debug ]]; then
   jydebug="--debug"
 fi
 # setup environment
 export C_FORCE_ROOT=1
 export CELERY_Q=$runtimelabel
-pip install -U jupyterhub==$JY_HUB_VERSION jupyterlab
+# upgrade of jupyter hub requested
+if [[ ! -z $JYHUB_VERSION ]]; then
+  pip install -U jupyterhub==$JYHUB_VERSION jupyterlab
+fi
 # -- running in container, use /app as a shared home
 if [[ -d "/app" ]]; then
   export APPBASE="/app"
@@ -41,6 +45,7 @@ fi
 if [[ ! -f $APPBASE/.jupyter/.omegaml.ok ]]; then
     mkdir -p $APPBASE/.jupyter
     cp $omegaml_dir/notebook/jupyter/* $APPBASE/.jupyter/
+    touch $APPBASE/.jupyter/.omegaml.ok
 fi
 # -- if there is no config file, create one
 if [[ ! -f $OMEGA_CONFIG_FILE ]]; then

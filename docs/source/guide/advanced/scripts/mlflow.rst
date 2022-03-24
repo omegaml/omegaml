@@ -40,12 +40,12 @@ Deploying a git-based mlflow project
     om.runtime.script('myproject').run(entry_point='mlflow_tracking.py', conda=False)
 
 As an alternative to specify :code:`kind=mlflow.gitproject`, we can use
-the :code:`mlflow+git://` prefix:
+the :code:`mlflow+ssh://` prefix:
 
 .. code:: python
 
     # deploy the mlflow project to omega-ml runtime from github
-    project_path = 'mlflow+git://github.com/mlflow/mlflow#examples/quickstart'
+    project_path = 'mlflow+ssh://git@github.com/mlflow/mlflow#examples/quickstart'
     meta = om.scripts.put(mlflow_path, 'myproject')
 
     # run the project in a remote runtime worker

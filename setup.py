@@ -15,7 +15,7 @@ sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>0.4.0']
-jupyter_deps = ['jupyterlab', 'jupyterhub==1.0.0']  # jupyterhub-0.11 has breaking changes
+jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
 mlflow_deps = ['mlflow~=1.21.0']
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
@@ -94,6 +94,7 @@ setup(
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
+        'Jinja2<=3.0', # due to nbconvert   
         'ipython_genutils', # due tro nbconvert needing it, https://github.com/jupyter/nbconvert/pull/1726
         'dill>=0.3.2',
         'tee>=0.0.3',
