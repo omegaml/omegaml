@@ -1,26 +1,33 @@
-Operations (omegaops)
-=====================
+Account Manager
+===============
 
-The omega|ml operations component (omegamops) is central to the provisioning of the
-managed service in that it provides the backend to operating the service
-in the cloud. Responsibilities include:
+The Account Manager component Responsibilities include:
 
 * user sign up handling, e.g. generation of API keys, configuration of user
-  profile
-* execution of periodic tasks, e.g. maintenance
-* usage tracking to enable billing of usage-based services (log based, does
-  not yet cover all resources)
-* provision of services, including cloud resources, installation of user-
-  specific components and similar
-* a simple billing backend, including itemized invoices and payment (in development)
+  profile (`omegaweb`)
+* execution of periodic tasks, e.g. maintenance (`omegaops`)
 
-omegaops exposes a straight forward API that allows authorized users
-to define and manage the services available, the tasks required to deploy
-each services and to manage the deployment lifecyle including installation,
+Cloud Manager
+=============
+
+The Cloud Manager component is central to the provisioning of a managed
+MLOps service in that it provides the backend to operating the service
+in a private or public cloud environment.
+
+Responsibilities include:
+
+* provision of services, including cloud resources, installation of user-
+  specific components and similar (`cloudmgr`)
+* service usage tracking to enable service-based charging & billing
+* billing backend, including itemized invoices and payment
+
+Cloud Manager exposes a straight forward data model & REST API
+that enables authorized users to define and manage the services available
+and their deployment for each user, including installation,
 scaling, health checking and eventual removal.
 
 Data Model
-----------
+==========
 
 The core entities cover the specification of service offerings and their
 associated deployment steps as well as tracking the status of each deployment.
@@ -67,7 +74,7 @@ Commands, deployments and tasks all share the same state model:
 
 
 API
----
+===
 
 The API consists of two parts:
 

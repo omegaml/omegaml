@@ -1,3 +1,4 @@
+import os
 import socket
 from datetime import datetime
 
@@ -31,12 +32,13 @@ def log_task(task, status, exception=None):
         'data': task_data,
     }
 
-    if task.request.is_eager:
-        # send_task in eager mode, without a broker running, would wait forever
-        from omegaops.tasks import log_event_task
-        log_event_task(task_log)
-    else:
-        # note the user's omegaops queue is shovelled to the omops user for actual logging
-        # see omops.create_ops_forwarding_shovel
-        task.app.send_task('omegaops.tasks.log_event_task', (task_log,), queue='omegaops')
-        pass
+    if os.environ.get('OMEGA_ENABLE_TASK_LOGGING'):
+        if task.request.is_eager:
+            # send_task in eager mode, without a broker running, would wait forever
+            from omegaops.tasks import log_event_task
+            log_event_task(task_log)
+        else:
+            # note the user's omegaops queue is shovelled to the omops user for actual logging
+            # see omops.create_ops_forwarding_shovel
+            task.app.send_task('omegaops.tasks.log_event_task', (task_log,), queue='omegaops')
+            pass
