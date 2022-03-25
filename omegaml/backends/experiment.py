@@ -133,6 +133,41 @@ class TrackingProvider:
         self._experiment = name or self._experiment
         return self
 
+    def track(self, obj, store=None, label=None):
+        """ attach this experiment to the named object
+
+        Usage:
+
+            # use in experiment context
+            with om.runtime.experiment('myexp') as exp:
+                exp.track('mymodel')
+
+            # use on experiment directly
+            exp = om.runtime.experiment('myexp')
+            exp.track('mymodel')
+
+        Args:
+                obj (str): the name of the object
+                store (OmegaStore): optional, om.models, om.scripts, om.jobs.
+                    If not provided will use om.models
+                label (str): optional, the label of the worker, default is
+                    'default'
+
+        Note:
+                This modifies the object's metadata.attributes::
+
+                    { 'tracking': { label: self._experiment }
+        """
+        label = label or 'default'
+        store = store or self._model_store
+        meta = store.metadata(obj)
+        meta.attributes.setdefault('tracking', {})
+        meta.attributes['tracking'] = {
+            label: self._experiment
+        }
+        meta.save()
+        return meta
+
     def active_run(self):
         self._run = (self._run or 0) + 1
         return self._run
@@ -343,16 +378,7 @@ class OmegaSimpleTracker(TrackingProvider):
         }
         self._store.put(data, self._data_name, noversion=True)
 
-    def log_event(self, event, key, value, step=None, **extra):
-        """ log some event
-
-        Args:
-            event (str): the event name (e.g. start, stop, metric, param)
-            key (str): a key to relate the value (e.g. metric name)
-            value (str|float|int|bool|dict): the actual event value
-            step (int): the step
-            **extra: any other values to store with event
-        """
+    def log_event(self, event, key, value, step=None, dt=None, **extra):
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
@@ -360,7 +386,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'event': event,
             'key': key,
             'value': value,
-            'dt': datetime.utcnow(),
+            'dt': dt or datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
@@ -368,7 +394,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data.update(extra)
         self._store.put(data, self._data_name, noversion=True)
 
-    def log_param(self, key, value, step=None, **extra):
+    def log_param(self, key, value, step=None, dt=None, **extra):
         """ log an experiment parameter
 
         Args:
@@ -387,7 +413,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'event': 'param',
             'key': key,
             'value': value,
-            'dt': datetime.utcnow(),
+            'dt': dt or datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
@@ -395,7 +421,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data.update(extra)
         self._store.put(data, self._data_name, noversion=True)
 
-    def log_metric(self, key, value, step=None, **extra):
+    def log_metric(self, key, value, step=None, dt=None, **extra):
         """ log a metric value
 
         Args:
@@ -414,7 +440,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'event': 'metric',
             'key': key,
             'value': value,
-            'dt': datetime.utcnow(),
+            'dt': dt or datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
         if step is not None:
@@ -422,7 +448,7 @@ class OmegaSimpleTracker(TrackingProvider):
         data.update(extra)
         self._store.put(data, self._data_name)
 
-    def log_system(self, key=None, value=None, step=None, **extra):
+    def log_system(self, key=None, value=None, step=None, dt=None, **extra):
         """ log system data
 
         Args:
@@ -450,7 +476,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'event': 'system',
             'key': key,
             'value': value,
-            'dt': datetime.utcnow(),
+            'dt': dt or datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
         data.update(extra)
@@ -487,7 +513,9 @@ class OmegaSimpleTracker(TrackingProvider):
         if valid(key):
             filter['data.key'] = op(key)
         data = self._store.get(self._data_name, filter=filter)
-        data = pd.DataFrame.from_records(data) if data is not None and not raw else data
+        if data is not None and not raw:
+            data = pd.DataFrame.from_records(data)
+            data.sort_values('dt', inplace=True) if 'dt' in data.columns else None
         return data
 
     def restore_artifact(self, key=None, experiment=None, run=None, step=None, value=None):
@@ -571,8 +599,10 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
 
     def flush(self):
         for step, data in enumerate(self.profile_logs):
+            # record the actual time instead of logging time (avoid buffering delays)
+            dt = data.get('profile_dt')
             for k, v in data.items():
-                self.log_event('profile', k, v, step=step)
+                self.log_event('profile', k, v, step=step, dt=dt)
         self.profile_logs = []
 
     def start(self):

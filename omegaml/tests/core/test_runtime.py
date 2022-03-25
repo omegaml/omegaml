@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import unittest
 from unittest import TestCase
 
 import numpy as np
@@ -603,3 +604,44 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
         om.runtime.ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(level='DEBUG')), 3)
+
+    def test_list_labels(self):
+        om = Omega()
+        labels = om.runtime.mode(local=True).labels()
+        self.assertIsInstance(labels, dict)
+        self.assertEqual(['local'], list(labels.values())[0])
+
+    def test_parallel_getall(self):
+        om = Omega()
+        code = """print('hello')"""
+        om.jobs.create(code, 'myjob')
+        # --parallel
+        with om.runtime.parallel() as crt:
+            for i in range(5):
+                om.runtime.job(f'myjob').run()
+            result = crt.run()
+        results = result.getall()
+        self.assertEqual(len(results), 5)
+        # --sequence
+        with om.runtime.sequence() as crt:
+            for i in range(5):
+                om.runtime.job(f'myjob').run()
+            result = crt.run()
+        results = result.getall()
+        self.assertEqual(len(results), 5)
+
+    @unittest.skip("fails due to job not supporting callbacks")
+    def test_mapreduce_getall(self):
+        om = Omega()
+        code = """print('hello')"""
+        om.jobs.create(code, 'myjob')
+        # --mapreduce
+        with om.runtime.mapreduce() as crt:
+            for i in range(5):
+                om.runtime.job(f'myjob').run()
+            result = crt.run()
+        results = result.getall()
+        self.assertEqual(len(results), 5)
+
+
+
