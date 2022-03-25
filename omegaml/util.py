@@ -1005,3 +1005,34 @@ def tryOr(fn, else_fn):
 
 # https://stackoverflow.com/a/58466875/890242
 _raise = lambda ex: (_ for _ in ()).throw(ex)
+
+
+class IterableJsonDump(list):
+    """ dump iterable of json data """
+
+    # adapted from https://stackoverflow.com/a/45143995/890242
+    def __init__(self, generator, transform=None):
+        self.generator = generator
+        self._len = 1
+        self._transform = transform or (lambda o: o)
+
+    def __iter__(self):
+        self._len = 0
+        for item in self.generator:
+            yield self._transform(item)
+            self._len += 1
+
+    def __len__(self):
+        return self._len
+
+    @classmethod
+    def dump(cls, iterlike, fout, transform=None, **kwargs):
+        gen = IterableJsonDump(iterlike, transform=transform)
+        for chunk in json.JSONEncoder(**kwargs).iterencode(gen):
+            fout.write(chunk)
+
+    @classmethod
+    def dumps(cls, iterlike, **kwargs):
+        buffer = StringIO()
+        cls.dump(iterlike, buffer, **kwargs)
+        return buffer.getvalue()

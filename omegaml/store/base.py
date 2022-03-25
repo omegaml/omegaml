@@ -221,16 +221,15 @@ class OmegaStore(object):
         self._ensure_fs_index(self._fs)
         return self._fs
 
-    def metadata(self, name=None, bucket=None, prefix=None, version=-1):
+    def metadata(self, name=None, bucket=None, prefix=None, version=-1, **kwargs):
         """
         Returns a metadata document for the given entry name
-
-        FIXME: version attribute does not do anything
-        FIXME: metadata should be stored in a bucket-specific collection
-        to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
-
-        Role/#db.createRole
         """
+        # FIXME: version attribute does not do anything
+        # FIXME: metadata should be stored in a bucket-specific collection
+        # to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
+        #
+        # Role/#db.createRole
         db = self.mongodb
         fs = self.fs
         prefix = prefix or self.prefix
@@ -347,9 +346,12 @@ class OmegaStore(object):
         apply mixins in defaults.OMEGA_STORE_MIXINS
         """
         for mixin in self.defaults.OMEGA_STORE_MIXINS:
-            conditional = lambda cls, obj: cls.supports(obj) if hasattr(cls, 'supports') else True
+            conditional = self._mixins_conditional
             extend_instance(self, mixin,
                             conditional=conditional)
+
+    def _mixins_conditional(self, cls, obj):
+        return cls.supports(obj) if hasattr(cls, 'supports') else True
 
     def register_backends(self):
         """
@@ -376,7 +378,6 @@ class OmegaStore(object):
 
         :param mixincls: (class) the mixin class
         """
-        self.defaults.OMEGA_STORE_MIXINS.append(mixincls)
         extend_instance(self, mixincls)
         return self
 

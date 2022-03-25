@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from subprocess import call
 
 from urllib.parse import urlparse
@@ -8,6 +10,9 @@ from omegaml.client.docoptparser import CommandBase
 from omegaml.client.util import get_omega
 from pprint import pprint
 from time import sleep
+
+from omegaml.mixins.store.imexport import OmegaExporter
+
 
 class RuntimeCommandBase(CommandBase):
     """
@@ -21,9 +26,10 @@ class RuntimeCommandBase(CommandBase):
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [options]
-      om runtime [control|inspect|celery] [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
+      om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
+      om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
 
-    Options:
+      Options:
       --async           don't wait for results, will print taskid
       -f                tail log
       --require=VALUE   worker label
@@ -35,6 +41,10 @@ class RuntimeCommandBase(CommandBase):
       --local           if specified the task will run locally. Use this for testing
       --every           if specified runs task on all workers
       --insecure        allow insecure connections (disables verification of ssl certificates)
+      --compress        if specified the archive will be compress (tgz format) [default: True]
+      --path=PATH       path to directory where the archive should be written [default: ./mlops-export]
+      --list            if specified, print members of archive
+      --promote         if specified, import and promote objects
 
     Description:
       model, job and script commands
@@ -356,3 +366,40 @@ class RuntimeCommandBase(CommandBase):
                              auth=auth, verify=not insecure)
         self.logger.info(f'stop: {stop} start: {start}')
 
+    def do_export(self):
+        om = get_omega(self.args)
+        names = self.args.get('<prefix/name>')
+        archive = self.args.get('--path') or './mlops-export'
+        compress = self.args.get('--compress', True)
+        dolist = self.args.get('--list')
+        if dolist:
+            arc = OmegaExporter.archive(archive)
+            self.print(list(arc.members))
+        else:
+            exp = OmegaExporter(om)
+            arcfile = exp.to_archive(archive, names, compress=compress, progressfn=print)
+            self.print(arcfile)
+
+    def do_import(self):
+        om = get_omega(self.args)
+        names = self.args.get('<prefix/name>')
+        archive = Path(self.args.get('--path', './mlops-export'))
+        dolist = self.args.get('--list')
+        promote = self.args.get('--promote')
+        pattern = '|'.join(names)
+        if (not archive.is_file()
+              and not archive.exists()
+              and archive.parent.exists()):
+            archives = list(archive.parent.glob(f'{archive.name}*'))
+            if len(archives) > 1:
+                archive = Path(self.ask("Select an archive", options=archives, select=True, default=1))
+        assert archive.exists(), f"No mlops-export {archive} exists"
+        self.print(f"Processing {archive}")
+        if dolist:
+            arc = OmegaExporter.archive(archive)
+            self.print(list(arc.members))
+        else:
+            exp = OmegaExporter(om)
+            arcfile = exp.from_archive(archive, pattern=pattern, progressfn=print, promote=promote)
+            self.print("Imported objects:")
+            self.print(arcfile)
