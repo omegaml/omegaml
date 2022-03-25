@@ -1,14 +1,14 @@
 Concepts
 ========
 
-omega|ml provides an out-of-the-box, cloud-native data science platform
+omega-ml provides an out-of-the-box, cloud-native data science platform
 to enable end-end development, testing and deploying of data products. The
-typical buzzwords to position omega|ml are MLOps and Data Product
+typical buzzwords to position omega-ml are MLOps and Data Product
 Operationalization.
 
-omega|ml addresses the very questions that any (team of) data scientists, working to
+omega-ml addresses the very questions that any (team of) data scientists, working to
 build modern data products in an agile manner, has to answer at some point. To this end, the following
-are "first-class citizens" in omega|ml, mapping to corresponding functionality:
+are "first-class citizens" in omega-ml, mapping to corresponding functionality:
 
 .. contents::
 
@@ -29,17 +29,17 @@ How to run things
 How to keep track
 +++++++++++++++++
 
-* *metadata* - any object stored in omega|ml is actively tracked by its associated metadata
+* *metadata* - any object stored in omega-ml is actively tracked by its associated metadata
 * *logging* - logging is as simple as, well adding messages to the log. No setup required.
 
 How to scale
 ++++++++++++
 
-* *cloud-native* - omega|ml is designed as a set of microservices, leveraging the 12factor architecture principles, and thus is fully cloud enabled. It works across clouds, private or public.
-* *cloudmanager* - cloudmanager enables multi-user/multi-entity deployment of omega|ml itself as well as any other services, including your own data products (msp & enterprise edition)
-* *platform* - ready-made docker images and a docker-compose deployment descriptor, as well as a scalable kubernetes deployment (msp & enterprise editions)
+* *cloud-native* - omega-ml is designed as a set of microservices, leveraging the 12factor architecture principles, and thus is fully cloud enabled. It works across clouds, private or public.
+* *cloudmanager* - cloudmanager enables multi-user/multi-entity deployment of omega-ml itself as well as any other services, including your own data products (msp & commercial edition)
+* *platform* - ready-made docker images and a docker-compose deployment descriptor, as well as a scalable kubernetes deployment (msp & commercial editions)
 
-These concepts make up the very modules and APIs that omega|ml provides. For example, in
+These concepts make up the very modules and APIs that omega-ml provides. For example, in
 your Python code (these is an excerpt of the full capabilities):
 
 .. code:: python

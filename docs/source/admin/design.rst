@@ -28,8 +28,8 @@ the *X,Y* data as well as the actual model.
 Security concerns
 -----------------
 
-Note that the open source `omega|ml Core` does not implement any security by default.
-The omega|ml Commercial Edition however addresses all security concerns:
+Note that the open source `omega-ml Core` does not implement any security by default.
+The omega-ml Commercial Edition however addresses all security concerns:
 
 * **user authentication**. Users authenticate to REST endpoints by username +
   Apikey. Communication is protected by HTTPS.

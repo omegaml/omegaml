@@ -37,6 +37,6 @@ is one of the following:
 In general :code:`get` returns a Pandas :code:`DataFrame`. See the Pandas
 documentation for ways to work with DataFrames.
 
-However, unlike Pandas omega|ml provides methods to work with data that is
+However, unlike Pandas omega-ml provides methods to work with data that is
 larger than memory. This is covered in the next section.
 

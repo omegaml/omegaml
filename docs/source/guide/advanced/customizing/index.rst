@@ -1,4 +1,4 @@
-Customizing omega|ml
+Customizing omega-ml
 ====================
 
 .. toctree::

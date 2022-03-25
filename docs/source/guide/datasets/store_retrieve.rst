@@ -72,7 +72,7 @@ provide additional support on querying, as shown in the next section
 External Sources
 ----------------
 
-Any Python tools can be used to retrieve data from external sources and ingest into omega|ml datasets.
+Any Python tools can be used to retrieve data from external sources and ingest into omega-ml datasets.
 For example, you could use the Pandas' library :code:`pd.read_csv` to read a remote csv file and insert
 it into :code:`om.datasets`:
 
@@ -88,7 +88,7 @@ it into :code:`om.datasets`:
     for chunk_df in pd.read_csv('http://example.com/data.csv', chunksize=1000):
         om.datasets.put(chunk_df, 'example_data')
 
-Alternatively, omega|ml provides a convenience function, `om.datasets.read_csv` to ingest data
+Alternatively, omega-ml provides a convenience function, `om.datasets.read_csv` to ingest data
 from a wide range sources (e.g. S3, HTTPS, SFTP, HDFS, Azure Blob, GCS, etc.).
 
 .. code:: pyton

@@ -6,7 +6,7 @@ Deploying web applications
 .. contents::
 
 
-Similarly to script modules omega|ml can deploy Flask-based applications using
+Similarly to script modules omega-ml can deploy Flask-based applications using
 the commercial edition's apphub component. An example Flask application is
 provided at `hello flask`_
 

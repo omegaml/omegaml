@@ -1,5 +1,17 @@
-Introduction
-============
+omega|ml - MLOps for humans
+===========================
+
+with just a single line of code you can
+
+- deploy machine learning models straight from Jupyter Notebook (or any other code)
+- implement data pipelines quickly, without memory limitation, all from a Pandas-like API
+- serve models and data from an easy to use REST API
+
+Further, omega|ml is the fastest way to
+
+- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
+- collaborate on data science projects easily, sharing Jupyter Notebooks
+- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
 
 Quick start
 -----------
@@ -23,32 +35,14 @@ Leverage the power of omega|ml by installing as follows:
     # assuming you have started the server as per above
     $ pip install omegaml
 
+Further information
+-------------------
 
-DataOps & MLOps for humans
---------------------------
-
-with just a single line of code you can
-
-- deploy machine learning models straight from Jupyter Notebook (or any other code)
-- implement data pipelines quickly, without memory limitation, all from a Pandas-like API
-- serve models and data from an easy to use REST API
-
-Further, omega|ml is the fastest way to
-
-- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
-- collaborate on data science projects easily, sharing Jupyter Notebooks
-- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
-
-.. info::
-
-   * Documentation: https://omegaml.github.io/omegaml/
-
-   * Contributions: http://bit.ly/omegaml-contribute
+* Documentation: https://omegaml.github.io/omegaml/
+* Contributions: http://bit.ly/omegaml-contribute
 
 Examples
 --------
-
-Get more information at https://omegaml.github.io/omegaml/
 
 .. code::
 
@@ -112,10 +106,10 @@ https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipeline
 In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
 compute cluster, database and data source.
 
-*Enterprise Edition*
+*Commercial Edition & Support*
 
 https://omegaml.io
 
-omega|ml Enterprise Edition provides security on every level and is ready made for Kubernetes
+omega|ml Commercial Edition provides security on every level and is ready made for Kubernetes
 deployment. It is licensed separately for on-premise, private or hybrid cloud.
 Sign up at https://omegaml.io

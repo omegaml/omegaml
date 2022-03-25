@@ -8,7 +8,7 @@ Update deployment
 -----------------
 
 Once the image is ready it can be deployed to kubernetes using kubectl
-(this is as with any kubernetes cluster, i.e. not specific to omega|ml):
+(this is as with any kubernetes cluster, i.e. not specific to omega-ml):
 
 .. code:: bash
 

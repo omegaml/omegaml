@@ -1,4 +1,4 @@
-Using omega|ml datasets for files
+Using omega-ml datasets for files
 ---------------------------------
 
 Motivating example: Say you have a file 'test.xyz' that you want to read and write in your web application.

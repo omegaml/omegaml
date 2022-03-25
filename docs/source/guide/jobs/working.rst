@@ -4,8 +4,8 @@ Working with notebooks
 Integrated JupyterLab
 ---------------------
 
-omega|ml comes pre-configured to run with JupyterLab. In this mode, every
-notebook that you create is automatically stored in the omega|ml :code:`jobs`
+omega-ml comes pre-configured to run with JupyterLab. In this mode, every
+notebook that you create is automatically stored in the omega-ml :code:`jobs`
 storage. The advantage is that you can share notebooks instantly with your
 colleagues - their JupyterLab workspace will show the same notebooks as you have,
 no matter from where they work.
@@ -14,7 +14,7 @@ Local JupyterLab
 ----------------
 
 If you prefer to work within your own JupyterLab environment, you can still
-use omega|ml to deploy your notebooks and run the on the cloud. This is
+use omega-ml to deploy your notebooks and run the on the cloud. This is
 convenient, for example when you only have a certain budget to run on a CPU.
 Then you can prepare your notebooks locally and only run them on the GPU when
 it is ready.

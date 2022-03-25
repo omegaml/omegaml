@@ -4,10 +4,10 @@ Installing omegaml
 .. contents::
 
 
-Starting omega|ml locally
+Starting omega-ml locally
 -------------------------
 
-For a single-node installation, start the omega|ml platform as follows:
+For a single-node installation, start the omega-ml platform as follows:
 
 .. code::
 
@@ -15,10 +15,10 @@ For a single-node installation, start the omega|ml platform as follows:
     $ docker-compose up -d
 
 Jupyter Notebook is immediately available at http://localhost:8899 (`omegamlisfun` to login).
-Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+Any notebook you create will automatically be stored in the integrated omega-ml database, making collaboration a breeze.
 The REST API is available at http://localhost:5000.
 
-If you already have a Jupyter or other Python environment and would like to use omega|ml's storage and
+If you already have a Jupyter or other Python environment and would like to use omega-ml's storage and
 runtime environment, you can start just the required parts:
 
 .. code::
@@ -33,14 +33,14 @@ runtime environment, you can start just the required parts:
     import omegaml as om
 
 If you have secured MongoDB and RabbitMQ make sure to specify the user credentials
-in the respective environment variables or the omega|ml configuration file, :code:`$PWD/config.yml`.
+in the respective environment variables or the omega-ml configuration file, :code:`$PWD/config.yml`.
 
 Getting User Credentials
 ------------------------
 
 *Managed Service|Commercial Edition*
 
-omega|ml is also provided as a managed service at https://omegaml.io. For on-premise
+omega-ml is also provided as a managed service at https://omegaml.io. For on-premise
 or private-cloud deployment, we provide the Commercial Edition available from the same
 address.
 
@@ -53,21 +53,21 @@ and any subsequent API call will be directed to our cloud.
     om cloud login --userid USERID --apikey APIKEY
 
 
-Running omega|ml in JupyterLab, Jupyter Notebook
+Running omega-ml in JupyterLab, Jupyter Notebook
 ------------------------------------------------
 
-omega|ml is easy to integrate with JupyterLab and Jupyter Notebook. By default
-all notebooks are directly stored in the omega|ml :code:`jobs` store, so that
+omega-ml is easy to integrate with JupyterLab and Jupyter Notebook. By default
+all notebooks are directly stored in the omega-ml :code:`jobs` store, so that
 all team members have direct access (no sharing or uploading required).
 
 Alternatively, any existing Jupyter installation can be used as normal. Then
-omega|ml is run from the Terminal and from within your notebooks as any other
+omega-ml is run from the Terminal and from within your notebooks as any other
 Python module (see below).
 
-Running omega|ml from the command line
+Running omega-ml from the command line
 --------------------------------------
 
-The cli command :code:`om` provides access to all of the core APIs of omega|ml:
+The cli command :code:`om` provides access to all of the core APIs of omega-ml:
 
 .. code:: bash
 

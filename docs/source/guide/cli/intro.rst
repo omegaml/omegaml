@@ -18,7 +18,7 @@ Similar in structure to the Python API the command-line interface provides
 access to the
 
 * storages - access datasets, models, scripts, jobs
-* runtime - interact with the omega|ml runtime
+* runtime - interact with the omega-ml runtime
 * cloud - managed service configuration and access
 * shell - the Python shell with omegaml initialized
 
@@ -259,7 +259,7 @@ The cli provides built-in help
             om runtime env install --file requirements.txt --every
 
     Working with cloud
-      om cloud is available for the omega|ml managed service at https://hub.omegaml.io
+      om cloud is available for the omega-ml managed service at https://hub.omegaml.io
 
       Logging in
       ----------
@@ -318,7 +318,7 @@ The cli provides built-in help
 
 
     Working with shell
-        Without a command will start an IPython shell with omega|ml ready to use
+        Without a command will start an IPython shell with omega-ml ready to use
 
         $ om shell
         [] om.runtime.ping()

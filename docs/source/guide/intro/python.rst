@@ -19,17 +19,17 @@ or shell:
     # retrieve
     om.datasets.get('mydf')
 
-Using omega|ml in python
+Using omega-ml in python
 ------------------------
 
-Starting up omega|ml is straight forward. In any Python program or interactive
+Starting up omega-ml is straight forward. In any Python program or interactive
 shell just import the :code:`omegaml` module as follows:
 
 .. code:: python
 
    import omegaml as om
 
-The :code:`om` module is readily configured to work with your local omega|ml
+The :code:`om` module is readily configured to work with your local omega-ml
 server, or with the cloud instance configured using the :code:`om cloud login`
 command.
 
@@ -42,7 +42,7 @@ Once loaded :code:`om` provides several storage areas that are immediately usabl
 
 In addition, your cluster or cloud resources are available as
 
-* :code:`om.runtime` - the omega|ml remote execution environment
+* :code:`om.runtime` - the omega-ml remote execution environment
 
 
 Getting help

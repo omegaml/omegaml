@@ -1,7 +1,7 @@
 Working with the cloud
 ======================
 
-*Enterprise version*
+*Commercial Edition*
 
 .. code:: bash
 
@@ -29,7 +29,7 @@ Working with the cloud
       --plot            if specified use plotext library to plot (preliminary)
 
     Description:
-      om cloud is available for the omega|ml managed service at https://hub.omegaml.io
+      om cloud is available for the omega-ml managed service at https://hub.omegaml.io
 
       Logging in
       ----------
@@ -92,7 +92,7 @@ The configuration is stored in :code:`config.yml` as follows:
 Viewing the cloud status
 ------------------------
 
-View important aspects of your omega|ml cloud environment.
+View important aspects of your omega-ml cloud environment.
 
 Runtime
 +++++++
@@ -145,4 +145,4 @@ then access the log as follows:
 
 .. code:: bash
 
-     
+

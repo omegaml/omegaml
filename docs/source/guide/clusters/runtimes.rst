@@ -1,4 +1,4 @@
-The omega|ml runtime
+The omega-ml runtime
 ====================
 
 :code:`om.runtime` provides access to cloud resources:

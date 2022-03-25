@@ -3,8 +3,8 @@ Using pip-installable modules
 
 .. _serverless functions:: https://de.wikipedia.org/wiki/Function_as_a_Service
 
-omega|ml supports execution of arbitrary modules packaged by pip on the runtime cluster. This
-is the equivalent of `serverless functions`_ with the bonus of having the full set of omega|ml capabilities
+omega-ml supports execution of arbitrary modules packaged by pip on the runtime cluster. This
+is the equivalent of `serverless functions`_ with the bonus of having the full set of omega-ml capabilities
 available to your modules.
 
 Writing a pip-installable Module
@@ -59,7 +59,7 @@ Alternatively use the cli to achieve the same:
     $ om scripts put ./path/to/helloworld helloworld
 
 
-This will build the package and store it in omega|ml. It is automatically
+This will build the package and store it in omega-ml. It is automatically
 available for execution using the REST API or :code:`om.runtime.script()`.
 
 Learning more about pip and setuptools
