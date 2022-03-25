@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from constance import config as constance_config
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test.testcases import TestCase
 from kombu import Connection
 from pymongo.errors import PyMongoError, OperationFailure
@@ -183,78 +183,6 @@ class OmegaOpsTests(TestCase):
             message_received.ack()
             simple_queue.close()
 
-    def test_parse_client_config_v1(self):
-        ServicePlan.objects.create(name='omegaml')
-        config = {
-            'default': {
-                'dbname': 'dbname',
-                'user': 'dbuser',
-                'password': 'dbpass',
-                'notebook_url': 'nb_url',
-            }
-        }
-        defaults = omsettings()
-        add_service_deployment(self.user, config)
-        config = get_client_config(self.user, qualifier='default')
-        self.assertIn('OMEGA_CELERY_CONFIG', config)
-        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
-        self.assertIn('OMEGA_MONGO_URL', config)
-        parsed = urlparse(defaults.OMEGA_MONGO_URL)
-        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
-        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
-        # internal view
-        config = get_client_config(self.user, qualifier='default', view=True)
-        self.assertIn('OMEGA_CELERY_CONFIG', config)
-        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
-        self.assertIn('OMEGA_MONGO_URL', config)
-        parsed = urlparse(defaults.OMEGA_MONGO_URL)
-        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
-        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
-        # -- this is to avoid merging server-side config is not mixed with client side defaults
-        self.assertTrue(all(k.isupper() for k in config))
-
-    def test_parse_client_config_v2(self):
-        ServicePlan.objects.create(name='omegaml')
-        config = {
-            'version': 'v2',
-            'services': {
-                'notebook': {
-                    'url': 'nb_url',
-                }
-            },
-            'qualifiers': {
-                'default': {
-                    'mongodbname': 'dbname',
-                    'mongouser': 'dbuser',
-                    'mongopassword': 'dbpass',
-                }
-            }
-        }
-        defaults = omsettings()
-        add_service_deployment(self.user, config)
-        # external view
-        config = get_client_config(self.user, qualifier='default')
-        self.assertIn('OMEGA_CELERY_CONFIG', config)
-        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
-        self.assertIn('OMEGA_MONGO_URL', config)
-        parsed = urlparse(defaults.OMEGA_MONGO_URL)
-        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
-        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
-        # internal view
-        config = get_client_config(self.user, qualifier='default', view=True)
-        self.assertIn('OMEGA_CELERY_CONFIG', config)
-        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(defaults.OMEGA_BROKER, config['OMEGA_CELERY_CONFIG']['BROKER_URL'])
-        self.assertIn('OMEGA_MONGO_URL', config)
-        parsed = urlparse(defaults.OMEGA_MONGO_URL)
-        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
-        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
-        # -- this is to avoid merging server-side config is not mixed with client side defaults
-        self.assertTrue(all(k.isupper() for k in config))
-
     def test_parse_client_config_v3(self):
         from constance import config as site_config
 
@@ -297,4 +225,117 @@ class OmegaOpsTests(TestCase):
         # make sure there are on lower case configs passed into defaults
         # -- this is to avoid merging server-side config is not mixed with client side defaults
         self.assertTrue(all(k.isupper() for k in config))
+
+    def test_parse_client_config_v3_custom_qualifier(self):
+        from constance import config as site_config
+
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                }
+            },
+            'qualifiers': {
+                'default': {
+                    'mongodbname': 'dbname',
+                    'mongouser': 'dbuser',
+                    'mongopassword': 'dbpass',
+                },
+                'foobar': {
+                    'mongodbname': 'dbnameX',
+                    'mongouser': 'dbuserX',
+                    'mongopassword': 'dbpassX',
+                }
+            }
+        }
+        defaults = omsettings()
+        add_service_deployment(self.user, config)
+        config = get_client_config(self.user, qualifier='foobar')
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL)
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # internal view
+        config = get_client_config(self.user, qualifier='foobar', view=True)
+        self.assertIn('OMEGA_CELERY_CONFIG', config)
+        self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL,)
+        self.assertIn('OMEGA_MONGO_URL', config)
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # make sure there are on lower case configs passed into defaults
+        # -- this is to avoid merging server-side config is not mixed with client side defaults
+        self.assertTrue(all(k.isupper() for k in config))
+
+    def test_parse_client_config_v3_group_qualifier(self):
+        from constance import config as site_config
+
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                }
+            },
+            'qualifiers': {
+                'default': {
+                    'mongodbname': 'dbname',
+                    'mongouser': 'dbuser',
+                    'mongopassword': 'dbpass',
+                },
+            }
+        }
+        group_config = {
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                }
+            },
+            'qualifiers': {
+                'default': {
+                    'mongodbname': 'dbnameX',
+                    'mongouser': 'dbuserX',
+                    'mongopassword': 'dbpassX',
+                },
+                'special': {
+                    'mongodbname': 'dbnameY',
+                    'mongouser': 'dbuserY',
+                    'mongopassword': 'dbpassY',
+                },
+            }
+        }
+        defaults = omsettings()
+        group_user = User.objects.create_user('Gfoobar', 'groupadmin@example.com', 'foobar')
+        group = Group.objects.create(name='foobar')
+        group_user.groups.add(group)
+        add_service_deployment(self.user, config)
+        add_service_deployment(group_user, group_config)
+        # expect the user's default to be returned (not member of group)
+        config = get_client_config(self.user, qualifier='foobar')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # expect the group's default to be returned (user is member of group)
+        self.user.groups.add(group)
+        config = get_client_config(self.user, qualifier='foobar')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # expect the group's special to be returned (user is member of group)
+        config = get_client_config(self.user, qualifier='foobar:special')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserY:dbpassY@{parsed.hostname}:{parsed.port}/dbnameY'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+
+
+
+
 

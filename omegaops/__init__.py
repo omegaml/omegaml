@@ -1,4 +1,5 @@
 import json
+from django.contrib.auth.models import Group, User
 
 from omegaml.mongoshim import MongoClient
 from omegaml.util import urlparse, markup, dict_merge
@@ -305,6 +306,7 @@ def get_client_config(user, qualifier=None, view=False):
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_USERID": user.username,
         "OMEGA_APIKEY": user.api_key.key,
+        "OMEGA_QUALIFIER": qualifier,
         "OMEGA_MONGO_SSL_KWARGS": {
             "ssl": omega_config['use_ssl'],
         },
@@ -341,8 +343,8 @@ def get_user_config(user, qualifier, view):
         provided by landingpage/paasdeploy. settings is a dict (JSON formatted on
         input) of the following format
 
-        v2:
-            "version": "v2",
+        v3:
+            "version": "v3",
             'services' : {
                'jupyter': {
                   'image': 'imagename:tag',
@@ -373,22 +375,6 @@ def get_user_config(user, qualifier, view):
                 [...]
             },
 
-        v1:
-            <qualifier>: {
-                "dbname": "<mongo dbname>",
-                "user": "<mongo user>",
-                "password": "<mongo password",
-                "brokerhost": "<broker url:port", # external
-                "brokerhost.in": "<broker url:port", # internal
-            },
-            [...]
-
-        v0:
-            "dbname": "<mongo dbname>",
-            "username": "<mongo user>",
-            "password": "<mongo password",
-
-
     Args:
         user:
         qualifier:
@@ -405,15 +391,17 @@ def get_user_config(user, qualifier, view):
     settings = get_settings()
     qualifier = qualifier or 'default'
     user_settings = user.services.get(offering__name='omegaml').settings
+    # -- get group user's settings if so requested or as a fallback
+    if ':' in qualifier or qualifier not in user_settings['qualifiers']:
+        group_settings, qualifier = get_usergroup_settings(user, qualifier)
+        user_settings = group_settings or user_settings
     # -- parse user settings to most recent version
     #    we support multiple config versions for legacy reasons
     #    every parser must return to the most recent version spec as per above
     PARSERS = {
-        'v1': parse_client_config_v1,
-        'v2': parse_client_config_v2,
         'v3': parse_client_config_v3,
     }
-    user_settings_version = user_settings.get('version', 'v1')
+    user_settings_version = user_settings.get('version', 'v3')
     parser = PARSERS[user_settings_version]
     user_settings = parser(user_settings, qualifier, settings, config)
     qualifier_settings = user_settings['qualifiers'][qualifier]
@@ -463,159 +451,8 @@ def get_user_config(user, qualifier, view):
     return user_config
 
 
-def parse_client_config_v1(user_settings, qualifier, settings, config):
-    # parse config v0, v1 to current format
-    # -- mongo credentials
-    user_settings = user_settings.get(qualifier, user_settings)
-    mongouser = user_settings.get('username') or user_settings.get('user')
-    mongopassword = user_settings.get('password')
-    mongodbname = user_settings.get('dbname')
-    # -- external hosts
-    mongohost_ext = config.MONGO_HOST
-    broker_host_ext = config.BROKER_HOST
-    # -- internal hosts
-    # -- mongo
-    parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
-    host = parsed_url.netloc
-    if '@' in host:
-        creds, host = host.split('@', 1)
-    mongohost_in = host
-    # -- broker
-    parsed_url = urlparse.urlparse(settings.OMEGA_BROKER)
-    host = parsed_url.netloc
-    if '@' in host:
-        creds, host = host.split('@', 1)
-    broker_host_in = host
-    broker_defaults = urlparse.urlparse(settings.OMEGA_BROKER)
-    # prepare parsed
-    parsed = {
-        'services': {
-            'jupyter': {
-                'image': config.JUPYTER_IMAGE,
-                'node_selector': config.JUPYTER_NODE_SELECTOR,
-                'namespace': config.JUPYTER_NAMESPACE,
-                'affinity_role': config.JUPYTER_AFFINITY_ROLE,
-                'config': markup(config.JUPYTER_CONFIG or '{}'),
-            },
-            'runtime': {
-                'image': config.RUNTIME_IMAGE,
-                'node_selector': config.RUNTIME_NODE_SELECTOR,
-                'namespace': config.RUNTIME_NAMESPACE,
-                'affinity_role': config.RUNTIME_AFFINITY_ROLE,
-            },
-            'omegaml': {
-                'defaults': markup(config.OMEGA_DEFAULTS or '{}'),
-                'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
-                'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
-                'use_ssl': config.SERVICE_USESSL,
-            },
-            'cluster': {
-                'storage': None,
-                # specify as dict of lists
-                # {
-                #   'volumes': [
-                #      dict(name='pylib', persistentVolumeClaim='worker-{username}')
-                #   ],
-                #   'volumeMounts': [
-                #      dict(name='pylib', mountPath='/path/in/pod')
-                #   ]
-                # }
-            }
-        },
-        'qualifiers': {
-            qualifier: {
-                'mongohost': mongohost_ext,
-                'mongohost.in': mongohost_in,
-                'mongouser': mongouser,
-                'mongopassword': mongopassword,
-                'mongodbname': mongodbname,
-                'brokerhost': broker_host_ext,
-                'brokerhost.in': broker_host_in,
-                'brokeruser': broker_defaults.username,
-                'brokerpassword': broker_defaults.password,
-                'brokervhost': sanitize_vhost(broker_defaults.path),
-            }
-        }
-    }
-    return parsed
-
-
-def parse_client_config_v2(user_settings, qualifier, settings, config):
-    # parse config v2 to current format
-    qualifiers = dict(user_settings.get('qualifiers'))
-    qualifier_settings = qualifiers.get(qualifier, qualifiers['default'])
-    # -- external hosts
-    mongohost_ext = qualifier_settings.get('mongohost') or config.MONGO_HOST
-    broker_url_ext = qualifier_settings.get('brokerurl') or config.BROKER_URL
-    # -- internal hosts
-    parsed_url = urlparse.urlparse(settings.OMEGA_MONGO_URL)
-    host = parsed_url.netloc
-    if '@' in host:
-        creds, host = host.split('@', 1)
-    mongohost_in = qualifier_settings.get('mongohost.in') or host
-    broker_url_in = qualifier_settings.get('brokerurl.in') or settings.OMEGA_BROKER
-    parsed_url = urlparse.urlparse(settings.OMEGA_BROKER)
-    host = parsed_url.netloc
-    if '@' in host:
-        creds, host = host.split('@', 1)
-    broker_host_in = qualifier_settings.get('brokerhost.in') or host
-    parsed_url = urlparse.urlparse(config.BROKER_URL)
-    host = parsed_url.netloc
-    if '@' in host:
-        creds, host = host.split('@', 1)
-    broker_host_ext = qualifier_settings.get('brokerhost') or host
-    broker_defaults = urlparse.urlparse(broker_url_in)
-    # note we specify parsers for clarity, values can be overriden below
-    parsed = {
-        'services': {
-            'jupyter': {
-                'image': config.JUPYTER_IMAGE,
-                'node_selector': config.JUPYTER_NODE_SELECTOR,
-                'namespace': config.JUPYTER_NAMESPACE,
-                'affinity_role': config.JUPYTER_AFFINITY_ROLE,
-                'config': markup(config.JUPYTER_CONFIG or '{}'),
-            },
-            'runtime': {
-                'brokerurl': broker_url_ext,
-                'brokerurl.in': broker_url_in,
-                'image': config.RUNTIME_IMAGE,
-                'node_selector': config.RUNTIME_NODE_SELECTOR,
-                'namespace': config.RUNTIME_NAMESPACE,
-                'affinity_role': config.RUNTIME_AFFINITY_ROLE,
-            },
-            'omegaml': {
-                'defaults': json.loads(config.OMEGA_DEFAULTS or '{}'),
-                'notebook_collection': settings.OMEGA_NOTEBOOK_COLLECTION,
-                'celery_eager': settings.OMEGA_CELERY_CONFIG['CELERY_ALWAYS_EAGER'],
-                'use_ssl': config.SERVICE_USESSL,
-            },
-            'cluster': {
-                'storage': None,
-            }},
-        'qualifiers': {
-            qualifier: {
-                'mongohost': mongohost_ext,
-                'mongohost.in': mongohost_in,
-                'mongouser': qualifier_settings.get('mongouser'),
-                'mongopassword': qualifier_settings.get('mongopassword'),
-                'mongodbname': qualifier_settings.get('mongodbname'),
-                'brokerhost': broker_host_ext,
-                'brokerhost.in': broker_host_in,
-                'brokeruser': qualifier_settings.get('brokeruser', broker_defaults.username),
-                'brokerpassword': qualifier_settings.get('brokerpassword', broker_defaults.password),
-                'brokervhost': qualifier_settings.get('brokervhost', sanitize_vhost(broker_defaults.path)),
-            }
-        },
-    }
-    # the user provided values take precedence, if any
-    parsed['services']['jupyter'].update(user_settings['services'].get('jupyter', {}))
-    parsed['services']['runtime'].update(user_settings['services'].get('runtime', {}))
-    parsed['qualifiers'][qualifier].update(qualifier_settings)
-    return parsed
-
-
 def parse_client_config_v3(user_settings, qualifier, settings, config):
-    # parse config v2 to current format
+    # parse config v3 to current format
     qualifiers = dict(user_settings.get('qualifiers'))
     qualifier_settings = qualifiers.get(qualifier, qualifiers['default'])
     # -- external hosts
@@ -676,7 +513,7 @@ def parse_client_config_v3(user_settings, qualifier, settings, config):
                 'mongodbname': qualifier_settings.get('mongodbname'),
                 'brokerhost': broker_host_ext,
                 'brokerhost.in': qualifier_settings.get(
-                'brokerhost.in') or f'{broker_defaults.hostname}:{broker_defaults.port}',
+                    'brokerhost.in') or f'{broker_defaults.hostname}:{broker_defaults.port}',
                 'brokeruser': qualifier_settings.get('brokeruser', broker_defaults.username),
                 'brokerpassword': qualifier_settings.get('brokerpassword', broker_defaults.password),
                 'brokervhost': qualifier_settings.get('brokervhost', sanitize_vhost(broker_defaults.path)),
@@ -730,3 +567,44 @@ def sanitize_vhost(vhost):
     if vhost.startswith('/'):
         return vhost[1:]
     return vhost.replace('//', '/')
+
+
+def get_usergroup_settings(user, qualifier):
+    """ get the settings from a group
+
+    Args:
+         user (User): the user for which a group applies
+         qualifier (str): the qualifier which to get from its corresponding
+           group. See Usage
+
+    Usage:
+        The format of the qualifier is <group>[:<qualifier>]. If only group
+        is specified, the qualifier defaults to 'default'.
+
+        How it works:
+
+        1. Lookup the group named <group>, of which <user> must be a member
+        2. Find the group user named G<group> (note the capital G)
+        3. Return the group user's services.setting
+
+        Examples:
+
+        * qualifier = 'foobar' => settings=Gfoobar, qualifier=default
+        * qualifier = 'foobar:default' => user Gfoobar, qualifier default
+        * qualifier = 'foobar:some' => user Gfoobar, qualifier some
+
+        For the case where only <group> is specified without a qualifier,
+        and where the user's settings originally contain the <group> qualifier,
+        this is returned.
+    """
+    # e.g.
+    # somegroup => somegroup, default
+    # somegroup:qualif => somegroup, qualif
+    # somegroup:qualif:invalid => somegroup: qualif
+    group_name, qualifier, *_ = f'{qualifier}:default'.split(':', 2)
+    group_user = User.objects.filter(username=f'G{group_name}',
+                                     groups__name=group_name).first()
+    user_in_group = user.groups.filter(name=group_name).exists()
+    if group_user and user_in_group:
+        return group_user.services.get(offering__name='omegaml').settings, qualifier
+    return None, qualifier

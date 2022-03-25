@@ -3,11 +3,12 @@ import os
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 
 from config.env_local import EnvSettings_Local
+from stackable.contrib.config.conf_teamcity import Config_TeamcityTests
 
 
-class EnvSettings_LocalTest(Config_DjangoNoseTests,
+class EnvSettings_LocalTest(Config_TeamcityTests,
                             EnvSettings_Local):
-    NOSE_ARGS = '--nologcapture --verbosity 2 -s'.split(' ')
+    #NOSE_ARGS = '--nologcapture --verbosity 2 -s'.split(' ')
 
     BASE_MONGO_URL = 'mongodb://{mongouser}:{mongopassword}@{mongohost}/{mongodbname}'
     mongo_host = os.environ.get('MONGO_HOST', 'localhost:27017')
@@ -30,5 +31,7 @@ class EnvSettings_LocalTest(Config_DjangoNoseTests,
 
     # switch off stripe customer registration in landingpage
     STRIPE_REGISTER_ON_SIGNUP = False
+
+
 
 

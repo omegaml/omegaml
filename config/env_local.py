@@ -171,7 +171,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     DEBUG = truefalse(os.environ.get('DJANGO_DEBUG', False))
 
-    ALLOWED_HOSTS = ['localhost', 'testserver']
+    ALLOWED_HOSTS = ['localhost', 'testserver', '127.0.0.1']
 
     STATICFILES_STORAGE = 'omegaweb.util.FailsafeCompressedManifestStaticFilesStorage'
 

@@ -9,7 +9,7 @@ class OmegaResourceTestMixin:
     def setup_initconfig(self):
         # note this is specific to the current config version
         init_config = {
-            'version': 'v2',
+            'version': 'v3',
             'qualifiers': {
                 'default': {
                     'mongodbname': 'testdb',

@@ -23,7 +23,8 @@ OMEGA_RESTAPI_URL = (os.environ.get('OMEGA_RESTAPI_URL') or
 OMEGA_USERID = os.environ.get('OMEGA_USERID')
 #: omega apikey
 OMEGA_APIKEY = os.environ.get('OMEGA_APIKEY')
-
+#: omega qualifer
+OMEGA_QUALIFIER = os.environ.get('OMEGA_QUALIFIER')
 #: omega authentication provider
 OMEGA_AUTH_ENV = 'omegaml.client.auth.OmegaSecureAuthenticationEnv'
 #: jupyterhub admin user (equals omegajobs.jupyter_config:c.JupyterHub.api_tokens)

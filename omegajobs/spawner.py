@@ -51,7 +51,8 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
                 self.log.info("within get_config {}".format(os.getpid()))
                 user = self._config_env.pop('OMEGA_USERID')
                 apikey = self._config_env.pop('OMEGA_APIKEY')
-                save_userconfig_from_apikey(config_file, user, apikey, view=True)
+                qualifier = self._config_env.pop('OMEGA_QUALIFIER', 'default')
+                save_userconfig_from_apikey(config_file, user, apikey, view=True, qualifier=qualifier)
             except Exception as e:
                 self.log.error('SimpleLocalProcessSpawner: exec_fn:get_config error {}'.format(str(e)))
                 raise

@@ -93,6 +93,7 @@ class OmegaNotebookSpawnerMixin:
             'OMEGA_ROOT': os.path.join(os.path.dirname(omegaee.__file__), '..'),
             'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
             'OMEGA_USERID': configs['OMEGA_USERID'],
+            'OMEGA_QUALIFIER': configs.get('OMEGA_QUALIFIER', 'default'),
             'OMEGA_RESTAPI_URL': defaults.OMEGA_RESTAPI_URL,
             'OMEGA_SERVICES_INCLUSTER': yesno(defaults.OMEGA_SERVICES_INCLUSTER),
             'CA_CERTS_PATH': os.environ.get('CA_CERTS_PATH'),
@@ -109,6 +110,7 @@ class OmegaNotebookSpawnerMixin:
         self._config_env = {
             'OMEGA_USERID': configs['OMEGA_USERID'],
             'OMEGA_APIKEY': configs['OMEGA_APIKEY'],
+            'OMEGA_QUALIFIER': configs.get('OMEGA_QUALIFIER', 'default')
         }
         return env
 

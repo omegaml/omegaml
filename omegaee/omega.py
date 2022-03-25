@@ -65,6 +65,7 @@ def make_enterprise():
             username = username or defaults.OMEGA_USERID
             apikey = apikey or defaults.OMEGA_APIKEY
             api_url = api_url or defaults.OMEGA_RESTAPI_URL
+            qualifier = qualifier or defaults.OMEGA_QUALIFIER
             # get authentication options
             auth_set_in_config = all(getattr(defaults, k, False) for k in ('OMEGA_USERID', 'OMEGA_APIKEY'))
             auth_default_allowed = bool(defaults.OMEGA_ALLOW_TASK_DEFAULT_AUTH)

@@ -1,16 +1,14 @@
 from landingpage.models import ServicePlan
 
-from django.contrib.auth.models import User
-from tastypie.test import ResourceTestCaseMixin
 
-from landingpage.tests.api.test_signup import SignupResourceTests
-from omegaops import add_service_deployment, get_client_config
+def make_base():
+    # this avoids unittest discovery of SignupResourceTests
+    # unittest.skip() does not seem to work with unittest
+    from landingpage.tests.api.test_signup import SignupResourceTests
+    return SignupResourceTests
 
-SignupResourceTests.__test__ = False
 
-class SignupApi(SignupResourceTests):
-    __test__ = True
-
+class SignupApi(make_base()):
     def setUp(self):
         super(SignupApi, self).setUp()
         ServicePlan.objects.create(name='omegaml')
@@ -18,4 +16,3 @@ class SignupApi(SignupResourceTests):
     def url(self, pk=None):
         _url = super(SignupApi, self).url(pk=pk)
         return '/admin' + _url
-

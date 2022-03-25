@@ -1,2 +1,5 @@
+import logging
 from stackable import StackableSettings
-StackableSettings.load()
+
+logging.basicConfig(level='INFO')
+StackableSettings.load(globals())

@@ -35,8 +35,7 @@ candidate-dist: clean
 
 test: bumpbuild
 	-docker-compose up -d || echo "assuming docker-compose environment already running"
-	# note we use --exe to make this work with circleci, where all files are executable due to a uid/gid quirk
-	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2 --exe"
+	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2"
 
 shell:
 	scripts/rundev.sh --docker --shell
