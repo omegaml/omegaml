@@ -5,7 +5,7 @@ Aggregation Framework
 
 .. _MongoDB's aggregate: https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/#db.collection.aggregate
 
-omega|ml provides a rich aggregation framework that leverages `MongoDB's aggregate`_ operator while keeping
+omega-ml provides a rich aggregation framework that leverages `MongoDB's aggregate`_ operator while keeping
 the ease-of-use of Pandas syntax. Typical Pandas aggregation operations like group-by and descriptive statistics
 have direct equivalents in omegal|ml with the same or very similar syntax, using :code:`MDataFrame.groupby`:
 

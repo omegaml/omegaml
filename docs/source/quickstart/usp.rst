@@ -11,7 +11,7 @@ It is an integrated, Python-native yet open data science platform with
 
 * end-2-end features for collaboration, development and deployment,
 * based on well-known open source components to make integration & scaling easy
-* omega|ml does not change the way you work, yet it enables the hard parts -- usually from a single line of code.
+* omega-ml does not change the way you work, yet it enables the hard parts -- usually from a single line of code.
 
 For example,
 
@@ -47,7 +47,7 @@ For example,
 Start small, scale easily
 -------------------------
 
-omega|ml's philosophy is to provide both novice and expert users a fast start while enabling them
+omega-ml's philosophy is to provide both novice and expert users a fast start while enabling them
 to scale easily and at any time. It does so by providing a ready-made environment
 that works the same from laptop to cloud, as well as across clouds -- without code change.
 
@@ -75,12 +75,12 @@ No-hassle data access, storage & processing
 Data scientists spend a large part of their time accessing and processing data, and
 as any team will confirm, setting up data storage is a major effort any organization. Yet it is not
 a core skill of data science teams, nor should it be. To this end, and because data ingestion,
-processing and access is at the core of any data product, omega|ml provides
+processing and access is at the core of any data product, omega-ml provides
 an integrated, scalable analytics store with an integrated cloud-native filesystem (leveraging MongoDB's
 open source edition).
 
 As part of its *datasets* API it also integrates with any third-party database that provides a Python or REST API.
-Today, omega|ml includes support for MongoDB, MySQL, PostgreSQL, Oracle and any other DBMS supported by SQLAlchemy. Other
+Today, omega-ml includes support for MongoDB, MySQL, PostgreSQL, Oracle and any other DBMS supported by SQLAlchemy. Other
 DBMS or filesystems can be integrated using custom plugins.
 
 Instant deployment
@@ -114,7 +114,7 @@ to a static library. From this perspective, treating models as data is a more na
 packaging semantics around weights + hyper parameters.
 
 Treating models as data instead of code enables many useful scenarios, all of which are supported
-by omega|ml out of the box. In particular, in any collaborate environment and even more importantly
+by omega-ml out of the box. In particular, in any collaborate environment and even more importantly
 in productive ML systems we want to:
 
 * share and deploy new models immediately
@@ -127,16 +127,16 @@ Read more about this in http://bit.ly/omegaml-models-as-data
 Multi-environment
 -----------------
 
-omega|ml integrates facilities for both logical and physical segregation of environments. Promotion
+omega-ml integrates facilities for both logical and physical segregation of environments. Promotion
 between environments is, again, a single line of code.
 
 * Logical segregation means namespacing different parts of the system. For example each project
   could be using a different namespace; the development environment could be one namespace, the
   production environment another. In logical segregation all resources are shared, yet access
-  to each environment is by a different key. In omega|ml a namespace is called a bucket.
+  to each environment is by a different key. In omega-ml a namespace is called a bucket.
 
 * Physical segregation means to use different environments where each environment provides
-  dedicated resources. omega|ml supports this by its 12-factor architecture style, meaning that
+  dedicated resources. omega-ml supports this by its 12-factor architecture style, meaning that
   every resource is attached from a configuration setting. To run in different environments, a
   different configuration suffices.
 
@@ -153,11 +153,11 @@ Promoting objects from one environment to another, whether logically or physical
 Straight-forward to integrate & operate
 ---------------------------------------
 
-One key feature is that omega|ml integrates easily with well-known components in the PyData and Python fullstack.
+One key feature is that omega-ml integrates easily with well-known components in the PyData and Python fullstack.
 At the core designed as an open framework, it works with your existing
 data science frameworks like Pandas, Numpy, scikit-learn, Tensorflow, Keras
 and PyTorch. Other frameworks can be supported by adding a plugin, called a backend.
-In fact, most of omega|ml is built from plugins.
+In fact, most of omega-ml is built from plugins.
 
 .. note::
 
@@ -165,16 +165,16 @@ In fact, most of omega|ml is built from plugins.
       scipy, scikit-learn, Tensorflow, Pytorch, Jupyter Lab & Jupyter Notebook. Other libraries
       and frameworks are easy to integrate as plugins.
     * Components at its core: Python, Flask, Celery, MongoDB and RabbitMQ.
-    * Cloud deployments: somega|ml is ready-made to work with Docker and Kubernetes, however can also be run
+    * Cloud deployments: somega-ml is ready-made to work with Docker and Kubernetes, however can also be run
       on "bare metal" easily.
 
     The application of well known backend components like MongoDB and RabbitMQ is both a unique feature
-    and an advantage over platforms that introduce new, often complex technologies. This means omega|ml is easy
+    and an advantage over platforms that introduce new, often complex technologies. This means omega-ml is easy
     to integrate and operate because its core components are already known, battle tested -- and
     skills are widly available. In contrast, the same is not true for many other platforms, which typically introduce new, highly specialised
     technologies (e.g. Spark, Kafka, Flink).
 
-    At the same time omega|ml is designed from the ground up as an open framework
+    At the same time omega-ml is designed from the ground up as an open framework
     that provides a unified API to any third-party database, data science framework or cloud platform. This means that even otherwise more complex
     backends can be effectively provided to data product teams so they can move fast, while specialist
     DevOps providers can concentrate on efficient platform operations.
@@ -190,5 +190,5 @@ All of the above features are really based on just four core concepts:
 * **Plugins** - A straight-forward plugin system ties in with all of the above, leveraging each object's
   *kind*, stored in Metadata, to inform plugin selection and task delegation
 
-These four concepts are applied to provide the full scope of the features described above. Most of omega|ml is based on
+These four concepts are applied to provide the full scope of the features described above. Most of omega-ml is based on
 plugins that make use of

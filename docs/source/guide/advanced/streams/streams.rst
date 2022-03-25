@@ -1,12 +1,12 @@
 Introduction
 ------------
 
-omega|ml supports data streaming from various sources, including
+omega-ml supports data streaming from various sources, including
 
 * Python
 * Kafka
 * MQTT
-* omega|ml native datasets
+* omega-ml native datasets
 
 A streaming application, in general, consists of three components:
 
@@ -23,7 +23,7 @@ they can be active at different times.
 Creating a stream
 -----------------
 
-Streams in omega|ml are based on minibatch. minibatch streams are created
+Streams in omega-ml are based on minibatch. minibatch streams are created
 at first access time:
 
 .. code::
@@ -74,7 +74,7 @@ a producer has written data to the buffer, but no consumer has yet seen the data
 Consuming streaming data
 ------------------------
 
-omega|ml supports streaming in mini batches, called Windows. Each window is
+omega-ml supports streaming in mini batches, called Windows. Each window is
 some subset of the data in a streams buffer. Windows are produced by an emitter strategy.
 There are several emitter strategies provided out of the box, and custom stratagies can be
 created if needed.
@@ -112,7 +112,7 @@ Writing streaming apps
 Streaming apps require a continuously running consumer in order to be useful,
 or at least a consumer that runs as frequently as the emitter strategy needs.
 
-With omega|ml we can create a streaming application as follows:
+With omega-ml we can create a streaming application as follows:
 
 .. code:: python
 
@@ -150,16 +150,16 @@ When we run the producer and the consumer we get the following output:
     Window [2020-09-17 16:15:43.678020] [{'foo': 'bar'}]
 
 Note that producer and consumer are not required to run on the same machine.
-Since they are connected through the streaming log provided by omega|ml, they
+Since they are connected through the streaming log provided by omega-ml, they
 just need to use the same stream name in order connect.
 
 Deploying streaming apps
 ------------------------
 
-omega|ml core does not yet provide an integrated streaming runtime. However,
+omega-ml core does not yet provide an integrated streaming runtime. However,
 there are several options:
 
-1. omega|ml enterprise provides the apphub component, which supports streaming
+1. omega-ml commercial edition provides the apphub component, which supports streaming
    applications out of the box
 
     .. code:: bash
@@ -180,12 +180,12 @@ there are several options:
       streaming.apply(consumer)
 
 4. any python application can be any consumer or producer as long
-   as it is connected to an omega|ml server
+   as it is connected to an omega-ml server
 
 
 .. note::
 
-    Future releases will include a streaming worker built into the omega|ml
+    Future releases will include a streaming worker built into the omega-ml
     native runtime. The syntax will be something like this:
 
     .. code::

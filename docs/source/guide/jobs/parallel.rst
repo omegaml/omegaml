@@ -7,7 +7,7 @@ multiprocessing Pool.map(), however runs Jupyter Notebooks across a node
 of clusters.
 
 The following snippet runs the 'mynb' notebook 10 times, in parallel. It
-utilizes the omega|ml runtime cluster:
+utilizes the omega-ml runtime cluster:
 
 .. code:: python
 

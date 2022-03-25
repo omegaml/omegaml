@@ -24,9 +24,9 @@ is one of the following:
 
 * :code:`eq` compare equal (this is also the default, when using the short form, i.e.
   :code:`<column>=<value>`
-* :code:`gt` greator than
-* :code:`gte` greater or equal
+* :code:`gt` greater than
 * :code:`lt` less than
+* :code:`gte` greator or equal
 * :code:`lte` less or equal
 * :code:`between` between two values, specify :code:`value` as a 2-tuple
 * :code:`contains` contains a value, specify :code:`value` as a sequence
@@ -37,6 +37,6 @@ is one of the following:
 In general :code:`get` returns a Pandas :code:`DataFrame`. See the Pandas
 documentation for ways to work with DataFrames.
 
-However, unlike Pandas omega|ml provides methods to work with data that is
+However, unlike Pandas omega-ml provides methods to work with data that is
 larger than memory. This is covered in the next section.
 

@@ -8,7 +8,7 @@ Jupyter Notebooks are great tools for exploratory and ad-hoc work. But how do yo
 run a notebook on a schedule? Say you have a notebook that produces a nice report,
 and it should run every Friday morning.
 
-With omega|ml, scheduling a notebook to run in the cloud is straight forward:
+With omega-ml, scheduling a notebook to run in the cloud is straight forward:
 
 .. code:: bash
 

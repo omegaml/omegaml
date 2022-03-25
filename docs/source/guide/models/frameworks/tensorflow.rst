@@ -8,7 +8,7 @@ Tensorflow provides several types of models
 * Estimator models
 * SavedModel
 
-omega|ml supports all model variants as trained SavedModels. Keras models and Estimator models can also
+omega-ml supports all model variants as trained SavedModels. Keras models and Estimator models can also
 be serialized to and trained by the cluster as Python instances. The runtime can execute arbitrary
 functions that generate a model, train and save it as a SavedModel for subsequent consumption e.g. via the
 model REST API.
@@ -39,14 +39,14 @@ that uses the MobileNetV2 for image detection and trains a new output layer.
     model.summary()
     model.fit(ds, epochs=1, steps_per_epoch=3)
 
-Store the model to omega|ml as follows:
+Store the model to omega-ml as follows:
 
 .. code:: python
 
     om.models.put(model, 'tfkeras-flower')
 
 Load and use the model for prediction as follows. This runs the prediction on the local computer and
-does not use omega|ml's runtime cluster.
+does not use omega-ml's runtime cluster.
 
 .. code:: python
 

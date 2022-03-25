@@ -65,7 +65,7 @@ Retrieve a notebook to a local file as follows:
 Running notebooks
 -----------------
 
-Run notebooks as jobs on the omega|ml runtime:
+Run notebooks as jobs on the omega-ml runtime:
 
 .. code:: bash
 

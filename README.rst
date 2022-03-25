@@ -13,14 +13,8 @@ Further, omega|ml is the fastest way to
 - collaborate on data science projects easily, sharing Jupyter Notebooks
 - deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
 
-Links
-=====
-
-* Documentation: https://omegaml.github.io/omegaml/
-* Contributions: http://bit.ly/omegaml-contribute
-
-Get started in < 5 minutes
-==========================
+Quick start
+-----------
 
 Start the omega|ml server right from your laptop or virtual machine
 
@@ -39,13 +33,16 @@ Leverage the power of omega|ml by installing as follows:
 .. code::
 
     # assuming you have started the server as per above
-    $ pip install omega|ml
+    $ pip install omegaml
 
+Further information
+-------------------
+
+* Documentation: https://omegaml.github.io/omegaml/
+* Contributions: http://bit.ly/omegaml-contribute
 
 Examples
-========
-
-Get more information at https://omegaml.github.io/omegaml/
+--------
 
 .. code::
 
@@ -109,10 +106,10 @@ https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipeline
 In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
 compute cluster, database and data source.
 
-*Enterprise Edition*
+*Commercial Edition & Support*
 
 https://omegaml.io
 
-omega|ml Enterprise Edition provides security on every level and is ready made for Kubernetes
+omega|ml Commercial Edition provides security on every level and is ready made for Kubernetes
 deployment. It is licensed separately for on-premise, private or hybrid cloud.
 Sign up at https://omegaml.io

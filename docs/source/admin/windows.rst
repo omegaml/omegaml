@@ -1,6 +1,10 @@
 Windows
 =======
 
+.. note::
+
+    Should use WSL
+
 working as a client is SUPPORTED
 runtime worker is not NOT OFFICIALLY SUPPORTED on windows due to celery not supporting windows since v4.x
 (however it works, with limits: no concurrency)

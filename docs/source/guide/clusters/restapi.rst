@@ -62,7 +62,7 @@ with rules separated by ``;``
 API Reference
 -------------
 
-The API reference is accessible online from your omega|ml instance at:
+The API reference is accessible online from your omega-ml instance at:
 
 * :code:`/api/doc/v1`- Swagger UI
 * :code:`/api/doc/v1/specs/swagger.json` - the Swagger specs (JSON)
@@ -72,7 +72,7 @@ The API reference is accessible online from your omega|ml instance at:
 API Semantics
 -------------
 
-The omega|ml REST API resources are all of the form
+The omega-ml REST API resources are all of the form
 :code:`/api/version/resource-name/resource-key/?param=value`.
 
 Resources
@@ -84,7 +84,7 @@ The valid resource names are:
 * model - run model tasks like fit, predict
 * job - runs jobs (notebooks)
 * script - runs scripts
-* config - access the user-specific omega|ml configuration *Commercial Edition*
+* config - access the user-specific omega-ml configuration *Commercial Edition*
 
 The resource-key and query parameters are optional. If a resource-key
 is not provided, a list of existing resources is returned. If a resource-key
@@ -117,7 +117,7 @@ All resources support a set of HTTP GET, PUT, POST or DELETE methods.
 Asynchronous API execution
 ++++++++++++++++++++++++++
 
-The omega|ml REST API by default is synchronous, however model, script
+The omega-ml REST API by default is synchronous, however model, script
 and notebook tasks can be run asynchronously. To do this, add :code:`async=1`
 as query parameter:
 
@@ -145,7 +145,7 @@ Authentication and  Authorization
 
 *Commercial Edition*
 
-From your omega|ml portal, get the userid and api key.
+From your omega-ml portal, get the userid and api key.
 
 .. code::
 

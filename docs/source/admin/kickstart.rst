@@ -1,11 +1,11 @@
-Getting Started with omega|ml
+Getting Started with omega-ml
 =============================
 
-omega|ml is the data science integration platform that consists of a compute cluster,
-a highly scalable distributed NoSQL database and a REST API. The omega|ml Commercial Edition
+omega-ml is the data science integration platform that consists of a compute cluster,
+a highly scalable distributed NoSQL database and a REST API. The omega-ml Commercial Edition
 in addition provides a web dashboard, user profile management and security features.
 
-omega|ml enables data scientists to offload all the heavy-lifting involved
+omega-ml enables data scientists to offload all the heavy-lifting involved
 with machine learning and analytics workflows, while enabling third-party apps
 to use machine learning models in production the REST API.
 
@@ -51,18 +51,18 @@ This will start a celery compute cluster that connects to the RabbitMQ instance 
 Client Configuration
 --------------------
 
-omega|ml supports two types of clients:
+omega-ml supports two types of clients:
 
-1. Data Science workstation - a local workstation / PC / laptop with a 
+1. Data Science workstation - a local workstation / PC / laptop with a
    full-scale data science setup, ready for a Data Scientist to work locally.
-   When ready she will deploy data and models onto the runtime (the omega|ml 
+   When ready she will deploy data and models onto the runtime (the omega-ml
    compute and data cluster), run models and jobs on the cluster or provide
    datasets for access by her colleagues. This configuration requires a
    local installation of omegaml, including machine learning libraries and
    client-side distribution components.
-   
-2. Application clients - some third-party application that access omega|ml
-   datasets, models or jobs using omegaml's REST API. This configuration 
+
+2. Application clients - some third-party application that access omega-ml
+   datasets, models or jobs using omegaml's REST API. This configuration
    has no specific requirements other than access to the REST API and the
    ability to send and receive JSON documents via HTTP.
 

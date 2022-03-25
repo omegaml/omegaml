@@ -1,7 +1,7 @@
 MLOps for humans
 ================
 
-omega|ml is the innovative Python-native MLOps platform that provides
+omega-ml is the innovative Python-native MLOps platform that provides
 a scalable development and runtime environment for your Data Products. Works
 from laptop to cloud.
 

@@ -1,7 +1,7 @@
 Custom development
 ------------------
 
-Custom development for omega|ml is available for the following extensions:
+Custom development for omega-ml is available for the following extensions:
 
 * storage backend & mixins - process and store new data types
 * model backend - integrate other machine learning frameworks or custom algorithms
@@ -9,21 +9,21 @@ Custom development for omega|ml is available for the following extensions:
 
 Backends provide the :code:`put,get` semantics to store and retrieve objects
 where as mixins provide overrides or extensions to existing implementations.
-Think of a backend as the storage engine for objects a specific data type 
-(e.g. a Pandas Dataframe) while a mixin provide the pre- or post-processing 
-applied to these objects on specific method calls. 
+Think of a backend as the storage engine for objects a specific data type
+(e.g. a Pandas Dataframe) while a mixin provide the pre- or post-processing
+applied to these objects on specific method calls.
 
 Semantics
 +++++++++
 
-Technically, storage and model backends, as well as storage mixins, extend the 
+Technically, storage and model backends, as well as storage mixins, extend the
 capability of :code:`OmegaStore`. Runtime mixins and tasks extend the
 capability of :code:`OmegaRuntime`. :code:`MDataFrame` mixins extend the capability
 of lazy-evaluation dataframes.
 
-A data backend shall adhere to the protocol established by :code:`BaseDataBackend`. 
-Similarly a model backend shall adhere to to the protocol established by 
-the :code:`BaseModelBackend`. 
+A data backend shall adhere to the protocol established by :code:`BaseDataBackend`.
+Similarly a model backend shall adhere to to the protocol established by
+the :code:`BaseModelBackend`.
 
 Both backend types support the general storage :code:`put,get` semantics to
 store and retrieve objects, respectively. Model backends in addition provide

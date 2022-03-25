@@ -1,7 +1,7 @@
 Introduction to models
 ======================
 
-omega|ml currently implements the following machine learning frameworks out of the box. More backends are planned.
+omega-ml currently implements the following machine learning frameworks out of the box. More backends are planned.
 Any backend can be implemented using the backend API.
 
 * scikit-learn
@@ -119,7 +119,7 @@ To see all revisions of a model use :code:`om.models.revisions('mymodel')`
     ('aef452194c1671e5b8a496bfbbba75d83bb51b91', ''),
     ('3ca9aef680612bbfa0d2ac67a1b2bdbd73b976f0', ['latest', 'experiment'])]
 
-Note version naming works across all parts of omega|ml, e.g.
+Note version naming works across all parts of omega-ml, e.g.
 
 .. code:: python
 
@@ -139,7 +139,7 @@ Using the compute cluster
 Prediction
 ++++++++++
 
-omega|ml provides a state-of-the art compute cluster, called the *runtime*. Using
+omega-ml provides a state-of-the art compute cluster, called the *runtime*. Using
 the runtime you can delegate model tasks to the cluster:
 
 .. code::

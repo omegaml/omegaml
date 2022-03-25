@@ -8,7 +8,7 @@ A short guide
 What is MDataFrame?
 -------------------
 
--  ``MDataFrame`` provides a Pandas-like API to omega|ml’s analytics
+-  ``MDataFrame`` provides a Pandas-like API to omega-ml’s analytics
    storage (backed by MongoDB). The key thing about ``MDataFrames`` is
    that they represent the *description of data and processes applied to
    the data*, but do not contain data itself. In this sense
@@ -65,7 +65,7 @@ MDataFrame:
    (i.e. MongoDB): ``om.datasets.put(docs, 'name')``
 
 Note in general the MDataFrame is not dependent on the original *source*
-of the data, but on the format it is stored in omega|ml’s analytics
+of the data, but on the format it is stored in omega-ml’s analytics
 storage. As long as the data can be retrieved back and transformed to a
 format Pandas can work with, MDataFrame will be able to handle it. That
 said, it works easiest with tabular data of rows and columns where each

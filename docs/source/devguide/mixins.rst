@@ -14,13 +14,13 @@ Storage mixins
 ++++++++++++++
 
 Storage mixins typically override the :code:`get` and :code:`put` methods
-to extend the functionality of backends. 
+to extend the functionality of backends.
 
-Consider users intend to store plain-text Yaml documents, which is not 
+Consider users intend to store plain-text Yaml documents, which is not
 natively supported by any of the existing backends. However the default
-backend supports storing Python dictionaries, so we could ask the user to 
-convert the Yaml documents to Pyton dictionaries first, and then use 
-:code:`om.datasets.put` to store the object. 
+backend supports storing Python dictionaries, so we could ask the user to
+convert the Yaml documents to Pyton dictionaries first, and then use
+:code:`om.datasets.put` to store the object.
 
 As a convenience to users, we provide this conversion in a storage mixin:
 
@@ -35,42 +35,42 @@ As a convenience to users, we provide this conversion in a storage mixin:
              pass # assume obj was some other valid type
           else:
              attributes['as_yaml'] = True
-          # call the default implementation 
-          return super(YamlDataMixin, self).put(obj, name, attributes=attributes, 
+          # call the default implementation
+          return super(YamlDataMixin, self).put(obj, name, attributes=attributes,
                                                **kwargs)
-             
+
       def get(name, **kwargs):
           meta = self.metadata(name)
           data = super(YamlDataMixin, self).get(name, **kwargs)
           if meta.attributes.get('as_yaml'):
-              data = yaml.puts(obj)   
+              data = yaml.puts(obj)
           return data
-          
+
 To enable this mixin, call :code:`om.datasets.register_mixin`:
 
 .. code::
 
    # on startup
-   om.datasets.register_mixin(YamlDataMixin) 
+   om.datasets.register_mixin(YamlDataMixin)
 
-.. note:: 
+.. note::
 
    Celery clusters require that the module providing YamlDaskMixin is available on
    both the client and the worker instance. This limitation is planned
-   to be removed in future versions of omega|ml using ccbackend, which provides
+   to be removed in future versions of omega-ml using ccbackend, which provides
    for arbitrary functions to be executed on a celery cluster. Dask Distributed
    clusters do not have this limitation.
-   
+
 Runtime mixins
 ++++++++++++++
 
 Runtime mixins provide client-side extensions to `om.runtime`, specifically
-to :code:`OmegaModelProxy`. OmegalModelProxy is responsible for submitting 
-user-requested functions to the compute cluster. 
+to :code:`OmegaModelProxy`. OmegalModelProxy is responsible for submitting
+user-requested functions to the compute cluster.
 
 Consider users want to run a cross-validation procedure in some particular
-way that is not supported by the default runtime. While they could use 
-a job (notebook) to accomplish this, we provide a runtime mixin as a 
+way that is not supported by the default runtime. While they could use
+a job (notebook) to accomplish this, we provide a runtime mixin as a
 convenience.
 
 .. code::
@@ -81,8 +81,8 @@ convenience.
             # get the cross validation task
             task = self.task('custom.tasks.cross_validate')
             return task.delay(modelName, Xname, Yname, *args, **kwargs)
-            
-   
+
+
    # in custom.tasks
    def cross_validate(modelName, Xname, Yname, *args, **kwargs):
       # get model and data
@@ -91,9 +91,9 @@ convenience.
       ydata = om.datasets.get(Yname)
       # perform cross validation
       results = ...
-      #   
+      #
       return results
-         
+
 
 To enable this mixin, add the class to :code:`om.defaults.OMEGA_RUNTIME_MIXINS`:
 
@@ -102,12 +102,12 @@ To enable this mixin, add the class to :code:`om.defaults.OMEGA_RUNTIME_MIXINS`:
   OMEGA_STORE_MIXINS = [
     'crossvalidate.CrossValidationMixin',
   ]
-  
-  
-.. note:: 
+
+
+.. note::
 
    Celery clusters require that the custom.tasks module is available on
    both the client and the worker instance. This limitation is planned
-   to be removed in future versions of omega|ml using ccbackend, which provides
+   to be removed in future versions of omega-ml using ccbackend, which provides
    for arbitrary functions to be executed on a celery cluster. Dask Distributed
    clusters do not have this limitation.

@@ -1,7 +1,7 @@
 Runtime Clusters
 ================
 
-By default omega|ml uses a Celery cluster for remote computation. However
+By default omega-ml uses a Celery cluster for remote computation. However
 the runtime is flexible to other clusters, provided the cluster supports
 submitting arbitrary functions (in particular, omegaml's task functions).
 
@@ -24,7 +24,7 @@ The model proxy supports most methods of scikit-learn models, e.g.
 
 .. note::
 
-   All omega|ml proxies support the same interface, although the specific
+   All omega-ml proxies support the same interface, although the specific
    backend implementation may not support all functionality or apply slightly
    different semantics
 
@@ -41,7 +41,7 @@ Dask runtime
 
 *Experimental*
 
-The Dask (distributed) runtime supports executing omega|ml tasks and jobs on a
+The Dask (distributed) runtime supports executing omega-ml tasks and jobs on a
 dask cluster, using the same semantics as the celery cluster.
 
 To enable the Dask cluster,
@@ -66,5 +66,5 @@ PySpark runtime
 
 *Experimental*
 
-It is possible to run the omega|ml Celery or Dask runtimes on Spark clusters.
+It is possible to run the omega-ml Celery or Dask runtimes on Spark clusters.
 Please write to support@omegaml.io for details.

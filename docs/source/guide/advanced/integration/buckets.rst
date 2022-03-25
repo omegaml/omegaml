@@ -1,7 +1,7 @@
 Multiple environments
 =====================
 
-omega|ml provides three concepts to work with multiple environments, each focussed on a specific need.
+omega-ml provides three concepts to work with multiple environments, each focussed on a specific need.
 
 * :code:`context` - a context provides a completely seperate environment, where all datasets, models,
   jobs as well as the runtime is distinct from any other other context. Think of this is the equivalent
@@ -18,7 +18,7 @@ omega|ml provides three concepts to work with multiple environments, each focuss
 Working with Contexts
 ---------------------
 
-omega|ml contexts are created by calling the :code:`om.setup()` function, returning a configured
+omega-ml contexts are created by calling the :code:`om.setup()` function, returning a configured
 :code:`Omega()` instance:
 
 .. code::

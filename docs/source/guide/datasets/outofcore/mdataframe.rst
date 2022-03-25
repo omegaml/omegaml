@@ -25,7 +25,7 @@ Specify the list of columns to be accessed:
 Masked-style selection
 ++++++++++++++++++++++
 
-As with Pandas DataFrames, omega|ml MDataFrames can be subset using filter masks:
+As with Pandas DataFrames, omega-ml MDataFrames can be subset using filter masks:
 
 .. code::
 
@@ -217,7 +217,7 @@ are executed by MongoDB. The result of the :code:`merge()` method is a new
 .. code::
 
     import pandas as pd
-    # create two dataframes and store in omega|ml
+    # create two dataframes and store in omega-ml
     dfl = pd.DataFrame({'x': range(3)})
     dfr = pd.DataFrame({'x': range(3), 'y': range(3)})
     om.datasets.put(dfl, 'dfxl', append=False)

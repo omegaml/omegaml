@@ -1,7 +1,7 @@
 Screenshots
 ===========
 
-Screenshots from the omega|ml Commercial Edition
+Screenshots from the omega-ml Commercial Edition
 
 Dashboard
 ---------
