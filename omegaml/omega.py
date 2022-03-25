@@ -143,7 +143,8 @@ class OmegaDeferredInstance(object):
 
         def setup_env():
             from omegaml.client.cloud import setup
-            return setup(os.environ['OMEGA_USERID'], os.environ['OMEGA_APIKEY'])
+            return setup(userid=os.environ['OMEGA_USERID'], apikey=os.environ['OMEGA_APIKEY'],
+                         qualifier=os.environ.get('OMEGA_QUALIFIER'))
 
         def setup_cloud_config():
             from omegaml.client.cloud import setup_from_config
