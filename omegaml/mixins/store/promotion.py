@@ -5,8 +5,15 @@ class PromotionMixin(object):
     """
     Promote objects from one bucket to another
     """
+    DEFAULT_DROP = {
+        'models/': False, # models are versioned, don't drop
+    }
 
-    def promote(self, name, other, asname=None, drop=True, **kwargs):
+    @classmethod
+    def supports(cls, store, **kwargs):
+        return store.prefix in ('data/', 'jobs/', 'models/', 'scripts/', 'streams/')
+
+    def promote(self, name, other, asname=None, drop=None, **kwargs):
         """
         Promote object to another bucket.
 
@@ -22,6 +29,7 @@ class PromotionMixin(object):
         Returns:
             The Metadata of the new object
         """
+        drop = drop if drop is not None else self.DEFAULT_DROP.get(self.prefix, True)
         if self == other:
             raise ValueError('cannot promote to self')
         # see if the backend supports explicit promotion

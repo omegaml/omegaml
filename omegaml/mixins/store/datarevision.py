@@ -71,7 +71,7 @@ class DataRevisionMixin:
     """
 
     @classmethod
-    def supports(cls, store):
+    def supports(cls, store, **kwargs):
         return store.prefix == 'data/'
 
     def _has_revisions(self, name, revisions=False):

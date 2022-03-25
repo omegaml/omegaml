@@ -37,7 +37,8 @@ class ModelVersionMixin(object):
 
     def put(self, obj, name, tag=None, commit=None, previous='latest', noversion=False, **kwargs):
         # create a new version
-        meta = super().put(obj, name, **kwargs)
+        base_name, tag, version = self._base_name(name, tag)
+        meta = super().put(obj, base_name, **kwargs)
         if self._model_version_applies(name) and not noversion:
             self._ensure_versioned(meta)
             meta = self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, **kwargs)
@@ -75,16 +76,20 @@ class ModelVersionMixin(object):
                                                           bucket=bucket,
                                                           prefix=prefix)
             meta = super().metadata(actual_name, bucket=bucket, prefix=prefix)
-        else:
+        elif base_meta:
+            # there is a versioned entry, return the base
             meta = base_meta
+        else:
+            # no version found, return the actual object
+            meta = super().metadata(name)
         return meta
 
     def revisions(self, name):
         if self._model_version_applies(name):
             meta = self.metadata(name)
             versions = meta.attributes.get('versions', {})
-            commits = versions.get('commits')
-            tags = versions.get('tags')
+            commits = versions.get('commits', [])
+            tags = versions.get('tags', {})
             commit_tags = defaultdict(list)
             for k, v in tags.items():
                 commit_tags[v].append(k)
@@ -96,16 +101,19 @@ class ModelVersionMixin(object):
         raise NotImplementedError
 
     def _base_metadata(self, name, **kwargs):
+        name, tag, version = self._base_name(name)
+        meta = super().metadata(name, **kwargs)
+        return meta, tag, version
+
+    def _base_name(self, name, tag=None, **kwargs):
         # return actual name without version tag
-        tag = None
         version = None
         if '^' in name:
             version = -1 * (name.count('^') + 1)
             name = name.split('^')[0].split('@')[0]
         elif '@' in name:
             name, tag = name.split('@')
-        meta = super().metadata(name, **kwargs)
-        return meta, tag, version
+        return name, tag, version
 
     def _model_version_actual_name(self, name, tag=None, commit=None,
                                    version=None, bucket=None, prefix=None):
@@ -113,8 +121,8 @@ class ModelVersionMixin(object):
         tag = tag or name_tag
         commit = commit or tag
         version = name_version or version or -1
-        actual_name = meta.name
         if meta is not None and 'versions' in meta.attributes:
+            actual_name = meta.name
             # we have an existing versioned object
             if tag or commit:
                 if tag and tag in meta.attributes['versions']['tags']:
@@ -127,6 +135,8 @@ class ModelVersionMixin(object):
             else:
                 if version == -1 or abs(version) <= len(meta.attributes['versions']['commits']):
                     actual_name = meta.attributes['versions']['commits'][version]['name']
+        else:
+            actual_name = name
         return actual_name
 
     def _model_version_hash(self, meta):

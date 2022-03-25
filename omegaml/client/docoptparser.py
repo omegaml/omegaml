@@ -9,6 +9,7 @@ import os
 import re
 import sys
 from docopt import docopt
+from pprint import pprint
 from textwrap import dedent
 
 
@@ -124,7 +125,7 @@ class CommandParser:
     How to print output in a command:
         You should avoid using print() as it is not really a good way to
         write modular, debuggable code. If your cli is more than a few
-        lines of code, it is better to use the built-in logger:
+        lines of code, it is better to use the built-in logger::
 
             (...)
             def bar(self):
@@ -138,6 +139,11 @@ class CommandParser:
 
         To change the loglevel, add --loglevel in options, pass INFO, DEBUG
         or ERROR
+
+        If you like the print() semantics, use `self.print()`. It uses
+        self.logger.info() behind the scences::
+
+            self.print('a message')
 
 
     Optional Description tag:
@@ -517,7 +523,7 @@ class CommandParser:
         msg = f"sorry, I don't know about >{command_requested}<. {hint}"
         raise SystemExit(msg)
 
-    def ask(self, prompt, hide=False, options=None, default=None):
+    def ask(self, prompt, hide=False, options=None, default=None, select=False):
         """
         ask user input
 
@@ -531,6 +537,7 @@ class CommandParser:
                 to be in options (lowercase)
             default (str): the default answer if no answer given or self.silent
                 is active (-q switch)
+            select (bool): if True, print options as a numbered listed, ask number
 
         Returns:
             answer as str
@@ -540,7 +547,13 @@ class CommandParser:
             return self._askfn(prompt, hide=hide, options=options, default=default,
                                parser=self)
         if not self.silent:
-            options_text = f'[{options}] ' if options else ''
+            if not select:
+                options_text = f'{options} ' if options else ''
+                options_text += f'[{default}] ' if default else ''
+            else:
+                for i, option in enumerate(options, 1):
+                    print(f'{i} - {option}')
+                options_text = f'[{default}]'
             prompt = f'{prompt} {options_text}'
             if hide:
                 value = getpass(prompt=prompt)
@@ -549,7 +562,11 @@ class CommandParser:
             if not value and default:
                 return default
             if options:
-                assert value.lower() in options.lower()
+                if not select:
+                    assert value.lower() in options.lower()
+                else:
+                    assert value.isnumeric() and int(value) in range(1, len(options)+1)
+                    value = options[int(value) - 1]
         return value
 
 
@@ -604,6 +621,7 @@ class CommandBase:
     options_header = 'Options for {self.command}'
     description_header = 'Working with {self.command}'
     options_label = 'Options:'
+    action_map = {}
 
     def __init__(self, docs, argv=None, logger=None, parser=None):
         # initialize, if this class contains a __doc__ header
@@ -629,7 +647,8 @@ class CommandBase:
         args = safe_docopt(docs, argv=self.argv, help=False)
         self.args.update(args)
         if self.parser.should_debug:
-            print("*** {self.command} parsed args".format(**locals()), self.args)
+            print(f"*** {self.command} parsed args")
+            pprint(self.args)
 
     @property
     def has_usage(self):
@@ -717,8 +736,11 @@ class CommandBase:
         """
         get the method to call, by default return command itself
 
-        for <action> style arguments will use the value to lookup.
-        The action tag used for the lookup is self.action_tag
+        for <action> style arguments will use the value to lookup the method
+        to call. If the method does not exist, it will also try the do_<action>
+        The action tag used for the method lookup is self.action_tag.
+        Alternatively specify the action_map (dict), mapping the <action> value to
+        the method to be called.
 
         Returns:
               the method or self if none was found. Returning self
@@ -730,8 +752,10 @@ class CommandBase:
             ordered_args += [(self.command, self.args[self.command])]
         for k, v in ordered_args:
             lookup = str(v if k == self.action_tag else k)
+            lookup = self.action_map.get(lookup, lookup)
+            lookup_alt = f'do_{lookup}'
             if v:
-                meth = getattr(self, lookup, None)
+                meth = getattr(self, lookup, getattr(self, lookup_alt, None))
                 if meth is not None:
                     return meth
         return self
@@ -844,8 +868,12 @@ class CommandBase:
         real_kwargs.update(requested_kwargs)
         return real_kwargs
 
-    def ask(self, *args, **kwargs):
-        return self.parser.ask(*args, **kwargs)
+    def ask(self, prompt, hide=False, options=None, default=None, select=False):
+        return self.parser.ask(prompt, hide=hide, options=options, default=default, select=select)
+
+    def print(self, *args):
+        msg = '\n'.join(str(s) for s in args)
+        self.logger.info(msg)
 
 
 def safe_docopt(doc, argv=None, help=True, version=None, options_first=False):

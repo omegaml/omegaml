@@ -590,3 +590,22 @@ class OmegaJobs(BackendBaseCommon):
             * text(str) if python is in not interactive mode
         """
         return self.store.help(name_or_obj, kind=kind, raw=raw)
+
+    def to_archive(self, name, path):
+        # TODO remove, pending #218
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
+        return self.store.to_archive(name, path)
+
+    def from_archive(self, path, name):
+        # TODO remove, pending #218
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
+        return self.store.from_archive(path, name)
+
+    def promote(self, name, other):
+        # TODO remove, pending #218
+        nb = self.get(name)
+        return other.put(nb, name)
+
+

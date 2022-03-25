@@ -76,8 +76,9 @@ class CliTestScenarios:
         level_logger(*args)
         return logger.data[level]
 
-    def get_log(self, level):
-        return self.cli_logger.data[level]
+    def get_log(self, level, as_text=False):
+        entries =  self.cli_logger.data[level.lower()]
+        return list(' '.join(args) for args in entries) if as_text else entries
 
     def assertLogSize(self, level, size):
         """ assert log of level has number of entries (lines) """

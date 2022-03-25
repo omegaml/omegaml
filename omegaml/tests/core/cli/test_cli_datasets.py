@@ -10,7 +10,7 @@ from omegaml.util import temp_filename
 
 import pandas as pd
 
-class CliModelsTest(CliTestScenarios, OmegaTestMixin, TestCase):
+class CliDatasetsTests(CliTestScenarios, OmegaTestMixin, TestCase):
     def setUp(self):
         super().setUp()
         self.om = Omega()
