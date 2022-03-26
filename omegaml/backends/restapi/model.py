@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from werkzeug.exceptions import NotFound
 
 from omegaml.util import ensure_json_serializable
 
@@ -12,16 +13,19 @@ class GenericModelResource(object):
     def is_eager(self):
         return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
 
-    def metadata(self, request, name):
-        meta = self.om.models.metadata(name)
-        data = {
-            'model': {
-                'name': meta.name,
-                'kind': meta.kind,
-                'created': '{}'.format(meta.created),
-                'bucket': meta.bucket,
+    def metadata(self, model_id, query, payload):
+        meta = self.om.models.metadata(model_id)
+        if meta is not None:
+            data = {
+                'model': {
+                    'name': meta.name,
+                    'kind': meta.kind,
+                    'created': '{}'.format(meta.created),
+                    'bucket': meta.bucket,
+                }
             }
-        }
+        else:
+            data = {}
         return data
 
     def predict(self, model_id, query, payload):
