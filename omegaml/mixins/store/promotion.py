@@ -30,8 +30,12 @@ class PromotionMixin(object):
             The Metadata of the new object
         """
         drop = drop if drop is not None else self.DEFAULT_DROP.get(self.prefix, True)
-        if self == other:
-            raise ValueError('cannot promote to self')
+        # sanity checks
+        # -- promotion by same name requires a different store
+        meta = self.metadata(name)
+        asname = asname or meta.name
+        if name == asname and self == other:
+            raise ValueError(f'must specify asname= different from {meta.name}')
         # see if the backend supports explicit promotion
         backend = self.get_backend(name)
         if hasattr(backend, 'promote'):

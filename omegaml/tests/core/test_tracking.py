@@ -127,7 +127,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 6)
 
-    def test_tracking_predictions(self):
+    def test_tracking_predictions_explicit_metadata(self):
         # create a model
         om = self.om
         iris = load_iris()
@@ -146,6 +146,29 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         data = exp.data()
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 6)
+
+    def test_tracking_predictions_implicit_tracker(self):
+        # create a model
+        om = self.om
+        iris = load_iris()
+        X = iris.data
+        Y = iris.target
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr.fit(X, Y)
+        om.models.put(lr, 'mymodel')
+        tracker = om.runtime.experiment('expfoo')
+        tracker.track('mymodel')
+        om.runtime.model('mymodel').score(X, Y)
+        exp = tracker.experiment
+        data = exp.data()
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 6)
+        # run a prediction to see if this is tracked
+        om.runtime.model('mymodel').predict(X)
+        tracker = om.runtime.experiment('expfoo')
+        data = exp.data()
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 9)
 
     def test_empty_experiment_data(self):
         om = self.om

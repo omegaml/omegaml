@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from socket import gethostname
+
 import logging
 from celery import Celery
 
@@ -118,6 +120,10 @@ class OmegaRuntime(object):
     def _inspect(self):
         return self.celeryapp.control.inspect()
 
+    @property
+    def is_local(self):
+        return self.celeryapp.conf['CELERY_ALWAYS_EAGER']
+
     def mode(self, local=None, logging=None):
         """ specify runtime modes
 
@@ -178,7 +184,8 @@ class OmegaRuntime(object):
 
         Args:
             always (bool): if True requirements will persist across task calls. defaults to False
-            label (str): the label required by the worker to have a runtime task dispatched to it
+            label (str): the label required by the worker to have a runtime task dispatched to it.
+               'local' is equivalent to calling self.mode(local=True).
             task (dict): if specified applied to the task kwargs
             kwargs: requirements specification that the runtime understands
 
@@ -188,6 +195,8 @@ class OmegaRuntime(object):
         Returns:
             self
         """
+        if label == 'local':
+            return self.mode(local=True)
         routing = routing or {
             'label': label or self._default_label
         }
@@ -342,7 +351,18 @@ class OmegaRuntime(object):
         See Also:
             celery Inspect.active_queues()
         """
-        return self._inspect.active_queues()
+        local_q = {gethostname(): [{'name': 'local', 'is_local': True}]}
+        celery_qs = self._inspect.active_queues() or {}
+        return dict_merge(local_q, celery_qs)
+
+    def labels(self):
+        """ list available labels
+
+        Returns:
+            dict of workers => list of lables
+        """
+        return {worker: [q.get('name') for q in queues]
+                for worker, queues in self.queues().items()}
 
     def stats(self):
         """ worker statistics

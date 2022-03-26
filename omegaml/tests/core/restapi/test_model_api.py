@@ -60,6 +60,24 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         self.assertEqual(data.get('model'), 'regression')
         self.assertEqual(data.get('result'), [10.])
 
+    def test_predict_from_dataset_complex_modelpath(self):
+        X = np.arange(10).reshape(-1, 1)
+        y = X * 2
+        # train model locally
+        clf = LinearRegression()
+        clf.fit(X, y)
+        result = clf.predict(X)
+        # store model in om
+        self.om.models.put(clf, 'project/test/regression')
+        self.om.datasets.put([5], 'project/test/foo', append=False)
+        # check we can use it to predict
+        resp = self.client.put('/api/v1/model/project/test/regression/predict?datax=project/test/foo',
+                               json={}, auth = self.auth, headers=self._headers)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertEqual(data.get('model'), 'project/test/regression')
+        self.assertEqual(data.get('result'), [10.])
+
     def test_dataset_query(self):
         om = self.om
         df = pd.DataFrame({
