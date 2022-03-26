@@ -132,6 +132,16 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         with self.assertRaises(ValueError):
             om.datasets.promote('foo', om.datasets)
 
+    def test_promotion_to_self_asname(self):
+        om = self.om
+        reg = LinearRegression()
+        om.models.put(reg, 'dev/mymodel')
+        om.models.promote('dev/mymodel', om.models, asname='prod/mymodel')
+        self.assertIn('prod/mymodel', om.models.list())
+        om.datasets.put(['foo'], 'dev/foo')
+        om.datasets.promote('dev/foo', om.datasets, asname='prod/foo')
+        self.assertIn('prod/foo', om.datasets.list())
+
     def test_promotion_to_other_db_works(self):
         om = self.om
         other = Omega(mongo_url=om.mongo_url + '_promotest')
