@@ -1,13 +1,10 @@
 import sys
-
-import six
 from celery import Task
 from contextlib import contextmanager
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
 from omegaml.store.logging import OmegaLoggingHandler
-from omegaml.util import tryOr
 
 
 class EagerSerializationTaskMixin(object):
@@ -107,7 +104,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def delegate_kwargs(self):
-        return {k: v for k, v in six.iteritems(self.request.kwargs) if not k.startswith('__')}
+        return {k: v for k, v in self.request.kwargs.items() if not k.startswith('__')}
 
     @property
     def tracking(self):

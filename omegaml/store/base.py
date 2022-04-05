@@ -76,7 +76,6 @@ from __future__ import absolute_import
 import bson
 import gridfs
 import os
-import six
 import tempfile
 import warnings
 from datetime import datetime
@@ -85,7 +84,6 @@ from mongoengine.connection import disconnect, \
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
-from six import iteritems
 from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
@@ -292,7 +290,7 @@ class OmegaStore(object):
                              bucket=bucket)
         if meta:
             dict_fields = 'attributes', 'kind_meta'
-            for k, v in six.iteritems(kwargs):
+            for k, v in kwargs.items():
                 if k in dict_fields and v is not None and len(v) > 0:
                     previous = getattr(meta, k, {})
                     previous.update(v)
@@ -357,7 +355,7 @@ class OmegaStore(object):
         """
         register backends in defaults.OMEGA_STORE_BACKENDS
         """
-        for kind, backend in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+        for kind, backend in self.defaults.OMEGA_STORE_BACKENDS.items():
             self.register_backend(kind, backend)
 
     def register_backend(self, kind, backend):
@@ -488,7 +486,7 @@ class OmegaStore(object):
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
                 col = '_created'
-            elif isinstance(timestamp, six.string_types):
+            elif isinstance(timestamp, str):
                 col = timestamp
             elif isinstance(timestamp, datetime):
                 col, dt = '_created', timestamp
@@ -504,7 +502,7 @@ class OmegaStore(object):
         d_column_map = dict(column_map)
         dtypes = {
             d_column_map.get(k): v.name
-            for k, v in iteritems(obj.dtypes)
+            for k, v in obj.dtypes.items()
         }
         kind_meta = {
             'columns': column_map,
@@ -784,7 +782,7 @@ class OmegaStore(object):
                 # TODO refactor pandas and numpy handling into proper backend to avoid misleading warning
                 # warnings.warn('Backend {kind} not found {objtype}. Reverting to default'.format(**locals()))
         else:
-            for backend_kind, backend_cls in six.iteritems(self.defaults.OMEGA_STORE_BACKENDS):
+            for backend_kind, backend_cls in self.defaults.OMEGA_STORE_BACKENDS.items():
                 backend = self.get_backend_bykind(backend_kind)
                 if backend.supports(obj, name, attributes=attributes,
                                     data_store=data_store, model_store=model_store,
@@ -897,7 +895,7 @@ class OmegaStore(object):
                 if columns:
                     # get only projected columns
                     # meta_columns is {origin_column: stored_column}
-                    orig_columns = dict({k: v for k, v in iteritems(meta_columns)
+                    orig_columns = dict({k: v for k, v in meta_columns.items()
                                          if k in columns or v in columns})
                 else:
                     # restore columns to original name

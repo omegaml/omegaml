@@ -4,7 +4,6 @@ from logging import warning
 import logging
 import os
 import pandas as pd
-import six
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -479,7 +478,7 @@ def _dataframe_to_indexcols(df, metadata, index_columns=None):
 def _meta_to_indexcols(meta):
     index_cols = meta.kind_meta.get('index_columns')
     multi = isinstance(index_cols, (list, tuple)) and len(index_cols) > 1
-    if index_cols is not None and not isinstance(index_cols, six.string_types):
+    if index_cols is not None and not isinstance(index_cols, str):
         for i, col in enumerate(index_cols):
             if col is None:
                 index_cols[i] = 'index' if not multi else 'index_{}'.format(i)

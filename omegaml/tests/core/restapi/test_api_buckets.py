@@ -10,7 +10,7 @@ from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 
 class OmegaRestApiTestsWithBuckets(OmegaRestApiTests):
     def setUp(self):
-        self.client = RequestsLikeTestClient(app)
+        self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()['mybucket']
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()

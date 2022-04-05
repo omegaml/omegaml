@@ -1,5 +1,3 @@
-import six
-
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.util import ensure_python_array
 
@@ -58,9 +56,9 @@ class KerasBackend(BaseModelBackend):
         keras_kwargs = dict(kwargs)
         if validation_data:
             valX, valY = validation_data
-            if isinstance(X, six.string_types):
+            if isinstance(X, str):
                 valX = self.data_store.get(valX)
-            if isinstance(Y, six.string_types):
+            if isinstance(Y, str):
                 valY = self.data_store.get(valY)
             keras_kwargs['validation_data'] = (valX, valY)
         callbacks = keras_kwargs.setdefault('callbacks', [])
@@ -96,4 +94,4 @@ class KerasBackend(BaseModelBackend):
 def serializable_history(history):
     # ensure history object is JSON/BSON serializable by converting to default
     return {k: ensure_python_array(v, float)
-            for k, v in six.iteritems(history.history)}
+            for k, v in history.history.items()}

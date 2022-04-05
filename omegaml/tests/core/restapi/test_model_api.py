@@ -14,7 +14,7 @@ from omegaml.tests.util import OmegaTestMixin
 
 class OmegaRestApiTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        self.client = RequestsLikeTestClient(app)
+        self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()
@@ -54,7 +54,7 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         self.om.datasets.put([5], 'foo', append=False)
         # check we can use it to predict
         resp = self.client.put('/api/v1/model/regression/predict?datax=foo',
-                               json={}, auth = self.auth, headers=self._headers)
+                               json={}, auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertEqual(data.get('model'), 'regression')

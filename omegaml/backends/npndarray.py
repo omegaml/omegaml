@@ -1,5 +1,6 @@
+from io import BytesIO
+
 import numpy as np
-from six import BytesIO
 
 from omegaml.backends.basedata import BaseDataBackend
 

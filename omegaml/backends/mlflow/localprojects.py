@@ -1,10 +1,9 @@
-import tempfile
 from os.path import basename, dirname
-from subprocess import run
 
 import os
-import six
+import tempfile
 from shutil import make_archive, unpack_archive
+from subprocess import run
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -26,7 +25,7 @@ class MLFlowProjectBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        is_mlflow_prefix = isinstance(obj, six.string_types) and obj.startswith(self.MLFLOW_PREFIX)
+        is_mlflow_prefix = isinstance(obj, str) and obj.startswith(self.MLFLOW_PREFIX)
         is_mlflow_kind = kwargs.get('kind') == self.KIND
         return is_mlflow_kind or is_mlflow_prefix
 

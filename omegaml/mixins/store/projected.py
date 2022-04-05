@@ -1,7 +1,5 @@
-import re
-
 import pandas as pd
-import six
+import re
 
 
 class ProjectedMixin(object):
@@ -11,7 +9,7 @@ class ProjectedMixin(object):
     colspec_pattern = re.compile(r"(?P<name>.*)\[(?P<colspec>.*)\].*$")
 
     def metadata(self, name, *args, **kwargs):
-        if isinstance(name, six.string_types):
+        if isinstance(name, str):
             name, colspec = self._extract_column_specs(name)
         return super(ProjectedMixin, self).metadata(name, *args, **kwargs)
 

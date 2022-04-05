@@ -1,7 +1,6 @@
 import hashlib
 import json
 import pandas as pd
-import six
 from itertools import product
 from uuid import uuid4
 
@@ -168,7 +167,7 @@ class ApplyMixin(object):
             # -- build a combined context by adding each expression
             #    this ensures any multi-stage projections are carried forward
             facets = {}
-            for col, expr in six.iteritems(result):
+            for col, expr in result.items():
                 if isinstance(expr, ApplyContext):
                     facets[col] = list(expr)
                     project = {
@@ -409,7 +408,7 @@ class ApplyContext(object):
         # add acccumulators
         expr = expr or {
             col: colExpr
-            for col, colExpr in six.iteritems(kwargs)}
+            for col, colExpr in kwargs.items()}
         groupby.update(expr)
         # add a projection to extract groupby values
         extractId = {
@@ -443,7 +442,7 @@ class ApplyContext(object):
         stage = self._getProjection(append=append)
         expr = expr or kwargs
         self.expressions.append(expr)
-        for k, v in six.iteritems(expr):
+        for k, v in expr.items():
             # only append to stage if no other column projection was there
             project = stage.get('$project')
             if k not in project:
@@ -497,7 +496,7 @@ class ApplyArithmetics(object):
         def inner(self, other):
             terms = []
             for term in make_tuple(other):
-                if isinstance(term, six.string_types):
+                if isinstance(term, str):
                     term = '$' + term
                 terms.append(term)
             def wrap(expr):
@@ -629,7 +628,7 @@ class ApplyString(object):
             values = list(make_tuple(other) + args)
             terms = []
             for term in values:
-                if isinstance(term, six.string_types):
+                if isinstance(term, str):
                     # if the term is a column name, add as a column name
                     if term in self.columns:
                         term = '$' + term
@@ -715,12 +714,12 @@ class ApplyAccumulators(object):
     def agg(self, map=None, **kwargs):
         stage = self._getGroupBy(by='$$last')
         specs = map or kwargs
-        for col, colExpr in six.iteritems(specs):
+        for col, colExpr in specs.items():
             if isinstance(colExpr, dict):
                 # specify an arbitrary expression
                 groupby = stage['$group']
                 groupby[col] = colExpr
-            elif isinstance(colExpr, six.string_types):
+            elif isinstance(colExpr, str):
                 # specify some known operator
                 if hasattr(self, colExpr):
                     method = getattr(self, colExpr)

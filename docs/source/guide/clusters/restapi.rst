@@ -346,7 +346,7 @@ the following code snippet.
             'append': append,
             'data': json.loads(df.to_json()),
             'dtypes': {k: str(v)
-                       for k, v in iteritems(df.dtypes.to_dict())},
+                       for k, v in df.dtypes.to_dict().items()},
             'orient': 'columns',
             'index': {
                 'type': type(df.index).__name__,

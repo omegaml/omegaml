@@ -1,13 +1,13 @@
+import builtins
 import datetime
-import re
-
 import flask
 import numpy as np
 import pandas as pd
-import six
+import re
 from flask import request
 from flask_restx import Resource, fields
 from mongoengine import DoesNotExist
+from urllib.parse import unquote
 from werkzeug.exceptions import NotFound, BadRequest
 
 import omegaml as om
@@ -236,7 +236,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         restore filter kwargs for query in om.datasets.get
         """
         # -- get filters as specified on request query args
-        fltkwargs = {k: v for k, v in six.iteritems(fltparams)
+        fltkwargs = {k: v for k, v in fltparams.items()
                      if k not in ['orient', 'limit', 'skip', 'page']}
         # -- get dtypes of dataframe and convert filter values
         metadata = om.datasets.metadata(name)
@@ -244,13 +244,13 @@ class DatasetResource(OmegaResourceMixin, Resource):
         dtypes = kind_meta.get('dtypes')
         # get numpy/python typemap. this is required for Py3 support
         # adopted from https://stackoverflow.com/a/34919415
-        np_typemap = {v: getattr(six.moves.builtins, k)
-                      for k, v in np.typeDict.items()
-                      if k in vars(six.moves.builtins)}
-        for k, v in six.iteritems(fltkwargs):
+        np_typemap = {v: getattr(builtins, k)
+                      for k, v in np.sctypeDict.items()
+                      if k in vars(builtins)}
+        for k, v in fltkwargs.items():
             # -- get column name without operator (e.g. x__gt => x)
             col = k.split('__')[0]
-            value = six.moves.urllib.parse.unquote(v)
+            value = unquote(v)
             dtype = dtypes.get(str(col))
             if dtype:
                 # -- get dtyped value and convert to python type
@@ -295,7 +295,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
             orient = 'columns'
         if dtypes:
             # due to https://github.com/pandas-dev/pandas/issues/14655#issuecomment-260736368
-            dtypes = {k: np.dtype(v) for k, v in six.iteritems(dtypes)}
+            dtypes = {k: np.dtype(v) for k, v in dtypes.items()}
         df = pd.DataFrame.from_dict(api.payload.get('data'),
                                     orient=orient).astype(dtypes)
         om.datasets.put(df, dataset_id, append=append)

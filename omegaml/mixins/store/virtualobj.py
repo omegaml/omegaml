@@ -1,7 +1,5 @@
 import re
 
-import six
-
 from omegaml.backends.virtualobj import VirtualObjectBackend
 
 
@@ -27,7 +25,7 @@ class VirtualObjectMixin(object):
 
     def _resolve_realname(self, name, kwargs):
         # parse names in the format name{a=b,c=d} to name and update kwargs
-        if isinstance(name, six.string_types) and all(c in name for c in '{}'):
+        if isinstance(name, str) and all(c in name for c in '{}'):
             rx = r"(\w*=\w*)*"
             real_name, fn_kwargs = name.split('{', 1)
             fn_kwargs = fn_kwargs.split('}')[0]

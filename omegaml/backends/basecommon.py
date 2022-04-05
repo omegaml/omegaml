@@ -1,8 +1,6 @@
-from warnings import warn
-
 import os
-import six
 from mongoengine import GridFSProxy
+from warnings import warn
 
 
 class BackendBaseCommon:
@@ -32,7 +30,7 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, six.string_types) and os.path.exists(obj)
+        return isinstance(obj, str) and os.path.exists(obj)
 
     def _store_to_file(self, store, obj, filename, encoding=None, replace=False):
         """

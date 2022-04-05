@@ -12,7 +12,7 @@ from omegaml.tests.util import OmegaTestMixin
 
 class JobResourceTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        self.client = RequestsLikeTestClient(app)
+        self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()
@@ -73,7 +73,7 @@ class JobResourceTests(OmegaTestMixin, TestCase):
         # put notebook
         meta = om.jobs.put(notebook, 'testjob')
         # run the job on the cluster
-        resp = self.client.post(self.url('testjob', action='run'))
+        resp = self.client.post(self.url('testjob', action='run'), json={})
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('created', data)
@@ -97,7 +97,7 @@ class JobResourceTests(OmegaTestMixin, TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         # run the job on the cluster
         resp = self.client.post(self.url('testjob', action='run'),
-                                headers=self._async_headers)
+                                headers=self._async_headers, json={})
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']

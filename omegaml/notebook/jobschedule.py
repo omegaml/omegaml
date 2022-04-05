@@ -1,7 +1,6 @@
 import datetime
-from croniter import croniter
-import six
 from celery.schedules import crontab
+from croniter import croniter
 
 
 class JobSchedule(object):
@@ -194,7 +193,7 @@ class JobSchedule(object):
 
     def _expand_every(self, v):
         # convert 'every' specs to cron-like
-        if not isinstance(v, six.string_types):
+        if not isinstance(v, str):
             return v
         # every n(nd,rd,th) => */n
         if '1st' in v or 'first' in v:

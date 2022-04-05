@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from io import BytesIO
 from unittest import skip
 
 import gridfs
@@ -10,10 +11,8 @@ import uuid
 from datetime import timedelta, datetime
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
-from pandas.util import testing
-from pandas.util.testing import assert_frame_equal, assert_series_equal
-from six import BytesIO
-from six.moves import range
+from pandas.testing import assert_frame_equal, assert_series_equal
+from pymongo.errors import OperationFailure
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
@@ -382,7 +381,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore(prefix='')
         store.put(data, 'mydata')
         data2 = store.get('mydata')
-        self.assertEquals([data], data2)
+        self.assertEqual([data], data2)
 
     def test_put_python_dict_multiple(self):
         # create some data
@@ -513,7 +512,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
         self.assertIn(
-            meta.collection, store.mongodb.collection_names())
+            meta.collection, store.mongodb.list_collection_names())
         # note column order can differ due to insertion order since pandas 0.25.1
         # hence using [] to ensure same column order for both expected, result
         df2 = store.get('dfgroup', kwargs={'b': 1})
@@ -718,7 +717,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
-        testing.assert_frame_equal(df, df2)
+        assert_frame_equal(df, df2)
 
     def test_store_tz_datetime(self):
         """ test storing timezoned datetimes """
@@ -728,7 +727,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
-        testing.assert_frame_equal(df, df2)
+        assert_frame_equal(df, df2)
 
     # TODO support DST-crossing datetime objects. use UTC to avoid the issue
     @skip('date ranges across dst period start/end do not return the original DatetimeIndex values')
@@ -746,7 +745,7 @@ class StoreTests(unittest.TestCase):
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         # currently this fails, see @skip reason
-        testing.assert_frame_equal(df, df2)
+        assert_frame_equal(df, df2)
 
     def test_store_dict_in_df(self):
         df = pd.DataFrame({
@@ -755,7 +754,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.put(df, 'test-dict', append=False)
         df2 = store.get('test-dict')
-        testing.assert_frame_equal(df, df2)
+        assert_frame_equal(df, df2)
 
     def test_existing_arbitrary_collection_flat(self):
         data = {'foo': 'bar',
@@ -763,7 +762,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
         foo_coll = store.mongodb['foo']
-        foo_coll.insert(data)
+        foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
@@ -783,7 +782,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
         foo_coll = store.mongodb['foo']
-        foo_coll.insert(data)
+        foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
@@ -803,7 +802,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
         foo_coll = store.mongodb['foo']
-        foo_coll.insert(data)
+        foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
@@ -827,7 +826,7 @@ class StoreTests(unittest.TestCase):
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
         # create the collection
         foo_coll = store.mongodb['foo']
-        foo_coll.insert(data)
+        foo_coll.insert_one(data)
         # store the collection as is
         store.put(foo_coll, 'myfoo').save()
         self.assertIn('myfoo', store.list())
@@ -970,16 +969,16 @@ class StoreTests(unittest.TestCase):
         # hashed names
         store.defaults.OMEGA_STORE_HASHEDNAMES = True
         try:
-            store.put(df, long_name)
+            store.put(df, long_name, append=False)
         except Exception as e:
             raised = True
             error = str(e)
         self.assertFalse(raised, error)
         # unhashed names
         store.defaults.OMEGA_STORE_HASHEDNAMES = False
-        long_name = 'a' * 200
-        with self.assertRaises(Exception):
-            store.put(df, long_name)
+        long_name = 'a' * 990
+        with self.assertRaises(OperationFailure):
+            store.put(df, long_name, append=False)
 
     def test_long_dataset_name_hdf(self):
         store = OmegaStore(bucket='foo', prefix='foo/')

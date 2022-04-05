@@ -1,7 +1,5 @@
 import copy
 
-import six
-
 from omegaml.store.queryops import MongoQueryOps, flatten_keys
 from omegaml.util import restore_index
 
@@ -149,7 +147,7 @@ class MongoQ(object):
                         subq.extend(vv)
                     else:
                         subq.append({k: vv})
-        for k, v in six.iteritems(self.conditions):
+        for k, v in self.conditions.items():
             # transform query operators as '<foo>__<op>',
             # however preserve dunder '__<foo>' names ss columns
             if '__' in k and not k.startswith('__'):

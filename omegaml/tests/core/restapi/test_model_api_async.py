@@ -13,7 +13,7 @@ from omegaml.tests.util import OmegaTestMixin
 
 class OmegaRestAsyncApiTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        self.client = RequestsLikeTestClient(app)
+        self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()

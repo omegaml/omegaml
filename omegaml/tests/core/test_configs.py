@@ -1,7 +1,6 @@
+from io import StringIO
 from unittest import TestCase
-
-from mock import patch
-from six import StringIO
+from unittest.mock import patch
 
 from omegaml import Omega
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict

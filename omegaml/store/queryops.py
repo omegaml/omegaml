@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import json
 import pymongo
-import six
 import sys
 from hashlib import md5
 
@@ -34,7 +33,7 @@ class GeoJSON(dict):
             coordinates = self.get_coordinates_from_geojson(lon)
         elif isinstance(lon, (list, tuple)):
             coordinates = lon
-        elif isinstance(lon, six.string_types):
+        elif isinstance(lon, str):
             coordinates = [float(c) for c in lon.split(',')]
         elif isinstance(coordinates, GeoJSON):
             coordinates = [coordinates.lon, coordinates.lat]
@@ -42,7 +41,7 @@ class GeoJSON(dict):
             coordinates = coordinates
         elif isinstance(coordinates, dict):
             coordinates = self.get_coordinates_from_geojson(lon)
-        elif isinstance(coordinates, six.string_types):
+        elif isinstance(coordinates, str):
             coordinates = [float(c) for c in lon.split(',')]
         else:
             coordinates = []
@@ -140,7 +139,7 @@ class MongoQueryOps(object):
             v['_id'].update({k: '$%s' % (k.replace('__', '.'))
                              for k in columns})
         if kwargs:
-            for _k, _v in six.iteritems(kwargs):
+            for _k, _v in kwargs.items():
                 v.setdefault(_k, {})
                 if isinstance(_v, dict):
                     v[_k].update(_v)
@@ -269,7 +268,7 @@ class MongoQueryOps(object):
         return a $near expression from an explicit lon/lat coordinate, a
         GeoJSON object, a GeoJSON dictionary or a string
         """
-        if isinstance(lon, six.string_types):
+        if isinstance(lon, str):
             location = GeoJSON(lon)
         elif isinstance(lon, (list, tuple)):
             if len(lon) == 4:

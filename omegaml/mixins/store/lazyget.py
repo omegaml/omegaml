@@ -1,5 +1,4 @@
 import re
-import six
 
 from omegaml.mdataframe import MDataFrame
 
@@ -27,7 +26,7 @@ class LazyGetMixin:
     ops_pattern = re.compile(r"(?P<name>.*)#(?P<opspec>.*?);(.*)$")
 
     def metadata(self, name, *args, **kwargs):
-        if isinstance(name, six.string_types):
+        if isinstance(name, str):
             name, opspec = self._extract_opspec(name)
         return super().metadata(name, *args, **kwargs)
 

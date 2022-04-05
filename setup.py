@@ -90,7 +90,6 @@ setup(
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
         'flask-restx>=0.4.0',
-        'six>=1.11.0',
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',

@@ -1,7 +1,6 @@
 from os.path import basename, dirname
 
 import os
-import six
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path
@@ -14,7 +13,7 @@ class PythonPackageData(BaseDataBackend):
     This supports any local setup.py
 
     Usage::
-    
+
         om.scripts.put('pkg://path/to/setup.py', 'myname')
         om.scripts.get('myname')
 
@@ -33,7 +32,7 @@ class PythonPackageData(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, six.string_types) and obj.startswith('pkg://')
+        return isinstance(obj, str) and obj.startswith('pkg://')
 
     def put(self, obj, name, attributes=None, **kwargs):
         """
