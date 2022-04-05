@@ -48,6 +48,8 @@ class CeleryTask(object):
         Returns:
             AsyncResult
         """
+        args = args or tuple()
+        kwargs = kwargs or {}
         self._apply_kwargs(kwargs, celery_kwargs)
         return self.task.apply_async(args=args, kwargs=kwargs, **celery_kwargs)
 

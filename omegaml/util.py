@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
-from base64 import b64encode
 from copy import deepcopy
-from datetime import datetime
 from importlib import import_module
 
 import json
@@ -12,6 +10,9 @@ import sys
 import tempfile
 import uuid
 import warnings
+from base64 import b64encode
+from bson import UuidRepresentation
+from datetime import datetime
 from shutil import rmtree
 
 try:
@@ -376,11 +377,11 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     # consumption. Note chunks are of size max. chunk_size.
     import pandas as pd
     frames = []
-    if hasattr(cursor, 'count'):
-        count = cursor.count()
+    if hasattr(cursor, 'count_documents'):
+        count = cursor.count_documents()
         chunk_size = max(chunk_size, int(count * .1))
     else:
-        # CommandCursors don't have .count, go as long as we can
+        # CommandCursors don't have .count_documents, go as long as we can
         count = None
     if count is None or count > 0:
         for chunk in grouper(chunk_size, cursor):
@@ -506,15 +507,15 @@ class PickableCollection(object):
 
         def process(job):
             data, coll = job
-            coll.insert(data)
+            coll.insert_one(data)
 
         coll = PickableCollection(coll)
         p = Pool()
         p.map(process, zip(range(1000), repeat(coll))
     """
-
     def __init__(self, collection):
         super(PickableCollection, self).__setattr__('collection', collection)
+        self._pkl_cloned = False
 
     def __getattr__(self, k):
         return getattr(self.collection, k)
@@ -533,10 +534,16 @@ class PickableCollection(object):
         host, port = list(client.nodes)[0]
         # options contains ssl settings
         options = self.database.client._MongoClient__options._options
-        creds = self.database.client._MongoClient__all_credentials[self.database.name]
+        creds = self.database.client._MongoClient__all_credentials[options['username']]
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
         creds_state['source'] = str(creds.source)
+        # https://github.com/mongodb/mongo-python-driver/blob/087950d869096cf44a797f6c402985a73ffec16e/pymongo/common.py#L161
+        UUID_REPS = {
+            UuidRepresentation.STANDARD: 'standard',
+            UuidRepresentation.PYTHON_LEGACY: 'pythonLegacy',
+        }
+        options['uuidRepresentation'] = UUID_REPS.get(options.get('uuidRepresentation'), 'standard')
         return {
             'name': self.name,
             'database': self.database.name,
@@ -560,6 +567,7 @@ class PickableCollection(object):
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
+        self._pkl_cloned = True
 
     def __repr__(self):
         return 'PickableCollection({})'.format(repr(self.collection))

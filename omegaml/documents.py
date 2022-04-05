@@ -6,6 +6,7 @@ from mongoengine.document import Document
 from mongoengine.fields import (
     StringField, FileField, DictField, DateTimeField
 )
+from mongoengine.pymongo_support import LEGACY_JSON_OPTIONS
 
 from omegaml.util import settings
 
@@ -78,11 +79,12 @@ def make_Metadata(db_alias='omega', collection=None):
     # this is to create context specific Metadata class that takes the
     # database from the given alias at the time of use
     from omegaml.documents import Metadata as Metadata_base
+    collection = collection or settings().OMEGA_MONGO_COLLECTION
     class Metadata(Metadata_base, Document):
         # override db_alias in gridfile
         gridfile = FileField(
             db_alias=db_alias,
-            collection_name=collection or settings().OMEGA_MONGO_COLLECTION)
+            collection_name=collection)
         # the actual db is defined at runtime
         meta = {
             'db_alias': db_alias,
@@ -114,6 +116,11 @@ def make_Metadata(db_alias='omega', collection=None):
             assert self.name is not None, "a dataset name is needed before saving"
             self.modified = datetime.datetime.now()
             return super(Metadata_base, self).save(*args, **kwargs)
+
+        def to_json(self, **kwargs):
+            kwargs['json_options'] = kwargs.get('json_options',
+                                                LEGACY_JSON_OPTIONS)
+            return super().to_json(**kwargs)
 
         def to_dict(self):
             return self.to_mongo().to_dict()

@@ -80,7 +80,7 @@ import tempfile
 import warnings
 from datetime import datetime
 from mongoengine.connection import disconnect, \
-    connect, _connections, get_db
+    connect, _connections, get_db, _connection_settings
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
@@ -90,7 +90,7 @@ from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
 from ..documents import make_Metadata, MDREGISTRY
-from ..mongoshim import sanitize_mongo_kwargs
+from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
 
@@ -194,6 +194,8 @@ class OmegaStore(object):
                                  serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
                                  **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
                                  )
+            # since PyMongo 4, connect() no longer waits for connection
+            waitForConnection(connection)
         self._db = get_db(alias)
         return self._db
 
@@ -469,7 +471,7 @@ class OmegaStore(object):
             store_series = False
         if append is False:
             self.drop(name, force=True)
-        elif append is None and collection.count(limit=1):
+        elif append is None and collection.count_documents({}, limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
         if index:
@@ -495,7 +497,7 @@ class OmegaStore(object):
             obj[col] = dt
         # store dataframe indicies
         # FIXME this may be a performance issue, use size stored on stats or metadata
-        row_count = self.collection(name).count()
+        row_count = self.collection(name).estimated_document_count()
         obj, idx_meta = unravel_index(obj, row_count=row_count)
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
@@ -624,10 +626,16 @@ class OmegaStore(object):
         collection = self.collection(name)
         if append is False:
             collection.drop()
-        elif append is None and collection.count(limit=1):
+        elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        objid = collection.insert(mongo_compatible({'data': obj}))
+        if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
+            # list of lists are inserted as many objects, as in pymongo < 4
+            result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
+            objid = result.inserted_ids[-1]
+        else:
+            result = collection.insert_one(mongo_compatible({'data': obj}))
+            objid = result.inserted_id
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,

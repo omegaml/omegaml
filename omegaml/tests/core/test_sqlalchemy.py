@@ -3,7 +3,7 @@ from getpass import getuser
 from unittest import TestCase
 
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 from sqlalchemy.engine import Connection, create_engine, ResultProxy
 
 from omegaml import Omega

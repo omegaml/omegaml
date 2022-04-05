@@ -43,6 +43,7 @@ class MLFlowRegistryBackend(BaseModelBackend):
     def get(self, name, tracking_uri=None, **kwargs):
         """ Load MLFlow model from the tracking uri stored in metadata.uri """
         meta = self.data_store.metadata(name)
+        tracking_uri = tracking_uri or meta.kind_meta['tracking_uri']
         self._ensure_tracking_uri(meta, tracking_uri=tracking_uri)
         model = mlflow.pyfunc.load_model(model_uri=f"{meta.uri}")
         return model

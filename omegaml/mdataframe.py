@@ -498,7 +498,8 @@ class MDataFrame(object):
 
     def _clone(self, collection=None, **kwargs):
         # convenience method to clone itself with updates
-        return self.__class__(collection or self.collection, **kwargs,
+        collection = collection if collection is not None else self.collection
+        return self.__class__(collection, **kwargs,
                               **self._getcopy_kwargs(without=list(kwargs.keys())))
 
     def statfunc(self, stat):
@@ -580,8 +581,9 @@ class MDataFrame(object):
         """
         projected number of rows when resolving
         """
+        nrows = len(self)
         counts = pd.Series({
-            col: len(self)
+            col: nrows
             for col in self.columns}, index=self.columns)
         return counts
 
@@ -589,7 +591,9 @@ class MDataFrame(object):
         """
         the projected number of rows when resolving
         """
-        return self._get_cursor().count()
+        # we reduce to just 1 column to reduce speed
+        short = self._clone()[self.columns[0]]
+        return sum(1 for d in short._get_cursor())
 
     @property
     def shape(self):

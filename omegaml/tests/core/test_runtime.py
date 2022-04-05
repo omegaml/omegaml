@@ -227,8 +227,8 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.datasets.put(Y, 'datay')
         Xhat = om.datasets.get('datax')
         Yhat = om.datasets.get('datay')
-        self.assertEqual([X], Xhat)
-        self.assertEqual([Y], Yhat)
+        self.assertEqual(X, Xhat)
+        self.assertEqual(Y, Yhat)
         # have Omega fit the model then predict
         lr = LinearRegression()
         lr.fit(X, Y)
@@ -482,7 +482,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             result = ctr.run()
 
         result.get()
-        self.assertEqual(len(om.datasets.get('callback_results')), 2)
+        self.assertEqual(len(om.datasets.get('callback_results')), 18)
 
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
@@ -492,7 +492,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             result = ctr.run()
 
         result.get()
-        self.assertEqual(len(om.datasets.get('callback_results')), 3)
+        self.assertEqual(len(om.datasets.get('callback_results')), 27)
 
     def test_task_callback(self):
         om = Omega()
@@ -641,6 +641,15 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
+
+    def test_predict_multiple_samples(self):
+        om = Omega()
+        reg = LinearRegression()
+        df = pd.DataFrame({'x': range(10)})
+        df['y'] = df['x'] * 2 + 3
+        reg.fit(df[['x']], df['y'])
+        om.models.put(reg, 'regmodel')
+        result = om.runtime.model('regmodel').predict([[5], [6]]).get()
 
 
 

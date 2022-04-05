@@ -367,9 +367,11 @@ class OmegaJobs(BackendBaseCommon):
         else:
             status = 'OK'
             message = ''
+        finally:
+            del ep
         # record results
-        meta_results = self.put(
-            notebook, 'results/{name}_{ts}'.format(**locals()))
+        meta_results = self.put(notebook,
+                                'results/{name}_{ts}'.format(**locals()))
         meta_results.attributes['source_job'] = name
         meta_results.save()
         job_results = meta_job.attributes.get('job_results', [])

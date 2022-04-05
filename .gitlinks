@@ -1,0 +1,5 @@
+# use gil clone
+# see https://github.com/chronoxor/gil
+# format:
+# name relpath git-repo-url branch
+minibatch ../minibatch https://github.com/omegaml/minibatch master
