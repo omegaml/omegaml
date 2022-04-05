@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from django.contrib.auth.models import User
-from pandas.util.testing import assert_almost_equal
+from pandas._testing import assert_almost_equal
 from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline

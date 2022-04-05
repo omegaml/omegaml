@@ -1,5 +1,5 @@
 # keep shippable happy
--e ../omegaml-ce[client]
+-e ../omegaml-ce[dev]
 -e ../stackable
 -e ../landingpage[paasdeploy]
 -e ../django-tastypie-swagger

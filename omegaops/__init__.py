@@ -118,7 +118,9 @@ def add_userdb(dbname, username, password):
     client = MongoClient(settings.MONGO_ADMIN_URL, ssl=config.SERVICE_USESSL_VIEW)
     _admin_newdb = client['admin']
     # add user and reset password in case the user was there already
-    _admin_newdb.add_user(username, password)
+    #_admin_newdb.add_user(username, password)
+    # https://www.mongodb.com/docs/manual/reference/built-in-roles/#std-label-built-in-roles
+    _admin_newdb.command("createUser", username, pwd=password, roles=['readWrite'])
     result = _admin_newdb.command("updateUser", username, pwd=password, roles=roles)
     assert 'ok' in result
     # we need to get the newdb from the client otherwise

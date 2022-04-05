@@ -3,7 +3,7 @@ import random
 
 import pandas as pd
 from django.contrib.auth.models import User
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 from six import iteritems
 from tastypie.test import ResourceTestCaseMixin
 

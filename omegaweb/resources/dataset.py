@@ -16,7 +16,7 @@ from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
 from six.moves import builtins
-from six.moves import urllib 
+from six.moves import urllib
 
 from .util import BundleObj
 
@@ -102,7 +102,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         # get numpy/python typemap. this is required for Py3 support
         # adopted from https://stackoverflow.com/a/34919415
         np_typemap = {v: getattr(builtins, k)
-                      for k, v in np.typeDict.items()
+                      for k, v in np.sctypeDict.items()
                       if k in vars(builtins)}
         for k, v in iteritems(fltkwargs):
             # -- get column name without operator (e.g. x__gt => x)
@@ -117,13 +117,13 @@ class DatasetResource(OmegaResourceMixin, Resource):
 
     def obj_get(self, bundle, **kwargs):
         """
-        Get a dataset 
+        Get a dataset
 
         HTTP GET :code:`/data/<name>/?<query>`
 
         :code:`<query>` is optional, when provided any combination of
 
-        *default parameters* 
+        *default parameters*
 
         * :code:`orient=dict|records` see orient field
         * :code:`skip=n` where n is the top n rows to skip
@@ -146,13 +146,13 @@ class DatasetResource(OmegaResourceMixin, Resource):
           name of the column is any of the above default parameters you have
           to use the :code:`eq` operator to distinguish the filter from the
           parameter.
-        * :code:`lt` less 
+        * :code:`lt` less
         * :code:`gt` greater
         * :code:`le` less or equal
-        * :code:`ge` greator or equal 
+        * :code:`ge` greator or equal
 
         Note that the :code:`in` operator is currently not supported via the
-        REST API yet. 
+        REST API yet.
         """
         name = urllib.parse.unquote(kwargs.get('pk'))
         orient = bundle.request.GET.get('orient', 'dict')
@@ -201,7 +201,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
 
     def obj_update(self, bundle, **kwargs):
         """
-        Update a dataset 
+        Update a dataset
 
         HTTP PUT :code:`/data/<name>/?append=0|1`
 
