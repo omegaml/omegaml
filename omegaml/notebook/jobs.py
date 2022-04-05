@@ -3,13 +3,12 @@ from __future__ import absolute_import
 import datetime
 import gridfs
 import re
-import six
 import yaml
 from croniter import croniter
+from io import StringIO, BytesIO
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
-from six import StringIO, BytesIO
 from uuid import uuid4
 
 from omegaml.backends.basecommon import BackendBaseCommon
@@ -562,7 +561,7 @@ class OmegaJobs(BackendBaseCommon):
         # prepare config
         # http://nbconvert.readthedocs.io/en/latest/nbconvert_library.html#Using-different-preprocessors
         c = Config()
-        for k, v in six.iteritems(configkw):
+        for k, v in configkw.items():
             context, key = k.split('.')
             setattr(c[context], key, v)
         # get configured exporter

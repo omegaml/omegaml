@@ -28,7 +28,7 @@ class OmegaTestMixin(object):
         self.assertEqual(resp.status_code, 202)
         data = resp.get_json()
         location = resp.headers['Location']
-        self.assertRegexpMatches(location, r'http://localhost/api/v1/task/.*/result')
+        self.assertRegex(location, r'.*/api/v1/task/.*/result')
         # check we can get back the actual result
         resp = self.client.get(location.replace('http://localhost', ''), json={
             'resource_uri': data.get('resource_uri')

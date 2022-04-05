@@ -12,7 +12,7 @@ from omegaml.tests.util import OmegaTestMixin
 
 class ScriptResourceTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        self.client = RequestsLikeTestClient(app)
+        self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()
@@ -38,7 +38,7 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
-        resp = self.client.post(self.url('helloworld', action='run', query='text=foo'))
+        resp = self.client.post(self.url('helloworld', action='run', query='text=foo'), json={})
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('runtimes', data)
@@ -55,7 +55,7 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
         resp = self.client.post(self.url('helloworld', action='run', query='text=foo'),
-                                headers=self._async_headers)
+                                headers=self._async_headers, json={})
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']

@@ -1,7 +1,6 @@
-import six
+import pandas as pd
 
 from omegaml.backends.basedata import BaseDataBackend
-import pandas as pd
 
 
 class PandasExternalData(BaseDataBackend):
@@ -114,7 +113,7 @@ class PandasExternalData(BaseDataBackend):
 
 
 def _is_supported_scheme(obj, **kwargs):
-    if isinstance(obj, six.string_types):
+    if isinstance(obj, str):
         parts = obj.split('://')
         if len(parts) > 1:
             scheme, loc = parts

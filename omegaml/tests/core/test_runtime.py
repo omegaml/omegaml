@@ -8,7 +8,6 @@ import os
 import pandas as pd
 import sys
 from numpy.testing import assert_array_almost_equal
-from six.moves import range
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression

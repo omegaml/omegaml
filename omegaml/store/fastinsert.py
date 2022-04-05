@@ -3,8 +3,10 @@ import os
 from itertools import repeat
 from joblib import delayed, Parallel
 
+from omegaml.runtimes.loky import OmegaRuntimeBackend
 from omegaml.util import PickableCollection
 
+OmegaRuntimeBackend = OmegaRuntimeBackend  # noqa
 default_chunksize = int(1e4)
 
 

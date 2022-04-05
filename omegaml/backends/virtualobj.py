@@ -1,5 +1,4 @@
 import dill
-import six
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -26,7 +25,7 @@ class VirtualObjectBackend(BaseDataBackend):
     VirtualObjectHandler
 
     Usage::
-    
+
         # create the 'foo' virtual object
         om.datasets.put(virtualobjfn, 'foo')
 
@@ -62,7 +61,7 @@ class VirtualObjectBackend(BaseDataBackend):
         # TODO add obj signing so that only trustworthy sources can put functions
         # ensure we have a dill'able object
         # -- only instances can be dill'ed
-        if isinstance(obj, six.class_types):
+        if isinstance(obj, type):
             obj = obj()
         data = dill.dumps(obj)
         filename = self.model_store.object_store_key(name, '.dill', hashed=True)

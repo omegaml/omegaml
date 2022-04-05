@@ -7,7 +7,6 @@ from pymongo.collection import Collection
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
 import pandas as pd
-from six.moves import range
 
 
 class FilteredCollectionTests(TestCase):

@@ -8,13 +8,11 @@ from importlib import import_module
 import json
 import logging
 import os
-import six
 import sys
 import tempfile
 import uuid
 import warnings
 from shutil import rmtree
-from six import string_types
 
 try:
     import urlparse
@@ -78,7 +76,7 @@ def is_spark_mllib(obj):
     # the model for the spark server to create. so obj is the name of the
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         return 'pyspark.mllib' in obj
     return False
 
@@ -150,7 +148,7 @@ def settings(reload=False):
 def override_settings(**kwargs):
     """ test support """
     cfgvars = settings()
-    for k, v in six.iteritems(kwargs):
+    for k, v in kwargs.items():
         setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
     celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {})
@@ -208,7 +206,7 @@ def load_class(requested_class):
     class from module, otherwise return requested_class as is
     """
     import importlib
-    if isinstance(requested_class, six.string_types):
+    if isinstance(requested_class, str):
         if requested_class in CLASS_CACHE:
             return CLASS_CACHE.get(requested_class)
         module_name, class_name = requested_class.rsplit(".", 1)
@@ -318,7 +316,7 @@ def restore_index_columns_order(columns):
             n = 0
         return n
 
-    index_cols = (col for col in columns if isinstance(col, six.string_types) and col.startswith('_idx'))
+    index_cols = (col for col in columns if isinstance(col, str) and col.startswith('_idx'))
     index_cols = sorted(index_cols, key=get_index_order)
     return index_cols
 
@@ -479,7 +477,7 @@ def convert_dtypes(df, dtypes):
     """
     # tz pattern used in convert_dtypes
     tzinfo_pattern = re.compile('datetime64\[ns, (.*)\]')
-    for col, dtype in six.iteritems(dtypes):
+    for col, dtype in dtypes.items():
         if dtype.startswith('datetime'):
             if not hasattr(df, 'dtypes'):
                 continue
@@ -735,7 +733,7 @@ def ensure_json_serializable(v):
     elif isinstance(v, dict):
         vv = {
             k: ensure_json_serializable(v)
-            for k, v in six.iteritems(v)
+            for k, v in v.items()
         }
         v = vv
     return v

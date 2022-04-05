@@ -8,8 +8,7 @@ from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.store.queryops import GeoJSON
 import pandas as pd
-from six.moves import range
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 # see https://gist.github.com/miraculixx/f01304186fc47d041da5a712774ac487
 locations = [{'location': {'coordinates': [-74.0059413, 40.7127837],
                            'type': 'Point'},

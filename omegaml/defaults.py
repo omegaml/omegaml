@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-import shutil
 from os.path import basename
-from pathlib import Path
 
 import logging
 import os
-import six
+import shutil
 import sys
+from pathlib import Path
 
 from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge
 
@@ -215,7 +214,7 @@ def update_from_env(vars=globals()):
     # -- debug if required
     if '--print-omega-defaults' in sys.argv:
         from pprint import pprint
-        vars = {k: v for k, v in six.iteritems(vars) if k.startswith('OMEGA')}
+        vars = {k: v for k, v in vars.items() if k.startswith('OMEGA')}
         pprint(vars)
     return vars
 

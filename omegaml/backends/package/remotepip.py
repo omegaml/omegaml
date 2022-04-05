@@ -1,8 +1,7 @@
-import re
 from os.path import basename
 
 import os
-import six
+import re
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.package.packager import install_and_import
@@ -48,7 +47,7 @@ class PythonPipSourcedPackageData(BaseDataBackend):
         pip_protocols = '|'.join(('git', 'hg', 'svn', 'bzr', 'pypi'))
         pattern = r'^{}(\+.+)?://.*'
         is_pip_protocol = lambda v: re.match(pattern.format(pip_protocols), v)
-        return isinstance(obj, six.string_types) and is_pip_protocol(obj)
+        return isinstance(obj, str) and is_pip_protocol(obj)
 
     def put(self, obj, name, attributes=None, **kwargs):
         """

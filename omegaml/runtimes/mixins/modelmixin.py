@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-import six
 from uuid import uuid4
 
 from omegaml.util import is_dataframe, is_ndarray, is_series
@@ -176,7 +175,7 @@ class ModelMixin(object):
         elif isinstance(name_or_data, (list, tuple, dict)):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
-        elif isinstance(name_or_data, six.string_types):
+        elif isinstance(name_or_data, str):
             name = name_or_data
         else:
             raise TypeError(

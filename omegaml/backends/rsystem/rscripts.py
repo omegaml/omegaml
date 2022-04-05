@@ -1,10 +1,8 @@
-import base64
 from os.path import basename, dirname
 
+import base64
 import json
 import os
-import re
-import six
 from shutil import make_archive, unpack_archive
 from subprocess import run
 
@@ -30,7 +28,7 @@ class RPackageData(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, six.string_types) and obj.startswith('R://')
+        return isinstance(obj, str) and obj.startswith('R://')
 
     def put(self, obj, name, attributes=None, **kwargs):
         """

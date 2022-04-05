@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import numpy as np
 import pandas as pd
-import six
 from bson import Code
 from numpy import isscalar
 from pymongo.collection import Collection
@@ -69,7 +68,7 @@ class MGrouper(object):
 
         # generate $group command
         _specs = {}
-        for column, stats in six.iteritems(specs):
+        for column, stats in specs.items():
             stats = make_tuple(stats)
             for stat in stats:
                 add_stats(_specs, column, stat)
@@ -469,7 +468,7 @@ class MDataFrame(object):
           slice to select columns or a masked-style
         :return: filtered MDataFrame or MSeries
         """
-        if isinstance(cols_or_slice, six.string_types):
+        if isinstance(cols_or_slice, str):
             # column name => MSeries
             return self._as_mseries(cols_or_slice)
         elif isinstance(cols_or_slice, int):
@@ -747,7 +746,7 @@ class MDataFrame(object):
         for key in [on, left_on, right_on]:
             if key:
                 assert isinstance(
-                    key, six.string_types), "only single column merge keys are supported (%s)" % key
+                    key, str), "only single column merge keys are supported (%s)" % key
         if isinstance(right, (Collection, PickableCollection, FilteredCollection)):
             right = MDataFrame(right)
         assert isinstance(
@@ -1043,7 +1042,7 @@ class MDataFrame(object):
 
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
+        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
         return "MDataFrame(collection={collection.name}, {kwargs})".format(collection=self.collection,
                                                                            kwargs=kwargs)
 
@@ -1120,7 +1119,7 @@ class MSeries(MDataFrame):
         return val
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in six.iteritems(self._getcopy_kwargs()))
+        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
         return "MSeries(collection={collection.name}, {kwargs})".format(collection=self.collection,
                                                                         kwargs=kwargs)
 

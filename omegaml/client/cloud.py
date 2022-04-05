@@ -1,5 +1,4 @@
 import os
-import six
 import yaml
 
 from omegaml.client.userconf import get_omega_from_apikey, ensure_api_url
@@ -109,7 +108,7 @@ def setup_from_config(config_file=None, fallback=None):
     """
     from omegaml import _base_config
     config_file = config_file or _base_config.OMEGA_CONFIG_FILE
-    if isinstance(config_file, six.string_types) and os.path.exists(config_file):
+    if isinstance(config_file, str) and os.path.exists(config_file):
         with open(config_file, 'r') as fin:
             userconfig = yaml.safe_load(fin)
             if isinstance(userconfig, dict) and 'OMEGA_USERID' in userconfig:
