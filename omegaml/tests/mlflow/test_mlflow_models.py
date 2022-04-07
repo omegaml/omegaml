@@ -26,22 +26,26 @@ else:
     from mlflow.exceptions import MlflowException
     import mlflow
 
+
     @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
     class TestMLFlowModels(OmegaTestMixin, TestCase):
+        @classmethod
+        def setUpClass(cls):
+            # we do this here to avoid interfering with mlflow dbs during tests
+            # due to mlflow's implicit once-only db setup at the first session start
+            cls.mlflow_tracking_db = 'sqlite:////tmp/mlflow-t.sqlite'
+            cls.mlflow_registry_db = 'sqlite:////tmp/mlflow-r.sqlite'
+            cls._clean_mlruns()
+            cls._clean_mlflowdbs()
+
         def setUp(self):
             om = self.om = Omega()
             self.clean()
             om.models.register_backend(MLFlowModelBackend.KIND, MLFlowModelBackend)
             om.models.register_backend(MLFlowRegistryBackend.KIND, MLFlowRegistryBackend)
-            self.mlflow_tracking_db = 'sqlite:////tmp/mlflow-t.sqlite'
-            self.mlflow_registry_db = 'sqlite:////tmp/mlflow-r.sqlite'
-            self._clean_mlruns()
-            self._clean_mlflowdbs()
 
         def tearDown(self):
-            # comment for debugging mlflow artifacts
-            self._clean_mlruns()
-            self._clean_mlflowdbs()
+            self._enable_mlflow_exit_handling()
 
         def test_save_mlflow_saved_model_path(self):
             """ test deploying a model saved by MLflow, from path """
@@ -168,14 +172,20 @@ else:
                 meta = om.models.put('mlflow+models://sklearn-model/1', 'sklearn-model')
             self.assertNotIn('sklearn-model', om.models.list())
 
+        @classmethod
         def _clean_mlflowdbs(self):
             Path(self.mlflow_tracking_db.split('sqlite:///')[-1]).unlink(missing_ok=True)
             Path(self.mlflow_registry_db.split('sqlite:///')[-1]).unlink(missing_ok=True)
 
+        @classmethod
         def _clean_mlruns(self):
             from mlflow.store import tracking
             mlruns_path = Path(__file__).parent / tracking.DEFAULT_LOCAL_FILE_AND_ARTIFACT_PATH
             shutil.rmtree(mlruns_path, ignore_errors=True)
             mlruns_path.mkdir(parents=True)
 
-
+        def _enable_mlflow_exit_handling(self):
+            # restore tracking uri to avoid mlflow exit handler error
+            # https://github.com/mlflow/mlflow/issues/3755
+            mlflow.set_tracking_uri(self.mlflow_tracking_db)
+            mlflow.set_registry_uri(None)

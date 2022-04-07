@@ -1042,3 +1042,5 @@ class IterableJsonDump(list):
         buffer = StringIO()
         cls.dump(iterlike, buffer, **kwargs)
         return buffer.getvalue()
+
+

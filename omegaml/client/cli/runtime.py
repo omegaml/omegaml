@@ -28,7 +28,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [options]
       om runtime serve [<rule>...] [--rules=<rulefile>] [options]
-      om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>...] [options]
+      om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
 
       Options:
@@ -304,7 +304,7 @@ class RuntimeCommandBase(CommandBase):
                 if kind == 'value':
                     celery_cmds += [self.args.get(opt)]
         celery_cmds += self.args.get('<celery-command>')
-        celery_cmds += self.args.get('--flags')
+        celery_cmds += self.args.get('--flags').split(' ')
         if len(celery_cmds) == 1 + int(action is not None):
             celery_cmds += ['--help']
         # start in-process for speed

@@ -1,3 +1,4 @@
+import cachetools
 import logging
 
 from omegaml import defaults as _base_config
@@ -7,6 +8,7 @@ from omegaml.omega import OmegaDeferredInstance
 from omegaml.util import load_class, settings, base_loader
 
 logger = logging.getLogger(__file__)
+
 
 # link implementation
 def link(_omega):
@@ -51,3 +53,5 @@ streams = _omega.OmegaDeferredInstance(_omega._om, 'streams')
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
+#: session cache
+session_cache = cachetools.cached(cache=cachetools.TTLCache(**getattr(_base_config, 'OMEGA_SESSION_CACHE')))

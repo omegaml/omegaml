@@ -23,15 +23,10 @@ def insert_chunk(job):
                 should include the database name, as the collection is taken
                 from the default database of the connection.
     """
+    # note we do not catch exceptions as we want to propagate errors back to caller
+    # rationale: if one chunk insert fails, all should fail and user be notified
     sdf, collection, cpid = job
-    try:
-        result = collection.insert_many(sdf.to_dict(orient='records'))
-    finally:
-        if getattr(collection, '_pkl_cloned', True):
-            # only close if this is a cloned connection
-            # this to avoid invalidating original calling MongoClient
-            # (InvalidOperation: Cannot use MongoClient after close)
-            collection.database.client.close()
+    result = collection.insert_many(sdf.to_dict(orient='records'))
     return len(result.inserted_ids)
 
 

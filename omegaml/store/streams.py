@@ -1,4 +1,3 @@
-from functools import lru_cache
 from hashlib import md5
 from mongoengine import DoesNotExist
 
@@ -92,7 +91,6 @@ class StreamsProxy(OmegaStore):
             stream = mb.streaming(stream_name, **kwargs, cnx_kwargs=self._stream_kwargs)
         return stream
 
-    @lru_cache(maxsize=None)
     def _cached_get(self, name, reload=False, _cachex=None):
         if reload:
             # force to avoid cache
