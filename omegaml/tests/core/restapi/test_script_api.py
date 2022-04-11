@@ -1,6 +1,6 @@
-import os
 from unittest import TestCase
 
+import os
 import sys
 
 from omegaml import Omega

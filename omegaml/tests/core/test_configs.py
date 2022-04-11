@@ -3,6 +3,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from omegaml import Omega
+from omegaml.client.auth import AuthenticationEnv
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
 
 
@@ -15,6 +16,10 @@ class ConfigurationTests(TestCase):
         self.defaults = {
             'OMEGA_MONGO_URL': 'foo'
         }
+        
+    def tearDown(self):
+        # reset authentaction env to avoid interference with other tests
+        AuthenticationEnv.auth_env = None
 
     def test_update_from_configfile(self):
         """
@@ -99,7 +104,7 @@ class ConfigurationTests(TestCase):
         # now test we can change the default through config
         # we patch the actual api call to avoid having to set up the user db
         # the objective here is to test get_omega_from_apikey
-        with patch('omegaml.client.userconf.get_user_config_from_api') as mock:
+        with patch('omegaml.client.userconf._get_userconfig_from_api') as mock:
             mock.return_value = {
                 'objects': [
                     {
@@ -137,7 +142,7 @@ class ConfigurationTests(TestCase):
         # check we get default without patching
         from omegaml.util import settings
         from omegaml import _base_config as _real_base_config
-        with patch('omegaml.client.userconf.get_user_config_from_api') as mock:
+        with patch('omegaml.client.userconf._get_userconfig_from_api') as mock:
             mock.return_value = {
                 'objects': [
                     {

@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
+from omegaml.client.auth import AuthenticationEnv
 from omegaml.store.logging import OmegaLoggingHandler
 
 
@@ -69,6 +70,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     def __init__(self, *args, **kwargs):
         super(OmegamlTask, self).__init__(*args, **kwargs)
+        self.auth_env = AuthenticationEnv().active()
 
     @property
     def om(self):
@@ -77,9 +79,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         if not hasattr(self.request, '_om'):
             self.request._om = None
         if self.request._om is None:
-            from omegaml import get_omega_for_task
             bucket = kwargs.get('__bucket')
-            self.request._om = get_omega_for_task(self)[bucket]
+            self.request._om = self.auth_env.get_omega_for_task(self)[bucket]
         return self.request._om
 
     def get_delegate(self, name, kind='models'):

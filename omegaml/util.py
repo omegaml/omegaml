@@ -513,6 +513,7 @@ class PickableCollection(object):
         p = Pool()
         p.map(process, zip(range(1000), repeat(coll))
     """
+
     def __init__(self, collection):
         super(PickableCollection, self).__setattr__('collection', collection)
         self._pkl_cloned = False
@@ -760,17 +761,23 @@ def base_loader(_base_config):
     # -- om.setup() does actual loading
     _omega = None
 
-    def load_ee():
+    def load_customized():
+        from omegacl import omega as _omega
+        from omegacl import defaults as _base_config_client
+        _base_config.update_from_obj(_base_config_client, attrs=_base_config)
+        return _omega, 'custom client'
+
+    def load_commercial():
         from omegaee import omega as _omega
         from omegaee import eedefaults as _base_config_ee
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
-        return _omega, 'enterprise'
+        return _omega, 'commercial'
 
     def load_base():
         from omegaml import omega as _omega
         return _omega, 'base configuration'
 
-    loaders = load_ee, load_base
+    loaders = load_customized, load_commercial, load_base
     for loader in loaders:
         try:
             logger.debug(f'attempting to load omegaml from {loader}')
@@ -914,6 +921,7 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
                 destination[key] = value
     return destination
 
+
 def ensure_base_collection(collection):
     """ get base from pymongo.Collection subclass instance """
     from pymongo.collection import Collection
@@ -1001,6 +1009,7 @@ class MongoEncoder(json.JSONEncoder):
 json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
 mongo_compatible = lambda *args: json.loads(json_dumps_np(*args))
 
+
 def tryOr(fn, else_fn):
     # try fn(), if exception call else_fn() if callable, return its value otherwise
     try:
@@ -1044,3 +1053,4 @@ class IterableJsonDump(list):
         return buffer.getvalue()
 
 
+isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])

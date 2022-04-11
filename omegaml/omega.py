@@ -202,10 +202,6 @@ def setup(*args, **kwargs):
     """
     return _om.setup(*args, **kwargs)
 
-
-# dynamic lookup of Omega instance in a task context
-get_omega_for_task = (lambda task: _om.setup())
-
 # default instance
 # -- these are deferred instanced that is the actual Omega instance
 #    is only created on actual attribute access

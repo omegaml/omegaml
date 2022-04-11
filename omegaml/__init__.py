@@ -13,7 +13,7 @@ logger = logging.getLogger(__file__)
 # link implementation
 def link(_omega):
     # link a specific implementation lazy loaded at runtime
-    global datasets, models, jobs, scripts, runtime, streams, logger, defaults, setup, version, get_omega_for_task
+    global datasets, models, jobs, scripts, runtime, streams, logger, defaults, setup, version
     datasets = _omega.datasets
     models = _omega.models
     jobs = _omega.jobs
@@ -24,7 +24,6 @@ def link(_omega):
     defaults = _omega.defaults
     setup = getattr(_omega, 'setup', setup)
     version = getattr(_omega, 'version', version)
-    get_omega_for_task = getattr(_omega, 'get_omega_for_task', get_omega_for_task)
 
 
 # load base and lazy link
@@ -33,7 +32,6 @@ def link(_omega):
 _omega = base_loader(_base_config)
 setup = _omega.setup
 version = getattr(_omega, 'version', version)
-get_omega_for_task = _omega.get_omega_for_task
 Omega = _omega.Omega
 _omega.OmegaDeferredInstance = getattr(_omega, 'OmegaDeferredInstance', OmegaDeferredInstance)
 # setup API

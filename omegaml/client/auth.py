@@ -1,24 +1,6 @@
-# source https://djangosnippets.org/snippets/2727/
-
 from requests.auth import AuthBase
 
-from omegaml import session_cache
-
-
-class AuthenticationEnv(object):
-    @classmethod
-    @session_cache  # PERFTUNED
-    def get_omega_for_task(cls, auth=None):
-        from omegaml import Omega
-        om = Omega()
-        return om
-
-    @classmethod
-    @session_cache  # PERFTUNED
-    def get_omega_from_apikey(cls, *args, **kwargs):
-        from omegaml import Omega
-        om = Omega()
-        return om
+from omegaml import session_cache, load_class, settings
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -36,11 +18,6 @@ class OmegaRestApiAuth(AuthBase):
         self.username = username
         self.apikey = apikey
         self.qualifier = qualifier or 'default'
-
-    @classmethod
-    def make_from(cls, om):
-        args = getattr(om.runtime, 'auth_tuple', (None, None, 'default'))
-        return OmegaRestApiAuth(*args)
 
     def get_credentials(self):
         return 'ApiKey %s:%s' % (self.username, self.apikey)
@@ -65,15 +42,86 @@ class OmegaRuntimeAuthentication:
         self.apikey = apikey
         self.qualifier = qualifier
 
+    @property
+    def token(self):
+        return self.userid, self.apikey, self.qualifier
+
     def __repr__(self):
         return ('OmegaRuntimeAuthentication(userid={}, '
                 'apikey="*****", qualifier={})').format(self.userid, self.qualifier)
 
 
-class OmegaSecureAuthenticationEnv(AuthenticationEnv):
+class AuthenticationEnv(object):
+    """ AuthenticationEnv creates Omega() configured to the current environment
+
+    This provides a basic authentication environment that is not protected. It
+    should not be used in production environments.
+
+    Usage::
+
+        auth_env = AuthenticationEnv.active()
+        om = auth_env.get_omega_from_apikey(<credentials>)
+        om = auth_env.get_omega_for_task(task, auth=<credentials>)
+
+    Notes:
+        * AuthenticationEnv.active() returns the environment as configured
+          in defaults.OMEGA_AUTH_ENV. This defaults to AuthenticationEnv.
+        * Any AuthenticationEnv is required to provide at least
+          get_omega_from_apikey() and get_omega_from_task() methods, as
+          the primary ways to instantiate omega is from either a set of
+          credentials (userid, apikey), or from a an authorized task that
+          provides these credentials
+        * some authentication environments may require additional methods
+          to provide credentials in a format suitable for their authentication
+          backends (e.g. REST APIs, kerberos, etc.)
+    """
+    auth_env = None
+    is_secure = False
+
+    @classmethod
+    @session_cache  # PERFTUNED
+    def get_omega_for_task(cls, task, auth=None):
+        # return the omega instance for the given task authentication
+        from omegaml import setup
+        om = setup()
+        return om
+
+    @classmethod
+    @session_cache  # PERFTUNED
+    def get_omega_from_apikey(cls, auth=None):
+        # return the omega instance for the given task authentication
+        from omegaml import setup
+        om = setup()
+        return om
+
+    @classmethod
+    def active(cls):
+        # load the currently active auth env
+        if cls.auth_env is None:
+            from omegaml import _base_config
+            cls.auth_env = load_class(getattr(_base_config, 'OMEGA_AUTH_ENV',
+                                              'omegaml.client.auth.AuthenticationEnv'))
+        return cls.auth_env
+
+    @classmethod
+    def secure(cls):
+        # load a server-backed authentication env
+        from omegaml import _base_config
+        if not hasattr(_base_config, 'OMEGA_AUTH_ENV'):
+            _base_config.OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
+            cls.auth_env = None
+        auth_env = cls.active()
+        if not auth_env.is_secure:
+            raise SystemError(f'A secure authentication environment was requested, however {auth_env} is not secure.')
+        return auth_env
+
+
+class CloudClientAuthenticationEnv(AuthenticationEnv):
+    is_secure = True
+
     @classmethod
     @session_cache
-    def get_omega_for_task(cls, auth=None):
+    def get_omega_for_task(cls, task, auth=None):
         """
         Get Omega instance configured for user in auth
 
@@ -111,7 +159,7 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
             # we provide the default implementation as per configuration
             from omegaml import _omega
             om = _omega._om
-            if not defaults.OMEGA_ALLOW_TASK_DEFAULT_AUTH:
+            if not getattr(defaults, 'OMEGA_ALLOW_TASK_DEFAULT_AUTH', True):
                 raise ValueError(
                     'Default task authentication is not allowed, got {}'.format(auth))
         else:
@@ -122,8 +170,44 @@ class OmegaSecureAuthenticationEnv(AuthenticationEnv):
     @classmethod
     @session_cache  # PERFTUNED
     def get_omega_from_apikey(cls, *args, **kwargs):
-        from omegaml.client.userconf import get_omega_from_apikey
-        return get_omega_from_apikey(*args, **kwargs)
+        from omegaml.client.userconf import _get_omega_from_apikey
+        return _get_omega_from_apikey(*args, **kwargs)
 
+    @classmethod
+    def get_restapi_auth(cls, defaults=None, om=None,
+                         userid=None, apikey=None, qualifier=None):
+        assert defaults or om, "require either defaults or om"
+        defaults = defaults or om.defaults
+        return OmegaRestApiAuth(userid or defaults.OMEGA_USERID,
+                                apikey or defaults.OMEGA_APIKEY,
+                                qualifier or defaults.OMEGA_QUALIFIER)
 
-isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])
+    @classmethod
+    def get_runtime_auth(cls, defaults=None, om=None):
+        assert defaults or om, "require either defaults or om"
+        defaults = defaults or om.defaults
+        return OmegaRuntimeAuthentication(defaults.OMEGA_USERID,
+                                          defaults.OMEGA_APIKEY,
+                                          defaults.OMEGA_QUALIFIER)
+
+    @classmethod
+    def get_userconfig_from_api(cls, api_auth=None, api_url=None, userid=None, apikey=None,
+                                requested_userid=None, defaults=None, qualifier=None, view=False):
+        from omegaml.client.userconf import _get_userconfig_from_api, ensure_api_url
+        defaults = defaults or settings()
+        api_auth = api_auth or cls.get_restapi_auth(userid=userid, apikey=apikey,
+                                                    qualifier=qualifier,
+                                                    defaults=defaults)
+        return _get_userconfig_from_api(api_auth,
+                                        api_url=ensure_api_url(api_url, defaults),
+                                        qualifier=qualifier or defaults.OMEGA_QUALIFIER,
+                                        requested_userid=requested_userid,
+                                        view=view)
+
+    @classmethod
+    def save_userconfig_from_apikey(cls, configfile, userid, apikey, api_url=None, requested_userid=None,
+                                    view=False, keys=None, qualifier=None):
+        from omegaml.client.userconf import _save_userconfig_from_apikey
+        return _save_userconfig_from_apikey(configfile, userid, apikey, api_url=api_url,
+                                            requested_userid=requested_userid,
+                                            view=view, keys=keys, qualifier=qualifier)

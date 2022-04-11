@@ -1,16 +1,13 @@
+import json
+
+import warnings
+
 import os
 import sys
 import yaml
 from urllib3 import Retry
 
-import omegaml
-from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
-
-
-def ensure_api_url(api_url, defaults):
-    api_url_default = os.environ.get('OMEGA_RESTAPI_URL') or 'https://hub.omegaml.io'
-    api_url = api_url or getattr(defaults, 'OMEGA_RESTAPI_URL', api_url_default)
-    return api_url
+from omegaml.client.auth import AuthenticationEnv
 
 
 def ensure_api_url(api_url, defaults):
@@ -31,7 +28,7 @@ def session_backoff(retries=5):
     return s
 
 
-def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, qualifier=None, view=False):
+def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qualifier=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
     from omegaml import settings
     defaults = settings()
@@ -53,11 +50,13 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, qual
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()
     elif api_url.startswith('test') or any('test' in v for v in sys.argv):
-        # test support
-        import json
-        from tastypie.test import TestApiClient
+        try:
+            from tastypie.test import TestApiClient
+        except ModuleNotFoundError as e:
+            # we need omegaee environment to proceed
+            raise
         server = TestApiClient()
-        server.close = lambda : None
+        server.close = lambda: None
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
     else:
@@ -74,8 +73,15 @@ def get_user_config_from_api(api_auth, api_url=None, requested_userid=None, qual
 
 
 # FIXME enable cache by arguments (mnemonic) @cached(seconds=3600)
-def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
-                          qualifier=None, view=False):
+def get_omega_from_apikey(*args, **kwargs):
+    warnings.warn(('Calling get_omega_from_apikey directly is deprecated '
+                   'and will be removed in the next release. Please use  '
+                   'AuthenticationEnv.secure().get_omega_from_apikey'), DeprecationWarning)
+    return _get_omega_from_apikey(*args, **kwargs)
+
+
+def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
+                           qualifier=None, view=False):
     """
     setup an Omega instance from userid and apikey
 
@@ -95,12 +101,14 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
 
     defaults = settings(reload=True)
     qualifier = qualifier or 'default'
+    defaults.OMEGA_USERID = userid
+    defaults.OMEGA_APIKEY = apikey
+    defaults.OMEGA_QUALIFIER = qualifier
     api_url = ensure_api_url(api_url, defaults)
+    auth_env = AuthenticationEnv.secure()
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
-        api_auth = OmegaRestApiAuth(userid, apikey, qualifier=qualifier)
-        configs = get_user_config_from_api(api_auth, api_url=api_url,
-                                           requested_userid=requested_userid,
-                                           view=view, qualifier=qualifier)
+        configs = auth_env.get_userconfig_from_api(requested_userid=requested_userid,
+                                                   view=view, defaults=defaults)
         configs = configs['objects'][0]['data']
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
@@ -112,7 +120,7 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     _base_config.update_from_config(defaults)
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
-    auth = OmegaRuntimeAuthentication(userid, apikey, qualifier)
+    auth = auth_env.get_runtime_auth(defaults)
     om = OmegaCloud(defaults=defaults, auth=auth)
     # update config to reflect request
     om.defaults.OMEGA_RESTAPI_URL = api_url
@@ -122,7 +130,14 @@ def get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     return om
 
 
-def get_omega_from_config(configfile, qualifier=None):
+def get_omega_from_config(*args, **kwargs):
+    warnings.warn(('Calling _get_omega_from_config directly is deprecated '
+                   'and will be removed in the next release. Please use  '
+                   'AuthenticationEnv.secure()._get_omega_from_config'), DeprecationWarning)
+    return _get_omega_from_config(*args, **kwargs)
+
+
+def _get_omega_from_config(configfile, qualifier=None):
     from omegaml import Omega
     from omegaml import settings, _base_config
     defaults = settings()
@@ -139,20 +154,21 @@ def get_omega_from_config(configfile, qualifier=None):
     return om
 
 
-def save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
-                                view=False, keys=None, qualifier=None):
+def _save_userconfig_from_apikey(configfile, userid, apikey, api_url=None, requested_userid=None,
+                                 view=False, keys=None, qualifier=None):
     from omegaml import settings
     defaults = settings()
     api_url = ensure_api_url(api_url, defaults)
     required_keys = ['OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_RESTAPI_URL', 'OMEGA_QUALIFIER']
     keys = keys or []
+    auth_env = AuthenticationEnv.secure()
     with open(configfile, 'w') as fconfig:
-        auth = OmegaRestApiAuth(userid, apikey, qualifier=qualifier)
-        configs = get_user_config_from_api(auth,
-                                           api_url=api_url,
-                                           requested_userid=requested_userid,
-                                           qualifier=qualifier,
-                                           view=view)
+        configs = auth_env.get_userconfig_from_api(api_url=api_url,
+                                                   userid=userid,
+                                                   apikey=apikey,
+                                                   requested_userid=requested_userid,
+                                                   qualifier=qualifier,
+                                                   view=view)
         config = configs['objects'][0]['data']
         config['OMEGA_RESTAPI_URL'] = api_url
         config['OMEGA_QUALIFIER'] = qualifier or 'default'
