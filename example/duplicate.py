@@ -12,7 +12,6 @@ from omegaml import Omega
 from sklearn.linear_model import LinearRegression
 from omegaml.util import override_settings
 import argparse
-from six.moves import range
 
 
 def testOmegaml(

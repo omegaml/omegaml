@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, urlunparse
+
 from omegaml.tests.features.util import get_admin_secrets
 
 istrue = lambda v: (
@@ -9,7 +11,6 @@ isfalse = lambda v: not istrue(v)
 
 def uri(browser, uri):
     """ given a browser, replace the path with uri """
-    from six.moves.urllib.parse import urlparse, urlunparse
     url = browser.url
     parsed = list(urlparse(url))
     parsed[2] = uri

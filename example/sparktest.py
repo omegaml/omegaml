@@ -5,14 +5,15 @@ example program to run in ipython
 # train a model to learn to duplicate numbers
 from __future__ import absolute_import
 from __future__ import print_function
+
+from io import StringIO
+
 import pandas as pd
 import numpy as np
 import os
 from omegaml import Omega
 from omegaml.util import override_settings, get_labeledpoints
-from StringIO import StringIO
 import argparse
-from six.moves import range
 
 
 def testOmegaml(

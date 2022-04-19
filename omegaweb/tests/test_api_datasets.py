@@ -4,7 +4,6 @@ import random
 import pandas as pd
 from django.contrib.auth.models import User
 from pandas.testing import assert_frame_equal
-from six import iteritems
 from tastypie.test import ResourceTestCaseMixin
 
 from landingpage.models import ServicePlan
@@ -169,7 +168,7 @@ def pandas_to_apidata(df, append=False):
         'append': append,
         'data': df.to_dict('records'),
         'dtypes': {k: str(v)
-                   for k, v in iteritems(df.dtypes.to_dict())},
+                   for k, v in df.dtypes.to_dict().items()},
         'orient': 'columns',
         'index': {
             'type': type(df.index).__name__,

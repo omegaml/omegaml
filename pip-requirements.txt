@@ -198,7 +198,6 @@ seaborn==0.11.2
 selenium==3.141.0
 Send2Trash==1.8.0
 setuptools==58.0.4
-six==1.16.0
 smart-open==5.2.1
 sniffio==1.2.0
 snowballstemmer==2.1.0

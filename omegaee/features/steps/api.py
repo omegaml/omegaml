@@ -1,10 +1,8 @@
 import base64
 import http
-from uuid import uuid4
-
 import requests
-import six
 from behave import when, then
+from uuid import uuid4
 
 from omegaml.client.auth import OmegaRestApiAuth
 
@@ -58,7 +56,7 @@ def api_signup_user(ctx):
     api = OmegaAdminApi(ctx.web_url, ctx.api_user, ctx.api_key)
     # we set this for subsequent steps to use this data
     ctx.feature.username = '{}@omegaml.io'.format(uuid4().hex)
-    ctx.feature.password = base64.encodebytes(six.b("123456")).decode('ascii'),
+    ctx.feature.password = base64.encodebytes(b"123456").decode('ascii'),
     # sign up
     resp = api.signup(ctx.feature.username, ctx.feature.password)
     ctx.assertEqual(resp.status_code, http.HTTPStatus.CREATED)

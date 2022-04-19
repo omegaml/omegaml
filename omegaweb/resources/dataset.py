@@ -1,10 +1,11 @@
 """
 REST API to datasets
 """
+import urllib
 
+import builtins
 
 from mongoengine.errors import DoesNotExist
-from six import iteritems
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, DictField
@@ -15,8 +16,6 @@ import numpy as np
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
 import pandas as pd
-from six.moves import builtins
-from six.moves import urllib
 
 from .util import BundleObj
 
@@ -92,7 +91,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         restore filter kwargs for query in om.datasets.get
         """
         # -- get filters as specified on request query args
-        fltkwargs = {k: v for k, v in iteritems(bundle.request.GET)
+        fltkwargs = {k: v for k, v in bundle.request.GET.items()
                      if k not in ['orient', 'limit', 'skip', 'page']}
         # -- get dtypes of dataframe and convert filter values
         om = self.get_omega(bundle)
@@ -104,7 +103,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         np_typemap = {v: getattr(builtins, k)
                       for k, v in np.sctypeDict.items()
                       if k in vars(builtins)}
-        for k, v in iteritems(fltkwargs):
+        for k, v in fltkwargs.items():
             # -- get column name without operator (e.g. x__gt => x)
             col = k.split('__')[0]
             value = urllib.parse.unquote(v)
@@ -227,7 +226,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         # convert dtypes back to numpy dtypes
         # -- see https://github.com/pandas-dev/pandas/issues/14655#issuecomment-260736368
         if dtypes:
-            dtypes = {k: np.dtype(v) for k, v in iteritems(dtypes)}
+            dtypes = {k: np.dtype(v) for k, v in dtypes.items()}
         # pandas only likes orient = records or columns
         if orient == 'dict':
             orient = 'columns'

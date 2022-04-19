@@ -3,12 +3,12 @@
 # see https://github.com/chronoxor/gil
 # format:
 # name relpath git-repo-url branch
-omegaml ../omegaml-ce https://github.com/omegaml/omegaml master
+omegaml ../omegaml-ce https://github.com/omegaml/omegaml 0.15.1
 cloudmgr ../omegaml-deploy/cloudmgr https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/cloudmgr 1.1.5
 helmcharts ../omegaml-deploy/helmcharts https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/helmcharts 1.4.4
-stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable updates
-landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage master
-minibatch ../minibatch https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch master
+stackable ../stackable https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/stackable 0.4
+landingpage ../landingpage https://7e7710a308996277fc9d448719d078f31193385a@github.com/productaize/landingpage 0.12
+minibatch ../minibatch https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/minibatch 0.4.0
 django-tastypie-swagger ../django-tastypie-swagger https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/django-tastypie-swagger 0.2.0
 tastypiex ../tastypiex https://7e7710a308996277fc9d448719d078f31193385a@github.com/miraculixx/tastypiex 0.4
 apps ../omegaml-apps https://7e7710a308996277fc9d448719d078f31193385a@github.com/omegaml/apps master
