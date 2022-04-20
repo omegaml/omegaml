@@ -1,15 +1,14 @@
-from random import random
-
 from celery import Task, shared_task
-from celery.signals import worker_init, worker_process_init
+from celery.signals import worker_process_init
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
 from pymongo.errors import ConnectionFailure
+from random import random
 from time import sleep
 
 import omegaops as omops
 from landingpage.models import DEPLOY_COMPLETED, ServicePlan
-from omegaml.client.userconf import get_omega_from_apikey
+from omegaml.client.auth import AuthenticationEnv
 from omegaops.celeryapp import app
 from omegaops.util import enforce_logging_format, retry
 from paasdeploy.models import ServiceDeployConfiguration
@@ -50,7 +49,8 @@ class BaseLoggingTask(Task):
         # initialize only once
         if BaseLoggingTask._om is None:
             omops_user = User.objects.get(username='omops')
-            BaseLoggingTask._om = om = get_omega_from_apikey(omops_user.username, omops_user.api_key.key)
+            auth_env = AuthenticationEnv.secure()
+            BaseLoggingTask._om = om = auth_env.get_omega_from_apikey(omops_user.username, omops_user.api_key.key)
             # ensure the dataset is created and the db connection exists
             if om.datasets.metadata('events') is None:
                 coll = om.datasets.collection('events')
@@ -105,7 +105,8 @@ def run_user_scheduler():
         qualifier = 'default'
         # get an omega instance configured to the user's specifics and send task to user's worker
         try:
-            user_om = get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
+            auth_env = AuthenticationEnv.secure()
+            user_om = auth_env.get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
             execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
             execute_scripts.apply_async()
         except Exception as e:

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-from omegaml.client.auth import OmegaRuntimeAuthentication
+from omegaml import load_class
+from omegaml.client.auth import AuthenticationEnv
 from omegaml.runtimes import OmegaRuntimeDask
 from omegaml.runtimes.scriptproxy import OmegaScriptProxy
 
@@ -18,7 +19,8 @@ class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):
 
     @property
     def _common_kwargs(self):
-        return dict(__auth=self.runtime.auth_tuple, pure_python=self.pure_python)
+        return dict(__auth=self.runtime.auth.token,
+                    pure_python=self.pure_python)
 
     def script(self, scriptname):
         """
@@ -31,15 +33,7 @@ class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):
         """
         return the current client authentication or None if not configured
         """
-        defaults = self.omega.defaults
         if self._auth is None:
-            kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
-                          apikey=getattr(defaults, 'OMEGA_APIKEY'),
-                          qualifier=getattr(defaults, 'OMEGA_QUALIFIER', 'default'))
-            self._auth = OmegaRuntimeAuthentication(**kwargs)
+            auth_env = AuthenticationEnv.secure()
+            self._auth = auth_env.get_runtime_auth(om=self.omega)
         return self._auth
-
-    @property
-    def auth_tuple(self):
-        auth = self.auth
-        return auth.userid, auth.apikey, auth.qualifier

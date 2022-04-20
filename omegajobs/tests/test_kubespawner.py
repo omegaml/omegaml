@@ -197,7 +197,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, Isola
 
     async def test_startup_failed_load_config(self):
         # https://github.com/omegaml/omegaml-enterprise/issues/254
-        with patch('omegajobs.spawnermixin.get_user_config_from_api',
+        with patch('omegaml.client.userconf._get_userconfig_from_api',
                    side_effect=AssertionError('problem')) as mock:
             config = Instance(Config, (), {})
             config._has_section = lambda *args : False

@@ -1,5 +1,6 @@
 from omegaee._version import version
-from omegaee.runtimes.runtime import OmegaAuthenticatedRuntime
+from omegaml import load_class
+from omegaml.client.auth import AuthenticationEnv
 
 
 def make_enterprise():
@@ -40,10 +41,12 @@ def make_enterprise():
             super(EnterpriseOmega, self).__init__(**kwargs)
 
         def _make_runtime(self, celeryconf):
-            return OmegaAuthenticatedRuntime(self, bucket=self.bucket,
-                                             defaults=self.defaults,
-                                             celeryconf=celeryconf,
-                                             auth=self.auth)
+            auth_env = load_class(self.defaults.OMEGA_AUTH_ENV)
+            RuntimeAuthentication = auth_env.get_runtime_auth()
+            return RuntimeAuthentication(self, bucket=self.bucket,
+                                         defaults=self.defaults,
+                                         celeryconf=celeryconf,
+                                         auth=self.auth)
 
         def __repr__(self):
             return 'OmegaEnterprise(mongo_url={})'.format(self.mongo_url)
@@ -58,7 +61,7 @@ def make_enterprise():
 
         def setup(self, username=None, apikey=None, api_url=None, qualifier=None, view=True):
             qualifier = qualifier or 'default'
-            from omegaml.util import settings, load_class
+            from omegaml.util import settings
             # load defaults
             defaults = settings()
             # get userid, apikey and api url
@@ -70,12 +73,12 @@ def make_enterprise():
             auth_set_in_config = all(getattr(defaults, k, False) for k in ('OMEGA_USERID', 'OMEGA_APIKEY'))
             auth_default_allowed = bool(defaults.OMEGA_ALLOW_TASK_DEFAULT_AUTH)
             # enable auth and start
-            auth = load_class(defaults.OMEGA_AUTH_ENV)
+            auth_env = AuthenticationEnv.secure()
             if not self.initialized:
                 if username and apikey:
                     # we have a username and apikey and this is the first time we initialize
-                    self.omega = auth.get_omega_from_apikey(username, apikey, api_url=api_url,
-                                                            qualifier=qualifier, view=view)
+                    self.omega = auth_env.get_omega_from_apikey(username, apikey, api_url=api_url,
+                                                                qualifier=qualifier, view=view)
                 elif auth_default_allowed or auth_set_in_config:
                     # if valid userid and apikey set in config, or default config allowed (e.g. testing)
                     self.omega = Omega(defaults=defaults)
@@ -138,37 +141,12 @@ def make_enterprise():
         om = EnterpriseOmegaDeferredInstance()
         return om.setup(**kwargs).omega[bucket]
 
-    def get_omega_for_task(task):
-        """
-        magic sauce to get omegaml for this task without exposing the __auth kwarg
-
-        This links back to omegaml.get_omega_for_task which is
-        an injected dependency. This way we can have any authentication
-        environment we want. The way this works behind the scenes
-        is that the task is passed the __auth kwargs which must hold
-        serialized credentials that the get_omega_for_task implementation
-        can unwrap, verify the credentials and return an authenticated
-        Omega instance. This may seem a little contrived but it allows for
-        flexibility.
-
-        Note get_omega_for_task will pop the __auth kwarg so that client
-        code never gets to see what it was.
-
-        Returns:
-                authenticted Omega instance
-        """
-        from omegaml import settings, load_class
-        task_kwargs = task.request.kwargs or {} # request.kwargs can be None
-        auth = task_kwargs.pop('__auth', None)
-        defaults = settings()
-        auth_env = load_class(defaults.OMEGA_AUTH_ENV)
-        return auth_env.get_omega_for_task(auth=auth)
-
-    return EnterpriseOmega, EnterpriseOmegaDeferredInstance, setup, get_omega_for_task
+    auth_env = AuthenticationEnv.active()
+    return EnterpriseOmega, EnterpriseOmegaDeferredInstance, setup
 
 
 # exports -- these are dependency-injected in omegaml.__init__
-EnterpriseOmega, EnterpriseOmegaDeferredInstance, setup, get_omega_for_task = make_enterprise()
+EnterpriseOmega, EnterpriseOmegaDeferredInstance, setup = make_enterprise()
 OmegaDeferredInstance = EnterpriseOmegaDeferredInstance
 Omega = EnterpriseOmega
 _om = EnterpriseOmegaDeferredInstance()

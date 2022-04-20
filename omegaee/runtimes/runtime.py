@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from omegaml import load_class
 from omegaml.client.cloud import OmegaCloudRuntime
 
 
@@ -15,17 +16,13 @@ class OmegaAuthenticatedRuntime(OmegaCloudRuntime):
         """
         defaults = self.omega.defaults
         if self._auth is None:
-            from omegaml.client.auth import OmegaRuntimeAuthentication
+            auth_env = load_class(defaults.OMEGA_AUTH_ENV)
+            RuntimeAuthentication = auth_env.get_runtime_auth()
             kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
                           apikey=getattr(defaults, 'OMEGA_APIKEY'),
                           qualifier=getattr(defaults, 'OMEGA_QUALIFIER', 'default'))
-            self._auth = OmegaRuntimeAuthentication(**kwargs)
+            self._auth = RuntimeAuthentication(**kwargs)
         return self._auth
-
-    @property
-    def auth_tuple(self):
-        auth = self.auth
-        return auth.userid, auth.apikey, auth.qualifier
 
     def __repr__(self):
         return 'OmegaAuthenticatedRuntime({}, auth={})'.format(self.omega.__repr__(), self.auth.__repr__())

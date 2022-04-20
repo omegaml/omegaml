@@ -1,10 +1,10 @@
 from kubespawner.spawner import EventReflector, PodReflector
 
-from omegaml.client.auth import OmegaRestApiAuth
-from omegaml.client.userconf import get_user_config_from_api
-from omegaml.util import dict_merge
+from omegaml.client.auth import AuthenticationEnv
+from omegaml.util import dict_merge, load_class
 
 yesno = lambda v: 'yes' if v else 'no'
+
 
 class OmegaNotebookSpawnerMixin:
     def __init__(self, *args, **kwargs):
@@ -32,10 +32,11 @@ class OmegaNotebookSpawnerMixin:
             defaults = settings(reload=True)
             admin_user = defaults.OMEGA_JYHUB_USER
             admin_apikey = defaults.OMEGA_JYHUB_APIKEY
-            api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-            configs = get_user_config_from_api(api_auth, api_url=None,
-                                               requested_userid=self.user.name,
-                                               view=True)
+            auth_env = AuthenticationEnv.secure()
+            api_auth = auth_env.get_restapi_auth(userid=admin_user, apikey=admin_apikey, defaults=defaults)
+            configs = auth_env.get_userconfig_from_api(api_auth, api_url=None,
+                                                       requested_userid=self.user.name,
+                                                       view=True)
             configs = configs['objects'][0]['data']
             configs['OMEGA_RESTAPI_URL'] = defaults.OMEGA_RESTAPI_URL
             self._omega_configs = configs
@@ -71,15 +72,8 @@ class OmegaNotebookSpawnerMixin:
         def env_or_config(key, default=None):
             return configs.get(key) or os.environ.get(key) or default
 
-        configs = self._get_omega_config()
-
         defaults = settings(reload=True)
-        admin_user = defaults.OMEGA_JYHUB_USER
-        admin_apikey = defaults.OMEGA_JYHUB_APIKEY
-        api_auth = OmegaRestApiAuth(admin_user, admin_apikey)
-        configs = get_user_config_from_api(api_auth, api_url=None, requested_userid=self.user.name,
-                                           view=True)
-        configs = configs['objects'][0]['data']
+        configs = self._get_omega_config()
         # define additional env vars
         om_env = {
             'USER': self.user.name,

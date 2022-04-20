@@ -1,10 +1,10 @@
 import requests
 from jupyterhub.auth import Authenticator
 
-from omegaml.client.auth import OmegaRestApiAuth
-from omegaml.client.userconf import get_user_config_from_api
+from omegaml.client.auth import AuthenticationEnv
 
 APIKEYS = {}
+
 
 class OmegaAuthenticator(Authenticator):
     async def authenticate(self, handler, data):
@@ -13,10 +13,10 @@ class OmegaAuthenticator(Authenticator):
         APIKEYS[username] = password
         from omegaml import settings
         defaults = settings()
-        api_url = defaults.OMEGA_RESTAPI_URL
-        api_auth = OmegaRestApiAuth(username, password)
+        auth_env = AuthenticationEnv.secure()
         try:
-            configs = get_user_config_from_api(api_auth, api_url=api_url)
+            configs = auth_env.get_userconfig_from_api(requested_userid=username,
+                                                       defaults=defaults)
             config = configs['objects'][0]['data']
         except:
             return None

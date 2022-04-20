@@ -1,11 +1,10 @@
 import shutil
-
 from jupyterhub.spawner import LocalProcessSpawner
 from jupyterhub.traitlets import Command
 from traitlets import Unicode
 
 from omegajobs.spawnermixin import OmegaNotebookSpawnerMixin
-from omegaml.client.userconf import save_userconfig_from_apikey
+from omegaml.client.auth import AuthenticationEnv
 
 singleuser_starter = '/app/scripts/omegajobs.sh'
 
@@ -52,7 +51,8 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
                 user = self._config_env.pop('OMEGA_USERID')
                 apikey = self._config_env.pop('OMEGA_APIKEY')
                 qualifier = self._config_env.pop('OMEGA_QUALIFIER', 'default')
-                save_userconfig_from_apikey(config_file, user, apikey, view=True, qualifier=qualifier)
+                auth_env = AuthenticationEnv.secure()
+                auth_env.save_userconfig_from_apikey(config_file, user, apikey, view=True, qualifier=qualifier)
             except Exception as e:
                 self.log.error('SimpleLocalProcessSpawner: exec_fn:get_config error {}'.format(str(e)))
                 raise

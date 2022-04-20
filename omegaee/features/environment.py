@@ -54,7 +54,7 @@ def before_all(context):
     # setup environment
     context.debug = os.environ.get('BEHAVE_DEBUG', False)
     defaults = settings()
-    defaults.OMEGA_AUTH_ENV = 'omegaml.client.auth.OmegaSecureAuthenticationEnv'
+    defaults.OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
     context.browser.visit(context.web_url)
     context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
     # setup test assertion methods

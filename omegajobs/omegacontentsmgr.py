@@ -27,8 +27,9 @@ class OmegaStoreAuthenticatedContentsManager(OmegaStoreContentsManager):
             userid = os.environ.get('JUPYTERHUB_USER')
             apikey = os.environ.get('OMEGA_APIKEY')
             if userid and apikey:
-                from omegaml.client.userconf import get_omega_from_apikey
-                self._omega = get_omega_from_apikey(userid, apikey, view=True)
+                from omegaml.client.auth import AuthenticationEnv
+                auth_env = AuthenticationEnv.secure()
+                self._omega = auth_env.get_omega_from_apikey(userid, apikey, view=True)
             else:
                 import omegaml as om
                 self._omega = om

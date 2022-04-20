@@ -185,7 +185,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                             'omegaee.tasks',
                             'omegaml.backends.package.tasks']
     #: authentication environment
-    OMEGA_AUTH_ENV = 'omegaml.client.auth.OmegaSecureAuthenticationEnv'
+    OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
 
     # be compatible with omegaml-core flask API which does not allow trailing slash
     TASTYPIE_ALLOW_MISSING_SLASH = True
