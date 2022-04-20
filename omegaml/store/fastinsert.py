@@ -7,7 +7,7 @@ from omegaml.runtimes.loky import OmegaRuntimeBackend
 from omegaml.util import PickableCollection
 
 OmegaRuntimeBackend = OmegaRuntimeBackend  # noqa
-default_chunksize = int(1e4)
+default_chunksize = int(1e6)
 
 
 def dfchunker(df, size=default_chunksize):
@@ -25,7 +25,7 @@ def insert_chunk(job):
     """
     # note we do not catch exceptions as we want to propagate errors back to caller
     # rationale: if one chunk insert fails, all should fail and user be notified
-    sdf, collection, cpid = job
+    sdf, collection = job
     result = collection.insert_many(sdf.to_dict(orient='records'))
     return len(result.inserted_ids)
 
@@ -66,8 +66,7 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         # use the cached pool
         # use at least 2 processes for parallelism, at most half of available cores
         n_jobs = max(2, math.ceil(os.cpu_count() / 2))
-        jobs = zip(dfchunker(df, size=chunksize),
-                   repeat(collection), repeat(id(collection)))
+        jobs = zip(dfchunker(df, size=chunksize), repeat(collection))
         approx_jobs = int(len(df) / chunksize)
         # we use multiprocessing backend because
         with Parallel(n_jobs=n_jobs, backend='omegaml', verbose=False) as p:

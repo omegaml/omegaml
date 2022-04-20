@@ -535,10 +535,12 @@ class PickableCollection(object):
         host, port = list(client.nodes)[0]
         # options contains ssl settings
         options = self.database.client._MongoClient__options._options
-        # FIXME from pymongo 4.1, __all_credentials no longer exists, moved to options.pool_options._credentials
-        #       https://github.com/mongodb/mongo-python-driver/commit/c94a3ad1dff4716f70989a46b126604e46e2e419
-        #       https://jira.mongodb.org/browse/PYTHON-2585
-        creds = self.database.client._MongoClient__all_credentials[options['username']]
+        all_creds = self.database.client._MongoClient__all_credentials
+        # extract credentials in pickable format
+        # -- if authSource was used for connection, credentials are in 'admin'
+        # -- otherwise credentials are keyed by username
+        cred_key = 'admin' if 'admin' in all_creds else options['username']
+        creds = all_creds[cred_key]
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
         creds_state['source'] = str(creds.source)
@@ -765,10 +767,11 @@ def base_loader(_base_config):
     _omega = None
 
     def load_customized():
-        from omegacl import omega as _omega
-        from omegacl import defaults as _base_config_client
+        mod = import_module(os.environ.get('OMEGA_CUSTOM_LOADER', ''))
+        _omega = mod.omega
+        _base_config_client = mod.defaults
         _base_config.update_from_obj(_base_config_client, attrs=_base_config)
-        return _omega, 'custom client'
+        return _omega, 'custom'
 
     def load_commercial():
         from omegaee import omega as _omega

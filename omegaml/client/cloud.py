@@ -77,10 +77,12 @@ class OmegaCloudRuntime(OmegaRuntime):
         return account_routing
 
 
-def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None):
+def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None,
+          view=None):
     import omegaml as om_mod
     api_url = ensure_api_url(api_url, om_mod._base_config)
-    view = getattr(om_mod._base_config, 'OMEGA_SERVICES_INCLUSTER', False)
+    view = (view if view is not None
+            else getattr(om_mod._base_config, 'OMEGA_SERVICES_INCLUSTER', False))
     auth_env = AuthenticationEnv.secure()
     om = auth_env.get_omega_from_apikey(userid=userid, apikey=apikey,
                                         api_url=api_url, qualifier=qualifier, view=view)
