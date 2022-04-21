@@ -37,6 +37,7 @@ OMEGA_MONGO_SSL_KWARGS = {
     'ssl': OMEGA_USESSL,
     'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
     'uuidRepresentation': 'standard',
+    'authSource': 'admin',
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)

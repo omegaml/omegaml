@@ -91,6 +91,7 @@ setup(
         'PyYAML>=3.12',
         'flask-restx>=0.4.0',
         'werkzeug<2.1.0', # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
+        'markupsafe==2.0.1', # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
