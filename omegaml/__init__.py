@@ -29,6 +29,7 @@ def link(_omega):
 # load base and lazy link
 # -- base_loader only loads classes, does not instantiate
 # -- deferred instance provides setup to load and link on access
+session_cache = cachetools.cached(cache=cachetools.TTLCache(**getattr(_base_config, 'OMEGA_SESSION_CACHE')))
 _omega = base_loader(_base_config)
 setup = _omega.setup
 version = getattr(_omega, 'version', version)
@@ -51,5 +52,3 @@ streams = _omega.OmegaDeferredInstance(_omega._om, 'streams')
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
-#: session cache
-session_cache = cachetools.cached(cache=cachetools.TTLCache(**getattr(_base_config, 'OMEGA_SESSION_CACHE')))
