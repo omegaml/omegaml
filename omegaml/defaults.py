@@ -177,7 +177,11 @@ OMEGA_TRACKING_PROVIDERS = {
     'profiling': 'omegaml.backends.experiment.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.experiment.NoTrackTracker',
 }
-
+#: session cache settings for cachetools.TTLCache
+OMEGA_SESSION_CACHE = {
+    'maxsize': 1, # cache at most one session
+    'ttl': 3600,  # keep it for 1 hour
+}
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
