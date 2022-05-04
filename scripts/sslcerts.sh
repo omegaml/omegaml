@@ -17,7 +17,9 @@ mkdir -p $rabbitmq_certs_dir
 
 # Clone tls-gen in upper directory
 cd $script_dir/../..
-#git clone https://github.com/michaelklishin/tls-gen.git
+if [ ! -f ./tls-gen ]; then
+  git clone https://github.com/michaelklishin/tls-gen.git
+fi
 cd tls-gen/basic
 
 # Create and move rabbitmq certs, use container hostname as CN

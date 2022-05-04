@@ -49,7 +49,7 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
 OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
 #: additional SSL kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
-    'ssl': OMEGA_USESSL,
+    'tls': OMEGA_USESSL,
     'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
 }
 #: admin broker

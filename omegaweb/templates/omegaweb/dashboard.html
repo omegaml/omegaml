@@ -1,5 +1,5 @@
 {% extends "landingpage/base.html" %}
-{% load sekizai_tags staticfiles %} 
+{% load sekizai_tags static %}
 {% block subcontent %}
 {% addtoblock "css" %}
 <link href="{% static 'omegaweb/js/libs/backgrid/libs/backgrid.css' %}" rel="stylesheet">
@@ -80,7 +80,7 @@
 {% addtoblock "pagejs" %}
 <script>
 $(function() {
-    require(['omegaweb/js/views/generictable', 
+    require(['omegaweb/js/views/generictable',
              'omegaweb/js/models/dataset',
              'omegaweb/js/models/model',
              'backbone'], function(GenericTableView, Dataset, Model, $B) {
@@ -139,7 +139,7 @@ $(function() {
            el: '.panel.datasets',
            tableOptions: tableOptions,
            collection: datasets,
-       }); 
+       });
        datasetsView.on('row:edit', function(model) {
            var dsName = encodeURIComponent(model.datasetName);
            window.open('/dataset/{0}/'.format([dsName]));
@@ -149,7 +149,7 @@ $(function() {
            el: '.panel.models',
            tableOptions: tableOptions,
            collection: models,
-       }); 
+       });
        modelsView.render();
     });
 });

@@ -24,6 +24,5 @@ class CloudRuntimeAuthenticationEnv(CloudClientAuthenticationEnv):
         Returns:
                 authenticted Omega instance
         """
-        auth_env = AuthenticationEnv.secure()
-        auth = task.system_kwargs.get('__auth', None)
-        return auth_env.get_omega_for_task(task, auth=auth)
+        auth = task.system_kwargs.get('__auth')
+        return super().get_omega_for_task(task, auth=auth)

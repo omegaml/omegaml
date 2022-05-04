@@ -1,7 +1,7 @@
-from landingpage.models import ServicePlan
-
 from django.contrib.auth.models import User
 from django.test.testcases import TestCase
+
+from landingpage.models import ServicePlan
 
 
 class UserSignupTests(TestCase):

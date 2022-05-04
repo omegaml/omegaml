@@ -52,7 +52,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'Django==2.2',
+        'Django~=3.2',
         'honcho==1.0.1',
         'pyrabbit2==1.0.7',
         'cachetools',

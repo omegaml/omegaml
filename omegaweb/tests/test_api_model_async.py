@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 from django.contrib.auth.models import User
+from django.test import TestCase
 from numpy.testing import assert_almost_equal
-from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from tastypie.test import ResourceTestCaseMixin
@@ -14,7 +15,7 @@ from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin):
+class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
     def setUp(self):
         super(ModelResourceTestsAsync, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client)

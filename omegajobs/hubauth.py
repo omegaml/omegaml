@@ -1,21 +1,18 @@
 import requests
 from jupyterhub.auth import Authenticator
-
+from omegaml import settings
 from omegaml.client.auth import AuthenticationEnv
-
-APIKEYS = {}
 
 
 class OmegaAuthenticator(Authenticator):
     async def authenticate(self, handler, data):
         username = data['username']
         password = data['password']
-        APIKEYS[username] = password
-        from omegaml import settings
         defaults = settings()
         auth_env = AuthenticationEnv.secure()
         try:
-            configs = auth_env.get_userconfig_from_api(requested_userid=username,
+            configs = auth_env.get_userconfig_from_api(userid=username,
+                                                       apikey=password,
                                                        defaults=defaults)
             config = configs['objects'][0]['data']
         except:

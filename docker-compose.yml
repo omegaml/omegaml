@@ -24,6 +24,7 @@ services:
       - HOME=/home/omegadev
       - PORT=8000
       - JYHUB_DEBUG=1
+      - PYTHONPATH=/app
     depends_on:
       - mongodb
       - rabbitmq
@@ -35,7 +36,7 @@ services:
     user: "${CURRENT_USER}"
 
   mongodb:
-    image: mongo:3.6.8-stretch
+    image: mongo:4.4.13-focal
     ports:
       - "27017:27017"
       - "28017:28017"

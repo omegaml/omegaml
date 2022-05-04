@@ -34,7 +34,7 @@ class OmegaResourceTestMixin:
         self.assertHttpAccepted(resp)
         data = self.deserialize(resp)
         location = resp['Location']
-        self.assertRegexpMatches(location, r'http://testserver/api/v1/task/.*/result')
+        self.assertRegexpMatches(location, r'.*/api/v1/task/.*/result')
         # check we can get back the actual result
         resp = self.api_client.get(location.replace('http://testserver', ''), data={
             'resource_uri': data.get('resource_uri'),

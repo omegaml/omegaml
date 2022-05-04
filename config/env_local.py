@@ -28,7 +28,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoPayments,
                         Config_DjangoConstance,
                         Config_FileEmail,
-                        Config_DjangoGrappelli,
+                        # Config_DjangoGrappelli,
                         # Config_Airbrake,
                         # Config_DebugToolbar,
                         Config_Cities_Light,
@@ -204,3 +204,10 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
 
     # secretsvault audit
     SECRETS_AUDIT = True
+
+    # Django 3.2 upgrade
+    # https://dev.to/weplayinternet/upgrading-to-django-3-2-and-fixing-defaultautofield-warnings-518n
+    DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+    # https://docs.djangoproject.com/en/3.2/ref/clickjacking/#setting-x-frame-options-for-all-responses
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+

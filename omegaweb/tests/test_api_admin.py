@@ -13,6 +13,3 @@ class SignupApi(make_base()):
         super(SignupApi, self).setUp()
         ServicePlan.objects.create(name='omegaml')
 
-    def url(self, pk=None):
-        _url = super(SignupApi, self).url(pk=pk)
-        return '/admin' + _url

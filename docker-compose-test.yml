@@ -40,7 +40,7 @@ services:
     user: "${CURRENT_USER}"
 
   mongodb:
-    image: mongo:3.6.8-stretch
+    image: mongo:4.4.13-focal
     ports:
       - "27017:27017"
       - "28017:28017"

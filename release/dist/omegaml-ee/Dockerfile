@@ -6,7 +6,7 @@ ENV GRANT_SUDO=yes
 USER root
 RUN apt-get update -y && \
     apt-get install -y --fix-missing python3-dev default-libmysqlclient-dev build-essential  && \
-    apt-get install -y procps htop curl && \
+    apt-get install -y procps htop curl git && \
     apt-get clean
 # add omegaml software, fix permissions according to above URL
 # -- adding /app requires root permission, however /app must belong to $NB_USER

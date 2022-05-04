@@ -10,8 +10,8 @@ class Config_Gunicorn(object):
         bind = '0.0.0.0:{port}'.format(port=os.environ.get('PORT', 5000))
     else:
         bind = 'localhost:5000'
-    timeout = os.environ.get('GUNICORN_TIMEOUT', 30)
-    loglevel = 'debug'
+    timeout = os.environ.get('WEB_TIMEOUT', 30)
+    loglevel = os.environ.get('WEB_LOGLEVEL', 'DEBUG')
     workers = os.environ.get('WEB_CONCURRENCY', concurrency())
     errorlog = '-'
     accesslog = '-'

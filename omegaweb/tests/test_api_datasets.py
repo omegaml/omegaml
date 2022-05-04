@@ -1,17 +1,16 @@
 import os
-import random
-
 import pandas as pd
+import random
 from django.contrib.auth.models import User
+from django.test import TestCase
 from pandas.testing import assert_frame_equal
 from tastypie.test import ResourceTestCaseMixin
 
-from landingpage.models import ServicePlan
 from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
-class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin):
+class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
     def setUp(self):
         from omegaml import Omega
 

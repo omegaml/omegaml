@@ -1,3 +1,6 @@
+import pymongo
+from uuid import uuid4
+
 import datetime
 import hashlib
 from urllib.parse import urlparse
@@ -42,35 +45,23 @@ class OmegaOpsTests(TestCase):
         """
         test new users and mongo databases can be added with authentication
         """
-        dbname = 'testdbops'
-        username = 'testuserops'
+        dbname = uuid4().hex
+        username = uuid4().hex
         password = 'foobar'
         db, url = add_userdb(dbname, username, password)
         self.assertIsNotNone(db)
-        # check we can authenticate and insert
-        db.logout()
-        db.authenticate(username, password, source='admin')
+        # check we can use the db to insert data
         coll = db['data']
-        coll.insert({'foo': 'bar'})
-        # check no other user can authenticate
-        with self.assertRaises(PyMongoError) as ex:
-            db.logout()
-            db.authenticate('sillyuser', 'norealpassword', source='admin')
+        coll.insert_one({'foo': 'bar'})
         # check a new user for another db cannot access old db
-        dbname2 = 'testdbops2'
-        username2 = 'testuserops2'
+        dbname2 = uuid4().hex
+        username2 = uuid4().hex
         password2 = 'foobar2'
         db2, url = add_userdb(dbname2, username2, password2)
-        with self.assertRaises(PyMongoError) as ex:
-            db.logout()
-            db.authenticate(username2, password2, source='admin')
-            db.create_collection('test')
         # check a valid user cannot get access to another db
-        db2.logout()
-        db2.authenticate(username2, password2, source='admin')
         otherdb = db2.client[dbname]
         with self.assertRaises(OperationFailure) as ex:
-            otherdb.collection_names()
+            otherdb.list_collection_names()
 
     def test_addservice(self):
         """
@@ -109,8 +100,8 @@ class OmegaOpsTests(TestCase):
         client = MongoClient(mongo_url, authSource='admin')
         db = client.get_database()
         coll = db['data']
-        coll.remove()
-        coll.insert({'foo': 'bar-user1'})
+        coll.drop()
+        coll.insert_one({'foo': 'bar-user1'})
         # add a second user
         username2 = hashlib.md5(self.username2.encode('utf-8')).hexdigest()
         password2 = hashlib.md5(self.password2.encode('utf-8')).hexdigest()
@@ -121,7 +112,17 @@ class OmegaOpsTests(TestCase):
         client2 = MongoClient(mongo_url, authSource='admin')
         db2 = client2.get_database()
         coll2 = db2['data']
-        coll2.insert({'foo': 'bar-user2'})
+        coll2.insert_one({'foo': 'bar-user2'})
+        # verify that second user does not have access to first user's db
+        config_fail = dict(config2['qualifiers']['default'])
+        config_fail['mongodbname'] = config['qualifiers']['default']['mongodbname']
+        mongo_url = settings.BASE_MONGO_URL.format(mongohost=constance_config.MONGO_HOST,
+                                                   **config_fail)
+        client_fail = MongoClient(mongo_url, authSource='admin')
+        with self.assertRaises(pymongo.errors.OperationFailure):
+            db_fail = client_fail.get_database()
+            coll_fail = db_fail['data']
+            data = coll_fail.find_one()
         # authorize second user to first user's db
         config3 = authorize_userdb(self.user, self.user2, username2, password2)
         # see if we can access first user's db using second user's credentials
@@ -136,7 +137,7 @@ class OmegaOpsTests(TestCase):
         coll3 = db3['data']
         data = coll3.find_one()
         self.assertEqual(data['foo'], 'bar-user1')
-        coll3.insert({'foobar': 'bar-user2'})
+        coll3.insert_one({'foobar': 'bar-user2'})
         data = coll.find_one({'foobar': 'bar-user2'})
         self.assertEqual(data['foobar'], 'bar-user2')
 

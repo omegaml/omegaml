@@ -33,12 +33,3 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypi
         """
         return self.create_response_from_resource(request, '_generic_script_resource', 'run', *args, **kwargs)
 
-        om = self.get_omega(request)
-        name = kwargs.pop('pk')
-        try:
-            result = om.runtime.script(name).run(**request.GET.dict(),
-                                                 __format='python')
-            data = result.get()
-        except Exception:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
-        return self.create_response(request, data)

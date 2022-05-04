@@ -1,8 +1,7 @@
 import json
-from django.contrib.auth.models import Group, User
 
 from omegaml.mongoshim import MongoClient
-from omegaml.util import urlparse, markup, dict_merge
+from omegaml.util import urlparse, dict_merge
 
 
 def get_settings():
@@ -116,12 +115,13 @@ def add_userdb(dbname, username, password):
     }]
     # create the db but NEVER return this db. it will have admin rights.
     client = MongoClient(settings.MONGO_ADMIN_URL, ssl=config.SERVICE_USESSL_VIEW)
-    _admin_newdb = client['admin']
+    _newdb = client[dbname]
+    _admindb = client['admin']
     # add user and reset password in case the user was there already
-    #_admin_newdb.add_user(username, password)
+    # _admin_newdb.add_user(username, password)
     # https://www.mongodb.com/docs/manual/reference/built-in-roles/#std-label-built-in-roles
-    _admin_newdb.command("createUser", username, pwd=password, roles=['readWrite'])
-    result = _admin_newdb.command("updateUser", username, pwd=password, roles=roles)
+    _admindb.command("createUser", username, pwd=password, roles=roles)
+    result = _admindb.command("grantRolesToUser", username, roles=roles)
     assert 'ok' in result
     # we need to get the newdb from the client otherwise
     # newdb has admin rights (!)
@@ -130,7 +130,7 @@ def add_userdb(dbname, username, password):
                                                       mongohost=mongohost,
                                                       mongopassword=password,
                                                       mongodbname=dbname)
-    client = MongoClient(client_mongo_url)
+    client = MongoClient(client_mongo_url, ssl=config.SERVICE_USESSL_VIEW)
     newdb = client[dbname]
     return newdb, client_mongo_url
 
@@ -147,15 +147,18 @@ def authorize_userdb(grant_user, grantee_user, username, password):
     :param password:
     :return:
     """
-    from django.contrib.auth.models import User
 
     # get settings from both users
     grant_settings = grant_user.services.get(offering__name='omegaml').settings
     grantee_service = grantee_user.services.get(offering__name='omegaml')
-    dbuser = User.objects.make_random_password(length=36)
+    grantee_settings = grantee_service.settings
     dbname = grant_settings['qualifiers'].get('default', grant_settings).get('mongodbname')
-    # add user to other db
-    add_userdb(dbname, username, password)
+    # add user to db if not exists
+    dbuser = grantee_settings['qualifiers'].get('default', grantee_settings).get('mongouser')
+    if not dbuser:
+        add_userdb(dbname, username, password)
+    else:
+        password = grantee_settings['qualifiers'].get('default', grantee_settings).get('mongopassword')
     otherdb_config = {
         grant_user.username: {
             'mongodbname': dbname,
@@ -286,6 +289,7 @@ def get_client_config(user, qualifier=None, view=False):
         view (bool): if True return the internal mongo url, else external as defined in
        constance.MONGO_HOST
     """
+    qualifier = qualifier or 'default'
     user_config = get_user_config(user, qualifier, view)
     user_settings = user_config['user_settings']
     omega_config = user_settings['services']['omegaml']
@@ -293,7 +297,7 @@ def get_client_config(user, qualifier=None, view=False):
     client_config = {
         "OMEGA_CELERY_CONFIG": {
             "BROKER_URL": user_config['broker_url'],
-            "CELERY_RESULT_BACKEND": 'amqp',
+            "CELERY_RESULT_BACKEND": 'rpc://',
             "CELERY_ACCEPT_CONTENT": [
                 "pickle",
                 "json",
@@ -310,7 +314,7 @@ def get_client_config(user, qualifier=None, view=False):
         "OMEGA_APIKEY": user.api_key.key,
         "OMEGA_QUALIFIER": qualifier,
         "OMEGA_MONGO_SSL_KWARGS": {
-            "ssl": omega_config['use_ssl'],
+            "tls": omega_config['use_ssl'],
         },
         "OMEGA_USESSL": omega_config['use_ssl'],
     }
@@ -599,6 +603,8 @@ def get_usergroup_settings(user, qualifier):
         and where the user's settings originally contain the <group> qualifier,
         this is returned.
     """
+    from django.contrib.auth.models import User
+
     # e.g.
     # somegroup => somegroup, default
     # somegroup:qualif => somegroup, qualif

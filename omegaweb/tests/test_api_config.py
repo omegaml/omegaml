@@ -1,11 +1,12 @@
-from landingpage.models import ServicePlan
-
 from django.contrib.auth.models import User
+from django.test import TestCase
 from tastypie.test import ResourceTestCaseMixin
+
+from landingpage.models import ServicePlan
 from omegaops import add_service_deployment, get_client_config
 
 
-class ClientConfigResourceTests(ResourceTestCaseMixin):
+class ClientConfigResourceTests(ResourceTestCaseMixin, TestCase):
     def setUp(self):
         super(ClientConfigResourceTests, self).setUp()
         ServicePlan.objects.create(name='omegaml')
@@ -14,15 +15,24 @@ class ClientConfigResourceTests(ResourceTestCaseMixin):
 
     def create_user(self):
         # setup a user including a (fake, no actual mongodb) config
-        self.username = username = 'test@omegaml.io'
+        self.username = username = 'testuser'
         self.email = email = 'test@omegaml.io'
         self.password = password = 'password'
         self.user = User.objects.create_user(username, email, password)
         self.config = {
-            'default': {
-                'dbname': 'testdb',
-                'username': self.user.username,
-                'password': 'foobar',
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': None,
+                }
+            },
+            'qualifiers': {
+                # TODO simplify -- use a more generic user:password@service/selector format
+                'default': {
+                    'mongodbname': 'foobar',
+                    'mongouser': 'foo',
+                    'mongopassword': password,
+                }
             }
         }
         add_service_deployment(self.user, self.config)
@@ -36,10 +46,19 @@ class ClientConfigResourceTests(ResourceTestCaseMixin):
         self.admin_user.is_staff = True
         self.admin_user.save()
         self.admin_config = {
-            'default': {
-                'dbname': 'admintestdb',
-                'username': self.admin_username,
-                'password': 'foobar',
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': None,
+                }
+            },
+            'qualifiers': {
+                # TODO simplify -- use a more generic user:password@service/selector format
+                'default': {
+                    'mongodbname': 'admintestdb',
+                    'mongouser': self.admin_username,
+                    'mongopassword': 'adminfoobar',
+                }
             }
         }
         add_service_deployment(self.admin_user, self.admin_config)
@@ -82,7 +101,7 @@ class ClientConfigResourceTests(ResourceTestCaseMixin):
         """
         # get config from api
         auth = self.admin_credentials()
-        resp = self.api_client.get(self.url(query='user=test@omegaml.io'), authentication=auth)
+        resp = self.api_client.get(self.url(query='user=testuser'), authentication=auth)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('objects', data)

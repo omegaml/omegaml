@@ -16,13 +16,15 @@ class AuthenticatedRuntimeTests(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-    def test_runtime_auth(self):
+    def test_runtime_explicit_auth(self):
         # set auth explicitely
         auth = OmegaRuntimeAuthentication('foo', 'bar')
         om = Omega(auth=auth)
         om.runtime.pure_python = True
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
         self.assertEquals(om.runtime.auth, auth)
+
+    def test_runtime_implicit_auth(self):
         # set auth indirectly
         defaults = settings()
         _userid = defaults.OMEGA_USERID

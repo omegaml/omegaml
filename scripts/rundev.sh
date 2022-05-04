@@ -57,9 +57,9 @@ export JYHUB_DEGUG=1
 # by enabling task routing we can have a central worker serve multiple accounts
 # on separate queues
 #export OMEGA_TASK_ROUTING_ENABLED=1
+export OMEGA_USERID=omops
+export OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
 export CELERY_Q=default
-#export OMEGA_USERID=omops
-#export OMEGA_APIKEY=686ae4620522e790d92009be674e3bdc0391164f
 export COMPOSE_FILE=${dcfile:-docker-compose.yml}
 
 if [[ ! -z $build ]]; then
@@ -108,5 +108,5 @@ else
     ./scripts/initlocal.sh --noinit
     python manage.py migrate
     python manage.py loaddata --app omegaweb landingpage
-    PORT=8000 honcho start web worker notebook scheduler omegaops
+    PORT=8000 honcho start web notebook omegaops worker scheduler
 fi

@@ -1,7 +1,8 @@
 from unittest import IsolatedAsyncioTestCase
 
+import os
 from django.contrib.auth.models import User
-from django.db import transaction
+from django.test import LiveServerTestCase, override_settings
 from kubespawner.spawner import MockObject
 from tastypie.test import ResourceTestCaseMixin
 from traitlets import Instance
@@ -12,18 +13,41 @@ from omegajobs.kubespawner import OmegaKubeSpawner
 from omegaml import settings
 from omegaweb.tests.util import OmegaResourceTestMixin
 
+# For compatibility,
+# - with JupyterHub 2.x: we use IsolatedAsyncioTestCase
+# - with Django 3.2: we use LiveServerTestCase and a file-based sqlite db
+# Rationale: JupyterHub has transitioned to use Python's native async, instead of
+# tornado, thus requires an async test driver => IsolatedAsyncioTestCase. In
+# Django 3.x there is support for async code, however calling ORM methods from
+# async code is not supported (i.e. through tastypie's TestApiClient). Thus
+# we need a LiveServerTestCase to run omega APIs in a non-async context.
+# This introduces a multi-threading issue with the in-memory sqlite DB that
+# Django test cases use by default, which is solved by using a file-based sqlite
+# DB as in LIVESERVER_DATABASES. Note we localize the settings override to this
+# module as it is the only test that uses a live server.
 
-# It looks like AsyncTestCase is not compatible with Django 2.2. After each test, Django will not
-# tear down or recreate its database. For that reason, I made this become a regular TestCase.  My
-# understanding is that nothing is lost after the change, and all tests still run properly. There
-# is a skipped test `test_start()` that does async stuff; but this test also used to be skipped
-# under the old Django, so no change here either. If `test_start()` is going to be utilized in the
-# future, it might need to be refactored into a separate class.
 
-class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, IsolatedAsyncioTestCase):
-    async def asyncSetUp(self):
-        super(OmegaKubeSpawnerTests, self).setUp()
-        transaction.set_autocommit(False)
+# overriding DATABASES here avoids django sqlite3.OperationalError: database table is locked
+# see notes above
+LIVERSERVER_DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db.sqlite3',
+        'TEST ': {
+            'NAME': '/tmp/test_db.sqlite3',
+        }
+    }
+}
+
+
+@override_settings(
+    DATABASES=LIVERSERVER_DATABASES)
+class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin,
+                            LiveServerTestCase,  # Django 3.2 compatibility, see notes above
+                            IsolatedAsyncioTestCase  # JupyterHub 2.x compatibility, see notes above
+                            ):
+
+    def setUp(self):
         defaults = settings()
         # setup django user
         self.username = username = 'test'
@@ -43,8 +67,20 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, Isola
         # setup omega credentials
         self.setup_initconfig()
 
+    async def asyncSetUp(self):
+        # enable tests to run sync and async code mixed - see notes above
+        # -- avoids django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context
+        # -- https://docs.djangoproject.com/en/4.0/topics/async/#asgiref.sync.sync_to_async
+        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+        # enable the use of the live server for omega config queries by OmegaKubeSpawner - see notes above
+        # -- this avoids django sqlite3.OperationalError: database table is locked
+        os.environ['OMEGA_RESTAPI_URL'] = self.live_server_url
+
+    def tearDown(self):
+        pass
+
     async def asyncTearDown(self):
-        transaction.rollback()
+        pass
 
     def _make_spawner(self):
         user = MockObject()
@@ -114,7 +150,6 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, Isola
             # hostPath for pylib user
             self.assertEqual(manifest['spec']['volumes'][1]['name'], 'pylib-user')
             self.assertEqual(manifest['spec']['volumes'][1]['host_path']['path'], f"/mnt/local/{self.user.username}")
-
 
     async def test_makepod_userspecified_jupyter_volumes(self):
         # update user config
@@ -194,13 +229,12 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, Isola
         post_options_form = spawner.options_form
         self.assertNotEqual(prev_options_form, post_options_form)
 
-
     async def test_startup_failed_load_config(self):
         # https://github.com/omegaml/omegaml-enterprise/issues/254
         with patch('omegaml.client.userconf._get_userconfig_from_api',
                    side_effect=AssertionError('problem')) as mock:
             config = Instance(Config, (), {})
-            config._has_section = lambda *args : False
+            config._has_section = lambda *args: False
             try:
                 spawner = self._make_spawner()
                 spawner._load_config(config)
@@ -209,5 +243,3 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin, Isola
             else:
                 raised = False
             self.assertFalse(raised)
-
-

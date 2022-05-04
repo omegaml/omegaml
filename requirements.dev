@@ -3,6 +3,6 @@
 -e ../stackable
 -e ../landingpage[paasdeploy]
 -e ../django-tastypie-swagger
--e ../tastypiex # is now part of of landingpage install
+-e ../tastypiex
 #git+https://github.com/liftoff/pyminifier.git
 

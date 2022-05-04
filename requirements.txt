@@ -44,7 +44,7 @@ cachetools==4.2.4
     # via google-auth
 callable-pip==1.0.0
     # via omegaml
-celery==4.2.1
+celery<5
     # via
     #   landingpage
     #   omegaml

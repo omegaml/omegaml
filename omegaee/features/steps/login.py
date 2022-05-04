@@ -13,9 +13,9 @@ def given_new_user(ctx):
     br.visit(uri(br, '/admin/post_office/email/'))
     # select email
     el = br.find_by_text(ctx.feature.username)
-    el.find_by_xpath('../th[@class="field-id"]/a').click()
+    el.find_by_xpath('../th[@class="field-truncated_message_id"]/a').click()
     # read confirmation url
-    text = br.find_by_id('id_message').text
+    text = br.find_by_css('div.readonly pre').text
     regex = r".*go.to.(.*)"
     # signout of admin
     br.visit(uri(br, '/admin/logout/'))
@@ -67,7 +67,6 @@ def log_out(ctx):
 @then('we can get an omega instance')
 def get_omgega_instance(ctx):
     import omegaml as om
-
     br = ctx.browser
     # check we can get a new omegaml instance
     userid, apikey = find_user_apikey(br)
