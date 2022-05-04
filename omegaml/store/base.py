@@ -110,7 +110,6 @@ class OmegaStore(object):
         self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
-        self._fs_collection = self._ensure_fs_collection()
         self._fs = None
         self._tmppath = None
         self.prefix = prefix or ''
@@ -141,6 +140,18 @@ class OmegaStore(object):
         return self.mongo_url == other.mongo_url and self.bucket == other.bucket and self.prefix == other.prefix
 
     @property
+    def db(self):
+        return self._get_database()
+
+    @property
+    def _Metadata(self):
+        return self._get_Metadata()
+
+    @property
+    def fs(self):
+        return self._get_filesystem()
+
+    @property
     def tmppath(self):
         """
         return an instance-specific temporary path
@@ -151,76 +162,6 @@ class OmegaStore(object):
         os.makedirs(self._tmppath)
         return self._tmppath
 
-    @property
-    def mongodb(self):
-        """
-        Returns a mongo database object
-        """
-        if self._db is not None:
-            return self._db
-        # parse salient parts of mongourl, e.g.
-        # mongodb://user:password@host/dbname
-        self.parsed_url = urlparse.urlparse(self.mongo_url)
-        self.database_name = self.parsed_url.path[1:]
-        host = self.parsed_url.netloc
-        scheme = self.parsed_url.scheme
-        username, password = None, None
-        if '@' in host:
-            creds, host = host.split('@', 1)
-            if ':' in creds:
-                username, password = creds.split(':')
-        # connect via mongoengine
-        #
-        # note this uses a MongoClient in the background, with pooled
-        # connections. there are multiprocessing issues with pymongo:
-        # http://api.mongodb.org/python/3.2/faq.html#using-pymongo-with-multiprocessing
-        # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
-        # this defers connecting until the first access
-        # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
-        #
-        # use an instance specific alias, note that access to Metadata and
-        # QueryCache must pass the very same alias
-        self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
-        # always disconnect before registering a new connection because
-        # mongoengine.connect() forgets all connection settings upon disconnect
-        if alias not in _connections:
-            disconnect(alias)
-            connection = connect(alias=alias, db=self.database_name,
-                                 host=f'{scheme}://{host}',
-                                 username=username,
-                                 password=password,
-                                 connect=False,
-                                 authentication_source='admin',
-                                 serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
-                                 **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
-                                 )
-            # since PyMongo 4, connect() no longer waits for connection
-            waitForConnection(connection)
-        self._db = get_db(alias)
-        return self._db
-
-    @property
-    def _Metadata(self):
-        if self._Metadata_cls is None:
-            # hack to localize metadata
-            db = self.mongodb
-            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
-                                               collection=self._fs_collection)
-        return self._Metadata_cls
-
-    @property
-    def fs(self):
-        """
-        Retrieve a gridfs instance using url and collection provided
-
-        :return: a gridfs instance
-        """
-        if self._fs is not None:
-            return self._fs
-        self._fs = gridfs.GridFS(self.mongodb, collection=self._fs_collection)
-        self._ensure_fs_index(self._fs)
-        return self._fs
-
     def metadata(self, name=None, bucket=None, prefix=None, version=-1, **kwargs):
         """
         Returns a metadata document for the given entry name
@@ -230,7 +171,7 @@ class OmegaStore(object):
         # to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
         #
         # Role/#db.createRole
-        db = self.mongodb
+        db = self.db
         fs = self.fs
         prefix = prefix or self.prefix
         bucket = bucket or self.bucket
@@ -336,7 +277,7 @@ class OmegaStore(object):
             collection = collection.replace('..', '.')
         # return the collection
         try:
-            datastore = getattr(self.mongodb, collection)
+            datastore = getattr(self.db, collection)
         except Exception as e:
             raise e
         return PickableCollection(datastore)
@@ -668,10 +609,10 @@ class OmegaStore(object):
             raise DoesNotExist()
         collection = self.collection(name)
         if collection:
-            self.mongodb.drop_collection(collection.name)
+            self.db.drop_collection(collection.name)
         if meta:
             if meta.collection:
-                self.mongodb.drop_collection(meta.collection)
+                self.db.drop_collection(meta.collection)
             if meta and meta.gridfile is not None:
                 meta.gridfile.delete()
             self._drop_metadata(name)
@@ -1019,9 +960,9 @@ class OmegaStore(object):
         if meta.kind == MDREGISTRY.PANDAS_HDF:
             return meta.gridfile
         if meta.kind == MDREGISTRY.PANDAS_DFROWS:
-            return list(getattr(self.mongodb, meta.collection).find())
+            return list(getattr(self.db, meta.collection).find())
         if meta.kind == MDREGISTRY.PYTHON_DATA:
-            col = getattr(self.mongodb, meta.collection)
+            col = getattr(self.db, meta.collection)
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
@@ -1045,7 +986,7 @@ class OmegaStore(object):
 
         """
         regex = lambda pattern: bson.regex.Regex(f'{pattern}')
-        db = self.mongodb
+        db = self.db
         searchkeys = dict(bucket=bucket or self.bucket,
                           prefix=prefix or self.prefix)
         q_excludes = Q()
@@ -1158,23 +1099,3 @@ class OmegaStore(object):
         df = hdf[key]
         hdf.close()
         return df
-
-    def _ensure_fs_collection(self):
-        # ensure backwards-compatible gridfs access
-        if self.defaults.OMEGA_BUCKET_FS_LEGACY:
-            # prior to 0.13.2 a single gridfs instance was used, always equal to the default collection
-            return self.defaults.OMEGA_MONGO_COLLECTION
-        if self.bucket == self.defaults.OMEGA_MONGO_COLLECTION:
-            # from 0.13.2 onwards, only the default bucket is equal to the default collection
-            # backwards compatibility for existing installations
-            return self.bucket
-        # since 0.13.2, all buckets other than the default use a qualified collection name to
-        # effectively separate files in different buckets, enabling finer-grade access control
-        # and avoiding name collisions from different buckets
-        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
-
-    def _ensure_fs_index(self, fs):
-        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
-        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
-        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
-        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})

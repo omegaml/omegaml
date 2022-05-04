@@ -16,7 +16,7 @@ else:
         def setUp(self):
             delete_database()
             self.om = Omega()
-            db = self.om.datasets.mongodb
+            db = self.om.datasets.db
             self.url = self.om.mongo_url + '?authSource=admin'
             connectdb(url=self.url)
 
@@ -26,7 +26,7 @@ else:
             """
             from minibatch import stream
             om = self.om
-            om.datasets.mongodb
+            om.datasets.db
             s = stream('test', url=self.url)
             s.append({'foo': 'bar1'})
             s.append({'foo': 'bar2'})

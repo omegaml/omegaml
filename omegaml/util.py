@@ -973,7 +973,7 @@ def migrate_unhashed_datasets(store):
         hashed_name = store.object_store_key(dsname, ext)
         if dsmeta.collection is not None:
             unhashed_coll_name = dsmeta.collection
-            unhashed_coll = store.mongodb[unhashed_coll_name]
+            unhashed_coll = store.db[unhashed_coll_name]
             # get the new collection name, rename
             unhashed_coll.rename(hashed_name)
             # remember new name

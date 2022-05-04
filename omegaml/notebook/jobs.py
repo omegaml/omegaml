@@ -42,7 +42,7 @@ class OmegaJobs(BackendBaseCommon):
 
     @property
     def _db(self):
-        return self.store.mongodb
+        return self.store.db
 
     @property
     def _fs(self):
@@ -191,7 +191,7 @@ class OmegaJobs(BackendBaseCommon):
         returns the collection object
         """
         # FIXME this should use store.collection
-        return getattr(self.store.mongodb, collection)
+        return getattr(self.store.db, collection)
 
     def list(self, pattern=None, regexp=None, raw=False, **kwargs):
         """

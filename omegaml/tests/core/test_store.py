@@ -482,7 +482,7 @@ class StoreTests(unittest.TestCase):
         }
         attributes = {'foo': 'bar'}
         meta = om.put(data, 'data', attributes=attributes)
-        meta_collection = om.mongodb['metadata']
+        meta_collection = om.db['metadata']
         flt = {'name': 'data'}
         meta_entry = meta_collection.find_one(flt)
         meta_entry['modified_extra'] = meta_entry['modified']
@@ -512,7 +512,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
         self.assertIn(
-            meta.collection, store.mongodb.list_collection_names())
+            meta.collection, store.db.list_collection_names())
         # note column order can differ due to insertion order since pandas 0.25.1
         # hence using [] to ensure same column order for both expected, result
         df2 = store.get('dfgroup', kwargs={'b': 1})
@@ -761,7 +761,7 @@ class StoreTests(unittest.TestCase):
                 'bax': 'fox'}
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
-        foo_coll = store.mongodb['foo']
+        foo_coll = store.db['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
@@ -781,7 +781,7 @@ class StoreTests(unittest.TestCase):
                 }}
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
-        foo_coll = store.mongodb['foo']
+        foo_coll = store.db['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
@@ -801,7 +801,7 @@ class StoreTests(unittest.TestCase):
                 }}
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
-        foo_coll = store.mongodb['foo']
+        foo_coll = store.db['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
@@ -825,7 +825,7 @@ class StoreTests(unittest.TestCase):
         store = OmegaStore()
         store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
         # create the collection
-        foo_coll = store.mongodb['foo']
+        foo_coll = store.db['foo']
         foo_coll.insert_one(data)
         # store the collection as is
         store.put(foo_coll, 'myfoo').save()
