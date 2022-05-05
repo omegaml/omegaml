@@ -48,20 +48,4 @@ class BackendBaseCommon:
         Returns:
             gridfile (GridFSProxy), assignable to Metadata.gridfile
         """
-        if replace:
-            for fileobj in store.fs.find({'filename': filename}):
-                try:
-                    store.fs.delete(fileobj._id)
-                except Exception as e:
-                    warn('deleting {filename} resulted in {e}'.format(**locals()))
-                    pass
-        if self._is_path(obj):
-            with open(obj, 'rb') as fin:
-                fileid = store.fs.put(fin, filename=filename, encoding=encoding)
-        else:
-            fileid = store.fs.put(obj, filename=filename, encoding=encoding)
-        gridfile = GridFSProxy(grid_id=fileid,
-                               db_alias=store._dbalias,
-                               key=filename,
-                               collection_name=store._fs_collection)
-        return gridfile
+        return store._save_file(obj, filename, encoding=encoding, replace=replace)

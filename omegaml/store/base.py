@@ -166,18 +166,7 @@ class OmegaStore(object):
         """
         Returns a metadata document for the given entry name
         """
-        # FIXME: version attribute does not do anything
-        # FIXME: metadata should be stored in a bucket-specific collection
-        # to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
-        #
-        # Role/#db.createRole
-        db = self.db
-        fs = self.fs
-        prefix = prefix or self.prefix
-        bucket = bucket or self.bucket
-        # Meta is to silence lint on import error
-        Meta = self._Metadata
-        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+        return self._find_metadata(name=name, bucket=bucket, prefix=prefix, version=version, **kwargs)
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
         """
@@ -269,18 +258,7 @@ class OmegaStore(object):
             collection name given on instantiation. the actual collection name
             used is always prefix + name + '.data'
         """
-        # see if we have a known object and a collection for that, if not define it
-        meta = self.metadata(name, bucket=bucket, prefix=prefix)
-        collection = meta.collection if meta else None
-        if not collection:
-            collection = self.object_store_key(name, '.datastore')
-            collection = collection.replace('..', '.')
-        # return the collection
-        try:
-            datastore = getattr(self.db, collection)
-        except Exception as e:
-            raise e
-        return PickableCollection(datastore)
+        return self._get_collection(name=name, bucket=bucket, prefix=prefix)
 
     def _apply_mixins(self):
         """
@@ -573,10 +551,10 @@ class OmegaStore(object):
         if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
             # list of lists are inserted as many objects, as in pymongo < 4
             result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
-            objid = result.inserted_ids[-1]
+            objid = getattr(result, 'inserted_ids', [None])[-1]
         else:
             result = collection.insert_one(mongo_compatible({'data': obj}))
-            objid = result.inserted_id
+            objid = getattr(result, 'inserted_id', None)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -960,9 +938,9 @@ class OmegaStore(object):
         if meta.kind == MDREGISTRY.PANDAS_HDF:
             return meta.gridfile
         if meta.kind == MDREGISTRY.PANDAS_DFROWS:
-            return list(getattr(self.db, meta.collection).find())
+            return list(self.db[meta.collection].find())
         if meta.kind == MDREGISTRY.PYTHON_DATA:
-            col = getattr(self.db, meta.collection)
+            col = self.db[meta.collection]
             return col.find_one(dict(_id=meta.objid)).get('data')
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
@@ -985,32 +963,8 @@ class OmegaStore(object):
         :return: List of files in store
 
         """
-        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
-        db = self.db
-        searchkeys = dict(bucket=bucket or self.bucket,
-                          prefix=prefix or self.prefix)
-        q_excludes = Q()
-        if regexp:
-            searchkeys['name'] = regex(regexp)
-        elif pattern:
-            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
-            searchkeys['name'] = regex(f'^{re_pattern}$')
-        if not include_temp:
-            q_excludes &= Q(name__not__startswith='_')
-            q_excludes &= Q(name__not=regex(r'(.{1,*}\/?_.*)'))
-        if not hidden:
-            q_excludes &= Q(name__not__startswith='.')
-        if kind or self.force_kind:
-            kind = kind or self.force_kind
-            if isinstance(kind, (tuple, list)):
-                searchkeys.update(kind__in=kind)
-            else:
-                searchkeys.update(kind=kind)
-        if filter:
-            searchkeys.update(filter)
-        q_search = Q(**searchkeys) & q_excludes
-        files = self._Metadata.objects.no_cache()(q_search)
-        return [f if raw else str(f.name).replace('.omm', '') for f in files]
+        return self._get_list(pattern=pattern, regexp=regexp, kind=kind, raw=raw, hidden=hidden,
+                              include_temp=include_temp, bucket=bucket, prefix=prefix, filter=filter)
 
     def exists(self, name, hidden=False):
         """ check if object exists

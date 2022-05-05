@@ -1,13 +1,19 @@
 from __future__ import absolute_import
 
+import bson
+import os
+
+from warnings import warn
+
 import gridfs
+from mongoengine import GridFSProxy, Q
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from uuid import uuid4
 
 from omegaml.documents import make_Metadata
 from omegaml.mongoshim import sanitize_mongo_kwargs, waitForConnection
-from omegaml.util import (urlparse, ensure_index)
+from omegaml.util import (urlparse, ensure_index, PickableCollection)
 
 
 class MongoStoreMixin:
@@ -104,3 +110,109 @@ class MongoStoreMixin:
         # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
         ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
         ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})
+
+    def _get_collection(self, name=None, bucket=None, prefix=None):
+        """
+        Returns a mongo db collection as a datastore
+
+        If there is an existing object of name, will return the .collection
+        of the object. Otherwise returns the collection according to naming
+        convention {bucket}.{prefix}.{name}.datastore
+
+        :param name: the collection to use. if none defaults to the
+            collection name given on instantiation. the actual collection name
+            used is always prefix + name + '.data'
+        """
+        # see if we have a known object and a collection for that, if not define it
+        meta = self.metadata(name, bucket=bucket, prefix=prefix)
+        collection = meta.collection if meta else None
+        if not collection:
+            collection = self.object_store_key(name, '.datastore')
+            collection = collection.replace('..', '.')
+        # return the collection
+        try:
+            datastore = getattr(self.db, collection)
+        except Exception as e:
+            raise e
+        return PickableCollection(datastore)
+
+    def _save_file(self, obj, filename, encoding=None, replace=False):
+        """
+        Use this method to store file-like objects to the store's gridfs
+
+        Args:
+            store (OmegaStore): the store whose .fs filesystem access will be used
+            obj (file-like): a file-like object or path, if path will be opened with mode=rb,
+               otherwise its obj.read() method is called to get the data as a byte stream
+            filename (path): the path in the store (key)
+            encoding (str): a valid encoding such as utf8, optional
+            replace (bool): if True the existing file(s) of the same name are deleted to avoid automated versioning
+               by gridfs. defaults to False
+
+        Returns:
+            gridfile (GridFSProxy), assignable to Metadata.gridfile
+        """
+        if replace:
+            for fileobj in self.fs.find({'filename': filename}):
+                try:
+                    self.fs.delete(fileobj._id)
+                except Exception as e:
+                    warn('deleting {filename} resulted in {e}'.format(**locals()))
+                    pass
+        if os.path.exists(str(obj)):
+            with open(obj, 'rb') as fin:
+                fileid = self.fs.put(fin, filename=filename)
+        else:
+            fileid = self.fs.put(obj, filename=filename)
+        gridfile = GridFSProxy(grid_id=fileid,
+                               db_alias=self._dbalias,
+                               key=filename,
+                               collection_name=self._fs_collection)
+        return gridfile
+
+    def _get_list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
+             include_temp=False, bucket=None, prefix=None, filter=None):
+
+        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
+        db = self.db
+        searchkeys = dict(bucket=bucket or self.bucket,
+                          prefix=prefix or self.prefix)
+        q_excludes = Q()
+        if regexp:
+            searchkeys['name'] = regex(regexp)
+        elif pattern:
+            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
+            searchkeys['name'] = regex(f'^{re_pattern}$')
+        if not include_temp:
+            q_excludes &= Q(name__not__startswith='_')
+            q_excludes &= Q(name__not=regex(r'(.{1,*}\/?_.*)'))
+        if not hidden:
+            q_excludes &= Q(name__not__startswith='.')
+        if kind or self.force_kind:
+            kind = kind or self.force_kind
+            if isinstance(kind, (tuple, list)):
+                searchkeys.update(kind__in=kind)
+            else:
+                searchkeys.update(kind=kind)
+        if filter:
+            searchkeys.update(filter)
+        q_search = Q(**searchkeys) & q_excludes
+        files = self._Metadata.objects.no_cache()(q_search)
+        return [f if raw else str(f.name).replace('.omm', '') for f in files]
+
+    def _find_metadata(self, name=None, bucket=None, prefix=None, version=-1, **kwargs):
+        """
+        Returns a metadata document for the given entry name
+        """
+        # FIXME: version attribute does not do anything
+        # FIXME: metadata should be stored in a bucket-specific collection
+        # to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
+        #
+        # Role/#db.createRole
+        db = self.mongodb
+        fs = self.fs
+        prefix = prefix or self.prefix
+        bucket = bucket or self.bucket
+        # Meta is to silence lint on import error
+        Meta = self._Metadata
+        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()

@@ -103,6 +103,10 @@ def make_Metadata(db_alias='omega', collection=None):
             newcls = super(Metadata, cls).__real_new__(cls)
             return newcls
 
+        def __init__(self, *args, **kwargs):
+            if 'gridfile' in kwargs:
+                kwargs['gridfile']
+
         def __eq__(self, other):
             return self.objid == other.objid
 

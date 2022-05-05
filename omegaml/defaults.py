@@ -125,7 +125,8 @@ if is_test_run:
 OMEGA_DISABLE_FRAMEWORKS = truefalse(os.environ.get('OMEGA_DISABLE_FRAMEWORKS'))
 #: storage mixins
 OMEGA_STORE_MIXINS = [
-    'omegaml.mixins.store.mongodb.MongoStoreMixin',
+    # 'omegaml.mixins.store.mongodb.MongoStoreMixin',
+    'omegaml.mixins.store.sqldb.DatasetStoreMixin',
     'omegaml.mixins.store.ProjectedMixin',
     'omegaml.mixins.store.LazyGetMixin',
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',
