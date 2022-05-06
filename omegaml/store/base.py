@@ -73,26 +73,20 @@ as follows:
 """
 from __future__ import absolute_import
 
-import bson
 import gridfs
 import os
 import tempfile
 import warnings
 from datetime import datetime
-from mongoengine.connection import disconnect, \
-    connect, _connections, get_db, _connection_settings
 from mongoengine.errors import DoesNotExist
-from mongoengine.fields import GridFSProxy
-from mongoengine.queryset.visitor import Q
 from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
-from ..documents import make_Metadata, MDREGISTRY
-from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, mongo_compatible
+from ..documents import MDREGISTRY
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
-                    settings as omega_settings, urlparse, is_series)
+                    settings as omega_settings, is_series)
 
 
 class OmegaStore(object):
@@ -393,16 +387,6 @@ class OmegaStore(object):
         elif append is None and collection.count_documents({}, limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        if index:
-            # get index keys
-            if isinstance(index, dict):
-                idx_kwargs = index
-                index = index.pop('columns')
-            else:
-                idx_kwargs = {}
-            # create index with appropriate options
-            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
-            ensure_index(collection, keys, **idx_kwargs)
         if timestamp:
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
@@ -432,14 +416,6 @@ class OmegaStore(object):
         }
         # ensure column names to be strings
         obj.columns = stored_columns
-        # create mongon indicies for data frame index columns
-        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
-        if df_idxcols:
-            keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
-            ensure_index(collection, keys, **idx_kwargs)
-        # create index on row id
-        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
-        ensure_index(collection, keys, **idx_kwargs)
         # bulk insert
         # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
@@ -450,6 +426,24 @@ class OmegaStore(object):
                     obj[col].fillna('', inplace=True)
         obj = obj.astype('O', errors='ignore')
         _fast_insert(obj, self, name, chunksize=chunksize)
+        # create mongon indicies for data frame index columns
+        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
+        if df_idxcols:
+            keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
+            ensure_index(collection, keys, **idx_kwargs)
+        # create index on row id
+        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
+        ensure_index(collection, keys, **idx_kwargs)
+        if index:
+            # get index keys
+            if isinstance(index, dict):
+                idx_kwargs = index
+                index = index.pop('columns')
+            else:
+                idx_kwargs = {}
+            # create index with appropriate options
+            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
+            ensure_index(collection, keys, **idx_kwargs)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series
                 else MDREGISTRY.PANDAS_DFROWS)
@@ -504,14 +498,14 @@ class OmegaStore(object):
         filename = self.object_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname, 'rb') as fhdf:
-            fileid = self.fs.put(fhdf, filename=filename)
+            filelike = self.fs.put(fhdf, filename=filename)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=MDREGISTRY.PANDAS_HDF,
                                    attributes=attributes,
-                                   gridfile=GridFSProxy(db_alias=self._dbalias,
-                                                        grid_id=fileid)).save()
+                                   objid=filelike.name,
+                                   gridfile=filelike).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None):
         """ store numpy array as hdf
@@ -551,17 +545,14 @@ class OmegaStore(object):
         if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
             # list of lists are inserted as many objects, as in pymongo < 4
             result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
-            objid = getattr(result, 'inserted_ids', [None])[-1]
         else:
             result = collection.insert_one(mongo_compatible({'data': obj}))
-            objid = getattr(result, 'inserted_id', None)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=MDREGISTRY.PYTHON_DATA,
                                    collection=collection.name,
-                                   attributes=attributes,
-                                   objid=objid).save()
+                                   attributes=attributes).save()
 
     def drop(self, name, force=False, version=-1, **kwargs):
         """
@@ -799,6 +790,7 @@ class OmegaStore(object):
                 df = df[0]
             if chunksize is not None and chunksize > 0:
                 return df.iterchunks(chunksize=chunksize)
+            result = df
         else:
             # TODO ensure the same processing is applied in MDataFrame
             # TODO this method should always use a MDataFrame disregarding lazy
@@ -811,8 +803,12 @@ class OmegaStore(object):
                 cursor = collection.find(projection=columns)
             # restore dataframe
             df = cursor_to_dataframe(cursor)
-            if '_id' in df.columns:
-                del df['_id']
+            df = df[list(columns or df.columns)]
+            # remove id columns
+            omit_cols = '_id', 'id'
+            for oc in omit_cols:
+                if oc in df.columns:
+                    del df[oc]
             if hasattr(meta, 'kind_meta'):
                 df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
             # -- restore columns
@@ -836,10 +832,13 @@ class OmegaStore(object):
             if is_series:
                 index = df.index
                 name = df.columns[0]
-                df = df[name]
-                df.index = index
-                df.name = None if name == 'None' else name
-        return df
+                sr = df[name]
+                sr.index = index
+                sr.name = None if name == 'None' else name
+                result = sr
+            else:
+                result = df
+        return result
 
     def rebuild_params(self, kwargs, collection):
         """
@@ -854,7 +853,7 @@ class OmegaStore(object):
         :return: Returns a set of parameters as dictionary.
         """
         modified_params = {}
-        db_structure = collection.find_one({}, {'_id': False})
+        db_structure = collection.find_one({}, projection={'_id': False})
         groupby_columns = list(set(db_structure.keys()) - set(['_data']))
         if kwargs is not None:
             for item in kwargs:
@@ -934,14 +933,14 @@ class OmegaStore(object):
         :return: Returns data as python object
         """
         if meta.kind == MDREGISTRY.SKLEARN_JOBLIB:
-            return meta.gridfile
+            return meta.gridfile.read()
         if meta.kind == MDREGISTRY.PANDAS_HDF:
-            return meta.gridfile
+            return meta.gridfile.read()
         if meta.kind == MDREGISTRY.PANDAS_DFROWS:
             return list(self.db[meta.collection].find())
         if meta.kind == MDREGISTRY.PYTHON_DATA:
             col = self.db[meta.collection]
-            return col.find_one(dict(_id=meta.objid)).get('data')
+            return [doc.get('data') for doc in col.find()]
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def __iter__(self):
@@ -1043,7 +1042,7 @@ class OmegaStore(object):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         try:
-            outf = self.fs.get_version(filename, version=version)
+            outf = self.fs.get(filename)
         except gridfs.errors.NoFile as e:
             raise e
         with open(hdffname, 'wb') as hdff:

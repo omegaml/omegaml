@@ -125,7 +125,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 tracker = self.om.runtime.experiment(experiment, implied_run=False)
                 self.request._om_tracking = tracker
             else:
-                self.request._om_tracking = self.om.runtime.experiment('.notrack', provider='notrack')
+                self.request._om_tracking = self.om.runtime.experiment('.notrack',
+                                                                       provider='notrack', implied_run=False)
         return self.request._om_tracking
 
     @property

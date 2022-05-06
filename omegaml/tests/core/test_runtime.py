@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 
-import unittest
 from unittest import TestCase
 
 import numpy as np
 import os
 import pandas as pd
 import sys
+import unittest
 from numpy.testing import assert_array_almost_equal
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
@@ -21,7 +21,7 @@ from sklearn.utils.validation import DataConversionWarning
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import delete_database, reshaped
+from omegaml.util import reshaped
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
@@ -208,7 +208,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         result = om.runtime.model('mymodel2').predict('data[x]')
         pred1 = result.get()
         mse_2 = mean_squared_error(om.datasets.get('data[y]'), pred1)
-        self.assertLess(mse_2, mse)
+        self.assertLessEqual(mse_2, mse)
 
     def test_predict_pure_python(self):
         # create some data

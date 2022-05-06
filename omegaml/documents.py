@@ -126,8 +126,8 @@ def make_Metadata(db_alias='omega', collection=None):
                                                 LEGACY_JSON_OPTIONS)
             return super().to_json(**kwargs)
 
-        def to_dict(self):
-            return self.to_mongo().to_dict()
+        def to_dict(self, serializable=False):
+            return self.to_mongo() if serializable else self.to_mongo().to_dict()
 
     return Metadata
 

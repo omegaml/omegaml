@@ -9,7 +9,6 @@ from dataset_orm import connect, files
 
 from omegaml.models import Metadata
 
-
 class DatasetStoreMixin:
     def _init_mixin(self, *args, **kwargs):
         pass
@@ -24,9 +23,11 @@ class DatasetStoreMixin:
         """
         if self._db is None:
             self._db = connect('sqlite:///db.sqlite')
+
             # make compatible to mongodb store
             # -- table semantics
             Table.insert_one = Table.insert
+            # Table.database = property(lambda self: DatabaseShim(self.db))
             # -- shim for filelike()
             files.FileLike.get = lambda self: self
             # -- delete, remove
@@ -78,7 +79,7 @@ class DatasetStoreMixin:
             collection = collection.replace('..', '.')
         # return the collection
         try:
-            datastore = TableCollection(self.db[collection])
+            datastore = self.db[collection]
         except Exception as e:
             raise e
         return datastore
@@ -115,28 +116,40 @@ class DatasetStoreMixin:
 
     def _get_list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
                   include_temp=False, bucket=None, prefix=None, filter=None):
-        search = {}
+        db = self.db
+        searchkeys = dict(bucket=bucket or self.bucket,
+                          prefix=prefix or self.prefix)
         pattern = pattern or '*'
         if pattern:
-            search['pattern__like'] = pattern
+            searchkeys['name__like'] = pattern.replace('*', '%')
         if bucket:
-            search['bucket'] = bucket
+            searchkeys['bucket'] = bucket
         if prefix:
-            search['prefix'] = prefix
-        items = self._Metadata.objects.find(**search)
+            searchkeys['prefix'] = prefix
+        if kind:
+            searchkeys['kind'] = kind
+        items = self._Metadata.objects.find(**searchkeys)
+        should_include = lambda v: (not (v.startswith('.') or v.startswith('_')) or
+                                    (v.startswith('.') and hidden) or
+                                    (v.startswith('_') and include_temp))
         if raw:
-            items = items.as_list()
+            items = [item for item in items if should_include(item.name)]
         else:
-            items = [item.name for item in items]
+            items = [item.name for item in items if should_include(item.name)]
         return items
 
 
 class TableCollection:
-    def __init__(self, table):
+    # shim a dataset.Table to duck as a pymongo.Collection
+    def __init__(self, table, limit=None, offset=0):
         self.table = table
 
     def __getattr__(self, k):
         return getattr(self.table, k)
+
+    def with_options(self, *args, **kwargs):
+        # not supported by sqla
+        return self
 
     def count_documents(self, *args, **kwargs):
         return self.table.count()
@@ -145,10 +158,106 @@ class TableCollection:
         return self.count_documents()
 
     def list_indexes(self):
-        return self.table._indexes
+        return [specs for idx, specs in self.index_information().items()]
+
+    def find(self, filter=None, projection=None, **kwargs):
+        kwargs.update(filter) if filter else None
+        result = DeferredCursor(self.table, filter=kwargs, projection=projection)
+        return result
+
+    def find_one(self, filter=None, projection=None, **kwargs):
+        kwargs.update(filter) if filter else None
+        result = self.table.find_one(**kwargs)
+        return result
+
+    def replace_one(self, flt, data):
+        data.update(flt)
+        keys = list(flt.keys())
+        return self.table.update(data, keys)
+
+    def distinct(self, key, filter=None, **kwargs):
+        filter = filter or {}
+        return (row[key] for row in self.table.distinct(key, **filter))
+
+    def create_index(self, columns, name=None, **kwargs):
+        columns = list(dict(columns))
+        name = name or '_'.join(columns)
+        name = f'{self.table.name}_{name}'
+        self.table.create_index(columns, name=name, **kwargs)
+
+    def index_information(self):
+        # transform index information into mongo-like format
+        # - get_indexes() returns a list of dicts
+        #   {name=>str, column_names=>[], unique=>bool, column_sorting={}}
+        # - returns a dict
+        #   {name=>{unique=>bool, key=>[(column, sortord)]}
+        indexes = self.table.db.inspect.get_indexes(self.name, schema=self.db.schema)
+        sortord = lambda v: -1 if v == 'desc' else 1
+        indexes = {
+            idx['name']: {
+                'unique': idx.get('unique', False),
+                'key': [(c, sortord(idx.get('column_sorting', {}).get(c)))
+                        for c in idx['column_names']]
+            }
+            for idx in indexes
+        }
+        return indexes
+
+
+class DeferredCursor:
+    # a cursor that is only evaluated on starting the iteration
+    # before it is started can set head(), limit(), sort()
+    def __init__(self, table, filter=None, projection=None):
+        self.table = table
+        self._filter = filter
+        self._projection = projection
+        self._limit = None
+        self._offset = 0
+
+    def limit(self, n):
+        self._limit = n
+
+    def head(self, n):
+        self._offset = n
+
+    def _sqlize(self, filter):
+        # transform mongodb filter spec into dataset-lib advanced filter spec
+        if '$and' in filter:
+            # some and'ed conditions
+            filter = filter.get('$and')
+            transform = True
+        elif any(k.startswith('$') for k in filter):
+            # some $operator
+            transform = True
+        else:
+            # no mongodb filter found, process as is
+            transform = False
+        if transform:
+            # {'$and': [{'_om#rowid': {'$gte': 2}}, {'_om#rowid': {'$lte': 3}}]}
+            # => { '_om#rowid': { 'gte': 2 }}
+            column_clauses = {}
+            sqlop = lambda v: v.replace('$', '')
+            for clause in filter:
+                for col, spec in clause.items():
+                    cur_clause = column_clauses.setdefault(col, {})
+                    cur_clause.update({
+                        sqlop(op): value
+                        for op, value in spec.items()
+                    })
+            filter = column_clauses
+        return filter
+
+    def __iter__(self):
+        for item in self.table.find(**self._sqlize(self._filter),
+                                    _limit=self._limit,
+                                    _offset=self._offset):
+            if self._projection:
+                item = { k:v for k, v in item.items() if k in self._projection}
+            yield item
 
 
 class DatabaseShim:
+    # shim a dataset.Database to duck as pymongo.Database
     def __init__(self, db):
         self.db = db
 
@@ -156,10 +265,16 @@ class DatabaseShim:
         return getattr(self.db, k)
 
     def __getitem__(self, item):
-        return self.db[item]
+        return TableCollection(self.db.get_table(item, primary_id='_id'))
 
     def drop_collection(self, name):
         if name in self.db.tables:
-            self.db[name].drop()
+            table = self[name]
+            table.drop()
 
+    def list_collection_names(self):
+        return self.db.tables
 
+    def command(self, *args, **kwargs):
+        # not supported by sqla
+        pass

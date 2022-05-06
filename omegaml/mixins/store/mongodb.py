@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 
 import bson
-import os
-
-from warnings import warn
-
 import gridfs
+import os
 from mongoengine import GridFSProxy, Q
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from uuid import uuid4
+from warnings import warn
 
 from omegaml.documents import make_Metadata
 from omegaml.mongoshim import sanitize_mongo_kwargs, waitForConnection
@@ -17,12 +15,9 @@ from omegaml.util import (urlparse, ensure_index, PickableCollection)
 
 
 class MongoStoreMixin:
-    def _init_mixin(self, *args, **kwargs):
-        self._fs_collection = self._ensure_fs_collection()
-
     @classmethod
     def supports(cls, obj, prefix=None, **kwargs):
-        return True # support all types of storage
+        return True  # support all types of storage
 
     def _get_database(self):
         """
@@ -85,31 +80,9 @@ class MongoStoreMixin:
 
         :return: a gridfs instance
         """
-        if self._fs is not None:
-            return self._fs
-        self._fs = gridfs.GridFS(self.db, collection=self._fs_collection)
-        self._ensure_fs_index(self._fs)
+        if self._fs is None:
+            self._fs = GridFSShim(self, self.db, collection=self._fs_collection)
         return self._fs
-
-    def _ensure_fs_collection(self):
-        # ensure backwards-compatible gridfs access
-        if self.defaults.OMEGA_BUCKET_FS_LEGACY:
-            # prior to 0.13.2 a single gridfs instance was used, always equal to the default collection
-            return self.defaults.OMEGA_MONGO_COLLECTION
-        if self.bucket == self.defaults.OMEGA_MONGO_COLLECTION:
-            # from 0.13.2 onwards, only the default bucket is equal to the default collection
-            # backwards compatibility for existing installations
-            return self.bucket
-        # since 0.13.2, all buckets other than the default use a qualified collection name to
-        # effectively separate files in different buckets, enabling finer-grade access control
-        # and avoiding name collisions from different buckets
-        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
-
-    def _ensure_fs_index(self, fs):
-        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
-        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
-        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
-        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})
 
     def _get_collection(self, name=None, bucket=None, prefix=None):
         """
@@ -161,17 +134,13 @@ class MongoStoreMixin:
                     pass
         if os.path.exists(str(obj)):
             with open(obj, 'rb') as fin:
-                fileid = self.fs.put(fin, filename=filename)
+                filelike = self.fs.put(fin, filename=filename)
         else:
-            fileid = self.fs.put(obj, filename=filename)
-        gridfile = GridFSProxy(grid_id=fileid,
-                               db_alias=self._dbalias,
-                               key=filename,
-                               collection_name=self._fs_collection)
-        return gridfile
+            filelike = self.fs.put(obj, filename=filename)
+        return filelike
 
     def _get_list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
-             include_temp=False, bucket=None, prefix=None, filter=None):
+                  include_temp=False, bucket=None, prefix=None, filter=None):
 
         regex = lambda pattern: bson.regex.Regex(f'{pattern}')
         db = self.db
@@ -216,3 +185,38 @@ class MongoStoreMixin:
         # Meta is to silence lint on import error
         Meta = self._Metadata
         return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+
+
+class GridFSShim(gridfs.GridFS):
+    def __init__(self, store, database, collection='fs'):
+        super().__init__(database, collection=collection)
+        self._omstore = store
+        self._ensure_fs_collection()
+        self._ensure_fs_index(self)
+
+    def put(self, *args, **kwargs):
+        # return a filelike instead of a fileid
+        gridid = super().put(*args, **kwargs)
+        filelike = GridFSProxy(db_alias=self._omstore._dbalias,
+                               grid_id=gridid)
+        return filelike
+
+    def _ensure_fs_collection(self):
+        # ensure backwards-compatible gridfs access
+        if self._omstore.OMEGA_BUCKET_FS_LEGACY:
+            # prior to 0.13.2 a single gridfs instance was used, always equal to the default collection
+            return self._omstore.defaults.OMEGA_MONGO_COLLECTION
+        if self._omstore.bucket == self._omstore.defaults.OMEGA_MONGO_COLLECTION:
+            # from 0.13.2 onwards, only the default bucket is equal to the default collection
+            # backwards compatibility for existing installations
+            return self._omstore.bucket
+        # since 0.13.2, all buckets other than the default use a qualified collection name to
+        # effectively separate files in different buckets, enabling finer-grade access control
+        # and avoiding name collisions from different buckets
+        return '{}_{}'.format(self._omstore.defaults.OMEGA_MONGO_COLLECTION, self._omstore.bucket)
+
+    def _ensure_fs_index(self, fs):
+        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
+        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
+        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
+        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})

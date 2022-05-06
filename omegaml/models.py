@@ -20,9 +20,9 @@ class Metadata(Model):
     #: for PYTHON_DATA this is the actual document
     objid = Column(types.string(length=255))
     #: omegaml technical attributes, e.g. column indicies
-    kind_meta = Column(types.json)
+    kind_meta = Column(types.json, default={})
     #: customer-defined other meta attributes
-    attributes = Column(types.json)
+    attributes = Column(types.json, default={})
     #: s3file attributes
     s3file = Column(types.json)
     #: location URI
@@ -31,3 +31,6 @@ class Metadata(Model):
     created = Column(types.datetime, default=datetime.datetime.now)
     #: created datetime
     modified = Column(types.datetime, default=datetime.datetime.now)
+
+    def __getitem__(self, k):
+        return getattr(self, k)

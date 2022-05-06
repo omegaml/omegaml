@@ -182,7 +182,7 @@ class OmegaSimpleLogger:
 
     def reset(self):
         self._collection = _setup_logging_dataset(self.store, self.dsname, self,
-                                                  collection=self._collection, size=self.size, reset=True)
+                                                  size=self.size, reset=True)
 
     def getLogger(self, name, **kwargs):
         return self.__class__(store=kwargs.get('store', self.store),

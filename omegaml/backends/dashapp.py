@@ -1,11 +1,9 @@
+import gridfs
+from dashserve import JupyterDash
+from dashserve.serializer import DashAppSerializer
 from io import BytesIO
 from uuid import uuid4
 
-import gridfs
-from mongoengine import GridFSProxy
-
-from dashserve import JupyterDash
-from dashserve.serializer import DashAppSerializer
 from omegaml.backends.basedata import BaseDataBackend
 
 
@@ -53,13 +51,13 @@ class DashAppBackend(BaseDataBackend):
         meta = self.data_store.metadata(name)
         if not meta:
             filename = uuid4().hex
-            fileid = self._fs.put(bbuf, filename=filename)
+            filelike = self._fs.put(bbuf, filename=filename)
             meta = self.data_store._make_metadata(name=name,
                                              prefix=self.data_store.prefix,
                                              bucket=self.data_store.bucket,
                                              kind=DashAppBackend.KIND,
                                              attributes=attributes,
-                                             gridfile=GridFSProxy(grid_id=fileid))
+                                             gridfile=filelike)
         else:
             meta.gridfile.replace(bbuf)
         return meta.save()
