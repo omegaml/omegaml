@@ -24,7 +24,7 @@ as follows:
 
     * .metadata
         all metadata. each object is one document,
-        See **omegaml.documents.Metadata** for details
+        See **omegaml.store.documents.Metadata** for details
     * .<bucket>.files
         this is the GridFS instance used to store
         blobs (models, numpy, hdf). The actual file name
@@ -81,10 +81,9 @@ from datetime import datetime
 from mongoengine.errors import DoesNotExist
 from uuid import uuid4
 
-from omegaml.store.fastinsert import fast_insert, default_chunksize
+from omegaml.store.documents import MDREGISTRY
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, mongo_compatible
-from ..documents import MDREGISTRY
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, is_series)
 
@@ -327,7 +326,7 @@ class OmegaStore(object):
             append = kwargs.pop('append', None)
             timestamp = kwargs.pop('timestamp', None)
             index = kwargs.pop('index', None)
-            chunksize = kwargs.pop('chunksize', default_chunksize)
+            chunksize = kwargs.pop('chunksize', None)
             return self.put_dataframe_as_documents(
                 obj, name, append=append, attributes=attributes, index=index,
                 timestamp=timestamp, chunksize=chunksize, **kwargs)
@@ -351,7 +350,7 @@ class OmegaStore(object):
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
                                    timestamp=None, chunksize=None,
-                                   ensure_compat=True, _fast_insert=fast_insert,
+                                   ensure_compat=True,
                                    **kwargs):
         """
         store a dataframe as a row-wise collection of documents
@@ -425,7 +424,7 @@ class OmegaStore(object):
                 if 'datetime' in col_dtype:
                     obj[col].fillna('', inplace=True)
         obj = obj.astype('O', errors='ignore')
-        _fast_insert(obj, self, name, chunksize=chunksize)
+        self._fast_insert(obj, self, name, chunksize=chunksize)
         # create mongon indicies for data frame index columns
         df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
         if df_idxcols:
@@ -577,16 +576,17 @@ class OmegaStore(object):
         if meta is None and not force:
             raise DoesNotExist()
         collection = self.collection(name)
-        if collection:
-            self.db.drop_collection(collection.name)
-        if meta:
-            if meta.collection:
-                self.db.drop_collection(meta.collection)
-            if meta and meta.gridfile is not None:
-                meta.gridfile.delete()
-            self._drop_metadata(name)
-            return True
-        return False
+        drop_collection = lambda: self.db.drop_collection(collection.name) if collection else None
+        drop_meta_collection = lambda: self.db.drop_collection(meta.collection) if meta.collection else None
+        drop_gridfile = lambda: meta.gridfile.delete() if meta.gridfile else None
+        for drop_part in (drop_collection, drop_meta_collection, drop_gridfile):
+            try:
+                drop_part()
+            except Exception:
+                if not force:
+                    raise
+        self._drop_metadata(name)
+        return True
 
     def get_backend_bykind(self, kind, model_store=None, data_store=None,
                            **kwargs):

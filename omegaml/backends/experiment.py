@@ -3,14 +3,13 @@ import os
 import pandas as pd
 import pkg_resources
 import platform
-import warnings
 from base64 import b64encode, b64decode
 from datetime import datetime
 from itertools import product
 from uuid import uuid4
 
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.documents import Metadata
+from omegaml.store.documents import Metadata
 from omegaml.util import _raise
 
 
@@ -296,7 +295,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'dt': self._startdt,
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
-        self._store.put(data, self._data_name, noversion=True)
+        self._save_data(data, self._data_name)
         self.log_system()
         return self._run
 
@@ -313,7 +312,11 @@ class OmegaSimpleTracker(TrackingProvider):
             'dt': self._stopdt,
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
-        self._store.put(data, self._data_name, noversion=True)
+        self._save_data(data, self._data_name)
+
+    def _save_data(self, data, dsname):
+        self._store.put(data, dsname, noversion=True,
+                        kind='pandas.rawdict')
 
     def log_artifact(self, obj, name, step=None, **extra):
         """ log any object to the current run
@@ -352,7 +355,7 @@ class OmegaSimpleTracker(TrackingProvider):
             rawdata = meta.name
         elif self._store.get_backend_by_obj(obj) is not None:
             objname = uuid4().hex
-            meta = self._store.put(obj, f'.experiments/.artefacts/{objname}')
+            meta = self._model_store.put(obj, f'.experiments/.artefacts/{objname}')
             format = 'dataset'
             rawdata = meta.name
         else:
@@ -376,7 +379,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'dt': datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
-        self._store.put(data, self._data_name, noversion=True)
+        self._save_data(data, self._data_name)
 
     def log_event(self, event, key, value, step=None, dt=None, **extra):
         data = {
@@ -392,7 +395,7 @@ class OmegaSimpleTracker(TrackingProvider):
         if step is not None:
             data['step'] = step
         data.update(extra)
-        self._store.put(data, self._data_name, noversion=True)
+        self._save_data(data, self._data_name)
 
     def log_param(self, key, value, step=None, dt=None, **extra):
         """ log an experiment parameter
@@ -419,7 +422,7 @@ class OmegaSimpleTracker(TrackingProvider):
         if step is not None:
             data['step'] = step
         data.update(extra)
-        self._store.put(data, self._data_name, noversion=True)
+        self._save_data(data, self._data_name)
 
     def log_metric(self, key, value, step=None, dt=None, **extra):
         """ log a metric value
@@ -446,7 +449,7 @@ class OmegaSimpleTracker(TrackingProvider):
         if step is not None:
             data['step'] = step
         data.update(extra)
-        self._store.put(data, self._data_name)
+        self._save_data(data, self._data_name)
 
     def log_system(self, key=None, value=None, step=None, dt=None, **extra):
         """ log system data
@@ -480,7 +483,7 @@ class OmegaSimpleTracker(TrackingProvider):
             'node': os.environ.get('HOSTNAME', platform.node()),
         }
         data.update(extra)
-        self._store.put(data, self._data_name)
+        self._save_data(data, self._data_name)
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
         """ build a dataframe of all stored data
@@ -503,19 +506,20 @@ class OmegaSimpleTracker(TrackingProvider):
         valid = lambda s: s is not None and str(s).lower() != 'all'
         op = lambda s: {'$in': list(s)} if isinstance(s, (list, tuple)) else s
         if valid(experiment):
-            filter['data.experiment'] = op(experiment)
+            filter['experiment'] = op(experiment)
         if valid(run):
-            filter['data.run'] = op(run)
+            filter['run'] = op(run)
         if valid(event):
-            filter['data.event'] = op(event)
+            filter['event'] = op(event)
         if valid(step):
-            filter['data.step'] = op(step)
+            filter['step'] = op(step)
         if valid(key):
-            filter['data.key'] = op(key)
-        data = self._store.get(self._data_name, filter=filter)
+            filter['key'] = op(key)
+        data = self._store.get(self._data_name, filter=filter, parser=None,
+                               resolve='value' if not raw else 'to_dict')
         if data is not None and not raw:
-            data = pd.DataFrame.from_records(data)
             data.sort_values('dt', inplace=True) if 'dt' in data.columns else None
+            data = data.to_dict() if data is not None and raw else data
         return data
 
     def restore_artifact(self, key=None, experiment=None, run=None, step=None, value=None):

@@ -9,8 +9,9 @@ from mongoengine.connection import disconnect, \
 from uuid import uuid4
 from warnings import warn
 
-from omegaml.documents import make_Metadata
+from omegaml.store.documents import make_Metadata
 from omegaml.mongoshim import sanitize_mongo_kwargs, waitForConnection
+from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import (urlparse, ensure_index, PickableCollection)
 
 
@@ -185,6 +186,9 @@ class MongoStoreMixin:
         # Meta is to silence lint on import error
         Meta = self._Metadata
         return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+
+    def _fast_insert(df, store, name, chunksize=default_chunksize):
+        fast_insert(df, store, name, chunksize=chunksize)
 
 
 class GridFSShim(gridfs.GridFS):

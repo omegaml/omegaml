@@ -2,31 +2,13 @@ from __future__ import absolute_import
 
 import os
 
-from io import BytesIO
-from unittest import skip
-
-import gridfs
-import joblib
 import pandas as pd
 import unittest
-import uuid
-from datetime import timedelta, datetime
 from mongoengine.connection import disconnect
-from mongoengine.errors import DoesNotExist, FieldDoesNotExist
-from pandas.testing import assert_frame_equal, assert_series_equal
-from pymongo.errors import OperationFailure
-from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from pandas.testing import assert_frame_equal
 
 from omegaml.backends.rawdict import PandasRawDictBackend
-from omegaml.backends.rawfiles import PythonRawFileBackend
-from omegaml.backends.scikitlearn import ScikitLearnBackend
-from omegaml.documents import MDREGISTRY, Metadata
-from omegaml.mdataframe import MDataFrame
-from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
-from omegaml.store.combined import CombinedOmegaStoreMixin
-from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
 
 

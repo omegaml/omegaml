@@ -4,7 +4,7 @@ import pandas as pd
 from itertools import product
 from uuid import uuid4
 
-from omegaml.documents import make_QueryCache
+from omegaml.store.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection

@@ -2,7 +2,7 @@ from unittest.case import TestCase
 
 import omegaml as om
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 from omegaml.backends.basedata import BaseDataBackend
 
 

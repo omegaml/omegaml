@@ -8,7 +8,7 @@ from datetime import timedelta
 from nbformat import v4
 
 from omegaml import Omega
-from omegaml.documents import Metadata
+from omegaml.store.documents import Metadata
 from omegaml.notebook.jobs import JobSchedule
 from omegaml.util import settings as omegaml_settings, settings
 
@@ -108,7 +108,7 @@ class JobTests(TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         self.assertEqual(meta.name, 'testjob.ipynb')
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.put(notebook, 'testjob')
         self.assertIn('job_results', meta.attributes)
         self.assertIn('job_runs', meta.attributes)
@@ -134,7 +134,7 @@ class JobTests(TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         # -- execute with default timeout, expect to succeed
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         runs = meta.attributes['job_runs']
         results = meta.attributes['job_results']
@@ -151,7 +151,7 @@ class JobTests(TestCase):
         meta.save()
         self.assertEqual(meta.name, 'testjob.ipynb')
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         self.assertIn('job_runs', meta.attributes)
         runs = meta.attributes['job_runs']
@@ -165,7 +165,7 @@ class JobTests(TestCase):
         meta.kind_meta['ep_kwargs'] = dict(timeout=None)
         meta.save()
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         runs = meta.attributes['job_runs']
         results = meta.attributes['job_results']
@@ -189,7 +189,7 @@ class JobTests(TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         # -- execute with default timeout, expect to succeed
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         runs = meta.attributes['job_runs']
         results = meta.attributes['job_results']
@@ -203,7 +203,7 @@ class JobTests(TestCase):
         om.jobs.drop('testjob', force=True)
         meta = om.jobs.put(notebook, 'testjob')
         meta_job = om.jobs.run('testjob', timeout=5)
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         self.assertIn('job_runs', meta.attributes)
         runs = meta.attributes['job_runs']
@@ -215,7 +215,7 @@ class JobTests(TestCase):
         om.jobs.drop('testjob', force=True)
         meta = om.jobs.put(notebook, 'testjob')
         meta_job = om.jobs.run('testjob', timeout=None)
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.metadata('testjob')
         runs = meta.attributes['job_runs']
         results = meta.attributes['job_results']
@@ -242,7 +242,7 @@ class JobTests(TestCase):
         self.assertEqual(meta.name, 'testjob.ipynb')
         nb = v4.new_notebook(cells=cells)
         meta_job = om.jobs.run('testjob')
-        self.assertIsInstance(meta_job, Metadata)
+        self.assertIsInstance(meta_job, om.jobs.store._Metadata)
         meta = om.jobs.put(notebook, 'testjob')
         runs = meta.attributes['job_runs']
         self.assertEqual(len(runs), 1)

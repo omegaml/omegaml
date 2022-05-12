@@ -263,7 +263,7 @@ class DatasetResource(OmegaResourceMixin, Resource):
         om = self._omega
         orient = request.args.get('orient', 'dict')
         fltkwargs = self._restore_filter(om, request.args, dataset_id)
-        df = om.datasets.getl(dataset_id, filter=fltkwargs).value
+        df = om.datasets.get(dataset_id, filter=fltkwargs)
         # get index values as python types to support Py3
         index_values = list(df.index.astype('O').values)
         index_type = type(df.index).__name__

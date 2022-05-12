@@ -13,7 +13,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
 
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 from omegaml.util import reshaped, gsreshaped
 
 # byte string

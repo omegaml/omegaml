@@ -94,10 +94,10 @@ class SQLAlchemyBackend(BaseDataBackend):
 
             # -- alternatively, create a vault dataset:
             secrets = dict(userid='chuck', dbname='chuckdb')
-            om.datasets.put(secrets, '_omega/vault')
+            om.datasets.put(secrets, '.omega/vault')
             om.datasets.get('userdb')
 
-            the '_omega/vault' dataset will be queried using the current userid as
+            the '.omega/vault' dataset will be queried using the current userid as
             the secret name,ad the dbname retrieved from the document. This is
             experimental and the vault is not encrypted.
 
@@ -312,9 +312,9 @@ class SQLAlchemyBackend(BaseDataBackend):
         }
         if secrets is True or (secrets is None and '{' in url and '}' in url):
             kind_meta['secrets'] = {
-                'dsname': '_omega/vault',
+                'dsname': '.omega/vault',
                 'query': {
-                    'data_userid': '{user}'
+                    'userid': '{user}'
                 }
             }
         else:
@@ -431,6 +431,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             query = _format_dict(query, replace=('_', '.'), **os.environ, user=getuser())
             # -- run query
             secrets = self.data_store.get(dsname, filter=query)
+            secrets = secrets.to_dict(orient='records') if secrets is not None else []
             secrets = secrets[0] if isinstance(secrets, list) and len(secrets) == 1 else {}
             secrets.update(os.environ)
         # -- format secrets

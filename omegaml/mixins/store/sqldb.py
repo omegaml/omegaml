@@ -1,13 +1,16 @@
 from __future__ import absolute_import
 
 import os
+from dataset.types import Types
 
 from warnings import warn
 
 from dataset.table import Table
 from dataset_orm import connect, files
 
-from omegaml.models import Metadata
+from omegaml.store.models import Metadata
+from omegaml.util import make_list
+
 
 class DatasetStoreMixin:
     def _init_mixin(self, *args, **kwargs):
@@ -22,8 +25,9 @@ class DatasetStoreMixin:
         Returns a mongo database object
         """
         if self._db is None:
-            self._db = connect('sqlite:///db.sqlite')
-
+            dbname = self.mongo_url.split('/')[-1]
+            db = connect(f'sqlite:////tmp/{dbname}.sqlite')
+            self._db = DatabaseShim(db)
             # make compatible to mongodb store
             # -- table semantics
             Table.insert_one = Table.insert
@@ -32,7 +36,7 @@ class DatasetStoreMixin:
             files.FileLike.get = lambda self: self
             # -- delete, remove
             files.FileLike.delete = files.FileLike.remove
-        return DatabaseShim(self._db)
+        return self._db
 
     def _get_Metadata(self):
         return Metadata
@@ -128,7 +132,7 @@ class DatasetStoreMixin:
             searchkeys['prefix'] = prefix
         if kind:
             searchkeys['kind'] = kind
-        items = self._Metadata.objects.find(**searchkeys)
+        items = self._Metadata.objects.find(**searchkeys, order_by=['name'])
         should_include = lambda v: (not (v.startswith('.') or v.startswith('_')) or
                                     (v.startswith('.') and hidden) or
                                     (v.startswith('_') and include_temp))
@@ -137,6 +141,9 @@ class DatasetStoreMixin:
         else:
             items = [item.name for item in items if should_include(item.name)]
         return items
+
+    def _fast_insert(self, df, store, name, chunksize=None):
+        store.collection(name).insert_many(df.to_dict(orient='records'), chunk_size=chunksize)
 
 
 class TableCollection:
@@ -167,12 +174,13 @@ class TableCollection:
 
     def find_one(self, filter=None, projection=None, **kwargs):
         kwargs.update(filter) if filter else None
-        result = self.table.find_one(**kwargs)
-        return result
+        result = list(DeferredCursor(self.table, filter=kwargs, projection=projection, limit=1))
+        return result[0] if len(result) else None
 
     def replace_one(self, flt, data):
         data.update(flt)
         keys = list(flt.keys())
+        keys = list(set(['id'] + keys)) # always include the id column
         return self.table.update(data, keys)
 
     def distinct(self, key, filter=None, **kwargs):
@@ -207,52 +215,65 @@ class TableCollection:
 class DeferredCursor:
     # a cursor that is only evaluated on starting the iteration
     # before it is started can set head(), limit(), sort()
-    def __init__(self, table, filter=None, projection=None):
+    def __init__(self, table, filter=None, projection=None, limit=None):
         self.table = table
         self._filter = filter
         self._projection = projection
-        self._limit = None
+        self._limit = limit
         self._offset = 0
+        self._sort_order = None
 
     def limit(self, n):
         self._limit = n
 
-    def head(self, n):
+    def skip(self, n):
         self._offset = n
+
+    def sort(self, columns):
+        self._sort_order = [('-' if order < 0 else '') + f'{col}'
+                            for col, order in columns]
 
     def _sqlize(self, filter):
         # transform mongodb filter spec into dataset-lib advanced filter spec
+        # example:
+        # {'$and': [{'_om#rowid': {'$gte': 2}}, {'_om#rowid': {'$lte': 3}}]}
+        # => { '_om#rowid': { 'gte': 2 }}
+        ensure_list = lambda v: [v] if not isinstance(v, (list, set, tuple)) else v
+        for k, v in filter.items():
+            if isinstance(v, dict):
+                filter[k] = self._sqlize(v)
         if '$and' in filter:
             # some and'ed conditions
-            filter = filter.get('$and')
+            clauses = filter.get('$and')
             transform = True
         elif any(k.startswith('$') for k in filter):
             # some $operator
+            clauses = ensure_list(filter)
             transform = True
+        elif any('.' in k for k in filter):
+            transform = True
+            clauses = ensure_list(filter)
         else:
             # no mongodb filter found, process as is
             transform = False
+            clauses = None
         if transform:
-            # {'$and': [{'_om#rowid': {'$gte': 2}}, {'_om#rowid': {'$lte': 3}}]}
-            # => { '_om#rowid': { 'gte': 2 }}
             column_clauses = {}
-            sqlop = lambda v: v.replace('$', '')
-            for clause in filter:
-                for col, spec in clause.items():
-                    cur_clause = column_clauses.setdefault(col, {})
-                    cur_clause.update({
-                        sqlop(op): value
-                        for op, value in spec.items()
-                    })
+            sqlop = lambda v: v.replace('$', '') # $eq => eq
+            colq = lambda v: v.split('.')[-1] # data.experiment => experiment
+            for clause in clauses:
+                for op, spec in clause.items():
+                    column_clauses[colq(sqlop(op))] = spec
             filter = column_clauses
         return filter
 
     def __iter__(self):
         for item in self.table.find(**self._sqlize(self._filter),
                                     _limit=self._limit,
-                                    _offset=self._offset):
+                                    _offset=self._offset,
+                                    order_by=self._sort_order):
             if self._projection:
-                item = { k:v for k, v in item.items() if k in self._projection}
+                item = {k: v for k, v in item.items() if k in self._projection}
             yield item
 
 
@@ -260,6 +281,7 @@ class DatabaseShim:
     # shim a dataset.Database to duck as pymongo.Database
     def __init__(self, db):
         self.db = db
+        self.db.types = ExtendedTypes(is_postgres=db.is_postgres)
 
     def __getattr__(self, k):
         return getattr(self.db, k)
@@ -278,3 +300,14 @@ class DatabaseShim:
     def command(self, *args, **kwargs):
         # not supported by sqla
         pass
+
+
+class ExtendedTypes(Types):
+    # Types override to accept lists as json
+    # -- makes native python objects work
+    # -- remove when done in upstream dataset https://github.com/pudo/dataset/pull/392
+    def guess(self, sample):
+        if isinstance(sample, list):
+            return self.json
+        return super().guess(sample)
+

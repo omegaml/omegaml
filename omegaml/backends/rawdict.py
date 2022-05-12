@@ -31,14 +31,15 @@ class PandasRawDictBackend(BaseDataBackend):
     def supports(self, obj, name, as_raw=None, **kwargs):
         return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection, TableCollection))
 
-    def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, **kwargs):
+    def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, resolve='value', **kwargs):
         collection = self.data_store.collection(name)
         # json_normalize needs a list of dicts to work, not a generator
         json_normalizer = lambda v: json_normalize([r for r in v])
-        parser = parser or json_normalizer
+        parser = None if raw else (parser or json_normalizer)
         query = filter or kwargs
         mdf = MDataFrame(collection, query=query, parser=parser, raw=raw, **kwargs)
-        return mdf if lazy else mdf.value
+        resolved = resolve if callable(resolve) else lambda mdf: getattr(mdf, resolve)
+        return mdf if lazy else resolved(mdf)
 
     def put(self, obj, name, attributes=None, **kwargs):
         if isinstance(obj, dict):

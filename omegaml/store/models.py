@@ -1,3 +1,5 @@
+import json
+
 import datetime
 
 from dataset_orm import types, Model, Column
@@ -30,7 +32,17 @@ class Metadata(Model):
     #: created datetime
     created = Column(types.datetime, default=datetime.datetime.now)
     #: created datetime
-    modified = Column(types.datetime, default=datetime.datetime.now)
+    modified = Column(types.datetime, default=datetime.datetime.now,
+                      on_update=datetime.datetime.now)
 
     def __getitem__(self, k):
         return getattr(self, k)
+
+    def __eq__(self, other):
+        return self.name == other.name and self.bucket == self.bucket
+
+    def __repr__(self):
+        return (f"Metadata(name={self.name},bucket={self.bucket},prefix={self.prefix},"
+                f"created={self.created},kind={self.kind})")
+
+

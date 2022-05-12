@@ -2,21 +2,19 @@ import os
 import unittest
 
 from omegaml import Omega
-from omegaml.documents import Metadata
+from omegaml.store.documents import Metadata
+from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import settings as omegaml_settings
 
 
-class JobTasksTests(unittest.TestCase):
+class JobTasksTests(OmegaTestMixin, unittest.TestCase):
     def setUp(self):
         super().setUp()
         # ensure that sub tasks run in test mode
         os.environ['OMEGA_TEST_MODE'] = '1'
         # ensure that sub tasks don't use authenticated runtime
         os.environ['OMEGA_ALLOW_TASK_DEFAULT_AUTH'] = 'yes'
-
-        for omx in (self.om, self.om['bucket']):
-            for fn in omx.jobs.list():
-                omx.jobs.drop(fn)
+        self.clean()
 
     @property
     def om(self):
@@ -37,7 +35,7 @@ class JobTasksTests(unittest.TestCase):
         job = om.runtime.job('main')
         tasks = job.map(range(2))
         self.assertEqual(len(tasks), 2)
-        self.assertTrue(all(isinstance(t, Metadata) for t in tasks))
+        self.assertTrue(all(isinstance(t, om.jobs.store._Metadata) for t in tasks))
         status = job.status().set_index('name')
         for t in tasks:
             self.assertIn('task_id', t.attributes)
@@ -72,7 +70,7 @@ class JobTasksTests(unittest.TestCase):
         job = om.runtime.job('main')
         tasks = job.map(range(2))
         self.assertEqual(len(tasks), 2)
-        self.assertTrue(all(isinstance(t, Metadata) for t in tasks))
+        self.assertTrue(all(isinstance(t, om.jobs.store._Metadata) for t in tasks))
         status = job.status().set_index('name')
         for t in tasks:
             self.assertIn('task_id', t.attributes)
@@ -84,7 +82,7 @@ class JobTasksTests(unittest.TestCase):
         meta = om.jobs.create("print('hello')", 'main')
         tasks = job.restart(reset=True)
         self.assertEqual(len(tasks), 2)
-        self.assertTrue(all(isinstance(t, Metadata) for t in tasks))
+        self.assertTrue(all(isinstance(t, om.jobs.store._Metadata) for t in tasks))
         status = job.status().set_index('name')
         for t in tasks:
             self.assertIn('task_id', t.attributes)
@@ -102,7 +100,7 @@ class JobTasksTests(unittest.TestCase):
 
         def check(tasks):
             self.assertEqual(len(tasks), 2)
-            self.assertTrue(all(isinstance(t, Metadata) for t in tasks))
+            self.assertTrue(all(isinstance(t, om.jobs.store._Metadata) for t in tasks))
             status = job.status('*').set_index('name')
             for t in tasks:
                 self.assertIn('task_id', t.attributes)

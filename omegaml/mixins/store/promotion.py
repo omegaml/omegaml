@@ -1,4 +1,4 @@
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 
 
 class PromotionMixin(object):

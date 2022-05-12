@@ -19,7 +19,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
 from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
@@ -879,9 +879,9 @@ class StoreTests(unittest.TestCase):
         foo_store = OmegaStore(bucket='foo', prefix='foo/')
         bar_store = OmegaStore(bucket='bar', prefix='bar/')
         job_store = OmegaJobs(bucket='bar', prefix='jobs/')
-        obj = {}
+        obj = {'foo': 'fox'}
         foo_store.put(obj, 'obj')
-        obj = {}
+        obj = {'fox': 'bax'}
         bar_store.put(obj, 'obj')
         combined = CombinedOmegaStoreMixin([foo_store, bar_store, job_store])
         # list

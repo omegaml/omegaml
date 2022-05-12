@@ -12,7 +12,7 @@ from nbformat import read as nbread, write as nbwrite, v4 as nbv4
 from uuid import uuid4
 
 from omegaml.backends.basecommon import BackendBaseCommon
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 from omegaml.notebook.jobschedule import JobSchedule
 from omegaml.store import OmegaStore
 from omegaml.util import settings as omega_settings

@@ -78,7 +78,7 @@ class Metadata:
 def make_Metadata(db_alias='omega', collection=None):
     # this is to create context specific Metadata class that takes the
     # database from the given alias at the time of use
-    from omegaml.documents import Metadata as Metadata_base
+    from omegaml.store.documents import Metadata as Metadata_base
     collection = collection or settings().OMEGA_MONGO_COLLECTION
     class Metadata(Metadata_base, Document):
         # override db_alias in gridfile
