@@ -110,7 +110,7 @@ def make_Metadata(db_alias='omega', collection=None):
         def __eq__(self, other):
             return self.objid == other.objid
 
-        def __unicode__(self):
+        def __repr__(self):
             fields = ('name', 'bucket', 'prefix', 'created', 'kind')
             kwargs = ('%s=%s' % (k, getattr(self, k))
                       for k in self._fields.keys() if k in fields)

@@ -43,7 +43,7 @@ class Omega(CombinedOmegaStoreMixin):
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
-        self.bucket = bucket
+        self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         # setup storage locations
         self._dbalias = self._make_dbalias()
         self.models = self._make_store(prefix='models/')
@@ -61,7 +61,7 @@ class Omega(CombinedOmegaStoreMixin):
         self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
 
     def __repr__(self):
-        return 'Omega()'.format()
+        return f'Omega(bucket={self.bucket})'
 
     def _clone(self, **kwargs):
         return self.__class__(defaults=self.defaults,
