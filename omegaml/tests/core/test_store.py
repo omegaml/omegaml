@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from unittest import skip
 
 import joblib
-import os
 import pandas as pd
 import unittest
 import uuid
@@ -19,30 +18,32 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
-from omegaml.store.documents import MDREGISTRY
 from omegaml.mdataframe import MDataFrame
 from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
+from omegaml.store.documents import MDREGISTRY
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize
 
 
 class StoreTests(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        delete_database()
+
     def setUp(self):
         unittest.TestCase.setUp(self)
-        delete_database()
-        if os.path.exists('db.sqlite'):
-            os.unlink('db.sqlite')
-        store = OmegaStore()
-        for member in store.list(include_temp=True, hidden=True):
-            store.drop(member, force=True)
+        for bucket in [None, 'foo', 'bar']:
+            store = OmegaStore(bucket=bucket)
+            for member in store.list(include_temp=True, hidden=True):
+                store.drop(member, force=True)
 
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-        delete_database()
+        # delete_database()
         disconnect('omega')
 
     def test_package_model(self):
@@ -212,20 +213,6 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(_created.replace(microsecond=0),
                          now.replace(microsecond=0))
 
-    def test_get_dataframe_filter(self):
-        # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
-        store = OmegaStore(prefix='')
-        store.put(df, 'mydata')
-        # filter in mongodb
-        df2 = store.get('mydata', filter=dict(a__gt=1, a__lt=10))
-        # filter local dataframe
-        df = df[(df.a > 1) & (df.a < 10)]
-        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
-
     def test_get_dataframe_project(self):
         # create some dataframe
         df = pd.DataFrame({
@@ -390,6 +377,14 @@ class StoreTests(unittest.TestCase):
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         self.assertEqual([data], data2)
+
+    def test_put_python_list(self):
+        # create some data
+        data = [list(range(1, 10)), list(range(1, 10))]
+        store = OmegaStore(prefix='')
+        store.put(data, 'mydata')
+        data2 = store.get('mydata')
+        self.assertEqual(data, data2)
 
     def test_put_python_dict_multiple(self):
         # create some data
@@ -762,7 +757,7 @@ class StoreTests(unittest.TestCase):
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
-        data_df = store.get('myfoo', raw=True)
+        data_df = store.get('myfoo', raw=True, parser=json_normalize)
         data_raw = store.collection('myfoo').find_one()
         assert_frame_equal(json_normalize(data_raw), data_df)
         # test we get just the data column
@@ -782,7 +777,7 @@ class StoreTests(unittest.TestCase):
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
         self.assertIn('myfoo', store.list())
         # test we get back _id column if raw=True
-        mdf = store.getl('myfoo', raw=True)
+        mdf = store.getl('myfoo', raw=True, parser=json_normalize)
         self.assertIsInstance(mdf, MDataFrame)
         data_df = mdf.value
         data_raw = store.collection('myfoo').find_one()
@@ -879,9 +874,9 @@ class StoreTests(unittest.TestCase):
         foo_store = OmegaStore(bucket='foo', prefix='foo/')
         bar_store = OmegaStore(bucket='bar', prefix='bar/')
         job_store = OmegaJobs(bucket='bar', prefix='jobs/')
-        obj = {'foo': 'fox'}
+        obj = {}
         foo_store.put(obj, 'obj')
-        obj = {'fox': 'bax'}
+        obj = {}
         bar_store.put(obj, 'obj')
         combined = CombinedOmegaStoreMixin([foo_store, bar_store, job_store])
         # list

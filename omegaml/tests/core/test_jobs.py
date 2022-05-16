@@ -19,7 +19,7 @@ class JobTests(TestCase):
         super().setUp()
         for omx in (self.om, self.om['bucket']):
             for fn in omx.jobs.list():
-                omx.jobs.drop(fn)
+                omx.jobs.drop(fn, force=True)
 
     @property
     def om(self):

@@ -21,10 +21,14 @@ from sklearn.utils.validation import DataConversionWarning
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import reshaped
+from omegaml.util import reshaped, delete_database
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        delete_database()
 
     def setUp(self):
         TestCase.setUp(self)
@@ -511,13 +515,13 @@ class RuntimeTests(OmegaTestMixin, TestCase):
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 1)
+        self.assertEqual(len(om.datasets.get('callback_results')), len(df))
         result = (om.runtime
                   .callback('callback')
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 2)
+        self.assertEqual(len(om.datasets.get('callback_results')), len(df) * 2)
 
     def test_task_callback_bucket(self):
         om = Omega()
@@ -537,13 +541,13 @@ class RuntimeTests(OmegaTestMixin, TestCase):
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 1)
+        self.assertEqual(len(omb.datasets.get('callback_results')), len(df))
         result = (omb.runtime
                   .callback('callback')
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 2)
+        self.assertEqual(len(omb.datasets.get('callback_results')), len(df) * 2)
 
     def test_task_logging(self):
         """ test task python output can be logged per-request """

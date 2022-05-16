@@ -3,7 +3,7 @@ from pymongo.collection import Collection
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
 from omegaml.mixins.store.sqldb import TableCollection
-from omegaml.util import json_normalize, PickableCollection
+from omegaml.util import json_normalize, PickableCollection, mongo_compatible
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -35,7 +35,7 @@ class PandasRawDictBackend(BaseDataBackend):
         collection = self.data_store.collection(name)
         # json_normalize needs a list of dicts to work, not a generator
         json_normalizer = lambda v: json_normalize([r for r in v])
-        parser = None if raw else (parser or json_normalizer)
+        parser = None if (raw and not parser) else (parser or json_normalizer)
         query = filter or kwargs
         mdf = MDataFrame(collection, query=query, parser=parser, raw=raw, **kwargs)
         resolved = resolve if callable(resolve) else lambda mdf: getattr(mdf, resolve)
@@ -45,7 +45,7 @@ class PandasRawDictBackend(BaseDataBackend):
         if isinstance(obj, dict):
             # actual data, just insert
             collection = self.data_store.collection(name)
-            collection.insert_one(obj)
+            collection.insert_one(mongo_compatible(obj))
         else:
             # already a collection, import it to metadata
             collection = obj

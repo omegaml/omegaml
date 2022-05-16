@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 
 import os
+from dataset.table import Table
 from dataset.types import Types
-
+from dataset_orm import connect, files
+from functools import lru_cache
 from warnings import warn
 
-from dataset.table import Table
-from dataset_orm import connect, files
-
 from omegaml.store.models import Metadata
-from omegaml.util import make_list
 
 
 class DatasetStoreMixin:
@@ -26,7 +24,7 @@ class DatasetStoreMixin:
         """
         if self._db is None:
             dbname = self.mongo_url.split('/')[-1]
-            db = connect(f'sqlite:////tmp/{dbname}.sqlite')
+            db = sqlconnect(f'sqlite:////tmp/{dbname}.sqlite', alias=self._dbalias)
             self._db = DatabaseShim(db)
             # make compatible to mongodb store
             # -- table semantics
@@ -39,7 +37,7 @@ class DatasetStoreMixin:
         return self._db
 
     def _get_Metadata(self):
-        return Metadata
+        return Metadata._make_using(self.db.db)
 
     def _get_filesystem(self):
         """
@@ -47,7 +45,9 @@ class DatasetStoreMixin:
 
         :return: a gridfs instance
         """
-        return files
+        db = self.db
+        with files.using(self._dbalias) as files_as:
+            return files_as
 
     def _find_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
         # FIXME: version attribute does not do anything
@@ -126,6 +126,8 @@ class DatasetStoreMixin:
         pattern = pattern or '*'
         if pattern:
             searchkeys['name__like'] = pattern.replace('*', '%')
+        if regexp:
+            searchkeys['name__regexp'] = regexp
         if bucket:
             searchkeys['bucket'] = bucket
         if prefix:
@@ -180,7 +182,7 @@ class TableCollection:
     def replace_one(self, flt, data):
         data.update(flt)
         keys = list(flt.keys())
-        keys = list(set(['id'] + keys)) # always include the id column
+        keys = list(set(['id'] + keys))  # always include the id column
         return self.table.update(data, keys)
 
     def distinct(self, key, filter=None, **kwargs):
@@ -259,8 +261,8 @@ class DeferredCursor:
             clauses = None
         if transform:
             column_clauses = {}
-            sqlop = lambda v: v.replace('$', '') # $eq => eq
-            colq = lambda v: v.split('.')[-1] # data.experiment => experiment
+            sqlop = lambda v: v.replace('$', '')  # $eq => eq
+            colq = lambda v: v.split('.')[-1]  # data.experiment => experiment
             for clause in clauses:
                 for op, spec in clause.items():
                     column_clauses[colq(sqlop(op))] = spec
@@ -311,3 +313,8 @@ class ExtendedTypes(Types):
             return self.json
         return super().guess(sample)
 
+@lru_cache()
+def sqlconnect(url=None, alias=None, recreate=False, **kwargs):
+    # we cache this so we get the same connection for the same alias
+    # this ensures tests work across threads
+    return connect(url=url, recreate=recreate, alias=alias, **kwargs)

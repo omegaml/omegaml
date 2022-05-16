@@ -68,12 +68,8 @@ class MongoStoreMixin:
         return self._db
 
     def _get_Metadata(self):
-        if self._Metadata_cls is None:
-            # hack to localize metadata
-            db = self.db
-            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
-                                               collection=self._fs_collection)
-        return self._Metadata_cls
+        return  make_Metadata(db_alias=self._dbalias,
+                              collection=self._fs_collection)
 
     def _get_filesystem(self):
         """

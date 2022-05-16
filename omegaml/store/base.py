@@ -138,11 +138,15 @@ class OmegaStore(object):
 
     @property
     def _Metadata(self):
-        return self._get_Metadata()
+        if self._Metadata_cls is None:
+            self._Metadata_cls = self._get_Metadata()
+        return self._Metadata_cls
 
     @property
     def fs(self):
-        return self._get_filesystem()
+        if self._fs is None:
+            self._fs = self._get_filesystem()
+        return self._fs
 
     @property
     def tmppath(self):
@@ -541,9 +545,9 @@ class OmegaStore(object):
         elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
+        if isinstance(obj, (list, tuple)):
             # list of lists are inserted as many objects, as in pymongo < 4
-            result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
+            result = collection.insert_many(list(mongo_compatible({'data': item}) for item in obj))
         else:
             result = collection.insert_one(mongo_compatible({'data': obj}))
         return self._make_metadata(name=name,

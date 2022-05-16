@@ -1,6 +1,5 @@
 import dill
 import os
-import pandas as pd
 import pkg_resources
 import platform
 from base64 import b64encode, b64decode
@@ -9,7 +8,6 @@ from itertools import product
 from uuid import uuid4
 
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.store.documents import Metadata
 from omegaml.util import _raise
 
 
@@ -345,7 +343,7 @@ class OmegaSimpleTracker(TrackingProvider):
         if isinstance(obj, (bool, str, int, float, list, dict)):
             format = 'type'
             rawdata = obj
-        elif isinstance(obj, Metadata):
+        elif isinstance(obj, self._store._Metadata):
             format = 'metadata'
             rawdata = obj.to_json()
         elif self._model_store.get_backend_byobj(obj) is not None:
@@ -353,7 +351,7 @@ class OmegaSimpleTracker(TrackingProvider):
             meta = self._model_store.put(obj, f'.experiments/.artefacts/{objname}')
             format = 'model'
             rawdata = meta.name
-        elif self._store.get_backend_by_obj(obj) is not None:
+        elif self._store.get_backend_byobj(obj) is not None:
             objname = uuid4().hex
             meta = self._model_store.put(obj, f'.experiments/.artefacts/{objname}')
             format = 'dataset'

@@ -101,3 +101,18 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(json_normalize(data_raw), data_df)
         cols = ['foo', 'bax']
         assert_frame_equal(data_df[cols], json_normalize(data_raw)[cols])
+
+    def test_get_dataframe_filter(self):
+        # create some dataframe
+        df = pd.DataFrame({
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        })
+        store = OmegaStore(prefix='')
+        store.put(df, 'mydata')
+        # filter in mongodb
+        df2 = store.get('mydata', filter=dict(a__gt=1, a__lt=10))
+        # filter local dataframe
+        df = df[(df.a > 1) & (df.a < 10)]
+        self.assertTrue(df.equals(df2), "expected dataframes to be equal")
+

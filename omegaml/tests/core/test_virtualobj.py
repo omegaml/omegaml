@@ -27,8 +27,8 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         data = om.datasets.get('virtualobj')
         self.assertEqual(data, 'no data yet')
         # save data
-        entrymeta = om.datasets.put(['foo'], 'virtualobj')
-        entrymeta = om.datasets.put(['bar'], 'virtualobj')
+        entrymeta = om.datasets.put([['foo']], 'virtualobj')
+        entrymeta = om.datasets.put([['bar']], 'virtualobj')
         self.assertEqual(entrymeta.name, 'virtualobj_data')
         self.assertEqual(entrymeta.attributes['virtualobj_ref'], 'virtualobj')
         meta = om.datasets.metadata('virtualobj')
@@ -44,8 +44,8 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         data = om.datasets.get('virtualobj{base_name=foo_data}')
         self.assertEqual(data, 'no data yet')
         # save data
-        entrymeta = om.datasets.put(['foo'], 'virtualobj{base_name=foo_data}')
-        entrymeta = om.datasets.put(['bar'], 'virtualobj{base_name=foo_data}')
+        entrymeta = om.datasets.put([['foo']], 'virtualobj{base_name=foo_data}')
+        entrymeta = om.datasets.put([['bar']], 'virtualobj{base_name=foo_data}')
         self.assertEqual(entrymeta.name, 'foo_data')
         self.assertEqual(entrymeta.attributes['virtualobj_ref'], 'virtualobj')
         meta = om.datasets.metadata('virtualobj')
