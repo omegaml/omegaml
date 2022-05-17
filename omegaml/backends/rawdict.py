@@ -29,6 +29,7 @@ class PandasRawDictBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, as_raw=None, **kwargs):
+        as_raw = as_raw or kwargs.get('kind') == self.KIND
         return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection, TableCollection))
 
     def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, resolve='value', **kwargs):

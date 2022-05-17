@@ -446,12 +446,12 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         assert_array_almost_equal(df['y'].values * 5, data[1][:, 0])
 
         @virtualobj
-        def combined(data=None, method=None, meta=None, store=None, **kwargs):
+        def combined2(data=None, method=None, meta=None, store=None, **kwargs):
             # data is the list of results from the previous tasks
             # we return only one result, simulating selection
             return data[0][:, 0]
 
-        om.models.put(combined, 'combined', replace=True)
+        om.models.put(combined2, 'combined', replace=True)
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
             ctr.model('regmodel').predict('sample[x]')

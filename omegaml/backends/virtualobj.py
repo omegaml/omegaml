@@ -57,7 +57,7 @@ class VirtualObjectBackend(BaseDataBackend):
     def supports(self, obj, name, **kwargs):
         return callable(obj) and getattr(obj, '_omega_virtual', False)
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, attributes=None, replace=True, **kwargs):
         # TODO add obj signing so that only trustworthy sources can put functions
         # ensure we have a dill'able object
         # -- only instances can be dill'ed
@@ -65,7 +65,7 @@ class VirtualObjectBackend(BaseDataBackend):
             obj = obj()
         data = dill.dumps(obj)
         filename = self.model_store.object_store_key(name, '.dill', hashed=True)
-        gridfile = self._store_to_file(self.model_store, data, filename)
+        gridfile = self._store_to_file(self.model_store, data, filename, replace=replace)
         return self.model_store._make_metadata(
             name=name,
             prefix=self.model_store.prefix,

@@ -11,7 +11,7 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 tables = ['tables>=3.7.0']
 graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
 dashserve_deps = ['dashserve']
-sql_deps = ['sqlalchemy', 'ipython-sql']
+sql_deps = ['sqlalchemy', 'ipython-sql', 'dataset-orm']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.4.1']

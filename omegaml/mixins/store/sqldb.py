@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import os
-from dataset.table import Table
+from dataset.table import Table, false, and_
 from dataset.types import Types
 from dataset_orm import connect, files
 from functools import lru_cache
@@ -105,7 +105,7 @@ class DatasetStoreMixin:
             gridfile (GridFSProxy), assignable to Metadata.gridfile
         """
         if replace:
-            for fileobj in self.fs.find(filename=filename):
+            for fileobj in self.fs.find(filename):
                 try:
                     self.fs.remove(filename)
                 except Exception as e:
@@ -240,34 +240,31 @@ class DeferredCursor:
         # example:
         # {'$and': [{'_om#rowid': {'$gte': 2}}, {'_om#rowid': {'$lte': 3}}]}
         # => { '_om#rowid': { 'gte': 2 }}
-        ensure_list = lambda v: [v] if not isinstance(v, (list, set, tuple)) else v
-        for k, v in filter.items():
-            if isinstance(v, dict):
-                filter[k] = self._sqlize(v)
-        if '$and' in filter:
-            # some and'ed conditions
-            clauses = filter.get('$and')
-            transform = True
-        elif any(k.startswith('$') for k in filter):
-            # some $operator
-            clauses = ensure_list(filter)
-            transform = True
-        elif any('.' in k for k in filter):
-            transform = True
-            clauses = ensure_list(filter)
-        else:
-            # no mongodb filter found, process as is
-            transform = False
-            clauses = None
-        if transform:
-            column_clauses = {}
-            sqlop = lambda v: v.replace('$', '')  # $eq => eq
-            colq = lambda v: v.split('.')[-1]  # data.experiment => experiment
-            for clause in clauses:
-                for op, spec in clause.items():
-                    column_clauses[colq(sqlop(op))] = spec
-            filter = column_clauses
-        return filter
+        sqlop = lambda v: v.replace('$', '')  # $eq => eq
+        colq = lambda v: v.split('.')[-1]  # data.experiment => experiment
+        column_clauses = {}
+        clauses = None
+        for opcol, cond in filter.items():
+            if opcol == '$and':
+                # {'$and': [{'_om#rowid': {'$gte': 2}}, {'_om#rowid': {'$lte': 3}}]}
+                clauses = [self._sqlize(sc) for sc in cond]
+            elif isinstance(cond, list):
+                # {'_om#rowid': 2}, {'_om#rowid': 3}
+                clauses = [self._sqlize(sc) for sc in cond]
+            elif isinstance(cond, dict):
+                # {'_om#rowid': {'$gte': 2}}
+                col = colq(opcol)
+                for op, spec in cond.items():
+                    op = sqlop(op)
+                    column_clauses[f'{col}__{op}'] = spec
+            else:
+                # {'_om#rowid': 2}
+                col = opcol
+                column_clauses[f'{col}'] = cond
+            if clauses:
+                for clause in clauses:
+                    column_clauses.update(self._sqlize(clause))
+        return column_clauses
 
     def __iter__(self):
         for item in self.table.find(**self._sqlize(self._filter),
@@ -312,6 +309,7 @@ class ExtendedTypes(Types):
         if isinstance(sample, list):
             return self.json
         return super().guess(sample)
+
 
 @lru_cache()
 def sqlconnect(url=None, alias=None, recreate=False, **kwargs):

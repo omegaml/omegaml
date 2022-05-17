@@ -427,6 +427,10 @@ class OmegaStore(object):
             for col, col_dtype in dtypes.items():
                 if 'datetime' in col_dtype:
                     obj[col].fillna('', inplace=True)
+                    try:
+                        obj[col] = obj[col].dt.tz_convert(tz='utc')
+                    except Exception:
+                        warnings.warn(f'Cannot convert naive datetime objects in column {col} to UTC.')
         obj = obj.astype('O', errors='ignore')
         self._fast_insert(obj, self, name, chunksize=chunksize)
         # create mongon indicies for data frame index columns

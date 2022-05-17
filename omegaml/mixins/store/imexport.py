@@ -161,7 +161,7 @@ class OmegaExportArchive:
         if lpaths.gridfile.exists():
             with lpaths.gridfile.open('rb') as fin:
                 file_backend = store.get_backend_byobj(fin)
-                meta.gridfile = file_backend._store_to_file(store, fin, lpaths.key)
+                meta.gridfile = file_backend._store_to_file(store, fin, lpaths.key, replace=True)
         if lpaths.collection.exists():
             with lpaths.collection.open('r') as fin:
                 data = bson_loads(fin.read())

@@ -874,6 +874,8 @@ class StoreTests(unittest.TestCase):
         foo_store = OmegaStore(bucket='foo', prefix='foo/')
         bar_store = OmegaStore(bucket='bar', prefix='bar/')
         job_store = OmegaJobs(bucket='bar', prefix='jobs/')
+        for store in foo_store, bar_store, job_store:
+            [store.drop(member, force=True) for member in store.list()]
         obj = {}
         foo_store.put(obj, 'obj')
         obj = {}
