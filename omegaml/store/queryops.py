@@ -378,13 +378,8 @@ def flatten_keys(d, keys=None):
 
 
 def humanize_index(idxs):
-    # idxs = collection.index_information()
-    SORT_MAP = {
-        1: 'asc',
-        -1: 'desc'
-    }
-    return '_'.join('{}_{}'.format(SORT_MAP.get(sort), var)
-                    for idx, spec in idxs.items() for var, sort in spec['key'])
+    return '__'.join('{}'.format(var) for idx, spec in idxs.items()
+                     for var, sort in spec['key'])
 
 
 def ensure_index_limit(idx, **kwargs):

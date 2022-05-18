@@ -1,15 +1,12 @@
-from time import sleep
-
-import platform
-
 import pandas as pd
+import platform
 import unittest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
+from time import sleep
 
 from omegaml import Omega
 from omegaml.backends.experiment import ExperimentBackend, OmegaSimpleTracker, OmegaProfilingTracker
-from omegaml.documents import Metadata
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -93,10 +90,10 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         obj = exp.restore_artifact(key='mymodel')
         self.assertIsInstance(obj, LogisticRegression)
         obj = exp.restore_artifact(key='mymodel_meta')
-        self.assertIsInstance(obj, Metadata)
+        self.assertIsInstance(obj, om.models._Metadata)
         # related is stored by runtime automatically as the delegate's metadata
         obj = exp.restore_artifact(key='related')
-        self.assertIsInstance(obj, Metadata)
+        self.assertIsInstance(obj, om.models._Metadata)
         # check that the current metadata lists the experiment for tracability
         meta = om.models.metadata('mymodel')
         self.assertIn('myexp', meta.attributes['tracking']['experiments'])
@@ -201,8 +198,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         data = exp.restore_artifact('foo')
         self.assertIsInstance(data, dict)
         # by value
-        data = exp.data(key='foo')
-        data = exp.restore_artifact(value=data.iloc[0].value)
+        data = exp.data(key='foo', raw=True)
+        data = exp.restore_artifact(value=data[0]['value'])
 
     def test_notrack(self):
         # create a model
@@ -258,8 +255,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         om = self.om
         with om.runtime.experiment('test') as exp:
             exp.log_system()
-        data = exp.data(key='system')
-        system = data.iloc[0]['value']
+        data = exp.data(key='system', raw=True)
+        system = data[0]['value']
         self.assertEqual(system['platform'], platform.uname()._asdict())
         self.assertEqual(system['platform']['node'], platform.node())
 

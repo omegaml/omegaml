@@ -7,7 +7,7 @@ from omegaml.runtimes.loky import OmegaRuntimeBackend
 from omegaml.util import PickableCollection
 
 OmegaRuntimeBackend = OmegaRuntimeBackend  # noqa
-default_chunksize = int(1e4)
+default_chunksize = int(1e6)
 
 
 def dfchunker(df, size=default_chunksize):
@@ -25,9 +25,9 @@ def insert_chunk(job):
     """
     # note we do not catch exceptions as we want to propagate errors back to caller
     # rationale: if one chunk insert fails, all should fail and user be notified
-    sdf, collection, cpid = job
+    sdf, collection = job
     result = collection.insert_many(sdf.to_dict(orient='records'))
-    return len(result.inserted_ids)
+    return len(sdf)
 
 
 def fast_insert(df, omstore, name, chunksize=default_chunksize):
@@ -61,23 +61,23 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
     # - pool dict performs to_dict on chunking, passes list of json docs pools just insert
     # - no chunking sets chunksize=False
     if chunksize and len(df) * len(df.columns) > chunksize:
+        #     (pickling and transaction issues)
         collection = PickableCollection(omstore.collection(name))
         # we crossed upper limits of single threaded processing, use a Pool
         # use the cached pool
         # use at least 2 processes for parallelism, at most half of available cores
         n_jobs = max(2, math.ceil(os.cpu_count() / 2))
-        jobs = zip(dfchunker(df, size=chunksize),
-                   repeat(collection), repeat(id(collection)))
+        jobs = zip(dfchunker(df, size=chunksize), repeat(collection))
         approx_jobs = int(len(df) / chunksize)
         # we use multiprocessing backend because
-        with Parallel(n_jobs=n_jobs, backend='omegaml', verbose=False) as p:
+        with Parallel(n_jobs=n_jobs, backend='threading', verbose=False) as p:
             runner = delayed(insert_chunk)
             p_jobs = (runner(job) for job in jobs)
             p._job_count = approx_jobs
             p(p_jobs)
     else:
         # still within bounds for single threaded inserts
-        omstore.collection(name).insert_many(df.to_dict(orient='records'))
+        omstore.collection(name).insert_many(df.to_dict(orient='records'), ordered=False)
 
 
 # ensure loky backend is registered

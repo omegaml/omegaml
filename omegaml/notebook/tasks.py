@@ -8,7 +8,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from omegaml.celery_util import OmegamlTask, sanitized
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 
 
 class NotebookTask(OmegamlTask):

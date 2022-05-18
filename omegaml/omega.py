@@ -1,3 +1,5 @@
+import sys
+
 import os
 from uuid import uuid4
 
@@ -41,7 +43,7 @@ class Omega(CombinedOmegaStoreMixin):
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
-        self.bucket = bucket
+        self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         # setup storage locations
         self._dbalias = self._make_dbalias()
         self.models = self._make_store(prefix='models/')
@@ -59,7 +61,7 @@ class Omega(CombinedOmegaStoreMixin):
         self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
 
     def __repr__(self):
-        return 'Omega()'.format()
+        return f'Omega(bucket={self.bucket})'
 
     def _clone(self, **kwargs):
         return self.__class__(defaults=self.defaults,
@@ -139,6 +141,10 @@ class OmegaDeferredInstance(object):
         def setup_base():
             return Omega(*args, **kwargs)
 
+        def setup_cloud():
+            from omegaml.client.cloud import setup
+            return setup(*args, **kwargs)
+
         def setup_env():
             from omegaml.client.cloud import setup
             return setup(userid=os.environ['OMEGA_USERID'], apikey=os.environ['OMEGA_APIKEY'],
@@ -149,9 +155,11 @@ class OmegaDeferredInstance(object):
             return setup_from_config(fallback=setup_base)
 
         omega = None
+        from_args = len(args) > 0 or any(kw in kwargs for kw in ('userid', 'apikey', 'api_url', 'qualifier'))
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
         from_config = 'OMEGA_CONFIG_FILE' in os.environ or os.path.exists('config.yml')
-        loaders = (from_env, setup_env), (from_config, setup_cloud_config), (True, setup_base)
+        loaders = ((from_args, setup_cloud), (from_env, setup_env),
+                   (from_config, setup_cloud_config), (True, setup_base))
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
         for condition, loader in loaders:
@@ -201,6 +209,7 @@ def setup(*args, **kwargs):
     configure and return the omega client instance
     """
     return _om.setup(*args, **kwargs)
+
 
 # default instance
 # -- these are deferred instanced that is the actual Omega instance

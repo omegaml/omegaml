@@ -11,9 +11,11 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.om = Omega()
         self.clean()
         self._reset_log()
+        self.pylogger = logging.getLogger()
 
     def tearDown(self):
         self.assertTrue(all(m.name is not None for m in self.om.datasets.list(raw=True)))
+        self.pylogger.setLevel(logging.INFO)
 
     def _reset_log(self):
         self.om.datasets.drop('.omega/logs', force=True)
@@ -64,7 +66,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertTrue(len(df) == 0)
 
     def test_loghandler(self):
-        pylogger = logging.getLogger()
+        pylogger = self.pylogger
         omlogger = self.om.logger
         handler = OmegaLoggingHandler.setup(logger=pylogger, level='DEBUG')
         pylogger.setLevel('DEBUG')

@@ -21,9 +21,14 @@ def sanitize_mongo_kwargs(kwargs):
     # -- if we receive "use_ssl" = False from cloud config but have
     #    a local CA defined, remove it. Otherwise mongo raises ConfigurationError
     kwargs = dict(kwargs)
-    if 'tlsCAFile' in kwargs and not kwargs.get('ssl'):
+    if 'ssl' in kwargs:
+        # ssl is alias to tls, should override tls (assume ssl is user-specified)
+        # see https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
+        kwargs['tls'] = kwargs['ssl']
+        del kwargs['ssl']
+    if 'tlsCAFile' in kwargs and not kwargs.get('tls'):
         del kwargs['tlsCAFile']
-    if 'ssl_ca_certs' in kwargs and not kwargs.get('ssl'):
+    if 'ssl_ca_certs' in kwargs and not kwargs.get('tls'):
         del kwargs['ssl_ca_certs']
     return kwargs
 

@@ -11,10 +11,10 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 tables = ['tables>=3.7.0']
 graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
 dashserve_deps = ['dashserve']
-sql_deps = ['sqlalchemy', 'ipython-sql']
+sql_deps = ['sqlalchemy', 'ipython-sql', 'dataset-orm']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
-streaming_deps = ['minibatch[all]>0.4.0']
+streaming_deps = ['minibatch[all]>=0.4.1']
 jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
 mlflow_deps = ['mlflow~=1.21.0']
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
@@ -79,7 +79,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
     ],
     install_requires=[
-        'celery<5.0',
+        'celery>4.4,<5.0',
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'mongoengine~=0.24.1',
@@ -113,7 +113,7 @@ setup(
         'tabulate>=0.8.2',  # required in cli
         'smart_open', # required in cli
         'imageio>=2.3.0', # require to store images
-        'psutil>=5.8' # required for profiling tracker
+        'psutil>=5.8', # required for profiling tracker
         'cachetools>=5.0.0' # required for session caching
     ],
     extras_require={

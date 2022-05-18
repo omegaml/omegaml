@@ -48,7 +48,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         # directly specified
         conn = om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'))
         # via vault
-        om.datasets.put(dict(userid=getuser(), user='foobar'), '_omega/vault', append=False)
+        om.datasets.put(dict(userid=getuser(), user='foobar'), '.omega/vault', kind='pandas.rawdict', append=False)
         conn = om.datasets.get('testsqlite', raw=True)
         self.assertIsInstance(conn, Connection)
 

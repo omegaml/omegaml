@@ -72,7 +72,7 @@ class KerasBackendTests(TestCase):
         x_test = np.random.random((100, 20))
         y_test = keras.utils.to_categorical(np.random.randint(10, size=(100, 1)), num_classes=10)
         result = om.runtime.model('keras-model').fit(x_test, y_test).get()
-        self.assertTrue(result.startswith('<Metadata:'))
+        self.assertTrue(result.startswith('Metadata('))
         result = om.runtime.model('keras-model').predict(x_test).get()
         self.assertEqual(result.shape, (100, 10))
 

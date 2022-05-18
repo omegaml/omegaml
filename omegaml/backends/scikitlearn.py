@@ -13,7 +13,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
 
 from omegaml.backends.basemodel import BaseModelBackend
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 from omegaml.util import reshaped, gsreshaped
 
 # byte string
@@ -176,8 +176,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         model.fit(reshaped(X), reshaped(Y), **kwargs)
         # store information required for retraining
         model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None,
+            'metaX': metaX.to_dict(serializable=True),
+            'metaY': metaY.to_dict(serializable=True) if metaY is not None else None,
         }
         try:
             import sklearn
@@ -200,8 +200,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                               X, Y, **kwargs))
         # store information required for retraining
         model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None,
+            'metaX': metaX.to_dict(serializable=True),
+            'metaY': metaY.to_dict(serializable=True) if metaY is not None else None,
         }
         try:
             import sklearn
@@ -256,8 +256,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
         # store information required for retraining
         model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None
+            'metaX': metaX.to_dict(serializable=True),
+            'metaY': metaY.to_dict(serializable=True) if metaY is not None else None
         }
         try:
             import sklearn

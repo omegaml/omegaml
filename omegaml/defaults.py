@@ -34,7 +34,7 @@ OMEGA_BUCKET_FS_LEGACY = False
 OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
-    'ssl': OMEGA_USESSL,
+    'tls': OMEGA_USESSL,
     'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
     'uuidRepresentation': 'standard',
     'authSource': 'admin',
@@ -125,6 +125,8 @@ if is_test_run:
 OMEGA_DISABLE_FRAMEWORKS = truefalse(os.environ.get('OMEGA_DISABLE_FRAMEWORKS'))
 #: storage mixins
 OMEGA_STORE_MIXINS = [
+    # 'omegaml.mixins.store.mongodb.MongoStoreMixin',
+    'omegaml.mixins.store.sqldb.DatasetStoreMixin',
     'omegaml.mixins.store.ProjectedMixin',
     'omegaml.mixins.store.LazyGetMixin',
     'omegaml.mixins.store.virtualobj.VirtualObjectMixin',

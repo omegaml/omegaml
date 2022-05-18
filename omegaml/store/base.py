@@ -24,7 +24,7 @@ as follows:
 
     * .metadata
         all metadata. each object is one document,
-        See **omegaml.documents.Metadata** for details
+        See **omegaml.store.documents.Metadata** for details
     * .<bucket>.files
         this is the GridFS instance used to store
         blobs (models, numpy, hdf). The actual file name
@@ -73,26 +73,19 @@ as follows:
 """
 from __future__ import absolute_import
 
-import bson
 import gridfs
 import os
 import tempfile
 import warnings
 from datetime import datetime
-from mongoengine.connection import disconnect, \
-    connect, _connections, get_db, _connection_settings
 from mongoengine.errors import DoesNotExist
-from mongoengine.fields import GridFSProxy
-from mongoengine.queryset.visitor import Q
 from uuid import uuid4
 
-from omegaml.store.fastinsert import fast_insert, default_chunksize
+from omegaml.store.documents import MDREGISTRY
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
-from ..documents import make_Metadata, MDREGISTRY
-from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, mongo_compatible
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
-                    settings as omega_settings, urlparse, is_series)
+                    settings as omega_settings, is_series)
 
 
 class OmegaStore(object):
@@ -110,7 +103,6 @@ class OmegaStore(object):
         self.defaults = defaults or omega_settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
-        self._fs_collection = self._ensure_fs_collection()
         self._fs = None
         self._tmppath = None
         self.prefix = prefix or ''
@@ -141,6 +133,22 @@ class OmegaStore(object):
         return self.mongo_url == other.mongo_url and self.bucket == other.bucket and self.prefix == other.prefix
 
     @property
+    def db(self):
+        return self._get_database()
+
+    @property
+    def _Metadata(self):
+        if self._Metadata_cls is None:
+            self._Metadata_cls = self._get_Metadata()
+        return self._Metadata_cls
+
+    @property
+    def fs(self):
+        if self._fs is None:
+            self._fs = self._get_filesystem()
+        return self._fs
+
+    @property
     def tmppath(self):
         """
         return an instance-specific temporary path
@@ -151,92 +159,11 @@ class OmegaStore(object):
         os.makedirs(self._tmppath)
         return self._tmppath
 
-    @property
-    def mongodb(self):
-        """
-        Returns a mongo database object
-        """
-        if self._db is not None:
-            return self._db
-        # parse salient parts of mongourl, e.g.
-        # mongodb://user:password@host/dbname
-        self.parsed_url = urlparse.urlparse(self.mongo_url)
-        self.database_name = self.parsed_url.path[1:]
-        host = self.parsed_url.netloc
-        scheme = self.parsed_url.scheme
-        username, password = None, None
-        if '@' in host:
-            creds, host = host.split('@', 1)
-            if ':' in creds:
-                username, password = creds.split(':')
-        # connect via mongoengine
-        #
-        # note this uses a MongoClient in the background, with pooled
-        # connections. there are multiprocessing issues with pymongo:
-        # http://api.mongodb.org/python/3.2/faq.html#using-pymongo-with-multiprocessing
-        # connect=False is due to https://jira.mongodb.org/browse/PYTHON-961
-        # this defers connecting until the first access
-        # serverSelectionTimeoutMS=2500 is to fail fast, the default is 30000
-        #
-        # use an instance specific alias, note that access to Metadata and
-        # QueryCache must pass the very same alias
-        self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
-        # always disconnect before registering a new connection because
-        # mongoengine.connect() forgets all connection settings upon disconnect
-        if alias not in _connections:
-            disconnect(alias)
-            connection = connect(alias=alias, db=self.database_name,
-                                 host=f'{scheme}://{host}',
-                                 username=username,
-                                 password=password,
-                                 connect=False,
-                                 authentication_source='admin',
-                                 serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
-                                 **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
-                                 )
-            # since PyMongo 4, connect() no longer waits for connection
-            waitForConnection(connection)
-        self._db = get_db(alias)
-        return self._db
-
-    @property
-    def _Metadata(self):
-        if self._Metadata_cls is None:
-            # hack to localize metadata
-            db = self.mongodb
-            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
-                                               collection=self._fs_collection)
-        return self._Metadata_cls
-
-    @property
-    def fs(self):
-        """
-        Retrieve a gridfs instance using url and collection provided
-
-        :return: a gridfs instance
-        """
-        if self._fs is not None:
-            return self._fs
-        self._fs = gridfs.GridFS(self.mongodb, collection=self._fs_collection)
-        self._ensure_fs_index(self._fs)
-        return self._fs
-
     def metadata(self, name=None, bucket=None, prefix=None, version=-1, **kwargs):
         """
         Returns a metadata document for the given entry name
         """
-        # FIXME: version attribute does not do anything
-        # FIXME: metadata should be stored in a bucket-specific collection
-        # to enable access control, see https://docs.mongodb.com/manual/reference/method/db.create
-        #
-        # Role/#db.createRole
-        db = self.mongodb
-        fs = self.fs
-        prefix = prefix or self.prefix
-        bucket = bucket or self.bucket
-        # Meta is to silence lint on import error
-        Meta = self._Metadata
-        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+        return self._find_metadata(name=name, bucket=bucket, prefix=prefix, version=version, **kwargs)
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
         """
@@ -328,18 +255,7 @@ class OmegaStore(object):
             collection name given on instantiation. the actual collection name
             used is always prefix + name + '.data'
         """
-        # see if we have a known object and a collection for that, if not define it
-        meta = self.metadata(name, bucket=bucket, prefix=prefix)
-        collection = meta.collection if meta else None
-        if not collection:
-            collection = self.object_store_key(name, '.datastore')
-            collection = collection.replace('..', '.')
-        # return the collection
-        try:
-            datastore = getattr(self.mongodb, collection)
-        except Exception as e:
-            raise e
-        return PickableCollection(datastore)
+        return self._get_collection(name=name, bucket=bucket, prefix=prefix)
 
     def _apply_mixins(self):
         """
@@ -414,7 +330,7 @@ class OmegaStore(object):
             append = kwargs.pop('append', None)
             timestamp = kwargs.pop('timestamp', None)
             index = kwargs.pop('index', None)
-            chunksize = kwargs.pop('chunksize', default_chunksize)
+            chunksize = kwargs.pop('chunksize', None)
             return self.put_dataframe_as_documents(
                 obj, name, append=append, attributes=attributes, index=index,
                 timestamp=timestamp, chunksize=chunksize, **kwargs)
@@ -438,7 +354,7 @@ class OmegaStore(object):
     def put_dataframe_as_documents(self, obj, name, append=None,
                                    attributes=None, index=None,
                                    timestamp=None, chunksize=None,
-                                   ensure_compat=True, _fast_insert=fast_insert,
+                                   ensure_compat=True,
                                    **kwargs):
         """
         store a dataframe as a row-wise collection of documents
@@ -474,16 +390,6 @@ class OmegaStore(object):
         elif append is None and collection.count_documents({}, limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        if index:
-            # get index keys
-            if isinstance(index, dict):
-                idx_kwargs = index
-                index = index.pop('columns')
-            else:
-                idx_kwargs = {}
-            # create index with appropriate options
-            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
-            ensure_index(collection, keys, **idx_kwargs)
         if timestamp:
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
@@ -513,14 +419,6 @@ class OmegaStore(object):
         }
         # ensure column names to be strings
         obj.columns = stored_columns
-        # create mongon indicies for data frame index columns
-        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
-        if df_idxcols:
-            keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
-            ensure_index(collection, keys, **idx_kwargs)
-        # create index on row id
-        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
-        ensure_index(collection, keys, **idx_kwargs)
         # bulk insert
         # -- get native objects
         # -- seems to be required since pymongo 3.3.x. if not converted
@@ -529,8 +427,30 @@ class OmegaStore(object):
             for col, col_dtype in dtypes.items():
                 if 'datetime' in col_dtype:
                     obj[col].fillna('', inplace=True)
+                    try:
+                        obj[col] = obj[col].dt.tz_convert(tz='utc')
+                    except Exception:
+                        warnings.warn(f'Cannot convert naive datetime objects in column {col} to UTC.')
         obj = obj.astype('O', errors='ignore')
-        _fast_insert(obj, self, name, chunksize=chunksize)
+        self._fast_insert(obj, self, name, chunksize=chunksize)
+        # create mongon indicies for data frame index columns
+        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
+        if df_idxcols:
+            keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
+            ensure_index(collection, keys, **idx_kwargs)
+        # create index on row id
+        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
+        ensure_index(collection, keys, **idx_kwargs)
+        if index:
+            # get index keys
+            if isinstance(index, dict):
+                idx_kwargs = index
+                index = index.pop('columns')
+            else:
+                idx_kwargs = {}
+            # create index with appropriate options
+            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
+            ensure_index(collection, keys, **idx_kwargs)
         kind = (MDREGISTRY.PANDAS_SEROWS
                 if store_series
                 else MDREGISTRY.PANDAS_DFROWS)
@@ -585,14 +505,14 @@ class OmegaStore(object):
         filename = self.object_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname, 'rb') as fhdf:
-            fileid = self.fs.put(fhdf, filename=filename)
+            filelike = self.fs.put(fhdf, filename=filename)
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=MDREGISTRY.PANDAS_HDF,
                                    attributes=attributes,
-                                   gridfile=GridFSProxy(db_alias=self._dbalias,
-                                                        grid_id=fileid)).save()
+                                   objid=filelike.name,
+                                   gridfile=filelike).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None):
         """ store numpy array as hdf
@@ -629,20 +549,17 @@ class OmegaStore(object):
         elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
+        if isinstance(obj, (list, tuple)):
             # list of lists are inserted as many objects, as in pymongo < 4
-            result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
-            objid = result.inserted_ids[-1]
+            result = collection.insert_many(list(mongo_compatible({'data': item}) for item in obj))
         else:
             result = collection.insert_one(mongo_compatible({'data': obj}))
-            objid = result.inserted_id
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
                                    kind=MDREGISTRY.PYTHON_DATA,
                                    collection=collection.name,
-                                   attributes=attributes,
-                                   objid=objid).save()
+                                   attributes=attributes).save()
 
     def drop(self, name, force=False, version=-1, **kwargs):
         """
@@ -667,16 +584,17 @@ class OmegaStore(object):
         if meta is None and not force:
             raise DoesNotExist()
         collection = self.collection(name)
-        if collection:
-            self.mongodb.drop_collection(collection.name)
-        if meta:
-            if meta.collection:
-                self.mongodb.drop_collection(meta.collection)
-            if meta and meta.gridfile is not None:
-                meta.gridfile.delete()
-            self._drop_metadata(name)
-            return True
-        return False
+        drop_collection = lambda: self.db.drop_collection(collection.name) if collection else None
+        drop_meta_collection = lambda: self.db.drop_collection(meta.collection) if meta.collection else None
+        drop_gridfile = lambda: meta.gridfile.delete() if meta.gridfile else None
+        for drop_part in (drop_collection, drop_meta_collection, drop_gridfile):
+            try:
+                drop_part()
+            except Exception:
+                if not force:
+                    raise
+        self._drop_metadata(name)
+        return True
 
     def get_backend_bykind(self, kind, model_store=None, data_store=None,
                            **kwargs):
@@ -880,6 +798,7 @@ class OmegaStore(object):
                 df = df[0]
             if chunksize is not None and chunksize > 0:
                 return df.iterchunks(chunksize=chunksize)
+            result = df
         else:
             # TODO ensure the same processing is applied in MDataFrame
             # TODO this method should always use a MDataFrame disregarding lazy
@@ -892,8 +811,12 @@ class OmegaStore(object):
                 cursor = collection.find(projection=columns)
             # restore dataframe
             df = cursor_to_dataframe(cursor)
-            if '_id' in df.columns:
-                del df['_id']
+            df = df[list(columns or df.columns)]
+            # remove id columns
+            omit_cols = '_id', 'id'
+            for oc in omit_cols:
+                if oc in df.columns:
+                    del df[oc]
             if hasattr(meta, 'kind_meta'):
                 df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
             # -- restore columns
@@ -917,10 +840,13 @@ class OmegaStore(object):
             if is_series:
                 index = df.index
                 name = df.columns[0]
-                df = df[name]
-                df.index = index
-                df.name = None if name == 'None' else name
-        return df
+                sr = df[name]
+                sr.index = index
+                sr.name = None if name == 'None' else name
+                result = sr
+            else:
+                result = df
+        return result
 
     def rebuild_params(self, kwargs, collection):
         """
@@ -935,7 +861,7 @@ class OmegaStore(object):
         :return: Returns a set of parameters as dictionary.
         """
         modified_params = {}
-        db_structure = collection.find_one({}, {'_id': False})
+        db_structure = collection.find_one({}, projection={'_id': False})
         groupby_columns = list(set(db_structure.keys()) - set(['_data']))
         if kwargs is not None:
             for item in kwargs:
@@ -1015,14 +941,14 @@ class OmegaStore(object):
         :return: Returns data as python object
         """
         if meta.kind == MDREGISTRY.SKLEARN_JOBLIB:
-            return meta.gridfile
+            return meta.gridfile.read()
         if meta.kind == MDREGISTRY.PANDAS_HDF:
-            return meta.gridfile
+            return meta.gridfile.read()
         if meta.kind == MDREGISTRY.PANDAS_DFROWS:
-            return list(getattr(self.mongodb, meta.collection).find())
+            return list(self.db[meta.collection].find())
         if meta.kind == MDREGISTRY.PYTHON_DATA:
-            col = getattr(self.mongodb, meta.collection)
-            return col.find_one(dict(_id=meta.objid)).get('data')
+            col = self.db[meta.collection]
+            return [doc.get('data') for doc in col.find()]
         raise TypeError('cannot return kind %s as a python object' % meta.kind)
 
     def __iter__(self):
@@ -1044,32 +970,8 @@ class OmegaStore(object):
         :return: List of files in store
 
         """
-        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
-        db = self.mongodb
-        searchkeys = dict(bucket=bucket or self.bucket,
-                          prefix=prefix or self.prefix)
-        q_excludes = Q()
-        if regexp:
-            searchkeys['name'] = regex(regexp)
-        elif pattern:
-            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
-            searchkeys['name'] = regex(f'^{re_pattern}$')
-        if not include_temp:
-            q_excludes &= Q(name__not__startswith='_')
-            q_excludes &= Q(name__not=regex(r'(.{1,*}\/?_.*)'))
-        if not hidden:
-            q_excludes &= Q(name__not__startswith='.')
-        if kind or self.force_kind:
-            kind = kind or self.force_kind
-            if isinstance(kind, (tuple, list)):
-                searchkeys.update(kind__in=kind)
-            else:
-                searchkeys.update(kind=kind)
-        if filter:
-            searchkeys.update(filter)
-        q_search = Q(**searchkeys) & q_excludes
-        files = self._Metadata.objects.no_cache()(q_search)
-        return [f if raw else str(f.name).replace('.omm', '') for f in files]
+        return self._get_list(pattern=pattern, regexp=regexp, kind=kind, raw=raw, hidden=hidden,
+                              include_temp=include_temp, bucket=bucket, prefix=prefix, filter=filter)
 
     def exists(self, name, hidden=False):
         """ check if object exists
@@ -1148,7 +1050,7 @@ class OmegaStore(object):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         try:
-            outf = self.fs.get_version(filename, version=version)
+            outf = self.fs.get(filename)
         except gridfs.errors.NoFile as e:
             raise e
         with open(hdffname, 'wb') as hdff:
@@ -1158,23 +1060,3 @@ class OmegaStore(object):
         df = hdf[key]
         hdf.close()
         return df
-
-    def _ensure_fs_collection(self):
-        # ensure backwards-compatible gridfs access
-        if self.defaults.OMEGA_BUCKET_FS_LEGACY:
-            # prior to 0.13.2 a single gridfs instance was used, always equal to the default collection
-            return self.defaults.OMEGA_MONGO_COLLECTION
-        if self.bucket == self.defaults.OMEGA_MONGO_COLLECTION:
-            # from 0.13.2 onwards, only the default bucket is equal to the default collection
-            # backwards compatibility for existing installations
-            return self.bucket
-        # since 0.13.2, all buckets other than the default use a qualified collection name to
-        # effectively separate files in different buckets, enabling finer-grade access control
-        # and avoiding name collisions from different buckets
-        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
-
-    def _ensure_fs_index(self, fs):
-        # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
-        # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
-        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
-        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})

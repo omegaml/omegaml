@@ -10,7 +10,7 @@ from pathlib import Path
 from shutil import rmtree
 
 from omegaml.client.util import AttrDict
-from omegaml.documents import Metadata
+from omegaml.store.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
@@ -161,7 +161,7 @@ class OmegaExportArchive:
         if lpaths.gridfile.exists():
             with lpaths.gridfile.open('rb') as fin:
                 file_backend = store.get_backend_byobj(fin)
-                meta.gridfile = file_backend._store_to_file(store, fin, lpaths.key)
+                meta.gridfile = file_backend._store_to_file(store, fin, lpaths.key, replace=True)
         if lpaths.collection.exists():
             with lpaths.collection.open('r') as fin:
                 data = bson_loads(fin.read())
@@ -231,7 +231,7 @@ class OmegaExporter:
             arc.clear()
             for obj in objects:
                 progressfn(obj) if progressfn else None
-                if isinstance(obj, Metadata):
+                if isinstance(obj, self.omega.datasets._Metadata):
                     store = self.omega.store_by_meta(obj)
                     store.to_archive(obj.name, arc)
                 elif isinstance(obj, str):

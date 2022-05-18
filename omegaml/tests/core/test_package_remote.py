@@ -4,10 +4,11 @@ from shutil import rmtree
 
 from omegaml import Omega
 from omegaml.backends.package import PythonPipSourcedPackageData
+from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import settings, delete_database, mkdirs
 
 
-class PythonRemotePackageDataTests(TestCase):
+class PythonRemotePackageDataTests(OmegaTestMixin, TestCase):
     _multiprocess_can_split_ = False
 
     def setUp(self):
@@ -17,7 +18,7 @@ class PythonRemotePackageDataTests(TestCase):
         if PythonPipSourcedPackageData.KIND not in OMEGA_STORE_BACKENDS:
             OMEGA_STORE_BACKENDS[PythonPipSourcedPackageData.KIND] = backend
         self.om = Omega()
-        delete_database()
+        self.clean()
         self.pkgsdir = self.om.scripts.get_backend_bykind(PythonPipSourcedPackageData.KIND).packages_path
         mkdirs(self.pkgsdir)
 

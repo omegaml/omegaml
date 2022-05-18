@@ -519,7 +519,7 @@ class MDataFrame(object):
     def _get_fields(self, raw=False):
         result = []
         doc = self.collection.find_one()
-        if doc is not None:
+        if doc:
             if raw:
                 result = list(doc.keys())
             else:
@@ -631,6 +631,11 @@ class MDataFrame(object):
         if self._preparefn:
             df = self._preparefn(df)
         return df
+
+    @property
+    def to_dict(self, orient='records'):
+        cursor = self._get_cursor()
+        return list(cursor)
 
     def reset(self):
         # TODO if head(), tail(), query(), .loc/iloc should return a new MDataFrame instance to avoid having a reset need

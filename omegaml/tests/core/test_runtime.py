@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 
-import unittest
 from unittest import TestCase
 
 import numpy as np
 import os
 import pandas as pd
 import sys
+import unittest
 from numpy.testing import assert_array_almost_equal
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
@@ -21,10 +21,14 @@ from sklearn.utils.validation import DataConversionWarning
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import delete_database, reshaped
+from omegaml.util import reshaped, delete_database
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        delete_database()
 
     def setUp(self):
         TestCase.setUp(self)
@@ -208,7 +212,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         result = om.runtime.model('mymodel2').predict('data[x]')
         pred1 = result.get()
         mse_2 = mean_squared_error(om.datasets.get('data[y]'), pred1)
-        self.assertLess(mse_2, mse)
+        self.assertLessEqual(mse_2, mse)
 
     def test_predict_pure_python(self):
         # create some data
@@ -442,12 +446,12 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         assert_array_almost_equal(df['y'].values * 5, data[1][:, 0])
 
         @virtualobj
-        def combined(data=None, method=None, meta=None, store=None, **kwargs):
+        def combined2(data=None, method=None, meta=None, store=None, **kwargs):
             # data is the list of results from the previous tasks
             # we return only one result, simulating selection
             return data[0][:, 0]
 
-        om.models.put(combined, 'combined', replace=True)
+        om.models.put(combined2, 'combined', replace=True)
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
             ctr.model('regmodel').predict('sample[x]')
@@ -511,13 +515,13 @@ class RuntimeTests(OmegaTestMixin, TestCase):
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 1)
+        self.assertEqual(len(om.datasets.get('callback_results')), len(df))
         result = (om.runtime
                   .callback('callback')
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 2)
+        self.assertEqual(len(om.datasets.get('callback_results')), len(df) * 2)
 
     def test_task_callback_bucket(self):
         om = Omega()
@@ -537,13 +541,13 @@ class RuntimeTests(OmegaTestMixin, TestCase):
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 1)
+        self.assertEqual(len(omb.datasets.get('callback_results')), len(df))
         result = (omb.runtime
                   .callback('callback')
                   .model('regmodel')
                   .predict('sample[x]')
                   .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 2)
+        self.assertEqual(len(omb.datasets.get('callback_results')), len(df) * 2)
 
     def test_task_logging(self):
         """ test task python output can be logged per-request """

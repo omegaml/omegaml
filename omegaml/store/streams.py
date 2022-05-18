@@ -100,13 +100,14 @@ class StreamsProxy(OmegaStore):
     def getl(self, name, **kwargs):
         return self.get(name, lazy=True, **kwargs)
 
-    def drop(self, name, force=False):
+    def drop(self, name, force=False, stream=False):
         meta = self.metadata(name)
         if meta is None and not force:
             raise DoesNotExist()
-        stream = self.get(name)
-        stream.buffer().delete()
-        stream.delete()
+        if stream:
+            stream = self.get(name)
+            stream.buffer().delete()
+            stream.delete()
         meta.delete() if meta is not None else None
         return True
 

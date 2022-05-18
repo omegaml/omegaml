@@ -4,7 +4,7 @@ import pandas as pd
 from itertools import product
 from uuid import uuid4
 
-from omegaml.documents import make_QueryCache
+from omegaml.store.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
@@ -38,18 +38,21 @@ class ApplyMixin(object):
         self.cache = kwargs.get('cache', ApplyCache(self._db_alias))
 
     def _ensure_db_connection(self):
-        from mongoengine.connection import _dbs, _connections
+        if hasattr(self.collection, 'database'):
+            from mongoengine.connection import _dbs, _connections
 
-        seek_db = self.collection.database
-        for alias, db in _dbs.items():
-            if db is seek_db:
-                self._db_alias = alias
-                break
+            seek_db = self.collection.database
+            for alias, db in _dbs.items():
+                if db is seek_db:
+                    self._db_alias = alias
+                    break
+            else:
+                # fake connection register
+                alias = self._db_alias = 'omega-{}'.format(uuid4().hex)
+                _connections[alias] = seek_db.client
+                _dbs[alias] = seek_db
         else:
-            # fake connection register
-            alias = self._db_alias = 'omega-{}'.format(uuid4().hex)
-            _connections[alias] = seek_db.client
-            _dbs[alias] = seek_db
+            self._db_alias = 'sqldb'
         return self._db_alias
 
     def nocache(self):

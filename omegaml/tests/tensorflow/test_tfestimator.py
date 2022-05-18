@@ -231,7 +231,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(train_y, 'train_y', append=False)
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
-        self.assertTrue(meta.startswith('<Metadata:'))
+        self.assertTrue(meta.startswith('Metadata('))
         # predict using fitted model in runtime
         om.datasets.put(test_x, 'test_x', append=False)
         om.datasets.put(test_y, 'test_y', append=False)
@@ -253,7 +253,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(test_x, 'test_x')
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
-        self.assertTrue(meta.startswith('<Metadata:'))
+        self.assertTrue(meta.startswith('Metadata('))
         # predict using fitted model in runtime
         om.datasets.put(test_x, 'test_x', append=False)
         om.datasets.put(test_y, 'test_y', append=False)
@@ -286,7 +286,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(test_x, 'test_x', append=False)
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
-        self.assertTrue(meta.startswith('<Metadata:'))
+        self.assertTrue(meta.startswith('Metadata('))
         # predict using fitted model in runtime
         om.datasets.put(test_x, 'test_x', append=False)
         om.datasets.put(test_y, 'test_y', append=False)
@@ -305,7 +305,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(train_y, 'train_y', append=False)
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_x', 'train_y').get()
-        self.assertTrue(meta.startswith('<Metadata:'))
+        self.assertTrue(meta.startswith('Metadata('))
         # predict using fitted model in runtime
         om.datasets.put(test_x, 'test_x', append=False)
         om.datasets.put(test_y, 'test_y', append=False)
@@ -361,4 +361,4 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         # do the same thing on the runtime
         om.models.put(estmdl, 'estimator-model')
         meta = om.runtime.model('estimator-model').fit('train_data{Xname=train_x,Yname=train_y}').get()
-        self.assertTrue(meta.startswith('<Metadata:'))
+        self.assertTrue(meta.startswith('Metadata('))

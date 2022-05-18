@@ -182,7 +182,7 @@ class OmegaSimpleLogger:
 
     def reset(self):
         self._collection = _setup_logging_dataset(self.store, self.dsname, self,
-                                                  collection=self._collection, size=self.size, reset=True)
+                                                  size=self.size, reset=True)
 
     def getLogger(self, name, **kwargs):
         return self.__class__(store=kwargs.get('store', self.store),
@@ -394,7 +394,7 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
         # initialize. we insert directly into the collection because the logger instance is not set up yet
         record = _make_log_entry('SYSTEM', 999, 'system', 'log init', 'log init')
         collection.insert_one(record)
-        store.mongodb.command('convertToCapped', collection.name, size=size)
+        store.db.command('convertToCapped', collection.name, size=size)
     # ensure indexed
     for idx in ('levelname', 'levelno', 'created'):
         ensure_index(collection, {idx: pymongo.ASCENDING}, replace=False)

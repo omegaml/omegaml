@@ -158,7 +158,8 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         # ensure changes only in original
         reg.coef_ = 15
         om.models.put(reg, 'mymodel')
-        self.assertNotEqual(om.models.get('mymodel').coef_, other.models.get('mymodel').coef_)
+        self.assertNotEqual(om.models.get('mymodel').coef_,
+                            other.models.get('mymodel').coef_)
         # try datasets
         om.datasets.put(['foo'], 'foo')
         # -- ensure only in original

@@ -1,4 +1,4 @@
-from omegaml.documents import MDREGISTRY
+from omegaml.store.documents import MDREGISTRY
 
 
 class PromotionMixin(object):
@@ -49,7 +49,7 @@ class PromotionMixin(object):
         if meta.kind == MDREGISTRY.PYTHON_DATA:
             # in case of native python data we get back a list of
             # all previously inserted objects. do the same in other
-            [other.put(o, asname) for o in obj]
+            [other.put([o], asname) for o in obj]
             other_meta = other.metadata(asname)
         else:
             other_meta = other.put(obj, asname, **kwargs)

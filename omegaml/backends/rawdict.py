@@ -2,7 +2,8 @@ from pymongo.collection import Collection
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
-from omegaml.util import json_normalize, PickableCollection
+from omegaml.mixins.store.sqldb import TableCollection
+from omegaml.util import json_normalize, PickableCollection, mongo_compatible
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -28,22 +29,24 @@ class PandasRawDictBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, as_raw=None, **kwargs):
-        return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection))
+        as_raw = as_raw or kwargs.get('kind') == self.KIND
+        return (as_raw and isinstance(obj, dict)) or isinstance(obj, (Collection, PickableCollection, TableCollection))
 
-    def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, **kwargs):
+    def get(self, name, version=-1, lazy=False, raw=False, parser=None, filter=None, resolve='value', **kwargs):
         collection = self.data_store.collection(name)
         # json_normalize needs a list of dicts to work, not a generator
         json_normalizer = lambda v: json_normalize([r for r in v])
-        parser = parser or json_normalizer
+        parser = None if (raw and not parser) else (parser or json_normalizer)
         query = filter or kwargs
         mdf = MDataFrame(collection, query=query, parser=parser, raw=raw, **kwargs)
-        return mdf if lazy else mdf.value
+        resolved = resolve if callable(resolve) else lambda mdf: getattr(mdf, resolve)
+        return mdf if lazy else resolved(mdf)
 
     def put(self, obj, name, attributes=None, **kwargs):
         if isinstance(obj, dict):
             # actual data, just insert
             collection = self.data_store.collection(name)
-            collection.insert_one(obj)
+            collection.insert_one(mongo_compatible(obj))
         else:
             # already a collection, import it to metadata
             collection = obj

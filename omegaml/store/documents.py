@@ -78,7 +78,7 @@ class Metadata:
 def make_Metadata(db_alias='omega', collection=None):
     # this is to create context specific Metadata class that takes the
     # database from the given alias at the time of use
-    from omegaml.documents import Metadata as Metadata_base
+    from omegaml.store.documents import Metadata as Metadata_base
     collection = collection or settings().OMEGA_MONGO_COLLECTION
     class Metadata(Metadata_base, Document):
         # override db_alias in gridfile
@@ -103,10 +103,14 @@ def make_Metadata(db_alias='omega', collection=None):
             newcls = super(Metadata, cls).__real_new__(cls)
             return newcls
 
+        def __init__(self, *args, **kwargs):
+            if 'gridfile' in kwargs:
+                kwargs['gridfile']
+
         def __eq__(self, other):
             return self.objid == other.objid
 
-        def __unicode__(self):
+        def __repr__(self):
             fields = ('name', 'bucket', 'prefix', 'created', 'kind')
             kwargs = ('%s=%s' % (k, getattr(self, k))
                       for k in self._fields.keys() if k in fields)
@@ -122,8 +126,8 @@ def make_Metadata(db_alias='omega', collection=None):
                                                 LEGACY_JSON_OPTIONS)
             return super().to_json(**kwargs)
 
-        def to_dict(self):
-            return self.to_mongo().to_dict()
+        def to_dict(self, serializable=False):
+            return self.to_mongo() if serializable else self.to_mongo().to_dict()
 
     return Metadata
 
