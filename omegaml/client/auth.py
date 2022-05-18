@@ -1,6 +1,7 @@
 from requests.auth import AuthBase
 
-from omegaml import session_cache, load_class, settings
+from omegaml import session_cache
+from omegaml.util import load_class, settings
 
 
 class OmegaRestApiAuth(AuthBase):

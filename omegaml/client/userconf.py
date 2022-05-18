@@ -108,7 +108,8 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     auth_env = AuthenticationEnv.secure()
     if api_url.startswith('http') or any('test' in v for v in sys.argv):
         configs = auth_env.get_userconfig_from_api(requested_userid=requested_userid,
-                                                   view=view, defaults=defaults)
+                                                   api_url=api_url, view=view,
+                                                   defaults=defaults)
         configs = configs['objects'][0]['data']
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
