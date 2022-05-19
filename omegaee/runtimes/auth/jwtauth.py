@@ -56,7 +56,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         # we can have multiple authentication realms, which may have
         # differing signing keys. thus we try to decode with each key in turn
         defaults = defaults or settings()
-        if defaults.JWT_PUBLIC_KEY_URI:
+        if getattr(defaults, 'JWT_PUBLIC_KEY_URI', None):
             payload = cls.jwt_decode_from_uri(token, defaults=defaults)
         else:
             payload = cls.jwt_decode_handler_single(token, defaults=defaults)
@@ -69,7 +69,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         options = {
             "verify_aud": settings.JWT_AUDIENCE is not None,
             "verify_exp": settings.JWT_VERIFY_EXPIRATION,
-            "verify": settings.JWT_VERIFY,
+            "verify_signature": settings.JWT_VERIFY,
         }
         return jwt.decode(
             jwt=token,
@@ -99,6 +99,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         else:
             # no key matched, deny access
             raise AuthenticationFailed()
+        return payload
 
     @classmethod
     def jwt_get_user_id_from_payload(cls, payload, defaults=None):
@@ -107,7 +108,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         """
         # adopted from jwtauth.utils (we don't have django in a worker)
         settings = defaults or cls.settings
-        userid = payload.get(getattr(settings, 'JWT_PAYLOAD_USERNAME_KEY', 'username'))
+        userid = payload.get(getattr(settings, 'JWT_PAYLOAD_USERNAME_KEY', 'preferred_username'))
         return userid
 
     @classmethod
@@ -133,10 +134,10 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         # adopted from jwt_auth.mixins (we don't have django in a worker)
         try:
             payload = cls.jwt_decode_handler(token, defaults=defaults)
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed("Signature has expired.")
-        except jwt.DecodeError:
-            raise AuthenticationFailed("Error decoding signature.")
+        except jwt.ExpiredSignatureError as e:
+            raise AuthenticationFailed(f"Signature has expired, {e}")
+        except jwt.DecodeError as e:
+            raise AuthenticationFailed(f"Error decoding token due to {e}.")
 
         return payload
 
@@ -155,8 +156,15 @@ def _create_jwt_token(defaults=None, om=None):
     return token
 
 
+# TODO refactor into common library
 class PublicKeyResolver(PyJWKClient):
     # get JWT signing key from KEYCLOAK_CERT_URI
+    # adopted from https://github.com/jpadilla/pyjwt/issues/722#issuecomment-1017941663
+    @lru_cache(maxsize=1)
+    def _default_algorithms(self):
+        from jwt.algorithms import get_default_algorithms
+        return get_default_algorithms()
+
     @lru_cache
     def get_public_key(self, uri):
         self.uri = uri
@@ -166,6 +174,10 @@ class PublicKeyResolver(PyJWKClient):
         pem = jwtkey.key.public_bytes(encoding=serialization.Encoding.PEM,
                                       format=serialization.PublicFormat.SubjectPublicKeyInfo)
         return pem
+
+    def fetch_data(self):
+        data = super().fetch_data()
+        return {"keys": [key for key in data.get("keys", []) if key.get("alg", None) in self._default_algorithms()]}
 
 
 key_resolver = PublicKeyResolver('notset', cache_keys=True)

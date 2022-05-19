@@ -61,10 +61,10 @@ class Command(BaseCommand):
             print("User {} created as superuser: {} staff: {}".format(user.username, user.is_superuser, user.is_staff))
             # note this only triggers the user_signed_up handler if requested
             # -- immediate deployment is done by create_omegaml_user call below
-            # -- if async is specified, treat this the same way as if the user signed up by API or
-            if options.get('async'):
-                options['nodeploy'] = True
+            # -- if async is specified, treat this the same way as if the user signed up by API or web UI
+            if options.get('async') and not options.get('nodeploy'):
                 user_signed_up.send(self, user=user)
+                options['nodeploy'] = True # ensure there is no deployment below
         else:
             print("Warning: User exists already. Specify --apikey or --staff to reset, or --force to recreate the user.")
         # update apikey

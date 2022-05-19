@@ -40,7 +40,7 @@ mkdir -p $distdir
 distdir=$(realpath $distdir)
 version=${version:=$(cat $sourcedir/omegaee/RELEASE)}
 # release zip is the zip file of the full release
-releasezip=$distdir/omegaml-enterprise-release-$version.zip
+releasezip=$distdir/omegaml-commercial-release-$version.zip
 # minify means to scramble the source code
 if ! [[ -z $nominify ]]; then
   use_nominify=--nominify
@@ -102,6 +102,7 @@ if [[ -z $nodist ]]; then
   cp -r $sourcedir/config .
   cp -r $sourcedir/scripts .
   cp -r $sourcedir/release/dist/omegaml-dev/etc/ ./etc-dev
+  find . -type d -name  "__pycache__" -exec rm -r {} +
   zip $releasezip -r conda-requirements.txt requirements.txt Procfile README.rst manage.py scripts etc-dev app config
   popd
 
@@ -121,20 +122,20 @@ fi
 
 # build docker image from release zip
 if [[ -z $nodocker ]]; then
+  # unpack into clean directory for docker build
   rm -rf $distdir/docker-staging
-
   mkdir -p $distdir/docker-staging
   pushd $distdir/docker-staging
   unzip $releasezip -d build
+  cp $releasezip build
   pushd build
+  # build image
   docker-compose down --volumes
   docker images | grep "$dockertag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
-
   if [[ ! -z $makebase ]]; then
      docker images | grep "$dockerbasetag" | xargs | cut -f 3 -d ' ' | xargs docker rmi --force
      try docker build -f Dockerfile.base -t $dockerbasetag .
   fi
-
   try docker build -f Dockerfile -t $dockertag:$version .
   docker tag $dockertag:$version $dockertag:latest
   popd

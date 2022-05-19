@@ -2,7 +2,6 @@ import os
 
 from config.conf_anymail import Config_Anymail
 from stackable.contrib.config.conf_api import Config_ApiKeys
-from stackable.contrib.config.conf_dokku import Config_Dokku
 from .env_local import EnvSettings_Local
 
 
