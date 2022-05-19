@@ -25,6 +25,7 @@ RUN cd /app && \
     ls -1 *whl > /app/requirements.whl && \
     sed -i -r 's/^(landing.*|omegamlee.*)/\1\[all\]/g' /app/requirements.whl && \
     pip install -U --no-cache-dir -r /app/requirements.whl && \
+    pip install psycopg2-binary && \
     rm *whl && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"

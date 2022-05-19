@@ -22,6 +22,17 @@ class EnvSettings_docker(Config_Dokku,
                 'PORT': 3306,
             }
         }
+    elif 'POSTGRES_USER' in os.environ:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
+                'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
+                'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
+                'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
+                'PORT': '5432',
+            }
+        }
     else:
         # default to whatever default is configured (usually sqlite database)
         pass

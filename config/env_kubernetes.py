@@ -34,12 +34,12 @@ class EnvSettings_kubernetes(Config_Dokku,
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('MYSQL_DATABASE', 'omegaml'),
-            'USER': os.environ.get('MYSQL_USER', 'omegaml'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'foobar'),
-            'HOST': 'mysql',  # Or an IP Address that your DB is hosted on
-            'PORT': '3306',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
+            'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
+            'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
+            'PORT': '5432',
         }
     }
 

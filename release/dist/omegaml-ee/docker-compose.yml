@@ -26,7 +26,7 @@ services:
       links:
          - rabbitmq
          - mongodb
-         - mysql
+         - postgres
       working_dir: /app
       command: scripts/startweb.sh
       volumes:
@@ -34,9 +34,9 @@ services:
       environment:
          - APP=omegaml
          - APP_CONFIG=EnvSettings_docker
-         - MYSQL_DATABASE=omegaml
-         - MYSQL_USER=omegaml
-         - MYSQL_PASSWORD=mysql
+         - POSTGRES_DATABASE=omegaml
+         - POSTGRES_USER=omegaml
+         - POSTGRES_PASSWORD=pgadmin
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - BROKER_URL=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/rmq
@@ -148,9 +148,9 @@ services:
          - OMEGA_MONGO_URL=mongodb://admin:jk3XVEpbpevN4BgtEbmcCpVM24gc7RVB@mongodb/userdb
          - OMEGA_RESTAPI_URL=http://omegaml:5000
          - C_FORCE_ROOT=yes
-         - MYSQL_DATABASE=omegaml
-         - MYSQL_USER=omegaml
-         - MYSQL_PASSWORD=mysql
+         - POSTGRES_DATABASE=omegaml
+         - POSTGRES_USER=omegaml
+         - POSTGRES_PASSWORD=pgadmin
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
          - PYTHONUSERBASE="/app/pylib/user"
@@ -181,14 +181,13 @@ services:
          - "etc/mongo/server_key.pem"
          - "--oplogSize"
          - "100"
-   mysql:
-      image: mysql:5.7
-      container_name: mysql
+   postgres:
+      image: postgres:14.2
+      container_name: postgres
       environment:
-         - MYSQL_ROOT_PASSWORD=rootadmin
-         - MYSQL_DATABASE=omegaml
-         - MYSQL_USER=omegaml
-         - MYSQL_PASSWORD=mysql
+         - POSTGRES_PASSWORD=pgadmin
+         - POSTGRES_USER=omegaml
+         - POSTGRES_DB=omegaml
 
 volumes:
    pythonlib:

@@ -21,6 +21,7 @@ jupyter_deps = [
     'jupyterhub==2.2.1',  # required or only dev?
     'jupyter-client>=7.0.6',
     'jupyterhub-simplespawner==0.1',
+    'jupyterlab',
 ]
 
 all_deps = [] + jupyter_deps
@@ -53,7 +54,7 @@ setup(
     ],
     install_requires=[
         'Django~=3.2',
-        'honcho==1.0.1',
+        'honcho>=1.0.1',
         'pyrabbit2==1.0.7',
         'cachetools',
         'dj_database_url',

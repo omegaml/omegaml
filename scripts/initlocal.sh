@@ -20,6 +20,8 @@ source $script_dir/omutils
 projects_dir=$script_dir/../..
 omegamlee_dir=$script_dir/..
 omegamlcore_dir=$omegamlee_dir/../omegaml-ce
+# set dbms postgres|mysql|mssql (see extras in omegaml/setup.py)
+dbms=postgres
 
 function installdeps() {
   # install sibling projects
@@ -50,6 +52,7 @@ function install() {
     activate_conda
     conda install -y --file conda-requirements.txt
     pip install --progress-bar off -U -r requirements.dev
+    pip install --progress-bar off -U -e ../landingpage[$dbms]
     pip install --progress-bar off -e $omegamlee_dir[all,dev]
 }
 
