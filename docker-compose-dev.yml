@@ -1,7 +1,7 @@
 version: '3'
 services:
   mongo:
-    image: mongo:4.4.13-focal
+    image: mongo:5.0.9-focal
     ports:
       - "27017:27017"
       - "28017:28017"
