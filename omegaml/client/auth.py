@@ -21,7 +21,10 @@ class OmegaRestApiAuth(AuthBase):
         self.qualifier = qualifier or 'default'
 
     def get_credentials(self):
-        return 'ApiKey %s:%s' % (self.username, self.apikey)
+        if self.username != 'jwt':
+            return 'ApiKey %s:%s' % (self.username, self.apikey)
+        else:
+            return 'Bearer %s' % (self.apikey,)
 
     def __call__(self, r):
         r.headers['Authorization'] = self.get_credentials()
@@ -50,6 +53,8 @@ class OmegaRuntimeAuthentication:
     def __repr__(self):
         return ('OmegaRuntimeAuthentication(userid={}, '
                 'apikey="*****", qualifier={})').format(self.userid, self.qualifier)
+
+
 
 
 class AuthenticationEnv(object):
