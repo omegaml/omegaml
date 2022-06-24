@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
-from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.fields import DictField
 from tastypie.resources import Resource
 
 from omegaops import get_client_config
+from tastypiex.jwtauth import JWTAuthentication
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
@@ -16,7 +17,9 @@ class ClientConfigResource(Resource):
         list_allowed_methods = ['get']
         detail_allowed_methods = []
         resource_name = 'config'
-        authentication = ApiKeyAuthentication()
+        authentication = MultiAuthentication(ApiKeyAuthentication(),
+                                             JWTAuthentication(),
+                                             SessionAuthentication())
 
     def obj_get_list(self, bundle, **kwargs):
         """

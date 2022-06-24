@@ -2,12 +2,12 @@ import json
 import os
 from urllib.parse import urlparse
 
+from config.conf_jwtauth import Config_DjangoJWTAuth
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
-from stackable.contrib.config.conf_djangograppelli import Config_DjangoGrappelli
 from stackable.contrib.config.conf_djangologging import Config_DjangoLogging
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
@@ -20,6 +20,7 @@ from config.env_global import EnvSettingsGlobal
 
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in 'yt1'))
+
 
 
 class EnvSettings_Local(Config_DjangoWhitenoise,
@@ -36,6 +37,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
                         Config_DjangoLogging,
+                        Config_DjangoJWTAuth,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb',
@@ -185,7 +187,8 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                             'omegaee.tasks',
                             'omegaml.backends.package.tasks']
     #: authentication environment
-    OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
+    OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.CloudRuntimeAuthenticationEnv'
+    #OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.JWTCloudRuntimeAuthenticationEnv'
 
     # be compatible with omegaml-core flask API which does not allow trailing slash
     TASTYPIE_ALLOW_MISSING_SLASH = True
@@ -210,4 +213,3 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
     # https://docs.djangoproject.com/en/3.2/ref/clickjacking/#setting-x-frame-options-for-all-responses
     X_FRAME_OPTIONS = 'SAMEORIGIN'
-

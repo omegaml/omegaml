@@ -3,13 +3,14 @@ REST API to models
 """
 import json
 
-from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.fields import CharField, ListField, DictField
 from tastypie.http import HttpCreated
 from tastypie.resources import Resource
 
 from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from omegaml.util import load_class
+from tastypiex.jwtauth import JWTAuthentication
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
@@ -74,7 +75,9 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['get', 'delete']
         resource_name = 'model'
-        authentication = ApiKeyAuthentication()
+        authentication = MultiAuthentication(ApiKeyAuthentication(),
+                                             JWTAuthentication(),
+                                             SessionAuthentication())
         result_uri = '/api/v1/task/{id}/result'
 
     @cqrsapi(allowed_methods=['put', 'get'])
@@ -145,7 +148,8 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie
 
         * :code:`datax` is the name of the features test dataset
         """
-        return self.create_response_from_resource(request, '_generic_model_resource', 'decision_function', *args, **kwargs)
+        return self.create_response_from_resource(request, '_generic_model_resource', 'decision_function', *args,
+                                                  **kwargs)
 
     @cqrsapi(allowed_methods=['get'])
     def transform(self, request, *args, **kwargs):

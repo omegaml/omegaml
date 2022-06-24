@@ -26,7 +26,7 @@ OMEGA_APIKEY = os.environ.get('OMEGA_APIKEY')
 #: omega qualifer
 OMEGA_QUALIFIER = os.environ.get('OMEGA_QUALIFIER')
 #: omega authentication provider
-OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.CloudRuntimeAuthenticationEnv'
+OMEGA_AUTH_ENV = os.environ.get('OMEGA_AUTH_ENV', 'omegaee.runtimes.auth.CloudRuntimeAuthenticationEnv')
 #: jupyterhub admin user (equals omegajobs.jupyter_config:c.JupyterHub.api_tokens)
 OMEGA_JYHUB_USER = os.environ.get('OMEGA_JYHUB_USER', 'jyadmin')
 #: jupyterhub admin token (equals omegajobs.jupyter_config:c.JupyterHub.api_tokens)

@@ -6,7 +6,7 @@ import urllib
 import builtins
 
 from mongoengine.errors import DoesNotExist
-from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
@@ -18,6 +18,7 @@ from omegaweb.resources.util import isTrue
 import pandas as pd
 
 from .util import BundleObj
+from tastypiex.jwtauth import JWTAuthentication
 
 
 class DatasetResource(OmegaResourceMixin, Resource):
@@ -84,7 +85,9 @@ class DatasetResource(OmegaResourceMixin, Resource):
         list_allowed_methods = ['get']
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
-        authentication = ApiKeyAuthentication()
+        authentication = MultiAuthentication(ApiKeyAuthentication(),
+                                             JWTAuthentication(),
+                                             SessionAuthentication())
 
     def restore_filter(self, bundle, name):
         """
