@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import logging
 from celery import Celery
+
+from omegaml.mongoshim import mongo_url
 from socket import gethostname
 
 from omegaml.util import dict_merge
@@ -89,17 +91,7 @@ class OmegaRuntime(object):
         self.bucket = bucket
         self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
-        # initialize celery as a runtimes
-        taskpkgs = defaults.OMEGA_CELERY_IMPORTS
-        celeryconf = celeryconf or defaults.OMEGA_CELERY_CONFIG
-        # ensure we use current value
-        celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
-        self.celeryapp = Celery('omegaml')
-        self.celeryapp.config_from_object(celeryconf)
-        # needed to get it to actually load the tasks
-        # https://stackoverflow.com/a/35735471
-        self.celeryapp.autodiscover_tasks(taskpkgs, force=True)
-        self.celeryapp.finalize()
+        self._create_celery_app(defaults, celeryconf=celeryconf)
         # temporary requirements, use .require() to set
         self._require_kwargs = dict(task={}, routing={})
         # fixed default arguments, use .require(always=True) to set
@@ -160,6 +152,21 @@ class OmegaRuntime(object):
             self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
         self._task_default_kwargs['task']['__logging'] = logging
         return self
+
+    def _create_celery_app(self, defaults, celeryconf=None):
+        # initialize celery as a runtimes
+        taskpkgs = defaults.OMEGA_CELERY_IMPORTS
+        celeryconf = dict(celeryconf or defaults.OMEGA_CELERY_CONFIG)
+        # ensure we use current value
+        celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
+        if celeryconf['CELERY_RESULT_BACKEND'].startswith('mongodb://'):
+            celeryconf['CELERY_RESULT_BACKEND'] = mongo_url(self.omega, drop_kwargs=['uuidRepresentation'])
+        self.celeryapp = Celery('omegaml')
+        self.celeryapp.config_from_object(celeryconf)
+        # needed to get it to actually load the tasks
+        # https://stackoverflow.com/a/35735471
+        self.celeryapp.autodiscover_tasks(taskpkgs, force=True)
+        self.celeryapp.finalize()
 
     def _client_is_pure_python(self):
         try:

@@ -49,7 +49,7 @@ OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', 
 #: (deprecated) the collection used to store ipython notebooks
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
-OMEGA_RESULT_BACKEND = 'rpc://'
+OMEGA_RESULT_BACKEND = os.environ.get('OMEGA_RESULT_BACKEND', 'rpc://')
 #: the omega worker label
 OMEGA_WORKER_LABEL = os.environ.get('OMEGA_WORKER_LABEL') or os.environ.get('CELERY_Q', 'default')
 #: the celery configurations

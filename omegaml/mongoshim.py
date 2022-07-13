@@ -33,9 +33,14 @@ def sanitize_mongo_kwargs(kwargs):
     return kwargs
 
 
-def mongo_url(om):
-    mongo_url = (om.datasets.mongo_url + '?authSource=admin&' +
-                 urlencode(sanitize_mongo_kwargs(om.defaults.OMEGA_MONGO_SSL_KWARGS)))
+def mongo_url(om, drop_kwargs=None):
+    url_kwargs = sanitize_mongo_kwargs(om.defaults.OMEGA_MONGO_SSL_KWARGS)
+    if drop_kwargs:
+        for kw in drop_kwargs:
+            url_kwargs.pop(kw, None)
+    url_kwargs = urlencode(url_kwargs)
+    url_kwargs = url_kwargs.replace('True', 'true').replace('False', 'false')
+    mongo_url = (om.datasets.mongo_url + '?authSource=admin&' + url_kwargs)
     return mongo_url
 
 
@@ -54,5 +59,3 @@ def waitForConnection(client):
             break
     if _exc is not None:
         raise _exc
-
-
