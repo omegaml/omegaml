@@ -281,11 +281,9 @@ class RuntimeCommandBase(CommandBase):
             self.logger.info(result.task_id)
 
     def result(self):
-        from celery.result import AsyncResult
-
         om = get_omega(self.args)
         task_id = self.args.get('<taskid>')
-        result = AsyncResult(task_id, app=om.runtime.celeryapp).get()
+        result = om.runtime.result(task_id)
         self.logger.info(result)
 
     def log(self):
@@ -309,8 +307,7 @@ class RuntimeCommandBase(CommandBase):
 
     def celery(self, action=None):
         om = get_omega(self.args)
-        # giving om command here changes celery help output
-        celery_cmds = ['om runtime celery']
+        celery_cmds = []
         if action:
             celery_cmds += action.split(' ')
         # convert omega terms into celery terms
@@ -320,21 +317,23 @@ class RuntimeCommandBase(CommandBase):
             ('--queue', '--queue', 'value'),
             ('--celery-help', '--help', 'flag'),
         )
-        is_r_worker = 'rworker' in self.args.get('<celery-command>')
         for opt, celery_opt, kind in celery_opts:
             if self.args.get(opt):
                 celery_cmds += [celery_opt]
                 if kind == 'value':
                     celery_cmds += [self.args.get(opt)]
         # prepare celery command args, remove empty parts
-        celery_cmds += self.args.get('<celery-command>')
+        celery_command = self.args.get('<celery-command>')
+        celery_cmds += celery_command
         celery_cmds += (self.args.get('--flags') or '').split(' ')
         celery_cmds = [cmd for cmd in celery_cmds if cmd]
-        if len(celery_cmds) == 1 + int(action is not None):
+        if len(celery_command) == 1 and celery_command[0] in ('inspect', 'control'):
             celery_cmds += ['--help']
         # start in-process for speed
         # -- disable command logging to avoid curses problems in celery events
         self.logger.setLevel(logging.CRITICAL + 1)
+        # check for R worker
+        is_r_worker = 'rworker' in self.args.get('<celery-command>')
         if is_r_worker:
             # start r runtime
             from omegaml.runtimes import rsystem
