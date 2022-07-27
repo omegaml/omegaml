@@ -99,6 +99,7 @@ jobs:
             cd omegaml
             sudo chmod -f -R 777 ~ || true
             scripts/initlocal.sh --install --noinit
+            scripts/updatechromedriver.sh
             docker login -u omegaml -p $DOCKER_PASS
             LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make release-docker
           shell: /bin/bash -l -eo pipefail

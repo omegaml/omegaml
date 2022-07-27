@@ -32,16 +32,33 @@ class EnvSettings_kubernetes(Config_Dokku,
     OMEGA_JYHUB_TOKEN = os.environ.get('OMEGA_JYHUB_TOKEN', 'PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL')
     OMEGA_RESTAPI_URL = os.environ.get('OMEGA_RESTAPI_URL', 'http://omegaml:5000')
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
-            'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
-            'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
-            'PORT': '5432',
-        }
-    }
+    if 'DATABASE_URL' not in os.environ:
+        if 'MYSQL_USER' in os.environ:
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': os.environ.get('MYSQL_DATABASE', 'omegaml'),
+                    'USER': os.environ.get('MYSQL_USER', 'omegaml'),
+                    'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'foobar'),
+                    'HOST': 'mysql',
+                    'PORT': 3306,
+                }
+            }
+        elif 'POSTGRES_USER' in os.environ:
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
+                    'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
+                    'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
+                    'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
+                    'PORT': '5432',
+                }
+            }
+        else:
+            # default to whatever default is configured (usually sqlite database)
+            pass
+
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

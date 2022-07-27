@@ -24,9 +24,7 @@ services:
       - DJANGO_DEBUG=1
       - HOME=/home/omegadev
       - APP_CONFIG=EnvSettings_docker
-      - MYSQL_DATABASE=omegaml
-      - MYSQL_USER=omegaml
-      - MYSQL_PASSWORD=mysql
+      - DATABASE_URL=mysql://omegaml:mysql@mysql:3306/omegaml
       - FERNET_KEYS=nq9OWzyzUsvYouzDZcchYKmuBbcjKnVeWu_RC0gQDYQ=
     depends_on:
       - mongodb

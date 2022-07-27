@@ -1,5 +1,6 @@
 .PHONY: dist image help
 test: export CURRENT_USER=omegadev
+license: export LICENSE_DOCX=/home/patrick/Dropbox/shrebo_mgmt/05_Legal/omegaml/EULA_Q12022-E.docx
 
 clean:
 	rm -rf ./dist/*
@@ -57,7 +58,6 @@ candidate-docker: bumpbuild candidate-dist
 release-docker: dist-prod
 	: "docker push image to dockerhub"
 	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
-	docker push omegaml/omegaml-ee:latest
 
 thirdparty:
 	: "create THIRDPARTY & THIRDPARTY-LICENSES"
@@ -73,3 +73,9 @@ circleci:
 	# put this into the BEHAVE_YML env variable to decode in circleci config.yml
 	@cat /home/patrick/.omegaml/behave.yml | grep -A3 -E "localhost|snowflake" | sed '/^--$$/d' | base64 -w0 | xargs -l1 echo BEHAVE_YML
 	@cat /home/patrick/.pypirc | base64 -w0 | xargs -l1 echo PYPIRC_INI
+
+license:
+	-rstfromdocx ${LICENSE_DOCX}
+	cat $(shell basename -s .docx ${LICENSE_DOCX} )/*.rest > LICENSE
+	rm -rf $(shell basename -s .docx ${LICENSE_DOCX})
+

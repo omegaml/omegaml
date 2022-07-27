@@ -34,9 +34,7 @@ services:
       environment:
          - APP=omegaml
          - APP_CONFIG=EnvSettings_docker
-         - POSTGRES_DATABASE=omegaml
-         - POSTGRES_USER=omegaml
-         - POSTGRES_PASSWORD=pgadmin
+         - DATABASE_URL=postgres://omegaml:pgadmin@postgres:5432/omegaml
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - BROKER_URL=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - OMEGA_BROKERAPI_URL=http://admin:een53uGa8Lvc9mKsyMyXtzH5pAMfD3FP@rabbitmq:15672/rmq

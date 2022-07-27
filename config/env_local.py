@@ -2,6 +2,7 @@ import json
 import os
 from urllib.parse import urlparse
 
+from config.conf_databaseurl import Config_DatabaseUrl
 from config.conf_jwtauth import Config_DjangoJWTAuth
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
@@ -38,6 +39,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
                         Config_DjangoPostOffice,
                         Config_DjangoLogging,
                         Config_DjangoJWTAuth,
+                        Config_DatabaseUrl,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
     _prefix_apps = ('omegaweb',

@@ -11,31 +11,32 @@ class EnvSettings_docker(Config_Dokku,
     # must match docker-compose configuration
     ALLOWED_HOSTS = ['localhost', 'omegaweb', 'omegaml']
 
-    if 'MYSQL_USER' in os.environ:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': os.environ.get('MYSQL_DATABASE'),
-                'USER': os.environ.get('MYSQL_USER'),
-                'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
-                'HOST': 'mysql',
-                'PORT': 3306,
+    if 'DATABASE_URL' not in os.environ:
+        if 'MYSQL_USER' in os.environ:
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': os.environ.get('MYSQL_DATABASE'),
+                    'USER': os.environ.get('MYSQL_USER'),
+                    'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
+                    'HOST': 'mysql',
+                    'PORT': 3306,
+                }
             }
-        }
-    elif 'POSTGRES_USER' in os.environ:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
-                'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
-                'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
-                'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
-                'PORT': '5432',
+        elif 'POSTGRES_USER' in os.environ:
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': os.environ.get('POSTGRES_DATABASE', 'omegaml'),
+                    'USER': os.environ.get('POSTGRES_USER', 'omegaml'),
+                    'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foobar'),
+                    'HOST': 'postgres',  # Or an IP Address that your DB is hosted on
+                    'PORT': '5432',
+                }
             }
-        }
-    else:
-        # default to whatever default is configured (usually sqlite database)
-        pass
+        else:
+            # default to whatever default is configured (usually sqlite database)
+            pass
 
     # optional = do not require account email verification
     # mandatory = verification email will be sent out
