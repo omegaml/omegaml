@@ -6,8 +6,7 @@ from stackable.contrib.config.conf_dokku import Config_Dokku
 from .env_local import EnvSettings_Local
 
 
-class EnvSettings_kubernetes(Config_Dokku,
-                             Config_ApiKeys,
+class EnvSettings_kubernetes(Config_ApiKeys,
                              Config_Anymail,
                              #Config_Airbrake,
                              EnvSettings_Local):

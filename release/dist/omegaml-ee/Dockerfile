@@ -1,12 +1,20 @@
 FROM jupyter/base-notebook
 # based on https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html
 ENV GRANT_SUDO=yes
+ENV ACCEPT_EULA=Y
 # install additional software
 # -- switching to root to avoid having to sudo on every command
 USER root
 RUN apt-get update -y && \
     apt-get install -y --fix-missing python3-dev default-libmysqlclient-dev build-essential  && \
     apt-get install -y procps htop curl git && \
+    apt-get clean
+# enable mssql server support
+# adopted from landingpage/getsqlserver.sh
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+RUN curl https://packages.microsoft.com/config/ubuntu/20.10/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    apt-get install -y msodbcsql18 msodbcsql17 unixodbc-dev && \
     apt-get clean
 # add omegaml software, fix permissions according to above URL
 # -- adding /app requires root permission, however /app must belong to $NB_USER
@@ -26,6 +34,7 @@ RUN cd /app && \
     sed -i -r 's/^(landing.*|omegamlee.*)/\1\[all\]/g' /app/requirements.whl && \
     pip install -U --no-cache-dir -r /app/requirements.whl && \
     pip install psycopg2-binary && \
+    pip install pyodbc mssql-django && \
     rm *whl && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import dj_database_url
 import os
 
@@ -26,11 +28,13 @@ class Config_DatabaseUrl:
     See Also:
         - https://github.com/jazzband/dj-database-url#url-schema
     """
+    _db_path = Path(__file__).parent
     DATABASES = {
-        'default': dj_database_url.config(default='sqlite://db.sqlite3'),
+        'default': dj_database_url.config(default=f'sqlite:///{_db_path}/db.sqlite3'),
     }
     # https://github.com/microsoft/mssql-django
     if 'mssql' in os.environ.get('DATABASE_URL', ''):
         StackableSettings.patch(fix_mssql)
 
-
+    # see 0002_city.py migration
+    CITIES_LIGHT_INDEX_SEARCH_NAMES = False
