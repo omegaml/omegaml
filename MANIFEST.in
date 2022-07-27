@@ -6,3 +6,4 @@ recursive-include omegaweb/static *
 recursive-include omegaweb/templates *
 recursive-include omegaweb/fixtures *
 recursive-include omegajobs/resources *
+recursive-include omegaops/resources *

@@ -7,9 +7,10 @@ from omegaops import add_service_deployment, get_client_config
 
 
 class ClientConfigResourceTests(ResourceTestCaseMixin, TestCase):
+    fixtures = ['landingpage']
+
     def setUp(self):
         super(ClientConfigResourceTests, self).setUp()
-        ServicePlan.objects.create(name='omegaml')
         self.create_user()
         self.create_admin_user()
 

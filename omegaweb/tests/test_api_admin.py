@@ -9,7 +9,4 @@ def make_base():
 
 
 class SignupApi(make_base()):
-    def setUp(self):
-        super(SignupApi, self).setUp()
-        ServicePlan.objects.create(name='omegaml')
-
+    fixtures = ['landingpage']

@@ -11,6 +11,8 @@ from omegaweb.tests.util import OmegaResourceTestMixin
 
 
 class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
+    fixtures = ['landingpage']
+
     def setUp(self):
         from omegaml import Omega
 

@@ -11,6 +11,8 @@ from tastypiex.requesttrace import ClientRequestTracer
 
 
 class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
+    fixtures = ['landingpage']
+
     def setUp(self):
         super(ScriptResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)

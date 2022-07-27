@@ -16,6 +16,8 @@ from omegaweb.tests.util import OmegaResourceTestMixin
 
 
 class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
+    fixtures = ['landingpage']
+
     def setUp(self):
         super(ModelResourceTestsAsync, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client)

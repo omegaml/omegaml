@@ -18,7 +18,7 @@ class OmegaResourceTestMixin:
                 }
             }
         }
-        ServicePlan.objects.create(name='omegaml')
+        ServicePlan.objects.get_or_create(name='omegaml')
         user_config = init_config['qualifiers']['default']
         self.config = add_user(user_config['mongousername'],
                                user_config['mongopassword'],

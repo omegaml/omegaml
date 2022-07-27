@@ -2,16 +2,16 @@ from celery import Task, shared_task
 from celery.signals import worker_process_init
 from celery.utils.log import get_task_logger
 from django.contrib.auth.models import User
+from omegaml.client.auth import AuthenticationEnv
 from pymongo.errors import ConnectionFailure
 from random import random
 from time import sleep
 
 import omegaops as omops
 from landingpage.models import DEPLOY_COMPLETED, ServicePlan
-from omegaml.client.auth import AuthenticationEnv
 from omegaops.celeryapp import app
 from omegaops.util import enforce_logging_format, retry
-from paasdeploy.models import ServiceDeployConfiguration
+from paasdeploy.models import ServiceDeployConfiguration, ServiceDeployTask
 from paasdeploy.tasks import deploy
 
 logger = get_task_logger(__name__)
@@ -64,14 +64,16 @@ class BaseLoggingTask(Task):
 
 
 @shared_task
-def deploy_user_service(user_id):
-    user = User.objects.get(pk=user_id)
+def deploy_user_service(task_id=None, **kwargs):
+    # this is a paasdeploy task, gets called by omops
+    task = ServiceDeployTask.objects.get(pk=task_id)
+    deployment = task.deployment
+    user = task.command.user
     password = User.objects.make_random_password(length=36)
     config = omops.add_user(user, password)
-    deplm = omops.add_service_deployment(user, config)
-    # if user.username != 'omops' and User.objects.filter(username='omops').exists():
-    #   omops.create_ops_forwarding_shovel(user)
-    omops.complete_service_deployment(deplm, DEPLOY_COMPLETED)
+    deployment.settings = config
+    deployment.text = f'userid {user.username}<br>apikey {user.api_key.key}'
+    deployment.save()
 
 
 @shared_task

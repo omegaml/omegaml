@@ -153,7 +153,7 @@ if [[ -z $nolivetest ]]; then
 
     echo "Logging docker logs from $distdir/docker-staging/build"
     mkdir -p /tmp/logs
-    docker-compose logs --no-color > /tmp/logs/services.log
+    docker-compose -f $distdir/docker-staging/build/docker-compose.yml logs --no-color > /tmp/logs/services.log
 
     echo "Stopping docker services from $distdir/docker-staging/build"
     docker-compose -f $distdir/docker-staging/build/docker-compose.yml stop

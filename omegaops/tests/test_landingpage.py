@@ -3,6 +3,7 @@ from django.test.testcases import TestCase
 from django.test.utils import override_settings
 
 from landingpage.models import ServiceDeployment
+from paasdeploy.models import ServiceDeployCommand
 
 
 class LandingpageTests(TestCase):
@@ -29,7 +30,7 @@ class LandingpageTests(TestCase):
         }
         resp = self.client.post('/accounts/signup/', data)
         user = User.objects.get(email='testing@example.com')
-        deployments = ServiceDeployment.objects.get(user=user)
+        deployments = ServiceDeployCommand.objects.get(offering__name='signup', user=user)
         self.assertIsNotNone(user)
         self.assertIsNotNone(deployments)
 
@@ -44,6 +45,6 @@ class LandingpageTests(TestCase):
         }
         resp = self.client.post('/accounts/signup/', data)
         user = User.objects.get(email='testing@example.com')
-        deployments = ServiceDeployment.objects.get(user=user)
+        deployments = ServiceDeployCommand.objects.get(offering__name='signup', user=user)
         self.assertIsNotNone(user)
         self.assertIsNotNone(deployments)

@@ -1,15 +1,22 @@
 from django.contrib.auth.models import User
+from django.core.management import execute_from_command_line
 from django.test.testcases import TestCase
+from pathlib import Path
 
-from landingpage.models import ServicePlan
+from paasdeploy.models import ServiceDeployCommand
+from paasdeploy.tasks import execute_pending
 
 
 class UserSignupTests(TestCase):
+    fixtures = ['landingpage']
 
     def setUp(self):
-        # our new user should not have a plan deployment yet
-        ServicePlan.objects.create(name='omegaml')
+        import omegaops
         TestCase.setUp(self)
+        # setup 'omegaml' service to deploy a new user
+        specs = Path(omegaops.__file__).parent / 'resources' / 'omegaml-user.yaml'
+        cmd = f'manage.py createservice --specs {specs}'
+        execute_from_command_line(cmd.split(' '))
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -27,8 +34,14 @@ class UserSignupTests(TestCase):
         resp = self.client.post('/accounts/signup/', data)
         user = User.objects.get(email=data['email'])
         self.assertEqual(user.username, data['email'].split('@')[0])
-        service = user.services.first()
-        self.assertEqual(service.offering.name, 'omegaml')
+        # check a deploy command was created by user_signed_up handler
+        command = ServiceDeployCommand.objects.get(offering__name='omegaml', user=user)
+        self.assertIsNotNone(command)
+        # simulate and check service deployment by omops
+        # TODO testing of omops should be in omegaops.tests
+        execute_pending()
+        service = user.services.get(offering__name='omegaml')
+        self.assertIsNotNone(service)
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))
 
     def test_usersignup_complex(self):
@@ -44,6 +57,12 @@ class UserSignupTests(TestCase):
         resp = self.client.post('/accounts/signup/', data)
         user = User.objects.get(email=data['email'])
         self.assertEqual(user.username, data['email'].split('@')[0].replace('.', ''))
-        service = user.services.first()
+        # check a deploy command was created by user_signed_up handler
+        command = ServiceDeployCommand.objects.get(offering__name='omegaml', user=user)
+        self.assertIsNotNone(command)
+        # simulate and check service deployment by omops
+        # TODO testing of omops should be in omegaops.tests
+        execute_pending()
+        service = user.services.get(offering__name='omegaml')
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))

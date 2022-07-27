@@ -20,5 +20,14 @@
     },
     "model": "landingpage.serviceplan",
     "pk": 2
+  },
+   {
+    "fields": {
+      "status": 1,
+      "name": "signup",
+      "visible": false
+    },
+    "model": "landingpage.serviceplan",
+    "pk": 3
   }
 ]

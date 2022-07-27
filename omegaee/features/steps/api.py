@@ -2,6 +2,7 @@ import base64
 import http
 import requests
 from behave import when, then
+from time import sleep
 from uuid import uuid4
 
 from omegaml.client.auth import OmegaRestApiAuth
@@ -70,11 +71,33 @@ def api_signup_user(ctx):
 
 @then("the service is deployed (api)")
 def api_service_deployed(ctx):
+    # from landingpage.models
+    DEPLOY_INITIATED = '0'
+    DEPLOY_PENDING = '1'
+    DEPLOY_COMPLETED = '5'
+    DEPLOY_REMOVED = '8'
+    DEPLOY_FAILED = '9'
+
+    # wait until all deployments are done
+    # -- deployment is supposed to be done async on user sign up
     api = OmegaAdminApi(ctx.web_url, ctx.api_user, ctx.api_key)
-    resp = api.get_deployment_status(ctx.feature.username)
-    ctx.assertEqual(resp.status_code, http.HTTPStatus.OK)
-    data = resp.json()
-    DEPLOY_COMPLETED = '5' # from landingpage.models
-    ctx.assertEqual(data['objects'][0]['status'], DEPLOY_COMPLETED)
+    tries = 10
+    while tries:
+        sleep(10); tries -= 1
+        resp = api.get_deployment_status(ctx.feature.username)
+        ctx.assertEqual(resp.status_code, http.HTTPStatus.OK)
+        data = resp.json()
+        deployments = [item['status'] for item in data['objects']]
+        pending = any(v in set(deployments) for v in (DEPLOY_INITIATED, DEPLOY_PENDING))
+        if not pending:
+            break
+    if 'name' in data['objects'][0]:
+        # we have the name of the deployment (updated API)
+        deployments = [item for item in data['objects'] if item['name'] == 'omegaml']
+        ctx.assertEqual(deployments[0]['status'], DEPLOY_COMPLETED)
+    else:
+        # we don't have the name, at least one of the deployments needs to be ok
+        deployments = [item['status'] for item in data['objects']]
+        ctx.assertIn(DEPLOY_COMPLETED, deployments)
 
 

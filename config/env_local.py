@@ -187,6 +187,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     OMEGA_CELERY_IMPORTS = ['omegaml.tasks',
                             'omegaml.notebook.tasks',
                             'omegaee.tasks',
+                            'omegaops.tasks',
                             'omegaml.backends.package.tasks']
     #: authentication environment
     OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.CloudRuntimeAuthenticationEnv'

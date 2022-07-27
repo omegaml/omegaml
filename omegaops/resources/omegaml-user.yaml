@@ -1,0 +1,25 @@
+# setup a new user
+#
+# This will set up a new omegaml user
+#
+# Pre-Reqs:
+#   omegaml deployed
+#   omops   deployed
+#
+# Syntax:
+#   service: omegaml
+#   params:  {}
+#
+# install:
+#   $ python manage.py createservice --specs ./omegaops/resources/omegaml-user.yaml
+# testing:
+#   $ python manage.py deployservice --phase install  --service omegaml --user user01 --params ""
+# shell:
+#   $ om cloud add omegaml --specs "username=<user>"
+- plan: omegaml
+  configuration:
+    env:
+      CLUSTER_ID: ${CLUSTER_ID}
+  steps:
+    - task: omegaops.tasks.deploy_user_service
+      params: ""

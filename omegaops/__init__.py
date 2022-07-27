@@ -259,8 +259,7 @@ def add_service_deployment(user, config):
     from landingpage.models import ServicePlan
 
     plan = ServicePlan.objects.get(name='omegaml')
-    text = 'userid {user.username}<br>apikey {user.api_key.key}'.format(
-        **locals())
+    text = f'userid {user.username}<br>apikey {user.api_key.key}'
     user.services.filter(offering__name='omegaml').delete()
     deployment = user.services.create(user=user,
                                       text=text,
@@ -616,3 +615,20 @@ def get_usergroup_settings(user, qualifier):
     if group_user and user_in_group:
         return group_user.services.get(offering__name='omegaml').settings, qualifier
     return None, qualifier
+
+
+def create_omegaml_user(user):
+    # FIXME this should no longer exist, supersed by deploy_user_service
+    # create a new omegaml user from scratch, simulating command execution
+    # user = User.objects.get(pk=user_id)
+    # local imports to avoid django init failure on celery startup
+    from django.contrib.auth.models import User
+    from landingpage.models import DEPLOY_COMPLETED
+
+    password = User.objects.make_random_password(length=36)
+    config = add_user(user, password)
+    deplm = add_service_deployment(user, config)
+    # if user.username != 'omops' and User.objects.filter(username='omops').exists():
+    #   omops.create_ops_forwarding_shovel(user)
+    complete_service_deployment(deplm, DEPLOY_COMPLETED)
+    return config

@@ -9,6 +9,8 @@ from omegaweb.tests.util import OmegaResourceTestMixin
 
 
 class JobResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
+    fixtures = ['landingpage']
+    
     def setUp(self):
         super(JobResourceTests, self).setUp()
         # self.api_client = ClientRequestTracer(self.api_client, response=False)

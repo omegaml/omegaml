@@ -64,8 +64,11 @@ function initlocal() {
     # make sure the site user directory exists, expected in jupyter spawner
     mkdir -p /app/pylib/user
     # initialize django
+    resources_dir=$(python -c 'from pathlib import Path; import omegaops; print(Path(omegaops.__file__).parent / "resources")')
     python manage.py migrate
     python manage.py loaddata --app omegaweb landingpage
+    python manage.py createservice --specs $resources_dir/omegaml-signup.yaml
+    python manage.py createservice --specs $resources_dir/omegaml-user.yaml
     python manage.py omsetupuser --username admin --email admin@omegaml.io --password test --staff --admin --nodeploy
     python manage.py omsetupuser --username omops --staff --apikey 686ae4620522e790d92009be674e3bdc0391164f --force
     python manage.py omsetupuser --username jyadmin --staff --apikey b7b034f57d442e605ab91f88a8936149e968e12e
