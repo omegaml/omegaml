@@ -8,15 +8,21 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).read()
 
 # extras
+# -- utilities
 tables = ['tables>=3.7.0']
-graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
-dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
-snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
-streaming_deps = ['minibatch[all]>=0.4.1']
+snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
+# -- ide tools
+graph_deps = ['matplotlib~=3.4.3', 'seaborn~=0.11.2', 'imageio~=2.6.1', 'plotext~=1.0.11']
 jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
+# -- ML frameworks
 mlflow_deps = ['mlflow~=1.21.0']
+xgboost_deps = ['xgboost']
+# -- omegaml extensions
+streaming_deps = ['minibatch[all]>=0.4.1']
+dashserve_deps = ['dashserve']
+# dev tools
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
@@ -28,7 +34,7 @@ if tf_version.startswith('1.15'):
     tf_deps = ['tensorflow=={}'.format(tf_version)]
     tf_deps = tf_deps + ['tensorflow-gpu==1.15.0', 'h5py==2.10.0']
     keras_deps = ['keras==2.2.4']
-elif (3, 8) <= sys.version_info[:2] < (3, 9) :
+elif (3, 8) <= sys.version_info[:2] < (3, 9):
     major, minor, *_ = (int(v) for v in tf_version.split('.'))
     assert (major, minor) >= (2, 2), "Python version 3.8 only supported by TF >= 2.2"
     tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
@@ -47,6 +53,7 @@ else:
 all_deps = (tables + graph_deps + dashserve_deps + sql_deps + iotools_deps
             + streaming_deps + jupyter_deps + snowflake_deps)
 client_deps = (tables + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
+mllibs_deps = (tf_deps, xgboost_deps, mlflow_deps)
 
 setup(
     name='omegaml',
@@ -90,14 +97,14 @@ setup(
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
         'flask-restx>=0.4.0',
-        'werkzeug<2.1.0', # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
-        'markupsafe==2.0.1', # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
+        'werkzeug<2.1.0',  # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
+        'markupsafe==2.0.1',  # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=5.4.1',
-        'jsonschema<4', # due to nbconvert, https://github.com/executablebooks/jupyter-book/issues/1483
-        'Jinja2<=3.0' # due to nbconvert, https://github.com/jupyter/nbconvert/issues/1605
-        'ipython_genutils', # due to nbconvert, https://github.com/jupyter/nbconvert/pull/1726
+        'jsonschema<4',  # due to nbconvert, https://github.com/executablebooks/jupyter-book/issues/1483
+        'Jinja2<=3.0'  # due to nbconvert, https://github.com/jupyter/nbconvert/issues/1605
+        'ipython_genutils',  # due to nbconvert, https://github.com/jupyter/nbconvert/pull/1726
         'dill>=0.3.2',
         'tee>=0.0.3',
         'callable-pip>=1.0.0',
@@ -111,10 +118,10 @@ setup(
         'tqdm>=4.32.2',
         'honcho>=1.0.1',  # not strictly required, but used in docker compose
         'tabulate>=0.8.2',  # required in cli
-        'smart_open', # required in cli
-        'imageio>=2.3.0', # require to store images
-        'psutil>=5.8', # required for profiling tracker
-        'cachetools>=5.0.0' # required for session caching
+        'smart_open',  # required in cli
+        'imageio>=2.3.0',  # require to store images
+        'psutil>=5.8',  # required for profiling tracker
+        'cachetools>=5.0.0'  # required for session caching
     ],
     extras_require={
         'graph': graph_deps,
@@ -126,15 +133,16 @@ setup(
         'sql': sql_deps,
         'snowflake': snowflake_deps,
         'mlflow': mlflow_deps,
+        'xgboost': xgboost_deps,
         'iotools': iotools_deps,
         'streaming': streaming_deps,
         'all': all_deps,
         'client': client_deps,
         'all-client': client_deps,
         'dev': dev_deps,
+        'mllibs': mllibs_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],
     }
 )
-

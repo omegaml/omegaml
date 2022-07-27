@@ -53,7 +53,7 @@ jobs:
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             function dotest() {
               export VER=$1
-              export EXTRAS=all,dev,mlflow,tensorflow
+              export EXTRAS=all,dev,mllibs
               conda env remove -q -y -n omenv$VER || echo ""
               echo "Testing with python $VER"
               conda create -q -y -n omenv$VER python=$VER
