@@ -94,11 +94,11 @@ class SQLAlchemyBackend(BaseDataBackend):
 
             # -- alternatively, create a vault dataset:
             secrets = dict(userid='chuck', dbname='chuckdb')
-            om.datasets.put(secrets, '_omega/vault')
+            om.datasets.put(secrets, '.omega/vault')
             om.datasets.get('userdb')
 
-            the '_omega/vault' dataset will be queried using the current userid as
-            the secret name,ad the dbname retrieved from the document. This is
+            the '.omega/vault' dataset will be queried using the current userid as
+            the secret name, and the dbname retrieved from the document. This is
             experimental and the vault is not encrypted.
 
     Advanced:
@@ -254,10 +254,10 @@ class SQLAlchemyBackend(BaseDataBackend):
             if copy:
                 secrets = self._get_secrets(metadata, secrets)
                 metadata = self._put_as_data(url, name, cnx_name,
-                                  sql=sql, chunksize=chunksize,
-                                  append=append, transform=transform,
-                                  secrets=secrets,
-                                  **kwargs)
+                                             sql=sql, chunksize=chunksize,
+                                             append=append, transform=transform,
+                                             secrets=secrets,
+                                             **kwargs)
         elif meta is not None:
             table = self._default_table(table or meta.kind_meta.get('table') or name)
             metadata = self._put_via(obj, name, append=append, table=table, chunksize=chunksize,
@@ -312,7 +312,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         }
         if secrets is True or (secrets is None and '{' in url and '}' in url):
             kind_meta['secrets'] = {
-                'dsname': '_omega/vault',
+                'dsname': '.omega/vault',
                 'query': {
                     'data_userid': '{user}'
                 }
@@ -373,6 +373,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         # insert large df in chunks and with a progress bar
         # from https://stackoverflow.com/a/39495229
         chunksize = chunksize if chunksize is not None else 10000
+
         def chunker(seq, size):
             return (seq.iloc[pos:pos + size] for pos in range(0, len(seq), size))
 
@@ -424,19 +425,24 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_secrets(self, meta, secrets):
         secrets_specs = meta.kind_meta.get('secrets')
+        values = dict(os.environ)
+        values.update(**self.data_store.defaults)
         if not secrets and secrets_specs:
             dsname = secrets_specs['dsname']
             query = secrets_specs['query']
             # -- format query values
-            query = _format_dict(query, replace=('_', '.'), **os.environ, user=getuser())
+            query = _format_dict(query, replace=('_', '.'), **values, user=self._getuser())
             # -- run query
             secrets = self.data_store.get(dsname, filter=query)
             secrets = secrets[0] if isinstance(secrets, list) and len(secrets) == 1 else {}
-            secrets.update(os.environ)
+            secrets.update(values)
         # -- format secrets
         if secrets:
-            secrets = _format_dict(secrets, **os.environ, user=getuser())
+            secrets = _format_dict(secrets, **values, user=self._getuser())
         return secrets
+
+    def _getuser(self):
+        return getattr(self.data_store.defaults, 'OMEGA_USERNAME', getuser())
 
     def _default_table(self, name):
         if name is None:
@@ -454,7 +460,7 @@ def _is_valid_url(url):
 
     try:
         url = sqlalchemy.engine.url.make_url(url)
-        drivername = url.drivername.split('+')[0] # e.g. mssql+pyodbc => mssql
+        drivername = url.drivername.split('+')[0]  # e.g. mssql+pyodbc => mssql
         valid = url.drivername in sqlalchemy.dialects.__all__
         valid |= sqlalchemy.dialects.registry.load(drivername) is not None
     except:
@@ -490,7 +496,7 @@ def _format_dict(d, replace=None, **kwargs):
         if replace:
             del d[k]
             k = k.replace(*replace) if replace else k
-        d[k] = v.format(**kwargs)
+        d[k] = v.format(**kwargs) if isinstance(v, str) else v
     return d
 
 

@@ -102,7 +102,7 @@ setup(
         'tee>=0.0.3',
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
-        'cron-descriptor>=1.2.24',
+        'cron-descriptor>=1.2.31',
         'docopt>=0.6.2',
         'requests>=2.20.0',
         # fix tensorflow pulling wrong version of absl-py,
