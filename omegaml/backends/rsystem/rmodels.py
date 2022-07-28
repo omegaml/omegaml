@@ -44,14 +44,14 @@ class RModelProxy:
     def r(self):
         return rhelper()
 
-    def predict(self, X_or_name):
+    def predict(self, X_or_name, **kwargs):
         """ call $model.predict()
 
         Args:
             X_or_name (str): the X object or name of the dataset
         """
         if isinstance(X_or_name, str):
-            result = self.r.om_model_predict(self, X_or_name)
+            result = self.r.om_model_predict(self, X_or_name, **kwargs)
         else:
-            result = self.r.om_model_predict_py(self, X_or_name)
+            result = self.r.om_model_predict_py(self, X_or_name, **kwargs)
         return result

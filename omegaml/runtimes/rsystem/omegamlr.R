@@ -16,9 +16,12 @@ om_load_model <- function(fn, key) {
     key
 }
 
-om_model_predict <- function(pymodel, XName) {
+om_model_predict <- function(pymodel, XName, as_matrix = FALSE) {
     model = rmodel(pymodel)
     data <- om$datasets$get(XName)
+    if (as_matrix) {
+        data <- as.matrix(data)
+    }
     predict(model, data)
 }
 

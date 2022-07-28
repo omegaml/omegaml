@@ -109,7 +109,7 @@ sources_dir=$script_dir/..
 # all images we want to test, and list of tests
 test_images=${specs:-$script_dir/docker/test_images_minimal.ini}
 # in-container location of project source under test
-test_base=/var/project
+test_base=/tmp/project
 # host log files
 test_logbase=/tmp/testlogs
 # host test rc file
