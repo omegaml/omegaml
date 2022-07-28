@@ -54,7 +54,7 @@ class MLFlowModelBackend(BaseModelBackend):
         3) Use case: deploy any mlflow-supported flavor
 
             model = SomeModel()
-            om.models.put(model, 'mymodel')
+            om.models.put(model, 'mymodel', kind='mlflow.model')
 
         Once the model is saved in om.models, it can be used by
         om.runtime.model() as well as throught the REST API as any
@@ -72,8 +72,8 @@ class MLFlowModelBackend(BaseModelBackend):
         is_mlflow_mlfile = isinstance(obj, str) and obj.lower().endswith('mlmodel') and cls._is_path(cls, obj)
         is_mlflow_modelpath = isinstance(obj, str) and cls._is_path(cls, os.path.join(obj, 'MLmodel'))
         kind_requested = kwargs.get('kind') == cls.KIND
-        is_mlflow_flavor = cls._infer_model_flavor(cls, obj)
-        return is_mlflow_type or is_mlflow_mlfile or is_mlflow_modelpath or kind_requested or is_mlflow_flavor
+        is_mlflow_flavor, _ = cls._infer_model_flavor(cls, obj)
+        return any([is_mlflow_type, is_mlflow_mlfile, is_mlflow_modelpath, kind_requested, is_mlflow_flavor])
 
     def _infer_model_flavor(self, model):
         from google.protobuf.message import Message
@@ -84,7 +84,7 @@ class MLFlowModelBackend(BaseModelBackend):
             lambda m: isinstance(m, Message),
         )
         not_a_model = any(test(model) for test in non_models)
-        return not not_a_model and flavor_supported and getattr(mlflow, model_flavor, None)
+        return not not_a_model and flavor_supported, getattr(mlflow, model_flavor, None)
 
     def _package_model(self, model, key, tmpfn, **kwargs):
         # package the model using corresponding save or save_model method
@@ -106,7 +106,7 @@ class MLFlowModelBackend(BaseModelBackend):
                 model_path = model
         else:
             # some supported model flavor perhaps?
-            flavor = self._infer_model_flavor(model)
+            _, flavor = self._infer_model_flavor(model)
             flavor.save_model(model, model_path, **kwargs)
         with TarFile(tmpfn, mode='w') as tarf:
             tarf.add(model_path, recursive=True)

@@ -70,17 +70,17 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     def __init__(self, *args, **kwargs):
         super(OmegamlTask, self).__init__(*args, **kwargs)
-        self.auth_env = AuthenticationEnv().active()
+        self.auth_env = AuthenticationEnv.active()
 
     @property
     def om(self):
         # TODO do some more intelligent caching, i.e. by client/auth
-        kwargs = self.request.kwargs or {}
         if not hasattr(self.request, '_om'):
             self.request._om = None
         if self.request._om is None:
-            bucket = kwargs.get('__bucket')
-            self.request._om = self.auth_env.get_omega_for_task(self)[bucket]
+            bucket = self.system_kwargs.get('__bucket')
+            auth = self.system_kwargs.get('__auth')
+            self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
         return self.request._om
 
     def get_delegate(self, name, kind='models'):
