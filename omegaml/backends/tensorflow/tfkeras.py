@@ -46,7 +46,7 @@ class TensorflowKerasBackend(KerasBackend):
         tpu_specs = tpu_specs or meta.attributes.get('tpu_specs')
         if tpu_specs:
             try:
-                result = self._fit_tpu(modelname, Xname, Yname, tpu_specs=tpu_specs, **kwargs)
+                result = self._fit_tpu(modelname, Xname, Yname=Yname, tpu_specs=tpu_specs, **kwargs)
             except:
                 import logging
                 logger = logging.getLogger(__name__)

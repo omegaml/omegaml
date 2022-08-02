@@ -36,9 +36,9 @@ class CombinedOmegaStoreMixin:
                 return store.help(store_name)
         return help(name_or_obj) if sys.flags.interactive else pydoc.render_doc(name_or_obj, renderer=pydoc.plaintext)
 
-    def metadata(self, name):
+    def metadata(self, name, **kwargs):
         store, store_name = self.store_by_name(name)
-        return store.metadata(store_name)
+        return store.metadata(store_name, **kwargs)
 
     def stores_prefixes(self):
         return [s.prefix for s in self._stores]

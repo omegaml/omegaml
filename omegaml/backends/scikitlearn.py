@@ -168,23 +168,10 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
-        X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
-        Y, metaY = None, None
-        if Yname:
-            Y, metaY = (self.data_store.get(Yname),
-                        self.data_store.metadata(Yname))
+        X = self.data_store.get(Xname)
+        Y = self.data_store.get(Yname) if Yname is not None else None
         model.fit(reshaped(X), reshaped(Y), **kwargs)
-        # store information required for retraining
-        model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None,
-        }
-        try:
-            import sklearn
-            model_attrs['scikit-learn'] = sklearn.__version__
-        except:
-            model_attrs['scikit-learn'] = 'unknown'
-        meta = self.model_store.put(model, modelname, attributes=model_attrs)
+        meta = self.model_store.put(model, modelname)
         return meta
 
     def partial_fit(
@@ -198,17 +185,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         process(maybe_chunked(model.partial_fit,
                               lambda X, Y: as_args(reshaped(X), reshaped(Y)),
                               X, Y, **kwargs))
-        # store information required for retraining
-        model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None,
-        }
-        try:
-            import sklearn
-            model_attrs['scikit-learn'] = sklearn.__version__
-        except:
-            model_attrs['scikit-learn'] = 'unknown'
-        meta = self.model_store.put(model, modelname, attributes=model_attrs)
+        meta = self.model_store.put(model, modelname)
         return meta
 
     def score(
@@ -254,17 +231,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                                        lambda X, Y: as_args(reshaped(X), reshaped(Y)),
                                        X, Y, **kwargs), fn=store, keep_last=True)
 
-        # store information required for retraining
-        model_attrs = {
-            'metaX': metaX.to_mongo(),
-            'metaY': metaY.to_mongo() if metaY is not None else None
-        }
-        try:
-            import sklearn
-            model_attrs['scikit-learn'] = sklearn.__version__
-        except:
-            model_attrs['scikit-learn'] = 'unknown'
-        model_meta = self.model_store.put(model, modelname, attributes=model_attrs)
+        model_meta = self.model_store.put(model, modelname)
         return result if rName else model_meta
 
     def transform(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -301,7 +268,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                                        X, **kwargs), fn=store, keep_last=True)
         return result
 
-    def gridsearch(self, modelname, Xname, Yname, rName=None,
+    def gridsearch(self, modelname, Xname, Yname=None, rName=None,
                    parameters=None, pure_python=True, **kwargs):
         model, meta = self.model_store.get(modelname), self.model_store.metadata(modelname)
         X = self.data_store.get(Xname)

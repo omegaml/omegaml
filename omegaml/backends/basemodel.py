@@ -63,6 +63,11 @@ class BaseModelBackend(BackendBaseCommon):
         """
         return False
 
+    @property
+    def _call_handler(self):
+        # the model store handles _pre and _post methods in self.perform()
+        return self.model_store
+
     def get(self, name, **kwargs):
         """
         retrieve a model

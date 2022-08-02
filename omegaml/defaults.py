@@ -134,6 +134,9 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.modelversion.ModelVersionMixin',
     'omegaml.mixins.store.datarevision.DataRevisionMixin',
     'omegaml.mixins.store.imexport.ObjectImportExportMixin',
+    'omegaml.mixins.store.extdmeta.SignatureMixin',
+    'omegaml.mixins.store.extdmeta.ScriptSignatureMixin',
+    'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -179,9 +182,10 @@ OMEGA_TRACKING_PROVIDERS = {
 }
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {
-    'maxsize': 1, # cache at most one session
+    'maxsize': 1,  # cache at most one session
     'ttl': 3600,  # keep it for 1 hour
 }
+
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
