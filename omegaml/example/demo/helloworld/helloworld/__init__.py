@@ -2,7 +2,7 @@ def hello(**kwargs):
     return "hello from helloworld", kwargs
 
 
-def run(om, **kwargs):
+def run(om, *args, **kwargs):
     """
     the script API execution entry point
     :return: result
