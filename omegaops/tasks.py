@@ -102,13 +102,16 @@ def run_user_scheduler():
 
     TODO this is hack to get this working. Will be replaced with a proper solution, https://github.com/omegaml/omegaml-enterprise/issues/117
     """
+    from omegaee import eedefaults
+
     users = User.objects.filter(is_active=True)
+    view = eedefaults.OMEGA_SERVICES_INCLUSTER
     for user in users:
         qualifier = 'default'
         # get an omega instance configured to the user's specifics and send task to user's worker
         try:
             auth_env = AuthenticationEnv.secure()
-            user_om = auth_env.get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier)
+            user_om = auth_env.get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier, view=view)
             execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
             execute_scripts.apply_async()
         except Exception as e:

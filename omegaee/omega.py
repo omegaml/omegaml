@@ -45,7 +45,10 @@ def make_enterprise():
             if getattr(self, 'auth', None) is None:
                 auth_env = load_class(self.defaults.OMEGA_AUTH_ENV)
                 self.auth = auth_env.get_runtime_auth(defaults=self.defaults)
-            return OmegaAuthenticatedRuntime(self, auth=self.auth)
+            return OmegaAuthenticatedRuntime(self, bucket=self.bucket,
+                                             defaults=self.defaults,
+                                             celeryconf=celeryconf,
+                                             auth=self.auth)
 
         def __repr__(self):
             return 'OmegaEnterprise(mongo_url={})'.format(self.mongo_url)
@@ -139,7 +142,6 @@ def make_enterprise():
         # another user/apikey or qualifier
         om = EnterpriseOmegaDeferredInstance()
         return om.setup(**kwargs).omega[bucket]
-
 
     return EnterpriseOmega, EnterpriseOmegaDeferredInstance, setup
 

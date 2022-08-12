@@ -28,6 +28,6 @@ def get_omega_for_user(user, qualifier=None, view=None):
     _base_config.update_from_dict(config, attrs=defaults)
     _base_config.update_from_config(defaults)
     _base_config.load_user_extensions(defaults)
-    auth = OmegaRuntimeAuthentication(user.username, user.api_key.key)
+    auth = OmegaRuntimeAuthentication(user.username, user.api_key.key, qualifier=qualifier)
     om = Omega(defaults=defaults, auth=auth)
     return om
