@@ -1,5 +1,6 @@
-FROM continuumio/miniconda3
-
+FROM jupyter/base-notebook:ubuntu-20.04
+# based on https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html
+# Ubuntu-20.04 is LTS version, see https://endoflife.date/ubuntu
 ADD *requirements.txt /app/
 RUN apt-get update -y && \
     apt-get install -y --fix-missing mysql-client && \
@@ -7,7 +8,7 @@ RUN apt-get update -y && \
     apt-get install -y procps htop && \
     apt-get clean
 RUN conda install -y conda=4.3 && \
-    conda update -y python 
+    conda update -y python
 RUN conda install -y --file /app/conda-requirements.txt && \
     conda clean --all
 RUN pip install --ignore-installed --no-cache-dir --no-warn-conflicts -r /app/requirements.txt

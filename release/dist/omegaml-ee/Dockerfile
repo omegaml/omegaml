@@ -1,5 +1,6 @@
-FROM jupyter/base-notebook
+FROM jupyter/base-notebook:ubuntu-20.04
 # based on https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html
+# Ubuntu-20.04 is LTS version, see https://endoflife.date/ubuntu
 ENV GRANT_SUDO=yes
 ENV ACCEPT_EULA=Y
 # install additional software
@@ -11,6 +12,7 @@ RUN apt-get update -y && \
     apt-get clean
 # enable mssql server support
 # adopted from landingpage/getsqlserver.sh
+ENV ACCEPT_EULA=Y
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 RUN curl https://packages.microsoft.com/config/ubuntu/20.10/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
