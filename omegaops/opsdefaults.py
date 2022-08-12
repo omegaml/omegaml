@@ -2,7 +2,6 @@ from os.path import basename
 
 import os
 import sys
-
 from omegaml import _base_config as omdefaults
 
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
@@ -72,3 +71,7 @@ if any(m in [basename(arg) for arg in sys.argv]
        for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
                  '_jb_nosetest_runner.py')):
     OMEGA_LOCAL_RUNTIME = True
+
+# allow overloading settings from EnvSettings
+from stackable import StackableSettings
+StackableSettings.load(globals())

@@ -23,3 +23,10 @@ class Config_Gunicorn(object):
 
 config = os.environ.get('GUNICORN_CONFIG', 'Config_Gunicorn')
 StackableSettings.setup(globals(), locals()[config], use_lowercase=True)
+
+if os.environ.get('WEB_DEBUG', '0') in ('1', 'yes', 'true'):
+    # debug gunicorn worker timeouts
+    # https://stackoverflow.com/a/65438492/890242
+    import faulthandler
+    faulthandler.enable()
+
