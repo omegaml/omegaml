@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 from config.conf_databaseurl import Config_DatabaseUrl
 from config.conf_jwtauth import Config_DjangoJWTAuth
+from config.env_global import EnvSettingsGlobal
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
@@ -16,8 +17,6 @@ from stackable.contrib.config.conf_sekizai import Config_DjangoSekizai
 from stackable.contrib.config.conf_whitenoise import Config_DjangoWhitenoise
 from stackable.contrib.config.email.filebased import Config_FileEmail
 from stackable.stackable import StackableSettings
-
-from config.env_global import EnvSettingsGlobal
 
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in 'yt1'))

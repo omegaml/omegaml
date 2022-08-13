@@ -37,9 +37,10 @@ class Command(BaseCommand):
         parser.add_argument('--stripe', action='store_true', help='register user with stripe')
         parser.add_argument('--shovel', action='store_true', help='create vhost shovel')
         parser.add_argument('--verbose', action='store_true', help='verbose', default=False)
-        parser.add_argument('--nodeploy', action='store_true', help='verbose', default=False)
+        parser.add_argument('--nodeploy', action='store_true', help='do not deploy the omegaml service for this user', default=False)
         parser.add_argument('--force', action='store_true', help='verbose', default=False)
-        parser.add_argument('--async', action='store_true', help='verbose', default=False)
+        parser.add_argument('--async', action='store_true', help='create user async by omops', default=False)
+        parser.add_argument('--vhost', action='store_true', help='create a rmq vhost for this user', default=False)
 
     def handle(self, *args, **options):
         username = options['username']
@@ -83,7 +84,7 @@ class Command(BaseCommand):
         should_deploy |= options.get('force')
         if should_deploy:
             if options.get('force') or not user.services.filter(offering__name='omegaml').exists():
-                config = create_omegaml_user(user)
+                config = create_omegaml_user(user, deploy_vhost=options.get('vhost'))
                 print("User services {} deployed. Is staff {}".format(user, user.is_staff))
                 if options.get('verbose'):
                     print("Config", config)

@@ -307,15 +307,14 @@ def get_client_config(user, qualifier=None, view=False):
         },
         "OMEGA_MONGO_URL": user_config['mongo_url'],
         "OMEGA_NOTEBOOK_COLLECTION": omega_config['notebook_collection'],
-        "OMEGA_TMP": "/tmp",
         "OMEGA_MONGO_COLLECTION": "omegaml",
         "OMEGA_USERID": user.username,
         "OMEGA_APIKEY": user.api_key.key,
         "OMEGA_QUALIFIER": qualifier,
         "OMEGA_MONGO_SSL_KWARGS": {
-            "tls": omega_config['use_ssl'],
+            "tls": True if omega_config['use_ssl'] else False,
         },
-        "OMEGA_USESSL": omega_config['use_ssl'],
+        "OMEGA_USESSL": True if omega_config['use_ssl'] else False,
     }
     # allow any updates to effectively omegaml.defaults
     dict_merge(client_config,
@@ -617,7 +616,7 @@ def get_usergroup_settings(user, qualifier):
     return None, qualifier
 
 
-def create_omegaml_user(user):
+def create_omegaml_user(user, deploy_vhost=False):
     # FIXME this should no longer exist, supersed by deploy_user_service
     # create a new omegaml user from scratch, simulating command execution
     # user = User.objects.get(pk=user_id)
@@ -626,7 +625,7 @@ def create_omegaml_user(user):
     from landingpage.models import DEPLOY_COMPLETED
 
     password = User.objects.make_random_password(length=36)
-    config = add_user(user, password)
+    config = add_user(user, password, deploy_vhost=deploy_vhost)
     deplm = add_service_deployment(user, config)
     # if user.username != 'omops' and User.objects.filter(username='omops').exists():
     #   omops.create_ops_forwarding_shovel(user)
