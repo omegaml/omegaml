@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from constance import config
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -20,7 +22,7 @@ def dashboard(request):
 
 @login_required
 def dataview(request, name):
-    name = urllib.parse.unquote(name)
+    name = unquote(name)
     context = {
         'name': name,
     }
@@ -29,7 +31,7 @@ def dataview(request, name):
 
 @login_required
 def report(request, name):
-    name = urllib.parse.unquote(name)
+    name = unquote(name)
     context = {
         'name': name,
     }
