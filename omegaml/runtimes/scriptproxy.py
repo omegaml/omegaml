@@ -23,7 +23,7 @@ class OmegaScriptProxy(object):
         self.scriptname = scriptname
         self.runtime = runtime
 
-    def run(self, as_callback=False, **kwargs):
+    def run(self, *args, as_callback=False, **kwargs):
         """
         run the script
 
@@ -40,7 +40,7 @@ class OmegaScriptProxy(object):
             AsyncResult
         """
         script_run = self.task(as_callback=as_callback)
-        return script_run.delay(self.scriptname, **kwargs)
+        return script_run.delay(self.scriptname, *args, **kwargs)
 
     def task(self, as_callback=False):
         task_name = 'run_omega_callback_script' if as_callback else 'run_omega_script'

@@ -4,10 +4,10 @@ import os
 import re
 
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.backends.package.packager import install_and_import
+from omegaml.backends.package.packager import install_and_import, RunnablePackageMixin
 
 
-class PythonPipSourcedPackageData(BaseDataBackend):
+class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
     """
     Backend to support locally sourced custom scripts deployment to runtimes cluster
 
@@ -95,6 +95,7 @@ class PythonPipSourcedPackageData(BaseDataBackend):
         pip_name = pip_source.replace('pypi://', '')
         mod = install_and_import(pip_name, pkgname, dstdir, keep=keep)
         return mod
+
 
     @property
     def packages_path(self):

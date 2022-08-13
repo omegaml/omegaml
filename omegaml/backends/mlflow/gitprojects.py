@@ -2,9 +2,10 @@ import re
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.mlflow.localprojects import MLFlowProject
+from omegaml.backends.package.packager import RunnablePackageMixin
 
 
-class MLFlowGitProjectBackend(BaseDataBackend):
+class MLFlowGitProjectBackend(RunnablePackageMixin, BaseDataBackend):
     """
     Backend to support git-sourced MLFlow projects
 

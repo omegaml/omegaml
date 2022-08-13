@@ -6,9 +6,10 @@ from shutil import make_archive, unpack_archive
 from subprocess import run
 
 from omegaml.backends.basedata import BaseDataBackend
+from omegaml.backends.package.packager import RunnablePackageMixin
 
 
-class MLFlowProjectBackend(BaseDataBackend):
+class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
     """
     Backend to support storage of MLFlow projects
 

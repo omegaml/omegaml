@@ -4,6 +4,7 @@ import os
 import sys
 
 from omegaml import Omega
+from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.restapi.app import app
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
@@ -38,12 +39,31 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
-        resp = self.client.post(self.url('helloworld', action='run', query='text=foo'), json={})
+        resp = self.client.post(self.url('helloworld', action='run', query='text=foo'), json={'foo': 'bar'})
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('runtimes', data)
         self.assertIn('result', data)
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
+        self.assertEqual(data['result'], expected)
+
+    def test_script_run_virtualobj(self):
+        om = self.om
+
+        @virtualobj
+        def myscript(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            return {'data': data, 'method': method}
+
+        om.scripts.put(myscript, 'myscript')
+        # check myscript is actually deserialized by runtime
+        myscript = None
+        # run the script on the cluster
+        resp = self.client.post(self.url('myscript', action='run', query='text=foo'), json={'foo': 'bar'})
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        self.assertIn('runtimes', data)
+        self.assertIn('result', data)
+        expected = {'data': {'foo': 'bar'}, 'method': 'run'}
         self.assertEqual(data['result'], expected)
 
     def test_script_run_async(self):

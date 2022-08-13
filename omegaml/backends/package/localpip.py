@@ -3,10 +3,10 @@ from os.path import basename, dirname
 import os
 
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path
+from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path, RunnablePackageMixin
 
 
-class PythonPackageData(BaseDataBackend):
+class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
     """
     Backend to support locally sourced custom scripts deployment to runtimes cluster
 

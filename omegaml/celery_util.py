@@ -83,10 +83,13 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
         return self.request._om
 
-    def get_delegate(self, name, kind='models'):
+    def get_delegate(self, name, kind='models', pass_as='model_store'):
         get_delegate_provider = getattr(self.om, kind)
         self.enable_delegate_tracking(name, kind, get_delegate_provider)
-        result = get_delegate_provider.get_backend(name, data_store=self.om.datasets, tracking=self.tracking)
+        kwargs = dict(data_store=self.om.datasets,
+                      tracking = self.tracking)
+        kwargs[pass_as] = get_delegate_provider
+        result = get_delegate_provider.get_backend(name, **kwargs)
         return result
 
     def enable_delegate_tracking(self, name, kind, delegate_provider):
@@ -204,7 +207,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         self.reset()
         return super().on_failure(exc, task_id, args, kwargs, einfo)
 
-    def on_retry(self, exc, task_id, args, kwargs):
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
         with self.tracking as exp:
             exp.log_event(f'task_retry', self.name, {
                 'exception': repr(exc),

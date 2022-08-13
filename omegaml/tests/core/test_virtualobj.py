@@ -1,5 +1,6 @@
-import datetime
 from unittest import TestCase
+
+import datetime
 
 from omegaml import Omega
 from omegaml.backends.virtualobj import VirtualObjectBackend, virtualobj, VirtualObjectHandler
@@ -12,6 +13,8 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         om = self.om = Omega()
         om.datasets.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
         om.datasets.register_mixin(VirtualObjectMixin)
+        om.scripts.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
+        om.scripts.register_mixin(VirtualObjectMixin)
         self.clean()
 
     def test_put(self):
@@ -65,6 +68,25 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         entrymeta = om.datasets.put(['bar'], 'virtualobj')
         self.assertEqual(entrymeta.name, 'virtualobj_data')
 
+    def test_virtualobj_as_script(self):
+        om = self.om
+
+        @virtualobj
+        def myscript(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if not data:
+                raise ValueError(f'expected data, got {data}')
+            return {'data': data, 'method': method}
+
+        # working as expected
+        om.scripts.put(myscript, 'myscript')
+        # check myscript is actually deserialized by runtime
+        myscript = None
+        result = om.runtime.script('myscript').run({'foo': 'bar'})
+        print(result.get())
+        # expect a runtime error due to missing input
+        with self.assertRaises(RuntimeError) as ex:
+            om.runtime.script('myscript').run().get()
+
 @virtualobj
 def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
     real_data_name = '{}_data'.format(meta.name)
@@ -106,6 +128,7 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
     def drop(self, data=None, meta=None, store=None, **kwargs):
         store.drop(self.real_data_name(meta), force=True)
         return 'ok, deleted'
+
 
 @virtualobj
 def myvirtualobjfn_with_basename(data=None, meta=None, method=None, base_name=None, store=None, **kwargs):

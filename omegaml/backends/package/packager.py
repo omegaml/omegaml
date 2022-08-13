@@ -9,13 +9,14 @@ sync_lock = threading.Lock()
 
 logger = logging.getLogger(__name__)
 
+
 def build_sdist(src, distdir):
     from distutils.core import run_setup
     # save argv. distutils run_setup changes argv and fails at restoring properly
     save_argv = list(sys.argv)
     # block any other thread from executing since we're changing cwd and sys.argv
     with sync_lock, tee.StdoutTee('build_sdist.out', 'w', 2), \
-         tee.StderrTee('build_sdist.err', 'w', 2):
+          tee.StderrTee('build_sdist.err', 'w', 2):
         # make sure no other processing is executing while we change the working directory for setup.py
         cwd = os.getcwd()
         sys.stdout.errors = None
@@ -32,7 +33,7 @@ def build_sdist(src, distdir):
             # restore cwd
             os.chdir(cwd)
             # restore sys argv
-            for i ,v in enumerate(save_argv):
+            for i, v in enumerate(save_argv):
                 sys.argv[i] = v
             if len(sys.argv) > len(save_argv):
                 del sys.argv[len(save_argv):]
@@ -74,6 +75,13 @@ def install_and_import(pkgfilename, package, installdir, keep=False):
     install_package(pkgfilename, installdir)
     mod = load_from_path(package, installdir, keep=keep)
     return mod
+
+
+class RunnablePackageMixin:
+    # mixin to Package backends to enable backend.perform('run') from tasks
+    def run(self, name, *args, keep=False, om=None, **kwargs):
+        mod = self.get(name, keep=keep)
+        return mod.run(om, *args, **kwargs)
 
 
 if __name__ == '__main__':

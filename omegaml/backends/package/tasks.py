@@ -10,14 +10,17 @@ from omegaml.celery_util import OmegamlTask
 from omegaml.util import json_dumps_np
 
 
-class NotebookTask(OmegamlTask):
+class ScriptTask(OmegamlTask):
     abstract = True
 
-    def on_success(self, retval, task_id, *args, **kwargs):
+    def _get_script_metadata(self, args, kwargs):
         om = self.om
-        args, kwargs = args[0:2]
-        scriptname = args[-1]
+        scriptname, *args = args
         meta = om.scripts.metadata(scriptname)
+        return meta
+
+    def on_success(self, retval, task_id, args, kwargs):
+        meta = self._get_script_metadata(args, kwargs)
         attrs = meta.attributes
         attrs['state'] = 'SUCCESS'
         attrs['task_id'] = task_id
@@ -31,13 +34,8 @@ class NotebookTask(OmegamlTask):
         meta.attributes = attrs
         meta.save()
 
-    def on_failure(self, retval, task_id, *args, **kwargs):
-        print("*** NotebookTask.on_failure (retval, task_id, args, kwargs)",
-              retval, task_id, args, kwargs)
-        om = self.om
-        args, kwargs = args[0:2]
-        scriptname = args[-1]
-        meta = om.scripts.metadata(scriptname)
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        meta = self._get_script_metadata(args, kwargs)
         attrs = meta.attributes
         attrs['state'] = 'FAILURE'
         attrs['task_id'] = task_id
@@ -52,42 +50,62 @@ class NotebookTask(OmegamlTask):
         meta.save()
 
 
-@shared_task(bind=True, base=NotebookTask)
-def run_omega_script(self, scriptname, **kwargs):
+class CallbackScriptTask(ScriptTask):
+    def _get_script_metadata(self, args, kwargs):
+        om = self.om
+        *args, scriptname = args
+        meta = om.scripts.metadata(scriptname)
+        return meta
+
+
+@shared_task(bind=True, base=ScriptTask)
+def run_omega_script(self, scriptname, *args, **kwargs):
     """
     runs omegaml job
     """
+    # setup options
     SERIALIZER = {
         'json': json_dumps_np,
         'python': lambda v: v,
     }
-
     format = self.system_kwargs.get('__format') or 'json'
-    mod = self.om.scripts.get(scriptname)
+    # call and measure time
     dtstart = datetime.datetime.now()
     try:
-        result = mod.run(self.om, **self.delegate_kwargs)
+        result = (self.get_delegate(scriptname, kind='scripts', pass_as='data_store')
+                  .run(scriptname, *self.delegate_args[1:], om=self.om, **self.delegate_kwargs))
     except Exception as e:
-        result = str(e)
+        import traceback
+        result = "".join(traceback.TracebackException.from_exception(e).format())
+        exception = True
+    else:
+        exception = False
     dtend = datetime.datetime.now()
     duration = dtend - dtstart
-
+    # prepare result
     data = {
         'script': scriptname,
+        'args': self.delegate_args[1:],
         'kwargs': self.delegate_kwargs,
         'result': result,
         'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
         'started': dtstart.isoformat(),
         'ended': dtend.isoformat(),
     }
-    return SERIALIZER[format](data)
+    data = SERIALIZER[format](data)
+    if exception:
+        raise RuntimeError(data)
+    return data
 
 
-@shared_task(bind=True, base=NotebookTask)
+@shared_task(bind=True, base=CallbackScriptTask)
 def run_omega_callback_script(self, *args, **kwargs):
     """
     runs omegaml job
     """
+    # callbacks have the result first, then the original arguments
+    # -- thus scriptname is the last(!) argument
+    # -- https://docs.celeryq.dev/en/stable/userguide/canvas.html#callbacks
     if len(args) >= 3:
         results = args[0:-2]
         state = args[-2]

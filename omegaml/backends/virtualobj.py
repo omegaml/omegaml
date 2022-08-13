@@ -12,7 +12,7 @@ class VirtualObjectBackend(BaseDataBackend):
 
         @virtualobj
         def virtualobjfn(data=None, method='get|put|drop',
-                         meta=None, **kwargs):
+                         meta=None, store=None, **kwargs):
             ...
             return data
 
@@ -26,21 +26,41 @@ class VirtualObjectBackend(BaseDataBackend):
 
     Usage::
 
-        # create the 'foo' virtual object
-        om.datasets.put(virtualobjfn, 'foo')
+        1) as a virtual data handler
 
-        # get data from the virtualobj
-        om.datasets.get('foo')
-        => will call virtualobjfn(method='get')
+            # create the 'foo' virtual object
+            om.datasets.put(virtualobjfn, 'foo')
 
-        # put data into the virtualobj
-        om.datasets.put(data, 'foo')
-        => will call virtualobjfn(data=data, method='put')
+            # get data from the virtualobj
+            om.datasets.get('foo')
+            => will call virtualobjfn(method='get')
 
-        # drop the virtualfn
-        om.datasets.drop('name')
-        => will call virtualobjfn(method='drop') and then
-           drop the virtual object completely from the storage
+            # put data into the virtualobj
+            om.datasets.put(data, 'foo')
+            => will call virtualobjfn(data=data, method='put')
+
+            # drop the virtualfn
+            om.datasets.drop('name')
+            => will call virtualobjfn(method='drop') and then
+               drop the virtual object completely from the storage
+
+        2) as a virtual model
+
+            # create the mymodel model as a virtualobj
+            om.models.put(virtualobjfn, 'mymodel')
+
+            # run the model's predict() function
+            om.runtime.model('mymodel').predict(X)
+            => will call virtualobjfn(method='predict')
+
+        3) as a virtual script
+
+            # create the myscript script as a virtualobj
+            om.models.put(virtualobjfn, 'myscript')
+
+            # run the script
+            om.runtime.script('myscript').run()
+            => will call virtualobjfn(method='run')
 
     WARNING:
 
@@ -88,6 +108,14 @@ class VirtualObjectBackend(BaseDataBackend):
         X = self.data_store.get(xName)
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
                        tracking=self.tracking, **kwargs)
+
+    def run(self, scriptname, *args, **kwargs):
+        # run as a script
+        meta = self.model_store.metadata(scriptname)
+        handler = self.get(scriptname)
+        data = args[0] if args else None
+        kwargs['args'] = args
+        return handler(method='run', data=data, meta=meta, store=self.data_store, tracking=self.tracking, **kwargs)
 
     def reduce(self, modelname, results, rName=None, **kwargs):
         """
@@ -157,12 +185,16 @@ class VirtualObjectHandler(object):
     def predict(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
+    def run(self, data=None, meta=None, store=None, **kwargs):
+        raise NotImplementedError
+
     def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
         MAP = {
             'drop': self.drop,
             'get': self.get,
             'put': self.put,
             'predict': self.predict,
+            'run': self.run,
         }
         methodfn = MAP[method]
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)

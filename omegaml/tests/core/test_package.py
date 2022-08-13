@@ -111,7 +111,7 @@ class PythonLocalPackageDataTests(TestCase):
         pkgsrc = 'pkg://{}'.format(pkgpath)
         om.scripts.put(pkgsrc, 'helloworld')
         print("***omega test_runtime (om, om.runtime)", om, om.runtime)
-        result = om.runtime.script('helloworld').run(text='foo')
+        result = om.runtime.script('helloworld').run({'foo': 'bar'}, text='foo')
         data = json.loads(result.get())
         self.assertIn('runtimes', data)
         expected = ['hello from helloworld', {'text': 'foo', 'pure_python': False}]
