@@ -20,7 +20,8 @@ class OmegaResourceMixin(object):
         request = getattr(bundle_or_request, 'request', bundle_or_request)
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
-            om = get_omega_for_user(request.user)[bucket]
+            qualifier = request.META.get('HTTP_QUALIFIER')
+            om = get_omega_for_user(request.user, qualifier=qualifier)[bucket]
             self.celeryapp = om.runtime.celeryapp
             self._omega_instance = om
         return self._omega_instance
