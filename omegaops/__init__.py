@@ -1,7 +1,14 @@
+from collections import defaultdict
+
+import os
+
 import json
 
 from omegaml.mongoshim import MongoClient
 from omegaml.util import urlparse, dict_merge
+
+# allow replacement by OMEGA_* environment vars
+omega_environ = {k: v for k, v in os.environ.items() if k.startswith('OMEGA_')}
 
 
 def get_settings():
@@ -442,12 +449,19 @@ def get_user_config(user, qualifier, view):
 
     # recursively replace place holders
     # {username} - user's name
+    # {OMEGA_*} - from runtime environment, e.g. k8s secrets
+    class Placeholders(dict):
+        def __missing__(self, key):
+            return '{' + key + '}'
+    # placeholders return "{KEY}" for any key that is missing
+    placeholders = Placeholders(omega_environ, username=user.username, USERNAME=user.username)
+
     def expand_placeholders(d):
         for k, v in d.items():
             if isinstance(v, dict):
                 expand_placeholders(v)
-            elif isinstance(v, str):
-                d[k] = v.format(username=user.username)
+            elif isinstance(v, str) and '{' in v:
+                d[k] = v.format_map(placeholders)
             else:
                 pass
 
