@@ -139,21 +139,22 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
         authentication according to the installation. To raise an
         error instead set settings OMEGA_ALLOW_TASK_DEFAULT_AUTH=False
 
-        :param auth: the OmegaRuntimeAuthentication object
+        :param auth: the OmegaRuntimeAuthentication object, or a token (userid, apikey, qualifier)
         :return: the Omega instance configured for the user
         """
         from omegaml.util import settings
 
         default_auth = (None, None, 'default')
-        is_auth_provided = lambda auth: (auth is not None
-                                         and auth != default_auth)
+        is_auth_provided = lambda token: (token is not None
+                                         and token != default_auth)
         defaults = settings()
+        token = auth.token if isinstance(auth, OmegaRuntimeAuthentication) else auth
 
-        if is_auth_provided(auth):
-            if isinstance(auth, (list, tuple)):
+        if is_auth_provided(token):
+            if isinstance(token, (list, tuple)):
                 # we get a serialized tuple, recreate auth object
                 # -- this is a hack to easily support python 2/3 client/server mix
-                userid, apikey, qualifier = auth
+                userid, apikey, qualifier = token
                 # by default assume worker is in cluster
                 # TODO refactor this setting to eedefaults
                 view = defaults.OMEGA_SERVICES_INCLUSTER
@@ -161,7 +162,7 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
             else:
                 raise ValueError(
                     'cannot parse authentication as {}'.format(auth))
-        elif auth == default_auth:
+        elif token == default_auth:
             # we provide the default implementation as per configuration
             from omegaml import _omega
             om = _omega._om
@@ -170,7 +171,7 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
                     'Default task authentication is not allowed, got {}'.format(auth))
         else:
             raise ValueError(
-                'missing authentication tuple as (userid, apikey, qualifier), got {}'.format(auth))
+                'Missing runtime task authentication, got {}'.format(auth))
         return om
 
     @classmethod

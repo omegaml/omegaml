@@ -121,13 +121,13 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     _base_config.update_from_config(defaults)
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
+    # update config to reflect request
+    defaults.OMEGA_RESTAPI_URL = api_url
+    defaults.OMEGA_USERID = userid
+    defaults.OMEGA_APIKEY = apikey
+    defaults.OMEGA_QUALIFIER = qualifier
     auth = auth_env.get_runtime_auth(defaults)
     om = OmegaCloud(defaults=defaults, auth=auth)
-    # update config to reflect request
-    om.defaults.OMEGA_RESTAPI_URL = api_url
-    om.defaults.OMEGA_USERID = userid
-    om.defaults.OMEGA_APIKEY = apikey
-    om.defaults.OMEGA_QUALIFIER = qualifier
     return om
 
 
