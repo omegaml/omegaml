@@ -152,3 +152,33 @@ OmegaDeferredInstance = EnterpriseOmegaDeferredInstance
 Omega = EnterpriseOmega
 _om = EnterpriseOmegaDeferredInstance()
 version = version  # ensure we keep imports
+
+
+# link implementation
+def safe_link(_omega):
+    # link a specific implementation lazy loaded at runtime
+    import omegaml as om
+    om.datasets = _omega.datasets
+    om.models = _omega.models
+    om.jobs = _omega.jobs
+    om.scripts = _omega.scripts
+    om.runtime = _omega.runtime
+    om.streams = _omega.streams
+    om.logger = _omega.logger
+    om.defaults = _omega.defaults
+    om.setup = getattr(_omega, 'setup', setup)
+    om.version = getattr(_omega, 'version', version)
+
+
+def safe_unlink():
+    import omegaml as om
+    om.datasets = None
+    om.models = None
+    om.jobs = None
+    om.scripts = None
+    om.runtime = None
+    om.streams = None
+    om.logger = None
+    om.defaults = None
+    om.setup = None
+    om.version = None

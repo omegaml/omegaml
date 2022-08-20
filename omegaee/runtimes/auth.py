@@ -26,8 +26,13 @@ class CloudRuntimeAuthenticationEnv(CloudClientAuthenticationEnv):
         Returns:
                 authenticted Omega instance
         """
+        from omegaml import link
         auth = auth or task.system_kwargs.get('__auth')
-        return super().get_omega_for_task(task, auth=auth)
+        om = super().get_omega_for_task(task, auth=auth)
+        # link omegaml default instance so import omegaml as om is linked
+        # to this instance
+        link(om)
+        return om
 
 
 class JWTOmegaRuntimeAuthentation(OmegaRuntimeAuthentication):
@@ -40,16 +45,31 @@ class JWTOmegaRuntimeAuthentation(OmegaRuntimeAuthentication):
 class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
     @classmethod
     def get_runtime_auth(cls, defaults=None, om=None):
-        # use a jwt token for runtime authentication
+        from jwt_auth import mixins
+        from jwt_auth.exceptions import AuthenticationFailed
+        # expect a jwt token for runtime authentication
         assert defaults or om, "require either defaults or om"
-        from django.conf import settings
-        from jwt_auth import settings as jwt_auth_settings
-
         defaults = defaults or om.defaults
-        payload = {
-            "username": defaults.OMEGA_USERID,
-            "exp": datetime.utcnow() + settings.JWT_EXPIRATION_DELTA,
-        }
-        token = jwt_auth_settings.JWT_ENCODE_HANDLER(payload)
+        token = defaults.OMEGA_APIKEY
+        # verify the token is valid
+        try:
+            payload = mixins.get_payload_from_token(token)
+            userid = mixins.jwt_get_user_id_from_payload(payload)
+        except AuthenticationFailed:
+            raise
         return JWTOmegaRuntimeAuthentation(token,
                                            defaults.OMEGA_QUALIFIER)
+
+
+def _create_jwt_token(defaults=None, om=None):
+    # use for testing only
+    from django.conf import settings
+    from jwt_auth import settings as jwt_auth_settings
+
+    defaults = defaults or om.defaults
+    payload = {
+        "username": defaults.OMEGA_USERID,
+        "exp": datetime.utcnow() + settings.JWT_EXPIRATION_DELTA,
+    }
+    token = jwt_auth_settings.JWT_ENCODE_HANDLER(payload)
+    return token

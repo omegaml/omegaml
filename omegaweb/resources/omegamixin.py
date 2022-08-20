@@ -21,10 +21,22 @@ class OmegaResourceMixin(object):
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
             qualifier = request.META.get('HTTP_QUALIFIER')
-            om = get_omega_for_user(request.user, qualifier=qualifier)[bucket]
+            creds = self._credentials_from_request(bundle_or_request)
+            om = get_omega_for_user(request.user, qualifier=qualifier, creds=creds)[bucket]
             self.celeryapp = om.runtime.celeryapp
             self._omega_instance = om
         return self._omega_instance
+
+    def _credentials_from_request(self, bundle_or_request):
+        # get credentials from Meta.authentication, if available
+        # -- _authentication_backend is set by tastypie.MultiAuthentication, tastypiex.DeferredAuthentication
+        # -- some Authentication classes provide extract_credentials(), some don't
+        creds = None
+        authenticator = getattr(bundle_or_request, '_authentication_backend', self._meta.authentication)
+        if authenticator and hasattr(authenticator, 'extract_credentials'):
+            # creds is expected to be a tuple of the form (userid, token)
+            creds = authenticator.extract_credentials(bundle_or_request)
+        return creds
 
     def dispatch(self, request_type, request, **kwargs):
         self._omega_instance = None
@@ -34,7 +46,7 @@ class OmegaResourceMixin(object):
         # cqrsapi hook instead of Tastypie Resource.dispatch()
         self._omega_instance = None
         self.is_async = (truefalse(request.GET.get('async', False)) or
-                      truefalse(request.META.get('HTTP_ASYNC', False)))
+                         truefalse(request.META.get('HTTP_ASYNC', False)))
         self._resource_uri = request.path
 
     def get_query_payload(self, request):

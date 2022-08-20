@@ -1,33 +1,34 @@
 from __future__ import absolute_import
 
-import json
-
 import hashlib
-
 from allauth.account.utils import sync_user_email_addresses
 from django.contrib.auth.models import User
+from django.test import TestCase
+from jwt_auth.exceptions import AuthenticationFailed
 
-from omegaee.runtimes.auth import CloudRuntimeAuthenticationEnv, JWTOmegaRuntimeAuthentation
-from omegaml.client.auth import OmegaRuntimeAuthentication, AuthenticationEnv
+from omegaee.runtimes.auth import JWTOmegaRuntimeAuthentation
 from omegaml import Omega
+from omegaml import _base_config
+from omegaml.client.auth import OmegaRuntimeAuthentication, AuthenticationEnv
 from omegaml.util import delete_database, settings
-from django.test import TestCase, override_settings
-
 from omegaweb.tests.util import OmegaResourceTestMixin
-from omegaml import defaults as _base_config
+
+prev_auth_env = getattr(_base_config, 'OMEGA_AUTH_ENV', None)
+
 
 class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         delete_database()
-        self.prev_auth_env = _base_config.OMEGA_AUTH_ENV
         self.password = hashlib.md5(b'some string').hexdigest()
         self.user = self.create_user('test@example.com', pk=1)
         self.setup_initconfig()
 
     def tearDown(self):
-        TestCase.tearDown(self)
-        _base_config.OMEGA_AUTH_ENV = self.prev_auth_env
+        super().tearDown()
+        # reset authentication env to default
+        _base_config.OMEGA_AUTH_ENV = prev_auth_env
+        AuthenticationEnv.auth_env = None
 
     def create_user(self, email, username=None, pk=None):
         username = username or email
@@ -66,8 +67,8 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         jwt_client_auth = JWTOmegaRuntimeAuthentation(jwt_token, 'default')
         # we expect the om instance to have an apikey authentication (real username, real apikey)
         om = authEnv.get_omega_for_task(None, auth=jwt_client_auth.token)
-        expected_auth = OmegaRuntimeAuthentication(self.user.username,
-                                                   self.user.api_key.key,
+        expected_auth = OmegaRuntimeAuthentication('jwt',
+                                                   jwt_token,
                                                    'default')
         self.assertEquals(om.runtime.auth.token, expected_auth.token)
 
@@ -96,9 +97,9 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         self.assertEquals(om.runtime.auth.token, runtime_auth.token)
         # ensure userid/apikey auth is not accepted
         apikey_auth = OmegaRuntimeAuthentication(self.user.username,
-                                                   self.user.api_key.key,
-                                                   'default')
-        with self.assertRaises(ValueError):
+                                                 self.user.api_key.key,
+                                                 'default')
+        with self.assertRaises(AuthenticationFailed):
             authEnv.get_omega_for_task(None, auth=apikey_auth)
 
     def test_runtime_implicit_auth(self):

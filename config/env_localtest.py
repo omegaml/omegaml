@@ -33,3 +33,10 @@ class EnvSettings_LocalTest(Config_TeamcityTests,
     # switch off stripe customer registration in landingpage
     STRIPE_REGISTER_ON_SIGNUP = False
 
+    # no session cache to avoid test failures on repeated tests
+    OMEGA_SESSION_CACHE = {
+        'maxsize': 0,  # cache at most one session
+        'ttl': 3600,  # keep it for 1 hour
+    }
+
+
