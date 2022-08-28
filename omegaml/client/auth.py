@@ -1,7 +1,9 @@
+import os
+
 from requests.auth import AuthBase
 
 from omegaml import session_cache
-from omegaml.util import load_class, settings
+from omegaml.util import load_class, settings, DefaultsContext
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -84,6 +86,9 @@ class AuthenticationEnv(object):
     """
     auth_env = None
     is_secure = False
+    # subprocess env keys to keep, see .prepare_env()
+    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_MONGO_URL', 'OMEGA_BROKER',
+                'OMEGA_TEST_MODE', 'OMEGA_RUNTIME_LOCAL', 'OMEGA_RESTAPI_URL']
 
     @classmethod
     @session_cache  # PERFTUNED
@@ -117,6 +122,7 @@ class AuthenticationEnv(object):
             from omegaml import _base_config
             cls.auth_env = load_class(getattr(_base_config, 'OMEGA_AUTH_ENV',
                                               'omegaml.client.auth.AuthenticationEnv'))
+            cls.auth_env.prepare_env(DefaultsContext(_base_config))
         return cls.auth_env
 
     @classmethod
@@ -143,9 +149,28 @@ class AuthenticationEnv(object):
         nop = lambda v: value
         getattr(cls, 'resultrepr', nop)(value)
 
+    @classmethod
+    def prepare_env(cls, defaults, clear=False):
+        # prepare subprocess env
+        # -- hook to setup subprocess env
+        # -- env keys that are in cls.env_keys are set to defaults[k]
+        # -- if clear is False, all other upper keys in defaults are deleted from env
+        # -- if clear is True, all keys in cls.env_keys are deleted from env
+        clear = clear or defaults is None
+        for k in defaults or cls.env_keys:
+            if not k.isupper():
+                continue
+            if k in cls.env_keys and not clear:
+                envstr = lambda v: str(int(v) if isinstance(v, bool) else v)
+                os.environ[k] = envstr(defaults[k])
+            else:
+                os.environ.pop(k, None)
+
 
 class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
+    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL',
+                'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER']
 
     @classmethod
     @session_cache

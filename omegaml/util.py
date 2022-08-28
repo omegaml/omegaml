@@ -720,7 +720,7 @@ class DefaultsContext(object):
     def __iter__(self):
         for k in dir(self):
             if k.startswith('OMEGA') and k.isupper():
-                yield k, getattr(self, k)
+                yield k
 
     def __getitem__(self, k):
         if k in dir(self):
@@ -729,6 +729,9 @@ class DefaultsContext(object):
 
     def __setitem__(self, k, v):
         setattr(self, k, v)
+
+    def __delitem__(self, k):
+        delattr(self, k)
 
     def get(self, k, default=None):
         try:

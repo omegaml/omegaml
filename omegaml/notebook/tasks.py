@@ -15,50 +15,51 @@ class NotebookTask(OmegamlTask):
     abstract = True
 
     def on_success(self, retval, task_id, *args, **kwargs):
-        super().on_success(retval, task_id, *args, **kwargs)
         try:
             om = self.om
-            args, kwargs = args[0:2]
-            nbfile = args[0]
+            task_args, task_kwargs = args[0:2]
+            nbfile = task_args[0]
             meta = om.jobs.metadata(nbfile)
             attrs = meta.attributes
             attrs['state'] = 'SUCCESS'
             attrs['task_id'] = task_id
             meta.kind = MDREGISTRY.OMEGAML_JOBS
-
-            if not kwargs:
+            if not task_kwargs:
                 pass
             else:
-                attrs['last_run_time'] = kwargs.get('run_at')
-                attrs['next_run_time'] = kwargs.get('next_run_time')
+                attrs['last_run_time'] = task_kwargs.get('run_at')
+                attrs['next_run_time'] = task_kwargs.get('next_run_time')
 
             meta.attributes = attrs
             meta.save()
         except:
             pass
+        finally:
+            super().on_success(retval, task_id, *args, **kwargs)
 
     def on_failure(self, retval, task_id, *args, **kwargs):
-        super().on_failure(retval, task_id, *args, **kwargs)
         try:
             om = self.om
-            args, kwargs = args[0:2]
-            nbfile = args[0]
+            task_args, task_kwargs = args[0:2]
+            nbfile = task_args[0]
             meta = om.jobs.metadata(nbfile)
             attrs = meta.attributes
             attrs['state'] = 'FAILURE'
             attrs['task_id'] = task_id
             meta.kind = MDREGISTRY.OMEGAML_JOBS
 
-            if not kwargs:
+            if not task_kwargs:
                 pass
             else:
-                attrs['last_run_time'] = kwargs.get('run_at')
-                attrs['next_run_time'] = kwargs.get('next_run_time')
+                attrs['last_run_time'] = task_kwargs.get('run_at')
+                attrs['next_run_time'] = task_kwargs.get('next_run_time')
 
             meta.attributes = attrs
             meta.save()
         except:
             pass
+        finally:
+            super().on_failure(retval, task_id, *args, **kwargs)
 
 
 @shared_task(bind=True, base=NotebookTask)
