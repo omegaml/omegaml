@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import re
-
 import json
+import re
 import tarfile
 from bson.json_util import dumps as bson_dumps, loads as bson_loads
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PosixPath
 from shutil import rmtree
 
 from omegaml.client.util import AttrDict
@@ -68,7 +67,7 @@ class OmegaExportArchive:
 
     def __enter__(self, compress=False):
         self._with_arc = arc = self.decompress()
-        arc.manitest = arc._read_manifest()
+        arc.manifest = arc._read_manifest()
         return arc
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -95,7 +94,9 @@ class OmegaExportArchive:
         self.manifest = self._read_manifest()
 
     def compress(self):
-        dt = datetime.utcnow().isoformat()
+        # create a timestamped path that does not contain :
+        # -- due to https://superuser.com/a/1720174
+        dt = str(datetime.utcnow().isoformat()).replace(':', '')
         tfn = self.path.parent / f'{self.path.name}-{dt}.tgz'
         Path(tfn).unlink(missing_ok=True)
         with tarfile.open(tfn, 'w:gz') as tar:
@@ -179,7 +180,7 @@ class OmegaExportArchive:
         manifest_key = self._manifest_key(name, store)
         in_manifest = manifest_key in self.manifest['members']
         if not in_manifest and not expect_exist:
-            local_key = Path(store.prefix) / store.object_store_key(name, 'omx')
+            local_key = PosixPath(store.prefix) / store.object_store_key(name, 'omx')
         elif in_manifest:
             local_key = self.manifest['members'][manifest_key]
         else:

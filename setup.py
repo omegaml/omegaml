@@ -94,10 +94,7 @@ setup(
         'markupsafe==2.0.1', # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
-        'nbconvert>=5.4.1',
-        'jsonschema<4', # due to nbconvert, https://github.com/executablebooks/jupyter-book/issues/1483
-        'Jinja2<=3.0' # due to nbconvert, https://github.com/jupyter/nbconvert/issues/1605
-        'ipython_genutils', # due to nbconvert, https://github.com/jupyter/nbconvert/pull/1726
+        'nbconvert>=7.0.0',
         'dill>=0.3.2',
         'tee>=0.0.3',
         'callable-pip>=1.0.0',
