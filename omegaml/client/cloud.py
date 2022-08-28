@@ -106,11 +106,11 @@ def setup_from_config(config_file=None, fallback=None):
     """
     from omegaml import _base_config
     config_file = config_file or _base_config.OMEGA_CONFIG_FILE
-    AuthenticationEnv.secure()
     if isinstance(config_file, str) and os.path.exists(config_file):
         with open(config_file, 'r') as fin:
             userconfig = yaml.safe_load(fin)
             if isinstance(userconfig, dict) and 'OMEGA_USERID' in userconfig:
+                AuthenticationEnv.secure()
                 try:
                     omega = setup(userid=userconfig['OMEGA_USERID'],
                                   apikey=userconfig['OMEGA_APIKEY'],

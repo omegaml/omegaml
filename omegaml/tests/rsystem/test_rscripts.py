@@ -23,10 +23,8 @@ class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
 
     def _write_helloR(self):
         import omegaml
-
         om = self.om
-        package_path = (Path(omegaml.__file__).parent / 'example' /
-                        'demo' / 'helloR')
+        package_path = (Path(omegaml.__file__).parent / 'example' / 'demo' / 'helloR')
         meta = om.scripts.put(f'R://{package_path}/app.R', 'helloR')
         return meta
 
