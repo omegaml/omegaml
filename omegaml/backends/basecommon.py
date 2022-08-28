@@ -65,3 +65,34 @@ class BackendBaseCommon:
                                key=filename,
                                collection_name=store._fs_collection)
         return gridfile
+
+    def perform(self, method, *args, **kwargs):
+        """ perform a model action, wrapped by pre-action/post-action calls
+
+        This is a helper method for the OmegaRuntime tasks to call model
+        actions that require pre/post processing. The pre/post action methods
+        are looked up on Backend.model_store, enabling mixins to the model store
+        to handle such calls.
+
+        Notes:
+
+            - see the ModelSignatureMixin for pre/post action methods on fit()
+              and predict()
+        """
+        pre_nop = lambda *args, **kwargs: (args, kwargs)
+        post_nop = lambda v, *args, **kwargs: v
+        do_call = getattr(self, method, None)
+        pre_call = getattr(self._call_handler, f'_pre_{method}', pre_nop)
+        post_call = getattr(self._call_handler, f'_post_{method}', post_nop)
+        common_kwargs = dict(data_store=getattr(self, 'data_store'),
+                             model_store=getattr(self, 'model_store'))
+        args, kwargs = pre_call(*args, **kwargs)
+        result = do_call(*args, **kwargs)
+        return post_call(result, *args, **kwargs, **common_kwargs)
+
+    @property
+    def _call_handler(self):
+        # by default the data store handles _pre and _post methods in self.perform()
+        return self.data_store
+
+

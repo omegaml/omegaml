@@ -1,8 +1,6 @@
 import cachetools
-import logging
 
 from omegaml import defaults as _base_config
-
 from omegaml._version import version
 from omegaml.omega import OmegaDeferredInstance
 from omegaml.util import load_class, settings, base_loader

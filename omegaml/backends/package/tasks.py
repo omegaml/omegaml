@@ -73,10 +73,13 @@ def run_omega_script(self, scriptname, *args, **kwargs):
     dtstart = datetime.datetime.now()
     try:
         result = (self.get_delegate(scriptname, kind='scripts', pass_as='data_store')
-                  .run(scriptname, *self.delegate_args[1:], om=self.om, **self.delegate_kwargs))
+                  .perform('run', scriptname, *self.delegate_args[1:], om=self.om, **self.delegate_kwargs))
     except Exception as e:
         import traceback
-        result = "".join(traceback.TracebackException.from_exception(e).format())
+        if kwargs.get('__traceback') or self.logging[-1].lower() == 'debug':
+            result = "".join(traceback.TracebackException.from_exception(e).format())
+        else:
+            result = repr(e)
         exception = True
     else:
         exception = False
