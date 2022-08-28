@@ -477,7 +477,7 @@ def convert_dtypes(df, dtypes):
     :param dtypes: the dict mapping column to dtype (use kind_meta['dtypes'])
     """
     # tz pattern used in convert_dtypes
-    tzinfo_pattern = re.compile('datetime64\[ns, (.*)\]')
+    tzinfo_pattern = re.compile(r'datetime64\[ns, (.*)\]')
     for col, dtype in dtypes.items():
         if dtype.startswith('datetime'):
             if not hasattr(df, 'dtypes'):

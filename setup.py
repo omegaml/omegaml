@@ -14,7 +14,7 @@ dashserve_deps = ['dashserve']
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
 iotools_deps = ['boto>=2.49.0']
-streaming_deps = ['minibatch[all]>=0.4.1']
+streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
 mlflow_deps = ['mlflow~=1.21.0']
 dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
@@ -110,7 +110,9 @@ setup(
         'smart_open', # required in cli
         'imageio>=2.3.0', # require to store images
         'psutil>=5.8', # required for profiling tracker
-        'cachetools>=5.0.0' # required for session caching
+        'cachetools>=5.0.0', # required for session caching
+        'apispec>=5.2.2', # required for openapi generation
+        'marshmallow>=3.17.0', # required for openapi generation
     ],
     extras_require={
         'graph': graph_deps,

@@ -12,9 +12,8 @@ from omegaml.util import tensorflow_available, keras_available, module_available
 
 # determine how we're run
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
-is_test_run = any(m in [basename(arg) for arg in ' '.join(sys.argv).split(' ')]
-                  for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
-                            '_jb_nosetest_runner.py')) or os.environ.get('OMEGA_TEST_MODE')
+is_test_run = (os.environ.get('OMEGA_TEST_MODE') or
+               any('test' in basename(v) for v in sys.argv[:3]))
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
 
@@ -134,6 +133,9 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.modelversion.ModelVersionMixin',
     'omegaml.mixins.store.datarevision.DataRevisionMixin',
     'omegaml.mixins.store.imexport.ObjectImportExportMixin',
+    'omegaml.mixins.store.extdmeta.SignatureMixin',
+    'omegaml.mixins.store.extdmeta.ScriptSignatureMixin',
+    'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -179,9 +181,10 @@ OMEGA_TRACKING_PROVIDERS = {
 }
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {
-    'maxsize': 1, # cache at most one session
+    'maxsize': 1,  # cache at most one session
     'ttl': 3600,  # keep it for 1 hour
 }
+
 
 # =========================================
 # ----- DO NOT MODIFY BELOW THIS LINE -----
@@ -283,8 +286,8 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
             user = ~/.config/omegaml
             site = /etc/xdg/omegaml
         Windows:
-            user = C:\Documents and Settings\<User>\Application Data\omegaml\omegaml
-            site = C:\Documents and Settings\All Users\Application Data\omegaml\omegaml
+            user = C:\\Documents and Settings\\<User>\\Application Data\\omegaml\\omegaml
+            site = C:\\Documents and Settings\\All Users\\Application Data\\omegaml\\omegaml
         Mac:
             user = ~/Library/Application Support/omegaml
             site = /Library/Application Support/omegaml
@@ -399,7 +402,7 @@ def load_framework_support(vars=globals()):
 if not is_cli_run and is_test_run:
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
-    OMEGA_RESTAPI_URL = ''
+    OMEGA_RESTAPI_URL = 'local'
     logging.getLogger().setLevel(logging.ERROR)
 else:
     # overrides in actual operations

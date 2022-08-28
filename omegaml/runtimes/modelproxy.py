@@ -53,7 +53,7 @@ class OmegaModelProxy(object):
         self.apply_require()
 
     def apply_require(self):
-        meta = self.runtime.omega.models.metadata(self.modelname)
+        self.meta = meta = self.runtime.omega.models.metadata(self.modelname)
         assert meta is not None, "model {self.modelname} does not exist".format(**locals())
         # get common require kwargs
         require_kwargs = meta.attributes.get('require', {})

@@ -19,8 +19,8 @@ class GenericScriptResource(object):
         om = self.om
         payload = {} if payload is None else payload
         promise = om.runtime.script(script_id).run(payload, __format='python', **query)
-        result = self.prepare_result_from_run(promise.get(), script_id=script_id) if not self.is_async else promise
+        result = promise if self.is_async else self.prepare_result(promise.get(), resource_name=script_id)
         return result
 
-    def prepare_result_from_run(self, result, script_id=None, **kwargs):
+    def prepare_result(self, result, resource_name=None, **kwargs):
         return result

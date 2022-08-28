@@ -18,14 +18,14 @@ class GenericJobResource(object):
         """
         om = self.om
         promise = om.runtime.job(job_id).run()
-        result = self.prepare_result_from_run(promise.get(), job_id=job_id) if not self.is_async else promise
+        result = self.prepare_result(promise.get(), resource_name=job_id) if not self.is_async else promise
         return result
 
     def metadata(self, job_id, query, payload):
         return self._get_job_detail(job_id)
 
-    def prepare_result_from_run(self, result, job_id=None, **kwargs):
-        return self._get_job_detail(job_id)
+    def prepare_result(self, result, resource_name=None, **kwargs):
+        return self._get_job_detail(resource_name)
 
     def _get_job_detail(self, job_id):
         meta = self.om.jobs.metadata(job_id)

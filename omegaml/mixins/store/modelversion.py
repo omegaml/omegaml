@@ -63,13 +63,14 @@ class ModelVersionMixin(object):
             name = self._model_version_actual_name(name, tag=tag, commit=commit, version=version)
         return super().drop(name, force=force, **kwargs)
 
-    def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False):
+    def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False, **kwargs):
         if not self._model_version_applies(name):
             return super().metadata(name)
         base_meta, base_commit, base_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
         commit = commit or base_commit
         version = base_version or version or -1
         if raw and base_meta and 'versions' in base_meta.attributes:
+            # the actual version's metadata is requested
             actual_name = self._model_version_actual_name(name, tag=tag,
                                                           commit=commit,
                                                           version=version,
@@ -108,7 +109,7 @@ class ModelVersionMixin(object):
     def _base_name(self, name, tag=None, **kwargs):
         # return actual name without version tag
         version = None
-        if '^' in name:
+        if '^' in str(name):
             version = -1 * (name.count('^') + 1)
             name = name.split('^')[0].split('@')[0]
         elif '@' in name:
