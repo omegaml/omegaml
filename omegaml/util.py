@@ -24,6 +24,11 @@ try:
 except:
     from urllib import parse as urlparse
 
+try:
+    from django.conf import settings as djsettings  # @UnresolvedImport
+except:
+    djsettings = None
+
 logger = logging.getLogger(__name__)
 
 import pandas as pd
@@ -121,29 +126,31 @@ def settings(reload=False):
     global __settings
     if not reload and __settings is not None:
         return __settings
-    try:
-        # see if we're running as a django app
-        from django.contrib.auth.models import User
-        from django.conf import settings as djsettings  # @UnresolvedImport
+    if djsettings is not None:
         try:
-            getattr(djsettings, 'SECRET_KEY')
+            try:
+                # see if we're running as a django app
+                from django.contrib.auth.models import User
+                getattr(djsettings, 'SECRET_KEY')
+            except Exception as e:
+                from warnings import warn
+                warn("Using omegaml.defaults because Django was not initialized."
+                     "Try importing omegaml within a method instead of at the "
+                     "module level")
+                raise
+            else:
+                defaults = djsettings
         except Exception as e:
-            from warnings import warn
-            warn("Using omegaml.defaults because Django was not initialized."
-                 "Try importing omegaml within a method instead of at the "
-                 "module level")
-            raise
+            # django failed to initialize, use omega defaults
+            defaults = omdefaults
         else:
-            defaults = djsettings
-    except Exception as e:
-        # django failed to initialize, use omega defaults
-        defaults = omdefaults
+            # get default omega settings into django settings if not set there
+            from omegaml import _base_config as omdefaults
+            for k in dir(omdefaults):
+                if k.isupper() and not hasattr(defaults, k):
+                    setattr(defaults, k, getattr(omdefaults, k))
     else:
-        # get default omega settings into django settings if not set there
-        from omegaml import _base_config as omdefaults
-        for k in dir(omdefaults):
-            if k.isupper() and not hasattr(defaults, k):
-                setattr(defaults, k, getattr(omdefaults, k))
+        defaults = omdefaults
     __settings = DefaultsContext(defaults)
     omdefaults.load_config_file(vars=__settings)
     omdefaults.update_from_env(vars=__settings)
@@ -779,6 +786,8 @@ def base_loader(_base_config):
     # -- this does not instantiate, only setup env
     # -- om.setup() does actual loading
     _omega = None
+
+    logger.debug('running base_loader')
 
     def load_customized():
         mod = import_module(os.environ.get('OMEGA_CUSTOM_LOADER', ''))
