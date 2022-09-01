@@ -36,7 +36,7 @@ candidate-dist: clean
 
 test: bumpbuild
 	-docker-compose up -d || echo "assuming docker-compose environment already running"
-	scripts/rundev.sh --docker --cmd "python manage.py test --debug-config --verbosity=2 --exe"
+	scripts/rundev.sh --docker --cmd "python manage.py test"
 
 shell:
 	scripts/rundev.sh --docker --shell

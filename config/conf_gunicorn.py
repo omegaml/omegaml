@@ -15,7 +15,7 @@ class Config_Gunicorn(object):
     workers = os.environ.get('WEB_CONCURRENCY', concurrency())
     errorlog = '-'
     accesslog = '-'
-    debug = True
+    debug = os.environ.get('WEB_DEBUG', '0') in ('1', 'yes', 'true')
     # allow at most 200 requests per worker before restarting
     max_requests = 100
     max_requests_jitter = 100
@@ -24,7 +24,7 @@ class Config_Gunicorn(object):
 config = os.environ.get('GUNICORN_CONFIG', 'Config_Gunicorn')
 StackableSettings.setup(globals(), locals()[config], use_lowercase=True)
 
-if os.environ.get('WEB_DEBUG', '0') in ('1', 'yes', 'true'):
+if Config_Gunicorn.debug:
     # debug gunicorn worker timeouts
     # https://stackoverflow.com/a/65438492/890242
     import faulthandler

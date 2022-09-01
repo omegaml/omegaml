@@ -1,6 +1,8 @@
 """
 Enterprise Edition defaults
 """
+import warnings
+
 import os
 
 import sys
@@ -59,3 +61,10 @@ parsed = urlparse(OMEGA_BROKERAPI_URL)
 port = 5671 if OMEGA_USESSL else 5672
 OMEGA_BROKER_HOST = '{}:{}'.format(parsed.hostname, port)
 
+# allow overloading settings from EnvSettings
+try:
+    from stackable import StackableSettings
+except:
+    warnings.warn('stackable is not available, EnvSettings could not be loaded.')
+else:
+    StackableSettings.load(globals())

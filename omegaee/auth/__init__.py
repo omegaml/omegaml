@@ -72,8 +72,8 @@ Technical implementation
 
     Implemented using tastypie Authentication mechanism [1]
     Adopted for JWT authentication using Django JWT auth [2]
-    Actual Authentication class is tastypiex.JWTAuthentication [3]
-    tastypiex.JWTAuthentication uses mixins configured by settings [4]
+    Actual Authentication class is omegaee.auth.OmegaJWTAuthentication [3]
+    OmegaJWTAuthentication uses the OMEGA_AUTHENV configured by settings [4]
     The JWT token is decoded by settings.JWT_DECODE_HANDLER
     User is retrieved from settings.JWT_PAYLOAD_GET_USER_ID_HANDLER [5]
 
@@ -107,8 +107,8 @@ Web login
 +++++++++
 
 This handles the IDP authentication flow and signs the user in for interactive
-web sessions. It does not provide the REST API authentication since the latter
-is a different concern.
+web sessions. It does _not_ provide the REST API authentication since the latter
+already must have the Authorization header including a valid JWT.
 
 1. settings.SOCIALACCOUNT_ADAPTER='myapp.auth.IDPAccountAdapter'
 
@@ -137,7 +137,7 @@ pass the Authorization header. The following default implementations are
 provided on every endpoint:
 
     ApiKeyAuthentication -  validates against userid/api key
-    JWTAuthentication -  validates against jwt tokens
+    OmegaJWTAuthentication -  validates against jwt tokens
     SessionAuthentication - validates against existing sessions (cookie based)
 
 In addition, a custom authentication class may be provided, which will be
@@ -152,7 +152,7 @@ called first, if provided.
 
 2. settings.JWT_DECODE_HANDLER='myapp.auth.jwt_decode_handler'
 
-    This is used by the JWTAuthentication class
+    This is used by the OmegaJWTAuthentication class
 
     def jwt_decode_handler(token):
         decoded = ...
@@ -160,7 +160,7 @@ called first, if provided.
 
 3. settings.JWT_PAYLOAD_GET_USER_ID_HANDLER='myapp.auth.jwt_get_user_id_handler'
 
-    This is used by the JWTAuthentication class
+    This is used by the OmegaJWTAuthentication class
 
     def jwt_get_user_id_handler(payload):
         ...

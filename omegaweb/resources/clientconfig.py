@@ -4,7 +4,6 @@ from tastypie.fields import DictField
 from tastypie.resources import Resource
 
 from omegaops import get_client_config
-from tastypiex.jwtauth import JWTAuthentication
 
 isTrue = lambda v: v if isinstance(v, bool) else (
         v.lower() in ['yes', 'y', 't', 'true', '1'])
@@ -18,7 +17,6 @@ class ClientConfigResource(Resource):
         detail_allowed_methods = []
         resource_name = 'config'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
 
     def obj_get_list(self, bundle, **kwargs):

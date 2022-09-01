@@ -10,7 +10,6 @@ from tastypie.resources import Resource
 
 from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from omegaml.util import load_class
-from tastypiex.jwtauth import JWTAuthentication
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
@@ -76,7 +75,6 @@ class ModelResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie
         detail_allowed_methods = ['get', 'delete']
         resource_name = 'model'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
         result_uri = '/api/v1/task/{id}/result'
 

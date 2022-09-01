@@ -4,14 +4,18 @@ import hashlib
 from allauth.account.utils import sync_user_email_addresses
 from django.contrib.auth.models import User
 from django.test import TestCase
-from jwt_auth.exceptions import AuthenticationFailed
-
-from omegaee.runtimes.auth import JWTOmegaRuntimeAuthentation
 from omegaml import Omega
 from omegaml import _base_config
 from omegaml.client.auth import OmegaRuntimeAuthentication, AuthenticationEnv
 from omegaml.util import delete_database, settings
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication
+
+from omegaee.auth.jwtauth import OmegaJWTAuthentication
+from omegaee.runtimes.auth import JWTOmegaRuntimeAuthentation
+from omegaee.runtimes.auth.jwtauth import AuthenticationFailed
+from omegaweb.resources.clientconfig import ClientConfigResource
 from omegaweb.tests.util import OmegaResourceTestMixin
+from tastypiex.centralize import ApiCentralizer
 
 prev_auth_env = getattr(_base_config, 'OMEGA_AUTH_ENV', None)
 
@@ -23,6 +27,23 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         self.password = hashlib.md5(b'some string').hexdigest()
         self.user = self.create_user('test@example.com', pk=1)
         self.setup_initconfig()
+        self.override_resource_auth()
+
+    def override_resource_auth(self):
+        # demonstrates overriding resources authentication
+        # Rationale: standard omegaee accepts ApiKeyAuth/SessionAuth only
+        # if you need JWT, be sure to configure it explicitely to avoid
+        # accidental acceptance of valid JWT of unknown source
+        class JWTAuthenticatedMeta:
+            authentication = MultiAuthentication(OmegaJWTAuthentication(),
+                                                 ApiKeyAuthentication())
+
+        api = ApiCentralizer()
+        api.centralize_resource(ClientConfigResource, meta=JWTAuthenticatedMeta)
+        # could also use:
+        # from omegaweb.api import v1_api
+        # api = ApiCentralizer(apis=[v1_api])
+        # api.centralize(api.apis, meta=JWTAuthenticatedMeta)
 
     def tearDown(self):
         super().tearDown()
@@ -95,7 +116,17 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         # check we can reuse this token to get om for another task
         om = authEnv.get_omega_for_task(None, auth=om.runtime.auth.token)
         self.assertEquals(om.runtime.auth.token, runtime_auth.token)
-        # ensure userid/apikey auth is not accepted
+        # ensure userid/apikey fallback works by default
+        apikey_auth = OmegaRuntimeAuthentication(self.user.username,
+                                                 self.user.api_key.key,
+                                                 'default')
+        self.assertEqual(apikey_auth.userid, self.user.username)
+        self.assertEqual(apikey_auth.apikey, self.user.api_key.key)
+        om = authEnv.get_omega_for_task(None, auth=apikey_auth)
+        self.assertEquals(om.runtime.auth.token[0], self.user.username)
+        self.assertEquals(om.runtime.auth.token[1], self.user.api_key.key)
+        # ensure userid/apikey auth is not accepted (if switched off)
+        authEnv.allow_apikey = False
         apikey_auth = OmegaRuntimeAuthentication(self.user.username,
                                                  self.user.api_key.key,
                                                  'default')

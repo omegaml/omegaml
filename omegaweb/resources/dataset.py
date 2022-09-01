@@ -1,10 +1,10 @@
 """
 REST API to datasets
 """
-import urllib
-
 import builtins
-
+import numpy as np
+import pandas as pd
+import urllib
 from mongoengine.errors import DoesNotExist
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
@@ -12,13 +12,9 @@ from tastypie.fields import CharField, DictField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
-import numpy as np
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from omegaweb.resources.util import isTrue
-import pandas as pd
-
 from .util import BundleObj
-from tastypiex.jwtauth import JWTAuthentication
 
 
 class DatasetResource(OmegaResourceMixin, Resource):
@@ -86,7 +82,6 @@ class DatasetResource(OmegaResourceMixin, Resource):
         detail_allowed_methods = ['get', 'put', 'delete']
         resource_name = 'dataset'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
 
     def restore_filter(self, bundle, name):

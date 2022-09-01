@@ -19,9 +19,6 @@ source $script_dir/easyoptions || exit
 ip=${ip:-0.0.0.0}
 port=${port:-5000}
 debug=${debug:-$JYHUB_DEBUG}
-omegaml_dir=$(python -W ignore -c  "import omegaml; print(omegaml.__path__[0])")
-omegaee_dir=$(python -W ignore -c  "import omegaee; print(omegaee.__path__[0])")
-omegajobs_dir=$(python -W ignore -c  "import omegajobs; print(omegajobs.__path__[0])")
 runtimelabel="${label:-$(hostname)},$CELERY_Q"
 if [[ ! -z $debug ]]; then
   jydebug="--debug"
@@ -37,7 +34,7 @@ fi
 # -- running in container, use /app as a shared home
 if [[ -d "/app" ]]; then
   export APPBASE="/app"
-  export PYTHONPATH="/app/pylib/user:/app/pylib/base"
+  export PYTHONPATH="$APPBASE:/app/pylib/user:/app/pylib/base"
   export PYTHONUSERBASE="/app/pylib/user"
   export OMEGA_CONFIG_FILE="/app/pylib/user/.omegaml/config.yml"
   export PATH="$PYTHONUSERBASE/bin:$PATH"
@@ -45,6 +42,10 @@ else
   export APPBASE=$HOME
   export OMEGA_CONFIG_FILE="$APPBASE/.omegaml/config.yml"
 fi
+# get python dependencies
+omegaml_dir=$(python -W ignore -c  "import omegaml; print(omegaml.__path__[0])")
+omegaee_dir=$(python -W ignore -c  "import omegaee; print(omegaee.__path__[0])")
+omegajobs_dir=$(python -W ignore -c  "import omegajobs; print(omegajobs.__path__[0])")
 if [[ $singleuser ]]; then
     echo "Starting singleuser spawned juypter notebook"
     if [[ ! -f $APPBASE/.jupyter/.omegaml.ok ]]; then

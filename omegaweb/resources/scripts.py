@@ -2,11 +2,10 @@
 REST API to jobs
 """
 
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.resources import Resource
 
-from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
-from tastypiex.jwtauth import JWTAuthentication
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
@@ -21,7 +20,6 @@ class ScriptResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypi
         detail_allowed_methods = []
         resource_name = 'script'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
         result_uri = '/api/v1/task/{id}/result'
 

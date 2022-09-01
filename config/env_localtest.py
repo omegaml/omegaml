@@ -1,12 +1,14 @@
 import os
 
+from config.conf_jwtauth import Config_OmegaJWTAuth
 from config.env_local import EnvSettings_Local
 from stackable.contrib.config.conf_djangonose import Config_DjangoNoseTests
 from stackable.contrib.config.conf_teamcity import Config_TeamcityTests
 
 
 class EnvSettings_LocalTest(Config_TeamcityTests,
-                            Config_DjangoNoseTests,
+                            #Config_DjangoNoseTests,
+                            Config_OmegaJWTAuth,
                             EnvSettings_Local):
     NOSE_ARGS = '--nologcapture --verbosity 2 -s'.split(' ')
 

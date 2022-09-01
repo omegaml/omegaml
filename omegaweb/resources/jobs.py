@@ -3,14 +3,13 @@ REST API to jobs
 """
 
 from nbformat import v4
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import DictField
 from tastypie.http import HttpBadRequest, HttpCreated
 from tastypie.resources import Resource
 
-from omegaml.backends.restapi.asyncrest import AsyncResponseMixinTastypie
-from tastypiex.jwtauth import JWTAuthentication
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
@@ -30,7 +29,6 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie, 
         detail_allowed_methods = ['get', 'post', 'delete']
         resource_name = 'job'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
         result_uri = '/api/v1/task/{id}/result'
 

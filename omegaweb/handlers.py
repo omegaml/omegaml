@@ -7,7 +7,6 @@ from django.dispatch.dispatcher import receiver
 
 from landingpage.models import ServicePlan
 from paasdeploy.models import ServiceDeployCommand
-from omegaops import tasks  # noqa import to initialize omops celery
 
 
 @receiver(pre_save, sender=User)

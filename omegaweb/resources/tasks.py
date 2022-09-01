@@ -1,14 +1,12 @@
 import re
-
 from django.urls import resolve
+from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.fields import DictField, CharField
 from tastypie.http import HttpNotFound
 from tastypie.resources import Resource
 
-from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin
-from tastypiex.jwtauth import JWTAuthentication
 from omegaweb.resources.omegamixin import OmegaResourceMixin
 from tastypiex.cqrsmixin import CQRSApiMixin, cqrsapi
 
@@ -26,7 +24,6 @@ class TaskResource(CQRSApiMixin, OmegaResourceMixin, AsyncTaskResourceMixin, Res
         detail_allowed_methods = ['get', 'delete']
         resource_name = 'task'
         authentication = MultiAuthentication(ApiKeyAuthentication(),
-                                             JWTAuthentication(),
                                              SessionAuthentication())
 
     @cqrsapi(allowed_methods=['get'])

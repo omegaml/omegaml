@@ -1,0 +1,113 @@
+# TODO move to landingpage
+import jwt
+from datetime import datetime
+from omegaml.client.auth import OmegaRuntimeAuthentication
+
+# jwt authentication adopted from webstack-django-jwt-auth, without django dependency
+# see https://pypi.org/project/webstack-django-jwt-auth/
+from omegaee.runtimes.auth.apikey import CloudRuntimeAuthenticationEnv
+
+
+class AuthenticationFailed(Exception):
+    # adopted from jwt_auth.exceptions
+    status_code = 401
+    detail = "Incorrect authentication credentials."
+
+    def __init__(self, detail=None):
+        super().__init__(self)
+        self.detail = detail or self.detail
+
+    def __str__(self):
+        return self.detail
+
+
+class JWTOmegaRuntimeAuthentation(OmegaRuntimeAuthentication):
+    def __init__(self, token, qualifier='default'):
+        self.userid = 'jwt'
+        self.apikey = token
+        self.qualifier = qualifier
+
+
+class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
+    # implements JWT auth adopted from jwt_auth, without Django dependency
+    from omegaee import eedefaults as settings
+    allow_apikey = True
+
+    @classmethod
+    def get_runtime_auth(cls, defaults=None, om=None):
+        # expect a jwt token for runtime authentication
+        assert defaults or om, "require either defaults or om"
+        defaults = defaults or om.defaults
+        token = defaults.OMEGA_APIKEY
+        # verify the token is valid
+        try:
+            payload = cls.get_payload_from_token(token, defaults=defaults)
+            userid = cls.jwt_get_user_id_from_payload(payload, defaults=defaults)
+        except AuthenticationFailed:
+            # revert to apikey handling
+            if cls.allow_apikey:
+                return super().get_runtime_auth(defaults=defaults, om=om)
+            raise
+        return JWTOmegaRuntimeAuthentation(token,
+                                           defaults.OMEGA_QUALIFIER)
+
+    @classmethod
+    def get_token_from_request(cls, request):
+        # adopted from jwt_auth.mixins
+        # convenience method to avoid global dependency on jwt_auth
+        from jwt_auth.mixins import get_token_from_request
+        return get_token_from_request(request)
+
+    @classmethod
+    def get_payload_from_token(cls, token, defaults=None):
+        # adopted from jwt_auth.mixins (we don't have django in a worker)
+        try:
+            payload = cls.jwt_decode_handler(token, defaults=defaults)
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Signature has expired.")
+        except jwt.DecodeError:
+            raise AuthenticationFailed("Error decoding signature.")
+
+        return payload
+
+    @classmethod
+    def jwt_decode_handler(cls, token, defaults=None, key=None):
+        # adopted from jwtauth.utils to work without Django (we don't have django in a worker)
+        settings = defaults or cls.settings
+        options = {
+            "verify_aud": settings.JWT_AUDIENCE is not None,
+            "verify_exp": settings.JWT_VERIFY_EXPIRATION,
+            "verify": settings.JWT_VERIFY,
+        }
+        return jwt.decode(
+            jwt=token,
+            key=key or settings.JWT_SECRET_KEY,
+            algorithms=settings.JWT_ALGORITHM.split(','),
+            options=options,
+            leeway=settings.JWT_LEEWAY,
+            audience=settings.JWT_AUDIENCE,
+        )
+
+    @classmethod
+    def jwt_get_user_id_from_payload(cls, payload, defaults=None):
+        """
+        Override this function if user_id is formatted differently in payload
+        """
+        # adopted from jwtauth.utils (we don't have django in a worker)
+        settings = defaults or cls.settings
+        userid = payload.get(getattr(settings, 'JWT_PAYLOAD_USERNAME_KEY', 'username'))
+        return userid
+
+
+def _create_jwt_token(defaults=None, om=None):
+    # use for testing only
+    from django.conf import settings
+    from jwt_auth import settings as jwt_auth_settings
+
+    defaults = defaults or om.defaults
+    payload = {
+        "username": defaults.OMEGA_USERID,
+        "exp": datetime.utcnow() + settings.JWT_EXPIRATION_DELTA,
+    }
+    token = jwt_auth_settings.JWT_ENCODE_HANDLER(payload)
+    return token
