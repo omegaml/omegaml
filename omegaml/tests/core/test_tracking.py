@@ -241,7 +241,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # check experiment and data where created
         self.assertIn('experiments/foo', om.models.list())
         meta = om.models.metadata('experiments/foo')
-        dataset = meta.attributes.get('dataset')
+        dataset = meta.attributes['tracking']['dataset']
         self.assertIsNotNone(dataset)
         self.assertIn(dataset, om.datasets.list(hidden=True))
         self.assertIn('experiments/foo', om.models.list())
