@@ -52,10 +52,7 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
         if not 'tar.gz' in os.path.basename(pkgdist):
             pkgsrc = pkgsrc.replace('setup.py', '')
             distdir = os.path.join(pkgsrc, 'dist')
-            sdist = build_sdist(pkgsrc, distdir)
-            version = sdist.metadata.version
-            pkgname = sdist.metadata.name
-            pkgdist = os.path.join(distdir, '{pkgname}-{version}.tar.gz'.format(**locals()))
+            pkgdist = build_sdist(pkgsrc, distdir)
         filename = self.data_store.object_store_key(name, 'pkg', hashed=True)
         gridfile = self._store_to_file(self.data_store, pkgdist, filename)
         return self.data_store._make_metadata(

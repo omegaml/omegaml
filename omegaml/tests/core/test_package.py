@@ -41,10 +41,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_build_sdist(self):
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
         distdir = os.path.join(pkgpath, 'dist')
-        sdist = build_sdist(pkgpath, self.distdir)
-        version = sdist.metadata.version
-        pkgname = sdist.metadata.name
-        pkgdist = os.path.join(distdir, '{pkgname}-{version}.tar.gz'.format(**locals()))
+        pkgdist = build_sdist(pkgpath, self.distdir)
         self.assertTrue(os.path.exists(pkgdist))
 
     def test_build_put(self):

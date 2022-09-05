@@ -2,42 +2,22 @@ import callable_pip as cpip
 import logging
 import os
 import sys
-import threading
-from tee import tee
-
-sync_lock = threading.Lock()
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
 def build_sdist(src, distdir):
-    from distutils.core import run_setup
-    # save argv. distutils run_setup changes argv and fails at restoring properly
-    save_argv = list(sys.argv)
-    # block any other thread from executing since we're changing cwd and sys.argv
-    with sync_lock, tee.StdoutTee('build_sdist.out', 'w', 2), \
-          tee.StderrTee('build_sdist.err', 'w', 2):
-        # make sure no other processing is executing while we change the working directory for setup.py
-        cwd = os.getcwd()
-        sys.stdout.errors = None
-        sys.stderr.errors = None
-        try:
-            if not src.endswith('setup.py'):
-                setup_path = os.path.join(src, 'setup.py')
-            else:
-                setup_path = src
-                src = os.path.dirname(setup_path)
-            os.chdir(src)
-            sdist = run_setup(setup_path, script_args=['sdist', '--dist-dir', distdir])
-        finally:
-            # restore cwd
-            os.chdir(cwd)
-            # restore sys argv
-            for i, v in enumerate(save_argv):
-                sys.argv[i] = v
-            if len(sys.argv) > len(save_argv):
-                del sys.argv[len(save_argv):]
-    return sdist
+    # TODO replace with python -m build
+    #      https://setuptools.pypa.io/en/latest/userguide/quickstart.html
+    from setuptools.sandbox import run_setup
+    if not src.endswith('setup.py'):
+        setup_path = os.path.join(src, 'setup.py')
+    else:
+        setup_path = src
+    run_setup(setup_path, ['sdist', '--dist-dir', distdir])
+    sdist = sorted(Path(distdir).iterdir(), key=os.path.getmtime)[-1]
+    return str(sdist)
 
 
 def install_package(src, dst):
