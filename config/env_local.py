@@ -61,6 +61,7 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     API_CONFIG = {
         'omega_apis': (
             ('omegaweb', 'omegaweb.api.v1_api'),
+            ('omegaweb', 'omegaweb.api.service_api'),
         ),
         'admin_apis': (
             ('landingpage', 'landingpage.api.config.v2_auth_api'),

@@ -61,13 +61,15 @@ class TaskResource(CQRSApiMixin, OmegaResourceMixin, AsyncTaskResourceMixin, Res
         # Typically the resource-property is implemented by OmegaResourceMixin
         URI_METHOD_MAP = {
             r"/api/.*/model/.*/.*/?$": ('_generic_model_resource', 'prepare_result', {'pk': 'model_id'}),
-            r'/api/.*/job/.*/run/?$': ('_generic_job_resource', 'prepare_result_from_run', {'pk': 'job_id'}),
-            r'/api/.*/script/.*/run/?$': ('_generic_script_resource', 'prepare_result_from_run', {'pk': 'script_id'}),
+            r'/api/.*/job/.*/run/?$': ('_generic_job_resource', 'prepare_result', {'pk': 'job_id'}),
+            r'/api/.*/script/.*/run/?$': ('_generic_script_resource', 'prepare_result', {'pk': 'script_id'}),
+            r'/api/.*/service/.*/?$': ('_generic_service_resource', 'prepare_result', {'pk': 'resource_name'}),
+            # services are also exposed as top-level services, see api.service_api
+            r'/api/service/.*/?$': ('_generic_service_resource', 'prepare_result', {'pk': 'resource_name'}),
         }
         for regexp, specs in URI_METHOD_MAP.items():
             if re.match(regexp.replace(r'/', r'\/'), resourceUri):
                 resource_name, method_name, kwargs_map = specs
                 meth = self._get_resource_method(resource_name, method_name)
-                meth_kwargs = {kwargs_map.get(k): res_match.kwargs.get(k) for k in res_match.kwargs.keys() if k in kwargs_map}
-                return meth, meth_kwargs
+                return meth, dict(resource_name=res_match.kwargs.get('pk'))
         raise ImmediateHttpResponse(HttpNotFound('unknown resource {}'.format(resourceUri)))

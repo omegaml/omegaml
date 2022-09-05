@@ -11,12 +11,15 @@ class UserSignupTests(TestCase):
     fixtures = ['landingpage']
 
     def setUp(self):
+        # force celery to import tasks
         import omegaops
+        from omegaops import tasks # noqa
         TestCase.setUp(self)
         # setup 'omegaml' service to deploy a new user
-        specs = Path(omegaops.__file__).parent / 'resources' / 'omegaml-user.yaml'
-        cmd = f'manage.py createservice --specs {specs}'
-        execute_from_command_line(cmd.split(' '))
+        specs = Path(omegaops.__file__).parent / 'resources'
+        for spec in specs.glob('*yaml'):
+            cmd = f'manage.py createservice --specs {spec}'
+            execute_from_command_line(cmd.split(' '))
 
     def tearDown(self):
         TestCase.tearDown(self)

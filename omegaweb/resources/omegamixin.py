@@ -5,6 +5,7 @@ from omegaml.backends.restapi.asyncrest import truefalse
 from omegaml.backends.restapi.job import GenericJobResource
 from omegaml.backends.restapi.model import GenericModelResource
 from omegaml.backends.restapi.script import GenericScriptResource
+from omegaml.backends.restapi.service import GenericServiceResource
 from omegaweb.resources.util import get_omega_for_user
 
 
@@ -51,7 +52,7 @@ class OmegaResourceMixin(object):
 
     def get_query_payload(self, request):
         query = request.GET.dict()
-        payload = self.deserialize(request, request.body) if request.body else None
+        payload = self.deserialize(request, request.body) if request.body else {}
         return query, payload
 
     def create_response_from_resource(self, request, generic_resource, resource_method, *args, **kwargs):
@@ -83,4 +84,8 @@ class OmegaResourceMixin(object):
     @property
     def _generic_script_resource(self):
         return GenericScriptResource(self._omega_instance, is_async=getattr(self, 'is_async', False))
+
+    @property
+    def _generic_service_resource(self):
+        return GenericServiceResource(self._omega_instance, is_async=getattr(self, 'is_async', False))
 

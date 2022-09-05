@@ -68,3 +68,4 @@ except:
     warnings.warn('stackable is not available, EnvSettings could not be loaded.')
 else:
     StackableSettings.load(globals())
+
