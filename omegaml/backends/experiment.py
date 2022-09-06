@@ -73,7 +73,8 @@ class ExperimentBackend(BaseModelBackend):
         obj._store = None
         obj._model_store = None
         meta = super().put(obj, name, **kwargs)
-        meta.attributes['dataset'] = obj._data_name
+        meta.attributes.setdefault('tracking', {})
+        meta.attributes['tracking']['dataset'] = obj._data_name
         meta.save()
         obj._store = store
         obj._model_store = self.model_store
@@ -90,8 +91,8 @@ class ExperimentBackend(BaseModelBackend):
     def drop(self, name, force=False, version=-1, data_store=None, **kwargs):
         data_store = data_store or self.data_store
         meta = self.model_store.metadata(name)
-        dataset = meta.attributes.get('dataset')
-        data_store.drop(dataset, force=True)
+        dataset = meta.attributes.get('tracking', {}).get('dataset')
+        data_store.drop(dataset, force=True) if dataset else None
         return self.model_store._drop(name, force=force, version=version, **kwargs)
 
 
