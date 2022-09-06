@@ -3,12 +3,17 @@ from __future__ import absolute_import
 import logging
 from uuid import uuid4
 
+from omegaml.runtimes import OmegaModelProxy
 from omegaml.util import is_dataframe, is_ndarray, is_series
 
 logger = logging.getLogger(__file__)
 
 
-class ModelMixin(object):
+class ModelMixin:
+    @classmethod
+    def supports(cls, obj):
+        return isinstance(obj, OmegaModelProxy)
+
     """ mixin methods to OmegaModelProxy
     """
     def fit(self, Xname, Yname=None, **kwargs):

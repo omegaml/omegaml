@@ -2,12 +2,12 @@ from __future__ import absolute_import
 
 import logging
 
-from omegaml.util import extend_instance
+from omegaml.runtimes.mixins import RuntimeProxy
 
 logger = logging.getLogger(__name__)
 
 
-class OmegaModelProxy(object):
+class OmegaModelProxy(RuntimeProxy):
     """
     proxy to a remote model in a celery worker
 
@@ -49,7 +49,7 @@ class OmegaModelProxy(object):
     def __init__(self, modelname, runtime=None):
         self.modelname = modelname
         self.runtime = runtime
-        self.apply_mixins()
+        self._apply_mixins()
         self.apply_require()
 
     def apply_require(self):
@@ -65,15 +65,6 @@ class OmegaModelProxy(object):
                 'task': dict(__experiment=meta.attributes['tracking'].get('default'))
             })
         self.runtime.require(**require_kwargs) if require_kwargs else None
-
-    def apply_mixins(self):
-        """
-        apply mixins in defaults.OMEGA_RUNTIME_MIXINS
-        """
-        from omegaml import settings
-        defaults = settings()
-        for mixin in defaults.OMEGA_RUNTIME_MIXINS:
-            extend_instance(self, mixin)
 
     def task(self, name):
         """
