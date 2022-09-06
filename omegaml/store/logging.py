@@ -311,7 +311,7 @@ class TailableLogDataset:
         atexit.register(self._stop_handler)
         for sig in ('SIGHUP', 'SIGBREAK', 'SIGINT'):
             if hasattr(signal, sig):
-                signal.signal(signal.SIGHUP, self._stop_handler)
+                signal.signal(getattr(signal, sig), self._stop_handler)
         # block if requested
         if wait:
             while wait:

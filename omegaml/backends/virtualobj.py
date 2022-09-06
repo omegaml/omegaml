@@ -97,7 +97,10 @@ class VirtualObjectBackend(BaseDataBackend):
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         meta = self.model_store.metadata(name)
         outf = meta.gridfile
-        obj = dill.load(outf)
+        # compat: Python 3.8.x < 3.8.2
+        # https://github.com/python/cpython/commit/b19f7ecfa3adc6ba1544225317b9473649815b38
+        # https://docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-final
+        obj = dill.loads(outf.read())
         outf.close()
         return obj
 
