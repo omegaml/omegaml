@@ -83,7 +83,7 @@ def main(argv=None, logger=None, **kwargs):
 
 
 def climain():
-    # entry point for distutils console_script
+    # entry point for console_script
     main()
 
 

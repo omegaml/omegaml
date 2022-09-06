@@ -96,7 +96,6 @@ setup(
         'nbformat>=4.0.1',
         'nbconvert>=7.0.0',
         'dill>=0.3.2',
-        'tee>=0.0.3',
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
         'cron-descriptor>=1.2.31',
