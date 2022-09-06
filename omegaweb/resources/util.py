@@ -1,4 +1,6 @@
 import cachetools
+from django.urls import re_path, include
+from tastypie.api import Api
 
 from omegaml.client.auth import AuthenticationEnv
 
@@ -51,3 +53,21 @@ def get_omega_for_user(user, qualifier=None, view=None, creds=None):
     # auth = OmegaRuntimeAuthentication(user.username, user.api_key.key, qualifier=qualifier)
     om = Omega(defaults=defaults, auth=auth)
     return om
+
+
+
+class TopLevelApi(Api):
+    # use this to have the service resources appear at the top-level, i.e. no /v1/ prepended
+    @property
+    def urls(self):
+        from tastypie.utils import trailing_slash
+        pattern_list = [
+            re_path(r"^(?P<api_name>%s)%s$" % (self.api_name, trailing_slash), self.wrap_view('top_level'),
+                    name="api_%s_top_level" % self.api_name),
+        ]
+        for name in sorted(self._registry.keys()):
+            self._registry[name].api_name = self.api_name
+            pattern_list.append(re_path(r"^", include(self._registry[name].urls)))
+        urlpatterns = self.prepend_urls()
+        urlpatterns += pattern_list
+        return urlpatterns

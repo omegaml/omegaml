@@ -59,7 +59,6 @@ class JobResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, TestC
         resp = self.api_client.post(self.url('testjob', action='run'),
                                     authentication=self.get_credentials(),
                                     **self._async_headers)
-
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']
