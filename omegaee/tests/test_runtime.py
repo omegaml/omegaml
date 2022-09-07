@@ -132,6 +132,16 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
                                                  'default')
         with self.assertRaises(AuthenticationFailed):
             authEnv.get_omega_for_task(None, auth=apikey_auth)
+        # ensure userid/apikey auth works if turned on
+        authEnv.allow_apikey = True
+        apikey_auth = OmegaRuntimeAuthentication(self.user.username,
+                                                 self.user.api_key.key,
+                                                 'default')
+        self.assertEqual(apikey_auth.userid, self.user.username)
+        self.assertEqual(apikey_auth.apikey, self.user.api_key.key)
+        om = authEnv.get_omega_for_task(None, auth=apikey_auth)
+        self.assertEquals(om.runtime.auth.token[0], self.user.username)
+        self.assertEquals(om.runtime.auth.token[1], self.user.api_key.key)
 
     def test_runtime_implicit_auth(self):
         # set auth indirectly

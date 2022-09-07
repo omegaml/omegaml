@@ -1,11 +1,17 @@
 # TODO move to landingpage
-import jwt
 from datetime import datetime
-from omegaml.client.auth import OmegaRuntimeAuthentication
+from functools import lru_cache
+
+import jwt
+from cryptography.hazmat.primitives import serialization
+from jwt import ExpiredSignatureError
+from jwt import PyJWKClient
 
 # jwt authentication adopted from webstack-django-jwt-auth, without django dependency
 # see https://pypi.org/project/webstack-django-jwt-auth/
 from omegaee.runtimes.auth.apikey import CloudRuntimeAuthenticationEnv
+from omegaml import settings  # noqa
+from omegaml.client.auth import OmegaRuntimeAuthentication
 
 
 class AuthenticationFailed(Exception):
@@ -35,19 +41,83 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
 
     @classmethod
     def get_runtime_auth(cls, defaults=None, om=None):
+        # allow fallback to api key
+        try:
+            auth = cls.get_runtime_auth_jwt(defaults=defaults, om=om)
+        except AuthenticationFailed as e:
+            if cls.allow_apikey:
+                auth = super().get_runtime_auth(defaults=defaults, om=om)
+            else:
+                raise
+        return auth
+
+    @classmethod
+    def jwt_decode_handler(cls, token, defaults=None):
+        # we can have multiple authentication realms, which may have
+        # differing signing keys. thus we try to decode with each key in turn
+        defaults = defaults or settings()
+        if defaults.JWT_PUBLIC_KEY_URI:
+            payload = cls.jwt_decode_from_uri(token, defaults=defaults)
+        else:
+            payload = cls.jwt_decode_handler_single(token, defaults=defaults)
+        return payload
+
+    @classmethod
+    def jwt_decode_handler_single(cls, token, defaults=None, key=None):
+        # adopted from jwtauth.utils to work without Django (we don't have django in a worker)
+        settings = defaults or cls.settings
+        options = {
+            "verify_aud": settings.JWT_AUDIENCE is not None,
+            "verify_exp": settings.JWT_VERIFY_EXPIRATION,
+            "verify": settings.JWT_VERIFY,
+        }
+        return jwt.decode(
+            jwt=token,
+            key=key or settings.JWT_SECRET_KEY,
+            algorithms=settings.JWT_ALGORITHM.split(','),
+            options=options,
+            leeway=settings.JWT_LEEWAY,
+            audience=settings.JWT_AUDIENCE,
+        )
+
+    @classmethod
+    def jwt_decode_from_uri(cls, token, defaults=None):
+        jwt_uris = defaults.JWT_PUBLIC_KEY_URI.split(',')
+        for uri in jwt_uris:
+            try:
+                key = key_resolver.get_public_key(uri)
+                payload = cls.jwt_decode_handler(token, defaults=defaults, key=key)
+            except ExpiredSignatureError as e:
+                # key_resolver caches keys so we must invalidate the cache if the key has expired
+                # enforce reloading key on next try
+                key_resolver.get_public_key.cache_clear()
+            except Exception as e:
+                # do not handle exception in hope of another key that matches
+                pass
+            else:
+                break
+        else:
+            # no key matched, deny access
+            raise AuthenticationFailed()
+
+    @classmethod
+    def jwt_get_user_id_from_payload(cls, payload, defaults=None):
+        """
+        Override this function if user_id is formatted differently in payload
+        """
+        # adopted from jwtauth.utils (we don't have django in a worker)
+        settings = defaults or cls.settings
+        userid = payload.get(getattr(settings, 'JWT_PAYLOAD_USERNAME_KEY', 'username'))
+        return userid
+
+    @classmethod
+    def get_runtime_auth_jwt(cls, defaults=None, om=None):
         # expect a jwt token for runtime authentication
         assert defaults or om, "require either defaults or om"
         defaults = defaults or om.defaults
         token = defaults.OMEGA_APIKEY
-        # verify the token is valid
-        try:
-            payload = cls.get_payload_from_token(token, defaults=defaults)
-            userid = cls.jwt_get_user_id_from_payload(payload, defaults=defaults)
-        except AuthenticationFailed:
-            # revert to apikey handling
-            if cls.allow_apikey:
-                return super().get_runtime_auth(defaults=defaults, om=om)
-            raise
+        payload = cls.get_payload_from_token(token, defaults=defaults)
+        userid = cls.jwt_get_user_id_from_payload(payload, defaults=defaults)
         return JWTOmegaRuntimeAuthentation(token,
                                            defaults.OMEGA_QUALIFIER)
 
@@ -70,34 +140,6 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
 
         return payload
 
-    @classmethod
-    def jwt_decode_handler(cls, token, defaults=None, key=None):
-        # adopted from jwtauth.utils to work without Django (we don't have django in a worker)
-        settings = defaults or cls.settings
-        options = {
-            "verify_aud": settings.JWT_AUDIENCE is not None,
-            "verify_exp": settings.JWT_VERIFY_EXPIRATION,
-            "verify": settings.JWT_VERIFY,
-        }
-        return jwt.decode(
-            jwt=token,
-            key=key or settings.JWT_SECRET_KEY,
-            algorithms=settings.JWT_ALGORITHM.split(','),
-            options=options,
-            leeway=settings.JWT_LEEWAY,
-            audience=settings.JWT_AUDIENCE,
-        )
-
-    @classmethod
-    def jwt_get_user_id_from_payload(cls, payload, defaults=None):
-        """
-        Override this function if user_id is formatted differently in payload
-        """
-        # adopted from jwtauth.utils (we don't have django in a worker)
-        settings = defaults or cls.settings
-        userid = payload.get(getattr(settings, 'JWT_PAYLOAD_USERNAME_KEY', 'username'))
-        return userid
-
 
 def _create_jwt_token(defaults=None, om=None):
     # use for testing only
@@ -111,3 +153,19 @@ def _create_jwt_token(defaults=None, om=None):
     }
     token = jwt_auth_settings.JWT_ENCODE_HANDLER(payload)
     return token
+
+
+class PublicKeyResolver(PyJWKClient):
+    # get JWT signing key from KEYCLOAK_CERT_URI
+    @lru_cache
+    def get_public_key(self, uri):
+        self.uri = uri
+        keys = self.get_signing_keys()
+        # https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
+        jwtkey = keys[0]
+        pem = jwtkey.key.public_bytes(encoding=serialization.Encoding.PEM,
+                                      format=serialization.PublicFormat.SubjectPublicKeyInfo)
+        return pem
+
+
+key_resolver = PublicKeyResolver('notset', cache_keys=True)
