@@ -1,10 +1,9 @@
-import pymongo
-from uuid import uuid4
-
 import datetime
 import hashlib
 from urllib.parse import urlparse
+from uuid import uuid4
 
+import pymongo
 from constance import config as constance_config
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -14,9 +13,9 @@ from pymongo.errors import PyMongoError, OperationFailure
 
 from landingpage.models import ServicePlan
 from omegaml.mongoshim import MongoClient
+from omegaml.util import settings as omsettings
 from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user, authorize_user_vhost, \
     get_client_config
-from omegaml.util import settings as omsettings
 
 
 class OmegaOpsTests(TestCase):
@@ -275,8 +274,6 @@ class OmegaOpsTests(TestCase):
         self.assertTrue(all(k.isupper() for k in config))
 
     def test_parse_client_config_v3_group_qualifier(self):
-        from constance import config as site_config
-
         ServicePlan.objects.create(name='omegaml')
         config = {
             'version': 'v3',
@@ -335,6 +332,60 @@ class OmegaOpsTests(TestCase):
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuserY:dbpassY@{parsed.hostname}:{parsed.port}/dbnameY'.format(**locals())
         self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+
+    def test_parse_client_config_v3_overrides(self):
+        # test in-cluster overrides
+        ServicePlan.objects.create(name='omegaml')
+        config = {
+            'version': 'v3',
+            'services': {
+                'notebook': {
+                    'url': 'nb_url',
+                },
+                'omegaml': {
+                    'defaults': {
+                        'OMEGA_CUSTOM_SETTING': 'foo',
+                    },
+                    'defaults.in': {
+                        'OMEGA_CUSTOM_SETTING': 'foo.in',
+                        'OMEGA_CUSTOM_SETTING_INONLY': 'bax.in',
+                    }
+                }
+            },
+            'qualifiers': {
+                # TODO simplify -- use a more generic user:password@service/selector format
+                'default': {
+                    'mongohost': 'mongodb:27017',
+                    'mongodbname': 'dbname',
+                    'mongouser': 'dbuser',
+                    'mongopassword': 'dbpass',
+                    'mongohost.in': 'localhost:27017',
+                },
+
+            }
+        }
+        defaults = omsettings()
+        add_service_deployment(self.user, config)
+        # out-cluster view (implies view=False)
+        config = get_client_config(self.user, qualifier='default')
+        self.assertIn('OMEGA_MONGO_URL', config)
+        self.assertIn('OMEGA_CUSTOM_SETTING', config)
+        self.assertNotIn('OMEGA_CUSTOM_SETTING_INONLY', config)
+        self.assertEqual(config['OMEGA_CUSTOM_SETTING'], 'foo')
+        mongo_url = 'mongodb://dbuser:dbpass@mongodb:27017/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # in-cluster view
+        config = get_client_config(self.user, qualifier='default', view=True)
+        self.assertIn('OMEGA_MONGO_URL', config)
+        self.assertIn('OMEGA_CUSTOM_SETTING', config)
+        self.assertIn('OMEGA_CUSTOM_SETTING_INONLY', config)
+        self.assertEqual(config['OMEGA_CUSTOM_SETTING'], 'foo.in')
+        self.assertEqual(config['OMEGA_CUSTOM_SETTING_INONLY'], 'bax.in')
+        mongo_url = 'mongodb://dbuser:dbpass@localhost:27017/dbname'.format(**locals())
+        self.assertEqual(mongo_url, config['OMEGA_MONGO_URL'])
+        # make sure there are no lower case configs passed into defaults
+        # -- this is to avoid merging server-side config is not mixed with client side defaults
+        self.assertTrue(all(k.isupper() for k in config))
 
 
 

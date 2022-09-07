@@ -340,6 +340,10 @@ def get_client_config(user, qualifier=None, view=False):
             "CLUSTER_STORAGE": user_settings['services']['cluster']['storage'],
             "JUPYTER_CONFIG": user_settings['services']['jupyter']['config'],
         })
+        # allow cluster-in only updates
+        if 'defaults.in' in omega_config:
+            dict_merge(client_config,
+                       omega_config['defaults.in'])
 
     client_config['OMEGA_CELERY_CONFIG']['CELERY_ALWAYS_EAGER'] = omega_config['celery_eager']
     return client_config
