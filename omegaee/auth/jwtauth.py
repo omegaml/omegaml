@@ -48,7 +48,7 @@ class OmegaJWTAuthentication(Authentication):
         try:
             userid, token = self.extract_credentials(request)
             user = self._get_user(userid)
-        except Exception:
+        except Exception as e:
             return self._unauthorized()
         request.user = user
         return True
