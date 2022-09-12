@@ -103,7 +103,7 @@ class AsyncResponseMixin:
     def resource_uri(self):
         return flask.request.path
 
-    def prep_response(self, result, status=None, headers=None, async_body=None):
+    def prep_response(self, result, status=None, headers=None, async_body=None, **kwargs):
         if isinstance(result, AsyncResult):
             if isinstance(result, EagerResult):
                 EAGER_RESULTS[result.id] = result
@@ -290,7 +290,7 @@ class AsyncTaskResourceMixin:
         # from a given task id return a AsyncResource as promise
         # hack to allow local testing
         if not getattr(self.celeryapp.conf, 'CELERY_ALWAYS_EAGER'):
-            promise = AsyncResult(task_id)
+            promise = self.celeryapp.AsyncResult(task_id)
         else:
             promise = EAGER_RESULTS[task_id]
         return promise
@@ -309,7 +309,7 @@ class AsyncTaskResourceMixin:
     def resolve_resource_method(self, taskid, context):
         # resolve the GenericResoure method to prepare the final result
         # return (callable, kwargs)
-        return self.default_prepare_result, {}
+        return self.default_prepare_result, {'context': context}
 
     def default_prepare_result(self, value, **kwargs):
         return value

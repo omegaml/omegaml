@@ -9,14 +9,15 @@ install:
 	# in some images pip is outdated, some packages are system-level installed
 	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
 	pip install --ignore-installed -U pip
-	[ -f .gitlinks ] && pip install gil && gil clone && pip install -r requirements.dev
+	pip install pytest -U
+	[ -f .gitlinks ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "no .gitlinks, using packaeges from pypi only"
 	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}"
 	(which R && scripts/setup-r.sh) || echo "R is not installed"
 
 test:
 	# add -x to fail on first error
 	# PATH is required for tensorflow images
-	unset DJANGO_SETTINGS_MODULE && PATH=${HOME}/.local/bin:${PATH} nosetests -v -s ${TESTS}
+	unset DJANGO_SETTINGS_MODULE && PATH=${HOME}/.local/bin:${PATH} pytest -v -s --tb=native ${TESTS}
 
 freeze:
 	echo "Writing pip requirements to pip-requirements.lst"
