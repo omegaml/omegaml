@@ -16,7 +16,7 @@ class CombinedOmegaStoreMixin:
         for store in self._stores:
             regexp = regexp.replace(store.prefix) if regexp else None
             # list by name|pattern, return list of Metadata or list of names
-            members = store.list(pattern.replace(store.prefix, ''),
+            members = store.list(pattern.replace(store.prefix, '', 1),
                                  regexp=regexp, raw=raw, **kwargs)
             # either add obj:Metadata as is, or obj:str as 'prefix/name'
             add = lambda obj: f'{store.prefix}{obj}' if not raw else obj
@@ -36,9 +36,9 @@ class CombinedOmegaStoreMixin:
                 return store.help(store_name)
         return help(name_or_obj) if sys.flags.interactive else pydoc.render_doc(name_or_obj, renderer=pydoc.plaintext)
 
-    def metadata(self, name):
+    def metadata(self, name, **kwargs):
         store, store_name = self.store_by_name(name)
-        return store.metadata(store_name)
+        return store.metadata(store_name, **kwargs)
 
     def stores_prefixes(self):
         return [s.prefix for s in self._stores]

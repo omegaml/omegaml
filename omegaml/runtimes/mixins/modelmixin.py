@@ -11,6 +11,7 @@ logger = logging.getLogger(__file__)
 class ModelMixin(object):
     """ mixin methods to OmegaModelProxy
     """
+
     def fit(self, Xname, Yname=None, **kwargs):
         """
         fit the model
@@ -31,7 +32,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
-        return omega_fit.delay(self.modelname, Xname, Yname, **kwargs)
+        return omega_fit.delay(self.modelname, Xname, Yname=Yname, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
         """
@@ -53,7 +54,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
-        return omega_fit.delay(self.modelname, Xname, Yname, **kwargs)
+        return omega_fit.delay(self.modelname, Xname, Yname=Yname, **kwargs)
 
     def transform(self, Xname, rName=None, **kwargs):
         """
@@ -91,8 +92,7 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname)
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname)
-        return omega_fit_transform.delay(self.modelname, Xname, Yname,
-                                         rName=rName, **kwargs)
+        return omega_fit_transform.delay(self.modelname, Xname, Yname=Yname, rName=rName, **kwargs)
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -109,6 +109,7 @@ class ModelMixin(object):
         omega_predict = self.task('omegaml.tasks.omega_predict')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName, **kwargs)
+
 
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -142,8 +143,8 @@ class ModelMixin(object):
         """
         omega_score = self.task('omegaml.tasks.omega_score')
         Xname = self._ensure_data_is_stored(Xname)
-        yName = self._ensure_data_is_stored(Yname)
-        return omega_score.delay(self.modelname, Xname, yName, rName=rName, **kwargs)
+        YName = self._ensure_data_is_stored(Yname)
+        return omega_score.delay(self.modelname, Xname, Yname=YName, rName=rName, **kwargs)
 
     def decision_function(self, Xname, rName=None, **kwargs):
         """
@@ -165,7 +166,9 @@ class ModelMixin(object):
         omega_reduce = self.task('omegaml.tasks.omega_reduce')
         return omega_reduce.delay(modelName=self.modelname, rName=rName, **kwargs)
 
-    def _ensure_data_is_stored(self, name_or_data, prefix='_temp'):
+    def _ensure_data_is_stored(self, name_or_data, prefix='_temp', as_payload=False):
+        if as_payload:
+            return name_or_data
         if is_dataframe(name_or_data) or is_series(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
@@ -181,3 +184,4 @@ class ModelMixin(object):
             raise TypeError(
                 'invalid type for Xpath_or_data', type(name_or_data))
         return name
+

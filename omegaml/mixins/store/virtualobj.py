@@ -37,6 +37,10 @@ class VirtualObjectMixin(object):
             name = real_name
         return name, kwargs
 
+    def metadata(self, name, **kwargs):
+        dsname, _ = self._resolve_realname(name, kwargs)
+        return super().metadata(dsname)
+
     def get(self, name, **kwargs):
         raw = kwargs.get('raw', False)
         name, kwargs = self._resolve_realname(name, kwargs)

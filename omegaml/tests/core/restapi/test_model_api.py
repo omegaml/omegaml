@@ -5,15 +5,15 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 from sklearn.linear_model import LinearRegression
 
-from omegaml import Omega
+from omegaml import Omega, restapi
 from omegaml.client.auth import OmegaRestApiAuth
-from omegaml.restapi.app import app
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
 
 class OmegaRestApiTests(OmegaTestMixin, TestCase):
     def setUp(self):
+        app = restapi.create_app()
         self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')

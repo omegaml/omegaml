@@ -109,7 +109,7 @@ sources_dir=$script_dir/..
 # all images we want to test, and list of tests
 test_images=${specs:-$script_dir/docker/test_images_minimal.ini}
 # in-container location of project source under test
-test_base=/var/project
+test_base=/tmp/runtests/project
 # host log files
 test_logbase=/tmp/testlogs
 # host test rc file
@@ -175,7 +175,7 @@ function runimage() {
   #    solution adopted from https://stackoverflow.com/questions/48527958/docker-error-getting-username-from-password-database
   #    due to https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html#user-related-configurations
   #    this may issue a "UID NNN ist not unique" message, not a problem
-  docker exec --user root omegaml-test bash -c "useradd -u $(id -u) -g users testuser"
+  docker exec --user root omegaml-test bash -c "useradd -u $(id -u) -g users testuser; chmod 777 $test_base/.."
   # -- some images don't have make installed, e.g. https://github.com/jupyter/docker-stacks/issues/1625
   docker exec --user root omegaml-test bash -c "which make || apt update && apt -y install build-essential"
   docker exec omegaml-test bash -c 'make -e install test; echo $? > /tmp/test.status' 2>&1 | tee -a $test_logfn

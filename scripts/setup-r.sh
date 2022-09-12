@@ -13,5 +13,5 @@ source $script_dir/easyoptions || exit
 
 # install
 # -- note we use miniforge/conda-forge, thus channel is conda-forge, not r
-conda install -y r-essentials
+which R || conda install -y r-essentials
 R -f $script_dir/../omegaml/runtimes/rsystem/install.R

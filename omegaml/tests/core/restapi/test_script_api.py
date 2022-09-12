@@ -3,16 +3,16 @@ from unittest import TestCase
 import os
 import sys
 
-from omegaml import Omega
+from omegaml import Omega, restapi
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.auth import OmegaRestApiAuth
-from omegaml.restapi.app import app
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
 
 class ScriptResourceTests(OmegaTestMixin, TestCase):
     def setUp(self):
+        app = restapi.create_app()
         self.client = RequestsLikeTestClient(app, is_json=True)
         self.om = Omega()
         self.auth = OmegaRestApiAuth('user', 'pass')
@@ -24,9 +24,9 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
     def url(self, pk=None, action=None, query=None):
         url = '/api/v1/script/'
         if pk is not None:
-            url += '{pk}/'.format(**locals())
+            url += '{pk}'.format(**locals())
         if action is not None:
-            url += '{action}'.format(**locals())
+            url += '/{action}'.format(**locals())
         if query is not None:
             url += '?{query}'.format(**locals())
         return url
@@ -44,6 +44,7 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         data = self.deserialize(resp)
         self.assertIn('runtimes', data)
         self.assertIn('result', data)
+        # note the json payload is not part of the response
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
         self.assertEqual(data['result'], expected)
 

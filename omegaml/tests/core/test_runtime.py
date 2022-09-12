@@ -104,8 +104,8 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         result.get()
         # check the new model version metadata includes the datax/y references
         meta = om.models.metadata('mymodel2')
-        self.assertIn('metaX', meta.attributes)
-        self.assertIn('metaY', meta.attributes)
+        self.assertIn('Xmeta', meta.attributes['dataset'])
+        self.assertIn('Ymeta', meta.attributes['dataset'])
         # -- using data already in Omega
         result = om.runtime.model('mymodel2').predict('datax')
         pred1 = result.get()
@@ -118,10 +118,10 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         pred2 = result.get()
         # -- check the local data provided to fit was stored as intended
         meta = om.models.metadata('mymodel2')
-        self.assertIn('metaX', meta.attributes)
-        self.assertIn('metaY', meta.attributes)
-        self.assertIn('_fitX', meta.attributes.get('metaX').get('name'))
-        self.assertIn('_fitY', meta.attributes.get('metaY').get('name'))
+        self.assertIn('Xmeta', meta.attributes['dataset'])
+        self.assertIn('Ymeta', meta.attributes['dataset'])
+        self.assertIn('_fitX', meta.attributes['dataset'].get('Xmeta').get('name'))
+        self.assertIn('_fitY', meta.attributes['dataset'].get('Ymeta').get('name'))
         self.assertTrue(
             (pred == pred1).all(), "runtimes prediction is different(1)")
         self.assertTrue(

@@ -71,13 +71,53 @@ class BackendBaseCommon:
 
         This is a helper method for the OmegaRuntime tasks to call model
         actions that require pre/post processing. The pre/post action methods
-        are looked up on Backend.model_store, enabling mixins to the model store
-        to handle such calls.
+        are looked up on the store provided by the Backend._call_handler,
+        enabling mixins to the model store to handle such calls.
+
+        Usage:
+            backend.perform('action', *args, **kwargs)
+
+            => will call
+
+                args, kwargs = handler.pre_<action>(*args, **kwargs),
+                result = backend.<action>(**args, **kwargs)
+                handler.post_<action>(result, *args, **kwargs)
+
+                where <action:str> is the effective method to be called,
+                handler is the _call_handler property of the object's backend,
+                typically the store where the object is contained.
+
+                The pre_<action> method should be defined as::
+
+                    def pre_action(**args, **kwargs):
+                        ...
+                        return args, kwargs
+
+                The args, kwargs will be passed as action(*args, **kwargs)
+                to the effective method. Note you can use any definition of
+                *args, **kwargs as long as you return a tuple([list], dict).
+
+                The post_<action> method should be defined as::
+
+                    def post_action(result, *args, **kwargs):
+                        ...
+                        return result
+
+                The args, kwargs are the same as passed to the pre_<action>()
+                and action() methods. result is the return value from the
+                effective method and should be the only value returned from
+                the post_<action>() method (though it can be modified as you
+                see fit).
 
         Notes:
 
             - see the ModelSignatureMixin for pre/post action methods on fit()
               and predict()
+            - the rationale to use store mixins for pre and post action is that
+              this are generic across all backends. However the backend may
+              override by providing its own _call_handler (which by default is
+              the main store of the backend (i.e. model_store for models, data_store
+              for datasets, scripts_store for scripts etc.)
         """
         pre_nop = lambda *args, **kwargs: (args, kwargs)
         post_nop = lambda v, *args, **kwargs: v

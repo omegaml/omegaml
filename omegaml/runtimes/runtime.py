@@ -422,7 +422,9 @@ class OmegaRuntime(object):
 
 # apply mixins
 from omegaml.runtimes.mixins.taskcanvas import canvas_chain, canvas_group, canvas_chord
+from omegaml.runtimes.mixins.swagger import SwaggerGenerator
 
 OmegaRuntime.sequence = canvas_chain
 OmegaRuntime.parallel = canvas_group
 OmegaRuntime.mapreduce = canvas_chord
+OmegaRuntime.swagger = SwaggerGenerator.build_swagger

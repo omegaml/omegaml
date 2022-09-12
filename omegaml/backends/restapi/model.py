@@ -54,11 +54,11 @@ class GenericModelResource(object):
             promise = self.om.runtime.model(model_id).predict(dataset)
         else:
             raise ValueError('require either "data" key in body, or ?datax=dataset')
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = self.prepare_result(promise.get(), resource_name=model_id) if not self.is_async else promise
         return result
 
-    def prepare_result(self, result, model_id=None, **kwargs):
-        return {'model': model_id, 'result': ensure_json_serializable(result)}
+    def prepare_result(self, result, resource_name=None, **kwargs):
+        return {'model': resource_name, 'result': ensure_json_serializable(result)}
 
     def fit(self, model_id, query, payload):
         datax = query.get('datax')
