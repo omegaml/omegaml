@@ -86,7 +86,7 @@ class Notebook:
 
     def login_nb(self):
         br = self.browser
-        assert br.is_element_present_by_id('ipython-main-app', wait_time=10)
+        assert br.is_element_present_by_id('jupyter-main-app', wait_time=10)
         br.find_by_id('password_input').fill(self.password)
         br.find_by_id('login_submit').click()
         br.visit(jburl(br.url, '', nbstyle='tree'))
@@ -124,7 +124,7 @@ class Notebook:
             br.reload()
             found = br.is_text_present(name, wait_time=60)
             retry = 0 if found else retry
-        item = br.find_link_by_partial_text(name)
+        item = br.links.find_by_partial_text(name)
         item.click()
         sleep(2)
         self.last_notebook
@@ -133,9 +133,9 @@ class Notebook:
     def restart(self, wait=False):
         br = self.browser
         assert br.is_element_present_by_text('Cell', wait_time=60)
-        br.find_link_by_text('Kernel', )[0].click()
+        br.links.find_by_text('Kernel', )[0].click()
         sleep(1)
-        br.find_link_by_text('Restart')[0].click()
+        br.links.find_by_text('Restart')[0].click()
         if wait:
             busy = True
             while busy:
@@ -145,9 +145,9 @@ class Notebook:
     def run_all_cells(self, wait=False):
         br = self.browser
         assert br.is_element_present_by_text('Cell', wait_time=30)
-        br.find_link_by_text('Cell', )[0].click()
+        br.links.find_by_text('Cell', )[0].click()
         sleep(1)
-        br.find_link_by_text('Run All')[0].click()
+        br.links.find_by_text('Run All')[0].click()
         if wait:
             busy = True
             while busy:
@@ -157,7 +157,7 @@ class Notebook:
     def open_folder(self, folder=None):
         br = self.browser
         folder = quote(folder.encode('utf-8'))
-        item = br.find_link_by_href('/tree/{folder}'.format(**locals()))[0]
+        item = br.links.find_by_href('/tree/{folder}'.format(**locals()))[0]
         item.click()
         return self
 

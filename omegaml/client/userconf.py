@@ -125,7 +125,7 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     _base_config.update_from_env(defaults)
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
-    # update config to reflect request
+    # update config to reflect request (never update from env or received config)
     defaults.OMEGA_RESTAPI_URL = api_url
     defaults.OMEGA_USERID = userid
     defaults.OMEGA_APIKEY = apikey

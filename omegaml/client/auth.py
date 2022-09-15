@@ -102,6 +102,15 @@ class AuthenticationEnv(object):
         return om
 
     @classmethod
+    def get_restapi_auth(cls, defaults=None, om=None,
+                         userid=None, apikey=None, qualifier=None):
+        return None
+
+    @classmethod
+    def get_runtime_auth(cls, defaults=None, om=None):
+        return None
+
+    @classmethod
     def active(cls):
         # load the currently active auth env
         if cls.auth_env is None:

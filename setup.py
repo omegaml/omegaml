@@ -17,7 +17,7 @@ iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
 mlflow_deps = ['mlflow~=1.21']
-dev_deps = ['nose', 'twine', 'flake8', 'mock', 'behave', 'splinter', 'ipdb', 'bumpversion']
+dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium3]', 'ipdb', 'bumpversion']
 
 # -- tensorflow specifics
 #    see https://www.tensorflow.org/install/source
@@ -80,11 +80,12 @@ setup(
     ],
     install_requires=[
         'celery>4.4,<5.0',
+        'importlib-metadata<5.0', # due to https://github.com/celery/kombu/pull/1601
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'mongoengine~=0.24.1',
         'pymongo~=4.0.2',  # mongoengine 0.24.1 compatibility
-        'pandas>1.1,<1.4',  # 1.1 fails on indexes, 1.4 fails some libraries, e.g. yfinance
+        'pandas>1.1',
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
@@ -94,7 +95,7 @@ setup(
         'markupsafe==2.0.1', # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
-        'nbconvert>=7.0.0',
+        'nbconvert>=6.4.0',
         'dill>=0.3.2',
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
