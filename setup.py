@@ -54,7 +54,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     data_files=[
-        ('omegaml/docs/', glob.glob('./docs/source/nb/*.ipynb')),
+        ('omegaml/docs', glob.glob('./docs/source/nb/*.ipynb')),
         ('omegaml/runtimes/rsystem', glob.glob('./runtimes/rsystem/*.R')),
     ],
     scripts=glob.glob('./scripts/runtime/*'),

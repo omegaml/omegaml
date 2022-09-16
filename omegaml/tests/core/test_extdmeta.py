@@ -1,3 +1,6 @@
+import numpy as np
+from datetime import datetime
+
 import json
 
 import pandas as pd
@@ -136,6 +139,33 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/testX', specs['paths'])
+
+    def test_meta_to_schema(self):
+        om = self.om
+        df = pd.DataFrame({'v_int': [0],
+                           'v_int32': [np.int32(0)],
+                           'v_int64': [np.int64(0)],
+                           'v_float': [0.25],
+                           'v_float32': [np.float32(0.25)],
+                           'v_float64': [np.float64(0.25)],
+                           'v_obj': [list()],
+                           'v_datetime': [datetime.now()],
+                           # not currently supported by OmegaStore
+                           # 'v_timedelta': [datetime.now() - datetime.now()],
+                           # 'v_date': [datetime.now().date()],
+                           'v_string': ['foo']})
+        meta = om.datasets.put(df, 'test')
+        extdmeta = SignatureMixin()
+        Schema = extdmeta._datatype_from_metadata(meta.to_dict())
+        sfields = Schema().fields
+        self.assertIsInstance(sfields['v_int'], fields.Integer)
+        self.assertIsInstance(sfields['v_int32'], fields.Integer)
+        self.assertIsInstance(sfields['v_int64'], fields.Integer)
+        self.assertIsInstance(sfields['v_float'], fields.Float)
+        self.assertIsInstance(sfields['v_float32'], fields.Float)
+        self.assertIsInstance(sfields['v_float64'], fields.Float)
+        self.assertIsInstance(sfields['v_obj'], fields.String)
+        self.assertIsInstance(sfields['v_string'], fields.String)
 
 
 @virtualobj
