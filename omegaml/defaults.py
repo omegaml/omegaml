@@ -11,11 +11,11 @@ from pathlib import Path
 from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge
 
 # determine how we're run
-is_cli_run = os.path.basename(sys.argv[0]) == 'om'
-is_test_run = (os.environ.get('OMEGA_TEST_MODE') or
-               any('test' in basename(v) for v in sys.argv[:3]))
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
+is_cli_run = os.path.basename(sys.argv[0]) == 'om'
+is_test_run = truefalse(os.environ.get('OMEGA_TEST_MODE') or
+                        any('test' in basename(v) for v in sys.argv[:3]))
 
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
