@@ -15,7 +15,7 @@ try:
 except:
     warnings.warn("mlflow not installed")
 else:
-    @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
+    @unittest.skipUnless(module_available('mlflow'), 'mlflow projects not available CURRENTLY DISABLED')
     class TestMLFlowProjects(OmegaTestMixin, TestCase):
         def setUp(self):
             om = self.om = Omega()
@@ -55,9 +55,10 @@ else:
             self.assertIn('output', data['result'])
             self.assertIn('hello', data['result']['output']['stdout'])
 
+        @unittest.skip('enable once issue #258 is fixed')
         def test_mlflow_project_remote_https(self):
             # store a local MLFlow project
-            project_path = 'https://github.com/mlflow/mlflow#examples/quickstart'
+            project_path = 'https://github.com/omegaml/omegaml#omegaml/example/mlflow/project'
             om = self.om
             meta = om.scripts.put(str(project_path), 'myproject', kind='mlflow.gitproject')
             self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
@@ -70,6 +71,7 @@ else:
             self.assertIn('output', data['result'])
             self.assertIn('succeeded', data['result']['output']['stderr'])
 
+        @unittest.skip('enable once issue #258 is fixed')
         def test_mlflow_gitproject_remote_ssh(self):
             # store a local MLFlow project
             project_path = 'mlflow+ssh://git@github.com/mlflow/mlflow.git#examples/quickstart'
@@ -85,6 +87,7 @@ else:
             self.assertIn('output', data['result'])
             self.assertIn('succeeded', data['result']['output']['stderr'])
 
+        @unittest.skip('enable once issue #258 is fixed')
         def test_mlflow_gitproject_remote_https(self):
             # store a local MLFlow project
             project_path = 'mlflow+https://github.com/mlflow/mlflow.git#examples/quickstart'
