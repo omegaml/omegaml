@@ -1005,6 +1005,8 @@ class MongoEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, pd.Timedelta):
+            return obj.value()
         elif isinstance(obj, bytes):
             return b64encode(obj).decode('utf8')
         elif isinstance(obj, range):
