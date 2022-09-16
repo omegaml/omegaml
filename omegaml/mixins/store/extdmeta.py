@@ -1,3 +1,5 @@
+import string
+
 import warnings
 
 from apispec import APISpec
@@ -153,26 +155,29 @@ class SignatureMixin:
         return schema
 
     def _datatype_from_metadata(self, meta, orient='records'):
+        # https://pbpython.com/pandas_dtypes.html
         TYPE_MAP = {
             "object": fields.String,
-            "int64": fields.Integer,
+            "int": fields.Integer,
             "float": fields.Float,
             "dict": fields.Raw,
             "bool": fields.Boolean,
             "datetime": fields.DateTime,
+            "timedelta[ns]": fields.DateTime,
             "date": fields.Date,
-            "defaults": fields.String,
+            "default": fields.String,
         }
         kind_meta = meta['kind_meta']
         dtypes = kind_meta.get('dtypes', {})
         name = meta.get('name')
         sdict = {}
+        infer = lambda v: v.rstrip(string.digits)
         for col, colType in dtypes.items():
             if '#' in col:
                 continue
             # orient == 'records' means every item is one value
             #        == 'columns' means every item is a list of values
-            ftype = TYPE_MAP.get(colType) or TYPE_MAP.get('default')
+            ftype = TYPE_MAP.get(infer(colType)) or TYPE_MAP.get('default')
             sdict[col] = ftype() if orient == 'records' else fields.List(ftype)
         schema = Schema.from_dict(sdict, name=name)
         schema.error_messages = {
