@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from pathlib import Path
+
 from copy import deepcopy
 from importlib import import_module
 
@@ -843,7 +845,7 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
     # - \/?                  leading /, optional
     # - (?P<path>\w+/?)*     any path-part followed by /, repeated 0 - n times
     # - (?P<ext>(\w*\.?\w*)+ any file.ext, at least once
-    pathlike = lambda s: re.match(r"^\/?(?P<path>\w+/?)*(?P<ext>(\w*\.?\w*))$", s)
+    pathlike = lambda s: Path(s).exists()
 
     @contextmanager
     def fopen(filein, *args, **kwargs):
