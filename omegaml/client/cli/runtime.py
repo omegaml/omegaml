@@ -1,3 +1,4 @@
+from omegaml.client.cli import deploy
 from pathlib import Path
 import subprocess
 
@@ -28,6 +29,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [options]
       om runtime serve [<rule>...] [--rules=<rulefile>] [options]
+      om runtime deploy [<deploy-action>] [--steps=<deployfile>] [--specs=<specs>] [--select=<filter>] [--dry] [options]
       om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
 
@@ -48,6 +50,7 @@ class RuntimeCommandBase(CommandBase):
       --path=PATH       path to directory where the archive should be written [default: ./mlops-export]
       --list            if specified, print members of archive
       --promote         if specified, import and promote objects
+      --steps=VALUE     /path/to/deployfile.yaml [default: ./deployfile.yaml
 
     Description:
       model, job and script commands
@@ -180,6 +183,28 @@ class RuntimeCommandBase(CommandBase):
 
           # allow only predictions by model foo
           om runtime serve model/foo/predict
+
+
+      deploy command
+      --------------
+
+      To deploy a complete application, create the deploy.yml as per below
+      and run:
+
+        # initial deployment
+        $ om runtime deploy --dry
+
+        # subsequent deployments
+        $ om runtime deploy
+
+        # select specific parts to deploy
+        $ om runtime deploy --select scripts.apps/helloworld
+
+        # dry run, show commands, do not exeucte
+        $ om runtime deploy --dry
+
+        # to see an example of the configuration file
+        $ om runtime deploy example
     """
     command = 'runtime'
 
@@ -405,6 +430,18 @@ class RuntimeCommandBase(CommandBase):
                 specs = [s.replace('\n', '') for s in fin.readlines() if not s.startswith('#')]
         os.environ['OMEGA_RESTAPI_FILTER'] = ';'.join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
         subprocess.run("gunicorn 'omegaml.restapi.app:serve_objects()'", shell=True)
+
+    def deploy(self):
+        om = get_omega(self.args, require_config=False)
+        deployfile = self.args.get('--steps') or 'deployfile.yaml'
+        action = self.args.get('<deploy-action>') or 'update'
+        dry = self.args.get('--dry')
+        specs = self.args.get('--specs')
+        selection = self.args.get('<filter>')
+        if action == 'example':
+            help(deploy)
+        assert Path(deployfile).exists(), f'{deployfile} does not exist'
+        deploy.process(deployfile, action=action, dry=dry, specs=specs, select=selection, cli_logger=self.logger)
 
     def do_export(self):
         om = get_omega(self.args)

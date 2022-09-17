@@ -44,6 +44,7 @@ class CombinedOmegaStoreMixin:
         return [s.prefix for s in self._stores]
 
     def store_by_prefix(self, prefix):
+        prefix = prefix.replace('datasets/', 'data/')
         for store in self._stores:
             if store.prefix == prefix:
                 return store
