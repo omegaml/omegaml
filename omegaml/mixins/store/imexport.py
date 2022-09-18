@@ -261,6 +261,7 @@ class OmegaExporter:
         omega = self.omega if not promote else promote_to[self._temp_bucket]
         store: ObjectImportExportMixin
         imported = []
+        pattern = pattern.replace('datasets/', 'data/') if pattern else pattern
         if not Path(path).exists():
             raise FileNotFoundError(path)
         with OmegaExporter.archive(path, fmt=fmt) as arc:

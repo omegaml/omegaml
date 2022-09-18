@@ -121,7 +121,33 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.cli(f'runtime import --promote --path={expfile} models/*')
         self.assertEqual(len(om.models.revisions('reg')), 2)
 
-
-
-
-
+    def test_cli_deploy_steps(self):
+        om = self.om
+        self.make_model('reg')
+        self.make_dataset_from_dataframe('sample')
+        # write a deployfile
+        deployfile = Path(om.defaults.OMEGA_TMP) / 'deployfile.yaml'
+        with open(deployfile, 'w') as fout:
+            steps = """
+            runtime:
+                - action: {action}
+                  name: |
+                     models/reg 
+                     datasets/sample
+            """
+            fout.writelines(steps)
+        # dry run
+        self.cli(f'runtime deploy export --steps {deployfile} --dry')
+        expected = self.pretend_log('DRY: om runtime  export models/reg datasets/sample')
+        self.assertLogContains('info', expected)
+        self.cli(f'runtime deploy import --steps {deployfile} --dry')
+        expected = self.pretend_log('DRY: om runtime  import models/reg datasets/sample')
+        self.assertLogContains('info', expected)
+        # actually do it
+        self.cli(f'runtime deploy export --steps {deployfile}')
+        # delete everything, import
+        self.clean()
+        self.cli(f'runtime deploy import --steps {deployfile}')
+        print(self.get_log('info'))
+        self.assertIn('reg', om.models.list())
+        self.assertIn('sample', om.datasets.list())
