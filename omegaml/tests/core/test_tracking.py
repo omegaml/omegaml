@@ -29,13 +29,14 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp.log_param('foo', 'bar')
         data = exp.data(run=run)
         self.assertIsNotNone(run)
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 2)
         # reuse latest run
         exp = om.runtime.experiment('test')
         with self.assertRaises(ValueError):
             exp.log_param('foo', 'bar')
         exp.use()
-        exp.log_param('foo', 'bar')
+        exp.log_param('foo', 'bax')
+        exp.stop()
         data = exp.data(run=run)
         self.assertIsNotNone(run)
         self.assertEqual(len(data), 4)
@@ -44,8 +45,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         with exp as xexp:
             xexp.log_param('foo', 'bar')
         data = xexp.data()
-        self.assertEqual(len(data), 4)
-        self.assertEqual(set(data['event']), set(['start', 'stop', 'param', 'system']))
+        self.assertEqual(len(data), 3)
+        self.assertEqual(set(data['event']), {'start', 'stop', 'param'})
         self.assertEqual(data['run'].iloc[-1], run + 1)
 
     def test_simple_tracking(self):
@@ -85,7 +86,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.models.get('experiments/myexp', raw=True, data_store=om.datasets)
         data = tracker.data()
         self.assertIsInstance(data, pd.DataFrame)
-        self.assertEqual(len(data), 17)  # includes runtime task events
+        self.assertEqual(len(data), 15)  # includes runtime task events
         self.assertEqual(len(data[data.event == 'start']), 2)
         self.assertEqual(len(data[data.event == 'stop']), 2)
         self.assertEqual(len(data[data.event == 'artifact']), 4)
@@ -168,7 +169,35 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.runtime.experiment('expfoo')
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 9)
+        self.assertEqual(len(data), 11)
+
+    def test_tracking_runtime_taskid(self):
+        # create a model
+        om = self.om
+        iris = load_iris()
+        X = iris.data
+        Y = iris.target
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr.fit(X, Y)
+        om.models.put(lr, 'mymodel')
+        tracker = om.runtime.experiment('expfoo')
+        tracker.track('mymodel')
+        resp = om.runtime.model('mymodel').score(X, Y)
+        exp = tracker.experiment
+        data = exp.data(taskid=resp.task_id)
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 6)
+        self.assertEqual(data['run'].unique(), [1])
+        resp = om.runtime.model('mymodel').score(X, Y)
+        data = exp.data(taskid=resp.task_id)
+        self.assertEqual(len(data), 6)
+        self.assertEqual(data['run'].unique(), [2])
+        # run a prediction to see if this is tracked
+        om.runtime.model('mymodel').predict(X)
+        tracker = om.runtime.experiment('expfoo')
+        data = exp.data()
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 3 * 6 -1 ) # 3 runs, last one has no metric
 
     def test_empty_experiment_data(self):
         om = self.om
@@ -177,7 +206,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp = om.models.get('experiments/myexp', data_store=om.datasets)
         # we have at least a 'system' event
         self.assertEqual(len(exp.data(event='metric')), 0)
-        self.assertEqual(len(exp.data()), 3)  # system, start, stop events
+        self.assertEqual(len(exp.data()), 2)  # start, stop events
 
     def test_experiment_explicit_logging(self):
         om = self.om
@@ -237,7 +266,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # create experiment, add some data
         with om.runtime.experiment('foo') as exp:
             exp.log_metric(5, 'accuracy')
-        self.assertEqual(len(exp.data()), 4)
+        self.assertEqual(len(exp.data()), 3)
         # check experiment and data where created
         self.assertIn('experiments/foo', om.models.list())
         meta = om.models.metadata('experiments/foo')
@@ -247,7 +276,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIn('experiments/foo', om.models.list())
         # add a metric, then clean
         exp.log_metric(5, 'accuracy')
-        self.assertEqual(len(exp.data()), 5)
+        self.assertEqual(len(exp.data()), 4)
         # explicit drop
         om.models.drop('experiments/foo', data_store=om.datasets)
         self.assertNotIn(dataset, om.datasets.list(hidden=True))
@@ -283,7 +312,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # check that it is removed afterwards
         om.runtime.ping()
         self.assertEqual(len(exp.data(event='metric')), 0)
-        self.assertEqual(len(exp.data()), 3)  # includes system, start, stop
+        self.assertEqual(len(exp.data()), 2)  # includes start, stop
 
 
 if __name__ == '__main__':

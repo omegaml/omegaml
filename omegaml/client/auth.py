@@ -21,10 +21,9 @@ class OmegaRestApiAuth(AuthBase):
         self.qualifier = qualifier or 'default'
 
     def get_credentials(self):
-        if self.username != 'jwt':
-            return 'ApiKey %s:%s' % (self.username, self.apikey)
-        else:
+        if self.kind == 'jwt':
             return 'Bearer %s' % (self.apikey,)
+        return 'ApiKey %s:%s' % (self.username, self.apikey)
 
     def __call__(self, r):
         r.headers['Authorization'] = self.get_credentials()
@@ -35,12 +34,15 @@ class OmegaRestApiAuth(AuthBase):
         return ('OmegaRestApiAuth(username={}, apikey="*****",'
                 'qualifier={})').format(self.username, self.qualifier)
 
+    @property
+    def kind(self):
+        return 'jwt' if self.username.startswith('jwt:') or self.apikey.count('.') == 2 else 'apikey'
+
 
 class OmegaRuntimeAuthentication:
     """
     The runtimes authentication
     """
-
     def __init__(self, userid, apikey, qualifier='default'):
         self.userid = userid
         self.apikey = apikey
@@ -53,8 +55,6 @@ class OmegaRuntimeAuthentication:
     def __repr__(self):
         return ('OmegaRuntimeAuthentication(userid={}, '
                 'apikey="*****", qualifier={})').format(self.userid, self.qualifier)
-
-
 
 
 class AuthenticationEnv(object):
@@ -146,14 +146,13 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
 
         default_auth = (None, None, 'default')
         is_auth_provided = lambda token: (token is not None
-                                         and token != default_auth)
+                                          and token != default_auth)
         defaults = settings()
         token = auth.token if isinstance(auth, OmegaRuntimeAuthentication) else auth
 
         if is_auth_provided(token):
             if isinstance(token, (list, tuple)):
                 # we get a serialized tuple, recreate auth object
-                # -- this is a hack to easily support python 2/3 client/server mix
                 userid, apikey, qualifier = token
                 # by default assume worker is in cluster
                 # TODO refactor this setting to eedefaults
