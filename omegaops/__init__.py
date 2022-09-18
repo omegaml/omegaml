@@ -407,11 +407,15 @@ def get_user_config(user, qualifier, view):
     #      user.services.settings = from deployed instance
     settings = get_settings()
     qualifier = qualifier or 'default'
-    user_settings = user.services.get(offering__name='omegaml').settings
+    # -- see if user has a defined deployment
+    user_service = user.services.filter(offering__name='omegaml').first()
+    user_settings = user_service.settings if user_service else {}
     # -- get group user's settings if so requested or as a fallback
-    if ':' in qualifier or qualifier not in user_settings['qualifiers']:
+    # -- if user does own deployment, will revert to group settings
+    if ':' in qualifier or qualifier not in user_settings.get('qualifiers', {}):
         group_settings, qualifier = get_usergroup_settings(user, qualifier)
         user_settings = group_settings or user_settings
+    assert user_settings, f"no service available for user {user} and qualifier {qualifier}"
     # -- parse user settings to most recent version
     #    we support multiple config versions for legacy reasons
     #    every parser must return to the most recent version spec as per above

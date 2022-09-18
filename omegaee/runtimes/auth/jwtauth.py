@@ -28,8 +28,8 @@ class AuthenticationFailed(Exception):
 
 
 class JWTOmegaRuntimeAuthentation(OmegaRuntimeAuthentication):
-    def __init__(self, token, qualifier='default'):
-        self.userid = 'jwt'
+    def __init__(self, userid, token, qualifier='default'):
+        self.userid = userid
         self.apikey = token
         self.qualifier = qualifier
 
@@ -41,14 +41,17 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
 
     @classmethod
     def get_runtime_auth(cls, defaults=None, om=None):
-        # allow fallback to api key
-        try:
+        # provide jwt auth for the runtime, allow fallback to api key
+        # -- assumes the defaults/om.apikey is a jwt
+        # -- if it is not, fallback to apikey
+        # -- to force jwt, use userid = 'jwt:<userid>'
+        kind = cls.get_restapi_auth(defaults=defaults, om=om).kind
+        if kind == 'jwt':
             auth = cls.get_runtime_auth_jwt(defaults=defaults, om=om)
-        except AuthenticationFailed as e:
-            if cls.allow_apikey:
-                auth = super().get_runtime_auth(defaults=defaults, om=om)
-            else:
-                raise
+        elif getattr(settings, 'OMEGA_ALLOW_APIKEY', cls.allow_apikey):
+            auth = super().get_runtime_auth(defaults=defaults, om=om)
+        else:
+            raise AuthenticationFailed('Invalid token or apikey')
         return auth
 
     @classmethod
@@ -119,7 +122,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         token = defaults.OMEGA_APIKEY
         payload = cls.get_payload_from_token(token, defaults=defaults)
         userid = cls.jwt_get_user_id_from_payload(payload, defaults=defaults)
-        return JWTOmegaRuntimeAuthentation(token,
+        return JWTOmegaRuntimeAuthentation(userid, token,
                                            defaults.OMEGA_QUALIFIER)
 
     @classmethod
