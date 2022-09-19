@@ -1,0 +1,35 @@
+# a standard logging configuration for commercial environments
+# -- logs as json
+# -- always includes hostname
+# -- always includes task filter
+logging:
+  version: 1
+  formatters:
+     json:
+       class: pythonjsonlogger.jsonlogger.JsonFormatter
+       # https://docs.python.org/3/library/logging.html#logrecord-attributes
+       format: "{asctime} {levelname} {hostname} {message} {task_id} {task_name}"
+       style: "{"
+  filters:
+     hostname:
+       (): omegaee.util.hostnameFilter
+     task:
+       (): omegaee.util.taskFilter
+  handlers:
+     console:
+       class: logging.StreamHandler
+       stream: ext://sys.stdout
+       formatter: json
+       filters:
+          - task
+          - hostname
+  loggers:
+     root:
+        handlers:
+          - console
+        level: INFO
+     celery.task:
+        handlers:
+          - console
+
+

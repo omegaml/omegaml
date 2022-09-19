@@ -1,3 +1,4 @@
+import logging
 import os
 import socket
 from datetime import datetime
@@ -42,3 +43,30 @@ def log_task(task, status, exception=None):
             # see omops.create_ops_forwarding_shovel
             task.app.send_task('omegaops.tasks.log_event_task', (task_log,), queue='omegaops')
             pass
+
+
+class HostnameInjectingFilter(logging.Filter):
+    def __init__(self):
+        self.hostname = socket.gethostname()
+
+    def filter(self, record):
+        record.hostname = self.hostname
+        return True
+
+
+class TaskInjectingFilter(logging.Filter):
+    def filter(self, record):
+        from celery._state import get_current_task
+        task = get_current_task()
+        if task and task.request:
+            record.__dict__.update(task_id=task.request.id,
+                                   task_name=task.name,
+                                   user_id=getattr(task, 'current_userid', '???'))
+        else:
+            record.__dict__.setdefault('task_name', '???')
+            record.__dict__.setdefault('task_id', '???')
+        return True
+
+
+hostnameFilter = lambda *args, **kwargs: HostnameInjectingFilter()
+taskFilter = lambda *args, **kwargs: TaskInjectingFilter()

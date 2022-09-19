@@ -57,7 +57,6 @@ class EnvSettings_kubernetes(Config_ApiKeys,
             # default to whatever default is configured (usually sqlite database)
             pass
 
-
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 

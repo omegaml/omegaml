@@ -57,6 +57,8 @@ OMEGA_CELERY_CONFIG = {
     'CELERYD_PREFETCH_MULTIPLIER': 1,
     # avoid tasks run forever
     'CELERYD_TIME_LIMIT': TASK_TIME_LIMIT,
+    # allow custom logging configuration
+    'CELERYD_HIJACK_ROOT_LOGGER': False,
 }
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['paasdeploy', 'omegaops']

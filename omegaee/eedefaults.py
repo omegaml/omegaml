@@ -1,13 +1,10 @@
 """
 Enterprise Edition defaults
 """
-import warnings
-
 import os
-
 import sys
+import warnings
 from os.path import basename
-
 # determine how we're run
 from urllib.parse import urlparse
 
@@ -60,6 +57,9 @@ OMEGA_BROKERAPI_URL = (os.environ.get('OMEGA_BROKERAPI_URL') or
 parsed = urlparse(OMEGA_BROKERAPI_URL)
 port = 5671 if OMEGA_USESSL else 5672
 OMEGA_BROKER_HOST = '{}:{}'.format(parsed.hostname, port)
+#: logging.yaml for log config
+default_logging = os.path.join(os.path.dirname(__file__), 'resources/logging.yaml')
+OMEGA_LOGGING_CONFIG = os.environ.get('OMEGA_LOGGING_CONFIG', default_logging)
 
 # allow overloading settings from EnvSettings
 try:

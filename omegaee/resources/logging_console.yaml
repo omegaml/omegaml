@@ -1,0 +1,21 @@
+# a minimal logging configuration for commercial environments
+logging:
+  version: 1
+  formatters:
+    default:
+      format: '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+     console:
+       class: logging.StreamHandler
+       formatter: default
+  loggers:
+     root:
+        handlers:
+          - console
+        level: INFO
+     celery.task:
+        handlers:
+          - console
+
+

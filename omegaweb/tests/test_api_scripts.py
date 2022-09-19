@@ -1,5 +1,7 @@
 import os
 import sys
+from uuid import uuid4
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from tastypie.test import ResourceTestCaseMixin
@@ -63,3 +65,43 @@ class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCas
         self.assertIn('result', data)
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
         self.assertEqual(data['result'], expected)
+
+    def test_script_run_request_id_header(self):
+        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
+        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
+        om = self.om
+        pkg = 'pkg://{}'.format(pkgpath)
+        # put script
+        meta = om.scripts.put(pkg, 'helloworld')
+        # run the script on the cluster
+        # -- we pass a custom request id
+        # -- request id is expected to show up in log
+        request_id = uuid4().hex
+        with self.assertLogs(logger='root', level='INFO') as log:
+            # note assertLogs does its own log formatting, so no json output here
+            resp = self.api_client.post(self.url('helloworld', action='run', query='text=foo'),
+                                        authentication=self.get_credentials(),
+                                        HTTP_X_REQUEST_ID=request_id)
+            self.assertIn(request_id, ' '.join(log.output))
+        # we run another request again to check the runtime resets the task id
+        request_id = uuid4().hex
+        with self.assertLogs(logger='root', level='INFO') as log:
+            # note assertLogs does its own log formatting, so no json output here
+            resp = self.api_client.post(self.url('helloworld', action='run', query='text=foo'),
+                                        authentication=self.get_credentials(),
+                                        HTTP_X_REQUEST_ID=request_id)
+            self.assertIn(request_id, ' '.join(log.output))
+        # -- we don't send the request id, it is not supposed to show up
+        #    (i.e. the omega runtime is reset to generate its own request id)
+        with self.assertLogs(logger='root', level='INFO') as log:
+            # note assertLogs does its own log formatting, so no json output here
+            resp = self.api_client.post(self.url('helloworld', action='run', query='text=foo'),
+                                        authentication=self.get_credentials())
+            self.assertNotIn(request_id, ' '.join(log.output))
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        self.assertIn('runtimes', data)
+        self.assertIn('result', data)
+        expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
+        self.assertEqual(data['result'], expected)
+

@@ -42,7 +42,7 @@ class EnvSettings_LocalTest(Config_TeamcityTests,
 
 
     # patch celery imports so existing imports elsewhere are kept
-    _celery_imports = ['omegaops.tasks']
+    _celery_imports = ['omegaops']
     StackableSettings.patch_list('OMEGA_CELERY_IMPORTS', _celery_imports)
 
     # test settings
