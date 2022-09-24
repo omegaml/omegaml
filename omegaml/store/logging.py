@@ -339,18 +339,20 @@ class TailableLogDataset:
 
     def _tailer(self, collection, stdout):
         # this runs in a thread to tail the log
-        # adopted from https://api.mongodb.com/python/current/examples/tailable.html
         from time import sleep
         import pymongo
 
         def printer(record, stdout=stdout):
             print('{created} {level} {msg}'.format(**record), file=stdout, flush=True)
 
+        # adopted from https://pymongo.readthedocs.io/en/stable/examples/tailable.html
         first = collection.find().sort('$natural', pymongo.DESCENDING).limit(1).next()
         created = first.get('created')
         printer(first)
 
         while not self.tail_stop:
+            # CursorType.TAILABLE_AWAIT have shown to be prone to errors
+            # -- thus using a normal cursor
             cursor = collection.find({'created': {'$gt': created}})
             for record in cursor:
                 printer(record)
