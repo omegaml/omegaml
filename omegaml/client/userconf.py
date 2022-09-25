@@ -60,11 +60,11 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
     else:
-        raise ValueError('invalid api_url {}'.format(api_url))
+        raise ValueError('invalid api_url >{}<'.format(api_url))
     # -- actual logic to get configs
-    fail_msg = ("Not authenticated using userid {api_auth.username}"
-                " apikey {api_auth.apikey}, error was {resp.status_code} "
-                "using {api_url}\n{resp.content}")
+    fail_msg = ("omegaml hub refused authentication by {api_auth}, "
+                "status code={resp.status_code} "
+                "using {api_url}.")
     resp = server.get(api_url, **server_kwargs)
     assert resp.status_code == 200, fail_msg.format(**locals())
     configs = deserialize(resp)
@@ -114,7 +114,7 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
-        raise ValueError('invalid api_url {}'.format(api_url))
+        raise ValueError('invalid api_url >{}<'.format(api_url))
     config = configs.get(qualifier, configs)
     # update
     _base_config.update_from_dict(config, attrs=defaults)
