@@ -1,9 +1,10 @@
+import getpass
+
 import dill
 import os
 import pandas as pd
 import pkg_resources
 import platform
-import warnings
 from base64 import b64encode, b64decode
 from datetime import datetime
 from itertools import product
@@ -11,7 +12,7 @@ from uuid import uuid4
 
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.documents import Metadata
-from omegaml.util import _raise
+from omegaml.util import _raise, settings
 
 
 class ExperimentBackend(BaseModelBackend):
@@ -129,6 +130,12 @@ class TrackingProvider:
         self._run = None
         self._store = store
         self._model_store = model_store
+        self._extra_log = None
+
+    @property
+    def userid(self):
+        defaults = getattr(self._store, 'defaults', None) or settings()
+        return getattr(defaults, 'OMEGA_USERID', getpass.getuser())
 
     def experiment(self, name=None):
         self._experiment = name or self._experiment
@@ -173,6 +180,9 @@ class TrackingProvider:
         self._run = (self._run or 0) + 1
         return self._run
 
+    def status(self, run=None):
+        return 'STOPPED'
+
     def start(self):
         raise NotImplementedError
 
@@ -189,6 +199,10 @@ class TrackingProvider:
         raise NotImplementedError
 
     def log_param(self, key, value, step=None, **extra):
+        raise NotImplementedError
+
+    def log_extra(self, remove=False, **kwargs):
+        # add extra logging information for every subsequent log_xyz call
         raise NotImplementedError
 
     def tensorflow_callback(self):
@@ -223,6 +237,9 @@ class NoTrackTracker(TrackingProvider):
     def log_event(self, event, key, value, step=None, **extra):
         pass
 
+    def log_extra(self, **kwargs):
+        pass
+
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
         pass
 
@@ -241,19 +258,29 @@ class OmegaSimpleTracker(TrackingProvider):
     _startdt = None
     _stopdt = None
 
-    _ensure_active = lambda self, r: r if r is not None else _raise(ValueError('no active run, call .start() or .use() '))
+    _ensure_active = lambda self, r: r if r is not None else _raise(
+        ValueError('no active run, call .start() or .use() '))
 
-    def active_run(self):
+    def active_run(self, run=None):
         """ set the lastest run as the active run
+
+        Args:
+            run (int|str): optional or unique task id, if None the
+               latest active run will be set, or
 
         Returns:
             current run (int)
         """
-        self._run = self._latest_run or self.start()
+        if run is None:
+            latest = self._latest_run
+            latest_is_active = (latest is not None and self.status(run=latest) == 'STARTED')
+            self._run = latest if latest_is_active else self.start(run=None)
+        else:
+            self._run = run
         self._experiment = self._experiment or uuid4().hex
         return self._run
 
-    def use(self):
+    def use(self, run=None):
         """ reuse the latest run instead of starting a new one
 
         semantic sugar for self.active_run()
@@ -261,7 +288,7 @@ class OmegaSimpleTracker(TrackingProvider):
         Returns:
             self
         """
-        self.active_run()
+        self.active_run(run=run)
         return self
 
     @property
@@ -270,7 +297,6 @@ class OmegaSimpleTracker(TrackingProvider):
         run = data[-1]['run'] if data is not None and len(data) > 0 else None
         return run
 
-    @property
     def status(self, run=None):
         """ status of a run
 
@@ -280,25 +306,21 @@ class OmegaSimpleTracker(TrackingProvider):
         Returns:
             status in 'STARTED', 'STOPPED'
         """
-        data = self.data(event=('start', 'stop'), run=run, raw=True)
-        return 'STARTED' if len(data) > 1 else 'STOPPED'
+        self._run = run or self._run or self._latest_run
+        data = self.data(event=('start', 'stop'), run=self._run, raw=True)
+        no_runs = data is None or len(data) == 0
+        has_stop = sum(1 for row in (data or []) if row.get('event') == 'stop')
+        return 'PENDING' if no_runs else 'STOPPED' if has_stop else 'STARTED'
 
-    def start(self):
+    def start(self, run=None):
         """ start a new run
 
         This starts a new run and logs the start event
         """
-        self._run = (self._latest_run or 0) + 1
+        self._run = run or (self._latest_run or 0) + 1
         self._startdt = datetime.utcnow()
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'event': 'start',
-            'dt': self._startdt,
-            'node': os.environ.get('HOSTNAME', platform.node()),
-        }
-        self._store.put(data, self._data_name, noversion=True)
-        self.log_system()
+        data = self._common_log_data('start', key=None, value=None, step=None, dt=self._startdt)
+        self._write_log(data)
         return self._run
 
     def stop(self):
@@ -307,13 +329,26 @@ class OmegaSimpleTracker(TrackingProvider):
         This stops the current run and records the stop event
         """
         self._stopdt = datetime.utcnow()
+        data = self._common_log_data('stop', key=None, value=None, step=None, dt=self._stopdt)
+        self._write_log(data)
+
+    def _common_log_data(self, event, key, value, step=None, dt=None, **extra):
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
-            'event': 'stop',
-            'dt': self._stopdt,
+            'step': step,
+            'event': event,
+            'key': key or event,
+            'value': value,
+            'dt': dt or datetime.utcnow(),
             'node': os.environ.get('HOSTNAME', platform.node()),
+            'userid': self.userid,
         }
+        data.update(extra)
+        data.update(self._extra_log) if self._extra_log else None
+        return data
+
+    def _write_log(self, data):
         self._store.put(data, self._data_name, noversion=True)
 
     def log_artifact(self, obj, name, step=None, **extra):
@@ -363,37 +398,17 @@ class OmegaSimpleTracker(TrackingProvider):
             except TypeError as e:
                 rawdata = repr(obj)
                 format = 'repr'
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'step': step,
-            'event': 'artifact',
-            'key': name,
-            'value': {
-                'name': name,
-                'data': rawdata,
-                'format': format
-            },
-            'dt': datetime.utcnow(),
-            'node': os.environ.get('HOSTNAME', platform.node()),
+        value = {
+            'name': name,
+            'data': rawdata,
+            'format': format
         }
-        self._store.put(data, self._data_name, noversion=True)
+        data = self._common_log_data('artifact', name, value, step=step, **extra)
+        self._write_log(data)
 
     def log_event(self, event, key, value, step=None, dt=None, **extra):
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'step': step,
-            'event': event,
-            'key': key,
-            'value': value,
-            'dt': dt or datetime.utcnow(),
-            'node': os.environ.get('HOSTNAME', platform.node()),
-        }
-        if step is not None:
-            data['step'] = step
-        data.update(extra)
-        self._store.put(data, self._data_name, noversion=True)
+        data = self._common_log_data(event, key, value, step=step, dt=dt, **extra)
+        self._write_log(data)
 
     def log_param(self, key, value, step=None, dt=None, **extra):
         """ log an experiment parameter
@@ -407,20 +422,8 @@ class OmegaSimpleTracker(TrackingProvider):
         Notes:
             * logged as ``event=param``
         """
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'step': step,
-            'event': 'param',
-            'key': key,
-            'value': value,
-            'dt': dt or datetime.utcnow(),
-            'node': os.environ.get('HOSTNAME', platform.node()),
-        }
-        if step is not None:
-            data['step'] = step
-        data.update(extra)
-        self._store.put(data, self._data_name, noversion=True)
+        data = self._common_log_data('param', key, value, step=step, dt=dt, **extra)
+        self._write_log(data)
 
     def log_metric(self, key, value, step=None, dt=None, **extra):
         """ log a metric value
@@ -434,20 +437,8 @@ class OmegaSimpleTracker(TrackingProvider):
         Notes:
             * logged as ``event=metric``
         """
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'step': step,
-            'event': 'metric',
-            'key': key,
-            'value': value,
-            'dt': dt or datetime.utcnow(),
-            'node': os.environ.get('HOSTNAME', platform.node()),
-        }
-        if step is not None:
-            data['step'] = step
-        data.update(extra)
-        self._store.put(data, self._data_name)
+        data = self._common_log_data('metric', key, value, step=step, dt=dt, **extra)
+        self._write_log(data)
 
     def log_system(self, key=None, value=None, step=None, dt=None, **extra):
         """ log system data
@@ -470,20 +461,21 @@ class OmegaSimpleTracker(TrackingProvider):
             'packages': ['=='.join((d.project_name, d.version))
                          for d in pkg_resources.working_set]
         }
-        data = {
-            'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
-            'step': step,
-            'event': 'system',
-            'key': key,
-            'value': value,
-            'dt': dt or datetime.utcnow(),
-            'node': os.environ.get('HOSTNAME', platform.node()),
-        }
-        data.update(extra)
-        self._store.put(data, self._data_name)
+        data = self._common_log_data('system', key, value, step=step, dt=dt, **extra)
+        self._write_log(data)
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
+    def log_extra(self, remove=False, **kwargs):
+        """ add additional log information for every subsequent logging call """
+        self._extra_log = {} if self._extra_log is None else self._extra_log
+        if not remove:
+            self._extra_log.update(kwargs)
+        else:
+            from collections import deque as consume
+            deletions = (self._extra_log.pop(k, None) for k in kwargs)
+            consume(deletions, maxlen=0)
+
+    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
+             **extra):
         """ build a dataframe of all stored data
 
         Args:
@@ -497,6 +489,7 @@ class OmegaSimpleTracker(TrackingProvider):
         Returns:
             * data (DataFrame) if raw == False
             * data (list of dicts) if raw == True
+            * None if no data exists
         """
         filter = {}
         experiment = experiment or self._experiment
@@ -513,6 +506,9 @@ class OmegaSimpleTracker(TrackingProvider):
             filter['data.step'] = op(step)
         if valid(key):
             filter['data.key'] = op(key)
+        for k, v in extra.items():
+            if valid(k):
+                filter[f'data.{k}'] = op(v)
         data = self._store.get(self._data_name, filter=filter)
         if data is not None and not raw:
             data = pd.DataFrame.from_records(data)
@@ -632,6 +628,7 @@ else:
 
             * https://www.tensorflow.org/guide/keras/custom_callback
         """
+
         #
         def __new__(cls, *args, **kwargs):
             # generate methods as per specs

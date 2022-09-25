@@ -78,7 +78,7 @@ class OmegaCloudRuntime(OmegaRuntime):
 
 
 def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None,
-          view=None):
+          view=None, make_default=True):
     import omegaml as om_mod
     api_url = ensure_api_url(api_url, om_mod._base_config)
     view = (view if view is not None
@@ -94,7 +94,7 @@ def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None,
     om._om = om
     # ensure link to deferred instance
     om_mod.Omega = OmegaCloud
-    om_mod.link(om)
+    om_mod.link(om) if make_default else None
     return om[bucket]
 
 

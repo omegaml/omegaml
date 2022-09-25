@@ -42,7 +42,7 @@ class PandasRawDictBackend(BaseDataBackend):
         mdf = MDataFrame(collection, query=query, parser=parser, raw=raw, **kwargs)
         return mdf if lazy else mdf.value
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, attributes=None, as_raw=None, **kwargs):
         if isinstance(obj, dict):
             # actual data, just insert
             collection = self.data_store.collection(name)
@@ -54,5 +54,5 @@ class PandasRawDictBackend(BaseDataBackend):
                                               kind=self.KIND,
                                               collection=collection.name,
                                               attributes=attributes,
-                                              **kwargs)
+                                              **kwargs.get('meta_kwargs', {}))
         return meta.save()

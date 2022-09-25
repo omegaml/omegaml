@@ -166,6 +166,8 @@ OMEGA_JOBPROXY_MIXINS = [
 ]
 #: user extensions
 OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
+#: logging handler for om.logger
+OMEGA_LOG_HANDLER = 'omegaml.store.logging.OmegaLoggingHandler'
 #: log dataset
 OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format

@@ -60,8 +60,6 @@ class OmegaTrackingProxy:
             fqdn = os.path.join(ExperimentBackend.exp_prefix, self._experiment)
             exp = (om.models.get(fqdn, data_store=om.datasets) or
                    self.create_experiment(self._experiment, provider=self.provider))
-            if not self._implied_run:
-                exp.active_run()
             self._tracker = exp
         return self._tracker
 
@@ -70,8 +68,10 @@ class OmegaTrackingProxy:
         OmegaTrackingProxy.__nested += 1
         self.runtime.require(task=dict(__experiment=self._experiment), always=True)
         self._with_experiment = experiment = self.experiment
-        if self._implied_run:
+        no_active_run = experiment.status() in ('STOPPED', 'PENDING')
+        if self._implied_run or no_active_run:
             experiment.start()
+            self._implied_run = True if no_active_run else self._implied_run
         return experiment
 
     def __exit__(self, exc_type, exc_val, exc_tb):

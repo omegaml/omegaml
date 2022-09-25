@@ -1,4 +1,5 @@
 import atexit
+import getpass
 
 import logging
 import os
@@ -9,9 +10,10 @@ from contextlib import contextmanager
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-from omegaml.util import ensure_index
+from omegaml.util import ensure_index, load_class
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
+python_logger = logging.getLogger(__name__)
 
 
 class OmegaLoggingHandler(logging.Handler):
@@ -39,17 +41,22 @@ class OmegaLoggingHandler(logging.Handler):
         OmegaSimpleLogger for notes about the log dataset format
     """
 
-    def __init__(self, store, dataset, collection, level=None):
+    def __init__(self, store, dataset, collection, level=None, userid=None):
         level = level or logging.INFO
         super().__init__(level=level)
         self.store = store
         self.collection = collection
         self.dataset = dataset
+        self.userid = userid or getattr(store.defaults, 'OMEGA_USERID', getpass.getuser())
 
     def emit(self, record):
+        if record.__dict__.get('_from_simplelogger'):
+            # ignore log calls from the OmegaSimpleLogger
+            return
         log_entry = _make_log_entry(record.levelname, record.levelno, record.name,
                                     record.msg, text=self.format(record),
-                                    hostname=getattr(record, 'hostname', LOGGER_HOSTNAME))
+                                    hostname=getattr(record, 'hostname', LOGGER_HOSTNAME),
+                                    userid=self.userid)
         self.collection.insert_one(log_entry)
 
     def tail(self, wait=False):
@@ -81,11 +88,13 @@ class OmegaLoggingHandler(logging.Handler):
         dataset = dataset or defaults.OMEGA_LOG_DATASET
         fmt = fmt or defaults.OMEGA_LOG_FORMAT
         # setup handler and logger
+        LoggingHandler = load_class(defaults.OMEGA_LOG_HANDLER)
         logger = logger or logging.getLogger(logger_name)
         logger.setLevel(level)
         collection = _setup_logging_dataset(store, dataset, logger=logger, size=size, reset=reset)
         formatter = logging.Formatter(fmt)
-        handler = OmegaLoggingHandler(store, dataset, collection, level=level)
+        handler = LoggingHandler(store, dataset, collection, level=level,
+                                 userid=getattr(defaults, 'OMEGA_USERID', getpass.getuser()))
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         if exit_hook:
@@ -163,6 +172,7 @@ class OmegaSimpleLogger:
         self._collection = collection
         self.size = size
         self._name = name
+        self.userid = getattr(defaults, 'OMEGA_USERID', getpass.getuser())
 
     @property
     def collection(self):
@@ -223,8 +233,17 @@ class OmegaSimpleLogger:
         # insert a log message
         fmt = '{created} {level} {message}'
         log_entry = _make_log_entry(level, levelno, self._name, message, fmt=fmt,
-                                    hostname=LOGGER_HOSTNAME)
+                                    hostname=LOGGER_HOSTNAME, userid=self.userid)
+        # log to dataset
         self.collection.insert_one(log_entry)
+        # log to system
+        # -- we use extra to pass along the same information that we log in omega dataset
+        #    see https://docs.python.org/3/library/logging.html#logging.debug
+        # -- we mark this record to avoid double logging in case of an active OmegaLoggingHandler
+        pylogmeth = getattr(python_logger, level.lower(), 'INFO')
+        pylogmeth(message, extra=dict(userid=self.userid,
+                                      hostname=LOGGER_HOSTNAME,
+                                      _from_simplelogger=True))
 
     def info(self, message, **kwargs):
         self.log('INFO', message, **kwargs)
@@ -380,7 +399,7 @@ class TailableLogDataset:
         return stdout
 
 
-def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', hostname=None):
+def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', hostname=None, userid=None):
     from datetime import datetime
     created = datetime.utcnow()
     text = text if text is not None else fmt.format(**locals())
@@ -393,6 +412,7 @@ def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', h
         'text': text,
         'hostname': hostname,
         'created': created,
+        'userid': userid or getpass.getuser(),
     }
 
 

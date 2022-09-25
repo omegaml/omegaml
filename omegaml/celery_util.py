@@ -1,3 +1,5 @@
+import getpass
+
 import sys
 from celery import Task
 from contextlib import contextmanager
@@ -87,7 +89,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         get_delegate_provider = getattr(self.om, kind)
         self.enable_delegate_tracking(name, kind, get_delegate_provider)
         kwargs = dict(data_store=self.om.datasets,
-                      tracking = self.tracking)
+                      tracking=self.tracking)
         kwargs[pass_as] = get_delegate_provider
         result = get_delegate_provider.get_backend(name, **kwargs)
         return result
@@ -100,6 +102,10 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         tracking['experiments'] = set(tracking.get('experiments', []) + [exp._experiment])
         meta.save()
         return meta
+
+    @property
+    def current_userid(self):
+        return getattr(self.om.runtime.auth, 'userid', getpass.getuser())
 
     @property
     def delegate_args(self):
@@ -124,8 +130,9 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             experiment = kwargs.get('__experiment')
             if experiment is not None:
                 # we reuse implied_run=False to use the currently active run,
-                # i.e. with block will NOT call exp.start()
+                # i.e. with block will NOT call exp.start() if an experiment is already running
                 tracker = self.om.runtime.experiment(experiment, implied_run=False)
+                tracker.log_extra(taskid=self.request.id, userid=self.current_userid)
                 self.request._om_tracking = tracker
             else:
                 self.request._om_tracking = self.om.runtime.experiment('.notrack', provider='notrack')
@@ -152,6 +159,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     def __call__(self, *args, **kwargs):
         import logging
+
         @contextmanager
         def task_logging():
             logname, level = self.logging
@@ -178,8 +186,15 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     sys.stdout, sys.stderr = save_stdout, save_stderr
 
         with task_logging():
+            # start experiment block, if required
+            # -- this ensures we call exp.start() / exp.stop() if the task was started in context
+            #    of this celery task
             with self.tracking as exp:
-                exp.log_event(f'task_call', self.name, {'args': args, 'kwargs': kwargs})
+                # log task call event
+                # -- only log delegate args, kwargs
+                # -- avoid logging internal arguments
+                exp.log_event(f'task_call', self.name, {'args': self.delegate_args,
+                                                                  'kwargs': self.delegate_kwargs})
                 if self.request.id is not None:
                     # PERFTUNED
                     # if we have a request, avoid super().__call__()
@@ -204,6 +219,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 'exception': repr(exc),
                 'task_id': task_id,
             })
+            exp.log_extra(taskid=None, remove=True)
         self.reset()
         return super().on_failure(exc, task_id, args, kwargs, einfo)
 
@@ -213,15 +229,18 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 'exception': repr(exc),
                 'task_id': task_id,
             })
+            exp.log_extra(taskid=None, remove=True)
         self.reset()
         return super().on_retry(exc, task_id, args, kwargs)
 
     def on_success(self, retval, task_id, args, kwargs):
-        with self.tracking as exp:
-            exp.log_event(f'task_success', self.name, {
-                'result': sanitized(retval),
-                'task_id': task_id,
-            })
+        # on task success the experiment is stopped already (if we started it)
+        exp = self.tracking
+        exp.log_event(f'task_success', self.name, {
+            'result': sanitized(retval),
+            'task_id': task_id,
+        })
+        exp.log_extra(taskid=None, remove=True)
         self.reset()
         return super().on_success(retval, task_id, args, kwargs)
 
