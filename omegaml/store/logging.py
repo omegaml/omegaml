@@ -28,7 +28,7 @@ class OmegaLoggingHandler(logging.Handler):
         handler = handler.tail()
 
         # if you want to attach to a specific logger
-        logger = logging.getLogger(__file__)
+        logger = logging.getLogger(__name__)
         handler = OmegaLoggingHandler.setup(reset=True, logger=logger)
 
         # if omega is initialized other than om.setup()
@@ -241,6 +241,21 @@ class OmegaSimpleLogger:
     def critical(self, message, **kwargs):
         self.log('CRITICAL', message, **kwargs)
 
+    def show(self, tail=False, latest=20, columns=None, reverse=False, **kwargs):
+        columns = columns or ['level', 'msg', 'hostname', 'userid']
+        if tail:
+            self.dataset.tail(wait=True, **kwargs)
+            data = None
+        else:
+            data = self.dataset.get(**kwargs)
+            if latest:
+                data = data.iloc[-1 * abs(min(len(data), latest)):]
+            if isinstance(columns, list):
+                data = data[columns or data.columns]
+            if reverse:
+                data = data.sort_index(ascending=False)
+        return data
+
     @property
     def dataset(self):
         if self._dataset is None:
@@ -294,7 +309,8 @@ class TailableLogDataset:
         self.tail_stop = True
 
     def get(self, **kwargs):
-        return self.store.get(self.dataset, **kwargs)
+        data = self.store.get(self.dataset, **kwargs)
+        return data.set_index('created') if len(data) else data
 
     def _start(self, wait=False):
         from threading import Thread
@@ -314,9 +330,8 @@ class TailableLogDataset:
                 signal.signal(getattr(signal, sig), self._stop_handler)
         # block if requested
         if wait:
-            while wait:
+            while not self.tail_stop:
                 sleep(1)
-            self.tail_stop = True
         return self
 
     def _stop_handler(self, *args):
@@ -329,7 +344,7 @@ class TailableLogDataset:
         import pymongo
 
         def printer(record, stdout=stdout):
-            print(str(record.get('text')), file=stdout, flush=True)
+            print('{created} {level} {msg}'.format(**record), file=stdout, flush=True)
 
         first = collection.find().sort('$natural', pymongo.DESCENDING).limit(1).next()
         created = first.get('created')
