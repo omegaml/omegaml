@@ -119,7 +119,6 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         om.models.link_dataset('mymodel', Xname='testX', data_store=om.datasets,
                                actions=['predict', 'fit'])
         specs = om.runtime.swagger(format='dict')
-        print(specs)
         self.assertIn('paths', specs)
         self.assertIn('/api/v1/model/mymodel/predict', specs['paths'])
         self.assertIn('/api/v1/model/mymodel/fit', specs['paths'])
@@ -134,11 +133,52 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         om.models.link_dataset('mymodel', Xname='testX', data_store=om.datasets,
                                actions=['predict', 'fit'])
         specs = om.runtime.swagger(format='dict', as_service=True)
-        print(specs)
         self.assertIn('paths', specs)
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/testX', specs['paths'])
+
+    def test_swagger_link_specs(self):
+        # sample spec
+        specs = {
+            'info': {
+                'title': 'omega-ml service', 'version': '1.0.0'},
+            'swagger': '2.0',
+            'paths': {
+                '/api/service/mymodel': {
+                    'post': {'summary': 'summary', 'description': 'no description', 'operationId': 'mymodel#predict#post',
+                             'consumes': ['application/json'], 'produces': ['application/json'],
+                             'parameters': [
+                                 {'in': 'body', 'name': 'body', 'description': 'no description',
+                                  'schema': {'$ref': '#/definitions/mymodel_X'}}],
+                             'responses': {
+                                 '200': {'description': 'no description',
+                                         'schema': {'$ref': '#/definitions/GeneratedSchema'}}}}},
+            },
+            'definitions': {
+                'mymodel_X': {
+                    'type': 'object', 'properties': {'x': {'type': 'integer'}}},
+                'GeneratedSchema': {'type': 'object', 'properties': {'data': {}}},
+                'testX': {
+                    'type': 'object', 'properties': {'x': {'type': 'integer'}}},
+                'DatasetInput_testX': {
+                    'type': 'object', 'properties': {
+                        'data': {'type': 'array', 'items': {'$ref': '#/definitions/testX'}}, 'dtypes': {},
+                        'append': {'type': 'boolean'}}}}}
+        om = self.om
+        # create a model
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+        # link spec to a model
+        metas = om.models.link_swagger(specs)
+        self.assertEqual(len(metas), 1)
+        self.assertEqual(metas[0].name, 'mymodel')
+        # reverse check, we expect to have a valid spec
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        print(specs)
 
     def test_meta_to_schema(self):
         om = self.om
