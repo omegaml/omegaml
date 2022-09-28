@@ -59,7 +59,7 @@ class OmegaModelProxy(object):
         require_kwargs = meta.attributes.get('require', {})
         # enable default model tracking, unless explicitly tracked
         should_track = 'default' in meta.attributes.get('tracking', {})
-        already_tracked = '__experiment' in self.runtime._common_kwargs['task']
+        already_tracked = self.runtime._common_kwargs['task'].get('__experiment')
         if not already_tracked and should_track:
             require_kwargs.update({
                 'task': dict(__experiment=meta.attributes['tracking'].get('default'))

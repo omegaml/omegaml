@@ -59,6 +59,9 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         lr.fit(X, Y)
         # run a local experiment and track its result
         with om.runtime.experiment('myexp') as exp:
+            # check exp is associated with correct stores
+            self.assertEqual(exp._model_store, om.models)
+            self.assertEqual(exp._store, om.datasets)
             score = lr.score(X, Y)
             exp.log_metric('accuracy', score)
         # check the experiemnt is logged
