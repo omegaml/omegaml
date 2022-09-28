@@ -6,6 +6,8 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from marshmallow import fields, Schema
 
+from omegaml.util import markup
+
 
 class SignatureMixin:
     """ Associate a models corresponding dataset
@@ -93,6 +95,86 @@ class SignatureMixin:
             'orient': orient,
         }
         return meta.save()
+
+    def link_swagger(self, specs, operations=None):
+        """ link swagger specs to operations
+
+        Args:
+            specs (dict|filename): the swagger specifications
+            operations (list|dict): the operations to support (names of services, models),
+                if dict, a mapping of { '/api/path': 'name#action#method' }, where name is
+                the name of a service or model, action is the method to call (e.g. predict),
+                and method is the http method (e.g. post)
+
+        Returns:
+            list of mapped Metadata
+        """
+        specs = specs if isinstance(specs, dict) else markup(specs)
+        assert specs.get('swagger') == '2.0', f"Only swagger version 2.0 is currently supported."
+        paths = specs['paths']
+        definitions = specs['definitions']
+        actions = []
+        operations = operations or self.list()
+        metas = []
+
+        def pathspecs():
+            for path, pathspec in paths.items():
+                for method, opspec in pathspec.items():
+                    yield path, method, opspec
+
+        for path, method, opspec in pathspecs():
+            # operation mapping
+            # -- format: name#action#method[,method]
+            # -- name is the model or service name
+            # -- action is the method to call (e.g. predict)
+            # -- method(s) is the name of the http method
+            opId = opspec.get('operationId')
+            if opId is None:
+                # extract from given operations spec
+                if isinstance(operations, dict):
+                    opId = operations.get(path)
+                else:
+                    # fallback to default operation
+                    pathName = path.split('/')[-1]
+                    opId = f'{pathName}#predict#post'
+            name, action, methods = opId.split('#')
+            if not self.exists(name):
+                print(f"{name} not found in {self.prefix}, ignored.")
+                continue
+            methods = methods.split(',')
+            actions.append((action, methods))
+            # parameters
+            params = opspec['parameters']
+            for prmspec in params:
+                if prmspec.get('in') != 'body':
+                    continue
+                # resolve schema spec
+                # -- either direct spec of schema
+                # -- or $ref: #/definitions/<name>, where name is the key into definitions
+                schemaSpec = prmspec.get('schema')
+                schemaRef = schemaSpec.get('$ref')
+                Xschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
+                break
+            else:
+                print("No body found, cannot generate X datatype")
+                Xschema = None
+            resps = opspec['responses']
+            for code, respspec in resps.items():
+                if code != '200':
+                    continue
+                schemaSpec = respspec.get('schema')
+                schemaRef = schemaSpec.get('$ref')
+                Yschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
+                break
+            else:
+                print("No response 200 found, cannot generate Y datatype")
+                Yschema = None
+            # finally link
+            Xdtype = self._datatype_from_schema(Xschema, name=f'{name}Input_{action}')
+            Ydtype = self._datatype_from_schema(Yschema, name=f'{name}Output_{action}')
+            meta = self.link_datatype(name, X=Xdtype, Y=Ydtype, actions=actions)
+            metas.append(meta)
+        return metas
 
     def validate(self, name, X=None, Y=None, result=None, **kwargs):
         meta = self.metadata(name, **kwargs)
