@@ -5,7 +5,7 @@ import re
 import tarfile
 from bson.json_util import dumps as bson_dumps, loads as bson_loads
 from datetime import datetime
-from pathlib import Path, PosixPath
+from pathlib import Path
 from shutil import rmtree
 
 from omegaml.client.util import AttrDict
@@ -13,7 +13,7 @@ from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
-from omegaml.util import IterableJsonDump, load_class
+from omegaml.util import IterableJsonDump, load_class, SystemPosixPath
 
 
 class ObjectImportExportMixin:
@@ -180,7 +180,7 @@ class OmegaExportArchive:
         manifest_key = self._manifest_key(name, store)
         in_manifest = manifest_key in self.manifest['members']
         if not in_manifest and not expect_exist:
-            local_key = PosixPath(store.prefix) / store.object_store_key(name, 'omx')
+            local_key = SystemPosixPath(store.prefix) / store.object_store_key(name, 'omx')
         elif in_manifest:
             local_key = self.manifest['members'][manifest_key]
         else:
