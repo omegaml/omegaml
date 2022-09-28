@@ -1,5 +1,3 @@
-import warnings
-
 import datetime
 import os
 
@@ -8,7 +6,8 @@ class Config_OmegaJWTAuth:
     # this configures omegaee JWTAuth implementation
     # adopted from https://github.com/webstack/django-jwt-auth
     JWT_AUTH_ENV = 'omegaee.runtimes.auth.JWTCloudRuntimeAuthenticationEnv'
-    JWT_PAYLOAD_USERNAME_KEY = 'username'
+    # https://www.iana.org/assignments/jwt/jwt.xhtml
+    JWT_PAYLOAD_USERNAME_KEY = 'preferred_username'
     JWT_EXPIRATION_DELTA = datetime.timedelta(300)
     JWT_ALGORITHM = "HS256"
     JWT_SECRET_KEY = ""
@@ -19,5 +18,4 @@ class Config_OmegaJWTAuth:
     JWT_VERIFY_EXPIRATION = True
     JWT_WARN_INSECURE = True
 
-    if JWT_WARN_INSECURE and not (JWT_VERIFY and JWT_SECRET_KEY):
-        warnings.warn('Config_DjangoJWTAuth is using insecure settings. Check JWT_VERIFY, JWT_SECRET_KEY')
+

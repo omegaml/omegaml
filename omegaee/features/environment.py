@@ -4,6 +4,7 @@ import os
 from unittest import TestCase
 
 import nbformat
+import psutil
 from behave import fixture, use_fixture
 from splinter.browser import Browser
 
@@ -18,19 +19,22 @@ def splinter_browser(context):
 
     headless = istrue(os.environ.get('CHROME_HEADLESS'))
     screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp/screenshots')
+    debugging_port = os.environ.get('CHROME_DEBUGPORT', '9222')
+    assert not int(debugging_port) in [i.laddr.port for i in psutil.net_connections()], f"{debugging_port} is already in use. Set --debugport or CHROME_DEBUGPORT"
     os.makedirs(screenshot_path, exist_ok=True)
     options = ChromeOptions()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-setuid-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=800,600')
-    options.add_argument('--remote-debugging-port=9222')
+    options.add_argument(f'--remote-debugging-port={debugging_port}')
     options.add_argument('--remote-debugging-address=0.0.0.0')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-extensions')
     options.add_argument('--verbose')
     if headless:
-        print("Running headless, debug at http://localhost:9222")
+        print(f"Running headless, debug at chrome://inspect/#devices")
+        print(f"be sure to configure Discovering network targets, add http://localhost:{debugging_port}")
         options.add_argument('--headless')
     context.browser = Browser('chrome', options=options)
     context.browser.driver.set_window_size(1024, 768)

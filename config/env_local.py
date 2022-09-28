@@ -3,6 +3,8 @@ import os
 from urllib.parse import urlparse
 
 from config.conf_databaseurl import Config_DatabaseUrl
+from config.conf_envoverride import Config_EnvOverrides
+
 from config.env_global import EnvSettingsGlobal
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
@@ -22,7 +24,8 @@ truefalse = lambda v: (v if isinstance(v, bool) else
 
 
 
-class EnvSettings_Local(Config_DjangoWhitenoise,
+class EnvSettings_Local(Config_EnvOverrides,
+                        Config_DjangoWhitenoise,
                         Config_DjangoSekizai,
                         Config_Bootstrap3,
                         Config_DjangoPayments,
@@ -208,11 +211,25 @@ class EnvSettings_Local(Config_DjangoWhitenoise,
     _fernet_keys = os.environ.get('FERNET_KEYS', '').split(':') + [EnvSettingsGlobal.SECRET_KEY]
     FERNET_KEYS = [k for k in _fernet_keys if k]
 
-    # secretsvault audit
-    SECRETS_AUDIT = True
+    # secretsvault
+    SECRETS_AUTOSEAL = {
+        'tastypie.ApiKey': ['key'],
+        'landingpage.ServiceDeployment': ['settings', 'text'],
+        'paasdeploy.ServiceDeployCommand': ['params'],
+        'paasdeploy.ServiceDeployTask': ['params'],
+        'paasdeploy.ServiceDeployConfiguration': ['deploy_keys', 'env_vars'],
+        'paasdeploy.ServiceDeployEnvironment': ['config'],
+        'database.Constance': ['value'],
+        'socialaccount.SocialToken': ['token', 'token_secret'],
+        'socialaccount.SocialApp': ['secret', 'key'],
+    }
+    SECRETS_VAULTUSER = 'vaultuser'
+    SECRETS_AUDIT = 'wd'
 
     # Django 3.2 upgrade
     # https://dev.to/weplayinternet/upgrading-to-django-3-2-and-fixing-defaultautofield-warnings-518n
     DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
     # https://docs.djangoproject.com/en/3.2/ref/clickjacking/#setting-x-frame-options-for-all-responses
     X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+

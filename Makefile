@@ -20,23 +20,28 @@ bumpbuild:
 
 dist-prod: clean
 	: "build a release"
-	-bash -c "docker ps -q | xargs docker kill"
+	-bash -c "docker-compose stop"
 	scripts/distrelease.sh --version=`cat omegaee/RELEASE`
 
 dist: clean
 	: "build a release"
-	-bash -c "docker ps -q | xargs docker kill"
+	-bash -c "docker-compose stop"
 	rm -rf ./dist/*
 	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE`
 
 candidate-dist: clean
-	-bash -c "docker ps -q | xargs docker kill"
+	-bash -c "docker-compose stop"
 	rm -rf ./dist/*
 	scripts/distrelease.sh --nominify --version=`cat omegaee/RELEASE` --nolivetest
 
 test: bumpbuild
 	-docker-compose up -d || echo "assuming docker-compose environment already running"
 	scripts/rundev.sh --docker --cmd "python manage.py test"
+
+test-local:
+	docker-compose up -d mongodb rabbitmq
+	scripts/initlocal.sh
+	python manage.py test
 
 shell:
 	scripts/rundev.sh --docker --shell
@@ -55,7 +60,7 @@ candidate-docker: bumpbuild candidate-dist
 	: "docker push image to dockerhub"
 	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
 
-release-docker: dist-prod
+release-docker: bumpbuild dist-prod
 	: "docker push image to dockerhub"
 	docker push omegaml/omegaml-ee:`cat omegaee/RELEASE`
 

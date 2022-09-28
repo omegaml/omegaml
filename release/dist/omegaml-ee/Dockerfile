@@ -8,7 +8,7 @@ ENV ACCEPT_EULA=Y
 USER root
 RUN apt-get update -y && \
     apt-get install -y --fix-missing python3-dev default-libmysqlclient-dev build-essential  && \
-    apt-get install -y procps htop curl git && \
+    apt-get install -y procps htop curl git nano zip && \
     apt-get clean
 # enable mssql server support
 # adopted from landingpage/getsqlserver.sh

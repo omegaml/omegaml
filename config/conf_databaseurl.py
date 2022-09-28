@@ -28,9 +28,9 @@ class Config_DatabaseUrl:
     See Also:
         - https://github.com/jazzband/dj-database-url#url-schema
     """
-    _db_path = Path(__file__).parent
+    _db_path = Path(__file__).parent.parent / 'db.sqlite3'
     DATABASES = {
-        'default': dj_database_url.config(default=f'sqlite:///{_db_path}/db.sqlite3'),
+        'default': dj_database_url.config(default=f'sqlite:///{_db_path}'),
     }
     # https://github.com/microsoft/mssql-django
     if 'mssql' in os.environ.get('DATABASE_URL', ''):

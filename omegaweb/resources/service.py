@@ -25,19 +25,19 @@ class ServiceResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastyp
 
     def get_detail(self, request, *args, **kwargs):
         # /service/
-        return self.create_response_from_resource(request, self._meta.resource_handler, 'run', *args, **kwargs)
+        return self.create_response_from_resource(request, self._meta.resource_handler, 'get', *args, **kwargs)
 
     def put_detail(self, request, *args, **kwargs):
         # /service/
-        return self.create_response_from_resource(request, self._meta.resource_handler, 'run', *args, **kwargs)
+        return self.create_response_from_resource(request, self._meta.resource_handler, 'put', *args, **kwargs)
 
     def delete_detail(self, request, *args, **kwargs):
         # /service/
-        return self.create_response_from_resource(request, self._meta.resource_handler, 'run', *args, **kwargs)
+        return self.create_response_from_resource(request, self._meta.resource_handler, 'delete', *args, **kwargs)
 
     def post_detail(self, request, *args, **kwargs):
         # /service/
-        return self.create_response_from_resource(request, self._meta.resource_handler, 'run', *args, **kwargs)
+        return self.create_response_from_resource(request, self._meta.resource_handler, 'post', *args, **kwargs)
 
     @cqrsapi(allowed_methods=['get'])
     def doc(self, request, *args, **kwargs):

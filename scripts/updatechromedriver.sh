@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-run=`which sudo`
+run=$(which sudo)
 if [[ -z `which google-chrome` ]]; then
+    # set non interactive install mode
+    $run apt update
+    $run apt install -y unzip
+    echo 'tzdata tzdata/Zones/Europe select Paris' | sudo debconf-set-selections
+    echo 'tzdata tzdata/Areas select Europe' | sudo debconf-set-selections
     curl --silent --show-error --location --fail --retry 3 --output /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    $run dpkg -i /tmp/google-chrome-stable_current_amd64.deb || $run apt-get -fy install
+    $run DEBIAN_FRONTEND=noniteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg -i /tmp/google-chrome-stable_current_amd64.deb
+    $run DEBIAN_FRONTEND=noniteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -fy install
     $run sed -i 's|HERE/chrome"|HERE/chrome" --disable-setuid-sandbox --no-sandbox|g' "/opt/google/chrome/google-chrome"
 fi
 google-chrome --version

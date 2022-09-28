@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpBadRequest
 
@@ -65,7 +66,8 @@ class OmegaResourceMixin(object):
             result = meth(model_id, query, payload)
             resp = self.create_maybe_async_response(request, result, async_body=async_body)
         except Exception as e:
-            raise ImmediateHttpResponse(HttpBadRequest(str(e)))
+            msg = dict(message=repr(e))
+            raise ImmediateHttpResponse(JsonResponse(msg, status=HttpBadRequest.status_code))
         return resp
 
     def _get_resource_method(self, resource_name, method_name):

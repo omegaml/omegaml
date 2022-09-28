@@ -21,20 +21,3 @@ urlpatterns += [
     url(r'^admin/', admin.site.urls),
 ]
 
-"""
-see https://github.com/jazzband/django-debug-toolbar/issues/1035
-try:
-    import debug_toolbar
-except:
-    pass
-else:
-    urlpatterns += [r'^__debug__/', debug_toolbar.urls]
-"""
-
-# enable custom urls
-try:
-    from app import custom_urls
-except:
-    pass
-else:
-    custom_urls.setup(urlpatterns)

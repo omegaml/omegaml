@@ -11,6 +11,7 @@
 ##      --apiuser=USERID  the user for api tests
 ##      --apikey=KEY      the key for api tests
 ##      --headless        if specified uses a headless browser
+##      --debugport=VALUE set the debug port, defaults to 9222
 ##      --tags=VALUE      if specified execute this tag only
 ##      --runlocal        if specified run omegaml-ee in docker-compose
 ##      --debug           if specified drops into pdb on error
@@ -30,6 +31,7 @@ fi
 
 pushd $script_dir/..
 export CHROME_HEADLESS=$headless
+export CHROME_DEBUGPORT=${debugport:-9222}
 export OMEGA_URL=${url:-"http://localhost:5000"}
 export OMEGA_ADMIN_USER=$user
 export OMEGA_ADMIN_PASSWORD=$pass

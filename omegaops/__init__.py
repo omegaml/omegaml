@@ -1,3 +1,5 @@
+import re
+import string
 from collections import defaultdict
 
 import os
@@ -626,7 +628,8 @@ def get_usergroup_settings(user, qualifier):
     # somegroup:qualif => somegroup, qualif
     # somegroup:qualif:invalid => somegroup: qualif
     group_name, qualifier, *_ = f'{qualifier}:default'.split(':', 2)
-    group_user = User.objects.filter(username=f'G{group_name}',
+    group_user = re.sub(f'[{string.punctuation}]', '', f'G{group_name}')
+    group_user = User.objects.filter(username=group_user,
                                      groups__name=group_name).first()
     user_in_group = user.groups.filter(name=group_name).exists()
     if group_user and user_in_group:
