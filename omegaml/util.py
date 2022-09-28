@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import pathlib
+
 from pathlib import Path
 
 from copy import deepcopy
@@ -1064,3 +1066,23 @@ class IterableJsonDump(list):
 
 
 isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])
+
+
+class SystemPosixPath(type(Path()), Path):
+    """ a pathlib.Path shim that renders with Posix path.sep on all systems
+
+    Usage:
+        path = SystemPosixPath('./foo/bar')
+        => will give a WindowsPath | PosixPath
+        => str(path) => will always be './foo/bar')
+
+    Rationale:
+        pathlib.Path('./foo/bar') will render as '\\foo\bar' on Windows
+        while pathlib.PosixPath cannot be imported in Windows
+    """
+
+    def __str__(self):
+        # on windows, return a posix path
+        # on posix systems, this is a noop
+        path = super().__str__()
+        return path if os.name != 'nt' else path.replace('\\', '/')
