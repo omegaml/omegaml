@@ -1,10 +1,7 @@
+import json
+import os
 import re
 import string
-from collections import defaultdict
-
-import os
-
-import json
 
 from omegaml.mongoshim import MongoClient
 from omegaml.util import urlparse, dict_merge
