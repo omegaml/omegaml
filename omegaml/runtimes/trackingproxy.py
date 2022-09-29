@@ -1,6 +1,7 @@
 import os
 
 from omegaml import load_class
+from omegaml.util import SystemPosixPath
 
 
 class OmegaTrackingProxy:
@@ -43,11 +44,11 @@ class OmegaTrackingProxy:
             return getattr(self.experiment, item)
         return super().__getattribute__(item)
 
-    def create_experiment(self, name, provider=None, *args, **kwargs):
+    def create_experiment(self, name, *args, provider=None, **kwargs):
         om = self.runtime.omega
         provider = provider or 'default'
         trackercls = load_class(om.defaults.OMEGA_TRACKING_PROVIDERS.get(provider))
-        tracker = trackercls(name, *args, store=om.datasets, **kwargs)
+        tracker = trackercls(name, *args, store=om.datasets, model_store=om.models, **kwargs)
         meta = om.models.put(tracker, name, noversion=True)
         return tracker.experiment(name)
 
@@ -57,8 +58,8 @@ class OmegaTrackingProxy:
 
         if self._tracker is None:
             om = self.runtime.omega
-            fqdn = os.path.join(ExperimentBackend.exp_prefix, self._experiment)
-            exp = (om.models.get(fqdn, data_store=om.datasets) or
+            fqdn = SystemPosixPath(ExperimentBackend.exp_prefix) / self._experiment
+            exp = (om.models.get(str(fqdn), data_store=om.datasets) or
                    self.create_experiment(self._experiment, provider=self.provider))
             self._tracker = exp
         return self._tracker
