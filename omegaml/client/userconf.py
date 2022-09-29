@@ -119,6 +119,7 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None,
     # update
     _base_config.update_from_dict(config, attrs=defaults)
     _base_config.update_from_config(defaults)
+    _base_config.update_from_env(defaults)
     _base_config.load_framework_support(defaults)
     _base_config.load_user_extensions(defaults)
     # update config to reflect request

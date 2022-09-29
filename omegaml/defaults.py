@@ -50,6 +50,8 @@ OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', 
 OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 #: the celery backend name or URL
 OMEGA_RESULT_BACKEND = 'rpc://'
+#: the omega worker label
+OMEGA_WORKER_LABEL = os.environ.get('OMEGA_WORKER_LABEL') or os.environ.get('CELERY_Q', 'default')
 #: the celery configurations
 OMEGA_CELERY_CONFIG = {
     # FIXME should work with json (the default celery serializer)
@@ -57,7 +59,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
     'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
-    'CELERY_DEFAULT_QUEUE': os.environ.get('CELERY_Q', 'default'),
+    'CELERY_DEFAULT_QUEUE': OMEGA_WORKER_LABEL,
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
     # TODO replace result backend with redis or mongodb
@@ -203,9 +205,9 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     # override from configuration file
     userconfig = markup(config_file, default={}, msg='could not read config file {}')
     if isinstance(userconfig, dict):
-        for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
+        for k in [k for k in userconfig.keys() if k.startswith('OMEGA')]:
             value = userconfig.get(k, None) or vars[k]
-            if isinstance(vars[k], dict):
+            if k in vars and isinstance(vars[k], dict):
                 dict_merge(vars[k], value)
             else:
                 vars[k] = value
@@ -215,9 +217,9 @@ def update_from_config(vars=globals(), config_file=OMEGA_CONFIG_FILE):
 def update_from_env(vars=globals()):
     # simple override from env vars
     # -- top-level OMEGA_*
-    for k in [k for k in vars.keys() if k.startswith('OMEGA')]:
-        nv = os.environ.get(k, None) or vars[k]
-        vars[k] = (truefalse(nv) if isinstance(vars[k], bool) else nv)
+    for k in [k for k in os.environ.keys() if k.startswith('OMEGA')]:
+        nv = os.environ.get(k, None) or vars.get(k)
+        vars[k] = (truefalse(nv) if isinstance(vars.get(k), bool) else nv)
     # -- OMEGA_CELERY_CONFIG updates
     for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
@@ -311,7 +313,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
         site_config_dir = lambda *args: '/etc/xdg/omegaml'
 
     if os.path.exists(configfile):
-        return configfile
+        return os.path.abspath(configfile)
     appdirs_args = ('omegaml', 'omegaml')
     cur_dir_tree = lambda *args: Path(os.getcwd()).parents
     all_dirs = (cur_dir_tree(), [user_config_dir(*appdirs_args)], [site_config_dir(*appdirs_args)])
@@ -399,24 +401,27 @@ def load_framework_support(vars=globals()):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
 
 
+def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
+    config_file = locate_config_file(config_file)
+    vars['OMEGA_CONFIG_FILE'] = config_file
+    update_from_config(vars, config_file=config_file)
+    if is_cli_run:
+        import warnings
+        warnings.filterwarnings("ignore", category=FutureWarning)
+
+
 # -- test support
-# this is to avoid using production settings during test
 if not is_cli_run and is_test_run:
+    # this is to avoid using production settings during test
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = 'local'
     logging.getLogger().setLevel(logging.ERROR)
 else:
     # overrides in actual operations
-    OMEGA_CONFIG_FILE = locate_config_file()
-    update_from_config(globals(), config_file=OMEGA_CONFIG_FILE)
-    update_from_env(globals())
-    if is_cli_run:
-        # be les
-        import warnings
-
-        warnings.filterwarnings("ignore", category=FutureWarning)
+    load_config_file()
 
 # load extensions, always last step to ensure we have user configs loaded
+update_from_env()
 load_framework_support()
 load_user_extensions()

@@ -145,6 +145,8 @@ def settings(reload=False):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
     __settings = DefaultsContext(defaults)
+    omdefaults.load_config_file(vars=__settings)
+    omdefaults.update_from_env(vars=__settings)
     omdefaults.load_framework_support(vars=__settings)
     omdefaults.load_user_extensions(vars=__settings)
     return __settings
@@ -841,13 +843,10 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
     import json
     import yaml
     import logging
+    import pathlib
 
     parsers = parsers or (json.load, yaml.safe_load, json.loads)
-    # path-like regex
-    # - \/?                  leading /, optional
-    # - (?P<path>\w+/?)*     any path-part followed by /, repeated 0 - n times
-    # - (?P<ext>(\w*\.?\w*)+ any file.ext, at least once
-    pathlike = lambda s: Path(s).exists()
+    pathlike = lambda s: pathlib.Path(s).exists()
 
     @contextmanager
     def fopen(filein, *args, **kwargs):

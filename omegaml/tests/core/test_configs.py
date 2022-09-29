@@ -16,7 +16,7 @@ class ConfigurationTests(TestCase):
         self.defaults = {
             'OMEGA_MONGO_URL': 'foo'
         }
-        
+
     def tearDown(self):
         # reset authentaction env to avoid interference with other tests
         AuthenticationEnv.auth_env = None
@@ -91,6 +91,8 @@ class ConfigurationTests(TestCase):
             _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
             defaults.update_from_dict = _real_base_config.update_from_dict
             defaults.update_from_config = _real_base_config.update_from_config
+            defaults.load_config_file = _real_base_config.load_config_file
+            defaults.update_from_env = _real_base_config.update_from_env
             defaults.load_user_extensions = lambda *args, **kwargs: None
             defaults.load_framework_support = lambda *args, **kwargs: None
             setup = om.setup
@@ -159,6 +161,8 @@ class ConfigurationTests(TestCase):
                 defaults.update_from_dict = _real_base_config.update_from_dict
                 defaults.update_from_config = _real_base_config.update_from_config
                 defaults.load_user_extensions = _real_base_config.load_user_extensions
+                defaults.load_config_file = _real_base_config.load_config_file
+                defaults.update_from_env = _real_base_config.update_from_env
                 defaults.load_framework_support = lambda *args, **kwargs: None
                 defaults.OMEGA_MY_OWN_SETTING = 'foo'
                 om = get_omega_from_apikey('foo', 'bar')
