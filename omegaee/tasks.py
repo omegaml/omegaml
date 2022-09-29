@@ -1,6 +1,7 @@
-from celery.signals import (task_failure, task_prerun,
-                            task_success)
 from datetime import datetime
+
+from celery.signals import (task_failure, task_prerun,
+                            task_success, worker_process_init, setup_logging)
 
 from omegaee.util import log_task
 
@@ -29,3 +30,18 @@ def task_failure_handler(sender=None, exception=None, **kwargs):
     if should_log(sender):
         log_task(sender, 'FAILURE', exception=exception)
 
+
+@worker_process_init.connect
+def disable_result_logging(**kwargs):
+    # disable celery tracing of task outputs
+    # https://stackoverflow.com/a/63548174/890242
+    from celery.app import trace
+    trace.LOG_SUCCESS = """\
+    Task %(name)s[%(id)s] succeeded in %(runtime)ss\
+    """
+
+@setup_logging.connect
+def config_loggers(*args, **kwargs):
+    import logging.config
+    from django.conf import settings  # noqa
+    logging.config.dictConfig(settings.LOGGING)

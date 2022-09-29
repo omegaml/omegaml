@@ -186,10 +186,10 @@ class EnvSettings_Local(Config_EnvOverrides,
     OMEGA_RESTAPI_URL = os.environ.get('OMEGA_RESTAPI_URL', 'http://localhost:8000')
 
     # patch celery imports so existing imports elsewhere are kept
-    _celery_imports = ['omegaml.tasks',
-                       'omegaml.notebook.tasks',
-                       'omegaee.tasks',
-                       'omegaml.backends.package.tasks']
+    _celery_imports = ['omegaml',
+                       'omegaml.notebook',
+                       'omegaee',
+                       'omegaml.backends.package']
     StackableSettings.patch_list('OMEGA_CELERY_IMPORTS', _celery_imports)
 
     #: authentication environment
@@ -231,5 +231,8 @@ class EnvSettings_Local(Config_EnvOverrides,
     DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
     # https://docs.djangoproject.com/en/3.2/ref/clickjacking/#setting-x-frame-options-for-all-responses
     X_FRAME_OPTIONS = 'SAMEORIGIN'
+    # X-Request-Id is the commonly accepted request id
+    # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+    REQUEST_ID_HEADER = 'X-REQUEST-ID'
 
 

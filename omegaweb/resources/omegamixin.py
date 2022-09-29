@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import JsonResponse
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpBadRequest
@@ -23,11 +24,28 @@ class OmegaResourceMixin(object):
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
             qualifier = request.META.get('HTTP_QUALIFIER')
+            tracking_id = request.META.get(self._tracking_id_key)
             creds = self._credentials_from_request(bundle_or_request)
             om = get_omega_for_user(request.user, qualifier=qualifier, creds=creds)[bucket]
             self.celeryapp = om.runtime.celeryapp
+            # ensure tracking id is set on every request
+            if tracking_id:
+                # specify a custom task id if set by the client
+                # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
+                om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om
         return self._omega_instance
+
+    @property
+    def _tracking_id_key(self):
+        # generate the header key into request.META for the request ID
+        # X-Request-Id is the commonly accepted request id
+        # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+        #     https://docs.djangoproject.com/en/3.2/ref/request-response/#django.http.HttpRequest.META
+        if not hasattr(self, '_tracking_id_key_header'):
+            key = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID')
+            self._tracking_id_key_header = f'HTTP_{key}'.replace('-', '_').upper()
+        return self._tracking_id_key_header
 
     def _credentials_from_request(self, bundle_or_request):
         # get credentials from Meta.authentication, if available
@@ -90,4 +108,3 @@ class OmegaResourceMixin(object):
     @property
     def _generic_service_resource(self):
         return GenericServiceResource(self._omega_instance, is_async=getattr(self, 'is_async', False))
-

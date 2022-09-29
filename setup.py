@@ -60,6 +60,7 @@ setup(
         'dj_database_url',
         'gunicorn>=19.7.1',
         'omegaml>=0.13.4',
+        'python-json-logger>=2.0.4'
 
     ],
     dependency_links=[
