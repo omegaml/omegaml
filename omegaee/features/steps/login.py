@@ -34,7 +34,7 @@ def login_new_user(ctx):
     assert hasattr(ctx.feature, 'username'), "feature.username is not set, did you run tag=@always?"
     br.fill('login', ctx.feature.username)
     br.fill('password', ctx.feature.password)
-    br.click_link_by_text('Login ')
+    br.find_by_text('Login ').click()
 
 
 @then('the site shows the dashboard')
@@ -113,9 +113,9 @@ def not_logged_in(ctx):
 def load_jupyter_notebook(ctx):
     br = ctx.browser
     assert br.is_element_present_by_text('Profile', wait_time=15)
-    br.click_link_by_text('Profile')
+    br.find_by_text('Profile').click()
     userid, apikey = find_user_apikey(br)
-    br.click_link_by_text('Dashboard')
+    br.find_by_text('Dashboard').click()
     el = br.find_by_text('Notebook').first
     ctx.feature.jynb_url = el['href']
     br.visit(ctx.feature.jynb_url)

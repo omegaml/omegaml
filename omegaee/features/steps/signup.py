@@ -19,7 +19,7 @@ def site_deployed(ctx):
 def signup_user(ctx):
     br = ctx.browser
     br.visit(ctx.web_url)
-    br.click_link_by_text('sign in')
+    br.find_by_text('sign in').click()
     assert br.is_text_present('Sign up here', wait_time=15), "Expecting link to <Sign up here>"
     br.visit(uri(br, '/accounts/signup'))
     assert br.is_text_present('Create account', wait_time=15)
@@ -27,7 +27,7 @@ def signup_user(ctx):
     ctx.feature.password = 'test9test9'
     br.fill('email', ctx.feature.username)
     br.fill('password1', ctx.feature.password)
-    br.click_link_by_text('Create account')
+    br.find_by_text('Create account').click()
     assert br.is_text_present('Verify Your E-mail Address', wait_time=15)
 
 
@@ -47,7 +47,7 @@ def site_registration_email(ctx):
         # this is the standard login, when admin site is login protected
         br.fill('login', ctx.admin_user)
         br.fill('password', ctx.admin_password)
-        br.click_link_by_text('Login ')
+        br.find_by_text('Login ').click()
     # never mind the way to login, go to admin site
     br.visit(uri(br, '/admin'))
     # open emails sent
