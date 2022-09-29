@@ -332,6 +332,25 @@ class OmegaOpsTests(TestCase):
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuserY:dbpassY@{parsed.hostname}:{parsed.port}/dbnameY'.format(**locals())
         self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # use a group user and qualifier
+        config = get_client_config(group_user, qualifier='foobar:default')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # use a user and qualifier, where the user does not have a qualifier itself
+        # -- this is useful where we have authorization by token and group-enabled services only
+        #    such as with corporate users, where not every user has their own deployment
+        no_service_user = User.objects.create_user('baxuser')
+        group.user_set.add(no_service_user)
+        config = get_client_config(no_service_user, qualifier='foobar:default')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # -- same scenario, different qualifier
+        config = get_client_config(no_service_user, qualifier='foobar:special')
+        parsed = urlparse(defaults.OMEGA_MONGO_URL)
+        mongo_url = 'mongodb://dbuserY:dbpassY@{parsed.hostname}:{parsed.port}/dbnameY'.format(**locals())
+        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
 
     def test_parse_client_config_v3_overrides(self):
         # test in-cluster overrides

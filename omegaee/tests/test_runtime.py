@@ -75,7 +75,7 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         self.assertEquals(om.runtime.auth.token, auth.token)
 
     def test_runtime_explicit_auth_jwt_apikey_authenv(self):
-        # use apikey authentication env, however providing a jwt token
+        # client uses apikey authentication env, however providing a jwt token
         # note this uses the special user "jwt", with apikey=jwt
         resp = self.client.post('/token-auth/',
                                 content_type='application/json',
@@ -85,10 +85,11 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         jwt_token = resp.json()['token']
         # we have the apikey authentication env, put pass it a JWT
         authEnv = AuthenticationEnv.secure()
-        jwt_client_auth = JWTOmegaRuntimeAuthentation(jwt_token, 'default')
+        jwt_client_auth = JWTOmegaRuntimeAuthentation(f'jwt:{self.user.username}',
+                                                      jwt_token, 'default')
         # we expect the om instance to have an apikey authentication (real username, real apikey)
         om = authEnv.get_omega_for_task(None, auth=jwt_client_auth.token)
-        expected_auth = OmegaRuntimeAuthentication('jwt',
+        expected_auth = OmegaRuntimeAuthentication(f'jwt:{self.user.username}',
                                                    jwt_token,
                                                    'default')
         self.assertEquals(om.runtime.auth.token, expected_auth.token)
@@ -107,11 +108,12 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         # simulate call to om runtime, using the JWT token
         AuthenticationEnv.auth_env = None
         authEnv = AuthenticationEnv.secure()
-        jwt_client_auth = JWTOmegaRuntimeAuthentation(jwt_token, 'default')
+        jwt_client_auth = JWTOmegaRuntimeAuthentation(self.user.username,
+                                                      jwt_token, 'default')
         om = authEnv.get_omega_for_task(None, auth=jwt_client_auth.token)
         # we expect that we get back a jwt token, not userid/apikey
         runtime_auth = om.runtime.auth
-        self.assertEquals(om.runtime.auth.token[0], 'jwt')
+        self.assertEquals(om.runtime.auth.token[0], self.user.username)
         self.assertNotEqual(om.runtime.auth.token[0], self.user.api_key.key)
         # check we can reuse this token to get om for another task
         om = authEnv.get_omega_for_task(None, auth=om.runtime.auth.token)
