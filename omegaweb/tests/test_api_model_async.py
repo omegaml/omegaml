@@ -1,3 +1,6 @@
+import os
+from unittest import mock
+
 import numpy as np
 import pandas as pd
 from django.contrib.auth.models import User
@@ -15,6 +18,8 @@ from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
+# ensure the client uses the server-specified mongo url
+@mock.patch.dict(os.environ, {"OMEGA_MONGO_URL": ""})
 class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
     fixtures = ['landingpage']
 
