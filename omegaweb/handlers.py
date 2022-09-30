@@ -26,15 +26,10 @@ def handle_usersignup(sender, request=None, user=None, **kwargs):
     #   deploy_user_service(user.pk)
     # now we just create a command and have omops execute it async
     # rationale:
-    # - scalable as it does not block the user signup proces
+    # - scalable as it does not block the user signup process
     # - customizable as we can create any scripting for the command
-    # issue command to add a new user
+    # issue command to deploy user services
     plan = ServicePlan.objects.get(name='signup')
-    ServiceDeployCommand.objects.create(offering=plan,
-                                        user=user,
-                                        phase='install')
-    # -- issue command to deploy omegaml
-    plan = ServicePlan.objects.get(name='omegaml')
     ServiceDeployCommand.objects.create(offering=plan,
                                         user=user,
                                         phase='install')

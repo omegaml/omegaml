@@ -122,8 +122,13 @@ def add_userdb(dbname, username, password):
         'role': 'readWrite',
         'db': dbname,
     }]
-    # create the db but NEVER return this db. it will have admin rights.
-    client = MongoClient(settings.MONGO_ADMIN_URL, ssl=config.SERVICE_USESSL_VIEW)
+    # get the admin db to create users, but NEVER return this db. it will have admin rights.
+    # -- only add ssl= kwarg according to SERVICE_USESSL_VIEW if not specified already
+    # -- otherwise revert to the very URL specified
+    parsed = urlparse.urlparse(settings.MONGO_ADMIN_URL)
+    ssl_in_url = any(v in parsed.query for v in ('ssl=', 'tls='))
+    mongo_kwargs = {} if ssl_in_url else dict(ssl=config.SERVICE_USESSL_VIEW)
+    client = MongoClient(settings.MONGO_ADMIN_URL, **mongo_kwargs)
     _newdb = client[dbname]
     _admindb = client['admin']
     # add user and reset password in case the user was there already
@@ -409,7 +414,7 @@ def get_user_config(user, qualifier, view):
     qualifier = qualifier or 'default'
     # -- see if user has a defined deployment
     user_service = user.services.filter(offering__name='omegaml').first()
-    user_settings = user_service.settings if user_service else {}
+    user_settings = user_service.settings if user_service is not None else {}
     # -- get group user's settings if so requested or as a fallback
     # -- if user does own deployment, will revert to group settings
     if ':' in qualifier or qualifier not in user_settings.get('qualifiers', {}):

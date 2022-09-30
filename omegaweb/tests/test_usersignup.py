@@ -38,11 +38,13 @@ class UserSignupTests(TestCase):
         user = User.objects.get(email=data['email'])
         self.assertEqual(user.username, data['email'].split('@')[0])
         # check a deploy command was created by user_signed_up handler
-        command = ServiceDeployCommand.objects.get(offering__name='omegaml', user=user)
+        command = ServiceDeployCommand.objects.get(offering__name='signup', user=user)
         self.assertIsNotNone(command)
         # simulate and check service deployment by omops
         # TODO testing of omops should be in omegaops.tests
-        execute_pending()
+        # signup should eventually trigger deployment of omegaml
+        for i in range(5):
+            execute_pending()
         service = user.services.get(offering__name='omegaml')
         self.assertIsNotNone(service)
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))
@@ -61,11 +63,13 @@ class UserSignupTests(TestCase):
         user = User.objects.get(email=data['email'])
         self.assertEqual(user.username, data['email'].split('@')[0].replace('.', ''))
         # check a deploy command was created by user_signed_up handler
-        command = ServiceDeployCommand.objects.get(offering__name='omegaml', user=user)
+        command = ServiceDeployCommand.objects.get(offering__name='signup', user=user)
         self.assertIsNotNone(command)
         # simulate and check service deployment by omops
         # TODO testing of omops should be in omegaops.tests
-        execute_pending()
+        # signup should eventually trigger deployment of omegaml
+        for i in range(5):
+            execute_pending()
         service = user.services.get(offering__name='omegaml')
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))

@@ -11,7 +11,7 @@ import omegaops as omops
 from landingpage.models import DEPLOY_COMPLETED, ServicePlan
 from omegaops.celeryapp import app
 from omegaops.util import enforce_logging_format, retry
-from paasdeploy.models import ServiceDeployConfiguration, ServiceDeployTask
+from paasdeploy.models import ServiceDeployConfiguration, ServiceDeployTask, ServiceDeployCommand
 from paasdeploy.tasks import deploy
 
 logger = get_task_logger(__name__)
@@ -76,6 +76,18 @@ def deploy_user_service(task_id=None, **kwargs):
     deployment.settings = config
     deployment.text = f'userid {user.username}<br>apikey {user.api_key.key}'
     deployment.save()
+
+
+@shared_task
+def user_signup(task_id=None, **kwargs):
+    # deploy omegaml for this user
+    task = ServiceDeployTask.objects.get(pk=task_id)
+    user = task.command.user
+    # -- issue command to deploy omegaml
+    plan = ServicePlan.objects.get(name='omegaml')
+    ServiceDeployCommand.objects.create(offering=plan,
+                                        user=user,
+                                        phase='install')
 
 
 @shared_task
@@ -185,7 +197,6 @@ def log_event_task(self, log_data):
                 self._in_eager_logging = False
 
     do(self, log_data)
-
 
 # disabled due to initialisation issue at startup
 # @worker_init.connect

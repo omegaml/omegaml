@@ -21,5 +21,5 @@
     env:
       CLUSTER_ID: ${CLUSTER_ID}
   steps:
-    - task: omegaops.tasks.signup
+    - task: omegaops.tasks.user_signup
       params: ""
