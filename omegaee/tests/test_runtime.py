@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import hashlib
+from unittest.mock import patch
+
 from allauth.account.utils import sync_user_email_addresses
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -17,7 +19,9 @@ from omegaweb.resources.clientconfig import ClientConfigResource
 from omegaweb.tests.util import OmegaResourceTestMixin
 from tastypiex.centralize import ApiCentralizer
 
-prev_auth_env = getattr(_base_config, 'OMEGA_AUTH_ENV', None)
+prev_config = {
+    k: getattr(_base_config, k, None) for k in dir(_base_config) if k.isupper()
+}
 
 
 class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
@@ -32,7 +36,7 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
     def override_resource_auth(self):
         # demonstrates overriding resources authentication
         # Rationale: standard omegaee accepts ApiKeyAuth/SessionAuth only
-        # if you need JWT, be sure to configure it explicitely to avoid
+        # if you need JWT, be sure to configure it explicitly to avoid
         # accidental acceptance of valid JWT of unknown source
         class JWTAuthenticatedMeta:
             authentication = MultiAuthentication(OmegaJWTAuthentication(),
@@ -47,8 +51,9 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
 
     def tearDown(self):
         super().tearDown()
-        # reset authentication env to default
-        _base_config.OMEGA_AUTH_ENV = prev_auth_env
+        # reset config and authentication env to default
+        for k, v in prev_config.items():
+            setattr(_base_config, k, v)
         AuthenticationEnv.auth_env = None
 
     def create_user(self, email, username=None, pk=None):
@@ -144,6 +149,41 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         om = authEnv.get_omega_for_task(None, auth=apikey_auth)
         self.assertEquals(om.runtime.auth.token[0], self.user.username)
         self.assertEquals(om.runtime.auth.token[1], self.user.api_key.key)
+
+    def test_runtime_jwt_auth_uris(self):
+        # TESTFIX #377
+        from omegaee.runtimes.auth.jwtauth import key_resolver
+        # use jwt authentication env, with expects and provides JWT tokens as the runtime auth
+        _base_config.OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.JWTCloudRuntimeAuthenticationEnv'
+        _base_config.JWT_PUBLIC_KEY_URI = 'http://foobar.com'
+        # get a new token
+        resp = self.client.post('/token-auth/',
+                                content_type='application/json',
+                                data={'username': self.user.email,
+                                      'password': self.password})
+        self.assertEqual(resp.status_code, 200)
+        jwt_token = resp.json()['token']
+        # simulate call to om runtime, using the JWT token
+        AuthenticationEnv.auth_env = None
+        authEnv = AuthenticationEnv.secure()
+        # simulate fetching public keys
+        # -- we don't actually fetch keys but check that the
+        #    corresponding methods are called
+        # -- decoding is done by jwt_decode_handler_single
+        #    which we test in test_runtime_explicit_auth_jwt_authenv
+        # -- thus if jwt_decode_handler_single is called we can be
+        #    sure to avoid issue #377
+        uri_handler = patch.object(authEnv, 'jwt_decode_from_uri')
+        key_resolver = patch.object(key_resolver, 'get_public_key')
+        single_decoder = patch.object(authEnv, 'jwt_decode_handler_single')
+        with uri_handler as uri_handler:
+            authEnv.get_payload_from_token(jwt_token, defaults=_base_config)
+            uri_handler.assert_called()
+        with key_resolver as key_resolver, single_decoder as single_decoder:
+            key_resolver.return_value = 'public key'
+            authEnv.get_payload_from_token(jwt_token, defaults=_base_config)
+            key_resolver.assert_called()
+            single_decoder.assert_called()
 
     def test_runtime_implicit_auth(self):
         # set auth indirectly
