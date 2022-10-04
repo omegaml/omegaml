@@ -89,7 +89,7 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
         for uri in jwt_uris:
             try:
                 key = key_resolver.get_public_key(uri)
-                payload = cls.jwt_decode_handler(token, defaults=defaults, key=key)
+                payload = cls.jwt_decode_handler_single(token, defaults=defaults, key=key)
             except ExpiredSignatureError as e:
                 # key_resolver caches keys so we must invalidate the cache if the key has expired
                 # enforce reloading key on next try

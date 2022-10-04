@@ -1,8 +1,11 @@
+from unittest.mock import MagicMock
+
 from django.contrib.auth.models import User
 from django.core.management import execute_from_command_line
 from django.test.testcases import TestCase
 from pathlib import Path
 
+from omegaml.util import override_settings
 from paasdeploy.models import ServiceDeployCommand
 from paasdeploy.tasks import execute_pending
 
@@ -73,3 +76,4 @@ class UserSignupTests(TestCase):
         service = user.services.get(offering__name='omegaml')
         self.assertEqual(service.offering.name, 'omegaml')
         self.assertIn('mongodbname', service.settings['qualifiers'].get('default'))
+
