@@ -411,7 +411,7 @@ def get_user_config(user, qualifier, view):
     qualifier = qualifier or 'default'
     # -- see if user has a defined deployment
     user_service = user.services.filter(offering__name='omegaml').first()
-    user_settings = user_service.settings if user_service is not None else {}
+    user_settings = getattr(user_service, 'settings', None) or {}
     # -- get group user's settings if so requested or as a fallback
     # -- if user does own deployment, will revert to group settings
     if ':' in qualifier or qualifier not in user_settings.get('qualifiers', {}):

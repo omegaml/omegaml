@@ -163,7 +163,8 @@ def ensure_user_broker_ready(self, *args, **kwargs):
                     omops.add_user_vhost(cnx_config['brokervhost'],
                                          cnx_config['brokeruser'],
                                          cnx_config['brokerpassword'])
-                    omops.create_ops_forwarding_shovel(user)
+                    # TODO rethink shovel concept (was supposed to collect service usage messages)
+                    # omops.create_ops_forwarding_shovel(user)
                 except Exception as e:
                     logger.error(f'error recreating user {user} vhost due to {e}')
                     # avoid excessive task bursts on rabbitmq
