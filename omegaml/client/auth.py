@@ -43,6 +43,7 @@ class OmegaRuntimeAuthentication:
     """
     The runtimes authentication
     """
+
     def __init__(self, userid, apikey, qualifier='default'):
         self.userid = userid
         self.apikey = apikey
@@ -120,6 +121,18 @@ class AuthenticationEnv(object):
         if not auth_env.is_secure:
             raise SystemError(f'A secure authentication environment was requested, however {auth_env} is not secure.')
         return auth_env
+
+    @classmethod
+    def taskauth(cls, args, kwargs, celery_kwargs):
+        # apply event mask in monitoring events
+        nop = lambda *args, **kwargs: ()
+        getattr(cls, 'taskrepr', nop)(args, kwargs, celery_kwargs)
+
+    @classmethod
+    def resultauth(cls, value):
+        # apply result mask in monitoring events
+        nop = lambda v: value
+        getattr(cls, 'resultrepr', nop)(value)
 
 
 class CloudClientAuthenticationEnv(AuthenticationEnv):
@@ -217,3 +230,14 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
         return _save_userconfig_from_apikey(configfile, userid, apikey, api_url=api_url,
                                             requested_userid=requested_userid,
                                             view=view, keys=keys, qualifier=qualifier)
+
+    @classmethod
+    def taskrepr(cls, args, kwargs, celery_kwargs):
+        celery_kwargs.update({
+            'argsrepr': ['*****'] * len(args),
+            'kwargsrepr': {k: '*****' for k in kwargs}
+        })
+
+    @classmethod
+    def resultrepr(cls, value):
+        return value

@@ -36,6 +36,10 @@ class CeleryTask(object):
             celery_kwargs['queue'] = celery_kwargs['label']
             del celery_kwargs['label']
 
+    def _apply_auth(self, args, kwargs, celery_kwargs):
+        from omegaml.client.auth import AuthenticationEnv
+        AuthenticationEnv.active().taskauth(args, kwargs, celery_kwargs)
+
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
         """
 
@@ -50,6 +54,7 @@ class CeleryTask(object):
         args = args or tuple()
         kwargs = kwargs or {}
         self._apply_kwargs(kwargs, celery_kwargs)
+        self._apply_auth(args, kwargs, celery_kwargs)
         return self.task.apply_async(args=args, kwargs=kwargs, **celery_kwargs)
 
     def delay(self, *args, **kwargs):

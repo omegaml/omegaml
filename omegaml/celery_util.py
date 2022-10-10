@@ -194,7 +194,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 # -- only log delegate args, kwargs
                 # -- avoid logging internal arguments
                 exp.log_event(f'task_call', self.name, {'args': self.delegate_args,
-                                                                  'kwargs': self.delegate_kwargs})
+                                                        'kwargs': self.delegate_kwargs})
                 if self.request.id is not None:
                     # PERFTUNED
                     # if we have a request, avoid super().__call__()
@@ -212,6 +212,12 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def reset(self):
         # ensure next call will start over and get a new om instance
         self.request._om = None
+
+    def send_event(self, type, **fields):
+        # ensure result masking in events
+        if 'result' in fields:
+            fields['result'] = AuthenticationEnv().active().resultauth(fields['result'])
+        super().send_event(type, **fields)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         with self.tracking as exp:
