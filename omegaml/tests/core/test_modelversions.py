@@ -4,7 +4,9 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
+from omegaml.backends.virtualobj import VirtualObjectBackend, virtualobj
 from omegaml.mixins.store.modelversion import ModelVersionMixin
+from omegaml.mixins.store.virtualobj import VirtualObjectMixin
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -141,6 +143,29 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         reg.intercept_ = 0
         store.put(reg, 'regmodel', tag='commit2')
 
+    def test_virtualobj_versioning(self):
+        store = self.om.models
+        store.register_mixin(ModelVersionMixin)
+        store.register_mixin(VirtualObjectMixin)
+        store.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
 
-
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if not data:
+                raise ValueError(f'expected data, got {data}')
+            return {'data': data, 'method': method}
+        # store virtual obj as a versioned model (the default for models)
+        mymodel.version_ = 1
+        meta1 = store.put(mymodel, 'mymodel')
+        mymodel.version_ = 2
+        meta2 = store.put(mymodel, 'mymodel')
+        # since this is a versioned model, the virtualobj get, put, drop should not be called
+        mdl_ = store.get('mymodel', version=-1)
+        self.assertEqual(mdl_.version_, 2)
+        mdl_ = store.get('mymodel', version=-2)
+        self.assertEqual(mdl_.version_, 1)
+        mdl_ = store.get('mymodel')
+        self.assertEqual(mdl_.version_, 2)
+        store.drop('mymodel')
+        self.assertNotIn('mymodel', store.list())
 

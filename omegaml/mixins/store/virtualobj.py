@@ -1,5 +1,6 @@
 import re
 
+
 from omegaml.backends.virtualobj import VirtualObjectBackend
 
 
@@ -42,7 +43,10 @@ class VirtualObjectMixin(object):
         return super().metadata(dsname)
 
     def get(self, name, **kwargs):
+        # pass along some options to other mixins
         raw = kwargs.get('raw', False)
+        should_version = self._model_version_applies(name)
+        raw = raw or should_version
         name, kwargs = self._resolve_realname(name, kwargs)
         if not raw and self._isvirtual(name):
             handler = self._getvirtualobjfn(name)
@@ -52,16 +56,23 @@ class VirtualObjectMixin(object):
         return result
 
     def put(self, obj, name, replace=False, attributes=None, **kwargs):
+        # pass along some options to other mixins
+        raw = kwargs.get('raw', False)
+        noversion = kwargs.get('noversion')
         name, kwargs = self._resolve_realname(name, kwargs)
-        if not replace and self._isvirtual(name):
+        should_version = bool(noversion) if noversion is not None else self._model_version_applies(name)
+        raw = raw if raw is not None else should_version
+        if not should_version and not raw and not replace and self._isvirtual(name):
             result = self._getvirtualobjfn(name)(data=obj, method='put',
                                                  meta=self.__meta, store=self, **kwargs)
         else:
             result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, **kwargs)
         return result
 
-    def drop(self, name, force=False, version=-1, **kwargs):
-        if self._isvirtual(name):
+    def drop(self, name, force=False, **kwargs):
+        version = kwargs.get('version')
+        should_version = version is not None or self._model_version_applies(name)
+        if not should_version and self._isvirtual(name):
             try:
                 handler = self._getvirtualobjfn(name)
                 result = handler(method='drop', meta=self.__meta, store=self, force=force)
