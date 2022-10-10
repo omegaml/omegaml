@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch, MagicMock
 
 import numpy as np
 from numpy.testing import assert_almost_equal
@@ -151,3 +152,27 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         print(self.get_log('info'))
         self.assertIn('reg', om.models.list())
         self.assertIn('sample', om.datasets.list())
+
+    def test_cli_restart_app(self):
+        om = self.om
+        om.runtime = MagicMock()
+        om.runtime.auth.userid = 'testuser'
+        om.runtime.auth.apikey = 'apikey'
+        self.make_model('reg')
+        # use the default REST API as the /apps url
+        with patch('omegaml.client.cli.runtime.requests') as requests, \
+             patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+            get_omega.return_value = om
+            self.cli('runtime restart app apps/test')
+            requests.get.assert_called()
+            self.assertEqual(requests.get.call_args_list[0][0], ('local/apps/api/stop/testuser/test',))
+            self.assertEqual(requests.get.call_args_list[1][0], ('local/apps/api/start/testuser/test',))
+        # use a specific apphub URL
+        with patch('omegaml.client.cli.runtime.requests') as requests, \
+             patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+            get_omega.return_value = om
+            self.cli('runtime restart app apps/test --apphub-url http://myapphub.com')
+            requests.get.assert_called()
+            self.assertEqual(requests.get.call_args_list[0][0], ('http://myapphub.com/apps/api/stop/testuser/test',))
+            self.assertEqual(requests.get.call_args_list[1][0], ('http://myapphub.com/apps/api/start/testuser/test',))
+
