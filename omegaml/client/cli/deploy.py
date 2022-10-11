@@ -180,7 +180,8 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
             'metadata': item.get('metadata'),
         }
         try:
-            render_vars(command, **{**item, **vars, **specs})
+            action_override = {'action': item['action']} if not str(item.get('action')).startswith('{') else {}
+            render_vars(command, **{**item, **vars, **specs, **action_override})
         except KeyError as e:
             logger.error(f"Variable {e} must be set in {cmd} {item}")
             exit(1)

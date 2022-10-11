@@ -152,6 +152,18 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         print(self.get_log('info'))
         self.assertIn('reg', om.models.list())
         self.assertIn('sample', om.datasets.list())
+        # override action
+        with open(deployfile, 'w') as fout:
+            steps = """
+                    runtime:
+                        - action: foobar
+                          name: test
+                    """
+            fout.writelines(steps)
+        # dry run
+        self.cli(f'runtime deploy export --steps {deployfile} --dry')
+        expected = self.pretend_log('DRY: om runtime foobar test')
+
 
     def test_cli_restart_app(self):
         om = self.om
