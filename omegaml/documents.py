@@ -7,6 +7,7 @@ from mongoengine.fields import (
     StringField, FileField, DictField, DateTimeField
 )
 from mongoengine.pymongo_support import LEGACY_JSON_OPTIONS
+from pymongo.errors import OperationFailure
 
 from omegaml.util import settings
 
@@ -124,6 +125,15 @@ def make_Metadata(db_alias='omega', collection=None):
 
         def to_dict(self):
             return self.to_mongo().to_dict()
+
+        @classmethod
+        def ensure_indexes(cls):
+            # work around to https://github.com/MongoEngine/mongoengine/issues/2502
+            # read-only users cannot create indexes
+            try:
+                super().ensure_indexes()
+            except OperationFailure:
+                pass
 
     return Metadata
 
