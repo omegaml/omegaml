@@ -35,7 +35,7 @@ class OmegaJWTAuthentication(Authentication):
         token = auth_env.get_token_from_request(request)
         payload = auth_env.get_payload_from_token(token)
         userid = auth_env.jwt_get_user_id_from_payload(payload)
-        return userid, token
+        return userid, token.decode('utf8')
 
     def is_authenticated(self, request, **kwargs):
         """
