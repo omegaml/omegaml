@@ -110,6 +110,28 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         with self.assertRaises(ValidationError):
             om.models.validate('mymodel', X={'birthday': 'foo'})
 
+    def test_link_datatype_many(self):
+        class UserSchema(Schema):
+            name = fields.Str()
+            email = fields.Email()
+            created_at = fields.DateTime()
+            birthday = fields.Date()
+            data = fields.List(fields.Integer)
+            number = fields.Float()
+            registered = fields.Bool()
+
+        om = self.om
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+        om.models.link_datatype('mymodel', X=[UserSchema], Y=[UserSchema])
+        meta = om.models.metadata('mymodel')
+        om.models.validate('mymodel', X=[{'name': 'foo'}], Y=[{'name': 'foo'}])
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', X={'birthday': 'foo'})
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', X={'name': 'foo'})
+        specs = om.runtime.swagger(format='dict', as_service=True)
+
     def test_swagger_generator(self):
         om = self.om
         model = LinearRegression()
@@ -123,6 +145,7 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('/api/v1/model/mymodel/predict', specs['paths'])
         self.assertIn('/api/v1/model/mymodel/fit', specs['paths'])
         self.assertIn('/api/v1/dataset/testX', specs['paths'])
+        print(specs)
 
     def test_swagger_generator_as_service(self):
         om = self.om
@@ -146,7 +169,8 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
             'swagger': '2.0',
             'paths': {
                 '/api/service/mymodel': {
-                    'post': {'summary': 'summary', 'description': 'no description', 'operationId': 'mymodel#predict#post',
+                    'post': {'summary': 'summary', 'description': 'no description',
+                             'operationId': 'mymodel#predict#post',
                              'consumes': ['application/json'], 'produces': ['application/json'],
                              'parameters': [
                                  {'in': 'body', 'name': 'body', 'description': 'no description',
@@ -165,6 +189,48 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
                     'type': 'object', 'properties': {
                         'data': {'type': 'array', 'items': {'$ref': '#/definitions/testX'}}, 'dtypes': {},
                         'append': {'type': 'boolean'}}}}}
+        om = self.om
+        # create a model
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+        # link spec to a model
+        metas = om.models.link_swagger(specs)
+        self.assertEqual(len(metas), 1)
+        self.assertEqual(metas[0].name, 'mymodel')
+        # reverse check, we expect to have a valid spec
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('/api/service/mymodel', specs['paths'])
+
+    def test_swagger_link_multiobjects(self):
+        # sample spec
+        specs = {'paths': {'/api/service/mymodel': {
+            'post': {'summary': 'summary', 'description': 'no description', 'operationId': 'mymodel#predict#post',
+                     'consumes': ['application/json'], 'produces': ['application/json'], 'parameters': [
+                    {'in': 'body', 'name': 'body', 'description': 'no description',
+                     'schema': {'$ref': '#/definitions/mymodel_X'}}],
+                     'responses': {'200': {'description': 'no description',
+                                           'schema': {'type': 'array',
+                                                      'items': {
+                                                          '$ref': '#/definitions/mymodel_Y'}}}}}}},
+            'info': {'title': 'omega-ml service', 'version': '1.0.0'}, 'swagger': '2.0', 'definitions': {
+                'mymodel_X': {'type': 'object',
+                              'properties': {'registered': {'type': 'boolean'}, 'number': {'type': 'number'},
+                                             'data': {'type': 'array', 'items': {'type': 'integer'}},
+                                             'created_at': {'type': 'string', 'format': 'date-time'},
+                                             'name': {'type': 'string'},
+                                             'birthday': {'type': 'string', 'format': 'date'},
+                                             'email': {'type': 'string'}}},
+                'mymodel_Y': {'type': 'object', 'properties': {
+                    'registered': {'type': 'boolean'},
+                    'number': {'type': 'number'},
+                    'data': {'type': 'array', 'items': {'type': 'integer'}},
+                    'created_at': {'type': 'string', 'format': 'date-time'},
+                    'name': {'type': 'string'},
+                    'birthday': {'type': 'string', 'format': 'date'},
+                    'email': {'type': 'string'}}}}}
+
         om = self.om
         # create a model
         model = LinearRegression()

@@ -99,14 +99,19 @@ class Operation:
                     "name": name,
                     "description": param["description"] or ('no description'),
                     "schema": {
-                        "$ref": f'#/definitions/{param["schema"].__name__}'
+                        "$ref": f'#/definitions/{schema_name(param["schema"])}'
                     }
                 } for name, param in self.parameters.items()],
                 "responses": {
                     status: {
                         "description": resp["description"] or ('no description'),
                         "schema": {
-                            "$ref": f'#/definitions/{resp["schema"].__name__}'
+                            "$ref": f'#/definitions/{schema_name(resp["schema"])}'
+                        } if not getattr(resp["schema"], 'many', False) else {
+                            "type": "array",
+                            "items": {
+                                "$ref": f'#/definitions/{schema_name(resp["schema"])}'
+                            }
                         }
                     } for status, resp in self.responses.items()
                 }
@@ -170,8 +175,8 @@ class SpecFromResourceHelperBase:
         })
         OutputSchema = datatypes.get('Y') or datatypes.get('result') or DefaultOutputSchema
         self.render_operations(InputSchema, {200: OutputSchema})
-        self.add_schema_from_datatype(InputSchema.__name__, InputSchema)
-        self.add_schema_from_datatype(OutputSchema.__name__, OutputSchema)
+        self.add_schema_from_datatype(schema_name(InputSchema), InputSchema)
+        self.add_schema_from_datatype(schema_name(OutputSchema), OutputSchema)
 
     def render_operations(self, input_schema, responses):  # add operations
         # renders paths according to self.path_template and signature.actions
@@ -201,7 +206,9 @@ class SpecFromResourceHelperBase:
         name = self.name.replace('/', '_')
         if signature:
             datatypes = {
-                k: store._datatype_from_schema(spec['schema'], name=f'{name}_{k}', orient=orient)
+                k: store._datatype_from_schema(spec['schema'], name=f'{name}_{k}',
+                                               orient=orient,
+                                               many=spec.get('many', False))
                 for k, spec in signature.items() if k in ('X', 'Y', 'result') and spec
             }
         else:
@@ -292,3 +299,5 @@ class SpecFromServiceHelper(SpecFromResourceHelperBase):
                 raise
         return datatypes
 
+
+schema_name = lambda s: getattr(s, '__name__', s.__class__.__name__)

@@ -1,7 +1,5 @@
 import string
-
 import warnings
-
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from marshmallow import fields, Schema
@@ -56,16 +54,19 @@ class SignatureMixin:
 
         Args:
             name (str): the name of the model, script
-            X (Schema): the schema for the X data (dataX), applies to models, scripts
-            Y (Schema): the schema for the Y data (dataY), applies to models only
-            result (Schema): the schema for the result, applies to scripts only
+            X (Schema|list): the schema for the X data (dataX), applies to models, scripts. Pass [Schema] to
+               indicate many objects of type Schema.
+            Y (Schema|list): the schema for the Y data (dataY), applies to models only. Pass [Schema] to
+               indicate many objects of type Schema.
+            result (Schema): the schema for the result, applies to scripts only. Pass [Schema] to
+               indicate many objects of type Schema.
             orient (str): the datatype orientation, defaults to 'columns' for models, 'records' for datasets and scripts
             actions (list): the list of valid actions ['predict', ...],
                or a list of tuples to map actions to http methods [('predict', ['post', ...]), ...]. If
                the http method is not specified, it is assumed as 'post'
 
         Returns:
-
+            Metadata
         """
         meta = meta or self.metadata(name, **kwargs)
         if actions:
@@ -78,18 +79,27 @@ class SignatureMixin:
         else:
             actions = None
         existing = meta.attributes.setdefault('signature', {})
+        # determine object or array
+        is_many = lambda T: isinstance(T, list) or getattr(T, 'many', False)
+        many_type = lambda T: T[0] if isinstance(T, list) else X
+        Xmany, X = (True, many_type(X)) if is_many(X) else (False, X)
+        Ymany, Y = (True, many_type(Y)) if is_many(Y) else (False, Y)
+        Rmany, result = (True, result[0]) if isinstance(result, list) else (False, result)
         meta.attributes['signature'] = {
             'X': {
-                'datatype': f'{X.__module__}.{X.__name__}',
+                'datatype': f'{X.__module__}.{schema_name(X)}',
                 'schema': self._schema_from_datatype(X),
+                'many': Xmany,
             } if X is not None else existing.get('X'),
             'Y': {
-                'datatype': f'{Y.__module__}.{Y.__name__}',
+                'datatype': f'{Y.__module__}.{schema_name(Y)}',
                 'schema': self._schema_from_datatype(Y),
+                'many': Ymany,
             } if Y is not None else existing.get('Y'),
             'result': {
-                'datatype': f'{result.__module__}.{result.__name__}',
+                'datatype': f'{result.__module__}.{schema_name(result)}',
                 'schema': self._schema_from_datatype(result),
+                'result': Rmany,
             } if result is not None else existing.get('result'),
             'actions': actions,
             'orient': orient,
@@ -152,26 +162,30 @@ class SignatureMixin:
                 # -- either direct spec of schema
                 # -- or $ref: #/definitions/<name>, where name is the key into definitions
                 schemaSpec = prmspec.get('schema')
-                schemaRef = schemaSpec.get('$ref')
+                Xis_many = schemaSpec.get('type', 'object') == 'array'
+                schemaRef = schemaSpec.get('$ref') if not Xis_many else schemaSpec['items'].get('$ref')
                 Xschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
                 break
             else:
                 print("No body found, cannot generate X datatype")
                 Xschema = None
+                Xis_many = None
             resps = opspec['responses']
             for code, respspec in resps.items():
                 if code != '200':
                     continue
                 schemaSpec = respspec.get('schema')
-                schemaRef = schemaSpec.get('$ref')
+                Yis_many = schemaSpec.get('type', 'object') == 'array'
+                schemaRef = schemaSpec.get('$ref') if not Yis_many else schemaSpec['items'].get('$ref')
                 Yschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
                 break
             else:
                 print("No response 200 found, cannot generate Y datatype")
                 Yschema = None
+                Yis_many = None
             # finally link
-            Xdtype = self._datatype_from_schema(Xschema, name=f'{name}Input_{action}')
-            Ydtype = self._datatype_from_schema(Yschema, name=f'{name}Output_{action}')
+            Xdtype = self._datatype_from_schema(Xschema, name=f'{name}Input_{action}', many=Xis_many)
+            Ydtype = self._datatype_from_schema(Yschema, name=f'{name}Output_{action}', many=Yis_many)
             meta = self.link_datatype(name, X=Xdtype, Y=Ydtype, actions=actions)
             metas.append(meta)
         return metas
@@ -182,9 +196,10 @@ class SignatureMixin:
 
         def _do_validate(k, v):
             schema = (signature.get(k) or {}).get('schema')
+            many = (signature.get(k) or {}).get('many', False)
             if schema:
                 Schema = self._datatype_from_schema(schema, name=f'{name}_{k}')
-                Schema().load(v)
+                Schema(many=many).load(v)
 
         if signature:
             nop = lambda: ()
@@ -193,11 +208,12 @@ class SignatureMixin:
             _do_validate('result', result) if result is not None else nop()
         return True
 
-    def _datatype_from_schema(self, schema, name=None, orient='records'):
+    def _datatype_from_schema(self, schema, name=None, orient='records', many=False):
         # orient 'records' => every instance of the Schema reflects one item (default)
         #                     where each field is a distinct value of its type
         #        'columns' => every instance of the Schema reflects a full dataset, where
         #                     where each field is a list of values of its type
+        # many   if True, the Schema has Schema.many = True
         # map OpenAPI 3.x to marshmallow.fields
         # -- nested types are not supported (except arrays)
         # https://swagger.io/specification/
@@ -234,7 +250,7 @@ class SignatureMixin:
         schema.error_messages = {
             'type': f'invalid input for schema {name}'
         }
-        return schema
+        return schema if not many else schema(many=True)
 
     def _datatype_from_metadata(self, meta, orient='records'):
         # https://pbpython.com/pandas_dtypes.html
@@ -274,7 +290,7 @@ class SignatureMixin:
             openapi_version="3.0",
             plugins=[MarshmallowPlugin()],
         )
-        name = datatype.__name__
+        name = schema_name(datatype)
         spec.components.schema(name, schema=datatype)
         return spec.to_dict()['components']['schemas'][name]
 
@@ -420,3 +436,6 @@ class ModelSignatureMixin(SignatureMixin):
 
     def _pre_fit_transform(self, modelname, Xname, **kwargs):
         return self._resolve_dataset_defaults(modelname, Xname, **kwargs)
+
+
+schema_name = lambda s: getattr(s, '__name__', s.__class__.__name__)
