@@ -56,9 +56,9 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
 
     @classmethod
     def jwt_decode_handler(cls, token, defaults=None):
-        # we can have multiple authentication realms, which may have
-        # differing signing keys. thus we try to decode with each key in turn
         defaults = defaults or settings()
+        # -- ensure token is a byte string
+        token = token.encode('utf8') if isinstance(token, str) else token
         if getattr(defaults, 'JWT_PUBLIC_KEY_URI', None):
             payload = cls.jwt_decode_from_uri(token, defaults=defaults)
         else:
@@ -85,6 +85,8 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
 
     @classmethod
     def jwt_decode_from_uri(cls, token, defaults=None):
+        # we can have multiple authentication realms, which may have
+        # differing signing keys. thus we try to decode with each key in turn
         jwt_uris = defaults.JWT_PUBLIC_KEY_URI.split(',')
         for uri in jwt_uris:
             try:
