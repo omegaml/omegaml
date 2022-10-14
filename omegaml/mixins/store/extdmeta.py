@@ -84,7 +84,7 @@ class SignatureMixin:
         many_type = lambda T: T[0] if isinstance(T, list) else X
         Xmany, X = (True, many_type(X)) if is_many(X) else (False, X)
         Ymany, Y = (True, many_type(Y)) if is_many(Y) else (False, Y)
-        Rmany, result = (True, result[0]) if isinstance(result, list) else (False, result)
+        Rmany, result = (True, many_type(result)) if is_many(result) else (False, result)
         meta.attributes['signature'] = {
             'X': {
                 'datatype': f'{X.__module__}.{schema_name(X)}',
