@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.http import JsonResponse
 from tastypie.exceptions import ImmediateHttpResponse
@@ -24,15 +26,14 @@ class OmegaResourceMixin(object):
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
             qualifier = request.META.get('HTTP_QUALIFIER')
-            tracking_id = request.META.get(self._tracking_id_key)
             creds = self._credentials_from_request(bundle_or_request)
             om = get_omega_for_user(request.user, qualifier=qualifier, creds=creds)[bucket]
             self.celeryapp = om.runtime.celeryapp
-            # ensure tracking id is set on every request
-            if tracking_id:
-                # specify a custom task id if set by the client
-                # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
-                om.runtime.require(routing=dict(task_id=tracking_id))
+            # ensure tracking id is set on every request for traceability
+            # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
+            # TODO consider using https://github.com/dabapps/django-log-request-id/
+            tracking_id = request.META.get(self._tracking_id_key) or uuid4().hex
+            om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om
         return self._omega_instance
 
