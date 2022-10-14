@@ -1,18 +1,15 @@
-from omegaml.client.cli import deploy
-from pathlib import Path
-import subprocess
-
-from subprocess import call
-
-from urllib.parse import urlparse
-
 import logging
 import os
-from omegaml.client.docoptparser import CommandBase
-from omegaml.client.util import get_omega
+import requests
+import subprocess
+from pathlib import Path
 from pprint import pprint
+from subprocess import call
 from time import sleep
 
+from omegaml.client.cli import deploy
+from omegaml.client.docoptparser import CommandBase
+from omegaml.client.util import get_omega
 from omegaml.mixins.store.imexport import OmegaExporter
 
 
@@ -27,30 +24,31 @@ class RuntimeCommandBase(CommandBase):
       om runtime env <action> [<package>] [--file <requirements.txt>] [--every] [options]
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
-      om runtime restart app <name> [--insecure] [options]
+      om runtime restart app <name> [--insecure] [--apphub-url=<url>] [options]
       om runtime serve [<rule>...] [--rules=<rulefile>] [options]
       om runtime deploy [<deploy-action>] [--steps=<deployfile>] [--specs=<specs>] [--select=<filter>] [--dry] [options]
       om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
 
       Options:
-      --async           don't wait for results, will print taskid
-      -f                tail log
-      --require=VALUE   worker label
-      --flags=VALUES    celery flags, e.g. --flags "--queues=A,B,C -E --loglevel=INFO"
-      --worker=VALUE    celery worker
-      --queue=VALUE     celery queue
-      --celery-help     show celery help
-      --file=VALUE      path/to/requirements.txt
-      --local           if specified the task will run locally. Use this for testing
-      --every           if specified runs task on all workers
-      --insecure        allow insecure connections (disables verification of ssl certificates)
-      --rules=VALUE     /path/to/specs.txt, where each line is a <spec>
-      --compress        if specified the archive will be compress (tgz format) [default: True]
-      --path=PATH       path to directory where the archive should be written [default: ./mlops-export]
-      --list            if specified, print members of archive
-      --promote         if specified, import and promote objects
-      --steps=VALUE     /path/to/deployfile.yaml [default: ./deployfile.yaml
+      --async             don't wait for results, will print taskid
+      -f                  tail log
+      --require=VALUE     worker label
+      --flags=VALUES      celery flags, e.g. --flags "--queues=A,B,C -E --loglevel=INFO"
+      --worker=VALUE      celery worker
+      --queue=VALUE       celery queue
+      --celery-help       show celery help
+      --file=VALUE        path/to/requirements.txt
+      --local             if specified the task will run locally. Use this for testing
+      --every             if specified runs task on all workers
+      --insecure          allow insecure connections (disables verification of ssl certificates)
+      --rules=VALUE       /path/to/specs.txt, where each line is a <spec>
+      --compress          if specified the archive will be compress (tgz format) [default: True]
+      --path=PATH         path to directory where the archive should be written [default: ./mlops-export]
+      --list              if specified, print members of archive
+      --promote           if specified, import and promote objects
+      --steps=VALUE       /path/to/deployfile.yaml [default: ./deployfile.yaml]
+      --apphub-url=VALUE  the url of the apphub instance
 
     Description:
       model, job and script commands
@@ -407,18 +405,22 @@ class RuntimeCommandBase(CommandBase):
             } for worker, details in stats.items()})
 
     def restart(self):
-        import requests
-        om = get_omega(self.args, require_config=True)
+        from omegaml.client.userconf import ensure_api_url
+
+        om = get_omega(self.args)
         name = self.args.get('<name>')
         insecure = self.args.get('--insecure', False)
+        apphub_url = self.args.get('--apphub-url')
         user = om.runtime.auth.userid
+        qualifier = om.runtime.auth.qualifier
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
-        parsed = urlparse(om.defaults.OMEGA_MONGO_URL)
-        url = f'https://{parsed.hostname}'
-        stop = requests.get(f'{url}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
-                            auth=auth, verify=not insecure)
-        start = requests.get(f'{url}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
-                             auth=auth, verify=not insecure)
+        headers = {'Qualifier': qualifier}
+        appsurl = ensure_api_url(apphub_url, om.defaults, key='OMEGA_APPHUB_URL')
+        name = name.replace('apps/', '')
+        stop = requests.get(f'{appsurl}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
+                            auth=auth, verify=not insecure, headers=headers)
+        start = requests.get(f'{appsurl}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
+                             auth=auth, verify=not insecure, headers=headers)
         self.logger.info(f'stop: {stop} start: {start}')
 
     def serve(self):
