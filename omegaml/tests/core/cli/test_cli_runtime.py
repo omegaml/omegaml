@@ -98,10 +98,11 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.assertIn('reg', om.models.list())
         self.assertIn('sample', om.datasets.list())
         # import and promote model (twice to get 2 versions)
+        # -- note model export has a base model + the actual (latest) version
         self.clean()
         self.cli(f'runtime import --promote --path={expfile} models/*')
         self.cli(f'runtime import --promote --path={expfile} models/*')
-        self.assertEqual(len(om.models.revisions('reg')), 2)
+        self.assertEqual(len(om.models.revisions('reg')), 4)
 
     def test_cli_export_import_path(self):
         om = self.om
@@ -120,7 +121,7 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.clean()
         self.cli(f'runtime import --promote --path={expfile} models/*')
         self.cli(f'runtime import --promote --path={expfile} models/*')
-        self.assertEqual(len(om.models.revisions('reg')), 2)
+        self.assertEqual(len(om.models.revisions('reg')), 4)
 
     def test_cli_deploy_steps(self):
         om = self.om

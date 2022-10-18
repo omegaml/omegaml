@@ -143,6 +143,8 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     """
     KIND = 'sqlalchemy.conx'
+    PROMOTE = 'metadata'
+
     #: sqlalchemy.Engine cache to enable pooled connections
     __CNX_CACHE = ProcessLocal()
 

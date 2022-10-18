@@ -62,20 +62,34 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         model = LinearRegression()
         model.coef_ = 1
         model = LinearRegression()
+        # safe untrained model
+        om.models.put(model, 'mymodel@version1')
+        # safe a new model with trained weights
         model.coef_ = 2
-        om.models.put(model, 'mymodel', tag='latest')
         om.models.put(model, 'mymodel', tag='version2')
         om.models.to_archive('mymodel', '/tmp/test')
-        om.models.drop('mymodel', force=True)
-        om.models.from_archive('/tmp/test', 'mymodel')
-        mdl = om.models.get('mymodel')
-        self.assertIsInstance(mdl, LinearRegression)
-        om_restore.models.from_archive('/tmp/test', 'mymodel')
-        mdl = om_restore.models.get('mymodel')
-        # we expect the latest version
-        self.assertIsInstance(mdl, LinearRegression)
-        self.assertEqual(mdl.coef_, 2)
-        self.assertNotIn('versions', om_restore.models.metadata('mymodel').attributes)
+        try:
+            for test_store in (om.models, self.om_restore.models):
+                test_store.drop('mymodel', force=True)
+                self.assertNotIn('mymodel', test_store.list())
+                self.assertNotIn('mymodel@version1', test_store.list())
+                self.assertNotIn('mymodel@version2', test_store.list())
+                # restore the latest version, expect trained weights
+                test_store.from_archive('/tmp/test', 'mymodel')
+                mdl = test_store.get('mymodel')
+                self.assertIsInstance(mdl, LinearRegression)
+                self.assertEqual(mdl.coef_, 2)
+                # restore the specific version, expect trained weights
+                mdl = test_store.get('mymodel@version2')
+                self.assertIsInstance(mdl, LinearRegression)
+                self.assertEqual(mdl.coef_, 2)
+                # restore the specific version, expect untrained weights
+                mdl = test_store.get('mymodel@version1')
+                self.assertIsInstance(mdl, LinearRegression)
+                self.assertFalse(hasattr(mdl, 'coef_'))
+        except:
+            print(f"Failed to restore model from archive in {test_store}")
+            raise
 
     def test_model_multiple_versioned_export(self):
         om = self.om
@@ -101,13 +115,13 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         mdl = om_restore.models.get('mymodel@version2')
         self.assertIsInstance(mdl, LinearRegression)
         self.assertEqual(mdl.coef_, 2)
-        # we don't expect a versioned base model
+        # check models are gone from the main store
         self.assertNotIn('mymodel', om.models.list())
         self.assertNotIn('mymodel@version1', om.models.list())
         self.assertNotIn('mymodel@version2', om.models.list())
         # promote from restore bucket into a versioned model
-        om_restore.models.promote('mymodel@version1', om.models)
-        om_restore.models.promote('mymodel@version2', om.models)
+        om_restore.models.promote('mymodel@version1', om.models, asname='mymodel@version1')
+        om_restore.models.promote('mymodel@version2', om.models, asname='mymodel@version2')
         # check the model is actually versioned
         mdl = om.models.get('mymodel@latest')
         self.assertIsInstance(mdl, LinearRegression)
@@ -234,7 +248,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
                                                    promote_to=om_restore)
             self.assertIn('mydf', om_restore.datasets.list())
             self.assertIn('mymodel', om_restore.models.list())
-            self.assertEqual(len(om_restore.models.revisions('mymodel')), 2)
+            self.assertEqual(len(om_restore.models.revisions('mymodel')), 3)
             # check model versions are as expected
             # -- latest
             mdl = om_restore.models.get('mymodel')
@@ -252,7 +266,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
                                                    pattern='jobs/.*')
             self.assertEqual(om_restore.jobs.list(), ['myjob.ipynb'])
             # ensure models were not touched
-            self.assertEqual(len(om_restore.models.revisions('mymodel')), 2)
+            self.assertEqual(len(om_restore.models.revisions('mymodel')), 3)
 
 
 if __name__ == '__main__':
