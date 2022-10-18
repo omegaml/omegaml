@@ -73,7 +73,7 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
-        self.assertEqual(data.get('data'), expected)
+        self.assertEqual(data, expected)
 
     def test_service_script_signature_valid(self):
         """ a service with defined data type """
@@ -190,7 +190,7 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         data = self.deserialize(resp)['response']
         # since the response is not valid json, the 'data' key is inserted by GenericServiceResource
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
-        self.assertEqual(data['data'], expected)
+        self.assertEqual(data, expected)
 
     def FIXME_test_get_service_list(self):
         resp = self.api_client.get(self.url(''), data={},

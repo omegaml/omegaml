@@ -62,11 +62,9 @@ def make_enterprise():
         """
 
         def setup(self, username=None, apikey=None, api_url=None, qualifier=None, view=True):
-            qualifier = qualifier or 'default'
             from omegaml.util import settings
             # load defaults
             defaults = settings()
-            # get userid, apikey and api url
             username = username or defaults.OMEGA_USERID
             apikey = apikey or defaults.OMEGA_APIKEY
             api_url = api_url or defaults.OMEGA_RESTAPI_URL

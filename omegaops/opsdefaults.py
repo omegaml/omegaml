@@ -16,6 +16,8 @@ OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
 DEPLOY_SCHEDULE_RATE = int(os.environ.get('OMEGA_DEPLOY_SCHEDULE_RATE', 15))
 #: user scheduler rate. adjust to worker load
 USER_SCHEDULER_RATE = int(os.environ.get('OMEGA_USER_SCHEDULER_RATE', 15 * 60))
+#: rabbitmq scheduler rate. adjust to worker load
+RMQ_SCHEDULER_RATE = int(os.environ.get('OMEGA_RMQ_SCHEDULER_RATE', 15 * 60))
 #: task time limit
 TASK_TIME_LIMIT = int(os.environ.get('OMEGA_TASK_TIMELIMIT', 30 * 60))
 
@@ -37,7 +39,7 @@ OMEGA_CELERY_CONFIG = {
         },
         'ensure_user_broker_ready': {
             'task': 'omegaops.tasks.ensure_user_broker_ready',
-            'schedule': USER_SCHEDULER_RATE,
+            'schedule': RMQ_SCHEDULER_RATE,
             'options': {
                 'queue': 'omegaops',
             }
@@ -68,10 +70,10 @@ OMEGA_CELERY_IMPORTS += omdefaults.OMEGA_CELERY_IMPORTS
 del omdefaults.OMEGA_CELERY_CONFIG['CELERYBEAT_SCHEDULE']
 
 # test support -- always run tasks locally
-if any(m in [basename(arg) for arg in sys.argv]
+if any(m in [basename(arg) for arg in sys.argv[:3]]
        # this is to avoid using production settings during test
        for m in ('unittest', 'test', 'nosetests', 'noserunner', '_jb_unittest_runner.py',
-                 '_jb_nosetest_runner.py')):
+                 '_jb_nosetest_runner.py', 'pytest')):
     OMEGA_LOCAL_RUNTIME = True
 
 # allow overloading settings from EnvSettings

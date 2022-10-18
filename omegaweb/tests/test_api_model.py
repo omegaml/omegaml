@@ -1,6 +1,5 @@
 import os
 from unittest import mock
-
 import numpy as np
 import pandas as pd
 from django.contrib.auth.models import User
@@ -362,3 +361,5 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase
         p.fit(X, Y)
         local_result = p.decision_function(X).flatten().tolist()
         assert_almost_equal(data.get('result'), local_result)
+
+

@@ -91,6 +91,7 @@ class OmegaNotebookSpawnerMixin:
             'OMEGA_RESTAPI_URL': defaults.OMEGA_RESTAPI_URL,
             'OMEGA_SERVICES_INCLUSTER': yesno(defaults.OMEGA_SERVICES_INCLUSTER),
             'CA_CERTS_PATH': os.environ.get('CA_CERTS_PATH'),
+            'SSL_CERT_FILE': os.environ.get('SSL_CERT_FILE'),
             'JYHUB_VERSION': jupyterhub.__version__,
         }
         custom_envs = configs.get('JUPYTER_CONFIG', {}).get('ENVS', {})

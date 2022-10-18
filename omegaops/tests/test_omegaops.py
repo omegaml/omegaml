@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import ssl
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -167,6 +168,12 @@ class OmegaOpsTests(TestCase):
         config4 = get_client_config(self.user2, qualifier=self.user.username)
         broker_url = config4['OMEGA_CELERY_CONFIG']['BROKER_URL']
         use_ssl = config4['OMEGA_CELERY_CONFIG']['BROKER_USE_SSL']
+        if use_ssl:
+            # FIXME: Celery 5 by defaults sets ssl.CERT_REQUIRED,
+            #        does not work due to double CAs (must combine ca_certificate.pems?)
+            use_ssl = {
+                'cert_reqs': ssl.CERT_NONE,
+            }
         self.assertIsNone(self._test_broker(broker_url, use_ssl))
 
     def _test_broker(self, broker_url, use_ssl):

@@ -1,0 +1,55 @@
+# a standard logging configuration for commercial environments
+# -- logs as json
+# -- always includes hostname
+# -- always includes task filter
+logging:
+  version: 1
+  disable_existing_loggers: true
+  formatters:
+     json:
+       class: pythonjsonlogger.jsonlogger.JsonFormatter
+       # https://docs.python.org/3/library/logging.html#logrecord-attributes
+       format: "{asctime} {levelname} {hostname} {message} {requestId} {task_name}"
+       style: "{"
+  filters:
+     hostname:
+       (): config.logutil.hostnameFilter
+     task:
+       (): config.logutil.taskFilter
+     request:
+       (): config.logutil.requestContextFilter
+       drop:
+        - data
+        - result
+  handlers:
+     console:
+       class: logging.StreamHandler
+       stream: ext://sys.stdout
+       formatter: json
+       filters:
+          - hostname
+          - task
+          - request
+  loggers:
+     root:
+        handlers:
+          - console
+        level: INFO
+     celery.task:
+        handlers:
+          - console
+     django:
+        handlers:
+          - console
+        level: INFO
+     django.request:
+       handlers:
+         - console
+       level: DEBUG
+     gunicorn:
+       handlers:
+         - console
+       level: DEBUG
+
+
+
