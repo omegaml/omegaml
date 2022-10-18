@@ -1,3 +1,4 @@
+# TODO consider using selenium/standalone-chrome + install python
 FROM joyzoursky/python-chromedriver:3.9-selenium
 # chrome debug port https://developers.google.com/web/updates/2017/04/headless-chrome#frontend
 EXPOSE 9222/tcp

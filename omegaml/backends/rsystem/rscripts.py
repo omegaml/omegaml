@@ -7,11 +7,12 @@ from shutil import make_archive, unpack_archive
 from subprocess import run
 
 from omegaml.backends.basedata import BaseDataBackend
+from omegaml.backends.package.packager import RunnablePackageMixin
 from omegaml.runtimes.rsystem import rhelper
 from omegaml.util import tryOr
 
 
-class RPackageData(BaseDataBackend):
+class RPackageData(RunnablePackageMixin, BaseDataBackend):
     """
     Backend to support R packages
 

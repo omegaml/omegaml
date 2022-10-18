@@ -42,10 +42,12 @@ jobs:
               echo "Not a PR build."
             fi
       - run:
-          name: Install Miniforge
+          name: setup env
           command: |
             curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
             bash Miniforge3-Linux-x86_64.sh -b
+            apt update && apt install -y docker-compose
+            pip3 install tox tox-run-before tox-conda
       - run:
           name: Run unit tests
           command: |
@@ -74,8 +76,7 @@ jobs:
               scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
             else
               # if this is not a release build, do a quick build for speed
-              PYVER=3.9
-              dotest $PYVER
+              dotest 3.9
             fi
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
@@ -112,7 +113,7 @@ jobs:
             docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
             # TODO consider using https://cibuildwheel.readthedocs.io
-            for PYVER in 3.7 3.8 3.9; do
+            for PYVER in 3.8 3.9; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
