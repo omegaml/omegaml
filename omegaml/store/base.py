@@ -1052,7 +1052,7 @@ class OmegaStore(object):
         if regexp:
             searchkeys['name'] = regex(regexp)
         elif pattern:
-            re_pattern = pattern.replace('*', '.*').replace('/', '\/')
+            re_pattern = pattern.replace('*', '.*').replace('/', r'\/')
             searchkeys['name'] = regex(f'^{re_pattern}$')
         if not include_temp:
             q_excludes &= Q(name__not__startswith='_')
