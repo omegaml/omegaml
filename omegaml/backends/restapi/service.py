@@ -43,7 +43,7 @@ class GenericServiceResource:
         self.om.models.validate(model_id, X=payload)
         promise = self.om.runtime.model(model_id).predict(payload, **query)
         result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
-        self.om.models.validate(model_id, Y=result) if isinstance(result, dict) else None
+        self.om.models.validate(model_id, Y=result)
         return result
 
     def predict_proba(self, model_id, query, payload):
@@ -58,8 +58,8 @@ class GenericServiceResource:
         def do_action(self, resource_id, query, payload):
             meta = self.resolve_object(resource_id)
             # check first method that matches http_method in signature.actions
-            actions = meta.attributes.get('signature', {}).get('actions') or []
-            for method, http_methods in actions:
+            actions = meta.attributes.get('signature', {}).get('actions') or {}
+            for method, http_methods in actions.items():
                 # SignatureMixin.link_datatype
                 if http_method in http_methods:
                     meth = getattr(self, method)
@@ -95,7 +95,7 @@ class GenericServiceResource:
         else:
             data = result
         # ensure response is json serializable
-        if not isinstance(data, dict):
+        if not isinstance(data, (list, dict, tuple)):
             data = {'data': data}
         return data
 

@@ -50,8 +50,8 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         # note the json payload is not sent back, because it is not passed as **kwargs but as part of *args
-        expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
-        self.assertEqual(data.get('data'), expected)
+        expected = [{'*': None}, {'text': 'foo', 'pure_python': False}]
+        self.assertEqual(data, expected)
 
     def test_service_script_signature_valid(self):
         """ a service with defined data type """
@@ -185,7 +185,11 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
 
         @virtualobj
         def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
-            return {'data': data, 'method': method}
+            if kwargs.get('invalid'):
+                result = {'data': data, 'method': method}
+            else:
+                result = {'a': [1.0], 'b': [2.0]}
+            return result
 
         # specify service input and output
         class MyInputSchema(Schema):
@@ -196,17 +200,112 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
             b = fields.List(fields.Float())
 
         om.models.put(mymodel, 'mymodel')
-        om.models.link_datatype('mymodel', X=MyInputSchema, result=MyResultSchema, actions=['predict'])
+        om.models.link_datatype('mymodel', X=MyInputSchema, Y=MyResultSchema, actions=['predict'])
         # check mymodel is actually deserialized by runtime
         mymodel = None
         # run the script on the cluster
+        # -- invalid response, expect validation error
+        resp = self.client.post(self.url('service/mymodel', action='predict', query='invalid=1'),
+                                json={'factor': 1.0})
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertIn('ValidationError', str(data))
+        # -- valid response, expect response data
         resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'factor': 1.0})
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
-        expected = {'data': [{'factor': 1.0}], 'method': 'predict'}
+        expected = {'a': [1.0], 'b': [2.0]}
         self.assertEqual(data, expected)
         # run again with invalid signature
         resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'xfactor': 1.0})
+        self.assertEqual(resp.status_code, 400)
+        self.assertTrue('ValidationError' in resp.json['message'])
+
+    def test_service_noaction_virtualobj_model_signature(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('invalid'):
+                result = {'data': data, 'method': method}
+            else:
+                result = {'a': 1, 'b': 2}
+            return result
+
+        # specify service input and output
+        class MyInputSchema(Schema):
+            factor = fields.Float()
+
+        class MyResultSchema(Schema):
+            a = fields.Float()
+            b = fields.Float()
+
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', X=MyInputSchema, Y=MyResultSchema, actions=['predict'])
+        # check mymodel is actually deserialized by runtime
+        mymodel = None
+        # run the model on the cluster
+        # -- invalid response, expect validation error
+        resp = self.client.post(self.url('service/mymodel', query='invalid=1'), json={'factor': 1.0})
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertIn('ValidationError', str(data))
+        # -- valid response, expect response data
+        resp = self.client.post(self.url('service/mymodel'), json={'factor': 1.0})
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        expected = {'a': 1, 'b': 2}
+        self.assertEqual(data, expected)
+        # run again with invalid signature
+        resp = self.client.post(self.url('service/mymodel', query='text=foo'), json={'xfactor': 1.0})
+        self.assertEqual(resp.status_code, 400)
+        self.assertTrue('ValidationError' in resp.json['message'])
+
+    def test_service_noaction_virtualobj_model_signature_many_objects(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('invalid'):
+                result = {'data': data, 'method': method}
+            else:
+                result = [{'a': 1, 'b': 2}]
+            return result
+
+        # specify service input and output
+        class MyInputSchema(Schema):
+            factor = fields.Float()
+
+        class MyResultSchema(Schema):
+            a = fields.Float()
+            b = fields.Float()
+
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', X=[MyInputSchema], Y=[MyResultSchema])
+        # check mymodel is actually deserialized by runtime
+        mymodel = None
+        # run the model on the cluster
+        # -- invalid input, expect validation error
+        resp = self.client.post(self.url('service/mymodel', query='invalid=1'), json={'factor': 1.0})
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertIn('ValidationError', str(data))
+        self.assertIn('invalid input', str(data))  # result is a dict, expected a list
+        # -- invalid response, expect validation error
+        resp = self.client.post(self.url('service/mymodel', query='invalid=1'), json=[{'factor': 1.0}])
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertIn('ValidationError', str(data))
+        self.assertIn('invalid input', str(data)) # result is a dict, expected a list
+        # -- valid response, expect response data
+        resp = self.client.post(self.url('service/mymodel'), json=[{'factor': 1.0}])
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        expected = [{'a': 1, 'b': 2}]
+        self.assertListEqual(data, expected)
+        self.assertDictEqual(data[0], expected[0])
+        # run again with invalid signature
+        resp = self.client.post(self.url('service/mymodel', query='text=foo'), json=[{'xfactor': 1.0}])
         self.assertEqual(resp.status_code, 400)
         self.assertTrue('ValidationError' in resp.json['message'])
 
@@ -242,7 +341,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         data = self.deserialize(resp)['response']
         # since the response is not valid json, the 'data' key is inserted by GenericServiceResource
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
-        self.assertEqual(data['data'], expected)
+        self.assertEqual(data, expected)
 
 
 class ServiceV1ResourceTests(ServiceDirectResourceTests):
