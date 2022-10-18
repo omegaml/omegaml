@@ -60,6 +60,8 @@ OMEGA_BROKER_HOST = '{}:{}'.format(parsed.hostname, port)
 #: logging.yaml for log config
 default_logging = os.path.join(os.path.dirname(__file__), 'resources/logging.yaml')
 OMEGA_LOGGING_CONFIG = os.environ.get('OMEGA_LOGGING_CONFIG', default_logging)
+#: do not allow overrides from local env upon retrieving config from hub (disable in workers)
+OMEGA_ALLOW_ENV_CONFIG = truefalse(os.environ.get('OMEGA_ALLOW_ENV_CONFIG', '0'))
 
 # allow overloading settings from EnvSettings
 try:
