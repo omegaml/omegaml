@@ -52,7 +52,7 @@ class Omega(CombinedOmegaStoreMixin):
         self.streams = self._make_streams(prefix='streams/')
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
-        self.jobs = OmegaJobs(store=self._jobdata)
+        self.jobs = OmegaJobs(store=self._jobdata, defaults=self.defaults)
         # logger
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
         # stores

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from unittest.mock import patch
+
 import unittest
 from unittest import TestCase
 
@@ -610,6 +612,27 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(labels, dict)
         self.assertEqual(['local'], list(labels.values())[0])
 
+    def test_job_runtime_context(self):
+        om = Omega()
+        code = """import os; print(os.environ.get('OMEGA_AUTH_ENV'))"""
+        env_pass = '***CUSTOM_AUTH_ENV***'
+        # check no auth env is passed without setting one
+        om.jobs.create(code, 'myjob')
+        om.runtime.job('myjob').run().get()
+        results = om.jobs.get(om.jobs.list('results/*')[-1])
+        self.assertNotIn(env_pass, str(results['cells']))
+        # check that runtime uses auth env to prepare notebook env
+        with patch.dict(om.defaults, {'OMEGA_AUTH_ENV': env_pass}) as m:
+            om.jobs.create(code, 'myjob')
+            om.runtime.job('myjob').run().get()
+            results = om.jobs.get(om.jobs.list('results/*')[-1])
+            self.assertIn(env_pass, str(results['cells']))
+        # check auth env clears notebook env on exit
+        om.jobs.create(code, 'myjob')
+        om.runtime.job('myjob').run().get()
+        results = om.jobs.get(om.jobs.list('results/*')[-1])
+        self.assertNotIn(env_pass, str(results['cells']))
+
     def test_parallel_getall(self):
         om = Omega()
         code = """print('hello')"""
@@ -650,6 +673,3 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         reg.fit(df[['x']], df['y'])
         om.models.put(reg, 'regmodel')
         result = om.runtime.model('regmodel').predict([[5], [6]]).get()
-
-
-

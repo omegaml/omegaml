@@ -347,7 +347,7 @@ class OmegaJobs(BackendBaseCommon):
             # -- see https://stackoverflow.com/a/47053020/890242
             'kernel_name': '',
         }
-        # other interesting options
+        # overrides from metadata
         ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
         try:
             resources = {

@@ -82,7 +82,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         if self.request._om is None:
             bucket = self.system_kwargs.get('__bucket')
             auth = self.system_kwargs.get('__auth')
-            self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
+            om = self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
+            self.auth_env.prepare_env(om.defaults)
         return self.request._om
 
     def get_delegate(self, name, kind='models', pass_as='model_store'):
@@ -212,6 +213,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def reset(self):
         # ensure next call will start over and get a new om instance
         self.request._om = None
+        self.auth_env.prepare_env(None, clear=True)
 
     def send_event(self, type, **fields):
         # ensure result masking in events
