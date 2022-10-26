@@ -80,15 +80,15 @@ import tempfile
 import warnings
 from datetime import datetime
 from mongoengine.connection import disconnect, \
-    connect, _connections, get_db, _connection_settings
+    connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
-from uuid import uuid4
-
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
+from uuid import uuid4
+
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -851,7 +851,7 @@ class OmegaStore(object):
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
                                 filter=None, version=-1, is_series=False,
-                                chunksize=None,
+                                chunksize=None, sanitize=True,
                                 **kwargs):
         """
         Internal method to return DataFrame from documents
@@ -861,6 +861,9 @@ class OmegaStore(object):
         :param lazy: if True returns a lazy representation as an MDataFrame.
            If False retrieves all data and returns a DataFrame (default)
         :param filter: the filter to be applied as a column__op=value dict
+        :param sanitize: sanitize filter by removing all $op filter keys,
+          defaults to True. Specify False to allow $op filter keys. $where
+          is always removed as it is considered unsafe.
         :param version: the version to retrieve (not supported)
         :param is_series: if True retruns a Series instead of a DataFrame
         :param kwargs: remaining kwargs are used a filter. The filter kwarg
@@ -868,11 +871,15 @@ class OmegaStore(object):
         :return: the retrieved object (DataFrame, Series or MDataFrame)
 
         """
+        from omegaml.store.queryops import sanitize_filter
+        from omegaml.store.filtered import FilteredCollection
+
         collection = self.collection(name)
         meta = self.metadata(name)
         if lazy or chunksize:
             from ..mdataframe import MDataFrame
             filter = filter or kwargs
+            filter = sanitize_filter(filter, no_ops=sanitize)
             df = MDataFrame(collection,
                             metadata=meta.kind_meta,
                             columns=columns).query(**filter)
@@ -886,10 +893,11 @@ class OmegaStore(object):
             filter = filter or kwargs
             if filter:
                 from .query import Filter
+                filter = sanitize_filter(filter, no_ops=sanitize)
                 query = Filter(collection, **filter).query
-                cursor = collection.find(filter=query, projection=columns)
+                cursor = FilteredCollection(collection).find(filter=query, projection=columns)
             else:
-                cursor = collection.find(projection=columns)
+                cursor = FilteredCollection(collection).find(projection=columns)
             # restore dataframe
             df = cursor_to_dataframe(cursor)
             if '_id' in df.columns:
@@ -946,7 +954,7 @@ class OmegaStore(object):
                     modified_params[item] = kwargs.get(item)
         return modified_params
 
-    def get_dataframe_dfgroup(self, name, version=-1, kwargs=None):
+    def get_dataframe_dfgroup(self, name, version=-1, sanitize=True, kwargs=None):
         """
         Return a grouped dataframe
 
@@ -954,9 +962,13 @@ class OmegaStore(object):
         :param version: not supported
         :param kwargs: mongo db query arguments to be passed to
                collection.find() as a filter.
+        :param sanitize: remove any $op operators in kwargs
 
         """
         import pandas as pd
+        from omegaml.store.queryops import sanitize_filter
+        from omegaml.store.filtered import FilteredCollection
+
         def convert_doc_to_row(cursor):
             for doc in cursor:
                 data = doc.pop('_data', [])
@@ -964,10 +976,11 @@ class OmegaStore(object):
                     doc.update(row)
                     yield doc
 
-        datastore = self.collection(name)
+        datastore = FilteredCollection(self.collection(name))
         kwargs = kwargs if kwargs else {}
         params = self.rebuild_params(kwargs, datastore)
-        cursor = datastore.find(params, {'_id': False})
+        params = sanitize_filter(params, no_ops=sanitize)
+        cursor = datastore.find(params, projection={'_id': False})
         df = pd.DataFrame(convert_doc_to_row(cursor))
         return df
 

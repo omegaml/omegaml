@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import warnings
+
 from io import BytesIO
 from unittest import skip
 
@@ -521,6 +523,34 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(df3.equals(df[df3.columns]))
         df4 = store.get('dfgroup', kwargs={'a': 1})
         self.assertTrue(df4.equals(result_df[df4.columns]))
+
+    def test_store_dataframe_as_dfgroup_injected(self):
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        result_data = {
+            'a': list(range(1, 2)),
+            'b': 1,
+        }
+        df = pd.DataFrame(data)
+        result_df = pd.DataFrame(result_data)
+        store = OmegaStore()
+        groupby_columns = ['b']
+        meta = store.put(df, 'dfgroup', groupby=groupby_columns)
+        injected = {
+            '$gt': 0,
+        }
+        with warnings.catch_warnings(record=True) as wrn:
+            warnings.simplefilter('always')
+            df2 = store.get('dfgroup', kwargs={'b': injected})
+            warnlog = str(list(w.message for w in wrn))
+        self.assertIn('$gt clauses are not permitted', warnlog)
+        with self.assertLogs('omegaml', 'DEBUG') as cm:
+            df2 = store.get('dfgroup', kwargs={'b': injected})
+            log = cm.output
+        self.assertIn("{'b': {'-gt': 0}}", str(log))
+        self.assertEqual(len(df2), 0)
 
     def test_store_dataframe_as_hdf(self):
         data = {
