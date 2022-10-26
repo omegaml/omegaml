@@ -96,7 +96,7 @@ setup(
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=6.4.0',
-        'dill>=0.3.2',
+        'dill>=0.3.2,<0.3.6', # due to dill, https://github.com/uqfoundation/dill/issues/332
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
         'cron-descriptor>=1.2.31',
