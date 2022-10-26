@@ -1,14 +1,13 @@
-import os
 from getpass import getuser
 from unittest import TestCase
 
+import os
 import pandas as pd
-from pandas.testing import assert_frame_equal
-from sqlalchemy.engine import Connection, create_engine, ResultProxy
-
 from omegaml import Omega
 from omegaml.backends.sqlalchemy import SQLAlchemyBackend
 from omegaml.tests.util import OmegaTestMixin
+from pandas.testing import assert_frame_equal
+from sqlalchemy.engine import Connection, create_engine, ResultProxy
 
 
 class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
@@ -86,7 +85,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         })
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
         om.datasets.put(cnx_str, 'foobar',
-                        sql='select {cols} from foobar',
+                        sql='select {{cols}} from foobar',
                         kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
@@ -109,8 +108,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
             'x': range(10)
         })
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        # using
         om.datasets.put(cnx_str, 'foobar',
-                        sql='select {cols} from foobar',
+                        sql='select {{cols}} from foobar',
                         kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
@@ -118,8 +118,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         with self.assertRaises(KeyError):
             # missing sqlvars
             dfx = om.datasets.get('foobar')
-        dfx = om.datasets.getl('foobar', sqlvars=dict(cols='x'))
+        dfx = om.datasets.getl('foobar', sqlvars=dict(cols='x as x'))
         self.assertIsInstance(dfx, ResultProxy)
+        print(list(dfx))
 
     def test_put_copy_from_connection(self):
         """
@@ -276,3 +277,58 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         dfx = om.datasets.get('testsqlite', sql='select * from foo')
         df_expected = df.append(df)
         assert_frame_equal(dfx, df_expected)
+
+    def test_query_in_clause(self):
+        om = self.om
+        cnx_str = 'sqlite:///test.db'
+        engine = create_engine(cnx_str)
+        cnx = engine.connect()
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        om.datasets.put(cnx_str, 'foobar',
+                        sql='select * from foobar where x in {x} or x in {y}',
+                        kind=SQLAlchemyBackend.KIND)
+        df_db = om.datasets.get('foobar', sqlvars={
+            'x': [1, 2, 3],
+            'y': [5, 6, 7]
+        })
+        fltx = df['x'].isin([1, 2, 3])
+        flty = df['x'].isin([5, 6, 7])
+        df_filtered = df[fltx | flty].reset_index(drop=True)
+        assert_frame_equal(df_db, df_filtered)
+
+    def test_put_connection_with_sql_injection(self):
+        """
+        attempt sql injection
+        """
+        om = self.om
+        cnx_str = 'sqlite:///test.db'
+        engine = create_engine(cnx_str)
+        cnx = engine.connect()
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        om.datasets.put(cnx_str, 'foobar',
+                        sql='select * from foobar where x={x} and x > 5',
+                        kind=SQLAlchemyBackend.KIND)
+        self.assertIn('foobar', om.datasets.list())
+        meta = om.datasets.metadata('foobar')
+        self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
+        # simulate sql injection
+        # -- if injection is executed, will return all rows
+        # -- if injection is not executed will return no rows
+        #    (because no row matches the {x}="-1 or 0=0" statement)
+        # -- the log statement prints the sql with {x} replaced as :x
+        #    (:notation denotes bound variables)
+        # -- the sqlvars are passed on to sqlalchemy.execute verbatim,
+        #    i.e. are not interpreted as part of the sql statement
+        injection = "-1 or 0=0 --"
+        sqlvars = {'x': injection}
+        with self.assertLogs('omegaml', level='DEBUG') as cm:
+            dfx = om.datasets.get('foobar', sqlvars=sqlvars)
+        self.assertEqual(len(dfx), 0)
+        self.assertIn("select * from foobar where x=:x", str(cm.output))
+        self.assertIn("{'x': '-1 or 0=0 --'}", str(cm.output))
