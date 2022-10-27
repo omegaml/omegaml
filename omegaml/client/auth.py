@@ -38,7 +38,9 @@ class OmegaRestApiAuth(AuthBase):
 
     @property
     def kind(self):
-        return 'jwt' if self.username.startswith('jwt:') or self.apikey.count('.') == 2 else 'apikey'
+        is_jwt = str(self.username).startswith('jwt:')
+        is_jwt |= str(self.apikey).count('.') == 2
+        return 'jwt' if is_jwt else 'apikey'
 
 
 class OmegaRuntimeAuthentication:
