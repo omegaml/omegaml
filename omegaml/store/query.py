@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 from omegaml.store.queryops import MongoQueryOps, flatten_keys
 from omegaml.util import restore_index
@@ -44,7 +45,7 @@ class MongoQ(object):
 
     """
     def __init__(self, **kwargs):
-        self.conditions = kwargs
+        self.conditions = self._sanitize_filter(kwargs)
         self.qlist = [('', self)]
         # should we return ~(conditions)
         self._inv = False
@@ -232,6 +233,11 @@ class MongoQ(object):
         notq = copy.deepcopy(self).negate()
         return notq
 
+    def _sanitize_filter(self, filter):
+        from omegaml.store.queryops import sanitize_filter
+        return sanitize_filter(filter)
+
+
 
 class Filter(object):
 
@@ -400,3 +406,4 @@ class Filter(object):
 
     def __repr__(self):
         return ' '.join(f'Filter({self.q})'.replace('\n', ' ').split())
+

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import warnings
+
 import json
 import pymongo
 import sys
@@ -406,6 +408,31 @@ def ensure_index_limit(idx, **kwargs):
         name = md5(str(idx).encode('utf8')).hexdigest()
         kwargs.setdefault('name', name)
     return idx, kwargs
+
+
+def sanitize_filter(filter, no_ops=False):
+    """ sanitize mongodb filter statements """
+    injection_ops = ['$where', '$mapReduce']
+    user_ops = [k for k in filter if k.strip().startswith('$') and k not in injection_ops]
+    ops_to_remove = user_ops + injection_ops if no_ops else injection_ops
+    # sanitize user and default operators
+    if user_ops and not no_ops:
+        warnings.warn(f'Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized.')
+    for op in ops_to_remove:
+        value = filter.pop(op, None)
+        if value is not None:
+            repl_op = op.replace('$', '-')
+            warnings.warn(f'{op} clauses are not permitted and replaced by {repl_op} for security reasons.')
+            filter[repl_op] = value
+    # sanitize nested operators
+    for k, v in filter.items():
+        if isinstance(v, dict):
+            sanitize_filter(v, no_ops=no_ops)
+        elif isinstance(v, (list, tuple)):
+            for el in v:
+                if isinstance(el, dict):
+                    sanitize_filter(el, no_ops=no_ops)
+    return filter
 
 
 # convenience accessors

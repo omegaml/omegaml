@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import warnings
+
 from datetime import datetime
 
 import random
@@ -551,3 +553,59 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         for df_row, mdf_row in zip(mdf.items(), df.items()):
             self.assertEqual(type(df_row), type(mdf_row))
             assert_series_equal(df_row[1], mdf_row[1])
+
+    def test_filter_injection(self):
+        om = self.om
+        # check that where statements are not executed
+        injected = {
+            "$where": "function() { return true; }"
+        }
+        mdf = om.datasets.getl('sample', filter=injected)
+        self.assertEqual(len(mdf.value), 0)
+        # check that $operators are not executed by default
+        injected = {
+            "$or": [{
+                "x": -1,
+                "$where": "function() { return true; }"
+            }]
+        }
+        mdf = om.datasets.getl('sample', filter=injected, sanitize=False)
+        # if $where is executed we get rows back, else None (x == -1 is never true)
+        self.assertEqual(len(mdf.value), 0)
+        # check variable replacements that contain filters are detected
+        # -- lazy eval
+        injected = {
+            "$gt": 0
+        }
+        query = {
+            'x': injected
+        }
+        with self.assertLogs('omegaml', 'DEBUG') as cm:
+            mdf = om.datasets.getl('sample', filter=query)
+            result = mdf.value
+        # if injected condition is executed we get rows back, else None
+        # since x: "-gt: 0" is not a valid condition
+        self.assertIn("{'-gt': 0}", str(cm.output))
+        self.assertEqual(len(result), 0)
+        # -- direct eval
+        injected = {
+            "$gt": 0
+        }
+        query = {
+            'x': injected
+        }
+        with self.assertLogs('omegaml', 'DEBUG') as cm:
+            result = om.datasets.get('sample', filter=query)
+        # if injected condition is executed we get rows back, else None
+        # since x: "-gt: 0" is not a valid condition
+        self.assertIn("{'-gt': 0}", str(cm.output))
+        self.assertEqual(len(result), 0)
+        # check we can ask $operators other than $where to be executed
+        injected = {
+            "$and": [{
+                "x": {"$gte": 0},
+            }]
+        }
+        mdf = om.datasets.getl('sample', filter=injected, sanitize=False)
+        df = om.datasets.get('sample')
+        self.assertEqual(len(mdf.value), len(df))

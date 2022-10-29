@@ -1,9 +1,14 @@
 from __future__ import absolute_import
 
+import logging
+
+import warnings
+
 from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.util import PickableCollection, ensure_base_collection
 
+logger = logging.getLogger(__name__)
 
 class FilteredCollection:
     """
@@ -48,7 +53,8 @@ class FilteredCollection:
     the expression for the set fcoll.query = { expression }
     """
 
-    def __init__(self, collection, query=None, projection=None, **kwargs):
+    def __init__(self, collection, query=None, projection=None,
+                 **kwargs):
         if isinstance(collection, FilteredCollection):
             # avoid cascading of FilteredCollections
             query = query or collection._fixed_query
@@ -78,37 +84,37 @@ class FilteredCollection:
 
     def aggregate(self, pipeline, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         pipeline.insert(0, qops.MATCH(query))
         kwargs.update(allowDiskUse=True)
         return self.collection.aggregate(pipeline, **kwargs)
 
     def find(self, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.find(filter=query, **kwargs)
 
     def find_one(self, filter=None, *args, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.find_one(query, *args, **kwargs)
 
     def find_one_and_delete(self, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.find_one_and_delete(query,
                                                    **kwargs)
 
     def find_one_and_replace(self, replacement, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.find_one_and_replace(query,
                                                     replacement,
                                                     **kwargs)
 
     def find_one_and_update(self, update, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.find_one_and_update(query,
                                                    update,
                                                    **kwargs)
@@ -118,12 +124,12 @@ class FilteredCollection:
 
     def count_documents(self, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.count_documents(query, **kwargs)
 
     def distinct(self, key, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(filter or {})
+        query.update(self._sanitize_filter(filter or {}))
         return self.collection.distinct(key, filter=query, **kwargs)
 
     def create_index(self, keys, **kwargs):
@@ -155,3 +161,10 @@ class FilteredCollection:
     def save(self, *args, **kwargs):
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
+
+    def _sanitize_filter(self, filter):
+        from omegaml.store.queryops import sanitize_filter
+        sanitize_filter(filter)
+        logger.debug(f'executing mongodb query filter {filter}')
+        return filter
+

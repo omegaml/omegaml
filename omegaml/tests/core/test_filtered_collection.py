@@ -1,12 +1,12 @@
 from __future__ import absolute_import
+
+import warnings
+
+import pandas as pd
 import random
-from unittest.case import TestCase
-
-from pymongo.collection import Collection
-
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
-import pandas as pd
+from unittest.case import TestCase
 
 
 class FilteredCollectionTests(TestCase):
@@ -77,4 +77,34 @@ class FilteredCollectionTests(TestCase):
         fcoll = FilteredCollection(self.coll, query=query)
         result = fcoll.distinct('x')
         self.assertEqual(result, [9])
+
+    def test_injection(self):
+        # check that injected $where statements are not executed
+        # -- if executed would return all rows (all row conditions true)
+        # -- if properly sanitized will return zero rows because the
+        #    the $where clause is replaced by -where, not matching any rows
+        injected = {
+            "$where": "function() { return true; }"
+        }
+        with warnings.catch_warnings(record=True) as wrn:
+            warnings.simplefilter('always')
+            fcoll = FilteredCollection(self.coll, query=injected)
+            result = fcoll.count_documents()
+            warnlog = str(list(w.message for w in wrn))
+            self.assertIn('$where clauses are not permitted and replaced by -where for security reasons.', warnlog)
+        self.assertEqual(result, 0)
+        # check that nested $where statements are not executed
+        # -- if executed would return all rows (all row conditions true)
+        # -- if properly sanitized will return zero rows because the
+        #    the $where clause is replaced by -where, not matching any rows
+        injected = {
+            "$or": [{
+                "x": -1,
+                "$where": "function() { return true; }"
+            }]
+        }
+        fcoll = FilteredCollection(self.coll, query=injected)
+        result = fcoll.count_documents()
+        # if $where is executed we get rows back, else None (x == -1 is never true)
+        self.assertEqual(result, 0)
 
