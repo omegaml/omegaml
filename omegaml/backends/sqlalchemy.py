@@ -1,9 +1,13 @@
+import warnings
+
+import string
 from getpass import getuser
 from logging import warning
 
 import logging
 import os
 import pandas as pd
+import sqlalchemy
 
 from omegaml.backends.basedata import BaseDataBackend
 
@@ -17,6 +21,8 @@ except:
 
 CNX_CACHE = {}
 ALWAYS_CACHE = False
+
+logger = logging.getLogger(__name__)
 
 
 class SQLAlchemyBackend(BaseDataBackend):
@@ -46,8 +52,18 @@ class SQLAlchemyBackend(BaseDataBackend):
             # -- predefined sqls can contain variables to be resolved at access time
             #    if you miss to specify required variables in sqlvars, a KeyError is raised
             om.datasets.put(sqlaclhemy_constr, 'myview',
-                            sql='select ... from col="{var}"')
+                            sql='select ... from T1 where col="{var}"')
             om.datasets.get('mysqlalchemy', sqlvars=dict(var="value"))
+
+            # -- Variables are replaced by binding parameters, which is safe for
+            #    untrusted inputs. To replace variables as strings, use double
+            #    `{{variable}}` notation. A warning will be issued because this
+            #    is considered an unsafe practice for untrusted input (REST API).
+            #    It is in your responsibility to sanitize the value of the `cols` variable.
+            om.datasets.put(sqlaclhemy_constr, 'myview',
+                            sql='select {{cols}} from T1 where col="{var}"')
+            om.datasets.get('mysqlalchemy', sqlvars=dict(cols='foo, bar',
+                                                         var="value"))
 
         Query data from a connection and store into an omega-ml dataset::
 
@@ -161,10 +177,10 @@ class SQLAlchemyBackend(BaseDataBackend):
         Args:
 
                 raw (bool): if True, returns the raw sql alchemy connection
-                keep (bool): option, if True keeps the connection open. This
-                  is potentially unsafe in a multi-user environment where
-                  connection strings contain user-specific secrets. To always
-                  keep connections open, set
+                keep (bool): option, if True keeps the connection open. Lazy=True
+                  implies keep=True. This is potentially unsafe in a multi-user
+                  environment where connection strings contain user-specific
+                  secrets. To always keep connections open, set
                   ``om.datasets.defaults.SQLALCHEMY_ALWAYS_CACHE=True``
 
         Returns:
@@ -172,9 +188,11 @@ class SQLAlchemyBackend(BaseDataBackend):
         """
         meta = self.data_store.metadata(name)
         connection_str = meta.kind_meta.get('sqlalchemy_connection')
-        sql = sql or meta.kind_meta.get('sql')
+        valid_sql = lambda v: isinstance(v, str) or v is not None
+        sql = sql if valid_sql(sql) else meta.kind_meta.get('sql')
+        sqlvars = sqlvars or {}
         table = self._default_table(table or meta.kind_meta.get('table') or name)
-        if not raw and not sql:
+        if not raw and not valid_sql(sql):
             sql = f'select * from {table}'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
         keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE',
@@ -184,19 +202,21 @@ class SQLAlchemyBackend(BaseDataBackend):
             connection = self._get_connection(name, connection_str, secrets=secrets, keep=keep)
         else:
             raise ValueError('no connection string')
-        if not raw and sql:
+        if not raw and valid_sql(sql):
             index_cols = _meta_to_indexcols(meta) if index else kwargs.get('index_col')
-            try:
-                sql = sql.format(**(sqlvars or {}))
-            except KeyError as e:
-                raise KeyError('{e}, specify sqlvars= to build query >{sql}<'.format(**locals()))
+            stmt = self._sanitize_statement(sql, sqlvars)
             kwargs = meta.kind_meta.get('kwargs') or {}
             kwargs.update(kwargs)
             if not lazy:
-                result = pd.read_sql(sql, connection, chunksize=chunksize, index_col=index_cols, **kwargs)
+                logger.debug(f'executing sql {stmt} with parameters {sqlvars}')
+                pd_kwargs = {**dict(chunksize=chunksize, index_col=index_cols,
+                                    params=(sqlvars or {})), **kwargs}
+                result = pd.read_sql(stmt, connection, **pd_kwargs)
             else:
                 # lazy returns a cursor
-                result = connection.execute(sql)
+                logger.debug(f'preparing a cursor for sql {sql} with parameters {sqlvars}')
+                result = connection.execute(stmt, **sqlvars)
+                keep = True
             if not keep:
                 connection.close()
             return result
@@ -452,6 +472,55 @@ class SQLAlchemyBackend(BaseDataBackend):
         else:
             name = name[1:]
         return name
+
+    def _sanitize_statement(self, sql, sqlvars):
+        # sanitize sql:string statement in two steps
+        # -- step 1: replace all {} variables by :notation
+        # -- step 2: replace all remaining {} variables from sqlvars
+        #    and issue a warning. step 2 is considered unsafe if
+        #    the sqlvars source cannot be trusted
+        # -- step 3: prepare a SQL statement with bound variables
+        # see https://realpython.com/prevent-python-sql-injection/#using-query-parameters-in-sql
+        if not isinstance(sql, str):
+            return sql
+        # replace all {...} variables with bound parameters
+        #    sql = "select * from foo where user={username}"
+        #       => "select * from foo where user=:username"
+        placeholders = string.Formatter().parse(sql)
+        vars = [spec[1] for spec in placeholders if spec[1]]
+        safe_replacements = {var: f':{var}' for var in vars}
+        sql = sql.format(**safe_replacements)
+        # build parameter list for tuples and lists
+        # -- sqlalchemy+pyodbc do not support lists of values
+        # -- list of values must be passed as single parameters
+        # -- e.g. sql=select * from x in :list
+        #    =>       select * from x in (:x_1, :x_2, :x_3, ...)
+        for k in vars:
+            # note we are iterating vars, not sqlvars
+            # -- sqlvars is not used in constructing sql text
+            v = sqlvars[k]
+            if isinstance(v, (list, tuple)):
+                bind_vars = { f'{k}_{i}': lv for i, lv in enumerate(v)}
+                placeholders = ','.join(f':{bk}' for bk in bind_vars)
+                sql = sql.replace(f':{k}', f'({placeholders})')
+                sqlvars.update(bind_vars)
+        try:
+            # format remaining {{}} for selection
+            #    sql = "select {{cols}} from foo where user=:username
+            #    =>    "select a, b from foo where user=:username
+            placeholders = list(string.Formatter().parse(sql))
+            vars = [spec[1] for spec in placeholders if spec[1]]
+            if vars:
+                warnings.warn(f'Statement >{sql}< contains unsafe variables {vars}. Use :notation or sanitize input.')
+            sql = sql.format(**{**sqlvars, **safe_replacements})
+        except KeyError as e:
+            raise KeyError('{e}, specify sqlvars= to build query >{sql}<'.format(**locals()))
+        # prepare sql statement with bound variables
+        try:
+            stmt = sqlalchemy.sql.text(sql)
+        except sqlalchemy.exc.StatementError as exc:
+            raise
+        return stmt
 
 
 def _is_valid_url(url):
