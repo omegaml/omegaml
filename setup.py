@@ -79,7 +79,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
     ],
     install_requires=[
-        'celery>4.4,<5.0',
+        'celery>5,<6.0',
         'importlib-metadata<5.0', # due to https://github.com/celery/kombu/pull/1601
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',

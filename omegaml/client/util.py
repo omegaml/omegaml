@@ -21,7 +21,7 @@ def get_omega(args, require_config=False):
             raise ValueError(msg)
     else:
         om = setup()
-    if local:
+    if local or local_runtime:
         om.runtime.mode(local=True)
     return om[bucket] if bucket else om # for speed
 
