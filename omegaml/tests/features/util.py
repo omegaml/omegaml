@@ -77,7 +77,7 @@ class Notebook:
         br = self.browser
         br.find_by_id('username_input').first.fill(self.user)
         br.find_by_id('password_input').first.fill(self.password)
-        br.click_link_by_id('login_submit')
+        br.find_by_id('login_submit').click()
         br.visit(jburl(br.url, self.user, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection
