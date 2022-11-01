@@ -4,3 +4,4 @@ pandocfilters==1.4.2
 Sphinx==4.4.0
 sphinx-autobuild==0.6.0
 sphinx-rtd-theme==1.0.0
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
