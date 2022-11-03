@@ -445,7 +445,7 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_secrets(self, meta, secrets):
         secrets_specs = meta.kind_meta.get('secrets')
-        values = dict(os.environ)
+        values = dict(os.environ) if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict()
         values.update(**self.data_store.defaults)
         if not secrets and secrets_specs:
             dsname = secrets_specs['dsname']
@@ -561,11 +561,17 @@ def _meta_to_indexcols(meta):
 
 
 def _format_dict(d, replace=None, **kwargs):
+    class KeepMissing(dict):
+        # a missing '{key}' is replaced by '{key}'
+        # in order to avoid raising KeyError
+        # see str.format_map
+        def __missing__(self, key):
+            return '{' + key + '}'
     for k, v in dict(d).items():
         if replace:
             del d[k]
             k = k.replace(*replace) if replace else k
-        d[k] = v.format(**kwargs) if isinstance(v, str) else v
+        d[k] = v.format_map(KeepMissing(kwargs)) if isinstance(v, str) else v
     return d
 
 

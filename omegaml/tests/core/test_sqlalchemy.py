@@ -37,6 +37,8 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om = self.om
         cnx = 'sqlite:///{user}.db'
         om.datasets.put(cnx, 'testsqlite', kind=SQLAlchemyBackend.KIND)
+        # -- test missing key values do not raise KeyError
+        om.datasets.defaults.OMEGA_FOOBAR = '{othervalue}'
         self.assertIn('testsqlite', om.datasets.list())
         meta = om.datasets.metadata('testsqlite')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)

@@ -149,7 +149,7 @@ From your omega-ml portal, get the userid and api key.
 
 .. code::
 
-    from omegacli.auth import OmegaRestApiAuth
+    from omegaml.client.cli.auth import OmegaRestApiAuth
     auth = OmegaRestApiAuth(userid, apikey)
 
 

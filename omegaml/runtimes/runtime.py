@@ -325,9 +325,10 @@ class OmegaRuntime(object):
         self._require_kwargs = dict(routing={}, task={})
         return task
 
-    def result(self, task_id):
+    def result(self, task_id, wait=True):
         from celery.result import AsyncResult
-        return AsyncResult(task_id, app=self.celeryapp).get()
+        promise = AsyncResult(task_id, app=self.celeryapp)
+        return promise.get() if wait else promise
 
     def settings(self, require=None):
         """ return the runtimes's cluster settings
