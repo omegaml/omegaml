@@ -156,3 +156,4 @@ widgetsnbextension==3.4.2
 wrapt==1.11.2
 zict==1.0.0
 
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
