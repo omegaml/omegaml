@@ -91,7 +91,7 @@ partd==1.0.0
 pathtools==0.1.2
 pexpect==4.7.0
 pickleshare==0.7.4
-Pillow==9.0.1
+Pillow==9.2.0
 pipdeptree==0.13.2
 pkginfo==1.5.0.1
 port-for==0.3.1
