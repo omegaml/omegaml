@@ -37,6 +37,12 @@ class OmegaJWTAuthentication(Authentication):
         userid = auth_env.jwt_get_user_id_from_payload(payload)
         return userid, token.decode('utf8')
 
+    def runtime_credentials(self, request):
+        # hook to pass on some efficient form of authentication to the runtime
+        # - JWT is not efficient as needs to be decoded each time
+        # TODO move this to the AuthenticationEnv
+        return request.user.userid, request.user.api_key.key
+
     def is_authenticated(self, request, **kwargs):
         """
         Finds the user and checks their API key.

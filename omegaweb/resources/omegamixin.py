@@ -26,7 +26,7 @@ class OmegaResourceMixin(object):
         if reset or getattr(self, '_omega_instance', None) is None:
             bucket = request.META.get('HTTP_BUCKET')
             qualifier = request.META.get('HTTP_QUALIFIER')
-            creds = self._credentials_from_request(bundle_or_request)
+            creds = self._credentials_from_request(request)
             om = get_omega_for_user(request.user, qualifier=qualifier, creds=creds)[bucket]
             self.celeryapp = om.runtime.celeryapp
             # ensure tracking id is set on every request for traceability
@@ -48,16 +48,15 @@ class OmegaResourceMixin(object):
             self._tracking_id_key_header = f'HTTP_{key}'.replace('-', '_').upper()
         return self._tracking_id_key_header
 
-    def _credentials_from_request(self, bundle_or_request):
+    def _credentials_from_request(self, request):
         # get credentials from Meta.authentication, if available
         # -- _authentication_backend is set by tastypie.MultiAuthentication, tastypiex.DeferredAuthentication
-        # -- some Authentication classes provide extract_credentials(), some don't
-        creds = None
-        authenticator = getattr(bundle_or_request, '_authentication_backend', self._meta.authentication)
-        if authenticator and hasattr(authenticator, 'extract_credentials'):
-            # creds is expected to be a tuple of the form (userid, token)
-            creds = authenticator.extract_credentials(bundle_or_request)
-        return creds
+        # -- some Authentication classes provide runtime_credentials(), some don't
+        # -- TODO move to AuthenticationEnv
+        authenticator = getattr(request, '_authentication_backend', self._meta.authentication)
+        _default_creds_resolver = lambda request: (request.user.username, request.user.api_key.key)
+        creds_resolver = getattr(authenticator, 'runtime_credentials', _default_creds_resolver)
+        return creds_resolver(request)
 
     def dispatch(self, request_type, request, **kwargs):
         self._omega_instance = None
