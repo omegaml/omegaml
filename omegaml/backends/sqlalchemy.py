@@ -1,15 +1,15 @@
-import warnings
-
-import string
-from getpass import getuser
-from logging import warning
-
 import logging
 import os
+import string
+import warnings
+from getpass import getuser
+from hashlib import sha256
+from logging import warning
+
 import pandas as pd
 import sqlalchemy
-
 from omegaml.backends.basedata import BaseDataBackend
+from omegaml.util import ProcessLocal, KeepMissing
 
 try:
     import snowflake
@@ -19,8 +19,15 @@ try:
 except:
     pass
 
-CNX_CACHE = {}
-ALWAYS_CACHE = False
+#: override by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE
+ALWAYS_CACHE = True
+# -- enabled by default as this is the least-surprised option
+# -- consistent with sqlalchemy connection pooling defaults
+#: kwargs for create_engine()
+ENGINE_KWARGS = dict(echo=False, pool_pre_ping=True, pool_recycle=3600)
+# -- echo=False - do not log to stdout
+# -- pool_pre_ping=True - always check, re-establish connection if no longer working
+# -- pool_recylce=N - do not reuse connections older than N seconds
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +142,14 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     """
     KIND = 'sqlalchemy.conx'
+    #: sqlalchemy.Engine cache to enable pooled connections
+    __CNX_CACHE = ProcessLocal()
+
+    # -- https://docs.sqlalchemy.org/en/14/core/pooling.html#module-sqlalchemy.pool
+    # -- create_engine() must be called per-process, hence using ProcessLocal
+    # -- meaning when using a multiprocessing.Pool or other fork()-ed processes,
+    #    the cache will be cleared in child processes, forcing the engine to be
+    #    recreated automatically in _get_connection
 
     @classmethod
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
@@ -142,19 +157,27 @@ class SQLAlchemyBackend(BaseDataBackend):
         support_via = cls._supports_via(cls, data_store, name, obj)
         return valid or support_via
 
-    def drop(self, name, **kwargs):
-        if name in CNX_CACHE:
-            del CNX_CACHE[name]
+    def drop(self, name, secrets=None, **kwargs):
+        # ensure cache is cleared
+        clear_cache = True if secrets is None else False
+        try:
+            self.get(name, secrets=secrets, raw=True, keep=False)
+        except KeyError as e:
+            warnings.warn(f'Connection cache was cleared, however secret {e} was missing.')
+            clear_cache = True
+        if clear_cache:
+            self.__CNX_CACHE.clear()
         return super().drop(name, **kwargs)
 
     def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
-            secrets=None, index=True, keep=False, lazy=False, table=None, *args, **kwargs):
+            secrets=None, index=True, keep=None, lazy=False, table=None, *args, **kwargs):
         """ retrieve a stored connection or query data from connection
 
         Args:
             name (str): the name of the connection
             secrets (dict): dict to resolve variables in the connection string
-            keep (bool): if True connection is kept open.
+            keep (bool): if True connection is kept open, defaults to True (change
+              default as om.defaults.SQLALCHEMY_ALWAYS_CACHE)
             table (str): the name of the table, will be prefixed with the
                store's bucket name unless the table is specified as ':name'
 
@@ -195,8 +218,10 @@ class SQLAlchemyBackend(BaseDataBackend):
         if not raw and not valid_sql(sql):
             sql = f'select * from {table}'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
-        keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE',
-                       ALWAYS_CACHE) or keep
+        _default_keep = getattr(self.data_store.defaults,
+                                'SQLALCHEMY_ALWAYS_CACHE',
+                                ALWAYS_CACHE)
+        keep = keep if keep is not None else _default_keep
         if connection_str:
             secrets = self._get_secrets(meta, secrets)
             connection = self._get_connection(name, connection_str, secrets=secrets, keep=keep)
@@ -352,10 +377,16 @@ class SQLAlchemyBackend(BaseDataBackend):
         from sqlalchemy import create_engine
 
         connection = None
+        cache_key = None
         try:
+            # SECDEV: the cache key is a secret in order to avoid privilege escalation
+            # -- if it is not secret, user A could create the connection (=> cache)
+            # -- user B could reuse the connection by retrieving the dataset without secrets
+            # -- this way the user needs to have the same secrets in order to reuse the connection
             connection_str = connection_str.format(**(secrets or {}))
-            engine = create_engine(connection_str, echo=False)
-            connection = CNX_CACHE.get(name) or engine.connect()
+            cache_key = sha256(f'{name}:{connection_str}'.encode('utf8')).hexdigest()
+            engine = self.__CNX_CACHE.get(cache_key) or create_engine(connection_str, **ENGINE_KWARGS)
+            connection = engine.connect()
         except KeyError as e:
             msg = ('{e}, ensure secrets are specified for connection '
                    '>{connection_str}<'.format(**locals()))
@@ -363,13 +394,13 @@ class SQLAlchemyBackend(BaseDataBackend):
         except Exception as e:
             if connection is not None:
                 connection.close()
+                self.__CNX_CACHE.pop(cache_key, None)
             raise
         else:
             if keep:
-                CNX_CACHE[name] = connection
+                self.__CNX_CACHE[cache_key] = engine
             else:
-                if name in CNX_CACHE:
-                    del CNX_CACHE[name]
+                self.__CNX_CACHE.pop(cache_key, None)
         return connection
 
     def copy_from_sql(self, sql, connstr, name, chunksize=10000,
@@ -445,7 +476,7 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_secrets(self, meta, secrets):
         secrets_specs = meta.kind_meta.get('secrets')
-        values = dict(os.environ)
+        values = dict(os.environ) if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict()
         values.update(**self.data_store.defaults)
         if not secrets and secrets_specs:
             dsname = secrets_specs['dsname']
@@ -500,7 +531,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             # -- sqlvars is not used in constructing sql text
             v = sqlvars[k]
             if isinstance(v, (list, tuple)):
-                bind_vars = { f'{k}_{i}': lv for i, lv in enumerate(v)}
+                bind_vars = {f'{k}_{i}': lv for i, lv in enumerate(v)}
                 placeholders = ','.join(f':{bk}' for bk in bind_vars)
                 sql = sql.replace(f':{k}', f'({placeholders})')
                 sqlvars.update(bind_vars)
@@ -565,7 +596,7 @@ def _format_dict(d, replace=None, **kwargs):
         if replace:
             del d[k]
             k = k.replace(*replace) if replace else k
-        d[k] = v.format(**kwargs) if isinstance(v, str) else v
+        d[k] = v.format_map(KeepMissing(kwargs)) if isinstance(v, str) else v
     return d
 
 

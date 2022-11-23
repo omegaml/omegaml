@@ -1088,3 +1088,35 @@ class SystemPosixPath(type(Path()), Path):
         # on posix systems, this is a noop
         path = super().__str__()
         return path if os.name != 'nt' else path.replace('\\', '/')
+
+
+class ProcessLocal(dict):
+    def __init__(self, *args, **kwargs):
+        self._pid = os.getpid()
+        super().__init__(*args, **kwargs)
+
+    def _check_pid(self):
+        if self._pid != os.getpid():
+            self.clear()
+            self._pid = os.getpid()
+
+    def __getitem__(self, k):
+        self._check_pid()
+        return super().__getitem__(k)
+
+    def keys(self):
+        self._check_pid()
+        return super().keys()
+
+    def __contains__(self, item):
+        self._check_pid()
+        return super().__contains__(item)
+
+
+class KeepMissing(dict):
+    # a missing '{key}' is replaced by '{key}'
+    # in order to avoid raising KeyError
+    # see str.format_map
+    def __missing__(self, key):
+        return '{' + key + '}'
+
