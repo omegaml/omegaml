@@ -17,10 +17,11 @@ class OmegaRestApiAuth(AuthBase):
         response = requests.get('http://api.foo.bar/v1/spam/', auth=auth)
     """
 
-    def __init__(self, username, apikey, qualifier=None):
+    def __init__(self, username, apikey, qualifier=None, bucket=None):
         self.username = username
         self.apikey = apikey
         self.qualifier = qualifier or 'default'
+        self.bucket = bucket
 
     def get_credentials(self):
         if self.kind == 'jwt':
@@ -30,6 +31,8 @@ class OmegaRestApiAuth(AuthBase):
     def __call__(self, r):
         r.headers['Authorization'] = self.get_credentials()
         r.headers['Qualifier'] = self.qualifier
+        if self.bucket:
+            r.headers['Bucket'] = self.bucket
         return r
 
     def __repr__(self):
@@ -230,12 +233,13 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
 
     @classmethod
     def get_restapi_auth(cls, defaults=None, om=None,
-                         userid=None, apikey=None, qualifier=None):
+                         userid=None, apikey=None, qualifier=None, bucket=None):
         assert defaults or om, "require either defaults or om"
         defaults = defaults or om.defaults
         return OmegaRestApiAuth(userid or defaults.OMEGA_USERID,
                                 apikey or defaults.OMEGA_APIKEY,
-                                qualifier or defaults.OMEGA_QUALIFIER)
+                                qualifier=qualifier or defaults.OMEGA_QUALIFIER,
+                                bucket=bucket)
 
     @classmethod
     def get_runtime_auth(cls, defaults=None, om=None):
