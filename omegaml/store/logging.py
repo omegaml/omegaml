@@ -236,14 +236,15 @@ class OmegaSimpleLogger:
                                     hostname=LOGGER_HOSTNAME, userid=self.userid)
         # log to dataset
         self.collection.insert_one(log_entry)
-        # log to system
+        # optionally log to system (e.g. external log aggregation)
         # -- we use extra to pass along the same information that we log in omega dataset
         #    see https://docs.python.org/3/library/logging.html#logging.debug
         # -- we mark this record to avoid double logging in case of an active OmegaLoggingHandler
-        pylogmeth = getattr(python_logger, level.lower(), 'INFO')
-        pylogmeth(message, extra=dict(userid=self.userid,
-                                      hostname=LOGGER_HOSTNAME,
-                                      _from_simplelogger=True))
+        if getattr(self.defaults, 'OMEGA_LOG_PYTHON', False) :
+            pylogmeth = getattr(python_logger, level.lower())
+            pylogmeth(message, extra=dict(userid=self.userid,
+                                          hostname=LOGGER_HOSTNAME,
+                                          _from_simplelogger=True))
 
     def info(self, message, **kwargs):
         self.log('INFO', message, **kwargs)
