@@ -1,7 +1,5 @@
 import re
 
-from omegaml.mdataframe import MDataFrame
-
 
 class LazyGetMixin:
     """
@@ -57,6 +55,8 @@ class LazyGetMixin:
         return name, opspec
 
     def _default_op(self, name, lazy):
+        from omegaml.mdataframe import MDataFrame
+
         if isinstance(lazy, MDataFrame):
             op = 'iterchunks'
             opkwargs = {}
