@@ -333,6 +333,16 @@ class OmegaSimpleTracker(TrackingProvider):
         self._write_log(data)
 
     def _common_log_data(self, event, key, value, step=None, dt=None, **extra):
+        if isinstance(value, dict):
+            # shortcut to resolve PassthroughDataset actual values
+            # -- enables storing the actual values of a dataset passed as a PassthroughDataset
+            # TODO: should this be the responsibility of SimpleTracker?
+            if isinstance(value.get('args'), (list, tuple)):
+                value['args'] = [getattr(arg, '_passthrough_data', arg) for arg in value['args']]
+            if isinstance(value.get('kwargs'), dict):
+                value['kwargs'] = {
+                    k: getattr(v, '_passthrough_data', v) for k, v in value['kwargs'].items()
+                }
         data = {
             'experiment': self._experiment,
             'run': self._ensure_active(self._run),
