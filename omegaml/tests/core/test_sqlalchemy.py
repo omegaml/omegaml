@@ -51,6 +51,27 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         conn = om.datasets.get('testsqlite', raw=True)
         self.assertIsInstance(conn, Connection)
 
+    def test_connection_cache(self):
+        """ test connection caching
+        """
+        from omegaml.backends import sqlalchemy
+        om = self.om
+        cnx = 'sqlite:///{user}.db'
+        om.datasets.put(cnx, 'testsqlite', kind=SQLAlchemyBackend.KIND)
+        conn = om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'), keep=True)
+        conn_ = om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'), keep=True)
+        self.assertEqual(conn.engine, conn_.engine)
+        # drop should clear cache
+        om.datasets.drop('testsqlite', secrets=dict(user='user'))
+        conn_ = om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'), keep=True)
+        self.assertIsNone(conn_)
+        self.assertTrue(len(sqlalchemy.SQLAlchemyBackend._SQLAlchemyBackend__CNX_CACHE) == 0)
+        # even if we drop without secrets, cache is cleared
+        om.datasets.put(cnx, 'testsqlite', kind=SQLAlchemyBackend.KIND)
+        om.datasets.get('testsqlite', raw=True, secrets=dict(user='user'), keep=True)
+        om.datasets.drop('testsqlite')
+        self.assertTrue(len(sqlalchemy.SQLAlchemyBackend._SQLAlchemyBackend__CNX_CACHE) == 0)
+
     def test_put_connection_with_sql(self):
         """
         store generic sqlalchemy connection with sql, same principle as a view
