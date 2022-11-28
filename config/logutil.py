@@ -90,7 +90,7 @@ def configure_logging(logging_config=None, settings=None):
         except Exception as e:
             logging.warning(f'could not initialize logging configuration due to {e}')
         else:
-            setattr(settings, 'LOGGING', loggingConfig)
+            setattr(settings, 'LOGGING', loggingConfig) if settings else None
         logging.info('logging initialized')
     return loggingConfig
 

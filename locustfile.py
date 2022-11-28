@@ -1,7 +1,5 @@
 import time
 
-from contextlib import contextmanager
-
 from locust import HttpUser, task, User
 
 
@@ -13,15 +11,17 @@ class OmegaRestAPIUser(HttpUser):
     @task(5)
     def test_service(self):
         with self.client.get('/api/service/myservice',
-                             auth=self.rest_auth) as resp:
+                             auth=self.rest_auth, catch_response=True) as resp:
             result = resp.json()
             if result.get('data') != 42:
-                resp.failure(f'unexpected response {result}')
+                resp.failure(ValueError('wrong response'))
 
     def on_start(self):
         import omegaml as om
         from omegaml.client.auth import AuthenticationEnv
         from omegaml.backends.virtualobj import virtualobj
+
+        self.om = om.setup(view=False)
 
         @virtualobj
         def myservice(*args, **kwargs):
@@ -32,7 +32,6 @@ class OmegaRestAPIUser(HttpUser):
             exp = om.runtime.experiment('myexp')
             exp.track('myservice')
 
-        self.om = om
         env = AuthenticationEnv.active()
         self.rest_auth = env.get_restapi_auth(om=om, qualifier='employee:live')
 
@@ -103,7 +102,6 @@ class measure:
 
 
 class OtherUser(User):
-    weight = 2
 
     @task
     def test_ping(self):
@@ -113,7 +111,7 @@ class OtherUser(User):
 
     def on_start(self):
         import omegaml as om
-        self.om = om
+        self.om = om.setup(view=False)
 
 
 

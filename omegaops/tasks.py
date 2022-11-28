@@ -74,7 +74,7 @@ def deploy_user_service(task_id=None, **kwargs):
     password = User.objects.make_random_password(length=36)
     config = omops.add_user(user, password, deploy_vhost=deploy_vhost)
     deployment.settings = config
-    deployment.text = f'userid {user.username}<br>apikey {user.api_key.key}'
+    deployment.text = 'userid {user.username}<br>apikey {user.api_key.key}'
     deployment.save()
 
 

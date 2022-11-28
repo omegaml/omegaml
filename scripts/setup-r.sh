@@ -16,5 +16,6 @@ source $script_dir/easyoptions || exit
 # -- https://github.com/rstudio/reticulate/issues/1213
 export RETICULATE_MINICONDA_ENABLED=0
 export RETICULATE_PYTHON=$(which python)
-omegaml_dir=$(python -c "import omegaml, pathlib as pl; print(pl.Path(omegaml.__file__).parent)")
+site_packages=$(python -W ignore -c "import site; print(site.getsitepackages()[0])")
+omegaml_dir=$site_packages/omegaml
 R -f $omegaml_dir/runtimes/rsystem/install.R
