@@ -43,7 +43,11 @@ if [[ ! -z $runlocal ]]; then
     # run a local test
     # -- we deploy to local docker
     # -- certs defaults to self signed certs
-    export CA_CERTS_PATH=${cacert:-`find . -name "ca_certificate.pem" | grep 'mongo/certs' | sort | tail -n 1`}
+    cacert=${cacert:-$script_dir/../release/dist/omegaml-dev/etc/ca_chain.pem}
+    cat $script_dir/../release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem >> $cacert
+    cat $script_dir/../release/dist/omegaml-dev/etc/rabbitmq/certs/ca_certificate.pem >> $cacert
+    export CA_CERTS_PATH=$cacert
+    export SSL_CERT_FILE=$cacert
     pushd $script_dir/../dist/docker-staging/build
     ./deploy-docker.sh --clean
     popd
@@ -52,6 +56,7 @@ elif [[ ! -z $cacert ]]; then
     # -- deployment is remote
     # -- certs default to whatever the remote provides and optional user-specified CA
     export CA_CERTS_PATH=$cacert
+    export SSL_CERT_FILE=$cacert
 fi
 
 

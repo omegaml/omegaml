@@ -8,7 +8,7 @@ dev_deps = [
     'mock==3.0.5',
     'behave==1.2.6',
     'selenium==3.141.0',
-    'splinter==0.11.0',
+    'splinter[selenium3]',
     'ipdb==0.13.2',
     'gil',
     'sphinx-django-command',

@@ -40,7 +40,7 @@ def login_new_user(ctx):
 @then('the site shows the dashboard')
 def site_shows_dashboard(ctx):
     br = ctx.browser
-    assert br.is_text_present('Your apps', wait_time=15)
+    assert br.is_text_present('Your apps', wait_time=180)
     assert br.is_text_present('omegaml')
 
 
@@ -124,7 +124,7 @@ def load_jupyter_notebook(ctx):
     if br.is_element_present_by_id('username_input', wait_time=30):
         br.find_by_id('username_input').first.fill(userid)
         br.find_by_id('password_input').first.fill(apikey)
-        br.click_link_by_id('login_submit')
+        br.find_by_id('login_submit').click()
         br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='tree'))
         assert br.is_element_present_by_id('ipython-main-app', wait_time=60)
         # check that there is actually a connection

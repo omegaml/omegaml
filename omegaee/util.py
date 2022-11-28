@@ -68,5 +68,6 @@ class TaskInjectingFilter(logging.Filter):
         return True
 
 
+
 hostnameFilter = lambda *args, **kwargs: HostnameInjectingFilter()
 taskFilter = lambda *args, **kwargs: TaskInjectingFilter()

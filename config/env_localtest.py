@@ -30,6 +30,8 @@ class EnvSettings_LocalTest(Config_TeamcityTests,
     OMEGA_RESTAPI_URL = ''
     # allow default task auth for testing
     OMEGA_ALLOW_TASK_DEFAULT_AUTH = True
+    # allow signup via api
+    ALLAUTH_ALLOW_API_SIGNUP = True
 
     # switch off stripe customer registration in landingpage
     STRIPE_REGISTER_ON_SIGNUP = False
@@ -40,7 +42,6 @@ class EnvSettings_LocalTest(Config_TeamcityTests,
         'ttl': 0.1,
     }
 
-
     # patch celery imports so existing imports elsewhere are kept
     _celery_imports = ['omegaops']
     StackableSettings.patch_list('OMEGA_CELERY_IMPORTS', _celery_imports)
@@ -48,3 +49,10 @@ class EnvSettings_LocalTest(Config_TeamcityTests,
     # test settings
     # -- django jwtauth uses username instead of preferred_username
     JWT_PAYLOAD_USERNAME_KEY = 'username'
+
+    # enable test mode
+    # -- compatibility with landingpage.secretsvault
+    TEST_MODE = True
+    # -- omegaml runtime
+    OMEGA_LOCAL_RUNTIME = True
+

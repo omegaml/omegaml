@@ -3,6 +3,11 @@ from omegaml.client.auth import CloudClientAuthenticationEnv, OmegaRuntimeAuthen
 
 
 class CloudRuntimeAuthenticationEnv(CloudClientAuthenticationEnv):
+    # make sure this matches OMEGA_* keys in spawnermixin.om_env
+    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL',
+                'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER',
+                'OMEGA_SERVICES_INCLUSTER']
+
     @classmethod
     @session_cache
     def get_omega_for_task(cls, task, auth=None):

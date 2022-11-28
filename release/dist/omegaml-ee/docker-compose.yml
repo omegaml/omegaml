@@ -45,13 +45,14 @@ services:
          - JYHUB_HOST=localhost:8899
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - SSL_CERT_FILE=/app/etc-dev/rabbitmq/certs/ca_certificate.pem
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
          - OMEGA_SERVICES_INCLUSTER=yes
          - MONGO_HOST=localhost:27017
          - MONGO_SERVICE_HOST=mongodb:27017
    apphub:
-      image: omegaml/apphub:0.5.0-rc4
+      image: omegaml/apphub:0.6.0-rc16
       container_name: apphub
       hostname: apphub
       links:
@@ -68,6 +69,7 @@ services:
          - OMEGA_BROKER=amqp://omegaml:ZQQycr43FQFe9fqWqh2KBmauAGT9XdUe@rabbitmq:5671/omegaml
          - OMEGA_RESTAPI_URL=http://omegaml:5000
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - SSL_CERT_FILE=/app/etc-dev/rabbitmq/certs/ca_certificate.pem
          - CELERY_Q=default
          - APP_CONFIG=EnvSettings_omegacloud_compose
          - WEB_CONCURRENCY=4
@@ -102,6 +104,7 @@ services:
          - OMEGA_JYHUB_TOKEN=PQZ4Sw2YNvNpdnwbLetbDDDF6NcRbazv2dCL
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - SSL_CERT_FILE=/app/etc-dev/rabbitmq/certs/ca_certificate.pem
          - PYTHONUSERBASE="/app/pylib/user"
          - OMEGA_SERVICES_INCLUSTER=yes
    worker:
@@ -125,6 +128,7 @@ services:
          - C_FORCE_ROOT=yes
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - SSL_CERT_FILE=/app/etc-dev/rabbitmq/certs/ca_certificate.pem
          - CELERY_Q=default
          - PYTHONUSERBASE="/app/pylib/user"
          - OMEGA_SERVICES_INCLUSTER=yes
@@ -152,6 +156,7 @@ services:
          - DATABASE_URL=postgres://omegaml:pgadmin@postgres:5432/omegaml
          - OMEGA_USESSL=True
          - CA_CERTS_PATH=/app/etc-dev/mongo/certs/ca_certificate.pem
+         - SSL_CERT_FILE=/app/etc-dev/rabbitmq/certs/ca_certificate.pem
          - PYTHONUSERBASE="/app/pylib/user"
          - OMEGA_SERVICES_INCLUSTER=yes
    rabbitmq:

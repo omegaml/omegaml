@@ -32,7 +32,9 @@ source $script_dir/omutils || exit
 release=$script_dir/release.sh
 sourcedir=$script_dir/..
 sourcedir=$(realpath $sourcedir)
-cacert=$script_dir/../release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem
+cacert=$script_dir/../release/dist/omegaml-dev/etc/ca_chain.pem
+cat $script_dir/../release/dist/omegaml-dev/etc/mongo/certs/ca_certificate.pem >> $cacert
+cat $script_dir/../release/dist/omegaml-dev/etc/rabbitmq/certs/ca_certificate.pem >> $cacert
 
 # distdir is where we stage the release files
 distdir=$script_dir/../dist
@@ -69,7 +71,7 @@ if [[ -z $nodist ]]; then
   #$release $use_nominify --source ../ccbackend
   $release $use_nominify --source ../tastypiex
   $release $use_nominify --source ../omegaml-deploy/cloudmgr
-  #$release $use_nominify --source ../minibatch
+  $release $use_nominify --source ../minibatch
   $release $use_nominify --source ../omegaml-ce
 
   # repackage into one zip file

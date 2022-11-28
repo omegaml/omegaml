@@ -11,7 +11,7 @@ class Config_Gunicorn(object):
     else:
         bind = 'localhost:5000'
     timeout = os.environ.get('WEB_TIMEOUT', 30)
-    loglevel = os.environ.get('WEB_LOGLEVEL', 'DEBUG')
+    loglevel = os.environ.get('WEB_LOGLEVEL', 'info').lower()
     workers = os.environ.get('WEB_CONCURRENCY', concurrency())
     errorlog = '-'
     accesslog = '-'

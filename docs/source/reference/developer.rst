@@ -14,12 +14,12 @@ omegaml.store
 .. automodule:: omegaml.store.base
 
 .. autoclass:: omegaml.store.base.OmegaStore
-   
-   
+
+
 omegaml.backends
 ----------------
 
-.. autoclass:: omegaml.backends.basedata.BaseDataBackend 
+.. autoclass:: omegaml.backends.basedata.BaseDataBackend
 
 .. autoclass:: omegaml.backends.basemodel.BaseModelBackend
 
@@ -71,7 +71,3 @@ omegajobs
 .. autoclass:: omegajobs.omegacontentsmgr.OmegaStoreContentsManager
 
 
-omegacli
---------
-
-.. automodule:: omegacli

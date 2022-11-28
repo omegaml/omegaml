@@ -17,7 +17,7 @@ class OmegaAuthenticatedRuntime(OmegaCloudRuntime):
         defaults = self.omega.defaults
         if self._auth is None:
             auth_env = load_class(defaults.OMEGA_AUTH_ENV)
-            RuntimeAuthentication = auth_env.get_runtime_auth()
+            RuntimeAuthentication = auth_env.get_runtime_auth(defaults=defaults)
             kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),
                           apikey=getattr(defaults, 'OMEGA_APIKEY'),
                           qualifier=getattr(defaults, 'OMEGA_QUALIFIER', 'default'))

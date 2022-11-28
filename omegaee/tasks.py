@@ -40,8 +40,9 @@ def disable_result_logging(**kwargs):
     Task %(name)s[%(id)s] succeeded in %(runtime)ss\
     """
 
+
 @setup_logging.connect
 def config_loggers(*args, **kwargs):
-    import logging.config
-    from django.conf import settings  # noqa
-    logging.config.dictConfig(settings.LOGGING)
+    from config.logutil import configure_logging, logutil_celery
+    configure_logging()
+    logutil_celery()

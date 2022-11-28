@@ -13,6 +13,7 @@ from omegaml.backends.restapi.service import GenericServiceResource
 from omegaweb.resources.util import get_omega_for_user
 
 
+
 class OmegaResourceMixin(object):
     """
     A mixin for omega specifics in resources

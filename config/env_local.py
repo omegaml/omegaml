@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from config.conf_databaseurl import Config_DatabaseUrl
 from config.conf_envoverride import Config_EnvOverrides
-
 from config.env_global import EnvSettingsGlobal
 from stackable.contrib.config.conf_allauth import Config_DjangoAllAuth
 from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
@@ -56,10 +55,11 @@ class EnvSettings_Local(Config_EnvOverrides,
     StackableSettings.patch_apps(_prefix_apps, at='django.contrib.staticfiles')
     StackableSettings.patch_apps(_addl_apps)
 
-    _addl_middlewares = (
-        'omegaweb.middleware.EventsLoggingMiddleware',
-    )
-    StackableSettings.patch_middleware(_addl_middlewares)
+    # FIXME this adds 2 seconds to every API request!
+    # _addl_middlewares = (
+    #    'omegaweb.middleware.EventsLoggingMiddleware',
+    #)
+    #StackableSettings.patch_middleware(_addl_middlewares)
 
     API_CONFIG = {
         'omega_apis': (
