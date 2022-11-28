@@ -1,8 +1,9 @@
 from datetime import datetime
 
 from celery.signals import (task_failure, task_prerun,
-                            task_success, worker_process_init, setup_logging)
+                            task_success, worker_process_init, setup_logging, celeryd_after_setup, worker_shutting_down)
 
+from omegaee.pingserver import CeleryWorkerPingServer
 from omegaee.util import log_task
 
 
@@ -46,3 +47,17 @@ def config_loggers(*args, **kwargs):
     from config.logutil import configure_logging, logutil_celery
     configure_logging()
     logutil_celery()
+
+
+@celeryd_after_setup.connect
+def setup_ping_server(sender, instance, **kwargs):
+    server = CeleryWorkerPingServer(instance)
+    server.start()
+    stop_ping_server.server = server
+
+
+@worker_shutting_down.connect
+def stop_ping_server(sig, how, exitcode, **kwargs):
+    stop_ping_server.server.stop()
+
+

@@ -1,0 +1,85 @@
+import json
+
+import logging
+
+import os
+from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
+
+
+class CeleryWorkerPingServer(Thread):
+    """ A /healthz response server for celery workers
+
+    Implements a localhost-bound HTTP server that responds to /healthz
+    queries by pinging the local Celery worker. This is equivalent to, yet a lot faster
+    and less resource consuming than calling `celery inspect ping`.
+
+    Usage:
+        # in tasks.py
+        @celeryd_after_setup.connect
+        def setup_ping_server(sender, instance, **kwargs):
+            server = CeleryWorkerPingServer(instance)
+            server.start()
+            stop_ping_server.server = server
+
+        @worker_shutting_down.connect
+        def stop_ping_server(sig, how, exitcode, **kwargs):
+            stop_ping_server.server.stop()
+
+    How it works:
+        Upon start up of a celery worker (the main process), CeleryWorkerPingServer
+        starts a local HTTP server. The server responds to /healthz queries by
+        sending a celery.inspect().ping() to the local worker instance. If the
+        worker responds with a 'pong', the /healthz response is set to HTTP status
+        200 (OK), if not it is set to 400 (Bad Request).
+    """
+    def __init__(self, worker, port=None):
+        super().__init__()
+        port = int(port or os.environ.get('CELERY_PING_SERVER') or 80)
+        self.app = worker.app
+        self.worker_name = worker.hostname
+        if '@' not in self.worker_name:
+            self.worker_name = f'celery@{self.worker_name}'
+        self._server_address = ('localhost', port)
+        self._server = HTTPServer(self._server_address,
+                                  self.response_handler())
+        self.logger = logging.getLogger(__name__)
+
+    def response_handler(self):
+        server = self
+        celeryapp = server.app
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                server.logger.info(f'starting celery ping to {server.worker_name}')
+                resp = celeryapp.control.inspect().ping(destination=[server.worker_name])
+                server.logger.info(f'received ping response {resp}')
+                status = 'ok' if resp and server.worker_name in resp else 'nok'
+                self.respond(status)
+
+            def respond(self, status):
+                STATUS_MAP = {
+                    'ok': 200,
+                    'nok': 400,
+                }
+                message = json.dumps({'status': status})
+                self.send_response(STATUS_MAP[status], status)
+                self.end_headers()
+                self.wfile.write(message.encode('utf8'))
+
+        return Handler
+
+    @property
+    def url(self):
+        hostname, port = self._server_address
+        return f'http://{hostname}:{port}'
+
+    def run(self):
+        self.logger.info('starting celery ping server')
+        self._server.running = True
+        self._server.serve_forever()
+
+    def stop(self):
+        self.logger.info('shutting down ping server')
+        self._server.shutdown()
+        self._server.socket.close()

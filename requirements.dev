@@ -4,5 +4,6 @@
 -e ../landingpage[paasdeploy]
 -e ../django-tastypie-swagger
 -e ../tastypiex
+-e ../minibatch
 #git+https://github.com/liftoff/pyminifier.git
 
