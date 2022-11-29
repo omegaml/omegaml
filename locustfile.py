@@ -112,6 +112,8 @@ class OtherUser(User):
     def on_start(self):
         import omegaml as om
         self.om = om.setup(view=False)
+        self.om.runtime.ping()
+
 
 
 

@@ -1,3 +1,5 @@
+from time import sleep
+
 import json
 
 import logging
@@ -44,6 +46,7 @@ class CeleryWorkerPingServer(Thread):
         self._server = HTTPServer(self._server_address,
                                   self.response_handler())
         self.logger = logging.getLogger(__name__)
+        self.max_retry = 5
 
     def response_handler(self):
         server = self
@@ -52,8 +55,16 @@ class CeleryWorkerPingServer(Thread):
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
                 server.logger.info(f'starting celery ping to {server.worker_name}')
-                resp = celeryapp.control.inspect().ping(destination=[server.worker_name])
-                server.logger.info(f'received ping response {resp}')
+                for i in range(server.max_retry):
+                    try:
+                        resp = celeryapp.control.inspect().ping(destination=[server.worker_name])
+                    except Exception as e:
+                        server.logger.error(f'got celery ping exception {e} in {i}/{server.max_retry} attempts')
+                        resp = None
+                        sleep(.5)
+                    else:
+                        server.logger.info(f'received ping response {resp}')
+                        break
                 status = 'ok' if resp and server.worker_name in resp else 'nok'
                 self.respond(status)
 
