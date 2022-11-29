@@ -34,6 +34,7 @@ def session_backoff(retries=5):
 def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qualifier=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
     from omegaml import settings
+    from omegaml import _base_config
     defaults = settings()
     api_url = ensure_api_url(api_url, defaults)
     api_url += '/api/v1/config/'
@@ -47,12 +48,7 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
         query.append('qualifier={}'.format(qualifier))
     api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
-    if api_url.startswith('http'):
-        import requests
-        server = session_backoff()
-        server_kwargs = dict(auth=api_auth)
-        deserialize = lambda resp: resp.json()
-    elif api_url.startswith('test') or any('test' in v for v in sys.argv):
+    if _base_config.is_test_run or api_url.startswith('/'):
         try:
             from tastypie.test import TestApiClient
         except ModuleNotFoundError as e:
@@ -62,6 +58,11 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
         server.close = lambda: None
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
+    elif api_url.startswith('http'):
+        import requests
+        server = session_backoff()
+        server_kwargs = dict(auth=api_auth)
+        deserialize = lambda resp: resp.json()
     else:
         raise ValueError('invalid api_url >{}<'.format(api_url))
     # -- actual logic to get configs
