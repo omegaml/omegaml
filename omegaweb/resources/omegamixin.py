@@ -1,3 +1,6 @@
+import logging
+from time import perf_counter
+
 from uuid import uuid4
 
 from django.conf import settings
@@ -12,6 +15,7 @@ from omegaml.backends.restapi.script import GenericScriptResource
 from omegaml.backends.restapi.service import GenericServiceResource
 from omegaweb.resources.util import get_omega_for_user
 
+logger = logging.getLogger(__name__)
 
 
 class OmegaResourceMixin(object):
@@ -33,13 +37,11 @@ class OmegaResourceMixin(object):
             # ensure tracking id is set on every request for traceability
             # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
             # TODO consider using https://github.com/dabapps/django-log-request-id/
-            tracking_id = request.META.get(self._tracking_id_key) or uuid4().hex
-            om.runtime.require(routing=dict(task_id=tracking_id))
+            om.runtime.require(routing=dict(task_id=self._tracking_id(request)))
             self._omega_instance = om
         return self._omega_instance
 
-    @property
-    def _tracking_id_key(self):
+    def _tracking_id(self, request):
         # generate the header key into request.META for the request ID
         # X-Request-Id is the commonly accepted request id
         # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
@@ -47,7 +49,8 @@ class OmegaResourceMixin(object):
         if not hasattr(self, '_tracking_id_key_header'):
             key = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID')
             self._tracking_id_key_header = f'HTTP_{key}'.replace('-', '_').upper()
-        return self._tracking_id_key_header
+        tracking_id = getattr(request, '_requestid') or request.META.get(self._tracking_id_key) or uuid4().hex
+        return tracking_id
 
     def _credentials_from_request(self, request):
         # get credentials from Meta.authentication, if available
@@ -84,8 +87,10 @@ class OmegaResourceMixin(object):
             meth = self._get_resource_method(generic_resource, resource_method)
             result = meth(model_id, query, payload)
             resp = self.create_maybe_async_response(request, result, async_body=async_body)
+            status = 'ok'
         except Exception as e:
             msg = dict(message=repr(e))
+            status = 'error'
             raise ImmediateHttpResponse(JsonResponse(msg, status=HttpBadRequest.status_code))
         return resp
 

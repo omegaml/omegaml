@@ -9,7 +9,7 @@ logging:
      json:
        class: pythonjsonlogger.jsonlogger.JsonFormatter
        # https://docs.python.org/3/library/logging.html#logrecord-attributes
-       format: "{asctime} {levelname} {hostname} {message} {requestId} {task_name}"
+       format: "{asctime} {levelname} {hostname} {message} {requestId} {task_name} {module} {funcName} {name}"
        style: "{"
   filters:
      hostname:
@@ -21,6 +21,7 @@ logging:
        drop:
         - data
         - result
+        - request
   handlers:
      console:
        class: logging.StreamHandler
@@ -34,22 +35,13 @@ logging:
      root:
         handlers:
           - console
-        level: INFO
+        level: DEBUG
      celery.task:
         handlers:
           - console
      django:
-        handlers:
-          - console
-        level: INFO
-     django.request:
        handlers:
          - console
-       level: DEBUG
-     gunicorn:
-       handlers:
-         - console
-       level: DEBUG
 
 
 
