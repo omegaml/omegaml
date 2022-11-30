@@ -106,7 +106,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def current_userid(self):
-        return getattr(self.om.runtime.auth, 'userid', getpass.getuser())
+        auth = self.request._om.runtime.auth if getattr(self.request, '_om', None) else None
+        return getattr(auth, 'userid', getpass.getuser())
 
     @property
     def delegate_args(self):
@@ -222,34 +223,40 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         super().send_event(type, **fields)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        with self.tracking as exp:
-            exp.log_event(f'task_failure', self.name, {
-                'exception': repr(exc),
-                'task_id': task_id,
-            })
-            exp.log_extra(taskid=None, remove=True)
-        self.reset()
+        try:
+            with self.tracking as exp:
+                exp.log_event(f'task_failure', self.name, {
+                    'exception': repr(exc),
+                    'task_id': task_id,
+                })
+                exp.log_extra(taskid=None, remove=True)
+        finally:
+            self.reset()
         return super().on_failure(exc, task_id, args, kwargs, einfo)
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        with self.tracking as exp:
-            exp.log_event(f'task_retry', self.name, {
-                'exception': repr(exc),
-                'task_id': task_id,
-            })
-            exp.log_extra(taskid=None, remove=True)
-        self.reset()
+        try:
+            with self.tracking as exp:
+                exp.log_event(f'task_retry', self.name, {
+                    'exception': repr(exc),
+                    'task_id': task_id,
+                })
+                exp.log_extra(taskid=None, remove=True)
+        finally:
+            self.reset()
         return super().on_retry(exc, task_id, args, kwargs)
 
     def on_success(self, retval, task_id, args, kwargs):
         # on task success the experiment is stopped already (if we started it)
-        exp = self.tracking
-        exp.log_event(f'task_success', self.name, {
-            'result': sanitized(retval),
-            'task_id': task_id,
-        })
-        exp.log_extra(taskid=None, remove=True)
-        self.reset()
+        try:
+            exp = self.tracking
+            exp.log_event(f'task_success', self.name, {
+                'result': sanitized(retval),
+                'task_id': task_id,
+            })
+            exp.log_extra(taskid=None, remove=True)
+        finally:
+            self.reset()
         return super().on_success(retval, task_id, args, kwargs)
 
 

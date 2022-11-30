@@ -174,7 +174,7 @@ class AuthenticationEnv(object):
 
 class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
-    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL',
+    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
                 'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER',
                 'OMEGA_SERVICES_INCLUSTER']
 
