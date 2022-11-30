@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import logging
+import sys
+import warnings
 from uuid import uuid4
 
 from omegaml.util import is_dataframe, is_ndarray, is_series
@@ -167,19 +169,27 @@ class ModelMixin(object):
         return omega_reduce.delay(modelName=self.modelname, rName=rName, **kwargs)
 
     def _ensure_data_is_stored(self, name_or_data, prefix='_temp', as_payload=False):
+        from omegaml.mixins.store.passthrough import PassthroughDataset
+
         if as_payload:
+            return PassthroughDataset(name_or_data)
+        elif isinstance(name_or_data, str):
+            name = name_or_data
+        elif isinstance(name_or_data, PassthroughDataset):
             return name_or_data
-        if is_dataframe(name_or_data) or is_series(name_or_data):
+        elif isinstance(name_or_data, (list, tuple, dict)):
+            if sys.getsizeof(name_or_data) <= PassthroughDataset.MAX_SIZE:
+                return PassthroughDataset(name_or_data)
+            else:
+                warnings.warn(f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets')
+                name = '%s_%s' % (prefix, uuid4().hex)
+                self.runtime.omega.datasets.put(name_or_data, name)
+        elif is_dataframe(name_or_data) or is_series(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif is_ndarray(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
-        elif isinstance(name_or_data, (list, tuple, dict)):
-            name = '%s_%s' % (prefix, uuid4().hex)
-            self.runtime.omega.datasets.put(name_or_data, name)
-        elif isinstance(name_or_data, str):
-            name = name_or_data
         else:
             raise TypeError(
                 'invalid type for Xpath_or_data', type(name_or_data))

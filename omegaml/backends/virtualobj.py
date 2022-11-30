@@ -1,3 +1,5 @@
+import sys
+
 import dill
 
 from omegaml.backends.basedata import BaseDataBackend
@@ -100,7 +102,17 @@ class VirtualObjectBackend(BaseDataBackend):
         # compat: Python 3.8.x < 3.8.2
         # https://github.com/python/cpython/commit/b19f7ecfa3adc6ba1544225317b9473649815b38
         # https://docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-final
-        obj = dill.loads(outf.read())
+        try:
+            data = outf.read()
+            obj = dill.loads(data)
+        except ModuleNotFoundError as e:
+            # if the functions original module is not known, simulate it
+            # this is to deal with functions created outside of __main__
+            # see https://stackoverflow.com/q/26193102/890242
+            #     https://stackoverflow.com/a/70513630/890242
+            sys.modules[e.name] = sys.modules['__main__']
+            obj = dill.loads(data)
+
         outf.close()
         return obj
 
