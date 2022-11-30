@@ -128,9 +128,11 @@ def logutil_django(mapping=None, **extra):
 
     _header_id = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID').replace('-', '_')
     request_header_id = 'HTTP_{}'.format(_header_id)
-    request_started.connect(LoggingRequestContext.link_up(starter=starter, mapping=mapping, **extra))
-    request_finished.connect(LoggingRequestContext.link_down())
-    got_request_exception.connect(LoggingRequestContext.link_down())
+    request_started.connect(LoggingRequestContext.link_up(starter=starter,
+                                                          mapping=mapping,
+                                                          **extra), weak=False)
+    request_finished.connect(LoggingRequestContext.link_down(), weak=False)
+    got_request_exception.connect(LoggingRequestContext.link_down(), weak=False)
 
 
 def logutil_celery(mapping=None, **extra):
@@ -238,9 +240,6 @@ class TaskInjectingFilter(logging.Filter):
             record.__dict__.update(task_id=task.request.id,
                                    task_name=task.name,
                                    user_id=getattr(task, 'current_userid', '???'))
-        else:
-            record.__dict__.setdefault('task_name', '???')
-            record.__dict__.setdefault('task_id', '???')
         return True
 
 _context = threading.local()

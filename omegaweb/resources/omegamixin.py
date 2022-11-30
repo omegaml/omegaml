@@ -1,12 +1,8 @@
 import logging
-from time import perf_counter
-
-from uuid import uuid4
-
-from django.conf import settings
 from django.http import JsonResponse
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpBadRequest
+from uuid import uuid4
 
 from omegaml.backends.restapi.asyncrest import truefalse
 from omegaml.backends.restapi.job import GenericJobResource
@@ -37,20 +33,10 @@ class OmegaResourceMixin(object):
             # ensure tracking id is set on every request for traceability
             # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
             # TODO consider using https://github.com/dabapps/django-log-request-id/
-            om.runtime.require(routing=dict(task_id=self._tracking_id(request)))
+            tracking_id = getattr(request, '_requestid', None) or uuid4().hex
+            om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om
         return self._omega_instance
-
-    def _tracking_id(self, request):
-        # generate the header key into request.META for the request ID
-        # X-Request-Id is the commonly accepted request id
-        # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
-        #     https://docs.djangoproject.com/en/3.2/ref/request-response/#django.http.HttpRequest.META
-        if not hasattr(self, '_tracking_id_key_header'):
-            key = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID')
-            self._tracking_id_key_header = f'HTTP_{key}'.replace('-', '_').upper()
-        tracking_id = getattr(request, '_requestid') or request.META.get(self._tracking_id_key) or uuid4().hex
-        return tracking_id
 
     def _credentials_from_request(self, request):
         # get credentials from Meta.authentication, if available

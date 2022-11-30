@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from django.test import TestCase, RequestFactory
 
-from omegaweb.middleware import RequestTimingMiddleware
+from omegaweb.middleware import RequestTrackingMiddleware
 
 
 class MiddlewareTests(TestCase):
@@ -13,5 +13,5 @@ class MiddlewareTests(TestCase):
         request = self.factory.get('/')
         get_response = MagicMock()
         get_response.return_value = MagicMock()
-        mw = RequestTimingMiddleware(get_response)
+        mw = RequestTrackingMiddleware(get_response)
         mw(request)

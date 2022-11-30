@@ -60,5 +60,10 @@ class EnvSettings_kubernetes(Config_ApiKeys,
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     USE_X_FORWARDED_HOST = True
 
+    # PERFUNTED
+    # -- keep django sql connections open (seconds)
+    CONN_MAX_AGE = 3600
+
+
 
 
