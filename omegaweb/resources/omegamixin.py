@@ -32,7 +32,6 @@ class OmegaResourceMixin(object):
             self.celeryapp = om.runtime.celeryapp
             # ensure tracking id is set on every request for traceability
             # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
-            # TODO consider using https://github.com/dabapps/django-log-request-id/
             tracking_id = getattr(request, '_requestid', None) or uuid4().hex
             om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om
@@ -65,19 +64,20 @@ class OmegaResourceMixin(object):
         return query, payload
 
     def create_response_from_resource(self, request, generic_resource, resource_method, *args, **kwargs):
-        self.get_omega(request)
+        om = self.get_omega(request)
         model_id = kwargs.get('pk')
         query, payload = self.get_query_payload(request)
         async_body = dict(model=model_id, result='pending')
         try:
+            om.start_request(request)
             meth = self._get_resource_method(generic_resource, resource_method)
             result = meth(model_id, query, payload)
             resp = self.create_maybe_async_response(request, result, async_body=async_body)
-            status = 'ok'
         except Exception as e:
             msg = dict(message=repr(e))
-            status = 'error'
             raise ImmediateHttpResponse(JsonResponse(msg, status=HttpBadRequest.status_code))
+        finally:
+            om.close_request()
         return resp
 
     def _get_resource_method(self, resource_name, method_name):
