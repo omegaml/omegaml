@@ -138,10 +138,13 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.extdmeta.SignatureMixin',
     'omegaml.mixins.store.extdmeta.ScriptSignatureMixin',
     'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
+    'omegaml.mixins.store.requests.RequestCache',
     'omegaml.mixins.store.passthrough.PassthroughMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
+#: enable request caching for metadata
+OMEGA_STORE_CACHE = truefalse(os.environ.get('OMEGA_STORE_CACHE', False))
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
     'omegaml.runtimes.mixins.ModelMixin',

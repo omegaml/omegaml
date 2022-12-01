@@ -76,7 +76,6 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def om(self):
-        # TODO do some more intelligent caching, i.e. by client/auth
         if not hasattr(self.request, '_om'):
             self.request._om = None
         if self.request._om is None:
@@ -84,6 +83,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             auth = self.system_kwargs.get('__auth')
             om = self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
             self.auth_env.prepare_env(om.defaults)
+            self.request._auth = om.runtime.auth
         return self.request._om
 
     def get_delegate(self, name, kind='models', pass_as='model_store'):
@@ -106,8 +106,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
 
     @property
     def current_userid(self):
-        auth = self.request._om.runtime.auth if getattr(self.request, '_om', None) else None
-        return getattr(auth, 'userid', getpass.getuser())
+        # TODO: move current_userid to authenenv
+        return getattr(self.request._auth, 'userid', getpass.getuser())
 
     @property
     def delegate_args(self):
@@ -187,7 +187,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     # reset stdout redirects
                     sys.stdout, sys.stderr = save_stdout, save_stderr
 
-        with task_logging():
+        with self.om.request(request=self.request), task_logging():
             # start experiment block, if required
             # -- this ensures we call exp.start() / exp.stop() if the task was started in context
             #    of this celery task
@@ -215,6 +215,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         # ensure next call will start over and get a new om instance
         self.request._om = None
         self.auth_env.prepare_env(None, clear=True)
+        # note we do not reset self.request._auth to preserve the user context for logging purpose
+
 
     def send_event(self, type, **fields):
         # ensure result masking in events
@@ -231,8 +233,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 })
                 exp.log_extra(taskid=None, remove=True)
         finally:
+            super().on_failure(exc, task_id, args, kwargs, einfo)
             self.reset()
-        return super().on_failure(exc, task_id, args, kwargs, einfo)
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
@@ -242,9 +244,10 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     'task_id': task_id,
                 })
                 exp.log_extra(taskid=None, remove=True)
+
         finally:
+            super().on_retry(exc, task_id, args, kwargs)
             self.reset()
-        return super().on_retry(exc, task_id, args, kwargs)
 
     def on_success(self, retval, task_id, args, kwargs):
         # on task success the experiment is stopped already (if we started it)
@@ -256,8 +259,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             })
             exp.log_extra(taskid=None, remove=True)
         finally:
+            super().on_success(retval, task_id, args, kwargs)
             self.reset()
-        return super().on_success(retval, task_id, args, kwargs)
 
 
 def get_dataset_representations(items):
