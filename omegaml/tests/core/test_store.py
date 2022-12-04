@@ -11,6 +11,8 @@ import pandas as pd
 import unittest
 import uuid
 from datetime import timedelta, datetime
+
+import pymongo
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -384,6 +386,26 @@ class StoreTests(unittest.TestCase):
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         self.assertEqual([data], data2)
+        # check we can get back a cursor instead of data
+        cursor = store.get('mydata', lazy=True)
+        self.assertIsInstance(cursor, pymongo.cursor.Cursor)
+        data = list(doc.get('data') for doc in cursor)
+        self.assertEqual(data, data2)
+
+
+    def test_put_python_dict_with_index(self):
+        # create some data
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        store = OmegaStore(prefix='')
+        store.put(data, 'mydata', index=['a'])
+        coll = store.collection('mydata')
+        # SON(..., 'keys': { key: order, ...}) => ['key', ...]
+        idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
+        idxs_keys = [list(sorted(d.keys())) for d in idxs]
+        self.assertTrue(any(keys == ['data.a'] for keys in idxs_keys))
 
     def test_put_python_dict_multiple(self):
         # create some data

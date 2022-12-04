@@ -615,7 +615,7 @@ class OmegaStore(object):
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
-    def put_pyobj_as_document(self, obj, name, attributes=None, append=True):
+    def put_pyobj_as_document(self, obj, name, attributes=None, append=True, index=None, as_many=None, **kwargs):
         """
         store a dict as a document
 
@@ -629,13 +629,28 @@ class OmegaStore(object):
         elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
             warn('%s already exists, will append rows' % name)
-        if isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple)):
+        if index:
+            # create index with appropriate options
+            from omegaml.store import MongoQueryOps
+            if isinstance(index, dict):
+                idx_kwargs = index
+                index = index.pop('columns')
+            else:
+                idx_kwargs = {}
+            index = [f'data.{c}' for c in index]
+            keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
+            ensure_index(collection, keys, **idx_kwargs)
+        if as_many is None:
+            as_many = isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple))
+        if as_many:
             # list of lists are inserted as many objects, as in pymongo < 4
-            result = collection.insert_many((mongo_compatible({'data': item}) for item in obj))
+            records = (mongo_compatible({'data': item}) for item in obj)
+            result = collection.insert_many(records)
             objid = result.inserted_ids[-1]
         else:
             result = collection.insert_one(mongo_compatible({'data': obj}))
             objid = result.inserted_id
+
         return self._make_metadata(name=name,
                                    prefix=self.prefix,
                                    bucket=self.bucket,
@@ -1004,7 +1019,7 @@ class OmegaStore(object):
                 "{0} does not exist in mongo collection '{1}'".format(
                     name, self.bucket))
 
-    def get_python_data(self, name, version=-1, **kwargs):
+    def get_python_data(self, name, version=-1, lazy=False, **kwargs):
         """
         Retrieve objects as python data
 
@@ -1015,6 +1030,8 @@ class OmegaStore(object):
         """
         datastore = self.collection(name)
         cursor = datastore.find(**kwargs)
+        if lazy:
+            return cursor
         data = (d.get('data') for d in cursor)
         return list(data)
 
