@@ -58,7 +58,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
-    'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
+    'CELERY_RESULT_EXPIRES': 3600,  # expire results within 1 hour
     'CELERY_DEFAULT_QUEUE': OMEGA_WORKER_LABEL,
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
