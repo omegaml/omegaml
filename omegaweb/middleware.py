@@ -1,3 +1,5 @@
+import os
+
 import logging
 import re
 import uuid
@@ -10,7 +12,9 @@ from time import perf_counter
 from config.logutil import LoggingRequestContext
 from .util import log_request
 
+_default_loggable_re = r'/(api/.*|admin.*)/?'
 logger = logging.getLogger('django')
+loggable_requests = re.compile(os.environ.get('DJANGO_LOG_REQUESTS', _default_loggable_re))
 
 
 class EventsLoggingMiddleware(MiddlewareMixin):
@@ -66,7 +70,9 @@ class RequestTrackingMiddleware:
 
     def finalize_request(self, request, resp):
         self.track_user(request)
-        logger.info(f'{request.method} {request.path} {resp.status_code} {request._request_total:.2f}ms')
+        should_log = loggable_requests.match(request.path) is not None
+        if should_log:
+            logger.info(f'{request.method} {request.path} {resp.status_code} {request._request_total:.2f}ms')
 
     def __call__(self, request):
         self.start_request(request)
