@@ -5,6 +5,7 @@ import warnings
 from getpass import getuser
 from hashlib import sha256
 from logging import warning
+from urllib.parse import quote_plus
 
 import pandas as pd
 import sqlalchemy
@@ -375,7 +376,9 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_connection(self, name, connection_str, secrets=None, keep=False):
         from sqlalchemy import create_engine
-
+        # passwords should be encoded
+        # https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
+        encoded = lambda d: {k: quote_plus(v) for k, v in d.items()}
         connection = None
         cache_key = None
         try:
@@ -383,7 +386,8 @@ class SQLAlchemyBackend(BaseDataBackend):
             # -- if it is not secret, user A could create the connection (=> cache)
             # -- user B could reuse the connection by retrieving the dataset without secrets
             # -- this way the user needs to have the same secrets in order to reuse the connection
-            connection_str = connection_str.format(**(secrets or {}))
+            enc_secrets = encoded(secrets or {})
+            connection_str = connection_str.format(**enc_secrets)
             cache_key = sha256(f'{name}:{connection_str}'.encode('utf8')).hexdigest()
             engine = self.__CNX_CACHE.get(cache_key) or create_engine(connection_str, **ENGINE_KWARGS)
             connection = engine.connect()
