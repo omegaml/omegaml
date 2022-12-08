@@ -191,10 +191,16 @@ class TrackingProvider:
         raise NotImplementedError
 
     def start_runtime(self):
+        # hook to signal the runtime is starting a task inside a worker
+        # this is unlike the .start() method which is called to start a run
+        # which can happen in the client or in the runtime
         pass
 
     def stop_runtime(self):
-        pass
+        # hook to signal the runtime has completed a task inside a worker
+        # this is unlike the .stop() method which is called to stop a run
+        # which can happen in the client or in the runtime
+        self.flush()
 
     def log_event(self, event, key, value, step=None, **extra):
         raise NotImplementedError
@@ -655,12 +661,12 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
     def start_runtime(self):
         self.profiler = BackgroundProfiler(callback=self.log_profile)
         self.profiler.start()
-        super().start()
+        super().start_runtime()
 
     def stop_runtime(self):
         self.profiler.stop()
         self.flush()
-        super().stop()
+        super().stop_runtime()
 
 
 try:

@@ -58,7 +58,11 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
+    # according to docs, CELERY_RESULT_EXPIRES is the new setting
+    # however as of 5.2.7 celery still refers CELERY_TASK_RESULT_EXPIRES
+    # https://github.com/celery/celery/blob/7b585138af8318d62b8fe7086df7e85d110ac786/celery/app/defaults.py#L204
     'CELERY_RESULT_EXPIRES': 3600,  # expire results within 1 hour
+    'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
     'CELERY_DEFAULT_QUEUE': OMEGA_WORKER_LABEL,
     'BROKER_URL': OMEGA_BROKER,
     'BROKER_HEARTBEAT': 0,  # due to https://github.com/celery/celery/issues/4980
