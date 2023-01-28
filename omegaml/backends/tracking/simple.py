@@ -64,6 +64,7 @@ class OmegaSimpleTracker(TrackingProvider):
     _experiment = None
     _startdt = None
     _stopdt = None
+    _autotrack = False
 
     _ensure_active = lambda self, r: r if r is not None else _raise(
         ValueError('no active run, call .start() or .use() '))
@@ -104,6 +105,14 @@ class OmegaSimpleTracker(TrackingProvider):
         """
         self.active_run(run=run)
         return self
+
+    @property
+    def autotrack(self):
+        return self._autotrack
+
+    @autotrack.setter
+    def autotrack(self, value):
+        self._autotrack = value
 
     @property
     def _latest_run(self):
@@ -149,7 +158,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self.flush()
 
     def flush(self):
-        # passing list of list forces insert_many
+        # passing list of list, as_many=True => collection.insert_many() for speed
         if self.log_buffer:
             self._store.put(self.log_buffer, self._data_name,
                             noversion=True, as_many=True)

@@ -37,12 +37,15 @@ class RuntimeProxyBase:
         assert meta is not None, f"{self.store.prefix}{self.name} does not exist".format(**locals())
         # get common require kwargs
         require_kwargs = meta.attributes.get('require', {})
-        # enable default tracking, unless explicitly tracked
-        should_track = 'default' in meta.attributes.get('tracking', {})
+        tracking_specs = meta.attributes.get('tracking', {})
+        # enable tracking by current runtime label, unless explicitly tracked
+        label = self.runtime._common_kwargs['routing'].get('label')
+        label = label or require_kwargs.get('label') or 'default'
+        should_track = label in tracking_specs
         already_tracked = self.runtime._common_kwargs['task'].get('__experiment')
         if not already_tracked and should_track:
             require_kwargs.update({
-                'task': dict(__experiment=meta.attributes['tracking'].get('default'))
+                'task': dict(__experiment=meta.attributes['tracking'].get(label))
             })
         self.runtime.require(**require_kwargs, override=False) if require_kwargs else None
 

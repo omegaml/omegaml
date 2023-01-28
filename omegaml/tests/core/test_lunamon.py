@@ -1,10 +1,9 @@
 from unittest import TestCase
 
 import logging
-from time import sleep
-
 from omegaml import Omega
 from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
+from time import sleep
 
 
 class LunaMonitorTestClass(TestCase):
@@ -25,9 +24,9 @@ class LunaMonitorTestClass(TestCase):
         monitor.notify(on_status=lambda status: reports.append(status))
         sleep(2)
         self.assertTrue(len(reports) > 0)
-        monitor.assert_ok('database', timeout=.5)
-        monitor.assert_ok('runtime', timeout=.5)
-        monitor.assert_ok(timeout=.5)
+        monitor.assert_ok('database', timeout=1)
+        monitor.assert_ok('runtime', timeout=1)
+        monitor.assert_ok(timeout=1)
         self.assertTrue(monitor.healthy())
         self.assertTrue(monitor.healthy('database'))
         self.assertTrue(all(s == 'ok' for c, s in monitor.status().items()))

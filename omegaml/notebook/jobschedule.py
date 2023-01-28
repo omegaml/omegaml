@@ -200,7 +200,10 @@ class JobSchedule(object):
             # 'every 1st' => 1
             v = '1'
         if v.startswith('every '):
-            v = v.replace('every ', '*/')
+            if v.split(' ')[-1].isnumeric():
+                v = v.replace('every ', '*/')
+            else:
+                v = v.replace('every ', '')
             for order in ('nd', 'rd', 'th'):
                 v = v.replace(order, '')
         else:
@@ -214,41 +217,18 @@ class JobSchedule(object):
         specs = {}
         # ensure single whitespace
         orig_text = text
-        text = ' '.join(text.split(' ')).lower()
+        text = ' '.join(text.split(' ')).lower() + ' '
         # try placing commas
-        text = text.replace(' ', ',')
-        text = text.replace('every,', 'every ')
-        text = text.replace(',and,', ' and ')
-        text = text.replace(',only,', ' only ')
-        text = text.replace('at,', 'at ')
-        text = text.replace('on,', 'on ')
-        text = text.replace('in,', 'in ')
-        text = text.replace(',through,', ' through ')
-        text = text.replace(',-,', ' - ')
-        text = text.replace(',until,', ' until ')
-        text = text.replace(',till,', ' till ')
-        text = text.replace(',to,', ' to ')
-        text = text.replace(',of,', ' of ')
-        text = text.replace(',from,', ' from ')
-        text = text.replace(',hours,', ' hours,')
-        text = text.replace(',hour,', ' hour,')
-        text = text.replace('day hour,', 'day,hour ')
-        text = text.replace('hours,', 'hours ')
-        text = text.replace('hour,', 'hour ')
-        text = text.replace('working,day', 'working day')
-        text = text.replace('week,day', 'week day')
-        text = text.replace(',minutes', ' minutes')
-        text = text.replace(',minute', ' minute')
-        text = text.replace(',day', ' day')
-        text = text.replace(',end', ' end')
-        text = text.replace(',month,', ' month,')
+        text = text.replace(' at ', ', at ')
+        text = ','.join(part for part in text.split(',') if part)
+
         # get parts separated by comma
-        parts = [part.strip() for part in text.split(',') if part]
+        parts = [part.strip() for part in text.split(',') if part.strip()]
         try:
             specs = self._parse_parts(parts)
             sched = JobSchedule(**specs)
         except:
-            raise ValueError(f'Cannot parse {orig_text}, read as {parts}')
+            raise ValueError(f'Cannot parse {orig_text}, read as {specs}')
         return sched
 
     def _parse_parts(self, parts):
@@ -261,6 +241,7 @@ class JobSchedule(object):
             part = part.replace('minutes', 'minute')
             part = part.replace('ends', 'end')
             part = part.replace('on ', '')
+            part = part.replace('only ', '')
             part = part.replace('in ', '')
             part = part.replace('/', ',')
             part = part.replace(' through ', '-')
@@ -270,10 +251,11 @@ class JobSchedule(object):
             part = part.replace(' of ', '')
             part = part.replace('from ', '')
             if 'day' in part and 'month' in part:
-                specs['monthday'] = part.replace('day', '').replace('month', '')
-            elif 'month' in part:
-                # 'every month', 'every 3rd month'
-                specs['month'] = part.replace('month', '').strip()
+                # day 1 of the month
+                specs['monthday'] = part.replace('day', '').replace('month', '').replace('the', '').strip()
+            elif 'month' in part or 'months' in part:
+                # 'every month', 'every 3rd month', 'every 2 months'
+                specs['month'] = part.replace('months', '').replace('month', '').strip()
             elif self._has_month(part):
                 # 'january', 'every january'
                 specs['month'] = self._convert_months(part).replace('every', '')
@@ -284,16 +266,24 @@ class JobSchedule(object):
                 part = (self._convert_weekdays(part)
                         .replace('day', '')
                         .strip())
-                # every mon-fri => mon-fri
+                # every mon-fri => mon-fri, every fri
                 if 'every ' in part and '-' in part:
                     part = part.replace('every ', '').strip()
                 specs['weekday'] = part
-            elif ':' in part:
-                # at 06:00
-                specs['at'] = part.replace('at', '').strip()
-            elif 'hour' in part:
+            elif ':' in part and 'between' not in part:
+                # at 06:00, at 06:00 am
+                specs['at'] = part.replace('at', '').replace('am', '').replace('pm', '').strip()
+            elif ':' in part and 'between' in part:
+                # between 06:00 and 08:00, between 06:00 am and 08:00 am
+                parts = part.replace('between', '').split(',')
+                specs['at'] = parts[0].replace('at', '').replace('am', '').replace('pm', '').strip()
+            elif 'hour' in part and 'past the hour' not in part:
                 # every hour, hour 6, hour 6/7
                 specs['hour'] = part.replace('hour', '').strip()
+            elif 'hour' in part and 'past the hour' in part:
+                # every 5 minutes past the hour
+                time = part.replace('past the hour', '').replace('at', '').replace('minute', '').strip()
+                specs['minute'] = f'*/{time}'
             elif 'minute' in part:
                 # every minute, every 3rd minute, every 5 minutes, minute 6/7
                 specs['minute'] = part.replace('minute', '').replace('at ', '').strip()

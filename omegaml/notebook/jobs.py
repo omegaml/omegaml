@@ -533,7 +533,7 @@ class OmegaJobs(BackendBaseCommon):
                 trigger['status'] = 'CANCELLED'
         return meta.save()
 
-    def export(self, name, localpath, format='html'):
+    def export(self, name, localpath='memory', format='html'):
         """
         Export a job or result file to HTML
 
@@ -613,5 +613,8 @@ class OmegaJobs(BackendBaseCommon):
         # TODO remove, pending #218
         nb = self.get(name)
         return other.put(nb, name)
+
+    def summary(self, *args, **kwargs):
+        return self.store.summary(*args, **kwargs)
 
 

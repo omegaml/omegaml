@@ -11,7 +11,7 @@ import sys
 import weakref
 from datetime import datetime
 from time import sleep
-from tqdm import tqdm
+from yaspin import yaspin
 
 from omegaml.util import inprogress
 
@@ -174,12 +174,11 @@ class LunaMonitor:
         Returns:
             None
         """
-        t = tqdm(desc='waiting for checks to be ok', unit='checks', total=len(self.checks))
-        while not self.healthy():
-            active = len(self.checks) - len(self.failed())
-            t.update(active - t.n)
-            t.set_postfix_str(','.join(self.failed()))
-            sleep(1)
+        with yaspin(text='waiting for checks to be ok', color='yellow') as t:
+            while not self.healthy():
+                services = ','.join(self.failed())
+                t.text = f"waiting for dependencies {services}"
+                sleep(1)
 
     def notify(self, on_error=None, on_status=None):
         """ add a callback to be notified on error or status

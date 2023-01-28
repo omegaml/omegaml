@@ -12,6 +12,7 @@ import uuid
 import validators
 import warnings
 from base64 import b64encode
+from bson import UuidRepresentation, ObjectId
 from copy import deepcopy
 from datetime import datetime, date
 from hashlib import sha256
@@ -437,6 +438,14 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
     return created
 
 
+def ensure_index_relaxed(*args, **kwargs):
+    # a relaxed version of ensure_index(), use where read-access is possible
+    try:
+        return ensure_index(*args, **kwargs)
+    except Exception as e:
+        warnings.warn(f'could not create index due to {e}')
+
+
 def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
@@ -540,29 +549,36 @@ class PickableCollection(object):
     def __getstate__(self):
         client = self.database.client
         host, port = list(client.nodes)[0]
+        # options contains ssl settings
+        options = self.database.client._MongoClient__options._options
         # extract credentials in pickable format
         if hasattr(self.database.client, '_MongoClient__all_credentials'):
-            # -- before pymongo 4.10.1, options are in client['_MongoClient__options']
-            options = self.database.client._MongoClient__options._options
+            # pymongo < 4.1
             all_creds = self.database.client._MongoClient__all_credentials
             # -- if authSource was used for connection, credentials are in 'admin'
             # -- otherwise credentials are keyed by username
             cred_key = 'admin' if 'admin' in all_creds else options['username']
             creds = all_creds[cred_key]
         else:
-            # pymongo >= 4.10.1
+            # pymongo >= 4.1
             creds = self.database.client.options.pool_options._credentials
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
         creds_state['source'] = str(creds.source)
-        state = {
+        # https://github.com/mongodb/mongo-python-driver/blob/087950d869096cf44a797f6c402985a73ffec16e/pymongo/common.py#L161
+        UUID_REPS = {
+            UuidRepresentation.STANDARD: 'standard',
+            UuidRepresentation.PYTHON_LEGACY: 'pythonLegacy',
+        }
+        options['uuidRepresentation'] = UUID_REPS.get(options.get('uuidRepresentation'), 'standard')
+        return {
             'name': self.name,
             'database': self.database.name,
             'host': host,
             'port': port,
             'credentials': creds_state,
+            'options': options,
         }
-        return state
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
@@ -572,10 +588,9 @@ class PickableCollection(object):
         # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html?highlight=serverSelectionTimeoutMS#pymongo.mongo_client.MongoClient
         # https://github.com/mongodb/mongo-python-driver/blob/7a539f227a9524b27ef469826ef9ee5bd4533773/pymongo/common.py
         # https://github.com/mongodb/mongo-python-driver/blob/master/pymongo/client_options.py#L157
-        options = state.get('options', {})
+        options = state['options']
         options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
-        client = MongoClient(url, authSource=state['credentials']['source'],
-                             uuidRepresentation='standard', **options)
+        client = MongoClient(url, authSource=state['credentials']['source'], **options)
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -748,21 +763,7 @@ class DefaultsContext(object):
 
 
 def ensure_json_serializable(v):
-    import numpy as np
-    import pandas as pd
-    if isinstance(v, np.ndarray):
-        return v.flatten().tolist()
-    if isinstance(v, pd.Series):
-        return ensure_json_serializable(v.to_dict())
-    elif isinstance(v, range):
-        v = list(v)
-    elif isinstance(v, dict):
-        vv = {
-            k: ensure_json_serializable(v)
-            for k, v in v.items()
-        }
-        v = vv
-    return v
+    return mongo_compatible(v)
 
 
 def mkdirs(path):
@@ -1051,6 +1052,8 @@ class MongoEncoder(json.JSONEncoder):
             return b64encode(obj).decode('utf8')
         elif isinstance(obj, range):
             return list(obj)
+        elif isinstance(obj, ObjectId):
+            return str(obj)
         try:
             # PERF consider doing this first, only check for special types on exception
             return json.JSONEncoder.default(self, obj)
@@ -1306,3 +1309,10 @@ def inprogress(text="running {fn}", **__kwargs):
         return wrapper
 
     return decorator
+
+
+def signature(filter):
+    # sign a set of values
+    # SEC: CWE-345 ensure user-provided values are not tampered with
+    # -- this is used to ensure the values are not tampered with when passed to a query
+    return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
