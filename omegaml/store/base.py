@@ -699,7 +699,7 @@ class OmegaStore(object):
     def _drop(self, name, force=False, version=-1, **kwargs):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
-            raise DoesNotExist()
+            raise DoesNotExist(name)
         collection = self.collection(name)
         if collection:
             self.mongodb.drop_collection(collection.name)
@@ -1143,6 +1143,7 @@ class OmegaStore(object):
         Returns:
             bool, True if object exists
         """
+        hidden = True if name.startswith('.') else hidden
         return name in self.list(name, hidden=hidden)
 
     def object_store_key(self, name, ext, hashed=None):

@@ -46,7 +46,6 @@ OMEGA_MONGO_SSL_KWARGS = {
     'authSource': 'admin',
     # https://pymongo.readthedocs.io/en/4.8.0/migrate-to-pymongo4.html#directconnection-defaults-to-false
     'directConnection': True,
-    'socketTimeoutMS': OMEGA_MONGO_TIMEOUT,  # since 4.10
     'connectTimeoutMS': OMEGA_MONGO_TIMEOUT,  # since 4.10
     'serverSelectionTimeoutMS': OMEGA_MONGO_TIMEOUT,
 }

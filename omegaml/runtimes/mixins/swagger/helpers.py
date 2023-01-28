@@ -220,13 +220,13 @@ class SpecFromResourceHelperBase:
                                                many=spec.get('many', False))
                 for k, spec in signature.items()
                 if (k in ('X', 'Y', 'result')
-                    and (spec or {}).get('schema')) # skip empty schemas
+                    and (spec or {}).get('schema'))  # skip empty schemas
             }
             # errors - multiple response types, each mapped to one http status
             errors = {
                 int(status): store._datatype_from_schema(spec['schema'], name=f'{name}_{status}',
-                                               orient=orient,
-                                               many=spec.get('many', False))
+                                                         orient=orient,
+                                                         many=spec.get('many', False))
                 for status, spec in signature.get('errors').items()
             }
             # include a standard error message
@@ -238,7 +238,8 @@ class SpecFromResourceHelperBase:
         else:
             datatypes = None
         if not datatypes:
-            raise ValueError(f"Missing signature specification for object {store.prefix}/{name}")
+            resource = f'{store.prefix}/{name}'.replace('//', '/')
+            raise ValueError(f"Missing signature specification for object {resource}")
         return datatypes
 
 

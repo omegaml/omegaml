@@ -437,7 +437,7 @@ class RuntimeCommandBase(CommandBase):
             with open(specfile, 'r') as fin:
                 specs = [s.replace('\n', '') for s in fin.readlines() if not s.startswith('#')]
         os.environ['OMEGA_RESTAPI_FILTER'] = ';'.join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
-        subprocess.run(f"gunicorn 'omegaml.restapi.app:serve_objects()' --bind {host}:{port}", shell=True)
+        subprocess.run(f"gunicorn 'omegaml.server.restapi.app:serve_objects()' --bind {host}:{port}", shell=True)
 
     def deploy(self):
         om = get_omega(self.args, require_config=False)

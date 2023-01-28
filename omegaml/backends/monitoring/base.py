@@ -98,6 +98,7 @@ class DriftMonitorBase:
             DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
         """
         if seq in (None, 'recent'):
+            seq = [-2, -1]
             drifts = [self._calculate_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)]
         elif isinstance(seq, (list, tuple)) and len(seq) > 1:
             # [0, 1, 2, ...] => compare each snapshot to the previous
@@ -202,7 +203,7 @@ class DriftMonitorBase:
     def report(self, seq=None, format='html'):
         data = self.compare(seq=seq, raw=True)
         FORMATS = {
-            'html': lambda v: pd.json_normalize(v).T.to_html(),
+            'html': lambda v: pd.json_normalize(v).to_html(),
             'json': lambda v: pd.DataFrame(v).to_json(),
             'dict': lambda v: data if len(data) > 1 else data[0],
         }
@@ -228,11 +229,11 @@ class DriftMonitorBase:
         # make more efficient
         return len(self.data or [])
 
-    def _snapshot_info(self, name, kind, **kwargs):
+    def _snapshot_info(self, name, kind, dt=None, **kwargs):
         info = {
             'resource': name if isinstance(name, str) else str(type(name)),
             'kind': kind or self._kind,
-            'dt': datetime.utcnow().isoformat()
+            'dt': dt or datetime.utcnow().isoformat(),
         }
         info.update(kwargs)
         return info
@@ -491,17 +492,17 @@ class DriftMonitorBase:
         for col in numeric_columns + cat_columns:
             col_stats = metrics[col]
             mean_stats = {}
-            mean_stats['metric'] = np.mean([v['drift'] for v in col_stats.values() if v])
+            mean_stats['metric'] = np.mean([v['score'] for v in col_stats.values() if v])
             mean_stats['score'] = np.mean([v['score'] for v in col_stats.values() if v])
             mean_stats['stats'] = [k for k, v in col_stats.items() if v.get('drift')]
-            mean_stats['drift'] = mean_stats['metric'] > 0
+            mean_stats['drift'] = mean_stats['metric'] > 0.5
             col_stats['mean'] = mean_stats
         # per dataset
         column_drifts = [v['mean']['drift'] for v in metrics.values()]
         column_scores = [v['mean']['score'] for v in metrics.values()]
         result['drift'] = any(column_drifts)
         result['method'] = 'mean'
-        result['metric'] = np.mean(column_drifts)
+        result['score'] = np.mean(column_drifts)
         result['metric'] = np.mean(column_scores)
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift

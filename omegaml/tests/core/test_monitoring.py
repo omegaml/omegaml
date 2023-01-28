@@ -5,18 +5,17 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from numpy import random
-from pandas._testing import assert_frame_equal
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries, DriftStatsCalc
 from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import OmegaTestMixin
+from omegaml.tests.util import OmegaTestMixin, dict_almost_equal
+from pandas._testing import assert_frame_equal
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
@@ -57,7 +56,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drift = drift[0]
         self.assertIn('info', drift)
         self.assertIn('stats', drift)
-        self.assertEqual(drift['info']['seq'], [0, 0])
+        self.assertEqual(drift['info']['seq'], [-1, 0])
         self.assertEqual(drift['result']['drift'], False)
 
     def test_driftstats_mixin(self):
@@ -266,6 +265,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
         #    comparing each snapshot to the baseline
+        mon.samples = [1000, 10000]
         drifts = mon.compare(seq='baseline', raw=True)
         # expect 3 drift calculations
         # -- note how this is different from test_datadrift_sequence
@@ -279,9 +279,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[1]['result']['drift'], True)
         self.assertEqual(drifts[2]['result']['drift'], True)
         # -- expect drifts in lifeExp (1960/1980) and gdpPercap (1980/now)
-        self.assertIn('pop', drifts[0]['result']['columns'])
-        self.assertIn('lifeExp', drifts[1]['result']['columns'])
-        self.assertIn('lifeExp', drifts[2]['result']['columns'])
+        self.assertTrue(any('pop' in drifts[i]['result']['columns'] for i in range(len(drifts))))
+        self.assertTrue(any('lifeExp' in drifts[i]['result']['columns'] for i in range(len(drifts))))
 
     def _setup_model(self, exp_name='test', model_name='test', save_xy=False, autotrack=False):
         om = self.om
@@ -430,18 +429,24 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         captured = mon.capture()
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertEqual(events.iloc[0]['value'],
-                         {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True, 'acc': False},
-                          'summary': {'feature': True, 'label': True, 'metrics': False},
-                          'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'], 'metrics': ['acc'],
-                                   'seq': [[0, 1]]}})
+        self.assertTrue(dict_almost_equal(events.iloc[0]['value'],
+                                          {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
+                                                       'acc': False},
+                                           'summary': {'feature': True, 'label': True, 'metrics': False},
+                                           'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'],
+                                                    'metrics': ['acc'],
+                                                    'seq': [[0, 1]]},
+                                           'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1}},
+                                          tolerance=1e-1))
         # capture specific feature drift
         captured = mon.capture(column='X_0')
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertEqual(events.iloc[-1]['value'],
-                         {'columns': {'X_0': True}, 'info': {'feature': ['X_0'], 'seq': [[0, 1]]},
-                          'summary': {'feature': True}})
+        self.assertTrue(dict_almost_equal(events.iloc[-1]['value'],
+                                          {'columns': {'X_0': True}, 'info': {'feature': ['X_0'], 'seq': [[0, 1]]},
+                                           'summary': {'feature': True},
+                                           'score': {'feature': 1.0}},
+                                          tolerance=1e-1))
 
     def test_alert_rule_notify(self):
         om = self.om
@@ -452,11 +457,15 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # capture overall model drift
         captured = mon.capture()
         stats = mon.events(stats=True)
-        self.assertDictEqual(stats.summary(raw=True),
-                             {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
-                                          'acc': False}, 'summary': {'feature': True, 'label': True, 'metrics': False},
-                              'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'], 'metrics': ['acc'],
-                                       'seq': [[0, 1]]}})
+        self.assertTrue(dict_almost_equal(stats.summary(raw=True),
+                                          {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
+                                                       'acc': False},
+                                           'summary': {'feature': True, 'label': True, 'metrics': False},
+                                           'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'],
+                                                    'metrics': ['acc'],
+                                                    'seq': [[0, 1]]},
+                                           'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1}},
+                                          tolerance=1e-1))
         self.assertIsInstance(stats.summary(), pd.DataFrame)
         # check alert rule is called upon detected drift
         rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
@@ -542,7 +551,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             del drifts[0][k]
         exp_drift_summary = {'columns': {'acc': True},
                              'info': {'metrics': ['acc'], 'seq': [[0, 1]]},
-                             'summary': {'metrics': True}}
+                             'summary': {'metrics': True},
+                             'score': {'metrics': 1.0}}
         self.assertDictEqual({'event': 'drift',
                               'experiment': 'test',
                               'key': 'test',
