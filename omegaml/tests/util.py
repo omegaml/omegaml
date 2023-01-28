@@ -88,3 +88,30 @@ def clear_om(om):
         omx = om[bucket]
         for omstore in (omx.datasets, omx.jobs, omx.models, omx.scripts, omx.streams):
             [omstore.drop(name, force=True) for name in omstore.list(include_temp=True, hidden=True)]
+
+
+import math
+
+
+def almost_equal(a, b, tolerance=1e-9):
+    """Check if two floating-point numbers are almost equal within a given tolerance."""
+    return math.isclose(a, b, abs_tol=tolerance)
+
+
+def dict_almost_equal(dict1, dict2, tolerance=1e-9):
+    """Recursively check if two nested dictionaries are almost equal."""
+    if dict1.keys() != dict2.keys():
+        return False
+    for key in dict1:
+        val1 = dict1[key]
+        val2 = dict2[key]
+        if isinstance(val1, dict) and isinstance(val2, dict):
+            if not dict_almost_equal(val1, val2, tolerance):
+                return False
+        elif isinstance(val1, float) and isinstance(val2, float):
+            if not almost_equal(val1, val2, tolerance):
+                raise AssertionError(f"Values key {key}: {val1} and {val2} are not almost equal")
+        else:
+            if val1 != val2:
+                raise AssertionError(f"Values key {key}: {val1} and {val2} are not equal")
+    return True

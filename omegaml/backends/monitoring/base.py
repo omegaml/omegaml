@@ -98,6 +98,7 @@ class DriftMonitorBase:
             DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
         """
         if seq in (None, 'recent'):
+            seq = [-2, -1]
             drifts = [self._calculate_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)]
         elif isinstance(seq, (list, tuple)) and len(seq) > 1:
             # [0, 1, 2, ...] => compare each snapshot to the previous
@@ -202,7 +203,7 @@ class DriftMonitorBase:
     def report(self, seq=None, format='html'):
         data = self.compare(seq=seq, raw=True)
         FORMATS = {
-            'html': lambda v: pd.json_normalize(v).T.to_html(),
+            'html': lambda v: pd.json_normalize(v).to_html(),
             'json': lambda v: pd.DataFrame(v).to_json(),
             'dict': lambda v: data if len(data) > 1 else data[0],
         }
@@ -228,11 +229,11 @@ class DriftMonitorBase:
         # make more efficient
         return len(self.data or [])
 
-    def _snapshot_info(self, name, kind, **kwargs):
+    def _snapshot_info(self, name, kind, dt=None, **kwargs):
         info = {
             'resource': name if isinstance(name, str) else str(type(name)),
             'kind': kind or self._kind,
-            'dt': datetime.utcnow().isoformat()
+            'dt': dt or datetime.utcnow().isoformat(),
         }
         info.update(kwargs)
         return info
@@ -359,6 +360,7 @@ class DriftMonitorBase:
                 'percentiles': [np.quantile(values, probs), probs],
                 'corr': {method: tryOr(lambda: correlations[method][col], None)
                          for method in correlations},
+                'missing': len(df1) - len(values),
             }
         # calculate categorical statistics
         for col in cat_columns:
@@ -366,7 +368,8 @@ class DriftMonitorBase:
             stats[s_col] = {
                 'dtype': str(df1.dtypes[col]),
                 'groups': df1[col].value_counts().to_dict(),
-                'pmf': df1[col].value_counts(normalize=True).to_dict()
+                'pmf': df1[col].value_counts(normalize=True).to_dict(),
+                'missing': len(df1) - len(df1[col].dropna()),
             }
         return snapshot
 
@@ -457,7 +460,8 @@ class DriftMonitorBase:
             cdf2 = calc.cdf_from_hist(h2, e2)
             metrics.setdefault(col, {})
             for metric, metric_fn in calc.metrics('numeric').items():
-                metrics[col][metric] = metric_fn(d1, d2, ci=ci, sd=sd)
+                metrics[col][metric] = tryOr(lambda: metric_fn(d1, d2, ci=ci, sd=sd),
+                                             {'score': 0, 'drift': False, 'metric': None, 'error': True})
             sample[col] = {
                 'd1': d1,
                 'd2': d2,
@@ -465,14 +469,15 @@ class DriftMonitorBase:
         for col in cat_columns:
             g1 = s1['stats'][_c('d1', s1, col)]['groups']
             g2 = s2['stats'][_c('d2', s2, col)]['groups']
-            # calculate group frequencies (%), required for chisquare
+            # calculate normalized group frequencies (%), required for statistic test
             g1v = np.array(list(g1.values()))
             g2v = np.array(list(g2.get(g, 0) for g in g1))
             d1 = (np.array(g1v) / np.sum(g1v)).round(decimals=99)
             d2 = (np.array(g2v) / np.sum(g2v)).round(decimals=99)
             metrics.setdefault(col, {})
             for metric, metric_fn in calc.metrics('categorical').items():
-                metrics[col][metric] = metric_fn(d1, d2, ci=ci, sd=sd)
+                metrics[col][metric] = tryOr(lambda: metric_fn(d1, d2, ci=ci, sd=sd),
+                                             {'score': 0, 'drift': False, 'metric': None, 'error': True})
             sample[col] = {
                 'd1': d1,
                 'd2': d2,
@@ -488,20 +493,27 @@ class DriftMonitorBase:
         # -- per dataset: mean of column drift statistics
         # -- that is, info['drift'] is the mean of all column drift indicators (0 = no drift, > 0 = drift)
         # per column
+        # -- drift is detected if the mean of the drift statistics is > 0.5
+        # -- we use the following metrics to calculate drift:
+        #    - ks: Kolmogorov-Smirnov test for goodness of fit
+        #    - wasserstein: Wasserstein distance
+        #    - chisq: chi-square test for goodness of fit
+        # rationale for not using jsd, kld, hellinger, bhattacharyya: these metrics are not symmetric
+        mean_metrics = calc.mean_metrics
         for col in numeric_columns + cat_columns:
             col_stats = metrics[col]
             mean_stats = {}
-            mean_stats['metric'] = np.mean([v['drift'] for v in col_stats.values() if v])
-            mean_stats['score'] = np.mean([v['score'] for v in col_stats.values() if v])
-            mean_stats['stats'] = [k for k, v in col_stats.items() if v.get('drift')]
-            mean_stats['drift'] = mean_stats['metric'] > 0
+            mean_stats['metric'] = np.mean([v['score'] for k, v in col_stats.items() if v if k in mean_metrics])
+            mean_stats['score'] = np.mean([v['score'] for k, v in col_stats.items() if v if k in mean_metrics])
+            mean_stats['stats'] = [k for k, v in col_stats.items() if v.get('drift') if k in mean_metrics]
+            mean_stats['drift'] = mean_stats['metric'] > 0.5
             col_stats['mean'] = mean_stats
         # per dataset
         column_drifts = [v['mean']['drift'] for v in metrics.values()]
         column_scores = [v['mean']['score'] for v in metrics.values()]
         result['drift'] = any(column_drifts)
         result['method'] = 'mean'
-        result['metric'] = np.mean(column_drifts)
+        result['score'] = np.mean(column_drifts)
         result['metric'] = np.mean(column_scores)
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift

@@ -1,4 +1,5 @@
 import pandas as pd
+
 from omegaml.backends.monitoring.base import DriftMonitorBase
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats
@@ -18,7 +19,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         drift detection
 
         Args:
-            model (str): the model to snapshot
+            model (str): the model to snapshot, defaults to the resource given at initialisation
             X (str|pd.DataFrame|np.ndarray): the input data to snapshot
             Y (str|pd.DataFrame|np.ndarray): the target data to snapshot
             rename (dict): a dict that maps columns new -> old, e.g. {'Y_y': 'Y_0'}
@@ -66,6 +67,32 @@ class ModelDriftMonitor(DriftMonitorBase):
             self._log_snapshot(snapshot)
         # -- log the full snapshot
         self._log_snapshot(snapshots)
+        return snapshots
+
+    @property
+    def data(self):
+        """ return snapshots of model metrics, X and Y data
+
+        Returns:
+            list[dict]: snapshots of model metrics, X and Y data, with the following keys
+                - metrics (dict): the snapshot of model metrics, see DataDriftMonitor.snapshot() for details
+                - X (dict): the snapshot of X data, see DataDriftMonitor.snapshot() for details
+                - Y (dict): the snapshot of Y data, see DataDriftMonitor.snapshot() for details
+        """
+        x_mon, y_mon = self._xy_monitor(self._resource)
+        metrics_mon = self._metrics_monitor(self._resource)
+        snapshots = []
+        for i in range(max(len(metrics_mon.data), len(x_mon.data), len(y_mon.data))):
+            snapshot = {
+                'metrics': metrics_mon.data[i] if i < len(metrics_mon.data) else None,
+                'X': x_mon.data[i] if i < len(x_mon.data) else None,
+                'Y': y_mon.data[i] if i < len(y_mon.data) else None,
+            }
+            # combine all snapshots into one, while keeping the details
+            merged_snapshot = self._combine_snapshots(snapshot.values())
+            snapshot['info'] = merged_snapshot['info']
+            snapshot['info']['kind'] = self._kind
+            snapshots.append(snapshot)
         return snapshots
 
     def _xy_monitor(self, model):
