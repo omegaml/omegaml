@@ -119,6 +119,7 @@ help:
 
 devstart:
 	docker-compose -f docker-compose-dev.yml up -d --remove-orphans
+	cp scripts/mongoinit.js.example scripts/mongoinit.js
 	scripts/initlocal.sh
 
 devstop:
@@ -133,4 +134,6 @@ scan: freeze pipsync
 	mv requirements.txt scripts/secdev/scanned-pipreqs.txt
 	cat $(find scripts/secdev/ -name *report)
 
-
+server:
+	# start omegaml server
+	python -m omegaml.server

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import warnings
-
 import numpy as np
 import pandas as pd
 from bson import Code
@@ -200,11 +198,11 @@ class MLocIndexer(object):
         if isinstance(specs, np.ndarray):
             specs = specs.tolist()
         if (isinstance(specs, enumerable_types)
-              and isscalar(specs[0]) and len(idx_cols) == 1
-              and not any(isinstance(s, slice) for s in specs)):
+                and isscalar(specs[0]) and len(idx_cols) == 1
+                and not any(isinstance(s, slice) for s in specs)):
             # single column index with list of scalar values
             if (self.positional and isinstance(specs, tuple) and len(specs) == 2
-                  and all(isscalar(v) for v in specs)):
+                    and all(isscalar(v) for v in specs)):
                 # iloc[int, int] is a cell access
                 flt_kwargs[idx_cols[0]] = specs[0]
                 projection = self._get_projection(specs[1])
@@ -430,6 +428,7 @@ class MDataFrame(object):
                       metadata=self.metadata,
                       query=self.filter_criteria,
                       auto_inspect=self.auto_inspect,
+                      parser=self._parser,
                       preparefn=self._preparefn)
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
@@ -767,7 +766,7 @@ class MDataFrame(object):
         target_name = self._get_collection_name_of(
             target, '_temp.merge.%s' % uuid4().hex)
         target_field = (
-              "%s_%s" % (right_name.replace('.', '_'), right_on or on))
+                "%s_%s" % (right_name.replace('.', '_'), right_on or on))
         """
         TODO enable filter criteria on right dataframe. requires changing LOOKUP syntax from 
              equitly to arbitray match 
@@ -1010,7 +1009,7 @@ class MDataFrame(object):
             else:
                 # Series does not have iterrows
                 for i in range(0, len(chunkdf), chunksize):
-                    yield chunkdf.iloc[i:i+chunksize]
+                    yield chunkdf.iloc[i:i + chunksize]
 
     def iteritems(self):
         if not hasattr(pd.DataFrame, 'iteritems'):
@@ -1047,7 +1046,6 @@ class MDataFrame(object):
         # equivalent to .iloc[start:end].iteritems(),
         start, end, chunksize = (int(v) for v in (start, end, chunksize))
         return self.iloc[slice(start, end)].iterchunks(chunksize)
-
 
     def __repr__(self):
         kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())

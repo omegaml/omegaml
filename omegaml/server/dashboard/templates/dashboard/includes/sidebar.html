@@ -1,0 +1,119 @@
+<!-- [ navigation menu ] start -->
+<nav class="pcoded-navbar">
+    <div class="navbar-wrapper">
+        <div class="navbar-brand header-logo">
+            <a href="{{ url_for('omega-server.index_index') }}" class="b-brand">
+                <div class="b-bg">
+                    <img class="img-fluid" src="{{ url_for('static', filename='/assets/images/logo-thumb.png') }}"
+                         alt="omega-ml logo">
+                </div>
+                <span class="b-title">omega-ml</span>
+            </a>
+            <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+        </div>
+        <div class="navbar-content scroll-div">
+            <ul class="nav pcoded-inner-navbar">
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Repository</label>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.models_view_list')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-brain"></i></span><span
+                            class="pcoded-mtext">Models</span></a>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.datasets_view_list')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-database"></i></span><span
+                            class="pcoded-mtext">Datasets</span></a>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.jobs_view_list')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-file-code"></i></span><span class="pcoded-mtext">Jobs</span></a>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.scripts_view_list')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-book"></i></span><span
+                            class="pcoded-mtext">Scripts</span></a>
+                </li>
+                <li class="nav-item pcoded-menu-caption">
+                    <label>DEPLOYMENT</label>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.runtime_summary')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-cloud"></i></span><span
+                            class="pcoded-mtext">Runtime</span></a>
+                </li>
+                <!--
+                          <li data-username="form elements advance componant validation masking wizard picker select"
+                              class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                              <a href="{{url_for('.tracking_view_list')}}" class="nav-link ">
+                                  <span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span
+                                      class="pcoded-mtext">Tracking</span></a>
+                          </li>
+                          -->
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="/apps" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-desktop"></i></span><span
+                            class="pcoded-mtext">Apps</span></a>
+                </li>
+              {% if cards_enabled %}
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="{{url_for('.cards_index')}}" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-th"></i>  </i></span><span
+                            class="pcoded-mtext">Cards</span></a>
+                </li>
+              {% endif %}
+                <!--
+                          <li data-username="form elements advance componant validation masking wizard picker select"
+                              class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                              <a href="{{url_for('.streams_view_list')}}" class="nav-link ">
+                                  <span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span
+                                      class="pcoded-mtext">Streams</span></a>
+                          </li>
+                          -->
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Admin</label>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="/admin/auth/user/" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-user"></i></span><span
+                            class="pcoded-mtext">Users</span></a>
+                </li>
+                <li data-username="form elements advance componant validation masking wizard picker select"
+                    class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+                    <a href="/admin/landingpage/servicedeployment/" class="nav-link ">
+                        <span class="pcoded-micon"><i class="fas fa-cube"></i></span><span
+                            class="pcoded-mtext">Environments</span></a>
+                </li>
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Information</label>
+                </li>
+                <li data-username="Support Page" class="nav-item ">
+                    <a target="_blank" href="https://omegaml.github.io/omegaml/" class="nav-link">
+            <span class="pcoded-micon">
+              <i class="feather icon-book"></i>
+            </span>
+                        <span class="pcoded-mtext">Docs</span>
+                    </a>
+                </li>
+                <li data-username="Support Page" class="nav-item ">
+                    <a target="_blank" href="https://github.com/omegaml/omegaml/issues" class="nav-link">
+            <span class="pcoded-micon">
+              <i class="feather icon-headphones"></i>
+            </span>
+                        <span class="pcoded-mtext">Support</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<!-- [ navigation menu ] end -->

@@ -173,6 +173,7 @@ class LunaMonitor:
         Returns:
             None
         """
+
         with yaspin(text='waiting for checks to be ok', color='yellow') as t:
             while not self.healthy():
                 services = ','.join(self.failed())

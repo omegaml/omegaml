@@ -1,0 +1,92 @@
+{% extends "dashboard/layouts/detail.html" %} {% block content %} {{ super() }}
+{% block tabitems %}
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="results-tab" data-toggle="tab" href="#results-content" role="tab"
+    aria-controls="results" aria-selected="false">Results</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="schedule-tab" data-toggle="tab" href="#schedule-content" role="tab"
+    aria-controls="schedule" aria-selected="false">Scheduling</a>
+</li>
+{% endblock tabitems %} {% block tabcontents %}
+<div class="tab-pane fade" id="results-content" role="tabpanel" aria-labelledby="results-tab">
+  <div class="nav"></div>
+  <div id="results-table" class="table-responsive">
+    <table id="results-viewer" class="table nowrap table-hover display compact" style="width: 100%">
+      <thead>
+        <tr>
+          <th>Result</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+<div class="tab-pane fade" id="schedule-content" role="tabpanel" aria-labelledby="schedule-tab">
+  <div class="nav"></div>
+  <div id="scheduler">
+    <!-- https://getbootstrap.com/docs/4.6/components/forms/#switches -->
+    <!--
+        <div class="custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" checked id="schedule-toggle">
+          <label class="custom-control-label" for="schedule-toggle">Run this job automatically</label>
+        </div>
+        -->
+    <div class="col-sm-12 col-md-6">
+      <div id="cronContainer" <div class="row"></div>
+    </div>
+    <div id="schedule-table" class="table-responsive">
+      <table id="schedule-viewer" class="table nowrap table-hover display compact" style="width: 100%">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Trigger</th>
+            <th>Start</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock tabcontents %}
+<div id="modals">
+  <!-- [ Modals ] end -->
+  <div class="modal fade" id="jobview-modal" tabindex="-1" role="dialog" aria-labelledby="jobview-modal"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-slideout" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="jobview-modal-title">Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="embed-responsive embed-responsive-16by9">
+            <iframe class="embed-responsive-item"
+              src="{{ url_for('omega-server.jobs_api_get_results', name='jobs/results/_empty_') }}"
+              allowfullscreen></iframe>
+          </div>
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block javascripts %} {{ super() }}
+<script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/repository/jobs_detail.js') }}"></script>
+<script type="text/javascript">
+  // avoid prettier formatting
+  const _schedule = {{ schedule | tojson }};
+  const _triggers = {{ triggers | tojson }};
+  window.context = {
+    "name": "{{ meta.name }}",
+    "triggers": _triggers,
+    "schedule": _schedule,
+  }
+</script>
+{% endblock javascripts %}

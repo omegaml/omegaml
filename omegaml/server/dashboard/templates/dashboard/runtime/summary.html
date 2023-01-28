@@ -1,0 +1,205 @@
+{% extends "dashboard/layouts/base.html" %}
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+{% endblock stylesheets %}
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ segment | title }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Runtime view</h5>
+                  </div>
+                </div>
+                <!-- tabs -->
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active text-uppercase" id="summary-tab" data-toggle="tab" href="#summary-content"
+                      role="tab" aria-controls="summary" aria-selected="true">Status</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="logview-tab" data-toggle="tab" href="#logview-content"
+                      role="tabview" aria-controls="logview" aria-selected="false">Log</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="restapi-tab" data-toggle="tab" href="#restapi-content"
+                      role="tab" aria-controls="restapi" aria-selected="false">REST API</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="workers-tab" data-toggle="tab" href="#workers-content"
+                      role="tab" aria-controls="workers" aria-selected="false">Workers</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="database-tab" data-toggle="tab" href="#database-content"
+                      role="tab" aria-controls="database" aria-selected="false">Database</a>
+                  </li>
+                  {% if clustertab %}
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="cluster-tab" data-toggle="tab" href="#cluster-content"
+                      role="tab" aria-controls="cluster" aria-selected="false">Cluster</a>
+                  </li>
+                  {% endif %}
+                </ul>
+                <!-- tab contents -->
+                <div class="tab-content" id="myTabContent">
+                  <div class="tab-pane fade show active" id="summary-content" role="tabpanel"
+                    aria-labelledby="summary-tab">
+                    <div class="row">
+                      <div class="col-md-6 col-xl-6">
+                        <div class="card">
+                          <div class="card-header">
+                            <h5>Service Health</h5>
+                          </div>
+                          <div class="card-block">
+                            <div id="status-chart"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 col-xl-6">
+                        <div class="card">
+                          <div class="card-header">
+                            <h5>Uptime</h5>
+                          </div>
+                          <div class="card-block">
+                            <div id="uptime-chart"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane fade" id="workers-content" role="tabpanel" aria-labelledby="workers-tab">
+                    <div class="table-responsive">
+                      <table id="list-table" class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Worker</th>
+                            <th>Status</th>
+                            <th>Activity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for item in items %}
+                          <tr>
+                            <td>
+                              <a class="worker-item" worker-id="{{ item.name }}" href="#void">{{
+                                item.name }}</a>
+                            </td>
+                            <td>{{ item.status }}</td>
+                            <td>{{ item.activity }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="tab-pane fade" id="restapi-content" role="tabpanel" aria-labelledby="restapi-tab">
+                    <div class="embed-responsive embed-responsive-16by9">
+                      <iframe class="embed-responsive-item" src="{{ url_for('omega-api.api_docs') }}"
+                        allowfullscreen></iframe>
+                    </div>
+                  </div>
+                  <div class="tab-pane fade" id="database-content" role="tabpanel" aria-labelledby="database-tab">
+                    <div class="row">
+                      <div class="col-md-6 col-xl-6">
+                        <div class="card">
+                          <div class="card-header">
+                            <h5>Server</h5>
+                          </div>
+                          <div class="card-block">
+                            <div id="dbstats-chart"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 col-xl-6">
+                        <div class="card">
+                          <div class="card-header">
+                            <h5>Repository</h5>
+                          </div>
+                          <div class="card-block">
+                            <div id="repostats-chart"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% if clustertab %}
+                  <div class="tab-pane fade" id="cluster-content" role="tabpanel" aria-labelledby="cluster-tab">
+                    <p>cluster</p>
+                  </div>
+                  {% endif %}
+                  <div class="tab-pane fade" id="logview-content" role="tabpanel" aria-labelledby="logview-tab">
+                    <div class="table-responsive">
+                      <table id="logviewer" class="table nowrap table-hover display compact" style="width:100%">
+                        <thead>
+                          <tr>
+                            <th>text</th>
+                            <th>hostname</th>
+                            <th>userid</th>
+                            <th>name</th>
+                          </tr>
+                        </thead>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ Modals ] end -->
+        <div class="modal fade" id="worker-modal" tabindex="-1" role="dialog" aria-labelledby="worker-modal"
+          aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-slideout" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="worker-modal-title">Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+              <div class="modal-body">...</div>
+              <div class="modal-footer"></div>
+            </div>
+          </div>
+        </div>
+        <!-- [ Main Content ] end -->
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/views/runtime/summary.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/views/runtime/workers.js') }}"></script>
+{% endblock javascripts %}
