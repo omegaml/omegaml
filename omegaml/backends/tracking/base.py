@@ -1,6 +1,9 @@
 import getpass
+import logging
 
 from omegaml import settings, load_class
+
+logger = logging.getLogger(__name__)
 
 
 class TrackingProvider:
@@ -127,7 +130,9 @@ class TrackingProvider:
         store = store or self._model_store
         mon = self._has_monitor(obj, store=store)
         is_autotracked = getattr(self, 'autotrack', False)
-        assert is_autotracked, "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
+        if not is_autotracked:
+            logger.warning(
+                f"Experiment {self._experiment} is not autotracked, model calls are not tracked automatically")
         provider = provider or mon.get('provider') if mon else None
         provider = provider or store.prefix.replace('/', '')
         store.link_monitor(obj, self._experiment, provider=provider, alerts=alerts, schedule=schedule)
