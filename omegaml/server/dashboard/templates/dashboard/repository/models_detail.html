@@ -1,0 +1,115 @@
+{% extends "dashboard/layouts/detail.html" %}
+{% block content %}
+{{ super() }}
+{% block tabitems %}
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
+    aria-controls="experiments" aria-selected="false">Experiments</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
+    aria-controls="experiments" aria-selected="false">Monitoring</a>
+</li>
+{% endblock tabitems %} {% block tabcontents %}
+<!-- experiments -->
+<div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
+  <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+    <div class=" dropdown">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownExperiments"
+        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Experiment
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
+        {% for exp in meta.attributes.tracking.experiments %}<a class="dropdown-item exp" href="#">{{ exp }}</a>{%
+        endfor %}
+      </div>
+    </div>
+    <div id="exp-sinceRangePicker"></div>
+    <!-- choose display style -->
+    <div class="btn-group mr-2" role="group">
+      <button type="button" id="showtable" class="btn btn-icon  ">
+        <i class="fa-solid far fa-table-list"></i>
+      </button>
+      <button type="button" id="details" class="btn btn-icon  ">
+        <i class="fa-solid far fa-table-cells"></i>
+      </button>
+    </div>
+    <div class="btn-group mr-2" role="group">
+      <button type="button" id="plotchart" class="btn btn-icon  ">
+        <i class="fa-solid fa-chart-line"></i>
+      </button>
+      <button type="button" id="multicharts" class="btn btn-icon  ">
+        <i class="fa-solid fa-table-columns"></i>
+      </button>
+    </div>
+  </div>
+  <div id="exptable" class="table-responsive">
+    <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%"></table>
+  </div>
+  <div id="expcards"></div>
+  <div id="expchart"></div>
+</div>
+<!-- drift -->
+<div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+  <div class="nav">
+    <div class="dropdown">
+      <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownDriftColumns"
+        data-toggle="dropdown" data-default='Columns' aria-haspopup="true" aria-expanded="false">
+        Columns
+      </button>
+      <div class="dropdown-menu mon column items" aria-labelledby="dropdownDriftColumns">
+        <a class="dropdown-item mon column refresh" href="#">(all)</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownStatistics"
+        data-toggle="dropdown" data-default='Statistics' aria-haspopup="true" aria-expanded="false">
+        Statistics
+      </button>
+      <div class="dropdown-menu mon stats items" aria-labelledby="dropdownStatistics">
+        <a class="dropdown-item mon stats refresh" href="#">score</a>
+      </div>
+    </div>
+    <div id="mon-sinceRangePicker"></div>
+    <button type="button" id="plotmon-time" class="btn btn-icon  ">
+      <i class="fa-solid fa-chart-line"></i>
+    </button>
+    <button type="button" id="plotmon-dist" class="btn btn-icon  ">
+      <i class="fa-solid fa-chart-bar"></i>
+    </button>
+  </div>
+  <div class="container-fluid mt-3 pl-0">
+    <div class="row">
+      <!-- Left Panel - Snapshots List -->
+      <div class="col-md-3">
+        <div class="">
+          <div>
+            <h5 class="mb-0">Snapshots</h5>
+            <hr>
+          </div>
+          <div class="p-0 snapshot-list">
+            <div id="snapshotsList">
+              <!-- Dynamically populated list -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right Panel - Chart -->
+      <div class="col-md-9">
+        <h5 class="mb-0">Drift Statistics</h5>
+        <hr>
+        <div class="chart-container">
+          <div id="monchart"><img id="monplot" /></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock tabcontents %}
+{% endblock content %}
+{% block javascripts %} {{
+super() }}
+<script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+{% endblock javascripts %}

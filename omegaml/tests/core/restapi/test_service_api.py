@@ -4,7 +4,8 @@ import os
 import sys
 from marshmallow import fields, Schema
 
-from omegaml import Omega, restapi
+from omegaml import Omega
+from omegaml.server import restapi
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient

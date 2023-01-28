@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% include 'dashboard/includes/styles.html' %}
+  {% include 'dashboard/includes/scripts.html' %}
+  {% block stylesheets %}
+  <style>
+    h5.nomark:after {
+      content: none;
+      background-color: transparent !important;
+    }
+  </style>
+  {% endblock stylesheets %}
+</head>
+
+<body>
+  <!-- Specific CSS goes HERE -->
+  {% block nav %}
+  {% endblock nav %}
+  {% block content %}
+  <script>
+    // Format the timestamps using moment.js once the page is loaded
+    window.onload = function () {
+      const timestamps = document.querySelectorAll('[data-timestamp]');
+      timestamps.forEach(function (timestampEl) {
+        const time = timestampEl.getAttribute('data-timestamp');
+        timestampEl.innerText = moment(time).fromNow();
+      });
+    };
+  </script>
+  <div id="status" class="container mt-4">
+    <div class="row">
+      <div class="col-12">
+        {% if title %}
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">System Status Dashboard</h4>
+        </div>
+        {% endif %}
+        <!-- Health overall -->
+        <div class="col-12 mb-4">
+          <div
+            class="alert alert-{{ 'success' if data.health.status == 'ok' else 'danger' }} d-flex justify-content-between align-items-center mb-0">
+            <strong>Overall System Health: {{ data.health.status.upper() }}</strong>
+            <span class="badge badge-light">{{ '✓' if data.health.status == 'ok' else '✗' }}</span>
+          </div>
+        </div>
+        <!-- Service cards row -->
+        <div class="col-12 mb-4">
+          <div class="row">
+            {% for service, details in data.items() if service != 'health' %}
+            <div class="col-md-6 col-lg-4 mb-4">
+              <div class="card h-100">
+                <div
+                  class="card-header nomark bg-{{ 'success' if details.status == 'ok' else 'danger' }} text-white d-flex justify-content-between align-items-center"
+                  data-toggle="collapse" href="#collapseService{{ loop.index }}" role="button" aria-expanded="false"
+                  aria-controls="collapseService{{ loop.index }}">
+                  <h5 class="mb-0 text-capitalize nomark">{{ service }}</h5>
+                  <span class="badge badge-light">{{ '✓' if details.status == 'ok' else '✗' }}</span>
+                </div>
+                <div id="collapseService{{ loop.index }}" class="collapse">
+                  <div class="card-body">
+                    <p class="card-text mb-2">
+                      <strong>Status:</strong>
+                      <span class="text-{{ 'success' if details.status == 'ok' else 'danger' }}">{{
+                        details.status.upper()
+                        }}</span>
+                    </p>
+                    <p class="card-text mb-2">
+                      <strong>Message:</strong><br>
+                      {{ details.message }}
+                    </p>
+                    <p class="card-text mb-2">
+                      <strong>Response Time:</strong><br>
+                      {{ "%.3f" % details.elapsed | float }}
+                    </p>
+                    <p class="card-text mb-0 text-muted">
+                      <small>Last updated: <span data-timestamp="{{ details.timestamp }}">{{ details.timestamp
+                          }}</span></small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock content %}
+</body>
+
+</html>
