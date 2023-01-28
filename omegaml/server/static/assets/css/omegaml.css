@@ -1,0 +1,49 @@
+/* make tabs resizable */
+.tab-content {
+  resize: vertical;
+  overflow: auto
+}
+
+/* move navbar closer to top */
+body>header>div.collapse.navbar-collapse {
+  height: 50px;
+}
+
+/* make logo appear in collapsed navbar */
+.pcoded-navbar.navbar-collapsed .header-logo img {
+  -webkit-transform: unset !important;
+  opacity: 1 !important;
+}
+
+/* h-align top controls with content */
+.pcoded-header .navbar-nav>li:first-child {
+  padding-left: 11px;
+}
+
+/* remove top padding in main content */
+.pcoded-main-container .pcoded-content {
+  position: relative;
+  display: block;
+  padding: 0px 30px 30px 30px;
+}
+
+/* https://datatables.net/examples/basic_init/scroll_x.html  */
+#logviewer_wrapper {
+  width: 100pct;
+  margin: 0 auto;
+  display: inline;
+}
+
+/* dark table text color */
+.dark .table {
+  color: #e2e1e1;
+}
+
+.dark .table :hover {
+  color: #e2e1e1;
+}
+
+/* button with icons */
+.btn-icon {
+  padding: 0px 5px;
+}

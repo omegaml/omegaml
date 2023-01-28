@@ -436,6 +436,14 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
     return created
 
 
+def ensure_index_relaxed(*args, **kwargs):
+    # a relaxed version of ensure_index(), use where read-access is possible
+    try:
+        return ensure_index(*args, **kwargs)
+    except Exception as e:
+        warnings.warn(f'could not create index due to {e}')
+
+
 def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
@@ -999,15 +1007,26 @@ def migrate_unhashed_datasets(store):
 
 
 class MongoEncoder(json.JSONEncoder):
-    """ Special json encoder for numpy types
+    """ A safe encoder for mongodb
 
-    adopted from https://stackoverflow.com/a/49677241/890242
-                 https://stackoverflow.com/a/11875813/890242
+    Encoder for python object to its corresponding JSON/BSON-compatible type,
+    defaulting to a value's string representation if no other conversion is possible.
+    In this case a warning is issued to the user.
+
+    Usage:
+        collection.insert(mongo_compatible(obj))
+
+    See Also:
+        https://stackoverflow.com/a/49677241/890242
+        https://stackoverflow.com/a/11875813/890242
     """
 
     def default(self, obj):
+        # TODO improve for speed
         import numpy as np
-
+        # PERF consider rewrite using a MAP type => lambda v: cast(v)
+        #      e.g. return MAP[type(obj)](obj)
+        #      where MAP.__missing__ returns lambda v: str(v)
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
@@ -1020,16 +1039,26 @@ class MongoEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, date):
+            return obj.isoformat()
         elif isinstance(obj, pd.Timedelta):
-            return obj.value()
+            return obj.value
         elif isinstance(obj, bytes):
             return b64encode(obj).decode('utf8')
         elif isinstance(obj, range):
             return list(obj)
-        return json.JSONEncoder.default(self, obj)
+        try:
+            # PERF consider doing this first, only check for special types on exception
+            return json.JSONEncoder.default(self, obj)
+        except Exception as e:
+            # ignore exception in favor of string repr
+            msg = f'Could not encode value of {type(obj)} natively due to {e}, resolved to str(obj)'
+            warnings.warn(msg)
+            pass
+        return str(obj)
 
 
-json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
+json_dumps_np = lambda *args, cls=None, fail=False, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
 mongo_compatible = lambda *args: json.loads(json_dumps_np(*args))
 
 
@@ -1133,42 +1162,3 @@ class KeepMissing(dict):
     # see str.format_map
     def __missing__(self, key):
         return '{' + key + '}'
-
-
-def sec_validate_url(url):
-    assert validators.url(url, skip_ipv4_addr=True,
-                          skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
-    assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
-    return True
-
-
-def tarfile_safe_extractall(tar, dest_path, filter='data'):
-    # backport of tarfile.extractall(..., filter=) kwarg
-    # -- this ensures safe tarfile extract in all Python versions
-    # -- can be removed once support for Python < 3.12 is dropped
-    # -- adopted from https://github.com/encukou/cpython/pull/26/files
-    # -- Python 3.12 https://docs.python.org/3/library/tarfile.html#tarfile.TarFile.extractall
-    # SEC: CVE-2007-4559 avoid extracting vulnerable file paths
-    # - reason: tarfile members are checked for
-    # - status: fixed
-    try:
-        # Python since 3.12
-        # -- there is a security backport to 3.11, 3.10, 3.9
-        # -- if respective release installed we will use it
-        return tar.extractall(dest_path, filter=filter)
-    except TypeError:
-        pass
-    for member in tar.getmembers():
-        name = member.name
-        if name.startswith(('/', os.sep)):
-            name = member.path.lstrip('/' + os.sep)
-        if os.path.isabs(name):
-            # Path is absolute even after stripping.
-            # For example, 'C:/foo' on Windows.
-            raise ValueError(f"tarfile: {member} is an absolute path")
-            # Ensure we stay in the destination
-        target_path = os.path.realpath(os.path.join(dest_path, name))
-        if os.path.commonpath([target_path, dest_path]) != dest_path:
-            raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
-    # Python before 3.12, before backports to 3.11, 3.10, 3.9
-    return tar.extractall(dest_path)

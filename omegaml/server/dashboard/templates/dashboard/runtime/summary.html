@@ -1,0 +1,147 @@
+{% extends "dashboard/layouts/base.html" %}
+{% block title %}Page Blank{% endblock %}
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+{% endblock stylesheets %}
+{% block content %}
+  <!-- [ Main Content ] start -->
+  <div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+      <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+          <!-- [ breadcrumb ] start -->
+          <div class="page-header">
+            <div class="page-block">
+              <div class="row align-items-center">
+                <div class="col-md-12">
+                  <div class="page-header-title"></div>
+                  <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                      <a href="/"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item">
+                      <a href="javascript:">{{ segment | title }}</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- [ breadcrumb ] end -->
+          <div class="main-body">
+            <div class="page-wrapper">
+              <!-- [ Main Content ] start -->
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>Runtime view</h5>
+                    </div>
+                  </div>
+                  <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link active text-uppercase"
+                         id="summary-tab"
+                         data-toggle="tab"
+                         href="#summary"
+                         role="tab"
+                         aria-controls="summary"
+                         aria-selected="true">Workers</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase"
+                         id="logview-tab"
+                         data-toggle="tab"
+                         href="#logview"
+                         role="tabview"
+                         aria-controls="logview"
+                         aria-selected="false">Log</a>
+                    </li>
+                  </ul>
+                  <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active"
+                         id="summary"
+                         role="tabpanel"
+                         aria-labelledby="summary-tab">
+                      <div class="table-responsive">
+                        <table id="list-table" class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>Worker</th>
+                              <th>Status</th>
+                              <th>Activity</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for item in items %}
+                              <tr>
+                                <td>
+                                  <a href="/{{ segment }}/worker/{{ item.name }}">{{ item.name }}</a>
+                                </td>
+                                <td>{{ item.status }}</td>
+                                <td>{{ item.activity }}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div class="tab-pane fade"
+                         id="logview"
+                         role="tabpanel"
+                         aria-labelledby="logview-tab">
+                      <div class="table-responsive">
+                        <table id="logviewer"
+                               class="table nowrap table-hover display compact"
+                               style="width:100%">
+                          <thead>
+                            <tr>
+                              <th>text</th>
+                              <th>level</th>
+                              <th>hostname</th>
+                              <th>userid</th>
+                              <th>name</th>
+                            </tr>
+                          </thead>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- [ Main Content ] end -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+  <script type="text/javascript"
+          src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+  <script>
+    // [ Zero Configuration ] start
+    $('#list-table').DataTable();
+    $('#logviewer').DataTable({
+      ajax: '/runtime/log',
+      dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'fp>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      serverSide: true,
+      search: {
+        return: true
+      },
+      processing: true,
+      responsive: true,
+      //scrollX: true,
+      columns: [
+        {data: 'text', width: '80%',},
+        {data: 'level'},
+        {data: 'hostname'},
+        {data: 'userid'},
+        {data: 'logger'},
+      ],
+    })
+  </script>
+{% endblock javascripts %}
