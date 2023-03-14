@@ -143,4 +143,4 @@ workflows:
             - test
           filters:
             branches:
-              only: /release-build.*/
+              only: .*release-build.*
