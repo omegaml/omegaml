@@ -6,7 +6,7 @@
 #     https://www.tensorflow.org/install/docker
 #     https://docs.nvidia.com/cuda/eula/index.html
 #     https://github.com/omegaml/omegaml
-FROM tensorflow/tensorflow:2.11.0rc1-gpu-jupyter
+FROM tensorflow/tensorflow:2.11.1-gpu-jupyter
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
 ARG  NB_UID=1000
