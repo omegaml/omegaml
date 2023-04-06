@@ -25,9 +25,10 @@ mongourl="mongodb://admin:foobar@mongodb/omega"
 omegaurl="http://omegaml:5000"
 jupyterurl="http://omegaml:8899"
 brokerurl="amqp://rabbitmq:5672//"
+selenium_address="http://selenium:4444"
 # from here on should be all standard
 docker_network="--network omegaml-ce_default"
-docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/usr/local/omegaml/docs"
+docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/usr/local/omegaml/docs -e SELENIUM_ADDRESS=$selenium_address"
 docker_image="omegaml/livetest"
 behave_features="/usr/local/lib/python3.9/site-packages/omegaml/tests/features"
 chrome_debug_port="9222:9222/tcp"
@@ -97,10 +98,14 @@ if [ ! -z $tags ]; then
     behave_options="-t $tags"
 fi
 
+echo "Running selenium grid locally"
+docker run -d -it -p 4444:4444 $docker_network --shm-size=2g --name selenium --network-alias selenium selenium/standalone-chrome
+countdown 10
 echo "Running the livetest image using port: $chrome_debug_port network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
 mkdir -p ~/.omegaml
 docker run -it -p $chrome_debug_port $BEHAVE_DEBUG -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v ~/.omegaml:/root/.omegaml -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS $behave_options
 success=$?
 rm -f $script_dir/livetest/packages/*whl
 docker-compose stop
+docker rm -f selenium
 exit $success

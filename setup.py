@@ -12,7 +12,7 @@ tables = ['tables>=3.7']
 graph_deps = ['matplotlib~=3.5', 'seaborn~=0.11', 'imageio~=2.6', 'plotext~=1.0']
 dashserve_deps = ['dashserve', 'dash<2.9'] # dash 2.9 breaks dashserve due to required pages folder
 sql_deps = ['sqlalchemy', 'ipython-sql']
-snowflake_deps = ['snowflake-sqlalchemy==1.2.3']
+snowflake_deps = ['snowflake-sqlalchemy>1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
@@ -85,7 +85,7 @@ setup(
         'jupyter-client>=4.1.1',
         'mongoengine~=0.24.1',
         'pymongo~=4.0.2',  # mongoengine 0.24.1 compatibility
-        'pandas>1.1',
+        'pandas>1.1,<2', # pandas 2.0 breaks some tests
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',

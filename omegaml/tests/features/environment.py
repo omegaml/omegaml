@@ -5,7 +5,7 @@ import os
 import nbformat
 from behave import fixture, use_fixture
 from selenium.webdriver import ChromeOptions
-from splinter.browser import Browser
+from splinter import Browser
 
 from omegaml import settings
 from omegaml.tests.features.util import istrue
@@ -16,20 +16,32 @@ from omegaml.tests.util import clear_om
 def splinter_browser(context):
     headless = istrue(os.environ.get('CHROME_HEADLESS'))
     screenshot_path = os.environ.get('CHROME_SCREENSHOTS', '/tmp/screenshots')
+    selenium_address = os.environ.get('SELENIUM_ADDRESS')
     os.makedirs(screenshot_path, exist_ok=True)
     options = None
-    if headless:
-        print("Running headless, debug at http://localhost:9222")
-        options = ChromeOptions()
-        options.add_argument('--no-sandbox')
-        options.add_argument('--headless')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--remote-debugging-port=9222')
-        options.add_argument('--remote-debugging-address=0.0.0.0')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-extensions')
-    context.browser = Browser('chrome', options=options)
-    context.browser.driver.set_window_size(1024, 768)
+    if selenium_address:
+        # start remote browser using selenium grid
+        caps = {
+            'browserName': 'chrome',
+            'screen_resolution': '1024x768',
+        }
+        context.browser = Browser('remote',
+                                  command_executor=selenium_address,
+                                  desired_capabilities=caps)
+    else:
+        # start local browser
+        if headless:
+            print("Running headless, debug at chrome://inspect/#devices")
+            options = ChromeOptions()
+            options.add_argument('--no-sandbox')
+            options.add_argument('--headless')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--remote-debugging-port=4444')
+            options.add_argument('--remote-debugging-address=localhost')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-extensions')
+        context.browser = Browser('chrome', options=options)
+        context.browser.driver.set_window_size(1024, 768)
     context.screenshot_path = screenshot_path
     yield context.browser
     context.browser.quit()

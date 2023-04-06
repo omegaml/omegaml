@@ -1,5 +1,5 @@
 import datetime
-from notebook.services.contents.checkpoints import GenericCheckpointsMixin, Checkpoints
+from jupyter_server.services.contents.checkpoints import GenericCheckpointsMixin, Checkpoints
 
 
 class NoOpCheckpoints(GenericCheckpointsMixin, Checkpoints):
