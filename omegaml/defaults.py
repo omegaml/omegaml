@@ -11,11 +11,13 @@ from pathlib import Path
 from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge
 
 # determine how we're run
+test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
+cmd_args = (basename(v) for v in sys.argv)
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = truefalse(os.environ.get('OMEGA_TEST_MODE'))
-is_test_run |= any('test' in basename(v) for v in sys.argv[:3]) and 'omegaml-ce' in str(Path().cwd())
+is_test_run |= len(set(test_runners) & set(cmd_args)) and 'omegaml-ce' in str(Path().cwd())
 
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
@@ -58,6 +60,10 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ACCEPT_CONTENT': ['pickle', 'json'],
     'CELERY_TASK_SERIALIZER': 'pickle',
     'CELERY_RESULT_SERIALIZER': 'pickle',
+    # according to docs, CELERY_RESULT_EXPIRES is the new setting
+    # however as of 5.2.7 celery still refers CELERY_TASK_RESULT_EXPIRES
+    # https://github.com/celery/celery/blob/7b585138af8318d62b8fe7086df7e85d110ac786/celery/app/defaults.py#L204
+    'CELERY_RESULT_EXPIRES': 3600,  # expire results within 1 hour
     'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
     'CELERY_DEFAULT_QUEUE': OMEGA_WORKER_LABEL,
     'BROKER_URL': OMEGA_BROKER,
@@ -138,10 +144,13 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.extdmeta.SignatureMixin',
     'omegaml.mixins.store.extdmeta.ScriptSignatureMixin',
     'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
+    'omegaml.mixins.store.requests.RequestCache',
     'omegaml.mixins.store.passthrough.PassthroughMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
+#: enable request caching for metadata
+OMEGA_STORE_CACHE = truefalse(os.environ.get('OMEGA_STORE_CACHE', False))
 #: runtimes mixins
 OMEGA_RUNTIME_MIXINS = [
     'omegaml.runtimes.mixins.ModelMixin',

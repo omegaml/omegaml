@@ -19,7 +19,7 @@ class OmegaRestApiAuth(AuthBase):
 
     def __init__(self, username, apikey, qualifier=None, bucket=None):
         self.username = username
-        self.apikey = apikey
+        self.apikey = apikey.decode('utf8') if isinstance(apikey, bytes) else apikey
         self.qualifier = qualifier or 'default'
         self.bucket = bucket
 
@@ -174,8 +174,9 @@ class AuthenticationEnv(object):
 
 class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
-    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL',
-                'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER']
+    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
+                'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER',
+                'OMEGA_SERVICES_INCLUSTER']
 
     @classmethod
     @session_cache

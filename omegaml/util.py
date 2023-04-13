@@ -431,7 +431,7 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
         coll.drop_index(idx_specs, **idx_kwargs)
         should_create = True
     if should_create:
-        coll.create_index(idx_specs, **kwargs)
+        coll.create_index(idx_specs, **idx_kwargs)
         created = True
     return created
 

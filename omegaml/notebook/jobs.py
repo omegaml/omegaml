@@ -6,6 +6,8 @@ import re
 import yaml
 from croniter import croniter
 from io import StringIO, BytesIO
+
+from jupyter_client import AsyncKernelManager
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4
@@ -346,6 +348,9 @@ class OmegaJobs(BackendBaseCommon):
             # -- e.g. python3, ir
             # -- see https://stackoverflow.com/a/47053020/890242
             'kernel_name': '',
+            # always use the async kernel manager
+            # -- see https://github.com/jupyter/nbconvert/issues/1964
+            'kernel_manager_class': AsyncKernelManager,
         }
         # overrides from metadata
         ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))

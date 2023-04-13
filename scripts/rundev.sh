@@ -24,4 +24,4 @@ if [[ $clean == "yes" ]]; then
     cat $script_dir/mongoinit.js | docker exec -i omegaml-ce_mongo_1 mongo
 fi
 
-honcho -f scripts/docker/omegaml/Procfile start restapi worker notebook
+honcho -f $script_dir/local/Procfile start restapi worker notebook

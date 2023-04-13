@@ -19,6 +19,15 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.clean()
         om.models.register_backend(ExperimentBackend.KIND, ExperimentBackend)
 
+    def test_initialize(self):
+        om = self.om
+        exp = om.runtime.experiment('test')
+        coll = om.datasets.collection(exp._data_name)
+        # SON(..., 'keys': { key: order, ...}) => ['key', ...]
+        idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
+        idxs_keys = [list(sorted(d.keys())) for d in idxs]
+        self.assertTrue(any(keys == ['data.event', 'data.run'] for keys in idxs_keys))
+
     def test_ensure_active(self):
         # explicit start
         om = self.om
@@ -27,6 +36,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             exp.log_param('foo', 'bar')
         run = exp.start()
         exp.log_param('foo', 'bar')
+        exp.flush()
         data = exp.data(run=run)
         self.assertIsNotNone(run)
         self.assertEqual(len(data), 2)
@@ -279,6 +289,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIn('experiments/foo', om.models.list())
         # add a metric, then clean
         exp.log_metric(5, 'accuracy')
+        exp.flush()
         self.assertEqual(len(exp.data()), 4)
         # explicit drop
         om.models.drop('experiments/foo', data_store=om.datasets)

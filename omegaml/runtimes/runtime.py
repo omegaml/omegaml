@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 
+import os
+
+import ssl
+
 import logging
 from celery import Celery
 
@@ -161,12 +165,26 @@ class OmegaRuntime(object):
         celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
         if celeryconf['CELERY_RESULT_BACKEND'].startswith('mongodb://'):
             celeryconf['CELERY_RESULT_BACKEND'] = mongo_url(self.omega, drop_kwargs=['uuidRepresentation'])
+        # initialize ssl configuration
+        if celeryconf.get('BROKER_USE_SSL'):
+            # celery > 5 requires ssl options to be specific
+            # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-broker_use_ssl
+            # https://github.com/celery/kombu/issues/1493
+            # https://docs.python.org/dev/library/ssl.html#ssl.wrap_socket
+            # https://www.openssl.org/docs/man3.0/man3/SSL_CTX_set_default_verify_paths.html
+            # env variables:
+            # SSL_CERT_FILE, CA_CERTS_PATH
+            self._apply_broker_ssl(celeryconf)
         self.celeryapp = Celery('omegaml')
         self.celeryapp.config_from_object(celeryconf)
         # needed to get it to actually load the tasks
         # https://stackoverflow.com/a/35735471
         self.celeryapp.autodiscover_tasks(taskpkgs, force=True)
         self.celeryapp.finalize()
+
+    def _apply_broker_ssl(self, celeryconf):
+        # hook to apply broker ssl options
+        pass
 
     def _client_is_pure_python(self):
         try:
@@ -307,9 +325,10 @@ class OmegaRuntime(object):
         self._require_kwargs = dict(routing={}, task={})
         return task
 
-    def result(self, task_id):
+    def result(self, task_id, wait=True):
         from celery.result import AsyncResult
-        return AsyncResult(task_id, app=self.celeryapp).get()
+        promise = AsyncResult(task_id, app=self.celeryapp)
+        return promise.get() if wait else promise
 
     def settings(self, require=None):
         """ return the runtimes's cluster settings

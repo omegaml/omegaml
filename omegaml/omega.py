@@ -2,11 +2,12 @@ import os
 from uuid import uuid4
 
 from ._version import version
+from .mixins.store.requests import CombinedStoreRequestCache
 from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
 
 
-class Omega(CombinedOmegaStoreMixin):
+class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     """
     Client API to omegaml
 

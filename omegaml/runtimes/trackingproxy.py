@@ -73,14 +73,17 @@ class OmegaTrackingProxy:
         if self._implied_run or no_active_run:
             experiment.start()
             self._implied_run = True if no_active_run else self._implied_run
+        if OmegaTrackingProxy.__nested == 1:
+            experiment.start_runtime()
         return experiment
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        experiment = self._with_experiment or self.experiment
         if self._implied_run:
-            experiment = self._with_experiment or self.experiment
             experiment.stop()
         self._with_experiment = None
         OmegaTrackingProxy.__nested -= 1
         # remove task argument
         if OmegaTrackingProxy.__nested == 0:
             self.runtime.require(task=dict(__experiment=None), always=True)
+            experiment.stop_runtime()
