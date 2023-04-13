@@ -121,7 +121,8 @@ jobs:
               pip install -e .[dev]
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
-              export LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" make livetest
+              export LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" 
+              make livetest
               if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
                 make release-test
               else
