@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from bson import Code
@@ -839,7 +841,7 @@ class MDataFrame(object):
 
     def append(self, other):
         if isinstance(other, Collection):
-            right = MDataFrame(other)
+            other = MDataFrame(other)
         assert isinstance(
             other, MDataFrame), "both must be MDataFrames, got other={}".format(type(other))
         outname = self.collection.name
@@ -1011,6 +1013,8 @@ class MDataFrame(object):
                     yield chunkdf.iloc[i:i+chunksize]
 
     def iteritems(self):
+        if not hasattr(pd.DataFrame, 'iteritems'):
+            raise NotImplementedError('MDataFrame.iteritems has been removed since Pandas 2.0. Use .items instead.')
         __doc__ = pd.DataFrame.iteritems.__doc__
         return self.items()
 

@@ -538,14 +538,6 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
             self.assertEqual(type(df_row), type(mdf_row))
             assert_series_equal(df_row[1], mdf_row[1])
 
-    def test_iteritems(self):
-        om = self.om
-        mdf = om.datasets.getl('sample')
-        df = mdf.value
-        for df_row, mdf_row in zip(mdf.iteritems(), df.iteritems()):
-            self.assertEqual(type(df_row), type(mdf_row))
-            assert_series_equal(df_row[1], mdf_row[1])
-
     def test_items(self):
         om = self.om
         mdf = om.datasets.getl('sample')

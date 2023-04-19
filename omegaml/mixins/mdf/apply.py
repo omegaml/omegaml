@@ -793,12 +793,12 @@ class ApplyCache(object):
 class ApplyStatistics(object):
     def quantile(self, q=.5):
         def preparefn(val):
-            return val.pivot('percentile', 'var', 'value')
+            return val.pivot(columns='var', index='percentile', values='value')
         return self.apply(self._percentile(q), preparefn=preparefn)
 
     def cov(self):
         def preparefn(val):
-            val = val.pivot('x', 'y', 'cov')
+            val = val.pivot(columns='y', index='x', values='cov')
             val.index.name = None
             val.columns.name = None
             return val
@@ -806,7 +806,7 @@ class ApplyStatistics(object):
 
     def corr(self):
         def preparefn(val):
-            val = val.pivot('x', 'y', 'rho')
+            val = val.pivot(columns='y', index='x', values='rho')
             val.index.name = None
             val.columns.name = None
             return val
