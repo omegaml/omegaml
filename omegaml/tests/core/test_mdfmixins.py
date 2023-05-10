@@ -135,7 +135,7 @@ class MDataFrameMixinTests(TestCase):
         df['x'], df['b'] = df['x'] * 5, df['x'] / 5
         value = mdf.value
         expected = df[value.columns]
-        self.assertEquals(sorted(['x', 'b']), sorted(expected))
+        self.assertEqual(sorted(['x', 'b']), sorted(expected))
         assert_frame_equal(expected, value)
 
     def test_apply_dict(self):
@@ -169,7 +169,8 @@ class MDataFrameMixinTests(TestCase):
         # they start at different days of the week with different base index
         value = mdf.apply(lambda v: ((v['x'].dt.dayofweek) + 5) % 7).value
         expected = df['x'].dt.dayofweek
-        assert_series_equal(expected, value['x'])
+        # dtypes may vary due to automatic choices made by libraries
+        assert_series_equal(expected, value['x'], check_dtype=False)
 
     def test_apply_str_concat(self):
         om = self.om

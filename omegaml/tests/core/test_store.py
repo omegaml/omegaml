@@ -418,8 +418,8 @@ class StoreTests(unittest.TestCase):
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         # we will have stored the same object twice
-        self.assertEquals(data, data2[0])
-        self.assertEquals(data, data2[1])
+        self.assertEqual(data, data2[0])
+        self.assertEqual(data, data2[1])
 
     def test_get_forced_python(self):
         """

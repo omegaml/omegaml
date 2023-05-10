@@ -241,7 +241,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(df, 'testsqlite', insert=True, append=False)
         om.datasets.put(df, 'testsqlite', insert=True)
         dfx = om.datasets.get('testsqlite', sql='select * from foo')
-        df_expected = df.append(df)
+        df_expected = pd.concat([df, df])
         assert_frame_equal(dfx, df_expected)
 
     def test_put_data_via_connection_bucket(self):
@@ -270,7 +270,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(df, 'testsqlite', insert=True, append=False)
         om.datasets.put(df, 'testsqlite', insert=True)
         dfx = om.datasets.get('testsqlite', sql='select * from mybucket_foo')
-        df_expected = df.append(df)
+        df_expected = pd.concat([df, df])
         assert_frame_equal(dfx, df_expected)
 
     def test_put_raw_data_via_connection(self):
@@ -298,7 +298,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om.datasets.put(raw, 'testsqlite', insert=True, append=False)
         om.datasets.put(raw, 'testsqlite', insert=True)
         dfx = om.datasets.get('testsqlite', sql='select * from foo')
-        df_expected = df.append(df)
+        df_expected = pd.concat([df, df])
         assert_frame_equal(dfx, df_expected)
 
     def test_query_in_clause(self):

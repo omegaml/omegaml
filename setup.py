@@ -15,7 +15,7 @@ sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy>1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.5.0']
-jupyter_deps = ['jupyterlab', 'jupyterhub==2.2.1']
+jupyter_deps = ['jupyterlab', 'jupyterhub']
 mlflow_deps = ['mlflow~=1.21']
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium3]', 'ipdb', 'bumpversion']
 
@@ -80,17 +80,17 @@ setup(
     ],
     install_requires=[
         'celery>5,<6.0',
-        'importlib-metadata<5.0',  # due to https://github.com/celery/kombu/pull/1601
+        'importlib-metadata<5.0',  # due to https://github.com/celery/kombu/pull/1601, remove upon Celery>=5.3 available
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
         'mongoengine~=0.24.1',
         'pymongo~=4.0.2',  # mongoengine 0.24.1 compatibility
-        'pandas>1.1,<2', # pandas 2.0 breaks some tests
+        'pandas>=2.0.0',
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
-        'flask-restx>=0.4.0',
+        'flask-restx>=1.1.0',
         'werkzeug<2.1.0',  # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
         'markupsafe==2.0.1',  # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
