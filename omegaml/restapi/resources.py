@@ -87,6 +87,22 @@ JobOutput = api.model('JobOutput', {
 })
 
 
+@api.errorhandler(Exception)
+def errorhandler(e):
+    # if we have a json serializable description, use that as a response
+    # as it will have been validated by the API already. Otherwise default to the
+    # standard behavior of returning a string representation of the exception
+    # see https://flask-restx.readthedocs.io/en/latest/errors.html
+    description = getattr(e, 'description', repr(e))
+    if isinstance(description, dict):
+        return description, getattr(e, 'code', 400)
+    if isinstance(description, list):
+        # flask error handler will extract as body
+        setattr(e, 'data', description)
+        return {}, getattr(e, 'code', 400)
+    return {'message': description}, getattr(e, 'code', 400)
+
+
 @api.route('/api/v1/ping')
 class PingResource(Resource):
     def get(self):

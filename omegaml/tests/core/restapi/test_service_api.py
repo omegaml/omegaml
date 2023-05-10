@@ -296,7 +296,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertIn('ValidationError', str(data))
-        self.assertIn('invalid input', str(data)) # result is a dict, expected a list
+        self.assertIn('invalid input', str(data))  # result is a dict, expected a list
         # -- valid response, expect response data
         resp = self.client.post(self.url('service/mymodel'), json=[{'factor': 1.0}])
         self.assertHttpOK(resp)
@@ -342,6 +342,83 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # since the response is not valid json, the 'data' key is inserted by GenericServiceResource
         expected = list(['hello from helloworld', {'text': 'foo', 'pure_python': False}])
         self.assertEqual(data, expected)
+
+    def test_service_exception_no_schema(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('error'):
+                status = int(kwargs.get('status'))
+                raise Exception(f'exception {status} raised', status)
+            return {'status': 'ok'}
+
+        om.models.put(mymodel, 'mymodel')
+        # check mymodel is actually deserialized by runtime
+        mymodel = None
+        for status in (404, 401, 406):
+            resp = self.client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}'),
+                                    json={'foo': 'bar'})
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = {'message': f'exception {status} raised'}
+            self.assertEqual(data, expected)
+
+    def test_service_exception_with_schema(self):
+        om = self.om
+
+        ErrorSchema401 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema401')
+        ErrorSchema404 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema404')
+        ErrorSchema406 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema406')
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('error'):
+                status = int(kwargs.get('status'))
+                many = int(kwargs.get('many', 0))
+                should_raise = int(kwargs.get('raise', 0))
+                if many:
+                    exc = Exception([{'message': f'exception {status} raised'}], status)
+                else:
+                    exc = Exception({'message': f'exception {status} raised'}, status)
+                raise exc
+            return {'status': 'ok'}
+
+        # single errors
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', errors={
+            ErrorSchema401: 401,
+            ErrorSchema404: 404,
+            ErrorSchema406: 406,
+        })
+        for status in (404, 401, 406):
+            resp = self.client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}'),
+                                    json={'foo': 'bar'})
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = {'message': f'exception {status} raised'}
+            self.assertEqual(data, expected)
+
+        # multiple errors
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', errors=[
+            ([ErrorSchema401], 401),
+            ([ErrorSchema404], 404),
+            ([ErrorSchema406], 406),
+        ])
+        for status in (404, 401, 406):
+            resp = self.client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}&many=1'),
+                                    json={'foo': 'bar'})
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = [{'message': f'exception {status} raised'}]
+            self.assertEqual(data, expected)
 
 
 class ServiceV1ResourceTests(ServiceDirectResourceTests):

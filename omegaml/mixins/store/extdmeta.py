@@ -49,8 +49,10 @@ class SignatureMixin:
         meta.attributes['docs'] = doc_or_ref
         return meta.save()
 
-    def link_datatype(self, name, X=None, Y=None, result=None, orient=None, meta=None, actions=None, **kwargs):
-        """
+    def link_datatype(self, name, X=None, Y=None, result=None, orient=None,
+                      meta=None, actions=None, errors=None,
+                      **kwargs):
+        """ link a Schema to a model or script
 
         Args:
             name (str): the name of the model, script
@@ -58,10 +60,11 @@ class SignatureMixin:
                indicate many objects of type Schema.
             Y (Schema|list): the schema for the Y data (dataY), applies to models only. Pass [Schema] to
                indicate many objects of type Schema.
-            result (Schema): the schema for the result, applies to scripts only. Pass [Schema] to
+            result (Schema): the schema for the successful result, applies to scripts only. Pass [Schema] to
                indicate many objects of type Schema.
+            errors (list|dict): list of tuples or dict of Schema|Exception => http status code to indicate errors
             orient (str): the datatype orientation, defaults to 'columns' for models, 'records' for datasets and scripts
-            actions (list): the list of valid actions ['predict', ...],
+            actions (list|dict): the list of valid actions ['predict', ...],
                or a list of tuples to map actions to http methods [('predict', ['post', ...]), ...]. If
                the http method is not specified, it is assumed as 'post'
 
@@ -85,6 +88,14 @@ class SignatureMixin:
         Xmany, X = (True, many_type(X)) if is_many(X) else (False, X)
         Ymany, Y = (True, many_type(Y)) if is_many(Y) else (False, Y)
         Rmany, result = (True, many_type(result)) if is_many(result) else (False, result)
+        iter_errors = (errors.items() if isinstance(errors, dict)
+                       else ((E, status) for E, status in errors) if isinstance(errors, (list, tuple)) else [])
+        errors = {
+            (True, many_type(E)) if is_many(E) else (False, E): status
+            for E, status in iter_errors}
+        # build signature specification
+        is_schema = lambda T: isinstance(T, Schema) or issubclass(T, Schema)
+        ExceptionSchema = Schema.from_dict({'message': fields.String()}, name=f'{name}Exception')
         meta.attributes['signature'] = {
             'X': {
                 'datatype': f'{X.__module__}.{schema_name(X)}',
@@ -99,8 +110,16 @@ class SignatureMixin:
             'result': {
                 'datatype': f'{result.__module__}.{schema_name(result)}',
                 'schema': self._schema_from_datatype(result),
-                'result': Rmany,
+                'many': Rmany,
             } if result is not None else existing.get('result'),
+            'errors': {
+                str(status): {
+                    'datatype': f'{E.__module__}.{schema_name(E)}',
+                    'schema': self._schema_from_datatype(E if is_schema(E) else ExceptionSchema),
+                    'many': many,
+                    'exception': isinstance(E, Exception) or isinstance(E(), Exception),
+                } for (many, E), status in errors.items()
+            } if errors is not None else existing.get('errors'),
             'actions': actions,
             'orient': orient,
         }
@@ -171,41 +190,59 @@ class SignatureMixin:
                 Xschema = None
                 Xis_many = None
             resps = opspec['responses']
+            errors = []
+            Yschema = None
             for code, respspec in resps.items():
-                if code != '200':
-                    continue
-                schemaSpec = respspec.get('schema')
-                Yis_many = schemaSpec.get('type', 'object') == 'array'
-                schemaRef = schemaSpec.get('$ref') if not Yis_many else schemaSpec['items'].get('$ref')
-                Yschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
-                break
-            else:
+                if code == '200':
+                    schemaSpec = respspec.get('schema')
+                    Yis_many = schemaSpec.get('type', 'object') == 'array'
+                    schemaRef = schemaSpec.get('$ref') if not Yis_many else schemaSpec['items'].get('$ref')
+                    Yschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
+                else:
+                    schemaSpec = respspec.get('schema')
+                    Eis_many = schemaSpec.get('type', 'object') == 'array'
+                    schemaRef = schemaSpec.get('$ref') if not Eis_many else schemaSpec['items'].get('$ref')
+                    Eschema = schemaSpec if schemaRef is None else definitions.get(schemaRef.split('/')[-1])
+                    Edtype = self._datatype_from_schema(Eschema, name=f'{name}_{code}', many=Eis_many)
+                    errors.append(([type(Edtype)] if Eis_many else Edtype, code))
+            if Yschema is None:
                 print("No response 200 found, cannot generate Y datatype")
                 Yschema = None
                 Yis_many = None
             # finally link
             Xdtype = self._datatype_from_schema(Xschema, name=f'{name}Input_{action}', many=Xis_many)
             Ydtype = self._datatype_from_schema(Yschema, name=f'{name}Output_{action}', many=Yis_many)
-            meta = self.link_datatype(name, X=Xdtype, Y=Ydtype, actions=actions)
+            meta = self.link_datatype(name, X=Xdtype, Y=Ydtype, actions=actions, errors=errors)
             metas.append(meta)
         return metas
 
-    def validate(self, name, X=None, Y=None, result=None, **kwargs):
+    def validate(self, name, X=None, Y=None, result=None, error=None, **kwargs):
         meta = self.metadata(name, **kwargs)
         signature = meta.attributes.get('signature')
-
         def _do_validate(k, v):
-            schema = (signature.get(k) or {}).get('schema')
-            many = (signature.get(k) or {}).get('many', False)
+            if isinstance(v, Exception) or k == 'error':
+                status_code = v.args[-1] if len(v.args) > 0 else 400
+                schema = (signature.get('errors') or {}).get(str(status_code), {}).get('schema')
+                many = (signature.get('errors') or {}).get(str(status_code), {}).get('many', False)
+                v = v.args[0] if len(v.args) > 0 else v  # parse exception value instead of instance
+                v = dict(message=v) if not isinstance(v, (list, dict)) else v
+            else:
+                schema = (signature.get(k) or {}).get('schema')
+                many = (signature.get(k) or {}).get('many', False)
             if schema:
                 Schema = self._datatype_from_schema(schema, name=f'{name}_{k}')
                 Schema(many=many).load(v)
 
         if signature:
             nop = lambda: ()
+            # if we have an exception, process as error
+            if isinstance(result, Exception):
+                error, result = result, None
+            # validate all inputs provided
             _do_validate('X', X) if X is not None else nop()
             _do_validate('Y', Y) if Y is not None else nop()
             _do_validate('result', result) if result is not None else nop()
+            _do_validate('error', error) if error is not None else nop()
         return True
 
     def _datatype_from_schema(self, schema, name=None, orient='records', many=False):
@@ -421,6 +458,10 @@ class ModelSignatureMixin(SignatureMixin):
 
     def _pre_predict(self, modelname, Xname, **kwargs):
         return self._resolve_dataset_defaults(modelname, Xname, **kwargs)
+
+    def _post_predict(self, result, modelname, Xname, **kwargs):
+        self.validate(modelname, result=result)
+        return result
 
     def _pre_decision_function(self, modelname, Xname, **kwargs):
         return self._resolve_dataset_defaults(modelname, Xname, **kwargs)

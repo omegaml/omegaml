@@ -127,7 +127,11 @@ class BackendBaseCommon:
         common_kwargs = dict(data_store=getattr(self, 'data_store'),
                              model_store=getattr(self, 'model_store'))
         args, kwargs = pre_call(*args, **kwargs)
-        result = do_call(*args, **kwargs)
+        try:
+            result = do_call(*args, **kwargs)
+        except Exception as e:
+            post_call(e, *args, **kwargs, **common_kwargs)
+            raise
         return post_call(result, *args, **kwargs, **common_kwargs)
 
     @property
