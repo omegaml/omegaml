@@ -311,6 +311,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         with om.runtime.experiment('proftest', provider='profiling') as exp:
             exp.profiler.interval = 0.1
             sleep(1.5)
+        data = exp.data(event=['start', 'stop'])
+        self.assertGreaterEqual(len(data), 2)
         data = exp.data(event='profile')
         self.assertGreaterEqual(len(data), 9)
         xexp = om.runtime.experiment('proftest')

@@ -171,9 +171,9 @@ class TrackingProvider:
         store = store or self._model_store
         meta = store.metadata(obj)
         meta.attributes.setdefault('tracking', {})
-        meta.attributes['tracking'] = {
+        meta.attributes['tracking'].update({
             label: self._experiment
-        }
+        })
         meta.save()
         return meta
 
@@ -646,6 +646,7 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
             self.flush()
 
     def flush(self):
+        super().flush()
         def log_items():
             for step, data in enumerate(self.profile_logs):
                 # record the actual time instead of logging time (avoid buffering delays)
