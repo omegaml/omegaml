@@ -307,3 +307,5 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
         very_large = 'abc' * 1024 * 1024
         self._create_notebook('foo', content=very_large)
         nbmodel = self.mgr.get('foo.ipynb', type='notebook')
+
+

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import os
 from traitlets.config import Config
 
@@ -63,7 +65,7 @@ class ShellCommandBase(CommandBase):
 
     def jupyter(self):
         from omegaml.notebook import jupyter
-        omega_root = os.path.dirname(jupyter.__file__)
-        cfg = os.path.join(omega_root, 'jupyter_notebook_config.py')
+        omega_root = Path(jupyter.__file__).parent
+        cfg = omega_root / 'jupyter_server_config.py'
         cmd = f'jupyter lab --config {cfg}'
         os.system(cmd)
