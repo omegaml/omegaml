@@ -68,7 +68,7 @@ services:
        volumes:
        - pythonlib:/app/pylib
    rabbitmq:
-       image: rabbitmq:3.7.17
+       image: rabbitmq:3.11.15
        hostname: rabbitmq
        ports:
           - 5672:5672
