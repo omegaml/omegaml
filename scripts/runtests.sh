@@ -161,6 +161,7 @@ function runimage() {
              --user $(id -u):$(id -g) --group-add users \
              -dt \
              $dockeropts \
+             -e RUNTESTS=yes \
              -e GRANT_SUDO=yes \
              -e TESTS="$tests" \
              -e EXTRAS="dev,$extras" \

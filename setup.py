@@ -8,20 +8,28 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 
 # extras
 tables = ['tables>=3.7']
-graph_deps = ['matplotlib~=3.5', 'seaborn~=0.11', 'imageio~=2.6', 'plotext~=1.0']
-sql_deps = ['sqlalchemy', 'ipython-sql']
-snowflake_deps = ['snowflake-sqlalchemy>1.2.3']
-iotools_deps = ['boto>=2.49.0']
-streaming_deps = ['minibatch[all]>=0.5.0']
+graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
+dashserve_deps = ['dash>=2.9']
+snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
-mlflow_deps = ['mlflow~=1.21']
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium4]', 'ipdb', 'bumpversion']
-tf_deps = ['tensorflow']
-
-# all deps
-all_deps = (tables + graph_deps + sql_deps + iotools_deps
-            + streaming_deps + jupyter_deps + snowflake_deps + mlflow_deps + tf_deps)
-client_deps = (tables + sql_deps + iotools_deps + streaming_deps)
+mlflow_deps = ['mlflow-skinny>=1.2']
+tf_deps = ['tensorflow>2']
+dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion']
+backtracking_deps = [
+    'json5>0.9',  # nobody knows
+    'google_auth_oauthlib>=1',  # nobody knows
+    'filelock>=3.0.0',  # nobody knows
+    'gitdb>4.0',  # nobody knows
+    'debugpy>=1.7',  # nobody knows
+    'cryptography>=41.0',  # nobody knows
+    'Babel>2.13',  # nobody knows
+    'attrs>=21.4.0',  # nobody knows
+    'asttokens>=2.4',  # nobody knows
+    'anyio>=3.7',  # nobody knows
+    'tomli>=2.0.0',  # nobody knows
+]
+test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
+client_deps = (tables + dashserve_deps)
 
 setup(
     name='omegaml',
@@ -55,17 +63,17 @@ setup(
     ],
     install_requires=[
         'celery>5,<6.0',
-        'importlib-metadata<5.0',  # due to https://github.com/celery/kombu/pull/1601, remove upon Celery>=5.3 available
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
+        'ipython>=8.0',  # required for cli shell
         'mongoengine>=0.24.1',
         'pandas>=2.0.0',
         'numpy>=1.16.4',
         'scipy>=0.17.0',
-        'scikit-learn>=0.21',
+        'scikit-learn>=1.2',
         'PyYAML>=3.12',
         'flask-restx>=1.1.0',
-        'Flask<3.0', # due to https://github.com/python-restx/flask-restx/issues/566
+        'Flask<3.0',  # due to https://github.com/python-restx/flask-restx/issues/566
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=6.4.0',
@@ -84,20 +92,12 @@ setup(
         'cachetools>=5.0.0',  # required for session caching
         'apispec>=5.2.2',  # required for openapi generation
         'marshmallow>=3.17.0',  # required for openapi generation
+        'sqlalchemy<2',  # currently no support for sqlalchemy 2
+        'minibatch[all]',  # required for streaming
     ],
     extras_require={
-        'graph': graph_deps,
-        'tables': tables,
-        'tensorflow': tf_deps,
-        'jupyter': jupyter_deps,
-        'sql': sql_deps,
-        'snowflake': snowflake_deps,
-        'mlflow': mlflow_deps,
-        'iotools': iotools_deps,
-        'streaming': streaming_deps,
-        'all': all_deps,
+        'all': test_deps,
         'client': client_deps,
-        'all-client': client_deps,
         'dev': dev_deps,
     },
     entry_points={

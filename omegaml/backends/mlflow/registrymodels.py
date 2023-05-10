@@ -53,6 +53,5 @@ class MLFlowRegistryBackend(BaseModelBackend):
                         os.environ.get('MLFLOW_TRACKING_URI'))
         meta.kind_meta['tracking_uri'] = tracking_uri
         assert tracking_uri, "pass tracking_uri= or set kind_meta.tracking_uri or set env MLFLOW_TRACKING_URI"
-        mlflow.tracking.MlflowClient(tracking_uri).list_registered_models(max_results=1)
         mlflow.set_tracking_uri(tracking_uri)
 

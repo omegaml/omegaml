@@ -79,7 +79,8 @@ class MLFlowModelBackend(BaseModelBackend):
         from google.protobuf.message import Message
         model_type = type(model).__module__
         model_flavor = model_type.split('.', 1)[0]
-        flavor_supported = model_flavor in mlflow._model_flavors_supported
+        mlflow_flavors = [k for k in dir(mlflow) if isinstance(getattr(mlflow, k), mlflow.LazyLoader)]
+        flavor_supported = model_flavor in mlflow_flavors
         non_models = (
             lambda m: isinstance(m, Message),
         )

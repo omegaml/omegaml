@@ -244,3 +244,6 @@ nohup.out
 /test.db
 /foobar.db
 /user.db
+mlops-export/**
+mlruns/**
+.vscode/**

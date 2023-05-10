@@ -11,6 +11,7 @@
 ##      --testpypi        if specified uses test pypi
 ##      --tag=VALUE       tag for omegaml image (only with --build)
 ##      --tags=VALUE      if specified execute this behave tag only
+##      --pyver=VALUE     the python version for the livetest image, defaults to current python version
 ##      --debug           if specified drops into pdb on error
 ##      --headless        if specified runs chrome headless
 ##
@@ -28,12 +29,13 @@ brokerurl="amqp://rabbitmq:5672//"
 selenium_address="http://selenium:4444"
 # from here on should be all standard
 docker_network="--network omegaml-ce_default"
-docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/usr/local/omegaml/docs -e SELENIUM_ADDRESS=$selenium_address"
+docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/app/docs -e SELENIUM_ADDRESS=$selenium_address"
 docker_image="omegaml/livetest"
-behave_features="/usr/local/lib/python3.9/site-packages/omegaml/tests/features"
+behave_features="/app/features"
 chrome_debug_port="9222:9222/tcp"
 docker_tag=$(cat omegaml/VERSION)
 docker_tag=${tag:-$docker_tag}
+pyver=${pyver:-$(python --version | cut -d' ' -f2 | cut -d'.' -f1-2)}
 # set pypi to use
 if [ "$testpypi" == "yes" ]; then
    pypi="https://test.pypi.org/simple/"
@@ -57,15 +59,7 @@ if [ "$build" == "yes" ]; then
    echo "Building omegaml images"
    export pypi=$pypi
    docker-compose down --remove-orphans --rmi local
-   $script_dir/distrelease.sh --buildarg $pypi --distname omegaml --version $docker_tag
-   #docker build --build-arg pypi=$pypi -t omegaml/omegaml $script_dir/..
-   #docker build --build-arg pypi=$pypi -t omegaml/jyhub $script_dir/docker/jyhub
-   # tag the built image
-   #if [ ! -z "$tag" ]; then
-   #  echo "The omegaml image is omegaml/omegaml:$docker_tag"
-   #  docker tag omegaml/omegaml:latest omegaml/omegaml:$docker_tag
-   #  docker tag omegaml/jyhub:latest omegaml/jyhub:$docker_tag
-   #fi
+   $script_dir/distrelease.sh --buildarg $pypi --pyver $pyver --distname omegaml --version $docker_tag
 fi
 
 # prepare to run
@@ -77,7 +71,7 @@ if [ -z "$nobuild" ]; then
   echo "Building livetest image using $pypi"
   docker rmi -f $docker_image
   pushd $script_dir/docker/livetest
-  docker build --build-arg pypi=$pypi -t $docker_image .
+  docker build --pull --no-cache --build-arg pypi=$pypi --build-arg pyver=$pyver -t $docker_image .
   popd
 fi
 
