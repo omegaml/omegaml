@@ -1,0 +1,11 @@
+version: '3'
+services:
+  apphub:
+    image: selenium/standalone-chrome
+    hostname: selenium
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+  livetest:
+    image: omegaml/livetest:latest
+
