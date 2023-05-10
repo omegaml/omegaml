@@ -66,6 +66,9 @@ class ModelVersionMixin(object):
     def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False, **kwargs):
         if not self._model_version_applies(name):
             return super().metadata(name)
+        # always get raw metadata if version is requested
+        version = None if version == -1 else version
+        raw = raw or any(c in name for c in '@^') or any(c is not None for c in (version, tag, commit))
         base_meta, base_commit, base_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
         commit = commit or base_commit
         version = base_version or version or -1
