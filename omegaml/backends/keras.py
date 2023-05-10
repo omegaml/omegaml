@@ -71,12 +71,9 @@ class KerasBackend(BaseModelBackend):
 
     def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get_model(modelname)
-        X = self.data_store.get(Xname)
+        X = self._resolve_input_data('predict', Xname, **kwargs)
         result = model.predict(X)
-        if rName:
-            meta = self.data_store.put(result, rName)
-            result = meta
-        return result
+        return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def score(
           self, modelname, Xname, Yname=None, rName=True, pure_python=True,

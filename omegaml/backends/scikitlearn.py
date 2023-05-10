@@ -133,16 +133,12 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
     def predict(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self.data_store.get(Xname)
+        data = self._resolve_input_data('predict', Xname, **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
-            if pure_python:
-                result = result.tolist()
-            if rName:
-                meta = self.data_store.put(result, rName)
-                result = meta
-            return result
+            return self._prepare_result('predict', result, rName=rName,
+                                        pure_python=pure_python, **kwargs)
 
         result = process(maybe_chunked(model.predict,
                                        lambda data: as_args(reshaped(data)),
@@ -151,16 +147,12 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
     def predict_proba(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self.data_store.get(Xname)
+        data = self._resolve_input_data('predict', Xname, **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
-            if pure_python:
-                result = result.tolist()
-            if rName:
-                meta = self.data_store.put(result, rName)
-                result = meta
-            return result
+            return self._prepare_result('predict', result, rName=rName,
+                                        pure_python=pure_python, **kwargs)
 
         result = process(maybe_chunked(model.predict_proba,
                                        lambda data: as_args(reshaped(data)),

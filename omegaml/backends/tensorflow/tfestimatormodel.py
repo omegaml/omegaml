@@ -212,14 +212,12 @@ class TFEstimatorModelBackend(BaseModelBackend):
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         import pandas as pd
         model = self.model_store.get(modelname)
-        X = self.data_store.get(Xname)
+        X = self._resolve_input_data('predict', Xname, **kwargs)
         if isfunction(X):
             result = pd.DataFrame(v for v in model.predict(input_fn=X))
         else:
             result = pd.DataFrame(v for v in model.predict(X))
-        if rName is not None:
-            result = self.data_store.put(result, rName)
-        return result
+        return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def score(
           self, modelname, Xname, Yname=None, rName=True, pure_python=True,
