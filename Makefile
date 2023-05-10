@@ -49,7 +49,7 @@ release-test: dist sanity
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --skip-existing --repository testpypi dist/*gz dist/*whl
+	twine upload --skip-existing --repository testpypi-omegaml dist/*gz dist/*whl
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
@@ -57,7 +57,7 @@ release-prod: dist sanity
 	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --skip-existing --repository pypi dist/*gz dist/*whl
+	twine upload --skip-existing --repository pypi-omegaml dist/*gz dist/*whl
 
 release-docker: dist
 	: "docker push image sto dockerhub"

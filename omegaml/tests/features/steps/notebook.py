@@ -68,7 +68,7 @@ def list_datasets(ctx):
 @then(u'we can add a notebook in the folder')
 def add_notebook_in_folder(ctx):
     br = ctx.browser
-    br.visit(jburl(ctx.feature.jynb_url, '', nbstyle='tree'))
+    br.visit(jburl(ctx.feature.jynb_url, '', nbstyle='lab'))
     nb = Notebook(br)
     nb.jupyter_home
     nb.open_folder('Untitled Folder')

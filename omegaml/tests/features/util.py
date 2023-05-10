@@ -1,3 +1,5 @@
+import warnings
+
 import os
 
 import yaml
@@ -20,10 +22,12 @@ def uri(browser, uri):
     return urlunparse(parsed)
 
 
-ACTIVATE_CELL = Keys.ESCAPE, Keys.ENTER
+ACTIVATE_CELL = Keys.ESCAPE, Keys.ENTER, Keys.ENTER
 EXEC_CELL = Keys.SHIFT, Keys.ENTER
 ADD_CELL_BELOW = Keys.ESCAPE, 'b'
 SAVE_NOTEBOOK = Keys.CONTROL, 's'
+SHOW_LAUNCHER = Keys.SHIFT, Keys.CONTROL, 'l'
+RESTART_CELL = Keys.ESCAPE, '0', '0', Keys.ENTER
 
 
 class Notebook:
@@ -48,6 +52,16 @@ class Notebook:
         return self.browser.find_by_css('body').first
 
     @property
+    def nbcell(self):
+        return self.browser.find_by_css('.lm-Widget.jp-Notebook').first
+
+    @property
+    def active(self):
+        el = self.browser.driver.switch_to.active_element
+        el.type = el.send_keys
+        return el
+
+    @property
     def jupyter_home(self):
         br = self.browser
         br.windows.current = br.windows[0]
@@ -62,16 +76,29 @@ class Notebook:
 
     def login(self):
         br = self.browser
-        if br.is_text_present('JupyterHub', wait_time=15):
+        maxwait = 15
+        is_hub, is_nb = False, False
+        while maxwait > 0:
+            is_hub = br.is_text_present('JupyterHub', wait_time=1)
+            is_nb = br.is_text_present('Password', wait_time=1)
+            if is_hub or is_nb:
+                break
+            maxwait -= 1
+            sleep(1)
+
+        if is_hub:
             login_required = br.is_element_present_by_id('username_input', wait_time=30)
             if login_required:
                 self.login_hub()
-        else:
+        elif is_nb:
             # fallback to juypter notebook
             login_required = br.is_text_present('Password', wait_time=15)
-            login_required |= br.is_text_present('token', wait_time=15)
+            login_required = login_required or br.is_text_present('token', wait_time=15)
             if login_required:
                 self.login_nb()
+        else:
+            # no login required
+            pass
 
     def login_hub(self):
         br = self.browser
@@ -94,14 +121,15 @@ class Notebook:
         assert not br.is_text_present('Server error: Traceback', wait_time=10)
         assert not br.is_text_present('Connection refuse', wait_time=10)
 
-    def create_folder(self):
+    def create_folder(self, name=''):
         """
         create a folder
         """
         br = self.browser
         self.jupyter_home
-        br.find_by_id('new-dropdown-button').click()
-        br.find_by_text('Folder').click()
+        br.find_by_xpath("//button[@data-command='filebrowser:create-new-directory']").first.click()
+        sleep(2)
+        self.active.type(name + Keys.ENTER)
         sleep(2)
 
     def create_notebook(self, folder=None):
@@ -110,8 +138,10 @@ class Notebook:
         """
         br = self.browser
         self.jupyter_home
-        br.find_by_id('new-dropdown-button').click()
-        br.links.find_by_partial_text('Python 3').click()
+        self.body.type(SHOW_LAUNCHER)
+        # TODO this is rather brittle. find a better way
+        # this uses the visible launcher's first item
+        br.find_by_text('Python 3 (ipykernel)')[-2].click()
         sleep(2)
         self.last_notebook
         return self
@@ -119,62 +149,65 @@ class Notebook:
     def open_notebook(self, name, retry=5):
         self.jupyter_home
         br = self.browser
-        # FIXME sometimes it takes long for the nb to appear why?
         while retry:
-            br.reload()
-            found = br.is_text_present(name, wait_time=60)
-            retry = 0 if found else retry
-        item = br.links.find_by_partial_text(name)
-        item.click()
-        sleep(2)
-        self.last_notebook
+            found = br.is_text_present(name)
+            retry = retry - 1 if not found else 0
+            sleep(1)
+        item = [el for el in br.find_by_css('.jp-DirListing-itemText') if el.value.startswith(name)][0]
+        item.double_click()
+        sleep(2) # wait for the notebook to open
+        self.last_notebook # switch to last window
         return self
 
     def restart(self, wait=False):
         br = self.browser
-        assert br.is_element_present_by_text('Cell', wait_time=60)
-        br.links.find_by_text('Kernel', )[0].click()
+        self.nbcell.type(RESTART_CELL)
         sleep(1)
-        br.links.find_by_text('Restart')[0].click()
         if wait:
-            busy = True
-            while busy:
-                sleep(5)
-                busy = br.is_element_present_by_css('#kernel_indicator_icon.kernel_busy_icon')
+            while self.kernel_busy:
+                sleep(1)
 
     def run_all_cells(self, wait=False):
         br = self.browser
-        assert br.is_element_present_by_text('Cell', wait_time=30)
-        br.links.find_by_text('Cell', )[0].click()
+        assert br.is_element_present_by_text('Run', wait_time=30)
+        br.find_by_text('Run')[0].click()
         sleep(1)
-        br.links.find_by_text('Run All')[0].click()
+        # use -1 to ensure we have an interactable element
+        br.find_by_text('Run All Cells')[-1].click()
         if wait:
-            busy = True
-            while busy:
-                sleep(5)
-                busy = br.is_element_present_by_css('#kernel_indicator_icon.kernel_busy_icon')
+            while self.kernel_busy:
+                sleep(1)
+
+    @property
+    def kernel_busy(self):
+        br = self.browser
+        status = br.find_by_css('.jp-Notebook-ExecutionIndicator').first['data-status']
+        busy = status != 'idle'
+        return busy
 
     def open_folder(self, folder=None):
         br = self.browser
-        folder = quote(folder.encode('utf-8'))
-        item = br.links.find_by_href('/tree/{folder}'.format(**locals()))[0]
-        item.click()
+        item = br.find_by_css('.jp-DirListing-itemText').find_by_text(folder).first
+        item.double_click()
         return self
 
     def _clean_code(self, code):
         return tuple('\n'.join(line.strip() for line in code.split('\n')))
 
     def current_cell_exec(self, code):
-        self.body.type(ACTIVATE_CELL + self._clean_code(code) + EXEC_CELL)
+        self.nbcell.type(ACTIVATE_CELL + self._clean_code(code) + EXEC_CELL)
 
     def new_cell_exec(self, code):
-        self.body.type(ADD_CELL_BELOW + ACTIVATE_CELL + self._clean_code(code) + EXEC_CELL)
+        self.nbcell.type(ADD_CELL_BELOW + ACTIVATE_CELL + self._clean_code(code) + EXEC_CELL)
 
     def current_cell_output(self):
-        return self.body.find_by_css('.output_subarea pre')[-1].text
+        return self.nbcell.find_by_css('.jp-OutputArea-output pre')[-1].text
 
     def save_notebook(self):
-        self.body.type(SAVE_NOTEBOOK)
+        self.nbcell.type(SAVE_NOTEBOOK)
+        br = self.browser
+        if br.is_text_present('Rename'):
+            br.find_by_text('Rename')[0].click()
 
 
 def get_admin_secrets(scope=None, keys=None):
@@ -188,8 +221,12 @@ def get_admin_secrets(scope=None, keys=None):
         result = secrets
     return result
 
-def jburl(url, userid, nbstyle='tree'):
-    # provide a users notebook url to lab (new style) or tree (old style) notebook
+
+def jburl(url, userid, **kwargs):
+    # provide a users notebook url to lab. we no longer support tree
+    if 'nbstyle' in kwargs:
+        warnings.warn("nbstyle is no longer supported. we only support lab")
+    nbstyle = 'doc'  # simple interface (in lab: ctrl-shift-d)
     parsed = urlparse(url)
     baseurl = '{parsed.scheme}://{parsed.netloc}'.format(**locals())
     if userid:
