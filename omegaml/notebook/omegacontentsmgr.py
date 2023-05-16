@@ -6,7 +6,7 @@ import nbformat
 import os
 from datetime import datetime
 from io import BytesIO
-from notebook.base.handlers import HTTPError
+from nbclassic.notebook.handlers import HTTPError
 from jupyter_server.services.contents.manager import ContentsManager
 from tornado import web
 from urllib.parse import unquote
