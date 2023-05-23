@@ -6,6 +6,8 @@ It exposes the WSGI callable as a module-level variable named ``application``.
 For more information on this file, see
 https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
 """
+import sys
+
 import warnings
 
 import os
@@ -23,8 +25,8 @@ if any(k in os.environ for k in ('OMEGA_USERID', 'OMEGA_APIKEY')):
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 application = DjangoStackableSettings.get_wsgi_application()
 
-if os.environ.get('DJANGO_DEBUG', '0') in ('1', 'yes', 'true'):
-    # debug gunicorn worker timeouts
-    # https://stackoverflow.com/a/65438492/890242
-    import faulthandler
-    faulthandler.enable()
+# debug gunicorn worker timeouts
+# https://stackoverflow.com/a/65438492/890242
+import faulthandler
+faulthandler.enable()
+

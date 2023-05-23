@@ -74,7 +74,7 @@ def deploy_user_service(task_id=None, **kwargs):
     password = User.objects.make_random_password(length=36)
     config = omops.add_user(user, password, deploy_vhost=deploy_vhost)
     deployment.settings = config
-    deployment.text = f'userid {user.username}<br>apikey {user.api_key.key}'
+    deployment.text = 'userid {user.username}<br>apikey {user.api_key.key}'
     deployment.save()
 
 
@@ -118,14 +118,13 @@ def run_user_scheduler():
     """
     from omegaee import eedefaults
 
-    users = User.objects.filter(is_active=True)
-    view = eedefaults.OMEGA_SERVICES_INCLUSTER
-    for user in users:
-        qualifier = 'default'
+    def schedule_for_user(user, qualifier, view):
         # get an omega instance configured to the user's specifics and send task to user's worker
+        logger.info(f'scheduling jobs for user {user} qualifier {qualifier}')
         try:
             auth_env = AuthenticationEnv.secure()
-            user_om = auth_env.get_omega_from_apikey(user.username, user.api_key.key, qualifier=qualifier, view=view)
+            user_om = auth_env.get_omega_from_apikey(user.username, user.api_key.key,
+                                                     qualifier=qualifier, view=view)
             execute_scripts = user_om.runtime.task('omegaml.notebook.tasks.execute_scripts')
             execute_scripts.apply_async()
         except Exception as e:
@@ -135,6 +134,17 @@ def run_user_scheduler():
             del user_om
         # avoid excessive task bursts on rabbitmq
         sleep(1)
+
+    users = User.objects.filter(is_active=True, groups__name__in=['scheduler'])
+    view = eedefaults.OMEGA_SERVICES_INCLUSTER
+    for user in users:
+        settings = user.services.get(offering__name='omegaml').settings or {}
+        for qualifier in settings.get('qualifiers', {}).keys():
+            # enable group qualifiers to be used as scheduler accounts
+            if user.username.startswith('G'):
+                qualifier = f'{user.username}:{qualifier}'
+            schedule_for_user(user, qualifier, view)
+
 
 
 @shared_task(bind=True)

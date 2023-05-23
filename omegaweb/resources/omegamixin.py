@@ -1,9 +1,8 @@
-from uuid import uuid4
-
-from django.conf import settings
+import logging
 from django.http import JsonResponse
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpBadRequest
+from uuid import uuid4
 
 from omegaml.backends.restapi.asyncrest import truefalse
 from omegaml.backends.restapi.job import GenericJobResource
@@ -12,6 +11,7 @@ from omegaml.backends.restapi.script import GenericScriptResource
 from omegaml.backends.restapi.service import GenericServiceResource
 from omegaweb.resources.util import get_omega_for_user
 
+logger = logging.getLogger(__name__)
 
 
 class OmegaResourceMixin(object):
@@ -32,22 +32,10 @@ class OmegaResourceMixin(object):
             self.celeryapp = om.runtime.celeryapp
             # ensure tracking id is set on every request for traceability
             # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
-            # TODO consider using https://github.com/dabapps/django-log-request-id/
-            tracking_id = request.META.get(self._tracking_id_key) or uuid4().hex
+            tracking_id = getattr(request, '_requestid', None) or uuid4().hex
             om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om
         return self._omega_instance
-
-    @property
-    def _tracking_id_key(self):
-        # generate the header key into request.META for the request ID
-        # X-Request-Id is the commonly accepted request id
-        # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
-        #     https://docs.djangoproject.com/en/3.2/ref/request-response/#django.http.HttpRequest.META
-        if not hasattr(self, '_tracking_id_key_header'):
-            key = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID')
-            self._tracking_id_key_header = f'HTTP_{key}'.replace('-', '_').upper()
-        return self._tracking_id_key_header
 
     def _credentials_from_request(self, request):
         # get credentials from Meta.authentication, if available
@@ -76,17 +64,20 @@ class OmegaResourceMixin(object):
         return query, payload
 
     def create_response_from_resource(self, request, generic_resource, resource_method, *args, **kwargs):
-        self.get_omega(request)
+        om = self.get_omega(request)
         model_id = kwargs.get('pk')
         query, payload = self.get_query_payload(request)
         async_body = dict(model=model_id, result='pending')
         try:
+            om.start_request(request)
             meth = self._get_resource_method(generic_resource, resource_method)
             result = meth(model_id, query, payload)
             resp = self.create_maybe_async_response(request, result, async_body=async_body)
         except Exception as e:
             msg = dict(message=repr(e))
             raise ImmediateHttpResponse(JsonResponse(msg, status=HttpBadRequest.status_code))
+        finally:
+            om.close_request()
         return resp
 
     def _get_resource_method(self, resource_name, method_name):

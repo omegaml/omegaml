@@ -1,3 +1,6 @@
+from unittest import mock
+from unittest.mock import MagicMock
+
 import datetime
 import hashlib
 import ssl
@@ -13,10 +16,12 @@ from kombu import Connection
 from pymongo.errors import PyMongoError, OperationFailure
 
 from landingpage.models import ServicePlan
+from omegaml.client.auth import AuthenticationEnv
 from omegaml.mongoshim import MongoClient
 from omegaml.util import settings as omsettings
 from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user, authorize_user_vhost, \
     get_client_config
+from omegaops.tasks import run_user_scheduler
 
 
 class OmegaOpsTests(TestCase):
@@ -412,6 +417,44 @@ class OmegaOpsTests(TestCase):
         # make sure there are no lower case configs passed into defaults
         # -- this is to avoid merging server-side config is not mixed with client side defaults
         self.assertTrue(all(k.isupper() for k in config))
+
+    def test_run_user_scheduler(self):
+        # setup service deployments
+        ServicePlan.objects.create(name='omegaml')
+        # create first user
+        user = self.user
+        password = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+        sched_group =  Group.objects.create(name='scheduler')
+        config = add_user(self.user.username, password)
+        add_service_deployment(user, config)
+        # no users are schedulers => no scheduling expected
+        om = self._schedule()
+        self.assertFalse(om.runtime.task.called)
+        # add user to scheduler group => schedule to be called
+        sched_group.user_set.add(user)
+        om = self._schedule()
+        self.assertTrue(om.runtime.task.called)
+        # add a group user => schedule for group qualifier
+        # -- we have 1 call for self.user
+        # --         1 call for guser
+        # -- total   2 calls
+        guser = User.objects.create_user('Gservices', 'services@omegaml.io', password)
+        add_service_deployment(guser, config)
+        sched_group.user_set.add(guser)
+        om = self._schedule()
+        self.assertTrue(om.runtime.task.called)
+        self.assertTrue(om.runtime.task.call_count, 2)
+
+    def _schedule(self):
+        auth_env = AuthenticationEnv.secure()
+        with mock.patch.object(auth_env, 'get_omega_from_apikey') as mock_get_om:
+            mock_om = MagicMock()
+            mock_get_om.return_value = mock_om
+            run_user_scheduler()
+        return mock_om
+
+
+
 
 
 

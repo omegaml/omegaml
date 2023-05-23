@@ -43,9 +43,10 @@ else
   export OMEGA_CONFIG_FILE="$APPBASE/.omegaml/config.yml"
 fi
 # get python dependencies
-omegaml_dir=$(python -W ignore -c  "import omegaml; print(omegaml.__path__[0])")
-omegaee_dir=$(python -W ignore -c  "import omegaee; print(omegaee.__path__[0])")
-omegajobs_dir=$(python -W ignore -c  "import omegajobs; print(omegajobs.__path__[0])")
+site_packages=$(python -W ignore -c "import site; print(site.getsitepackages()[0])")
+omegaml_dir=$site_packages/omegaml
+omegaee_dir=$site_packages/omegaee
+omegajobs_dir=$site_packages/omegajobs
 if [[ $singleuser ]]; then
     echo "Starting singleuser spawned juypter notebook"
     if [[ ! -f $APPBASE/.jupyter/.omegaml.ok ]]; then

@@ -3,7 +3,7 @@ standardized logging configuration for multiple frameworks
 
 Features
 - configured from a common logging.yaml
-- adds the global LoggingRequestContext, available as logutil.context
+- adds the global LoggingRequestContext, available as logutil.context()
   for any component to update current loggable data
 - request start/stop handlers to update the context per-request, including
   request and task id (celery)
@@ -43,14 +43,21 @@ Celery:
     def config_loggers(*args, **kwargs):
         configure_logging()
         logutil_celery()
-"""
-from pathlib import Path
 
+
+To update logging data:
+
+    from logutil import LoggingRequestContext
+    LoggingRequestContext.inject(**data)
+"""
+import flask
 import logging
 import os
 import socket
+import threading
 import uuid
 import yaml
+from pathlib import Path
 
 #: list of os env keys that are logged, if available
 LOGUTIL_ENV_KEYS = ['APP', 'APP_VERSION', 'APP_ENV', 'HOSTNAME']
@@ -58,7 +65,6 @@ LOGUTIL_ENV_KEYS = ['APP', 'APP_VERSION', 'APP_ENV', 'HOSTNAME']
 LOGUTIL_ENV_KEYS += os.environ.get('LOGUTIL_ENV_KEYS', '').split(',')
 #: the logger.yaml location, defaults to the location of logutil.py
 LOGUTIL_CONFIG_FILE = Path(__file__).parent / 'logging.yaml'
-
 
 def configure_logging(logging_config=None, settings=None):
     """ configure logging
@@ -75,10 +81,10 @@ def configure_logging(logging_config=None, settings=None):
     """
     from logging.config import dictConfig
 
-    logging_config = (logging_config or getattr(settings, 'LOGGING_CONFIG_FILE', None)
-                      or os.environ.get('LOGGING_CONFIG_FILE') or LOGUTIL_CONFIG_FILE)
+    config_file = (logging_config or getattr(settings, 'LOGGING_CONFIG_FILE', None)
+                   or os.environ.get('LOGGING_CONFIG_FILE') or LOGUTIL_CONFIG_FILE)
     try:
-        with open(logging_config, 'r') as fin:
+        with open(config_file, 'r') as fin:
             loggingConfig = yaml.safe_load(fin)
             loggingConfig = loggingConfig.get('logging', loggingConfig)
     except Exception as e:
@@ -90,8 +96,9 @@ def configure_logging(logging_config=None, settings=None):
         except Exception as e:
             logging.warning(f'could not initialize logging configuration due to {e}')
         else:
-            setattr(settings, 'LOGGING', loggingConfig)
-        logging.info('logging initialized')
+            setattr(settings, 'LOGGING', loggingConfig) if settings else None
+        logging.info(f'logging initialized from {config_file}')
+        logging.debug(f'logging config is {loggingConfig}')
     return loggingConfig
 
 
@@ -101,23 +108,31 @@ def logutil_flask(app, mapping=None, **extra):
     from flask import request  # noqa
 
     def starter(*args, **kwargs):
-        requestId = request.headers.get('x-request-id') or uuid.uuid4().hex
+        requestId = request.headers.get(request_header_id) or uuid.uuid4().hex
+        setattr(request, '_requestid', requestId)
         LoggingRequestContext.start(requestId=requestId)
 
+    request_header_id = getattr(flask.current_app.config, 'x-request-id')
     request_started.connect(LoggingRequestContext.link_up(starter=starter, mapping=mapping, **extra), app)
     request_tearing_down.connect(LoggingRequestContext.link_down(), app)
 
 
 def logutil_django(mapping=None, **extra):
     from django.core.signals import request_started, request_finished, got_request_exception  # noqa
+    from django.conf import settings
 
     def starter(sender, environ, **kwargs):
-        requestId = environ.get('HTTP_X_REQUEST_ID') or uuid.uuid4().hex
+        requestId = environ.get(request_header_id) or uuid.uuid4().hex
+        environ[_header_id] = requestId
         LoggingRequestContext.start(requestId=requestId)
 
-    request_started.connect(LoggingRequestContext.link_up(starter=starter, mapping=mapping, **extra))
-    request_finished.connect(LoggingRequestContext.link_down())
-    got_request_exception.connect(LoggingRequestContext.link_down())
+    _header_id = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID').replace('-', '_')
+    request_header_id = 'HTTP_{}'.format(_header_id)
+    request_started.connect(LoggingRequestContext.link_up(starter=starter,
+                                                          mapping=mapping,
+                                                          **extra), weak=False)
+    request_finished.connect(LoggingRequestContext.link_down(), weak=False)
+    got_request_exception.connect(LoggingRequestContext.link_down(), weak=False)
 
 
 def logutil_celery(mapping=None, **extra):
@@ -131,7 +146,6 @@ def logutil_celery(mapping=None, **extra):
 
 
 class LoggingRequestContext:
-    current = None
     mapping = {}
     extra = {
         'hostname': socket.gethostname(),
@@ -139,18 +153,21 @@ class LoggingRequestContext:
     extra.update({k.lower(): v for k, v in os.environ.items() if k in LOGUTIL_ENV_KEYS})
 
     def __init__(self, **extra):
-        LoggingRequestContext.current = self
         self.__dict__['data'] = {}
         self.gather(**extra)
 
     @classmethod
+    def current(cls):
+        _context.current = getattr(_context, 'current', None) or LoggingRequestContext()
+        return _context.current
+
+    @classmethod
     def start(cls, **extra):
-        cls.current = LoggingRequestContext(**extra)
+        _context.current = LoggingRequestContext(**extra)
 
     @classmethod
     def stop(cls, *args, **kwargs):
-        cls.current.clear() if cls.current else None
-        cls.current = LoggingRequestContext()
+        _context.current = LoggingRequestContext()
 
     @classmethod
     def link_up(cls, starter=None, mapping=None, **extra):
@@ -170,6 +187,13 @@ class LoggingRequestContext:
     def clear(self):
         self.__dict__['data'].clear()
 
+    def update(self, **extra):
+        self.__dict__['data'].update(extra)
+
+    @classmethod
+    def inject(cls, **data):
+        cls.current().update(**data)
+
     def __setattr__(self, key, value):
         self.__dict__['data'][key] = value
 
@@ -185,12 +209,13 @@ class LoggingRequestContextFilter(logging.Filter):
         self.drop = drop
 
     def filter(self, record):
-        if LoggingRequestContext.current:
-            LoggingRequestContext.current.gather(**self.extra)
-            LoggingRequestContext.current.mapping.update(self.mapping)
-            for k, v in LoggingRequestContext.current.data.items():
+        context = LoggingRequestContext.current()
+        if context:
+            context.gather(**self.extra)
+            context.mapping.update(self.mapping)
+            for k, v in context.data.items():
                 setattr(record, k, v)
-            for tgt, src in LoggingRequestContext.current.mapping.items():
+            for tgt, src in context.mapping.items():
                 setattr(record, tgt, getattr(record, src, os.environ.get(src)))
             for k in self.drop:
                 if hasattr(record, k):
@@ -215,13 +240,10 @@ class TaskInjectingFilter(logging.Filter):
             record.__dict__.update(task_id=task.request.id,
                                    task_name=task.name,
                                    user_id=getattr(task, 'current_userid', '???'))
-        else:
-            record.__dict__.setdefault('task_name', '???')
-            record.__dict__.setdefault('task_id', '???')
         return True
 
-
-context = LoggingRequestContext.current = LoggingRequestContext()
+_context = threading.local()
+_context.current = LoggingRequestContext()
 requestContextFilter = lambda *args, **kwargs: LoggingRequestContextFilter(**kwargs)
 hostnameFilter = lambda *args, **kwargs: HostnameInjectingFilter()
 taskFilter = lambda *args, **kwargs: TaskInjectingFilter()

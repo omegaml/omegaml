@@ -61,6 +61,8 @@ OMEGA_CELERY_CONFIG = {
     'CELERYD_TIME_LIMIT': TASK_TIME_LIMIT,
     # allow custom logging configuration
     'CELERYD_HIJACK_ROOT_LOGGER': False,
+    # make sure scheduled tasks expire results to cleanup result store
+    'CELERY_RESULT_EXPIRES': 3600,  # expire results within 1 hour
 }
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['paasdeploy', 'omegaops']
@@ -79,3 +81,4 @@ if any(m in [basename(arg) for arg in sys.argv[:3]]
 # allow overloading settings from EnvSettings
 from stackable import StackableSettings
 StackableSettings.load(globals())
+

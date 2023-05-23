@@ -270,7 +270,7 @@ def add_service_deployment(user, config):
     from landingpage.models import ServicePlan
 
     plan = ServicePlan.objects.get(name='omegaml')
-    text = f'userid {user.username}<br>apikey {user.api_key.key}'
+    text = 'userid {user.username}<br>apikey {user.api_key.key}'
     user.services.filter(offering__name='omegaml').delete()
     deployment = user.services.create(user=user,
                                       text=text,

@@ -37,7 +37,7 @@ class EnvSettings_Local(Config_EnvOverrides,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
-                        Config_DjangoLogging,
+                        #Config_DjangoLogging,
                         Config_DatabaseUrl,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
@@ -234,5 +234,7 @@ class EnvSettings_Local(Config_EnvOverrides,
     # X-Request-Id is the commonly accepted request id
     # see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
     REQUEST_ID_HEADER = 'X-REQUEST-ID'
+    _request_mw = ['omegaweb.middleware.RequestTrackingMiddleware']
+    StackableSettings.patch_list('MIDDLEWARE', _request_mw, prepend=True)
 
 
