@@ -1,6 +1,3 @@
-from landingpage.models import ServicePlan
-
-
 def make_base():
     # this avoids unittest discovery of SignupResourceTests
     # unittest.skip() does not seem to work with unittest

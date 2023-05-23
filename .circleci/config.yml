@@ -6,65 +6,65 @@ jobs:
       image: ubuntu-2004:202107-02
     resource_class: xlarge
     environment:
-        CURRENT_USER: omegadev
-        BUMPARGS: --allow-dirty --no-commit
+      CURRENT_USER: omegadev
+      BUMPARGS: --allow-dirty --no-commit
     steps:
-    - run:
-        name: Install system packages
-        command: |
-          sudo apt-get -q update
-          sudo apt-get -q -y install libmysqlclient-dev
-    - checkout:
-        path: /home/circleci/omegaml
-    - run:
-        name: Merge current master into PR branch
-        command: |
-          pr_number=${CI_PULL_REQUEST//*pull\//}
-          if [ -n "$pr_number" ]
-          then
-            echo "Building PR #$pr_number. Try to merge current master."
+      - run:
+          name: Install system packages
+          command: |
+            sudo apt-get -q update
+            sudo apt-get -q -y install libmysqlclient-dev
+      - checkout:
+          path: /home/circleci/omegaml
+      - run:
+          name: Merge current master into PR branch
+          command: |
+            pr_number=${CI_PULL_REQUEST//*pull\//}
+            if [ -n "$pr_number" ]
+            then
+              echo "Building PR #$pr_number. Try to merge current master."
+              cd omegaml
+              git fetch
+              git checkout origin/master
+              git pull --ff-only origin "refs/pull/$pr_number/head" || \
+                (echo "Merge failed. Please merge manually into your branch."; exit 1)
+            else
+              echo "Not a PR build."
+            fi
+      - run:
+          name: Setup local build env
+          command: |
             cd omegaml
-            git fetch
-            git checkout origin/master
-            git pull --ff-only origin "refs/pull/$pr_number/head" || \
-              (echo "Merge failed. Please merge manually into your branch."; exit 1)
-          else
-            echo "Not a PR build."
-          fi
-    - run:
-        name: Setup local build env
-        command: |
-          cd omegaml
-          scripts/initlocal.sh --deps --setup --noinit
-          # quick fix for allowing docker user to deal with circleci-owned files
-          sudo chmod -f -R 777 ~ || true
-          mkdir -p ~/.omegaml
-          sudo chown -R circleci:circleci ~/.omegaml/
-          echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
-          scripts/rundev.sh --docker --clean --cmd "python -m site"
-    - run:
-        name: Run unit tests
-        command: |
-          cd omegaml
-          make test
-        shell: /bin/bash -l -eo pipefail
-    - run:
-        # TODO replace with a livetest image instead of local installation
-        name: Build image and run live tests
-        command: |
-          source ~/miniforge3/etc/profile.d/conda.sh
-          conda activate base
-          cd omegaml
-          sudo chmod -f -R 777 ~ || true
-          scripts/initlocal.sh --install --noinit
-          scripts/updatechromedriver.sh
-          docker login -u omegaml -p $DOCKER_PASS
-          LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make dist
-        shell: /bin/bash -l -eo pipefail
-    - store_artifacts:
-        path: /tmp/screenshots
-    - store_artifacts:
-        path: /tmp/logs
+            scripts/initlocal.sh --deps --setup --noinit
+            # quick fix for allowing docker user to deal with circleci-owned files
+            sudo chmod -f -R 777 ~ || true
+            mkdir -p ~/.omegaml
+            sudo chown -R circleci:circleci ~/.omegaml/
+            echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
+            scripts/rundev.sh --docker --clean --cmd "python -m site"
+      - run:
+          name: Run unit tests
+          command: |
+            cd omegaml
+            make test
+          shell: /bin/bash -l -eo pipefail
+      - run:
+          # TODO replace with a livetest image instead of local installation
+          name: Build image and run live tests
+          command: |
+            source ~/miniforge3/etc/profile.d/conda.sh
+            conda activate base
+            cd omegaml
+            sudo chmod -f -R 777 ~ || true
+            scripts/initlocal.sh --install --noinit
+            scripts/updatechromedriver.sh
+            docker login -u omegaml -p $DOCKER_PASS
+            LIVETEST_BEHAVE_EXTRA_OPTS="--tags signup,always,quickstart,apitest,apphub" make dist
+          shell: /bin/bash -l -eo pipefail
+      - store_artifacts:
+          path: /tmp/screenshots
+      - store_artifacts:
+          path: /tmp/logs
   release:
     working_directory: /home/circleci
     machine:
@@ -111,13 +111,13 @@ workflows:
   version: 2
   workflow:
     jobs:
-    - test:
-        context: omegaml
-    - release:
-        context: omegaml
-        requires:
-          - test
-        filters:
-          branches:
-            only: /release.*/
+      - test:
+          context: omegaml
+      - release:
+          context: omegaml
+          requires:
+            - test
+          filters:
+            branches:
+              only: /release.*/
 

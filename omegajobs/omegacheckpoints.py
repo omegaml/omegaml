@@ -1,6 +1,7 @@
 import datetime
 
 from bson.objectid import ObjectId
+# TODO migrate to nbclassic
 from notebook.services.contents.checkpoints import GenericCheckpointsMixin,\
     Checkpoints
 

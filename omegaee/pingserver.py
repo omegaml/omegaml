@@ -8,6 +8,8 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
+DEFAULT_PORT = 5000
+DEFAULT_HOST = 'localhost'
 
 class CeleryWorkerPingServer(Thread):
     """ A /healthz response server for celery workers
@@ -34,15 +36,20 @@ class CeleryWorkerPingServer(Thread):
         sending a celery.inspect().ping() to the local worker instance. If the
         worker responds with a 'pong', the /healthz response is set to HTTP status
         200 (OK), if not it is set to 400 (Bad Request).
+
+    Alternatives:
+        https://github.com/celery/celery/issues/4079
     """
     def __init__(self, worker, port=None):
         super().__init__()
-        port = int(port or os.environ.get('CELERY_PING_SERVER') or 80)
+        # TODO make CELERY_PING_SERVER a host:port configurable, default to 0.0.0.0
+        #      rationale: kubernetes health probes http-get do not work on localhost
+        port = int(port or os.environ.get('CELERY_PING_SERVER') or DEFAULT_PORT)
         self.app = worker.app
         self.worker_name = worker.hostname
         if '@' not in self.worker_name:
             self.worker_name = f'celery@{self.worker_name}'
-        self._server_address = ('localhost', port)
+        self._server_address = (DEFAULT_HOST, port)
         self._server = HTTPServer(self._server_address,
                                   self.response_handler())
         self.logger = logging.getLogger(__name__)
@@ -57,6 +64,7 @@ class CeleryWorkerPingServer(Thread):
                 server.logger.info(f'starting celery ping to {server.worker_name}')
                 for i in range(server.max_retry):
                     try:
+                        # TODO: use control().ping(), with a shorter timeout
                         resp = celeryapp.control.inspect().ping(destination=[server.worker_name])
                     except Exception as e:
                         server.logger.error(f'got celery ping exception {e} in {i}/{server.max_retry} attempts')
