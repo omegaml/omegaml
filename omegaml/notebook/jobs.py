@@ -597,19 +597,19 @@ class OmegaJobs(BackendBaseCommon):
         """
         return self.store.help(name_or_obj, kind=kind, raw=raw)
 
-    def to_archive(self, name, path):
+    def to_archive(self, name, path, **kwargs):
         # TODO remove, pending #218
         if not name.endswith('.ipynb'):
             name += '.ipynb'
-        return self.store.to_archive(name, path)
+        return self.store.to_archive(name, path, **kwargs)
 
-    def from_archive(self, path, name):
+    def from_archive(self, path, name, **kwargs):
         # TODO remove, pending #218
         if not name.endswith('.ipynb'):
             name += '.ipynb'
-        return self.store.from_archive(path, name)
+        return self.store.from_archive(path, name, **kwargs)
 
-    def promote(self, name, other):
+    def promote(self, name, other, **kwargs):
         # TODO remove, pending #218
         nb = self.get(name)
         return other.put(nb, name)

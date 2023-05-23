@@ -27,30 +27,50 @@ class ObjectImportExportMixin:
         backend = self.get_backend(name)
         if hasattr(backend, 'export'):
             return backend.export(name)
-        meta = self.metadata(name, raw=True)
+        meta = self.metadata(name)
         assert meta is not None, f"{name} is not in {self.prefix}"
         if not isinstance(local, OmegaExportArchive):
             archive = OmegaExporter.archive(local, store=self, fmt=fmt)
         else:
             archive = local
+        if 'versions' in meta.attributes:
+            # for versioned objects, we defer to the versioning mixin
+            # -- export specific version (@version tag in name)
+            # -- or all versions (no @version tag in name)
+            metas = self._versioned_metas(name)
+        else:
+            # no versions, just this very object
+            metas = [(meta, name)]
         with archive as arc:
-            arc.add(meta, asname=name, store=self)
+            for meta, asname in metas:
+                arc.add(meta, asname=asname, store=self)
         return arc
 
     def from_archive(self, local, name, fmt='omega', **kwargs):
-        self.drop(name, force=True)
-        meta = self._load_metadata(name)
         if not isinstance(local, OmegaExportArchive):
             archive = OmegaExporter.archive(local, store=self, fmt=fmt)
         else:
             archive = local
         with archive as arc:
-            meta = arc.extract(name, meta, asname=meta.name, store=self)
-        return meta
+            self.drop(name, force=True)
+            # restore all names that match
+            # -- exact name matches
+            # -- name@version matches
+            # -- base for name@version matches
+            members = [(m, m.replace(self.prefix, '')) for m in arc.members
+                       if m == f'{self.prefix}{name}'
+                       or (f'{self.prefix}{name}'.startswith(m) and '@' in name)
+                       or (m.startswith(f'{self.prefix}{name}@') and (not '@' in name))]
+            # note we restored in opposite order so we restore versioned objects first
+            # this avoids replacing the main object with a versioned object by accident
+            for arc_member, member in members[::-1]:
+                meta = self._load_metadata(member)
+                meta = arc.extract(member, meta, asname=member, store=self)
+        return self.metadata(name)
 
     def _load_metadata(self, name, attributes=None, gridfile=None):
-        meta = self.metadata(name, raw=True)
-        return meta or self._make_metadata(
+        existing_meta = self.metadata(name, raw=True)
+        return existing_meta or self._make_metadata(
             name=name,
             prefix=self.prefix,
             bucket=self.bucket,
@@ -156,9 +176,14 @@ class OmegaExportArchive:
         lpaths = self._local_paths(self.path, name, store, expect_exist=True)
         with lpaths.meta.open('r') as fin:
             meta_dict = bson_loads(fin.read())
+            if meta_dict['name'] not in (name, asname):
+                asname = meta_dict['name']
+                old_meta = store.metadata(asname, raw=True)
+                meta = old_meta or meta
+            meta.kind = meta_dict['kind']
             meta.attributes.update(meta_dict['attributes'])
             meta.kind_meta.update(meta_dict['kind_meta'])
-            meta.kind = meta_dict['kind']
+
         if lpaths.gridfile.exists():
             with lpaths.gridfile.open('rb') as fin:
                 file_backend = store.get_backend_byobj(fin)
@@ -218,7 +243,7 @@ class OmegaExporter:
     ARCHIVERS = {
         'omega': 'omegaml.mixins.store.imexport.OmegaExportArchive',
     }
-    _temp_bucket = '__exporter' # used as the import target and source for promotion
+    _temp_bucket = '__exporter'  # used as the import target and source for promotion
 
     def __init__(self, omega):
         self.omega = omega
@@ -240,7 +265,8 @@ class OmegaExporter:
                         prefix, pattern = obj.split('/', 1)
                     except ValueError:
                         prefixes = [s.prefix for s in self.omega._stores]
-                        raise ValueError(f'Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}')
+                        raise ValueError(
+                            f'Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}')
                     store = self.omega.store_by_prefix(f'{prefix}/')
                     # if the pattern does not match in list, use it as a name
                     # e.g. mymodel@version1 will not show in list()
@@ -254,7 +280,7 @@ class OmegaExporter:
         return archive_path
 
     def from_archive(self, path, pattern=None, fmt='omega', promote=False,
-                     promote_to: Omega=None, progressfn=None):
+                     promote_to: Omega = None, progressfn=None):
         # for promotion, use a temp bucket for import and promotion source
         promote = promote or (promote_to is not None)
         promote_to = None if not promote else (promote_to or self.omega)
@@ -275,7 +301,7 @@ class OmegaExporter:
                 if promote:
                     store: PromotionMixin
                     to_store = promote_to.store_by_prefix(f'{prefix}/')
-                    meta = store.promote(name, to_store)
+                    meta = store.promote(name, to_store, asname=name)
                 imported.append(meta)
         return imported
 

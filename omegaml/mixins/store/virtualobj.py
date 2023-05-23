@@ -44,9 +44,9 @@ class VirtualObjectMixin(object):
 
     def get(self, name, **kwargs):
         # pass along some options to other mixins
-        raw = kwargs.get('raw', False)
+        raw = kwargs.get('raw')
         should_version = self._model_version_applies(name)
-        raw = raw or should_version
+        raw = raw if raw is not None else should_version
         name, kwargs = self._resolve_realname(name, kwargs)
         if not raw and self._isvirtual(name):
             handler = self._getvirtualobjfn(name)

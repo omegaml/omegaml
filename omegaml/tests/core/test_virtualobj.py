@@ -16,6 +16,7 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         om.scripts.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
         om.scripts.register_mixin(VirtualObjectMixin)
         self.clean()
+        self.clean(bucket='test')
 
     def test_put(self):
         om = self.om
@@ -82,10 +83,57 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         # check myscript is actually deserialized by runtime
         myscript = None
         result = om.runtime.script('myscript').run({'foo': 'bar'})
-        print(result.get())
         # expect a runtime error due to missing input
         with self.assertRaises(RuntimeError) as ex:
             om.runtime.script('myscript').run().get()
+
+    def test_virtualobj_as_model(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if not data:
+                raise ValueError(f'expected data, got {data}')
+            return {'data': data, 'method': method}
+
+        # working as expected
+        om.models.put(mymodel, 'mymodel')
+        # check myscript is actually deserialized by runtime
+        myscript = None
+        result = om.runtime.model('mymodel').predict([42]).get()
+        self.assertEqual(result.get('method'), 'predict')
+
+    def test_virtualobj_promotion(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if not data:
+                raise ValueError(f'expected data, got {data}')
+            return {'data': data, 'method': method}
+
+        # working as expected
+        meta = om.models.put(mymodel, 'mymodel', attributes={'foo': 'bar'})
+        self.assertEqual(meta.attributes.get('foo'), 'bar')
+        self.assertIn('versions', meta.attributes)
+        other = om['target']
+        # -- use export promotion, effectively copying 1:1
+        other_meta = om.models.promote('mymodel', other.models, method='export')
+        self.assertIsInstance(other_meta, other.models._Metadata)
+        self.assertIn('mymodel', other.models.list())
+        self.assertEqual(other_meta.attributes.get('foo'), 'bar')
+        self.assertEqual(meta.attributes, other_meta.attributes)
+        # -- use getput promotion, effectively creating a new version in other
+        # -- check that meta.attributes other than 'versions' are promoted
+        # -- check a new version is created
+        meta.attributes['fox'] = 'bax'
+        meta.save()
+        other_meta = om.models.promote('mymodel', other.models, method='getput')
+        self.assertNotEqual(meta.attributes.get('versions'),
+                            other_meta.attributes.get('versions'))
+        self.assertEqual(meta.attributes['fox'], other_meta.attributes['fox'])
+
+
 
 @virtualobj
 def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):

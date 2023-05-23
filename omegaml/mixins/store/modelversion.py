@@ -101,6 +101,31 @@ class ModelVersionMixin(object):
             return revisions
         raise NotImplementedError
 
+    def _versioned_metas(self, name):
+        # get all metas that match a given name
+        # return list of tuples(actual-meta, actual-name)
+        meta = self.metadata(name)
+        versions = meta.attributes.get('versions')
+        metas = []
+        # if the base version is requested (no @version tag in name)
+        # -- update the latest version's metadata with current
+        # -- include all tags and versions
+        if '@' not in name:
+            base_meta = self.metadata(name)
+            base_meta.attributes.update(meta.attributes)
+            metas.append((base_meta, name))
+            # -- add all tagged versions
+            for tag in versions['tags']:
+                asname = f'{name}@{tag}' if '@' not in name else name
+                metas.append((self.metadata(asname, raw=True), asname))
+        else:
+            # always add the base version's metadata to ensure the version is linked
+            base_meta = self.metadata(name)
+            metas.append((base_meta, base_meta.name))
+            # a specific version is requested, get that
+            metas.append((self.metadata(name, raw=True), name))
+        return metas
+
     def _base_metadata(self, name, **kwargs):
         name, tag, version = self._base_name(name)
         meta = super().metadata(name, **kwargs)

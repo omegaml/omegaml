@@ -74,6 +74,7 @@ class VirtualObjectBackend(BaseDataBackend):
         who are authorized to write data.
     """
     KIND = 'virtualobj.dill'
+    PROMOTE = 'export'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
