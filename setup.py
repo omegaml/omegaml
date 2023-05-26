@@ -18,10 +18,11 @@ dev_deps = [
 
 jupyter_deps = [
     'jupyterhub-kubespawner==2.0.1', # required or only dev
-    'jupyterhub==2.2.1',  # required or only dev?
+    'jupyterhub==4.0.0',  # required or only dev?
     'jupyter-client>=7.0.6',
     'jupyterhub-simplespawner==0.1',
     'jupyterlab',
+    'notebook',
 ]
 
 all_deps = [] + jupyter_deps

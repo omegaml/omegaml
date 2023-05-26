@@ -6,8 +6,6 @@ from traitlets import Unicode
 from omegajobs.spawnermixin import OmegaNotebookSpawnerMixin
 from omegaml.client.auth import AuthenticationEnv
 
-singleuser_starter = '/app/scripts/omegajobs.sh'
-
 
 class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
     """
@@ -26,7 +24,10 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
         help='Template to expand to set the user home. {userid} and {username} are expanded'
     )
 
-    cmd = Command([singleuser_starter])
+    cmd = Command(['/app/scripts/omegajobs.sh'])
+
+    shell_cmd = Command(['/bin/bash', '-l', '-c'],
+                        config=True)
 
     def make_preexec_fn(self, name):
         home = self.home_path

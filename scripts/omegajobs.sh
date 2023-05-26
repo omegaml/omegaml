@@ -43,10 +43,18 @@ else
   export OMEGA_CONFIG_FILE="$APPBASE/.omegaml/config.yml"
 fi
 # get python dependencies
-site_packages=$(python -W ignore -c "import site; print(site.getsitepackages()[0])")
-omegaml_dir=$site_packages/omegaml
-omegaee_dir=$site_packages/omegaee
-omegajobs_dir=$site_packages/omegajobs
+if [ -d ./omegaee ]; then
+  echo "Using omegaee from ./omegaee"
+  omegaml_dir=../omegaml-ce
+  omegaee_dir=./omegaee
+  omegajobs_dir=./omegajobs
+else
+    echo "Using omegaee from $site_packages/omegaee"
+    site_packages=$(python -W ignore -c "import site; print(site.getsitepackages()[0])")
+    omegaml_dir=$site_packages/omegaml
+    omegaee_dir=$site_packages/omegaee
+    omegajobs_dir=$site_packages/omegajobs
+fi
 if [[ $singleuser ]]; then
     echo "Starting singleuser spawned juypter notebook"
     if [[ ! -f $APPBASE/.jupyter/.omegaml.ok ]]; then
@@ -63,7 +71,6 @@ if [[ $singleuser ]]; then
     nohup honcho -d $APPBASE start worker >> worker.log 2>&1 &
     # ensure USER_SITE exists, otherwise it is not in sys.path
     mkdir -p $(python -m site --user-site)
-    jupyter serverextension enable jupyterlab
     jupyterhub-singleuser --ip $ip --port $port --allow-root $jydebug
 else
     echo "Starting multiuser spawned juypter hub"
