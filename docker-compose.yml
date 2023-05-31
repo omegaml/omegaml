@@ -54,7 +54,7 @@ services:
       - "100"
 
   rabbitmq:
-    image: rabbitmq:3.9.20
+    image: rabbitmq:3.11.15
     ports:
       - "5672:5672"
       - "5671:5671"
