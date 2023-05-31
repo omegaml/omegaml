@@ -14,4 +14,4 @@ currently being supported with security updates.
 ## Reporting a Vulnerability
 
 Report any observed or suspected vulnerability to security@omegaml.io 
-For urgen matters please follow the steps found in https://www.omegaml.io/sirp
+For urgent matters please follow the steps found in https://www.omegaml.io/sirp
