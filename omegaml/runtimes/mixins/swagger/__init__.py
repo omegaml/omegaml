@@ -75,3 +75,43 @@ class SwaggerGenerator:
         }
         return formatter.get(format)(stream=file)
 
+    @staticmethod
+    def combine_swagger(self, name, patches=[], sources=[], file=None):
+        """ combine swagger definition of a model with schemas of other specs
+
+        Args:
+            name (str): the name of the model
+            patches (list): list of strings in format 'schema#property'
+            sources (list): list of strings in format 'model#schema'
+            file (stream): optional, if given will dump yaml to this file
+
+        Returns:
+            yaml spec
+
+        Example:
+            # definitions
+            class PersonSchema(Schema):
+                name = fields.String()
+            class ResultSchema(Schema):
+                data = fields.List(fields.Dict()) # equiv. fields.List(fields.Nested(PersonSchema))
+            om.models.link_datatype('mymodel', Y=ResultSchema)
+            om.models.link_datatype('mymodel/schema/data', X=PersonSchema)
+            # build combined swagger spec
+            combine_swagger('mymodel',
+                            patches=['mymodel_Y#result'],
+                            sources=['mymodel/schema/data#mymodel_schema_data_X'])
+        """
+        import yaml
+        om = self.omega
+        spec = om.runtime.swagger(name, format='dict')
+        for patch, source in zip(patches, sources):
+            ttype, tprop = patch.split('#')
+            sname, stype = source.split('#')
+            sspec = om.runtime.swagger(sname, format='dict')
+            spec['definitions'][stype] = sspec['definitions'][stype]
+        if spec['definitions'][ttype]['properties'][tprop].get('type') == 'array':
+            spec['definitions'][ttype]['properties'][tprop]['items'] = {'$ref': f'#/definitions/{stype}'}
+        else:
+            spec['definitions'][ttype]['properties'][tprop]['$ref'] = f'#/definitions/{stype}'
+        return yaml.dump(spec, stream=file)
+
