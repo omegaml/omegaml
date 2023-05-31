@@ -1,3 +1,5 @@
+import os
+
 import shutil
 from jupyterhub.spawner import LocalProcessSpawner
 from jupyterhub.traitlets import Command
@@ -5,8 +7,6 @@ from traitlets import Unicode
 
 from omegajobs.spawnermixin import OmegaNotebookSpawnerMixin
 from omegaml.client.auth import AuthenticationEnv
-
-singleuser_starter = '/app/scripts/omegajobs.sh'
 
 
 class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
@@ -26,10 +26,14 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
         help='Template to expand to set the user home. {userid} and {username} are expanded'
     )
 
-    cmd = Command([singleuser_starter])
+    cmd = Command(['/app/scripts/omegajobs.sh'])
+
+    shell_cmd = Command(['/bin/bash', '-l', '-c'],
+                        config=True)
 
     def make_preexec_fn(self, name):
         home = self.home_path
+        jupyter_dir = os.path.join(home, '.jupyter')
 
         def preexec():
             # setup paths and get omegaml config
@@ -62,24 +66,17 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
             # create local paths as required by omegaml
             try:
                 import os
-                if os.path.exists(home):
-                    shutil.rmtree(home)
-                os.makedirs(home, 0o755)
-                os.makedirs(os.path.join(home, 'notebooks'))
-                os.makedirs(os.path.join(home, '.omegaml'))
-                os.chdir(home)
                 from omegaml.notebook import jupyter
-                for fn in ['ipystart.py', 'ipython_config.py',
-                           'jupyter_notebook_config.py']:
-                    src = os.path.join(os.path.dirname(jupyter.__file__), fn)
-                    dst = os.path.join(home, fn)
-                    self.log.info(('SimpleLocalProcessSpawner: exec_fn:create_path '
-                                   'copying {} to {}'.format(src, dst)))
-                    shutil.copy(src, dst)
+                os.makedirs(home, 0o755, exist_ok=True)
+                os.makedirs(jupyter_dir, 0o755, exist_ok=True)
+                src = os.path.join(os.path.dirname(jupyter.__file__))
+                dst = os.path.join(jupyter_dir)
+                shutil.copytree(src, dst, dirs_exist_ok=True)
             except Exception as e:
                 self.log.error('SimpleLocalProcessSpawner: exec_fn:create_path error {}'.format(str(e)))
                 raise
-
+            else:
+                os.chdir(home)
         return preexec
 
     def user_env(self, env):

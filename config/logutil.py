@@ -50,7 +50,6 @@ To update logging data:
     from logutil import LoggingRequestContext
     LoggingRequestContext.inject(**data)
 """
-import flask
 import logging
 import os
 import socket
@@ -65,6 +64,7 @@ LOGUTIL_ENV_KEYS = ['APP', 'APP_VERSION', 'APP_ENV', 'HOSTNAME']
 LOGUTIL_ENV_KEYS += os.environ.get('LOGUTIL_ENV_KEYS', '').split(',')
 #: the logger.yaml location, defaults to the location of logutil.py
 LOGUTIL_CONFIG_FILE = Path(__file__).parent / 'logging.yaml'
+
 
 def configure_logging(logging_config=None, settings=None):
     """ configure logging
@@ -104,6 +104,7 @@ def configure_logging(logging_config=None, settings=None):
 
 def logutil_flask(app, mapping=None, **extra):
     # https://flask.palletsprojects.com/en/2.2.x/api/#signals
+    import flask
     from flask import request_started, request_tearing_down  # noqa
     from flask import request  # noqa
 
@@ -224,12 +225,13 @@ class LoggingRequestContextFilter(logging.Filter):
 
 
 class HostnameInjectingFilter(logging.Filter):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.hostname = socket.gethostname()
 
     def filter(self, record):
         record.hostname = self.hostname
-        return True
+        return super().filter(record)
 
 
 class TaskInjectingFilter(logging.Filter):
@@ -241,6 +243,7 @@ class TaskInjectingFilter(logging.Filter):
                                    task_name=task.name,
                                    user_id=getattr(task, 'current_userid', '???'))
         return True
+
 
 _context = threading.local()
 _context.current = LoggingRequestContext()

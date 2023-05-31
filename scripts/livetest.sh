@@ -38,6 +38,7 @@ export OMEGA_ADMIN_PASSWORD=$pass
 export OMEGA_APIUSER=${apiuser:-omops}
 export OMEGA_APIKEY=${apikey:-686ae4620522e790d92009be674e3bdc0391164f}
 export BEHAVE_NBFILES=$script_dir/../../omegaml-ce/docs/source/nb
+export LIVETEST_BEHAVE_EXTRA_OPTS=${LIVETEST_BEHAVE_EXTRA_OPTS:-"--tags ~tfestimator --tags ~tfkeras --tags ~snowflake"}
 
 if [[ ! -z $runlocal ]]; then
     # run a local test

@@ -62,7 +62,11 @@ OMEGA_CELERY_CONFIG = {
     # allow custom logging configuration
     'CELERYD_HIJACK_ROOT_LOGGER': False,
     # make sure scheduled tasks expire results to cleanup result store
+    # according to docs, CELERY_RESULT_EXPIRES is the new setting
+    # however as of 5.2.7 celery still refers CELERY_TASK_RESULT_EXPIRES
+    # https://github.com/celery/celery/blob/7b585138af8318d62b8fe7086df7e85d110ac786/celery/app/defaults.py#L204
     'CELERY_RESULT_EXPIRES': 3600,  # expire results within 1 hour
+    'CELERY_TASK_RESULT_EXPIRES': 3600,  # expire results within 1 hour
 }
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['paasdeploy', 'omegaops']

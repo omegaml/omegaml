@@ -34,6 +34,7 @@
 ##      --clean         if specified restarts the docker containers a fresh and runs initlocal
 ##      --cmd=VALUE     if specified passed on to shell
 ##      --dcfile=VALUE  if specified sets the DOCKER_COMPOSE env variable
+##      --save          if specified commits state of omega-dev container to image
 # script setup to parse options
 script_dir=$(dirname "$0")
 script_dir=$(realpath $script_dir)
@@ -88,7 +89,9 @@ if [[ ! -z $clean ]]; then
     waiton "waiting for mongodb" http://localhost:27017
     cat scripts/mongoinit.js | docker-compose exec -T mongodb mongo
     docker-compose exec omegaml-dev bash -ic "scripts/initlocal.sh --setup --install"
-    fi
+    # save docker image state
+    docker-compose ps -q omegaml-dev | xargs -I{} docker commit {} omegaml/omegaml-dev
+fi
 
 if [[ ! -z $docker ]]; then
     # if we're running in container, just run the command given
@@ -100,6 +103,9 @@ if [[ ! -z $docker ]]; then
         docker-compose exec omegaml-dev bash
     elif [[ ! -z $cmd ]]; then
         docker-compose exec omegaml-dev bash -ic "$cmd"
+    fi
+    if [[ ! -z $save ]]; then
+        docker-compose ps -q omegaml-dev | xargs -I{} docker commit {} omegaml/omegaml-dev
     fi
 else
     # run with local software installed

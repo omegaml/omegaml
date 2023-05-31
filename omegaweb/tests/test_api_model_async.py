@@ -158,7 +158,7 @@ class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, Tes
 
     def test_partial_fit(self):
         om = self.om
-        x = np.array(list(range(1, 100)))
+        x = np.array(list(range(1, 10000)))
         y = x * 2
         df = pd.DataFrame({'x': x,
                            'y': y})
@@ -170,7 +170,7 @@ class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, Tes
         p = OnlinePipeline([
             ('scale', StandardScaler()),
             ('sgdr', SGDRegressor(random_state=42, learning_rate='optimal',
-                                  penalty='none', max_iter=1000, tol=1e-3)),
+                                  penalty=None, max_iter=10, tol=1e-3)),
         ])
         om.models.put(p, 'mymodel')
         # try to predict without fitting
@@ -180,7 +180,7 @@ class ModelResourceTestsAsync(OmegaResourceTestMixin, ResourceTestCaseMixin, Tes
         resp = self._check_async(resp)
         self.assertHttpBadRequest(resp)
         # fit remotely, note since we partial_fit we have to n_iter ourselves
-        n_iter = 100
+        n_iter = 2
         for i in range(n_iter):
             resp = self.api_client.put(self.url('mymodel', 'partial_fit',
                                                 'datax=X&datay=Y'),

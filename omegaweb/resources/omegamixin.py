@@ -16,7 +16,21 @@ logger = logging.getLogger(__name__)
 
 class OmegaResourceMixin(object):
     """
-    A mixin for omega specifics in resources
+    A Tastypie mixin for omega specifics in resources
+
+    Usage::
+
+        class MyResource(OmegaResourceMixin, Resource):
+            ...
+
+        This overrides the create_response_from_resource method,
+        which uses an implementation of a GenericResource to actually
+        create the response. This allows us to use the same GenericResource
+        for both commercial and open source versions of omegaml. To
+        this end, this OmegaResourceMixin is a specialization of
+        omegaml.backends.restapi.OmegaResourceMixin. We are not using
+        a subclass to avoid conflicting dependencies (open source: Flask,
+        commercial edition: Django).
     """
 
     def get_omega(self, bundle_or_request, reset=False):
@@ -64,6 +78,20 @@ class OmegaResourceMixin(object):
         return query, payload
 
     def create_response_from_resource(self, request, generic_resource, resource_method, *args, **kwargs):
+        """
+        Create a response from a resource method
+
+        Args:
+            request (Request):
+            generic_resource (str): name of the resource
+            resource_method (str): name of the resource method
+            *args: args to pass to the resource method (ignored)
+            **kwargs: kwargs to pass to the resource method, in particular
+                pk: the model id
+
+        Returns:
+            response: Response
+        """
         om = self.get_omega(request)
         model_id = kwargs.get('pk')
         query, payload = self.get_query_payload(request)

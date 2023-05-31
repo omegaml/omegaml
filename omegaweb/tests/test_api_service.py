@@ -173,6 +173,22 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         expected = {'data': {'foo': 'bar'}, 'method': 'run'}
         self.assertEqual(data, expected)
 
+    def test_service_run_virtualobj_error(self):
+        om = self.om
+
+        @virtualobj
+        def myscript(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            raise ValueError('Some ERROR_FOUND')
+
+        om.scripts.put(myscript, 'myscript')
+        # check myscript is actually deserialized by runtime
+        myscript = None
+        # run the script on the cluster
+        resp = self.api_client.post(self.url('service/myscript', action='run', query='text=foo'),
+                                    data={'foo': 'bar'},
+                                    authentication=self.get_credentials())
+        self.assertHttpBadRequest(resp)
+
     def test_service_run_async(self):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
