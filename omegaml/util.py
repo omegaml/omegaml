@@ -541,12 +541,17 @@ class PickableCollection(object):
         host, port = list(client.nodes)[0]
         # options contains ssl settings
         options = self.database.client._MongoClient__options._options
-        all_creds = self.database.client._MongoClient__all_credentials
         # extract credentials in pickable format
-        # -- if authSource was used for connection, credentials are in 'admin'
-        # -- otherwise credentials are keyed by username
-        cred_key = 'admin' if 'admin' in all_creds else options['username']
-        creds = all_creds[cred_key]
+        if hasattr(self.database.client, '_MongoClient__all_credentials'):
+            # pymongo < 4.1
+            all_creds = self.database.client._MongoClient__all_credentials
+            # -- if authSource was used for connection, credentials are in 'admin'
+            # -- otherwise credentials are keyed by username
+            cred_key = 'admin' if 'admin' in all_creds else options['username']
+            creds = all_creds[cred_key]
+        else:
+            # pymongo >= 4.1
+            creds = self.database.client.options.pool_options._credentials
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
         creds_state['source'] = str(creds.source)
