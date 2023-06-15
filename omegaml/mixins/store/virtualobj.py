@@ -1,7 +1,7 @@
 import re
 
 
-from omegaml.backends.virtualobj import VirtualObjectBackend
+from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 
 
 class VirtualObjectMixin(object):
@@ -20,8 +20,10 @@ class VirtualObjectMixin(object):
         return (self._vobj_meta is not None and
                 self._vobj_meta.kind == VirtualObjectBackend.KIND)
 
-    def _getvirtualobjfn(self, name):
-        virtualobjfn = super(VirtualObjectMixin, self).get(name)
+    def _getvirtualobjfn(self, name, **kwargs):
+        virtualobjfn = super(VirtualObjectMixin, self).get(name, **kwargs)
+        if isinstance(virtualobjfn, type):
+            virtualobjfn = virtualobjfn()
         return virtualobjfn
 
     def _resolve_realname(self, name, kwargs):

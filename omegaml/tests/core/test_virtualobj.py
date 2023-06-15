@@ -138,6 +138,8 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
 
 @virtualobj
 def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
+    import datetime
+
     real_data_name = '{}_data'.format(meta.name)
     if method == 'get':
         data = store.get(real_data_name)
@@ -165,6 +167,7 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
         return store.get(self.real_data_name(meta)) or 'no data yet'
 
     def put(self, data=None, meta=None, store=None, **kwargs):
+        import datetime
         entrymeta = store.put(data, self.real_data_name(meta), attributes={
             'virtualobj_ref': meta.name,
         })
@@ -178,9 +181,9 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
         store.drop(self.real_data_name(meta), force=True)
         return 'ok, deleted'
 
-
 @virtualobj
 def myvirtualobjfn_with_basename(data=None, meta=None, method=None, base_name=None, store=None, **kwargs):
+    import datetime
     real_data_name = base_name
     if method == 'get':
         data = store.get(real_data_name)

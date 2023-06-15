@@ -1,6 +1,7 @@
+from unittest import TestCase, skip
+
 import unittest
 from inspect import isfunction
-from unittest import TestCase, skip
 
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
@@ -315,7 +316,6 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
 
     def test_predict_from_objecthandler(self):
         import tensorflow as tf
-        from omegaml.backends.tensorflow import _tffn
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         om = self.om
@@ -323,6 +323,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         @virtualobj
         def train_xy_fn(Xname=None, Yname=None, **kwargs):
             import omegaml as om
+            from omegaml.backends.tensorflow import _tffn
             X = om.datasets.get(Xname)
             Y = om.datasets.get(Yname)
             dataset = _tffn('pandas_input_fn')(X, Y, shuffle=True)
@@ -331,6 +332,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         @virtualobj
         def test_x_fn(Xname=None, **kwargs):
             import omegaml as om
+            from omegaml.backends.tensorflow import _tffn
             X = om.datasets.get(Xname)
             dataset = _tffn('pandas_input_fn')(X, shuffle=False)
             return dataset
