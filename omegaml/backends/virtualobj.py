@@ -1,4 +1,7 @@
 import sys
+import types
+import warnings
+from uuid import uuid4
 
 import dill
 
@@ -80,13 +83,55 @@ class VirtualObjectBackend(BaseDataBackend):
     def supports(self, obj, name, **kwargs):
         return callable(obj) and getattr(obj, '_omega_virtual', False)
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def _dynamic_compile(self, obj, module='__code'):
+        if isinstance(obj, dict) and 'source' in obj:
+            source = obj.get('source')
+            mod = types.ModuleType(module)
+            mod.__dict__.update({'__compiling__': True,
+                                 'virtualobj': virtualobj,
+                                 'VirtualObjectHandler': VirtualObjectHandler})
+            sys.modules[module] = mod
+            code = compile(source, '<string>', 'exec')
+            exec(code, mod.__dict__)
+            obj = getattr(mod, obj['name'])
+        return obj
+
+    def put(self, obj, name, attributes=None, dill_kwargs=None, as_source=True, **kwargs):
         # TODO add obj signing so that only trustworthy sources can put functions
         # ensure we have a dill'able object
         # -- only instances can be dill'ed
-        if isinstance(obj, type):
-            obj = obj()
-        data = dill.dumps(obj)
+        dill_kwargs = dill_kwargs or {}
+        # since 0.15.6: only __main__ objects are stored as bytecodes,
+        #               all module code is stored as source code. This
+        #               removes the dependency on opcode parity between client
+        #               and server. Source objects are compiled into __main__
+        #               within the runtime. This is a tradeoff compatibility
+        #               v.s. execution time. Use as_source=False to force
+        #               storing bytecodes.
+        # if False and isinstance(obj, type):
+        #    obj = obj()
+        if dill.source.isfrommain(obj) or dill.source.isdynamic(obj):
+            # dynamic main objects cannot be stored as source code
+            data = dill.dumps(obj, **dill_kwargs)
+        elif isinstance(obj, type) or isinstance(obj, types.FunctionType):
+            source = dill.source.getsource(obj, lstrip=True)
+            source_obj = {'source': ''.join(source),
+                          'name': getattr(obj, '__name__', name)}
+            freevars = dill.detect.freevars(obj)
+            if len(freevars):
+                warnings.warn(f'The {repr(obj)} module references {freevars}, this may lead to errors at runtimes')
+            if '__main__' in source_obj['source']:
+                warnings.warn(f'The {repr(obj)} module references __main__, this may lead to unexpected results')
+            if as_source:
+                # transport as source code
+                data = dill.dumps(source_obj, **dill_kwargs)
+            else:
+                # compile to __main__ module to enable full serialization
+                obj = self._dynamic_compile(source_obj, module='__main__')
+                data = dill.dumps(obj, **dill_kwargs)
+        else:
+            # class instances cannot be dumped unless they come from __main__
+            data = dill.dumps(obj, **dill_kwargs)
         filename = self.model_store.object_store_key(name, '.dill', hashed=True)
         gridfile = self._store_to_file(self.model_store, data, filename)
         return self.model_store._make_metadata(
@@ -105,22 +150,27 @@ class VirtualObjectBackend(BaseDataBackend):
         # https://docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-final
         try:
             data = outf.read()
-            obj = dill.loads(data)
+            obj = self._dynamic_compile(dill.loads(data), module='__code')
         except ModuleNotFoundError as e:
             # if the functions original module is not known, simulate it
             # this is to deal with functions created outside of __main__
             # see https://stackoverflow.com/q/26193102/890242
             #     https://stackoverflow.com/a/70513630/890242
-            sys.modules[e.name] = sys.modules['__main__']
+            mod = types.ModuleType(e.name, 'dynamic module')
+            sys.modules[e.name] = mod  # sys.modules['__main__']
             obj = dill.loads(data)
 
         outf.close()
         return obj
 
+    def _ensure_handler_instance(self, obj):
+        # ensure VirtualObjectHandler classes are transformed to a virtualobj
+        return obj() if isinstance(obj, type) and issubclass(obj, VirtualObjectHandler) else obj
+
     def predict(self, modelname, xName, rName=None, **kwargs):
         # make this work as a model backend too
         meta = self.model_store.metadata(modelname)
-        handler = self.get(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
                        tracking=self.tracking, **kwargs)
@@ -128,7 +178,7 @@ class VirtualObjectBackend(BaseDataBackend):
     def run(self, scriptname, *args, **kwargs):
         # run as a script
         meta = self.model_store.metadata(scriptname)
-        handler = self.get(scriptname)
+        handler = self._ensure_handler_instance(self.get(scriptname))
         data = args[0] if args else None
         kwargs['args'] = args
         return handler(method='run', data=data, meta=meta, store=self.data_store, tracking=self.tracking, **kwargs)
@@ -152,7 +202,7 @@ class VirtualObjectBackend(BaseDataBackend):
             om.runtime.mapreduce
         """
         meta = self.model_store.metadata(modelname)
-        handler = self.get(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
         return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
                        tracking=self.tracking, **kwargs)
 
