@@ -1,15 +1,16 @@
-from __future__ import absolute_import
-
-from unittest.mock import patch
-
+import os
+import sys
 import unittest
 from unittest import TestCase
+from unittest.mock import patch
 
 import numpy as np
-import os
 import pandas as pd
-import sys
 from numpy.testing import assert_array_almost_equal
+from omegaml import Omega
+from omegaml.backends.virtualobj import virtualobj
+from omegaml.tests.util import OmegaTestMixin
+from omegaml.util import reshaped
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
@@ -19,11 +20,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
-
-from omegaml import Omega
-from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import delete_database, reshaped
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
@@ -605,6 +601,23 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
         om.runtime.ping(fox='bar')
         self.assertEqual(len(om.logger.dataset.get(level='DEBUG')), 3)
+        # -- request logging exceptions
+        om.logger.reset()
+        # case 1: error logging, no traceback
+        om.runtime.mode(local=True, logging=('celery', 'INFO'))
+        with self.assertRaises(RuntimeError):
+            om.runtime.ping(fox='bar', exception=True)
+        messages = om.logger.dataset.get(level='ERROR')
+        self.assertEqual(len(messages), 1)
+        self.assertNotIn('Traceback', messages.iloc[-1].msg)
+        # case 2: debug logging, traceback is included
+        om.logger.reset()
+        om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
+        with self.assertRaises(RuntimeError):
+            om.runtime.ping(fox='bar', exception=True)
+        messages = om.logger.dataset.get(level='ERROR')
+        self.assertEqual(len(messages), 1)
+        self.assertIn('Traceback', messages.iloc[-1].msg)
 
     def test_list_labels(self):
         om = Omega()
