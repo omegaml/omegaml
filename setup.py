@@ -83,29 +83,22 @@ setup(
         'importlib-metadata<5.0',  # due to https://github.com/celery/kombu/pull/1601, remove upon Celery>=5.3 available
         'joblib>=0.9.4',
         'jupyter-client>=4.1.1',
-        'mongoengine~=0.24.1',
-        'pymongo~=4.0.2',  # mongoengine 0.24.1 compatibility
+        'mongoengine>=0.24.1',
         'pandas>=2.0.0',
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
         'flask-restx>=1.1.0',
-        'werkzeug<2.1.0',  # due to flask-restx, https://github.com/python-restx/flask-restx/issues/422
-        'markupsafe==2.0.1',  # due to flask/markupsafe, https://github.com/pallets/markupsafe/issues/284
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=6.4.0',
-        'pygments>=2.7.4',  # via nbconvert, due to snyk report https://github.com/omegaml/omegaml/pull/299
         'dill>=0.3.2,<0.3.6',  # due to dill, https://github.com/uqfoundation/dill/issues/332
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
         'cron-descriptor>=1.2.31',
         'docopt>=0.6.2',
         'requests>=2.20.0',
-        # fix tensorflow pulling wrong version of absl-py,
-        # https://github.com/tensorflow/tensorflow/issues/26691#issuecomment-525519742
-        'absl-py>=0.8.1',
         'tqdm>=4.32.2',
         'honcho>=1.0.1',  # not strictly required, but used in docker compose
         'tabulate>=0.8.2',  # required in cli

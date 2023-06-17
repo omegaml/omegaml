@@ -108,3 +108,8 @@ help:
 	@echo -n "Common make targets"
 	@echo ":"
 	@cat Makefile | grep -A1 -E -e ".*:.*"
+
+devstart:
+	docker-compose -f docker-compose-dev.yml up -d
+	scripts/initlocal.sh
+
