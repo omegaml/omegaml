@@ -25,10 +25,10 @@ class PassthroughMixin:
         private
     """
 
-    def get(self, name, **kwargs):
+    def get(self, name, *args, **kwargs):
         if isinstance(name, PassthroughDataset):
             return name.data
-        return super().get(name, **kwargs)
+        return super().get(name, *args, **kwargs)
 
     def metadata(self, name, **kwargs):
         if isinstance(name, PassthroughDataset):

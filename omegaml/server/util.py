@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from flask import current_app, jsonify, url_for
 from functools import wraps, cache
 from pathlib import Path
+from unittest.mock import MagicMock
 from urllib.parse import unquote
 from werkzeug.exceptions import abort
 
@@ -112,3 +113,46 @@ def stripblocks(trim_blocks=True, lstrip_blocks=True):
     finally:
         app.jinja_env.trim_blocks = original_trim
         app.jinja_env.lstrip_blocks = original_lstrip
+
+
+def testable(fn, *args, **kwargs):
+    """ testable is a decorator to make a callable testable
+
+    Usage:
+        # in your code
+        testable(fn, *args, **kwargs)
+
+       This will call fn(*args, **kwargs) and return the result. If TestableMock has been
+       defined by testing code, it will be called as TestableMock(args, kwargs). If it
+       returns None, the original function's result will be returned.
+
+       Roughly equivalent to:
+
+       def testable(fn, *args, **kwargs):
+        result = fn(*args, **kwargs)
+        mocked_result = TestableMock(args, kwargs)
+        return mocked_result if mocked_result is not None else result
+    """
+    if TestableMock is _BareTestableMock:
+        result = fn(*args, **kwargs)
+    else:
+        mocked_result = TestableMock(fn, args, kwargs)
+        actual_result = fn(*args, **kwargs)
+        result = mocked_result if not isinstance(mocked_result, MagicMock) else actual_result
+    return result
+
+
+def TestableMock(fn, args, kwargs):
+    """ TestableMock is a placeholder for you to mock
+    
+    Usage: 
+        with mock.patch('omegaml.server.util.TestableMock') as mock:
+            # Your test code here
+            pass
+            # check mock.call_args
+            call_args, call_kwargs = mock.call_args
+    """
+    pass
+
+
+_BareTestableMock = TestableMock  # capture identiy of the original TestableMock

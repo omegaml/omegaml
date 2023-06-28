@@ -116,7 +116,7 @@ $(function () {
         dataType: "json",
         url:
           url_for("omega-server.tracking_api_plot_metrics", { name: exp }) +
-          `?multicharts=${multi}&since=${since}&end=${end}&run=${selected}`,
+          `?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
         success: function (data) {
           $("#exptable").hide();
           $("#expchart").show();

@@ -36,7 +36,6 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         # check created data is in isoformat
         self.assertRegex(data['result']['created'], r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
 
-
     def test_predict_from_data_inline(self):
         X = np.arange(10).reshape(-1, 1)
         y = X * 2
@@ -86,7 +85,7 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         self.om.datasets.put([5], 'project/test/foo', append=False)
         # check we can use it to predict
         resp = self.client.put('/api/v1/model/project/test/regression/predict?datax=project/test/foo',
-                               json={}, auth = self.auth, headers=self._headers)
+                               json={}, auth=self.auth, headers=self._headers)
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertEqual(data.get('model'), 'project/test/regression')
@@ -221,18 +220,3 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
         data = resp.get_json()
         self.assertEqual(data.get('model'), 'regression@commit1')
         assert_almost_equal(data.get('result'), [10.])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

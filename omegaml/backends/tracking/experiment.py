@@ -74,6 +74,7 @@ class ExperimentBackend(BaseModelBackend):
         return meta
 
     def get(self, name, raw=False, data_store=None, **kwargs):
+        data_store = data_store or self.data_store
         assert data_store is not None, "experiments require a datastore, specify data_store=om.datasets"
         tracker = super().get(name, **kwargs)
         tracker._store = data_store
@@ -87,7 +88,7 @@ class ExperimentBackend(BaseModelBackend):
             name = based_name
         elif not based_dataset and actual_dataset:
             name = actual_name
-        elif based_dataset and actual_dataset:
+        elif all((based_dataset, actual_dataset)) and based_dataset != actual_dataset:
             msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_name}, "
                    f"now using {data_store.prefix}{actual_name}")
             logger.warning(msg)

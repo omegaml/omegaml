@@ -1,10 +1,9 @@
 from unittest import TestCase
 
 import pandas as pd
-from pandas.testing import assert_frame_equal, assert_series_equal
-
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin
+from pandas.testing import assert_frame_equal
 
 
 class ParallelMixinTests(OmegaTestMixin, TestCase):
@@ -129,11 +128,11 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
 
         om.datasets.put(large, 'largedf', append=False)
         mdf = om.datasets.getl('largedf')
-        mdf.transform(myfunc, chunkfn=chunker, chunksize=5, n_jobs=1).persist('largedf_transformed', om.datasets)
+        transformer = mdf.transform(myfunc, chunkfn=chunker, chunksize=5, n_jobs=1)
+        transformer.persist('largedf_transformed', om.datasets)
         self.assertIn('largedf_transformed', om.datasets.list())
         # parallel insert may result in different row order, get back in sort order
         dfx = om.datasets.getl('largedf_transformed').sort('x').value
         large['y'] = large['x'] * 2
         self.assertEqual(len(dfx), len(large))
         assert_frame_equal(dfx.reset_index(), large.reset_index())
-

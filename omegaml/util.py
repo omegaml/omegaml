@@ -658,6 +658,18 @@ def keras_available():
     return module_available('keras')
 
 
+def mlflow_available():
+    # -- ignore pydantic warning
+    # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
+    # see https://github.com/mlflow/mlflow/pull/13023
+    import warnings
+    from pydantic import PydanticDeprecatedSince20
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+        available = module_available('mlflow')
+    return available
+
+
 def calltrace(obj):
     """
     trace calls on an object
@@ -1169,6 +1181,10 @@ class ProcessLocal(dict):
         self._check_pid()
         return (self._cache or super()).keys()
 
+    def values(self):
+        self._check_pid()
+        return (self._cache or super()).values()
+
     def clear(self):
         self._cache.clear() if self._cache else None
         return super().clear()
@@ -1358,3 +1374,23 @@ def failsafe_yaspin(mock=False):
             logger.debug(getattr(yaspin, 'text', '...'))
             yield
     return yaspin
+
+
+def is_alphanumeric(s):
+    # This regex checks if the string contains only alphanumeric characters
+    pattern = r'^[A-Za-z0-9]+$'
+    return bool(re.match(pattern, s))
+
+
+def find_instances(cls):
+    # find all instances of a class
+    import gc
+    instances = []
+    for obj in gc.get_objects():
+        try:
+            if isinstance(obj, cls):
+                instances.append(obj)
+        except Exception:
+            # ignore weakref or other issues
+            pass
+    return instances

@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import unittest
 from flask import url_for
+from unittest.mock import patch
 
 from omegaml.server.app import create_app
 from omegaml.tests.util import OmegaTestMixin
@@ -54,9 +55,16 @@ class TrackingViewTests(OmegaTestMixin, TestCase):
         for i in range(1, 10):
             with exp:
                 exp.log_metric('accuracy', 0.8)
-        resp = self.client.get(url_for('omega-server.tracking_api_plot_metrics',
-                                       name='foo') + '?runs=')
-        self.assertEqual(resp.status_code, 200)
+        # test for various runs
+        for runs in ('1', '2', '1,2,3', '1,2,3,4', '1,2,3,4,5', '1,2,3,4,5,6', 'all', ''):
+            with patch('omegaml.server.util.TestableMock') as mock:
+                resp = self.client.get(url_for('omega-server.tracking_api_plot_metrics',
+                                               name='foo') + f'?runs={runs}')
+                self.assertEqual(resp.status_code, 200)
+                plot_fn, plot_args, plot_kwargs = mock.call_args[0]
+                metrics = plot_kwargs.get('data_frame')
+                expected = len(runs.split(',')) if runs not in ('all', '') else 9
+                self.assertEqual(len(metrics), expected)
 
 
 if __name__ == '__main__':

@@ -1,11 +1,8 @@
-from pathlib import Path
-
-import shutil
-
 import joblib
-
+import shutil
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
+from pathlib import Path
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -52,7 +49,7 @@ class BaseModelBackend(BackendBaseCommon):
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
-
+    
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
@@ -213,7 +210,8 @@ class BaseModelBackend(BackendBaseCommon):
             meta = self.data_store.put(result, rName)
             result = meta
         if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind, event=method)
+            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
+                                   event=method)
         return result
 
     def predict_proba(
