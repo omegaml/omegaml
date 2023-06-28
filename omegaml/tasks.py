@@ -4,6 +4,7 @@ omega runtime model tasks
 from __future__ import absolute_import
 
 import datetime
+import inspect
 import os
 from celery import shared_task
 from celery.signals import worker_process_init
@@ -14,6 +15,20 @@ from omegaml.celery_util import OmegamlTask, sanitized
 @shared_task(base=OmegamlTask, bind=True)
 def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('predict', *self.delegate_args, **self.delegate_kwargs)
+    return sanitized(result)
+
+
+@shared_task(base=OmegamlTask, bind=True)
+def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
+    result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
+    if inspect.isgenerator(result):
+        chunk = {'result': None}
+        stream = self.om.streams.get(f'.system/complete/{self.request.id}')
+        for chunk in result:
+            stream.append(chunk)
+        result = {
+            'result': chunk,
+        }
     return sanitized(result)
 
 

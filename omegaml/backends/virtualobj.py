@@ -116,7 +116,7 @@ class VirtualObjectBackend(BaseDataBackend):
         data = outf.read()
         obj = dilldip.loads(data)
         outf.close()
-        return obj
+        return self._ensure_handler_instance(obj)
 
     def _ensure_handler_instance(self, obj):
         # ensure VirtualObjectHandler classes are transformed to a virtualobj
@@ -212,6 +212,15 @@ class VirtualObjectHandler(object):
     """
     _omega_virtual = True
 
+    def _vobj_call_map(self):
+        return {
+            'drop': self.drop,
+            'get': self.get,
+            'put': self.put,
+            'predict': self.predict,
+            'run': self.run,
+        }
+
     def get(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
@@ -228,13 +237,7 @@ class VirtualObjectHandler(object):
         raise NotImplementedError
 
     def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
-        MAP = {
-            'drop': self.drop,
-            'get': self.get,
-            'put': self.put,
-            'predict': self.predict,
-            'run': self.run,
-        }
+        MAP = self._vobj_call_map()
         methodfn = MAP[method]
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)
 
@@ -274,8 +277,8 @@ class _DillDip:
             # this is to deal with functions created outside of __main__
             # see https://stackoverflow.com/q/26193102/890242
             #     https://stackoverflow.com/a/70513630/890242
-            mod = types.ModuleType(e.name, '__dynamic__')
-            sys.modules[e.name] = mod  # sys.modules['__main__']
+            mod = types.ModuleType('__dynamic__', '__dynamic__')
+            sys.modules['__dynamic__'] = mod  # sys.modules['__main__']
             obj = dill.loads(data)
         return obj
 
@@ -339,6 +342,7 @@ class _DillDip:
         return data
 
     def _dynamic_compile(self, obj, module='__main__'):
+        from omegaml.backends.genai.models import GenAIModelHandler, virtual_genai
         # re-compile source obj in __main__
         if self.isdipped(obj):
             if 'dill' in obj:
@@ -352,7 +356,9 @@ class _DillDip:
             mod = types.ModuleType(module)
             mod.__dict__.update({'__compiling__': True,
                                  'virtualobj': virtualobj,
-                                 'VirtualObjectHandler': VirtualObjectHandler})
+                                 'virtual_genai': virtual_genai,
+                                 'VirtualObjectHandler': VirtualObjectHandler,
+                                 'GenAIModelHandler': GenAIModelHandler})
             sys.modules[module] = mod
             code = compile(source, '<string>', 'exec')
             exec(code, mod.__dict__)

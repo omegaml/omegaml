@@ -53,6 +53,11 @@ class GenericServiceResource:
         self.om.models.validate(model_id, Y=result) if isinstance(result, dict) else None
         return result
 
+    def complete(self, model_id, query, payload):
+        promise = self.om.runtime.model(model_id).complete(payload, **query)
+        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        return result
+
     def default_action(http_method):
         # decorator to generate a method for each http method
         def do_action(self, resource_id, query, payload):
