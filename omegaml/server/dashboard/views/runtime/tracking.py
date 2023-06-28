@@ -148,7 +148,7 @@ class TrackingView(RepositoryBaseView):
         multicharts = int(self.request.args.get('multicharts', 0))
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
-        runs = self.request.args.get('runs', 0) or 'all'
+        runs = self.request.args.get('run', 0) or 'all'
         runs = [validOrNone(v, astype=int) for v in runs.split(',')] if runs not in ('all', '*') else 'all'
         metrics, totalRows = self._experiment_data(name, run=runs, event='metric', since=since, end=end,
                                                    as_dataframe=True)
@@ -242,6 +242,7 @@ class TrackingView(RepositoryBaseView):
     def api_compare_monitor(self, model):
         om = self.om
         experiment = validOrNone(self.request.args.get('experiment'))
+        since = validOrNone(self.request.args.get('since'))
         exp = om.runtime.model(model).experiment(experiment=experiment)
         # Function to categorize the values based on the specified ranges
         categories = {
@@ -273,7 +274,7 @@ class TrackingView(RepositoryBaseView):
         if exp._has_monitor(model):
             try:
                 mon = exp.as_monitor(model)
-                stats = mon.compare(seq='series')
+                stats = mon.compare(seq='series', since=since)
                 result = compare_stats(stats)
             except:
                 result = {

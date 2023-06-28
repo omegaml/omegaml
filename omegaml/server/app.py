@@ -7,7 +7,7 @@ TODO: check all CDN dependencies, e.g. toastui
 import logging
 import os
 import warnings
-from flask import Flask
+from flask import Flask, redirect
 from flask_session import Session
 from matplotlib import pyplot as plt
 
@@ -47,6 +47,11 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
                 username = 'admin'
 
             return dict(current_user=user())
+
+        if url_prefix:
+            @app.route('/')
+            def base_index():
+                return redirect(url_prefix)
     else:
         app = server
     # ensure slashes in URIs are matched as specified

@@ -11,9 +11,12 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.om = Omega()
         self.clean()
         self._reset_log()
+        self.pylogger = logging.getLogger('root')
+        self.previous_loglevel = self.pylogger.getEffectiveLevel()
 
     def tearDown(self):
         self.assertTrue(all(m.name is not None for m in self.om.datasets.list(raw=True)))
+        self.pylogger.setLevel(self.previous_loglevel)
 
     def _reset_log(self):
         self.om.datasets.drop('.omega/logs', force=True)
@@ -52,7 +55,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
     def test_simple_logger_quiet(self):
         logger = self.om.logger
         self.assertIsInstance(logger, OmegaSimpleLogger)
-        logger.info('initialize') # need this to initialize
+        logger.info('initialize')  # need this to initialize
         logger.setLevel('QUIET')
         logger.error('info message')
         logger.debug('error message')
@@ -64,7 +67,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertTrue(len(df) == 0)
 
     def test_loghandler(self):
-        pylogger = logging.getLogger('root')
+        pylogger = self.pylogger
         omlogger = self.om.logger
         handler = OmegaLoggingHandler.setup(logger=pylogger, level='DEBUG', exit_hook=True)
         pylogger.setLevel('DEBUG')
@@ -73,7 +76,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         pylogger.warning('warning message')
         pylogger.debug('debug message')
         df = omlogger.dataset.get()
-        self.assertEqual(len(df), 5) # including init
+        self.assertEqual(len(df), 5)  # including init
         pylogger.handlers.remove(handler)
         # msg contains the exact message as passed in
         for level in ['INFO', 'ERROR', 'WARNING', 'DEBUG']:
@@ -85,7 +88,6 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
                 # text contains the formatted msg
                 self.assertNotEqual(df.iloc[0].text, '{} message'.format(level).lower())
                 self.assertIn('{} message'.format(level).lower(), df.iloc[0].text)
-
 
     def test_named_simplelogger(self):
         """
@@ -122,4 +124,3 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
             logger.info('foo')
         df = om.logger.dataset.get(level='INFO')
         self.assertEqual(len(df), 1)
-

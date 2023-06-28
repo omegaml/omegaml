@@ -1,6 +1,7 @@
 import re
 
-from omegaml.backends.virtualobj import VirtualObjectBackend
+
+from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 
 
 class VirtualObjectMixin(object):
@@ -19,12 +20,13 @@ class VirtualObjectMixin(object):
         return (self._vobj_meta is not None and
                 self._vobj_meta.kind == VirtualObjectBackend.KIND)
 
-    def _istool(self, name):
-        return name.startswith('tools/')
-
     def _getvirtualobjfn(self, name, **kwargs):
         virtualobjfn = super(VirtualObjectMixin, self).get(name, **kwargs)
+<<<<<<< HEAD
         if isinstance(virtualobjfn, type):
+=======
+        if isinstance(virtualobjfn, VirtualObjectHandler):
+>>>>>>> 1e042e1 (improve virtualobj storing)
             virtualobjfn = virtualobjfn()
         return virtualobjfn
 
@@ -51,9 +53,8 @@ class VirtualObjectMixin(object):
         raw = kwargs.get('raw')
         should_version = self._model_version_applies(name)
         raw = raw if raw is not None else should_version
-        is_tool = name.startswith('tools/')
         name, kwargs = self._resolve_realname(name, kwargs)
-        if not raw and self._isvirtual(name) and not is_tool:
+        if not raw and self._isvirtual(name):
             handler = self._getvirtualobjfn(name)
             result = handler(method='get', meta=self._vobj_meta, store=self, **kwargs)
         else:
@@ -67,11 +68,11 @@ class VirtualObjectMixin(object):
         name, kwargs = self._resolve_realname(name, kwargs)
         should_version = bool(noversion) if noversion is not None else self._model_version_applies(name)
         raw = raw if raw is not None else should_version
-        if not should_version and not raw and not replace and self._isvirtual(name) and not self._istool(name):
+        if not should_version and not raw and not replace and self._isvirtual(name):
             result = self._getvirtualobjfn(name)(data=obj, method='put',
                                                  meta=self._vobj_meta, store=self, **kwargs)
         else:
-            result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, replace=replace, **kwargs)
+            result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, **kwargs)
         return result
 
     def drop(self, name, force=False, **kwargs):
@@ -88,3 +89,4 @@ class VirtualObjectMixin(object):
                 if not force:
                     return bool(result)
         return super(VirtualObjectMixin, self).drop(name, force=force, **kwargs)
+

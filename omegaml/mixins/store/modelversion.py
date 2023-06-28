@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 from copy import deepcopy
 from hashlib import sha1
 
@@ -36,12 +37,14 @@ class ModelVersionMixin(object):
     """
 
     def put(self, obj, name, tag=None, commit=None, previous='latest', noversion=False, **kwargs):
-        # create a new version
-        base_name, tag, version = self._base_name(name, tag)
-        meta = super().put(obj, base_name, **kwargs)
         if self._model_version_applies(name) and not noversion:
+            # create a new version
+            base_name, tag, version = self._base_name(name, tag)
+            meta = super().put(obj, base_name, **kwargs)
             self._ensure_versioned(meta)
             meta = self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, **kwargs)
+        else:
+            meta = super().put(obj, name, **kwargs)
         return meta
 
     def get(self, name, commit=None, tag=None, version=-1, **kwargs):
@@ -97,7 +100,7 @@ class ModelVersionMixin(object):
             tagged_revs = [
                 f'{name}@{tag}' for tag in tags.keys()
             ]
-            non_tagged_revs  = [
+            non_tagged_revs = [
                 f'{name}@{commit["ref"]}' for commit in commits
                 if not commit_tags.get(commit['ref'])
             ]
@@ -182,7 +185,7 @@ class ModelVersionMixin(object):
         return '_versions/{}/{}'.format(name, version_hash)
 
     def _model_version_applies(self, name):
-        return self.prefix.startswith('models/')
+        return self.prefix.startswith('models/') and not str(name).startswith('tools/')
 
     def _ensure_versioned(self, meta):
         if 'versions' not in meta.attributes:
