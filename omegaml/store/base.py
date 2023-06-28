@@ -679,17 +679,17 @@ class OmegaStore(object):
             return backend.drop(name, force=force, version=version, **kwargs)
         return self._drop(name, force=force, version=version)
 
-    def _drop(self, name, force=False, version=-1, **kwargs):
+    def _drop(self, name, force=False, version=-1, keep_data=False, **kwargs):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
             raise DoesNotExist()
         collection = self.collection(name)
-        if collection:
+        if collection and not keep_data:
             self.mongodb.drop_collection(collection.name)
         if meta:
-            if meta.collection:
+            if meta.collection and not keep_data:
                 self.mongodb.drop_collection(meta.collection)
-            if meta and meta.gridfile is not None:
+            if meta and meta.gridfile is not None and not keep_data:
                 meta.gridfile.delete()
             self._drop_metadata(name)
             return True

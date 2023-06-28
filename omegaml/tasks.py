@@ -18,6 +18,12 @@ def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs
 
 
 @shared_task(base=OmegamlTask, bind=True)
+def omega_complete(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
+    return sanitized(result)
+
+
+@shared_task(base=OmegamlTask, bind=True)
 def omega_reduce(self, results, modelName=None, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelName).perform('reduce', modelName, results, **self.delegate_kwargs)
     return sanitized(result)

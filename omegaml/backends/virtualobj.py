@@ -116,7 +116,7 @@ class VirtualObjectBackend(BaseDataBackend):
         data = outf.read()
         obj = dilldip.loads(data)
         outf.close()
-        return obj
+        return self._ensure_handler_instance(obj)
 
     def _ensure_handler_instance(self, obj):
         # ensure VirtualObjectHandler classes are transformed to a virtualobj
@@ -212,6 +212,15 @@ class VirtualObjectHandler(object):
     """
     _omega_virtual = True
 
+    def _vobj_call_map(self):
+        return {
+            'drop': self.drop,
+            'get': self.get,
+            'put': self.put,
+            'predict': self.predict,
+            'run': self.run,
+        }
+
     def get(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
@@ -228,13 +237,7 @@ class VirtualObjectHandler(object):
         raise NotImplementedError
 
     def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
-        MAP = {
-            'drop': self.drop,
-            'get': self.get,
-            'put': self.put,
-            'predict': self.predict,
-            'run': self.run,
-        }
+        MAP = self._vobj_call_map()
         methodfn = MAP[method]
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)
 

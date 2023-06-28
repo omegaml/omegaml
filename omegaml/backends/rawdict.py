@@ -47,6 +47,10 @@ class PandasRawDictBackend(BaseDataBackend):
             # actual data, just insert
             collection = self.data_store.collection(name)
             collection.insert_one(obj)
+        elif isinstance(obj, (list, tuple)) or hasattr(obj, '__iter__'):
+            # actual data, just insert
+            collection = self.data_store.collection(name)
+            collection.insert_many(obj)
         else:
             # already a collection, import it to metadata
             collection = obj
