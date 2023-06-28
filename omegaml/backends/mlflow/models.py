@@ -1,3 +1,7 @@
+import shutil
+
+from pathlib import Path
+
 import glob
 
 import mlflow
@@ -107,6 +111,8 @@ class MLFlowModelBackend(BaseModelBackend):
         else:
             # some supported model flavor perhaps?
             _, flavor = self._infer_model_flavor(model)
+            # -- mlflow chokes on existing model paths
+            shutil.rmtree(model_path) if Path(model_path).exists() else None
             flavor.save_model(model, model_path, **kwargs)
         with TarFile(tmpfn, mode='w') as tarf:
             tarf.add(model_path, recursive=True)

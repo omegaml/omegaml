@@ -18,6 +18,7 @@ streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook']
 mlflow_deps = ['mlflow~=1.21']
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium3]', 'ipdb', 'bumpversion']
+llm_deps = ['langchain[all]']
 
 # -- tensorflow specifics
 #    see https://www.tensorflow.org/install/source
@@ -125,6 +126,7 @@ setup(
         'client': client_deps,
         'all-client': client_deps,
         'dev': dev_deps,
+        'llm': llm_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

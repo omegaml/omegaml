@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import shutil
+
 import joblib
 
 from omegaml.backends.basecommon import BackendBaseCommon
@@ -127,6 +131,23 @@ class BaseModelBackend(BackendBaseCommon):
         obj = joblib.load(infile)
         return obj
 
+    def _remove_path(self, path):
+        """
+        Remove a path, either a file or a directory
+
+        Args:
+            path (str): filename or path to remove. If path is a directory,
+            it will be removed recursively. If path is a file, it will be
+            removed.
+
+        Returns:
+            None
+        """
+        if Path(path).is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            Path(path).unlink(missing_ok=True)
+
     def get_model(self, name, version=-1, **kwargs):
         """
         Retrieves a pre-stored model
@@ -145,6 +166,7 @@ class BaseModelBackend(BackendBaseCommon):
         tmpfn = self._tmp_packagefn(self.model_store, storekey)
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
         gridfile = self._store_to_file(self.model_store, packagefname, storekey)
+        self._remove_path(packagefname)
         kind_meta = {
             self._backend_version_tag: self._backend_version,
         }
