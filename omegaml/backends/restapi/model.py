@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from werkzeug.exceptions import NotFound
 
 from omegaml.util import ensure_json_serializable
 
@@ -17,10 +16,12 @@ class GenericModelResource(object):
         meta = self.om.models.metadata(model_id)
         if meta is not None:
             data = {
-                'model': {
+                'model': meta.name,
+                'result': {
                     'name': meta.name,
                     'kind': meta.kind,
-                    'created': '{}'.format(meta.created),
+                    'created': meta.created,
+                    'modified': meta.modified,
                     'bucket': meta.bucket,
                 }
             }
@@ -58,7 +59,7 @@ class GenericModelResource(object):
         return result
 
     def prepare_result(self, result, resource_name=None, **kwargs):
-        return {'model': resource_name, 'result': ensure_json_serializable(result)}
+        return {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name }
 
     def fit(self, model_id, query, payload):
         datax = query.get('datax')
