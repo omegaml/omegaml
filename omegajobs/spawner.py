@@ -34,6 +34,7 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
     def make_preexec_fn(self, name):
         home = self.home_path
         jupyter_dir = os.path.join(home, '.jupyter')
+        omegaml_dir = os.path.join(home, '.omegaml')
 
         def preexec():
             # setup paths and get omegaml config
@@ -48,7 +49,7 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
                 from omegaml import settings
                 import os
                 defaults = settings()
-                config_file = os.path.join(self.home_path, '.omegaml', 'config.yml')
+                config_file = os.path.join(omegaml_dir, 'config.yml')
                 # must be an admin user to get back actual user's config
                 self.log.info(os.environ)
                 self.log.info("within get_config {}".format(os.getpid()))
@@ -69,6 +70,7 @@ class SimpleLocalProcessSpawner(OmegaNotebookSpawnerMixin, LocalProcessSpawner):
                 from omegaml.notebook import jupyter
                 os.makedirs(home, 0o755, exist_ok=True)
                 os.makedirs(jupyter_dir, 0o755, exist_ok=True)
+                os.makedirs(omegaml_dir, 0o755, exist_ok=True)
                 src = os.path.join(os.path.dirname(jupyter.__file__))
                 dst = os.path.join(jupyter_dir)
                 shutil.copytree(src, dst, dirs_exist_ok=True)
