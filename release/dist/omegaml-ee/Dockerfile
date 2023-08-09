@@ -1,8 +1,12 @@
-FROM jupyter/base-notebook:ubuntu-20.04
+FROM jupyter/base-notebook:ubuntu-22.04
 # based on https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html
 # Ubuntu-20.04 is LTS version, see https://endoflife.date/ubuntu
 ENV GRANT_SUDO=yes
-ENV ACCEPT_EULA=Y
+# disable humbug reporting
+# -- BUGGER_OFF for https://bugout.dev
+# -- DO_NOT_TRACK for tools compliant with https://consoledonottrack.com
+ENV BUGGER_OFF=true
+ENV DO_NOT_TRACK=1
 # install additional software
 # -- switching to root to avoid having to sudo on every command
 USER root

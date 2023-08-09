@@ -236,3 +236,4 @@ fabric.properties
 /Miniconda3*sh
 /config.yml
 /.jupyter
+/Miniforge3-Linux-x86_64.sh

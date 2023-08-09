@@ -11,7 +11,8 @@ def override_from_env(settings):
         str: str,
         bool: truefalse,
         int: int,
-        dict: json.loads
+        dict: json.loads,
+        list: lambda v: v.split(',')
     }
     adjust_type = lambda v, vv: TYPEMAP.get(type(vv), str)(v)
     settings.update({
