@@ -205,6 +205,7 @@ class JobResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
 
 @api.route('/api/v1/dataset/<path:dataset_id>')
 class DatasetResource(OmegaResourceMixin, Resource):
+    # TODO shall implement as a GenericResource, like all other resources
     def _restore_filter(self, om, fltparams, name):
         """
         restore filter kwargs for query in om.datasets.get

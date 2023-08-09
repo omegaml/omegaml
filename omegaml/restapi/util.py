@@ -3,6 +3,7 @@ from flask_restx import Model, fields
 from werkzeug.exceptions import BadRequest
 
 import omegaml as om
+from omegaml.util import MongoEncoder
 
 
 class StrictModel(Model):
@@ -113,3 +114,7 @@ class OmegaResourceMixin(object):
     @property
     def celeryapp(self):
         return self._omega.runtime.celeryapp
+
+
+class JSONEncoder(MongoEncoder):
+    pass

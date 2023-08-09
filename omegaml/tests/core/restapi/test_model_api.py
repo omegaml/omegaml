@@ -23,6 +23,19 @@ class OmegaRestApiTests(OmegaTestMixin, TestCase):
     def _headers(self):
         return {}
 
+    def test_get_model_metadata(self):
+        om = self.om
+        clf = LinearRegression()
+        om.models.put(clf, 'regression')
+        resp = self.client.get('/api/v1/model/regression/', auth=self.auth, headers=self._headers)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertIn('model', data)
+        self.assertIn('result', data)
+        # check created data is in isoformat
+        self.assertRegex(data['result']['created'], r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+
+
     def test_predict_from_data_inline(self):
         X = np.arange(10).reshape(-1, 1)
         y = X * 2

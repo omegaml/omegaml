@@ -1,19 +1,21 @@
 import os
 
 from flask import Flask
-from flask_restx import Api
 from werkzeug.utils import redirect
+
+
 
 
 def create_app(*args, **kwargs):
     from omegaml.restapi.resources import omega_bp
+    from omegaml.restapi.util import JSONEncoder
 
     app = Flask(__name__)
     # ensure slashes in URIs are matched as specified
     # see https://stackoverflow.com/a/33285603/890242
     app.url_map.strict_slashes = True
     # use Flask json encoder to support datetime
-    app.config['RESTX_JSON'] = {'cls': app.json_encoder}
+    app.config['RESTX_JSON'] = {'cls': JSONEncoder}
     app.register_blueprint(omega_bp)
 
     @app.route('/docs')
