@@ -1,5 +1,5 @@
 # adopted from https://github.com/jupyterhub/the-littlest-jupyterhub/blob/master/integration-tests/Dockerfile
-FROM jupyterhub/jupyterhub:latest
+FROM jupyterhub/jupyterhub:4.0.2
 ARG  pypi
 ENV  pypi=$pypi
 COPY . /app
