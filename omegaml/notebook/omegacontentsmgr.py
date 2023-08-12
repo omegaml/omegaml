@@ -6,9 +6,9 @@ import nbformat
 import os
 from datetime import datetime
 from io import BytesIO
-from nbclassic.notebook.handlers import HTTPError
 from jupyter_server.services.contents.manager import ContentsManager
 from tornado import web
+from traitlets import default
 from urllib.parse import unquote
 
 from omegaml.notebook.checkpoints import NoOpCheckpoints
@@ -85,7 +85,7 @@ class OmegaStoreContentsManager(ContentsManager):
         path = unquote(path).strip('/')
         type = model.get('type')
         name = model.get('name')
-        self.run_pre_save_hook(model=model, path=path)
+        self.run_pre_save_hooks(model=model, path=path)
         if type is None:
             raise web.HTTPError(400, u'No file type provided')
         try:
@@ -201,7 +201,7 @@ class OmegaStoreContentsManager(ContentsManager):
         pattern = r'^{path}.*/({placeholder}|.+)'.format(path=path, placeholder=self._dir_placeholder)
         return len(self.omega.jobs.list(regexp=pattern)) > 0
 
-    def file_exists(self, path):
+    def file_exists(self, path=""):
         """check if file exists
 
         Args:
@@ -251,7 +251,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if content:
             nb = self._read_notebook(path, as_version=4)
             if nb is None:
-                raise HTTPError(400, "Cannot read non-file {}".format(path))
+                raise web.HTTPError(400, "Cannot read non-file {}".format(path))
             self.mark_trusted_cells(nb, path)
             model['content'] = nb
             model['format'] = 'json'
@@ -302,7 +302,7 @@ class OmegaStoreContentsManager(ContentsManager):
         #      \d is any digit
         #      :_  match literally
         #      [^\/]  matches any character except /
-        #pattern = r'([\w\s\-.\d:()+]+\/)?([\w\s\-.\d:()+]+\.[\w]*)$'
+        # pattern = r'([\w\s\-.\d:()+]+\/)?([\w\s\-.\d:()+]+\.[\w]*)$'
         pattern = r'([^\/]+\/)?([^\/]+\.[^\/]*)$'
         # if we're looking in an existing directory, prepend that
         if path:
@@ -310,7 +310,7 @@ class OmegaStoreContentsManager(ContentsManager):
         pattern = r'^{}'.format(pattern)
         entries = self.omega.jobs.list(regexp=pattern, raw=True, hidden=True, include_temp=True)
         if path and not entries:
-            raise HTTPError(400, "Directory not found {}".format(path))
+            raise web.HTTPError(400, "Directory not found {}".format(path))
         # by default assume the current path is listed already
         directories = [path]
         for meta in entries:
@@ -374,7 +374,7 @@ class OmegaStoreContentsManager(ContentsManager):
         else:
             meta = self.omega.datasets.metadata(os_path)
         if meta is None or meta.gridfile is None:
-            raise HTTPError(400, "Cannot read non-file %s" % os_path)
+            raise web.HTTPError(400, "Cannot read non-file %s" % os_path)
 
         if meta.gridfile:
             bcontent = meta.gridfile.read()
@@ -387,7 +387,7 @@ class OmegaStoreContentsManager(ContentsManager):
                 return bcontent.decode('utf8'), 'text'
             except UnicodeError:
                 if format == 'text':
-                    raise HTTPError(
+                    raise web.HTTPError(
                         400,
                         "%s is not UTF-8 encoded" % os_path,
                         reason='bad format',
@@ -397,7 +397,7 @@ class OmegaStoreContentsManager(ContentsManager):
     def _save_file(self, os_path, content, format):
         """Save content of a generic file."""
         if format not in {'text', 'base64'}:
-            raise HTTPError(
+            raise web.HTTPError(
                 400,
                 "Must specify format of file contents as 'text' or 'base64'",
             )
@@ -408,8 +408,19 @@ class OmegaStoreContentsManager(ContentsManager):
                 b64_bytes = content.encode('ascii')
                 bcontent = decodebytes(b64_bytes)
         except Exception as e:
-            raise HTTPError(
+            raise web.HTTPError(
                 400, u'Encoding error saving %s: %s' % (os_path, e)
             )
 
         self.omega.datasets.put(BytesIO(bcontent), os_path)
+
+    @default('files_handler_params')
+    def _files_handler_params_default(self):
+        # avoid exception
+        #   TypeError: StaticFileHandler.initialize() missing 1 required positional argument: 'path'
+        #   issue: https://github.com/jupyter-server/jupyter_server/issues/1313
+        # What this does
+        # - ensure that ContentsManager.files_handler_class=FilesHandler gets has a path attribute on initialize()
+        # - this only happens when dealing with local files, e.g. when downloading a notebook
+        # - source of the issue is that ContentsManager.files_handler_params is not set
+        return {'path': self.root_dir}
