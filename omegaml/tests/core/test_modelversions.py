@@ -169,3 +169,29 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.drop('mymodel')
         self.assertNotIn('mymodel', store.list())
 
+    def test_empty_versions(self):
+        # don't fail .get() in case we have a model with empty versions
+        # fix OMS-
+        store = self.om.models
+        store.register_mixin(ModelVersionMixin)
+        store.register_mixin(VirtualObjectMixin)
+        store.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if not data:
+                raise ValueError(f'expected data, got {data}')
+            return {'data': data, 'method': method}
+
+        meta = store.put(mymodel, 'mymodel')
+        # simulate _ensure_versioned
+        # -- this should never happen (it may on manual versions update)
+        meta.attributes['versions'] = {}
+        meta.attributes['versions']['tags'] = {}
+        meta.attributes['versions']['commits'] = []
+        meta.attributes['versions']['tree'] = {}
+        meta.save()
+        # without
+        store.get('mymodel')
+
+
