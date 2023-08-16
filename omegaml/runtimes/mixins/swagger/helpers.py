@@ -169,10 +169,13 @@ class SpecFromResourceHelperBase:
         # render endpoint
         orient = self.signature.get('orient') or self.default_orient
         datatypes = self.datatypes(orient)
-        InputSchema = datatypes['X']
+        InputSchema = datatypes.get('X')
+        if InputSchema is None:
+            InputSchema = Schema.from_dict({}, name='EmptyX')
+            warnings.warn(f'{self.name} does not specify a signature for input (X), assuming an empty object is valid.')
         DefaultOutputSchema = Schema.from_dict({
             'data': fields.Raw(),
-        })
+        }, name="EmptyY")
         OutputSchema = datatypes.get('Y') or datatypes.get('result') or DefaultOutputSchema
         self.render_operations(InputSchema, {200: OutputSchema})
         self.add_schema_from_datatype(schema_name(InputSchema), InputSchema)
@@ -226,7 +229,7 @@ class SpecFromModelHelper(SpecFromResourceHelperBase):
         name = self.name.replace('/', '_')
         datatypes_ = super().datatypes(orient)
         datatypes_['X'] = Schema.from_dict({
-            'data': self.match_data_orient(datatypes_.get('X', fields.Raw), orient),
+            'data': self.match_data_orient(datatypes_.get('X', Schema.from_dict({}, name='EmptyX')), orient),
             'columns': fields.List(fields.String),
             'shape': fields.List(fields.Integer),
         }, name=f'PredictInput_{name}')
