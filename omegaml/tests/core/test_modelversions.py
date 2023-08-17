@@ -171,7 +171,7 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
 
     def test_empty_versions(self):
         # don't fail .get() in case we have a model with empty versions
-        # fix OMS-
+        # fix omegaml/#344
         store = self.om.models
         store.register_mixin(ModelVersionMixin)
         store.register_mixin(VirtualObjectMixin)
