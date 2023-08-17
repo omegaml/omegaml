@@ -159,7 +159,7 @@ class ModelVersionMixin(object):
                 else:
                     actual_name = name
             else:
-                if version == -1 or abs(version) <= len(meta.attributes['versions']['commits']):
+                if abs(version) <= len(meta.attributes['versions']['commits']):
                     actual_name = meta.attributes['versions']['commits'][version]['name']
         else:
             actual_name = name
