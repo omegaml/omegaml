@@ -155,11 +155,33 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         om.datasets.put(df, 'testX')
         om.models.link_dataset('mymodel', Xname='testX', data_store=om.datasets,
                                actions=['predict', 'fit'])
+        # as service
         specs = om.runtime.swagger(format='dict', as_service=True)
         self.assertIn('paths', specs)
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/testX', specs['paths'])
+
+    def test_swagger_generator_no_input(self):
+        # test model with no input
+        # fix #
+        om = self.om
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+        class Output(Schema):
+            pass
+        om.models.link_datatype('mymodel', X=None, Y=Output)
+        # as model
+        specs = om.runtime.swagger(format='dict', as_service=False)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/v1/model/mymodel/predict', specs['paths'])
+        self.assertIn('EmptyX', specs['definitions'])
+        # as service
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('EmptyX', specs['definitions'])
+
 
     def test_swagger_link_specs(self):
         # sample spec
