@@ -113,3 +113,5 @@ devstart:
 	docker-compose -f docker-compose-dev.yml up -d
 	scripts/initlocal.sh
 
+devstop:
+	docker-compose -f docker-compose-dev.yml stop
