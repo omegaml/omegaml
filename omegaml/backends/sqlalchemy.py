@@ -180,7 +180,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             name (str): the name of the connection
             secrets (dict): dict to resolve variables in the connection string
             keep (bool): if True connection is kept open, defaults to True (change
-              default as om.defaults.SQLALCHEMY_ALWAYS_CACHE)
+              default by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE = False)
             table (str): the name of the table, will be prefixed with the
                store's bucket name unless the table is specified as ':name'
 
@@ -211,6 +211,17 @@ class SQLAlchemyBackend(BaseDataBackend):
 
         Returns:
             connection
+
+        To get a cursor for a data query, instead of a DataFrame. Note this
+        implies keep=True.
+
+        Args:
+
+                lazy (bool): if True, returns a cursor instead of a DataFrame
+                sql (str): the sql query, defaults to the query specific on .put()
+
+        Returns:
+            cursor
         """
         meta = self.data_store.metadata(name)
         connection_str = meta.kind_meta.get('sqlalchemy_connection')
