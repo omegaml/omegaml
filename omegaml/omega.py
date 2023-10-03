@@ -136,6 +136,7 @@ class OmegaDeferredInstance(object):
         Returns:
             omega instance
         """
+        from omegaml import _base_config
 
         def setup_base():
             return Omega(*args, **kwargs)
@@ -156,7 +157,7 @@ class OmegaDeferredInstance(object):
         omega = None
         from_args = len(args) > 0 or any(kw in kwargs for kw in ('userid', 'apikey', 'api_url', 'qualifier'))
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
-        from_config = 'OMEGA_CONFIG_FILE' in os.environ or os.path.exists('config.yml')
+        from_config = _base_config.OMEGA_CONFIG_FILE and os.path.exists(_base_config.OMEGA_CONFIG_FILE)
         loaders = ((from_args, setup_cloud), (from_env, setup_env),
                    (from_config, setup_cloud_config), (True, setup_base))
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
