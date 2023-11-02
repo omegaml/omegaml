@@ -35,7 +35,7 @@ Feature: omegaml feature testing
     When we open jupyter
     When we upload the tfkeras-tutorial notebook
     When we run the notebook tfkeras-tutorial
-    Then model tfkeras-flower-unfitted exists
+    Then model tfkeras-flower-savedmodel exists
 
   @tfestimator
   Scenario: tfestimator-tutorial
@@ -43,7 +43,7 @@ Feature: omegaml feature testing
     When we open jupyter
     When we upload the tfestimator-tutorial notebook
     When we run the notebook tfestimator-tutorial
-    Then model tf-model-mnist-estimator exists
+    Then model tf-model-mnist-fn exists
 
   @snowflake
   Scenario: snowflake-plugin

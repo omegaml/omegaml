@@ -1,7 +1,6 @@
 import glob
 
 import os
-import sys
 from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
@@ -18,30 +17,7 @@ streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow~=1.21']
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium3]', 'ipdb', 'bumpversion']
-
-# -- tensorflow specifics
-#    see https://www.tensorflow.org/install/source
-tf_version = os.environ.get('TF_VERSION') or '2.3.1'
-tf_match = os.environ.get('TF_VERSION_MATCH', '==')
-if tf_version.startswith('1.15'):
-    assert sys.version_info[:2] <= (3, 7), "TF < 2.x requires Python <= 3.7"
-    tf_deps = ['tensorflow=={}'.format(tf_version)]
-    tf_deps = tf_deps + ['tensorflow-gpu==1.15.0', 'h5py==2.10.0']
-    keras_deps = ['keras==2.2.4']
-elif (3, 8) <= sys.version_info[:2] < (3, 9):
-    major, minor, *_ = (int(v) for v in tf_version.split('.'))
-    assert (major, minor) >= (2, 2), "Python version 3.8 only supported by TF >= 2.2"
-    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras~=2.4.3']
-elif sys.version_info[:2] >= (3, 9):
-    major, minor, *_ = (int(v) for v in tf_version.split('.'))
-    tf_issue = "https://github.com/tensorflow/tensorflow/issues/44485"
-    tf_deps = ['tensorflow>=2.5,<2.9']
-    keras_deps = ['keras~=2.4.3']
-else:
-    # python 3.6, tensorflow 2.3.1 only supported with keras<=2.5
-    tf_deps = ['tensorflow{}{}'.format(tf_match, tf_version)]
-    keras_deps = ['keras<=2.5']
+tf_deps = ['tensorflow']
 
 # all deps
 all_deps = (tables + graph_deps + dashserve_deps + sql_deps + iotools_deps
@@ -113,7 +89,6 @@ setup(
         'graph': graph_deps,
         'tables': tables,
         'tensorflow': tf_deps,
-        'keras': keras_deps,
         'jupyter': jupyter_deps,
         'dashserve': dashserve_deps,
         'sql': sql_deps,
