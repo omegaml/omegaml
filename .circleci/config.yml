@@ -8,7 +8,7 @@ jobs:
       # -- Python 3.10 requires at least Docker 20.10
       #    https://github.com/jupyter/docker-stacks/issues/1767
       #    https://medium.com/nttlabs/ubuntu-21-10-and-fedora-35-do-not-work-on-docker-20-10-9-1cd439d9921
-      image: ubuntu-2004:2022.04.1
+      image: ubuntu-2204:2023.07.2
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce
@@ -87,7 +87,7 @@ jobs:
   release:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-2004:202107-02
+      image: ubuntu-2204:2023.07.2
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce
@@ -96,6 +96,8 @@ jobs:
           command: |
             curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
             bash Miniforge3-Linux-x86_64.sh -b
+            apt update && apt install -y docker-compose
+            pip3 install tox tox-run-before tox-conda
       - run:
           name: Make image and pypi
           command: |
@@ -107,12 +109,8 @@ jobs:
             cd omegaml-ce
             VERSION=`cat omegaml/VERSION`
             docker login -u omegaml -p $DOCKER_PASS
-            docker-compose -f docker-compose-dev.yml up -d
-            echo "Waiting..."
-            sleep 10
-            docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
-            # TODO consider using https://cibuildwheel.readthedocs.io
+            # TODO consider using https://cibuildwheel.readthedocs.io or https://github.com/getsentry/milksnake or tox
             for PYVER in 3.8 3.9; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
@@ -122,8 +120,9 @@ jobs:
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
               export LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" 
-              make livetest
-              if [[ "$VERSION" =~ "-rc" || "$VERSION" =~ "-dev" ]]; then
+              if [[ "$VERSION" =~ "-dev" ]]; then
+                make livetest
+              elif [[ "$VERSION" =~ "-rc" ]]; then
                 make release-test
               else
                 make release-prod

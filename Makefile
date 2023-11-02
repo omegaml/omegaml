@@ -27,7 +27,7 @@ sanity:
 	# quick sanity check -- avoid easy mistakes
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
-dist:
+dist: sanity
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
@@ -45,7 +45,7 @@ image:
 	: "run docker build"
 	scripts/livetest.sh --build
 
-release-test: dist sanity bumpbuild
+release-test: dist bumpbuild
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -53,7 +53,7 @@ release-test: dist sanity bumpbuild
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
-release-prod: dist sanity
+release-prod: dist livetest
 	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -68,7 +68,7 @@ release-docker: dist bumpbuild
 	sleep 5
 	scripts/livetest.sh
 
-candidate-docker: sanity dist bumpbuild
+candidate-docker: dist bumpbuild
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
 	docker push omegaml/omegaml:${VERSION}
 

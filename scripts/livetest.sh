@@ -99,7 +99,7 @@ if [ ! -z $tags ]; then
 fi
 
 echo "Running selenium grid locally"
-docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network --shm-size=2g --name selenium --network-alias selenium selenium/standalone-chrome
+docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network --shm-size=2g --cpus=1 -e SE_START_VNC=false --name selenium --network-alias selenium selenium/standalone-chrome
 countdown 10
 echo "Running the livetest image using port: $chrome_debug_port network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
 mkdir -p ~/.omegaml
