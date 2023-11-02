@@ -28,7 +28,7 @@ def splinter_browser(context):
         options = ChromeOptions()
         options.add_argument('--no-sandbox')
         # https://stackoverflow.com/a/75939337/890242
-        options.add_argument('--headless=new')
+        #options.add_argument('--headless=new')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
