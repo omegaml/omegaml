@@ -28,6 +28,7 @@ ADD_CELL_BELOW = Keys.ESCAPE, 'b'
 SAVE_NOTEBOOK = Keys.CONTROL, 's'
 SHOW_LAUNCHER = Keys.SHIFT, Keys.CONTROL, 'l'
 RESTART_CELL = Keys.ESCAPE, '0', '0', Keys.ENTER
+FILE_BROWSER = Keys.CONTROL, Keys.SHIFT, 'f'
 
 
 class Notebook:
@@ -66,6 +67,13 @@ class Notebook:
         br = self.browser
         br.windows.current = br.windows[0]
         sleep(1)
+        return self
+
+    @property
+    def file_browser(self):
+        br = self.browser
+        if not br.text_is_present('Last Modified'):
+            br.active.type(FILE_BROWSER)
         return self
 
     @property
@@ -127,6 +135,7 @@ class Notebook:
         """
         br = self.browser
         self.jupyter_home
+        self.file_browser
         br.find_by_xpath("//button[@data-command='filebrowser:create-new-directory']").first.click()
         sleep(2)
         self.active.type(name + Keys.ENTER)
@@ -138,6 +147,7 @@ class Notebook:
         """
         br = self.browser
         self.jupyter_home
+        self.file_browser
         self.body.type(SHOW_LAUNCHER)
         # TODO this is rather brittle. find a better way
         # this uses the visible launcher's first item
@@ -148,6 +158,7 @@ class Notebook:
 
     def open_notebook(self, name, retry=5):
         self.jupyter_home
+        self.file_browser
         br = self.browser
         while retry:
             found = br.is_text_present(name)
@@ -187,6 +198,7 @@ class Notebook:
 
     def open_folder(self, folder=None):
         br = self.browser
+        self.file_browser
         item = br.find_by_css('.jp-DirListing-itemText').find_by_text(folder).first
         item.double_click()
         return self
