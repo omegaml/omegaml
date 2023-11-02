@@ -72,8 +72,8 @@ class Notebook:
     @property
     def file_browser(self):
         br = self.browser
-        if not br.text_is_present('Last Modified'):
-            br.active.type(FILE_BROWSER)
+        if not br.is_text_present('Last Modified'):
+            self.active.type(FILE_BROWSER)
         return self
 
     @property

@@ -27,7 +27,7 @@ sanity:
 	# quick sanity check -- avoid easy mistakes
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
-dist: bumpbuild
+dist:
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
@@ -45,7 +45,7 @@ image:
 	: "run docker build"
 	scripts/livetest.sh --build
 
-release-test: dist sanity
+release-test: dist sanity bumpbuild
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -59,7 +59,7 @@ release-prod: dist sanity
 	# config is in $HOME/.pypirc
 	twine upload --repository pypi-omegaml dist/*gz dist/*whl
 
-release-docker: dist
+release-docker: dist bumpbuild
 	: "docker push image sto dockerhub"
 	scripts/livetest.sh --local --build --tag ${VERSION}
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
@@ -68,7 +68,7 @@ release-docker: dist
 	sleep 5
 	scripts/livetest.sh
 
-candidate-docker: sanity dist
+candidate-docker: sanity dist bumpbuild
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
 	docker push omegaml/omegaml:${VERSION}
 
@@ -77,10 +77,10 @@ thirdparty:
 	pip-licenses > THIRDPARTY
 	python -m pylicenses
 
-release-tensorflow: dist
+release-tensorflow: dist bumpbuild
 	scripts/distrelease.sh --distname omegaml-tensorflow --version ${VERSION}-gpu-jupyter --push
 
-release-pytorch: dist
+release-pytorch: dist bumpbuild
 	scripts/distrelease.sh --distname omegaml-pytorch --version ${VERSION}-gpu-jupyter --push
 
 old:
