@@ -27,7 +27,7 @@ sanity:
 	# quick sanity check -- avoid easy mistakes
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
-dist:
+dist: bumpbuild
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
