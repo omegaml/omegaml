@@ -96,7 +96,7 @@ def omega_settings(self, *args, **kwargs):
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_ping(task, *args, logging=False, **kwargs):
+def omega_ping(task, *args, exception=False, **kwargs):
     import socket
     hostname = task.request.hostname or socket.gethostname()
     # resolve standard kwargs
@@ -112,6 +112,8 @@ def omega_ping(task, *args, logging=False, **kwargs):
         'kwargs': kwargs,
         'worker': hostname,
     }
+    if exception:
+        raise RuntimeError("intentional exception caused by exception=True kwarg")
     logname, level = task.logging
     if logname:
         import logging as logmod

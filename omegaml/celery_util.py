@@ -179,6 +179,14 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 logger = None
             try:
                 yield
+            except Exception as e:
+                # in case of DEBUG logging enabled, output exception
+                if logger and logger.isEnabledFor(logging.ERROR):
+                    import traceback
+                    tb = traceback.format_exc() if logger.isEnabledFor(logging.DEBUG) else ''
+                    msg = f'{e}\n{tb}'
+                    logger.error(msg)
+                raise
             finally:
                 if logger:
                     handler.flush()
