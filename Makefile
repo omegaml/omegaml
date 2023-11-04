@@ -57,16 +57,14 @@ release-prod: dist livetest
 	: "upload to pypi prod and dockerhub"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository pypi-omegaml dist/*gz dist/*whl
+	twine upload --skip-existing --repository pypi-omegaml dist/*gz dist/*whl
 
-release-docker: dist bumpbuild
+release-docker: dist
 	: "docker push image sto dockerhub"
 	scripts/livetest.sh --local --build --tag ${VERSION}
 	docker tag omegaml/omegaml:${VERSION} omegaml/latest
 	docker push omegaml/omegaml:${VERSION}
 	docker push omegaml/omegaml:latest
-	sleep 5
-	scripts/livetest.sh
 
 candidate-docker: dist bumpbuild
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
