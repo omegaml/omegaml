@@ -1,4 +1,4 @@
-FROM jupyter/datascience-notebook:python-3.9.7
+FROM jupyter/datascience-notebook:python-3.9
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
 USER root

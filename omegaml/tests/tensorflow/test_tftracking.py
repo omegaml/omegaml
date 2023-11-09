@@ -62,7 +62,7 @@ class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
             x_shape = x_train.shape
         x_shape = x_train.shape[1:]
         model.add(Dense(10, activation='softmax', input_shape=x_shape))
-        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
         model.compile(loss='categorical_crossentropy',
                       optimizer=sgd,
                       metrics=['accuracy'])

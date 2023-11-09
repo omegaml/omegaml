@@ -19,7 +19,7 @@ def uploadtutorial(ctx, nbname):
     om.jobs.put(nbcells, nbname)
     # now run the notebook
     userid = getattr(om.runtime.auth, 'userid', '')
-    br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='tree'))
+    br.visit(jburl(ctx.feature.jynb_url, userid, nbstyle='lab'))
     assert br.is_text_present(nbname, wait_time=30)
 
 

@@ -45,7 +45,7 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
         model.add(Dense(64, activation='relu'))
         model.add(Dropout(0.5))
         model.add(Dense(10, activation='softmax', name='output'))
-        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
         model.compile(loss='categorical_crossentropy',
                       optimizer=sgd,
                       metrics=['accuracy'])

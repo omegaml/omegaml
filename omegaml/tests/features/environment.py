@@ -25,8 +25,16 @@ def splinter_browser(context):
             'browserName': 'chrome',
             'screen_resolution': '1024x768',
         }
+        options = ChromeOptions()
+        options.add_argument('--no-sandbox')
+        # https://stackoverflow.com/a/75939337/890242
+        #options.add_argument('--headless=new')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
         context.browser = Browser('remote',
                                   command_executor=selenium_address,
+                                  options=options,
                                   desired_capabilities=caps)
     else:
         # start local browser
@@ -34,7 +42,8 @@ def splinter_browser(context):
             print("Running headless, debug at chrome://inspect/#devices")
             options = ChromeOptions()
             options.add_argument('--no-sandbox')
-            options.add_argument('--headless')
+            # https://stackoverflow.com/a/75939337/890242
+            options.add_argument('--headless=new')
             options.add_argument('--disable-gpu')
             options.add_argument('--remote-debugging-port=4444')
             options.add_argument('--remote-debugging-address=localhost')
