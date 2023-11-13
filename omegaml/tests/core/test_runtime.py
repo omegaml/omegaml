@@ -361,7 +361,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         df['y'] = y
         om.datasets.put(df, 'iris', append=False)
         from sklearn.cluster import KMeans
-        model = KMeans(n_clusters=8)
+        model = KMeans(n_clusters=8, n_init='auto')
         # fit & predict remote
         om.models.drop('iris-model', True)
         om.models.put(model, 'iris-model')

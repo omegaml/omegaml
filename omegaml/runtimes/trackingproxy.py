@@ -42,16 +42,21 @@ class OmegaTrackingProxy:
         return super().__getattribute__(item)
 
     def create_experiment(self, name, *args, provider=None, **kwargs):
+        from omegaml.backends.tracking.experiment import ExperimentBackend
         om = self.runtime.omega
         provider = provider or 'default'
         trackercls = load_class(om.defaults.OMEGA_TRACKING_PROVIDERS.get(provider))
         tracker = trackercls(name, *args, store=om.datasets, model_store=om.models, **kwargs)
-        meta = om.models.put(tracker, name, noversion=True)
+        # kind= forces use of ExperimentBackend for the case where
+        #       the experiment name is the same as an existing object that is not an experiment
+        meta = om.models.put(tracker, name,
+                             kind=ExperimentBackend.KIND,
+                             noversion=True)
         return tracker.experiment(name)
 
     @property
     def experiment(self):
-        from omegaml.backends.experiment import ExperimentBackend
+        from omegaml.backends.tracking.experiment import ExperimentBackend
 
         if self._tracker is None:
             om = self.runtime.omega
@@ -80,5 +85,8 @@ class OmegaTrackingProxy:
         self._with_experiment = None
         # remove task argument
         self.runtime.require(task=dict(__experiment=None), always=True)
+
+    def __repr__(self):
+        return f'OmegaTrackingProxy({self.experiment})'
 
 

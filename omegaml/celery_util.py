@@ -99,9 +99,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         exp = self.tracking.experiment
         meta = delegate_provider.metadata(name)
         exp.log_artifact(meta, 'related')
-        tracking = meta.attributes.setdefault('tracking', {})
-        tracking['experiments'] = set(tracking.get('experiments', []) + [exp._experiment])
-        meta.save()
+        meta = delegate_provider.link_experiment(name, exp._experiment)
         return meta
 
     @property
@@ -168,6 +166,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             if logname:
                 self.om.logger.setLevel(level)
                 logger = logging.getLogger(name=logname if logname != 'root' else None)
+                prev_level = logger.level
                 logger.setLevel(level)
                 save_stdout, save_stderr = sys.stdout, sys.stderr
                 self.app.log.redirect_stdouts_to_logger(logger, loglevel=level)
@@ -192,6 +191,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     handler.flush()
                     handler.close()
                     logger.removeHandler(handler)
+                    logger.setLevel(prev_level)
                     # reset stdout redirects
                     sys.stdout, sys.stderr = save_stdout, save_stderr
 
@@ -226,7 +226,6 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         self.auth_env.prepare_env(None, clear=True)
         # note we do not reset self.request._auth to preserve the user context for logging purpose
 
-
     def send_event(self, type, **fields):
         # ensure result masking in events
         if 'result' in fields:
@@ -240,7 +239,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     'exception': repr(exc),
                     'task_id': task_id,
                 })
-                exp.log_extra(taskid=None, remove=True)
+                exp.log_extra(taskid=None, userid=None, remove=True)
                 exp.flush()
         finally:
             super().on_failure(exc, task_id, args, kwargs, einfo)
@@ -253,7 +252,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                     'exception': repr(exc),
                     'task_id': task_id,
                 })
-                exp.log_extra(taskid=None, remove=True)
+                exp.log_extra(taskid=None, userid=None, remove=True)
                 exp.flush()
         finally:
             super().on_retry(exc, task_id, args, kwargs)
@@ -267,7 +266,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 'result': sanitized(retval),
                 'task_id': task_id,
             })
-            exp.log_extra(taskid=None, remove=True)
+            exp.log_extra(taskid=None, userid=None, remove=True)
             exp.flush()
         finally:
             super().on_success(retval, task_id, args, kwargs)

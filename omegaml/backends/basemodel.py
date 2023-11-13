@@ -109,7 +109,6 @@ class BaseModelBackend(BackendBaseCommon):
             joblib.dump(model, outf)
         return tmpfn
 
-
     def _extract_model(self, infile, key, tmpfn, **kwargs):
         """
         implement this method to deserialize a model from the given infile
@@ -158,7 +157,7 @@ class BaseModelBackend(BackendBaseCommon):
             gridfile=gridfile).save()
 
     def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict using data stored in Xname
 
@@ -171,20 +170,39 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the predicted outcome
         """
         model = self.model_store.get(modelname)
-        data = self.data_store.get(Xname)
+        data = self._resolve_input_data('predict', Xname, **kwargs)
         if not hasattr(model, 'predict'):
             raise NotImplementedError
         result = model.predict(reshaped(data))
+        return self._prepare_result('predict', result, rName=rName,
+                                    pure_python=pure_python, **kwargs)
+
+    def _resolve_input_data(self, method, Xname, **kwargs):
+        data = self.data_store.get(Xname)
+        meta = self.data_store.metadata(Xname)
+        if self.tracking:
+            self.tracking.log_event(method, 'X', {
+                'Xname': Xname,
+                'data': data,
+                'kind': meta.kind,
+            })
+        return data
+
+    def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
         if pure_python:
             result = result.tolist()
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta
+        if self.tracking:
+            self.tracking.log_event(method, 'Y', {
+                'result': result if rName is None else rName,
+                'kind': str(type(result)) if rName is None else meta.kind,
+            })
         return result
 
-
     def predict_proba(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict the probability using data stored in Xname
 
@@ -213,7 +231,7 @@ class BaseModelBackend(BackendBaseCommon):
         raise NotImplementedError
 
     def partial_fit(
-          self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+            self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         """
         partially fit the model with data (online)
 
@@ -229,8 +247,8 @@ class BaseModelBackend(BackendBaseCommon):
         raise NotImplementedError
 
     def fit_transform(
-          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
+            **kwargs):
         """
         fit and transform using data
 
@@ -258,8 +276,8 @@ class BaseModelBackend(BackendBaseCommon):
         raise NotImplementedError
 
     def score(
-          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
+            **kwargs):
         """
         score using data
 
@@ -273,5 +291,3 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the score result
         """
         raise NotImplementedError
-
-

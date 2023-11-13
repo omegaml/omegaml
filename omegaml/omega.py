@@ -104,8 +104,14 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         """
         return self._get_bucket(bucket)
 
+    @property
+    def buckets(self):
+        from itertools import chain
+        return list(set(chain(*[getattr(store, 'buckets', []) for store in self._stores])))
+
     def _get_bucket(self, bucket):
         # enable patching in testing
+        bucket = None if bucket == 'default' else bucket
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)

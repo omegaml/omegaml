@@ -89,7 +89,7 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
 OMEGA_RESTAPI_FILTER = os.environ.get('OMEGA_RESTAPI_FILTER', '.*/.*/.*')
 #: storage backends
 OMEGA_STORE_BACKENDS = {
-    'experiment.tracker': 'omegaml.backends.experiment.ExperimentBackend',
+    'experiment.tracker': 'omegaml.backends.tracking.ExperimentBackend',
     'sklearn.joblib': 'omegaml.backends.scikitlearn.ScikitLearnBackend',
     'ndarray.bin': 'omegaml.backends.npndarray.NumpyNDArrayBackend',
     'virtualobj.dill': 'omegaml.backends.virtualobj.VirtualObjectBackend',
@@ -146,6 +146,8 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
     'omegaml.mixins.store.requests.RequestCache',
     'omegaml.mixins.store.passthrough.PassthroughMixin',
+    'omegaml.mixins.store.tracking.TrackableMetadataMixin',
+    'omegaml.mixins.store.tracking.UntrackableMetadataMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -190,10 +192,10 @@ OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
 #: tracking providers
 OMEGA_TRACKING_PROVIDERS = {
-    'simple': 'omegaml.backends.experiment.OmegaSimpleTracker',
-    'default': 'omegaml.backends.experiment.OmegaSimpleTracker',
-    'profiling': 'omegaml.backends.experiment.OmegaProfilingTracker',
-    'notrack': 'omegaml.backends.experiment.NoTrackTracker',
+    'simple': 'omegaml.backends.tracking.OmegaSimpleTracker',
+    'default': 'omegaml.backends.tracking.OmegaSimpleTracker',
+    'profiling': 'omegaml.backends.tracking.OmegaProfilingTracker',
+    'notrack': 'omegaml.backends.tracking.NoTrackTracker',
 }
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {
@@ -408,7 +410,7 @@ def load_framework_support(vars=globals()):
     if module_available('sqlalchemy'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_SQL'])
     #: dash backend
-    if 'dash' in OMEGA_FRAMEWORKS and module_available('dashserve'):
+    if 'dash' in vars['OMEGA_FRAMEWORKS'] and module_available('dashserve'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_DASH'])
     #: r environment
     if shutil.which('R') is not None:

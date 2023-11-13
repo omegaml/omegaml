@@ -8,8 +8,11 @@ from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 
 from omegaml import Omega
-from omegaml.backends.experiment import ExperimentBackend, OmegaSimpleTracker, OmegaProfilingTracker
+from omegaml.backends.tracking.simple import OmegaSimpleTracker
+from omegaml.backends.tracking.profiling import OmegaProfilingTracker
+from omegaml.backends.tracking.experiment import ExperimentBackend
 from omegaml.documents import Metadata
+from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -104,13 +107,16 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(len(data[data.event == 'stop']), 2)
         self.assertEqual(len(data[data.event == 'artifact']), 4)
         artifacts = data[data.event == 'artifact']['value'].to_list()
-        obj = exp.restore_artifact(key='mymodel')
-        self.assertIsInstance(obj, LogisticRegression)
-        obj = exp.restore_artifact(key='mymodel_meta')
-        self.assertIsInstance(obj, Metadata)
+        with self.assertWarns(DeprecationWarning):
+            obj = exp.restore_artifact(key='mymodel')
+            self.assertIsInstance(obj, LogisticRegression)
+        obj = exp.restore_artifacts(key='mymodel')
+        self.assertIsInstance(obj[0], LogisticRegression)
+        obj = exp.restore_artifacts(key='mymodel_meta')
+        self.assertIsInstance(obj[0], Metadata)
         # related is stored by runtime automatically as the delegate's metadata
-        obj = exp.restore_artifact(key='related')
-        self.assertIsInstance(obj, Metadata)
+        obj = exp.restore_artifacts(key='related')
+        self.assertIsInstance(obj[0], Metadata)
         # check that the current metadata lists the experiment for tracability
         meta = om.models.metadata('mymodel')
         self.assertIn('myexp', meta.attributes['tracking']['experiments'])
@@ -182,7 +188,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.runtime.experiment('expfoo')
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 11)
+        self.assertEqual(len(data), 13)
 
     def test_tracking_runtime_taskid(self):
         # create a model
@@ -210,7 +216,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         tracker = om.runtime.experiment('expfoo')
         data = exp.data()
         self.assertIsNotNone(data)
-        self.assertEqual(len(data), 3 * 6 -1 ) # 3 runs, last one has no metric
+        self.assertEqual(len(data), 3 * 6 + 1)  # 3 runs, last one has X, Y entries
 
     def test_empty_experiment_data(self):
         om = self.om
@@ -240,11 +246,12 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         with om.runtime.experiment('myexp') as exp:
             exp.log_artifact(dict(test='data'), 'foo')
         # by name
-        data = exp.restore_artifact('foo')
-        self.assertIsInstance(data, dict)
+        data = exp.restore_artifacts('foo')
+        self.assertIsInstance(data[0], dict)
         # by value
         data = exp.data(key='foo')
-        data = exp.restore_artifact(value=data.iloc[0].value)
+        data = exp.restore_artifacts(value=data.iloc[0].value)
+        self.assertIsInstance(data[0], dict)
 
     def test_notrack(self):
         # create a model
@@ -329,6 +336,65 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         om.runtime.ping()
         self.assertEqual(len(exp.data(event='metric')), 0)
         self.assertEqual(len(exp.data()), 2)  # includes start, stop
+
+    def test_runtime_experiments_links(self):
+        # test experiments are stopped afterwards
+        om = self.om
+        # create a model and get its default experiment
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        om.models.put(lr, 'foo')
+        # get default experiment, expect it to be tracking the model
+        exp = om.runtime.model('foo').experiment()
+        self.assertIsInstance(exp, OmegaTrackingProxy)
+        meta = om.models.metadata('foo')
+        self.assertIn('tracking', meta.attributes)
+        self.assertEqual(meta.attributes['tracking']['default'], 'foo')
+        # get the experiment again, this time it is not created again
+        exp = om.runtime.model('foo').experiment()
+        self.assertIsInstance(exp, OmegaTrackingProxy)
+        self.assertEqual(exp.experiment._experiment, 'foo')
+        # get the experiment by default runtime label
+        rtmdl = om.runtime.model('foo')
+        exp = rtmdl.experiment(label='default')
+        self.assertIsInstance(exp, OmegaTrackingProxy)
+        # get the experiment by arbitrary runtime label
+        rtmdl = om.runtime.model('foo')
+        exp = rtmdl.experiment(label='someotherlabel')
+        meta = om.models.metadata('foo')
+        self.assertIn('tracking', meta.attributes)
+        self.assertEqual(meta.attributes['tracking']['someotherlabel'], 'foo')
+        # get all experiments for the model, by default runtime label
+        rtmdl = om.runtime.model('foo')
+        exps = rtmdl.experiments()
+        self.assertIsInstance(exps[0], OmegaTrackingProxy)
+        # get metadata of experiments, instead of tracking proxies
+        exps = rtmdl.experiments(raw=True)
+        self.assertIsInstance(exps[0], om.models._Metadata)
+
+    def test_summary(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', .98)
+                exp.log_metric('mse', .02)
+        summary = exp.summary()
+        self.assertEqual(len(summary.loc['metric']), 3)
+        self.assertEqual(set(summary.loc['metric'].index), {'accuracy', 'mse', 'latency'})
+        summary = exp.summary(perf_stats=True)
+        self.assertEqual(len(summary.loc['metric']), 5)
+        self.assertEqual(set(summary.loc['metric'].index),
+                         {'accuracy', 'mse', 'latency', 'utilization', 'group_latency'})
+
+    def test_latency(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', .98)
+        latency = exp.stats.latency(run='all', percentiles=False)
+        self.assertEqual(len(latency), 10)
+        latency_perc = exp.stats.latency(run='all', percentiles=True)
+        self.assertEqual(len(latency_perc), 1)
+        self.assertIn('50%', latency_perc.columns)
 
 
 if __name__ == '__main__':

@@ -1059,6 +1059,11 @@ class OmegaStore(object):
         for f in self.list(include_temp=True):
             yield f
 
+    @property
+    def buckets(self):
+        return ['default' if b == self.defaults.OMEGA_MONGO_COLLECTION else b
+                for b in self._Metadata.objects.distinct('bucket')]
+
     def list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
              include_temp=False, bucket=None, prefix=None, filter=None):
         """

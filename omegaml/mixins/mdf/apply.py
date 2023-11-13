@@ -234,7 +234,7 @@ class ApplyMixin(object):
             df = self._restore_dataframe_proper(df)
         # TODO write a unit test for this condition
         if self.index_columns and all(col in df.columns for col in self.index_columns):
-            df.set_index(self.index_columns, inplace=True)
+            df.set_index(list(self.index_columns), inplace=True)
         return df
 
 
