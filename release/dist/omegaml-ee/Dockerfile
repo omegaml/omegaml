@@ -18,7 +18,7 @@ RUN apt-get update -y && \
 # adopted from landingpage/getsqlserver.sh
 ENV ACCEPT_EULA=Y
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/ubuntu/20.10/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
+RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     apt-get install -y msodbcsql18 msodbcsql17 unixodbc-dev && \
     apt-get clean

@@ -43,16 +43,11 @@ source $script_dir/omutils || exit
 
 # set script arguments
 devimage=omegaml/omegaml-dev
-chromedriverbin=`which chromedriver`
 distdir=./dist/omegaml-dev
-host_user=omegadev
-host_uid=$(id -u)
-host_guid=$(id -g)
-container_uid=$host_uid:$host_guid
 cmd=${cmd:-"scripts/rundev.sh"}
 
 # run process
-export CURRENT_USER=${CURRENT_USER:-omegadev}
+export CURRENT_USER=${CURRENT_USER:-jovyan}
 export JYHUB_DEGUG=1
 # task routing means the default queue is $account-default
 # by enabling task routing we can have a central worker serve multiple accounts
@@ -73,7 +68,6 @@ if [[ ! -z $build ]]; then
        cp -r ./scripts $distdir
        pushd $distdir
        # https://stackoverflow.com/a/50362562/890242
-       build_args="--build-arg UNAME=$host_user --build-arg UID=$host_uid --build-arg GID=$host_guid"
        docker build $build_args  --no-cache -t $devimage -f Dockerfile.dev .
        popd
        echo "Run application using scripts/rundev.sh --docker"

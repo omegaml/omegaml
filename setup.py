@@ -17,8 +17,8 @@ dev_deps = [
 ]
 
 jupyter_deps = [
-    'jupyterhub-kubespawner==2.0.1', # required or only dev
-    'jupyterhub==4.0.0',  # required or only dev?
+    'jupyterhub-kubespawner', # required or only dev
+    'jupyterhub',  # required or only dev?
     'jupyter-client>=7.0.6',
     'jupyterhub-simplespawner==0.1',
     'jupyterlab',
@@ -54,15 +54,16 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'Django~=3.2',
+        'Django<3.4',
         'honcho>=1.0.1',
         'pyrabbit2==1.0.7',
         'cachetools',
         'dj_database_url',
         'gunicorn>=19.7.1',
         'omegaml>=0.13.4',
-        'python-json-logger>=2.0.4'
+        'python-json-logger>=2.0.4',
         'django-constance<3', # due to https://django-constance.readthedocs.io/en/latest/changes.html#v3-0-0-2023-07-27
+        'django-jazzmin',
     ],
     dependency_links=[
     ],
