@@ -13,12 +13,12 @@ class VirtualObjectMixin(object):
     """
 
     def __init__(self):
-        self.__meta = None
+        self._vobj_meta = None
 
     def _isvirtual(self, name):
-        self.__meta = self.metadata(name)
-        return (self.__meta is not None and
-                self.__meta.kind == VirtualObjectBackend.KIND)
+        self._vobj_meta = self.metadata(name)
+        return (self._vobj_meta is not None and
+                self._vobj_meta.kind == VirtualObjectBackend.KIND)
 
     def _getvirtualobjfn(self, name):
         virtualobjfn = super(VirtualObjectMixin, self).get(name)
@@ -50,7 +50,7 @@ class VirtualObjectMixin(object):
         name, kwargs = self._resolve_realname(name, kwargs)
         if not raw and self._isvirtual(name):
             handler = self._getvirtualobjfn(name)
-            result = handler(method='get', meta=self.__meta, store=self, **kwargs)
+            result = handler(method='get', meta=self._vobj_meta, store=self, **kwargs)
         else:
             result = super(VirtualObjectMixin, self).get(name, **kwargs)
         return result
@@ -64,7 +64,7 @@ class VirtualObjectMixin(object):
         raw = raw if raw is not None else should_version
         if not should_version and not raw and not replace and self._isvirtual(name):
             result = self._getvirtualobjfn(name)(data=obj, method='put',
-                                                 meta=self.__meta, store=self, **kwargs)
+                                                 meta=self._vobj_meta, store=self, **kwargs)
         else:
             result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, **kwargs)
         return result
@@ -75,12 +75,12 @@ class VirtualObjectMixin(object):
         if not should_version and self._isvirtual(name):
             try:
                 handler = self._getvirtualobjfn(name)
-                result = handler(method='drop', meta=self.__meta, store=self, force=force)
-            except:
+                result = handler(method='drop', meta=self._vobj_meta, store=self, force=force)
+            except Exception as e:
                 if not force:
                     raise
             else:
-                if result is False:
-                    return False
+                if not force:
+                    return bool(result)
         return super(VirtualObjectMixin, self).drop(name, force=force, **kwargs)
 

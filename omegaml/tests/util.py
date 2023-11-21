@@ -74,4 +74,4 @@ def tf_perhaps_eager_execution(*args, **kwargs):
 
 def clear_om(om):
     for omstore in (om.datasets, om.jobs, om.models):
-        [omstore.drop(name) for name in omstore.list()]
+        [omstore.drop(name, force=True) for name in omstore.list()]
