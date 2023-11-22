@@ -9,20 +9,19 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 # extras
 tables = ['tables>=3.7']
 graph_deps = ['matplotlib~=3.5', 'seaborn~=0.11', 'imageio~=2.6', 'plotext~=1.0']
-dashserve_deps = ['dashserve', 'dash<2.9'] # dash 2.9 breaks dashserve due to required pages folder
 sql_deps = ['sqlalchemy', 'ipython-sql']
 snowflake_deps = ['snowflake-sqlalchemy>1.2.3']
 iotools_deps = ['boto>=2.49.0']
 streaming_deps = ['minibatch[all]>=0.5.0']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow~=1.21']
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium3]', 'ipdb', 'bumpversion']
+dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium4]', 'ipdb', 'bumpversion']
 tf_deps = ['tensorflow']
 
 # all deps
-all_deps = (tables + graph_deps + dashserve_deps + sql_deps + iotools_deps
-            + streaming_deps + jupyter_deps + snowflake_deps)
-client_deps = (tables + dashserve_deps + sql_deps + iotools_deps + streaming_deps)
+all_deps = (tables + graph_deps + sql_deps + iotools_deps
+            + streaming_deps + jupyter_deps + snowflake_deps + mlflow_deps + tf_deps)
+client_deps = (tables + sql_deps + iotools_deps + streaming_deps)
 
 setup(
     name='omegaml',
@@ -66,10 +65,11 @@ setup(
         'scikit-learn>=0.21',
         'PyYAML>=3.12',
         'flask-restx>=1.1.0',
+        'Flask<3.0', # due to https://github.com/python-restx/flask-restx/issues/566
         'croniter>=0.3.30',
         'nbformat>=4.0.1',
         'nbconvert>=6.4.0',
-        'dill>=0.3.2,<0.3.6',  # due to dill, https://github.com/uqfoundation/dill/issues/332
+        'dill>0.3.6',
         'callable-pip>=1.0.0',
         'appdirs>=1.4.3',
         'cron-descriptor>=1.2.31',
@@ -90,7 +90,6 @@ setup(
         'tables': tables,
         'tensorflow': tf_deps,
         'jupyter': jupyter_deps,
-        'dashserve': dashserve_deps,
         'sql': sql_deps,
         'snowflake': snowflake_deps,
         'mlflow': mlflow_deps,

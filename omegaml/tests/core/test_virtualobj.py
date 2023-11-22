@@ -61,6 +61,7 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         om = self.om
         meta = om.datasets.put(myvirtualfn, 'virtualobj')
         self.assertEqual(meta.kind, VirtualObjectBackend.KIND)
+        self.assertTrue(om.datasets.drop('virtualobj'))
 
     def test_virtualhandler(self):
         om = self.om

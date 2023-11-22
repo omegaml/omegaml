@@ -108,9 +108,6 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
 OMEGA_STORE_BACKENDS_KERAS = {
     'keras.h5': 'omegaml.backends.keras.KerasBackend',
 }
-OMEGA_STORE_BACKENDS_DASH = {
-    'python.dash': 'omegaml.backends.dashapp.DashAppBackend',
-}
 OMEGA_STORE_BACKENDS_SQL = {
     'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
 }
@@ -127,7 +124,7 @@ OMEGA_STORE_BACKENDS_R = {
 #: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
-    OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras', 'dash')
+    OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras')
 #: disable framework preloading, e.g. for web, jupyter
 OMEGA_DISABLE_FRAMEWORKS = truefalse(os.environ.get('OMEGA_DISABLE_FRAMEWORKS'))
 #: storage mixins
@@ -409,9 +406,6 @@ def load_framework_support(vars=globals()):
     #: sqlalchemy backend
     if module_available('sqlalchemy'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_SQL'])
-    #: dash backend
-    if 'dash' in vars['OMEGA_FRAMEWORKS'] and module_available('dashserve'):
-        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_DASH'])
     #: r environment
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
