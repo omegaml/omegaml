@@ -177,9 +177,14 @@ class SpecFromResourceHelperBase:
             'data': fields.Raw(),
         }, name="EmptyY")
         OutputSchema = datatypes.get('Y') or datatypes.get('result') or DefaultOutputSchema
-        self.render_operations(InputSchema, {200: OutputSchema})
+        ResponseSchemas = {200: OutputSchema}
+        ErrorSchemas = datatypes.get('errors') or {}
+        ResponseSchemas.update(ErrorSchemas)
+        self.render_operations(InputSchema, ResponseSchemas)
         self.add_schema_from_datatype(schema_name(InputSchema), InputSchema)
         self.add_schema_from_datatype(schema_name(OutputSchema), OutputSchema)
+        for status, error_schema in ErrorSchemas.items():
+            self.add_schema_from_datatype(schema_name(error_schema), error_schema)
 
     def render_operations(self, input_schema, responses):  # add operations
         # renders paths according to self.path_template and signature.actions
@@ -208,12 +213,28 @@ class SpecFromResourceHelperBase:
         store = self.store
         name = self.name.replace('/', '_')
         if signature:
+            # X, Y, result - single response types (always map to http status 200)
             datatypes = {
                 k: store._datatype_from_schema(spec['schema'], name=f'{name}_{k}',
                                                orient=orient,
                                                many=spec.get('many', False))
-                for k, spec in signature.items() if k in ('X', 'Y', 'result') and spec
+                for k, spec in signature.items()
+                if (k in ('X', 'Y', 'result')
+                    and (spec or {}).get('schema')) # skip empty schemas
             }
+            # errors - multiple response types, each mapped to one http status
+            errors = {
+                int(status): store._datatype_from_schema(spec['schema'], name=f'{name}_{status}',
+                                               orient=orient,
+                                               many=spec.get('many', False))
+                for status, spec in signature.get('errors').items()
+            }
+            # include a standard error message
+            if 400 not in errors:
+                errors[400] = Schema.from_dict({
+                    'message': fields.String(),
+                }, name=f'{name}_400')
+            datatypes.update(errors=errors)
         else:
             datatypes = None
         if not datatypes:

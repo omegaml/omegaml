@@ -1,6 +1,6 @@
 import flask
 from flask_restx import Model, fields
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, HTTPException
 
 import omegaml as om
 from omegaml.util import MongoEncoder
@@ -83,8 +83,25 @@ class OmegaResourceMixin(object):
             result = meth(resource_pk, query, payload)
             resp = self.create_maybe_async_response(result, async_body=async_body, **kwargs)
         except Exception as e:
-            raise BadRequest(repr(e))
+            raise self._build_http_exception(e)
         return resp
+
+    def _build_http_exception(self, e):
+        # build a valid HTTPException from an exception
+        # works as follows:
+        # - if the exception is an HTTPException, return that
+        # - if the exception has a tuple of arguments as (str, int),
+        #   assume it is Exception(message, code) => HTTPException(args[0]).code = args[1]
+        if isinstance(e, HTTPException):
+            return e
+        has_status_code = len(e.args) > 1 and isinstance(e.args[1], int)
+        if has_status_code:
+            message, status_code = e.args
+        else:
+            message, status_code = repr(e), BadRequest.code
+        exc = HTTPException(message)
+        exc.code = status_code
+        return exc
 
     def _get_resource_method(self, resource_name, method_name):
         resource = getattr(self, resource_name)

@@ -104,7 +104,7 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         om = self.om
         model = LinearRegression()
         om.models.put(model, 'mymodel')
-        om.models.link_datatype('mymodel', X=UserSchema)
+        om.models.link_datatype('mymodel', X=UserSchema())
         meta = om.models.metadata('mymodel')
         om.models.validate('mymodel', X={'name': 'foo'})
         with self.assertRaises(ValidationError):
@@ -145,7 +145,6 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('/api/v1/model/mymodel/predict', specs['paths'])
         self.assertIn('/api/v1/model/mymodel/fit', specs['paths'])
         self.assertIn('/api/v1/dataset/testX', specs['paths'])
-        print(specs)
 
     def test_swagger_generator_as_service(self):
         om = self.om
@@ -168,8 +167,10 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         om = self.om
         model = LinearRegression()
         om.models.put(model, 'mymodel')
+
         class Output(Schema):
             pass
+
         om.models.link_datatype('mymodel', X=None, Y=Output)
         # as model
         specs = om.runtime.swagger(format='dict', as_service=False)
@@ -182,35 +183,23 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('EmptyX', specs['definitions'])
 
-
     def test_swagger_link_specs(self):
         # sample spec
-        specs = {
-            'info': {
-                'title': 'omega-ml service', 'version': '1.0.0'},
-            'swagger': '2.0',
-            'paths': {
-                '/api/service/mymodel': {
-                    'post': {'summary': 'summary', 'description': 'no description',
-                             'operationId': 'mymodel#predict#post',
-                             'consumes': ['application/json'], 'produces': ['application/json'],
-                             'parameters': [
-                                 {'in': 'body', 'name': 'body', 'description': 'no description',
-                                  'schema': {'$ref': '#/definitions/mymodel_X'}}],
-                             'responses': {
-                                 '200': {'description': 'no description',
-                                         'schema': {'$ref': '#/definitions/GeneratedSchema'}}}}},
-            },
-            'definitions': {
-                'mymodel_X': {
-                    'type': 'object', 'properties': {'x': {'type': 'integer'}}},
-                'GeneratedSchema': {'type': 'object', 'properties': {'data': {}}},
-                'testX': {
-                    'type': 'object', 'properties': {'x': {'type': 'integer'}}},
-                'DatasetInput_testX': {
-                    'type': 'object', 'properties': {
-                        'data': {'type': 'array', 'items': {'$ref': '#/definitions/testX'}}, 'dtypes': {},
-                        'append': {'type': 'boolean'}}}}}
+        specs = {'paths': {'/api/service/mymodel': {
+            'post': {'summary': 'summary', 'description': 'no description', 'operationId': 'mymodel#predict#post',
+                     'consumes': ['application/json'], 'produces': ['application/json'], 'parameters': [
+                    {'in': 'body', 'name': 'body', 'description': 'no description',
+                     'schema': {'$ref': '#/definitions/EmptyX'}}],
+                     'responses': {'200': {'description': 'no description', 'schema': {'$ref': '#/definitions/EmptyY'}},
+                                   '404': {'description': 'no description',
+                                           'schema': {'$ref': '#/definitions/mymodel_404'}},
+                                   '400': {'description': 'no description',
+                                           'schema': {'$ref': '#/definitions/mymodel_400'}}}}}},
+            'info': {'title': 'omega-ml service', 'version': '1.0.0'}, 'swagger': '2.0',
+            'definitions': {'EmptyX': {'type': 'object', 'properties': {}},
+                            'EmptyY': {'type': 'object', 'properties': {'data': {}}},
+                            'mymodel_404': {'type': 'object', 'properties': {'message': {'type': 'string'}}},
+                            'mymodel_400': {'type': 'object', 'properties': {'message': {'type': 'string'}}}}}
         om = self.om
         # create a model
         model = LinearRegression()
@@ -235,7 +224,11 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
                      'responses': {'200': {'description': 'no description',
                                            'schema': {'type': 'array',
                                                       'items': {
-                                                          '$ref': '#/definitions/mymodel_Y'}}}}}}},
+                                                          '$ref': '#/definitions/mymodel_Y'}}},
+                                   '404': {'description': 'no description',
+                                           'schema': {'type': 'array', 'items': {'$ref': '#/definitions/mymodel_404'}}},
+                                   '400': {'description': 'no description',
+                                           'schema': {'$ref': '#/definitions/mymodel_400'}}}}}},
             'info': {'title': 'omega-ml service', 'version': '1.0.0'}, 'swagger': '2.0', 'definitions': {
                 'mymodel_X': {'type': 'object',
                               'properties': {'registered': {'type': 'boolean'}, 'number': {'type': 'number'},
@@ -251,8 +244,10 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
                     'created_at': {'type': 'string', 'format': 'date-time'},
                     'name': {'type': 'string'},
                     'birthday': {'type': 'string', 'format': 'date'},
-                    'email': {'type': 'string'}}}}}
-
+                    'email': {'type': 'string'}}},
+                'mymodel_404': {'type': 'object', 'properties': {'message': {'type': 'string'}}},
+                'mymodel_400': {'type': 'object', 'properties': {'message': {'type': 'string'}}}
+            }}
         om = self.om
         # create a model
         model = LinearRegression()
@@ -266,7 +261,6 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('paths', specs)
         self.assertIn('/api/service/mymodel', specs['paths'])
         self.assertIn('/api/service/mymodel', specs['paths'])
-        print(specs)
 
     def test_meta_to_schema(self):
         om = self.om
@@ -294,6 +288,89 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(sfields['v_float64'], fields.Float)
         self.assertIsInstance(sfields['v_obj'], fields.String)
         self.assertIsInstance(sfields['v_string'], fields.String)
+
+    def test_link_exception_single(self):
+        om = self.om
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+
+        # error with a default ExceptionSchema
+        om.models.link_datatype('mymodel', errors={Exception: 404})
+        meta = om.models.metadata('mymodel')
+        self.assertTrue(om.models.validate('mymodel',
+                                           error=Exception("failure", 404)))
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', error=Exception(dict(xmessage='failure'), 404))
+        # -- also test we can pass exception as the result (i.e. not raised)
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', result=Exception(dict(xmessage='failure'), 404))
+        self.assertTrue(om.models.validate('mymodel',
+                                           result=Exception("failure", 404)))
+        # check swagger spec includes errors
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('404', specs['paths']['/api/service/mymodel']['post']['responses'])
+        self.assertIn('mymodel_404', specs['definitions'])
+        self.assertIn('message', specs['definitions']['mymodel_404']['properties'])
+
+    def test_link_errors_single(self):
+        om = self.om
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+
+        class ErrorSchema(Schema):
+            message = fields.String(required=True)
+
+        # error with a schema
+        om.models.link_datatype('mymodel', errors={ErrorSchema: 404})
+        meta = om.models.metadata('mymodel')
+        self.assertTrue(om.models.validate('mymodel',
+                                           error=Exception({'message': 'failure'}, 404)))
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', error=Exception({'xmessage': 'failure'}, 404))
+        # -- also test we can pass exception as the result (i.e. not raised)
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel', result=Exception({'xmessage': 'failure'}, 404))
+        # check swagger spec includes errors
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('404', specs['paths']['/api/service/mymodel']['post']['responses'])
+        self.assertIn('mymodel_404', specs['definitions'])
+        self.assertIn('message', specs['definitions']['mymodel_404']['properties'])
+
+    def test_link_errors_multiple(self):
+        om = self.om
+        model = LinearRegression()
+        om.models.put(model, 'mymodel')
+
+        class ErrorSchema(Schema):
+            message = fields.String(required=True)
+
+        # list of errors with a schema
+        errors = [
+            ([ErrorSchema], 404)
+        ]
+        om.models.link_datatype('mymodel', errors=errors)
+        meta = om.models.metadata('mymodel')
+        self.assertTrue(om.models.validate('mymodel',
+                                           error=Exception([{'message': 'failure'}], 404)))
+        # -- not a list
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel',
+                               error=Exception({'xmessage': 'failure'}, 404))
+        # -- wrong fields
+        with self.assertRaises(ValidationError):
+            om.models.validate('mymodel',
+                               error=Exception([{'xmessage': 'failure'}], 404))
+        # check swagger spec includes errors
+        specs = om.runtime.swagger(format='dict', as_service=True)
+        self.assertIn('paths', specs)
+        self.assertIn('/api/service/mymodel', specs['paths'])
+        self.assertIn('404', specs['paths']['/api/service/mymodel']['post']['responses'])
+        self.assertIn('mymodel_404', specs['definitions'])
+        self.assertIn('message', specs['definitions']['mymodel_404']['properties'])
 
 
 @virtualobj

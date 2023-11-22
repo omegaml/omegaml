@@ -73,12 +73,19 @@ class VirtualObjectBackend(BaseDataBackend):
         context, respectively - virtual objects can be injected by anyone
         who are authorized to write data.
     """
+    # TODO split VirtualObjectBackend into VirtualModelBackend and VirtualDataBackend
+    #      to avoid confusion between the two (currently the same class is used for both)
     KIND = 'virtualobj.dill'
     PROMOTE = 'export'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         return callable(obj) and getattr(obj, '_omega_virtual', False)
+
+    @property
+    def _call_handler(self):
+        # the model store handles _pre and _post methods in self.perform()
+        return self.model_store
 
     def put(self, obj, name, attributes=None, **kwargs):
         # TODO add obj signing so that only trustworthy sources can put functions

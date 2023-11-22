@@ -16,6 +16,8 @@ def create_app(*args, **kwargs):
     app.url_map.strict_slashes = True
     # use Flask json encoder to support datetime
     app.config['RESTX_JSON'] = {'cls': JSONEncoder}
+    # disable 404 help as it interferes with our api.errorhandler
+    app.config['RESTX_ERROR_404_HELP'] = False
     app.register_blueprint(omega_bp)
 
     @app.route('/docs')
