@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
-import os
-
-import ssl
+from copy import deepcopy
 
 import logging
 from celery import Celery
@@ -112,7 +110,7 @@ class OmegaRuntime(object):
 
     @property
     def _common_kwargs(self):
-        common = dict(self._task_default_kwargs)
+        common = deepcopy(self._task_default_kwargs)
         common['task'].update(pure_python=self.pure_python, __bucket=self.bucket)
         common['task'].update(self._require_kwargs['task'])
         common['routing'].update(self._require_kwargs['routing'])
@@ -256,7 +254,7 @@ class OmegaRuntime(object):
         Returns:
             OmegaModelProxy
         """
-        from omegaml.runtimes.modelproxy import OmegaModelProxy
+        from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaModelProxy(modelname, runtime=self)
 
@@ -271,7 +269,7 @@ class OmegaRuntime(object):
         Returns:
             OmegaJobProxy
         """
-        from omegaml.runtimes.jobproxy import OmegaJobProxy
+        from omegaml.runtimes.proxies.jobproxy import OmegaJobProxy
 
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaJobProxy(jobname, runtime=self)
@@ -287,7 +285,7 @@ class OmegaRuntime(object):
         Returns:
             OmegaScriptProxy
         """
-        from omegaml.runtimes.scriptproxy import OmegaScriptProxy
+        from omegaml.runtimes.proxies.scriptproxy import OmegaScriptProxy
 
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
@@ -302,7 +300,7 @@ class OmegaRuntime(object):
         Returns:
             OmegaTrackingProxy
         """
-        from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
+        from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
         tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run)
         return tracker

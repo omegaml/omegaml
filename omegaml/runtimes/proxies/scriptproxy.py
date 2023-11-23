@@ -2,10 +2,12 @@ from __future__ import absolute_import
 
 import logging
 
+from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
+
 logger = logging.getLogger(__file__)
 
 
-class OmegaScriptProxy(object):
+class OmegaScriptProxy(RuntimeProxyBase):
     """
     proxy to a remote job in a celery worker
 
@@ -20,8 +22,8 @@ class OmegaScriptProxy(object):
     """
 
     def __init__(self, scriptname, runtime=None):
+        super().__init__(scriptname, runtime=runtime, store=runtime.omega.scripts)
         self.scriptname = scriptname
-        self.runtime = runtime
 
     def run(self, *args, as_callback=False, **kwargs):
         """

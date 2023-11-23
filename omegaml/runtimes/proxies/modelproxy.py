@@ -2,12 +2,12 @@ from __future__ import absolute_import
 
 import logging
 
-from omegaml.util import extend_instance
+from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
 
 logger = logging.getLogger(__name__)
 
 
-class OmegaModelProxy(object):
+class OmegaModelProxy(RuntimeProxyBase):
     """
     proxy to a remote model in a celery worker
 
@@ -47,36 +47,8 @@ class OmegaModelProxy(object):
     #     method call.
 
     def __init__(self, modelname, runtime=None):
+        super().__init__(modelname, runtime=runtime, store=runtime.omega.models)
         self.modelname = modelname
-        self.runtime = runtime
-        self.apply_mixins()
-        self.apply_require()
-
-    def __repr__(self):
-        return f'OmegaModelProxy({self.modelname})'
-
-    def apply_require(self):
-        self.meta = meta = self.runtime.omega.models.metadata(self.modelname)
-        assert meta is not None, "model {self.modelname} does not exist".format(**locals())
-        # get common require kwargs
-        require_kwargs = meta.attributes.get('require', {})
-        # enable default model tracking, unless explicitly tracked
-        should_track = 'default' in meta.attributes.get('tracking', {})
-        already_tracked = self.runtime._common_kwargs['task'].get('__experiment')
-        if not already_tracked and should_track:
-            require_kwargs.update({
-                'task': dict(__experiment=meta.attributes['tracking'].get('default'))
-            })
-        self.runtime.require(**require_kwargs) if require_kwargs else None
-
-    def apply_mixins(self):
-        """
-        apply mixins in defaults.OMEGA_RUNTIME_MIXINS
-        """
-        from omegaml import settings
-        defaults = settings()
-        for mixin in defaults.OMEGA_RUNTIME_MIXINS:
-            extend_instance(self, mixin)
 
     def task(self, name):
         """
@@ -121,7 +93,7 @@ class OmegaModelProxy(object):
         Returns:
             list of OmegaTrackingProxy instances or Metadata objects
         """
-        store = self.runtime.omega.models
+        store = self.store
         tracking = (store.metadata(self.modelname).attributes.get('tracking', {}))
         names = [tracking.get(label)] if label in tracking else None
         names = names or (tracking.get('experiments', []) if not (label or names) else [])

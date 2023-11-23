@@ -4,7 +4,7 @@ import datetime
 from importlib import import_module
 import os
 
-from omegaml.runtimes.jobproxy import OmegaJobProxy
+from omegaml.runtimes.proxies.jobproxy import OmegaJobProxy
 
 
 class DaskTask(object):
@@ -84,7 +84,7 @@ class OmegaRuntimeDask(object):
         """
         return a model for remote execution
         """
-        from omegaml.runtimes.modelproxy import OmegaModelProxy
+        from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
         return OmegaModelProxy(modelname, runtime=self)
 
     def job(self, jobname):

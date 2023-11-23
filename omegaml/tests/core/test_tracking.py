@@ -12,7 +12,7 @@ from omegaml.backends.tracking.simple import OmegaSimpleTracker
 from omegaml.backends.tracking.profiling import OmegaProfilingTracker
 from omegaml.backends.tracking.experiment import ExperimentBackend
 from omegaml.documents import Metadata
-from omegaml.runtimes.trackingproxy import OmegaTrackingProxy
+from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
 from omegaml.tests.util import OmegaTestMixin
 
 
