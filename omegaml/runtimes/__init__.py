@@ -1,7 +1,7 @@
 
 from .runtime import OmegaRuntime
-from .modelproxy import OmegaModelProxy
+from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
 from .daskruntime import OmegaRuntimeDask
-from .jobproxy import  OmegaJobProxy
+from omegaml.runtimes.proxies.jobproxy import  OmegaJobProxy
 from .loky import OmegaRuntimeBackend
 

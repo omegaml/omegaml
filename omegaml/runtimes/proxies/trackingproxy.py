@@ -1,10 +1,11 @@
 import os
 
 from omegaml import load_class
+from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
 from omegaml.util import SystemPosixPath
 
 
-class OmegaTrackingProxy:
+class OmegaTrackingProxy(RuntimeProxyBase):
     """ OmegaTrackingProxy provides the runtime context for experiment tracking
 
     Usage:
@@ -28,13 +29,19 @@ class OmegaTrackingProxy:
         * OmegaSimpleTracker
         * ExperimentBackend
     """
+
     def __init__(self, experiment=None, provider=None, runtime=None, implied_run=True):
-        self.runtime = runtime
         self.provider = provider
         self._experiment = experiment
         self._implied_run = implied_run
         self._with_experiment = None
         self._tracker = None
+        super().__init__(experiment, runtime=runtime)
+
+
+    def _apply_require(self):
+        # require is not applicable for experiments, as it is implied with the model/script/job
+        pass
 
     def __getattr__(self, item):
         if hasattr(self.experiment, item):
@@ -85,8 +92,3 @@ class OmegaTrackingProxy:
         self._with_experiment = None
         # remove task argument
         self.runtime.require(task=dict(__experiment=None), always=True)
-
-    def __repr__(self):
-        return f'OmegaTrackingProxy({self.experiment})'
-
-

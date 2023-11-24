@@ -686,3 +686,32 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         reg.fit(df[['x']], df['y'])
         om.models.put(reg, 'regmodel')
         result = om.runtime.model('regmodel').predict([[5], [6]]).get()
+
+    def test_require(self):
+        om = Omega()
+        # -- test ephemeral require (resets on next task)
+        om.runtime.require(label='foo')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertNotIn('label', task.kwargs['routing'])
+        # -- test permanent require (runtime keeps label for every task)
+        om.runtime.require(label='foo', always=True)
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+
+    def test_require_via_metadata(self):
+        om = Omega()
+        reg = LinearRegression()
+        om.models.put(reg, 'regmodel')
+        # -- specify a permanent task requirement for this mdoel
+        meta = om.runtime.model('regmodel').require(label='foo', always=True)
+        self.assertIsInstance(meta, om.models._Metadata)
+        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        # -- test the permanent requirement is kept, despite runtime settings
+        om.runtime.require('baz')
+        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
