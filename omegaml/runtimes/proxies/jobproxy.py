@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import logging
 
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
-from omegaml.util import extend_instance
 
 logger = logging.getLogger(__file__)
 
