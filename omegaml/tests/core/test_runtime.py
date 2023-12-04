@@ -711,7 +711,16 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(meta, om.models._Metadata)
         task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
         self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        # -- test the permanent requirement is kept, despite runtime settings
-        om.runtime.require('baz')
+        # -- test the permanent requirement is kept even if runtime is reset
+        om = Omega()
         task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
         self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        # -- test runtime requirement takes precedence
+        om.runtime.require('baz')
+        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
+        self.assertEqual(task.kwargs['routing']['label'], 'baz')
+        # -- test we can reset a previous local require
+        om.runtime.require()
+        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+

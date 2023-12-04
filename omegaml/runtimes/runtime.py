@@ -150,7 +150,7 @@ class OmegaRuntime(object):
             # disable logging
             om.runtime.mode(logging=False)
         """
-        if local is not None:
+        if isinstance(local, bool):
             self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
         self._task_default_kwargs['task']['__logging'] = logging
         return self
@@ -203,7 +203,8 @@ class OmegaRuntime(object):
             return dict(*value)
         return value
 
-    def require(self, label=None, always=False, routing=None, task=None, **kwargs):
+    def require(self, label=None, always=False, routing=None, task=None,
+                logging=None, override=True, **kwargs):
         """
         specify requirements for the task execution
 
@@ -216,6 +217,8 @@ class OmegaRuntime(object):
             label (str): the label required by the worker to have a runtime task dispatched to it.
                'local' is equivalent to calling self.mode(local=True).
             task (dict): if specified applied to the task kwargs
+            logging (str|tuple): if specified, same as runtime.mode(logging=...)
+            override (bool): if True overrides previously set .require(), defaults to True
             kwargs: requirements specification that the runtime understands
 
         Usage:
@@ -227,20 +230,35 @@ class OmegaRuntime(object):
         if label is not None:
             if label == 'local':
                 self.mode(local=True)
-            else:
+            elif override:
                 self.mode(local=False)
             routing = routing or {
                 'label': label or self._default_label
             }
+        task = task or {}
+        routing = routing or {}
         if task or routing:
-            task = task or {}
-            routing = routing or {}
+            if not override:
+                # override not allowed, remove previously existing
+                ex_task = dict(**self._task_default_kwargs['task'],
+                               **self._require_kwargs['task'])
+                ex_routing = dict(**self._task_default_kwargs['routing'],
+                                  **self._require_kwargs['routing'])
+                task = {k: v for k, v in task.items() if k not in ex_task}
+                routing = {k: v for k, v in routing.items() if k not in ex_routing}
             if always:
                 self._task_default_kwargs['routing'].update(routing)
                 self._task_default_kwargs['task'].update(task)
             else:
                 self._require_kwargs['routing'].update(routing)
                 self._require_kwargs['task'].update(task)
+        else:
+            if not task:
+                self._require_kwargs['task'] = {}
+            if not routing:
+                self._require_kwargs['routing'] = {}
+        if logging is not None:
+            self.mode(logging=logging)
         return self
 
     def model(self, modelname, require=None):

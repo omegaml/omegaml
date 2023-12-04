@@ -44,7 +44,7 @@ class RuntimeProxyBase:
             require_kwargs.update({
                 'task': dict(__experiment=meta.attributes['tracking'].get('default'))
             })
-        self.runtime.require(**require_kwargs) if require_kwargs else None
+        self.runtime.require(**require_kwargs, override=False) if require_kwargs else None
 
     def require(self, label=None, always=False, drop=False, **kwargs):
         """
