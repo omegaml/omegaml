@@ -146,7 +146,7 @@ class DatasetResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCa
         resp = self.api_client.put(self.url('newdata'), data=data,
                                    authentication=self.get_credentials())
         df = self.om.datasets.get('newdata')
-        assert_frame_equal(df, self.df.append(self.df))
+        assert_frame_equal(df, pd.concat([self.df, self.df]))
 
     def test_drop_dataset(self):
         # see if a dataset does not exist

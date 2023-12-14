@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 
-from omegaml import load_class
 from omegaml.client.auth import AuthenticationEnv
 from omegaml.runtimes import OmegaRuntimeDask
-from omegaml.runtimes.scriptproxy import OmegaScriptProxy
+from omegaml.runtimes.proxies.scriptproxy import OmegaScriptProxy
 
 
 class OmegaAuthenticatedRuntimeDask(OmegaRuntimeDask):

@@ -17,5 +17,6 @@ class Config_OmegaJWTAuth:
     JWT_AUDIENCE = None
     JWT_VERIFY_EXPIRATION = True
     JWT_WARN_INSECURE = True
+    JWT_DEBUG = False
 
 

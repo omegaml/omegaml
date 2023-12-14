@@ -22,7 +22,6 @@ truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in 'yt1'))
 
 
-
 class EnvSettings_Local(Config_EnvOverrides,
                         Config_DjangoWhitenoise,
                         Config_DjangoSekizai,
@@ -37,10 +36,11 @@ class EnvSettings_Local(Config_EnvOverrides,
                         Config_DjangoAllAuth,
                         Config_DjangoAdmin,
                         Config_DjangoPostOffice,
-                        #Config_DjangoLogging,
+                        # Config_DjangoLogging,
                         Config_DatabaseUrl,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
+    _prefix_admin = ('jazzmin',)
     _prefix_apps = ('omegaweb',
                     'landingpage',
                     'paasdeploy',
@@ -52,14 +52,15 @@ class EnvSettings_Local(Config_EnvOverrides,
                   'organizations',
                   'django_extensions',
                   )
+    StackableSettings.patch_apps(_prefix_admin, prepend=True, at='django.contrib.admin')
     StackableSettings.patch_apps(_prefix_apps, at='django.contrib.staticfiles')
     StackableSettings.patch_apps(_addl_apps)
 
     # FIXME this adds 2 seconds to every API request!
     # _addl_middlewares = (
     #    'omegaweb.middleware.EventsLoggingMiddleware',
-    #)
-    #StackableSettings.patch_middleware(_addl_middlewares)
+    # )
+    # StackableSettings.patch_middleware(_addl_middlewares)
 
     API_CONFIG = {
         'omega_apis': (
@@ -127,7 +128,7 @@ class EnvSettings_Local(Config_EnvOverrides,
                 "hostPath": {
                     "type": "DirectoryOrCreate",
                     "path": "/mnt/local/{username}"
-            }}
+                }}
         ],
         "volumeMounts": [
             {
@@ -152,7 +153,8 @@ class EnvSettings_Local(Config_EnvOverrides,
     jupyter_image = os.environ.get('OMEGA_JUPYTER_IMAGE', 'omegaml/omegaml-ee:latest')
     runtime_image = os.environ.get('OMEGA_RUNTIME_IMAGE', 'omegaml/omegaml-ee:latest')
     use_ssl = truefalse(os.environ.get('OMEGA_USESSL'))
-    use_ssl_services = use_ssl if 'OMEGA_USESSL_VIEW' not in os.environ else truefalse(os.environ.get('OMEGA_USESSL_VIEW'))
+    use_ssl_services = use_ssl if 'OMEGA_USESSL_VIEW' not in os.environ else truefalse(
+        os.environ.get('OMEGA_USESSL_VIEW'))
 
     StackableSettings.patch_dict('CONSTANCE_CONFIG', {
         'MONGO_HOST': (mongo_host, 'mongodb host:port (public)'),
@@ -194,7 +196,7 @@ class EnvSettings_Local(Config_EnvOverrides,
 
     #: authentication environment
     OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.CloudRuntimeAuthenticationEnv'
-    #OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.JWTCloudRuntimeAuthenticationEnv'
+    # OMEGA_AUTH_ENV = 'omegaee.runtimes.auth.JWTCloudRuntimeAuthenticationEnv'
 
     # be compatible with omegaml-core flask API which does not allow trailing slash
     TASTYPIE_ALLOW_MISSING_SLASH = True
@@ -236,5 +238,3 @@ class EnvSettings_Local(Config_EnvOverrides,
     REQUEST_ID_HEADER = 'X-REQUEST-ID'
     _request_mw = ['omegaweb.middleware.RequestTrackingMiddleware']
     StackableSettings.patch_list('MIDDLEWARE', _request_mw, prepend=True)
-
-

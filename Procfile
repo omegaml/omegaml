@@ -5,3 +5,4 @@ scheduler:  celery --app omegaops.celeryapp beat --loglevel=debug
 notebook: scripts/omegajobs.sh
 dask: dask-scheduler
 daskworker: PYTHONPATH=. && dask-worker localhost:8786
+test: bash -c "eval $(conda shell.bash hook) && conda activate omegaml-ce39 && CELERY_Q=default:py39 honcho start worker"

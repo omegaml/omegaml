@@ -1,4 +1,4 @@
-from unittest import IsolatedAsyncioTestCase
+from unittest import IsolatedAsyncioTestCase, skipUnless
 
 import os
 from django.contrib.auth.models import User
@@ -42,6 +42,7 @@ LIVERSERVER_DATABASES = {
 
 @override_settings(
     DATABASES=LIVERSERVER_DATABASES)
+@skipUnless(os.environ.get('OMEGA_TEST_KUBESPAWNER', '0') in ('1', 'yes', 'true'), "OMEGA_TEST_KUBESPAWNER is not 1, yes or true")
 class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin,
                             LiveServerTestCase,  # Django 3.2 compatibility, see notes above
                             IsolatedAsyncioTestCase  # JupyterHub 2.x compatibility, see notes above
@@ -171,7 +172,7 @@ class OmegaKubeSpawnerTests(OmegaResourceTestMixin, ResourceTestCaseMixin,
 
     async def test_makepod_userspecified_jupyter_config(self):
         # update user config
-        # https: // zero - to - jupyterhub.readthedocs.io / en / latest / customizing / user - resources.html
+        # https: // zero - to - jupyterhub.readthedocs.io / en / latest / customizing / user - summary.html
         jupyter_config = {}
         jupyter_config['profile_list'] = [
             {

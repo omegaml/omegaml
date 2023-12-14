@@ -23,7 +23,7 @@ services:
       - OMEGA_USESSL=yes
       - CELERY_Q=default
       - DJANGO_DEBUG=1
-      - HOME=/home/omegadev
+      - HOME=/home/jovyan
       - PORT=8000
       - JYHUB_DEBUG=1
       - PYTHONPATH=/app

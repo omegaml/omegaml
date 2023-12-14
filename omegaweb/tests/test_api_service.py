@@ -272,8 +272,8 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
             factor = fields.Float()
 
         class MyResultSchema(Schema):
-            a = fields.List(fields.Float())
-            b = fields.List(fields.Float())
+            data = fields.Dict(keys=fields.String(), values=fields.Float())
+            method = fields.String()
 
         om.models.put(mymodel, 'mymodel')
         om.models.link_datatype('mymodel', X=MyInputSchema, result=MyResultSchema, actions=['predict'])

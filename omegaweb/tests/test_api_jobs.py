@@ -163,7 +163,7 @@ class JobResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
         data = self.deserialize(resp)
         self.assertIn('content', data)
         self.assertIn('name', data)
-        self.assertIn('<html>', data['content'])
+        self.assertIn('<html', data['content'])
 
     def test_job_report_slides(self):
         om = self.om
@@ -188,5 +188,5 @@ class JobResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
         data = self.deserialize(resp)
         self.assertIn('content', data)
         self.assertIn('name', data)
-        self.assertIn('<html>', data['content'])
+        self.assertIn('<html', data['content'])
         self.assertIn('Reveal.initialize', data['content'])

@@ -84,3 +84,10 @@ license:
 	cat $(shell basename -s .docx ${LICENSE_DOCX} )/*.rest > LICENSE
 	rm -rf $(shell basename -s .docx ${LICENSE_DOCX})
 
+baseimages:
+	docker pull jupyter/datascience-notebook:python-3.11
+	docker pull jupyter/datascience-notebook:python-3.10
+	docker pull jupyter/datascience-notebook:python-3.9
+	docker images | grep jupyter/datascience-notebook | xargs -L1 | cut -d ' ' -f 2 | xargs -I{} docker tag jupyter/datascience-notebook:{} omegaml/datascience-notebook:{}
+	docker images | grep jupyter/datascience-notebook | xargs -L1 | cut -d ' ' -f 2 | xargs -I{} docker tag jupyter/datascience-notebook:{} ghcr.io/omegaml/datascience-notebook:{}
+	docker images | grep omegaml/datascience-notebook | xargs -L1 | cut -d ' ' -f 1-2 | tr ' ' : | xargs -L1 docker push
