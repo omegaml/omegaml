@@ -13,6 +13,7 @@ from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
 from tastypiex.requesttrace import ClientRequestTracer
 
+
 # ensure the client uses the server-specified mongo url
 @mock.patch.dict(os.environ, {"OMEGA_MONGO_URL": ""})
 class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase):
@@ -210,7 +211,7 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
 
     def FIXME_test_get_service_list(self):
         resp = self.api_client.get(self.url(''), data={},
-                               authentication=self.get_credentials())
+                                   authentication=self.get_credentials())
         print(resp)
 
     def test_service_model_signature_invalid(self):
@@ -243,8 +244,8 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         self.assertIn('helloservice_result', specs['definitions'])
         # run the script
         resp = self.api_client.post(self.url('service/helloservice', query='text=foo'),
-                                data={'xfactor': 5.0},
-                                authentication=self.get_credentials())
+                                    data={'xfactor': 5.0},
+                                    authentication=self.get_credentials())
         self.assertEqual(resp.status_code, 400)
         expected = {'message': "{'script': 'service/helloservice', 'args': ({'xfactor': 5.0},), "
                                "'kwargs': {'text': 'foo', 'xfactor': 5.0, 'pure_python': False}, "
@@ -260,7 +261,11 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
 
         @virtualobj
         def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
-            return {'data': data, 'method': method}
+            if kwargs.get('invalid'):
+                result = {'data': data, 'method': method}
+            else:
+                result = {'a': [1.0], 'b': [2.0]}
+            return result
 
         # specify service input and output
         class MyInputSchema(Schema):
@@ -275,11 +280,18 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         # check mymodel is actually deserialized by runtime
         mymodel = None
         # run the script on the cluster
+        # -- invalid response, expect validation error
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='invalid=1'),
+                                    data={'factor': 1.0}, authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertTrue('ValidationError', data['message'])
+        # -- valid response, expect response data
         resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),
-                                data={'factor': 1.0}, authentication=self.get_credentials())
+                                    data={'factor': 1.0}, authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
-        expected = {'data': [{'factor': 1.0}], 'method': 'predict'}
+        expected = {'a': [1], 'b': [2]}
         self.assertEqual(data, expected)
         # run again with invalid signature
         resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),
@@ -288,7 +300,129 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         data = self.deserialize(resp)
         self.assertTrue('ValidationError', data['message'])
 
+    def test_service_predict_virtualobj_model_signature_many_objects(self):
+        om = self.om
 
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('invalid'):
+                result = {'data': data, 'method': method}
+            else:
+                result = [{'a': 1, 'b': 2}]
+            return result
+
+        # specify service input and output
+        class MyInputSchema(Schema):
+            factor = fields.Float()
+
+        class MyResultSchema(Schema):
+            a = fields.Float()
+            b = fields.Float()
+
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', X=[MyInputSchema], result=[MyResultSchema], actions=['predict'])
+        # check mymodel is actually deserialized by runtime
+        mymodel = None
+        # run the script on the cluster
+        # -- invalid response, expect validation error
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='invalid=1'),
+                                    data={'factor': 1.0}, authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertTrue('ValidationError', data['message'])
+        # -- valid response, expect response data
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),
+                                    data=[{'factor': 1.0}], authentication=self.get_credentials())
+        self.assertHttpOK(resp)
+        data = self.deserialize(resp)
+        expected = [{'a': 1, 'b': 2}]
+        self.assertEqual(data, expected)
+        # run again with invalid signature
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),
+                                    data=[{'xfactor': 1.0}], authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 400)
+        data = self.deserialize(resp)
+        self.assertTrue('ValidationError', data['message'])
+
+    def test_service_exception_no_schema(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('error'):
+                status = int(kwargs.get('status'))
+                raise Exception(f'exception {status} raised', status)
+            return {'status': 'ok'}
+
+        om.models.put(mymodel, 'mymodel')
+        # check mymodel is actually deserialized by runtime
+        mymodel = None
+        for status in (404, 401, 406):
+            resp = self.api_client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}'),
+                                    data={'foo': 'bar'},
+                                    authentication=self.get_credentials())
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = {'message': f'exception {status} raised'}
+            self.assertEqual(data, expected)
+
+    def test_service_exception_with_schema(self):
+        om = self.om
+
+        ErrorSchema401 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema401')
+        ErrorSchema404 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema404')
+        ErrorSchema406 = Schema.from_dict({'message': fields.String()}, name='ErrorSchema406')
+
+        @virtualobj
+        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+            if kwargs.get('error'):
+                status = int(kwargs.get('status'))
+                many = int(kwargs.get('many', 0))
+                should_raise = int(kwargs.get('raise', 0))
+                if many:
+                    exc = Exception([{'message': f'exception {status} raised'}], status)
+                else:
+                    exc = Exception({'message': f'exception {status} raised'}, status)
+                raise exc
+            return {'status': 'ok'}
+
+        # single errors
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', errors={
+            ErrorSchema401: 401,
+            ErrorSchema404: 404,
+            ErrorSchema406: 406,
+        })
+        for status in (404, 401, 406):
+            resp = self.api_client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}'),
+                                    data={'foo': 'bar'},
+                                    authentication=self.get_credentials())
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = {'message': f'exception {status} raised'}
+            self.assertEqual(data, expected)
+
+        # multiple errors
+        om.models.put(mymodel, 'mymodel')
+        om.models.link_datatype('mymodel', errors=[
+            ([ErrorSchema401], 401),
+            ([ErrorSchema404], 404),
+            ([ErrorSchema406], 406),
+        ])
+        for status in (404, 401, 406):
+            resp = self.api_client.post(self.url('service/mymodel',
+                                             action='predict',
+                                             query=f'error=yes&status={status}&many=1'),
+                                    data={'foo': 'bar'},
+                                    authentication=self.get_credentials())
+            self.assertEqual(resp.status_code, status)
+            data = self.deserialize(resp)
+            expected = [{'message': f'exception {status} raised'}]
+            self.assertEqual(data, expected)
 
 
 class ServiceV1ResourceTests(ServiceDirectResourceTests):

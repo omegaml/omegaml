@@ -32,6 +32,7 @@ class OmegaResourceMixin(object):
         a subclass to avoid conflicting dependencies (open source: Flask,
         commercial edition: Django).
     """
+    # TODO this should be a subclass of omegaml.backends.restapi.OmegaResourceMixin
 
     def get_omega(self, bundle_or_request, reset=False):
         """
@@ -102,11 +103,27 @@ class OmegaResourceMixin(object):
             result = meth(model_id, query, payload)
             resp = self.create_maybe_async_response(request, result, async_body=async_body)
         except Exception as e:
-            msg = dict(message=repr(e))
-            raise ImmediateHttpResponse(JsonResponse(msg, status=HttpBadRequest.status_code))
+            raise self._build_http_exception(e)
         finally:
             om.close_request()
         return resp
+
+    def _build_http_exception(self, e):
+        # build a valid HTTPException from an exception
+        # works as follows:
+        # - if the exception has a code attribute, use that as the HTTPException.code
+        # - if the exception has arguments, check it is Exception(message, code) => exc.message, exc.code = exc.args
+        has_status_code = len(e.args) > 1 and isinstance(e.args[1], int)
+        if has_status_code:
+            message, status_code = e.args
+        else:
+            message, status_code = repr(e), HttpBadRequest.status_code
+        if not isinstance(message, (dict, list)):
+            message = dict(message=message)
+        allow_list = True if isinstance(message, list) else False
+        exc = ImmediateHttpResponse(JsonResponse(message, status=status_code, safe=not allow_list))
+        exc.code = status_code
+        return exc
 
     def _get_resource_method(self, resource_name, method_name):
         resource = getattr(self, resource_name)
