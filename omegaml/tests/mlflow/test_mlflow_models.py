@@ -160,17 +160,14 @@ else:
             assert_array_equal(yhat_rt, yhat_direct)
 
         def test_save_mlflow_model_run_file_tracking(self):
-            """ test deploying an MLModel from a tracking URI using file path (not supported) """
+            """ test deploying an MLModel from a tracking URI using file path """
             import mlflow
 
             om = self.om
-            # note we don't set a tracking uri so mlflow uses a local file path and refused to
-            # work with the file path as a model registry
             mlflow.set_tracking_uri(None)
             mlflow.set_registry_uri(None)
-            with self.assertRaises(MlflowException):
-                meta = om.models.put('mlflow+models://sklearn-model/1', 'sklearn-model')
-            self.assertNotIn('sklearn-model', om.models.list())
+            meta = om.models.put('mlflow+models://sklearn-model/1', 'sklearn-model')
+            self.assertIn('sklearn-model', om.models.list())
 
         @classmethod
         def _clean_mlflowdbs(self):

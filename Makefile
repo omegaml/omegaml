@@ -10,7 +10,7 @@ install:
 	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
 	pip install --ignore-installed -U pip
 	pip install -U pytest tox tox-conda tox-run-before
-	[ -f .gitlinks ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "no .gitlinks, using packaeges from pypi only"
+	[ -z "${RUNTESTS}" ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "env:RUNTESTS set, using packages from pypi only"
 	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}"
 	(which R && scripts/setup-r.sh) || echo "R is not installed"
 
@@ -45,6 +45,10 @@ image:
 	: "run docker build"
 	scripts/livetest.sh --build
 
+runtime-tests: devstart
+	# actual specs are in scripts/docker/test_images.txt
+	scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
+
 release-test: dist bumpbuild
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
@@ -59,12 +63,17 @@ release-prod: dist livetest
 	# config is in $HOME/.pypirc
 	twine upload --skip-existing --repository pypi-omegaml dist/*gz dist/*whl
 
-release-docker: dist
+release-docker:
 	: "docker push image sto dockerhub"
-	scripts/livetest.sh --local --build --tag ${VERSION}
-	docker tag omegaml/omegaml:${VERSION} omegaml/latest
-	docker push omegaml/omegaml:${VERSION}
+	scripts/livetest.sh --build --tag ${VERSION}
+	# push all images for this version
+	docker images | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | xargs -L1 docker push
+	# tag and push latest
+	docker images | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | tail -n1 | xargs -I{} docker tag {} omegaml/omegaml:latest
 	docker push omegaml/omegaml:latest
+	# run livetest to verify the pushed images actually work
+	sleep 5
+	scripts/livetest.sh
 
 candidate-docker: dist bumpbuild
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
@@ -108,7 +117,7 @@ help:
 	@cat Makefile | grep -A1 -E -e ".*:.*"
 
 devstart:
-	docker-compose -f docker-compose-dev.yml up -d
+	docker-compose -f docker-compose-dev.yml up -d --remove-orphans
 	scripts/initlocal.sh
 
 devstop:

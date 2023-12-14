@@ -21,10 +21,6 @@ def splinter_browser(context):
     options = None
     if selenium_address:
         # start remote browser using selenium grid
-        caps = {
-            'browserName': 'chrome',
-            'screen_resolution': '1024x768',
-        }
         options = ChromeOptions()
         options.add_argument('--no-sandbox')
         # https://stackoverflow.com/a/75939337/890242
@@ -32,10 +28,13 @@ def splinter_browser(context):
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
+        # capabilities are no passed through options https://stackoverflow.com/q/76622916/890242
+        options.set_capability('browserName', 'chrome')
+        options.add_argument('--window-size=1024,768')
         context.browser = Browser('remote',
+                                  browser='Chrome',
                                   command_executor=selenium_address,
-                                  options=options,
-                                  desired_capabilities=caps)
+                                  options=options)
     else:
         # start local browser
         if headless:

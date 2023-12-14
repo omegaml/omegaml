@@ -34,7 +34,7 @@ else:
             mod = om.scripts.get('myproject')
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='main.py', conda=False).get()
+            result = om.runtime.script('myproject').run(entry_point='main.py').get()
             data = json.loads(result)
             self.assertIn('output', data['result'])
             self.assertIn('hello', data['result']['output']['stdout'])
@@ -50,7 +50,7 @@ else:
             mod = om.scripts.get('myproject')
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='main.py', conda=False).get()
+            result = om.runtime.script('myproject').run(entry_point='main.py').get()
             data = json.loads(result)
             self.assertIn('output', data['result'])
             self.assertIn('hello', data['result']['output']['stdout'])

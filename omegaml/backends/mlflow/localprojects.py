@@ -102,16 +102,15 @@ class MLFlowProject:
     def __init__(self, uri):
         self.uri = uri
 
-    def run(self, om, pure_python=False, conda=True, **kwargs):
+    def run(self, om, pure_python=False, **kwargs):
+        kwargs.setdefault('env-manager', 'local')
         options = ' '.join(f'--{k.replace("_", "-")} {v}' for k, v in kwargs.items())
-        if not conda:
-            options += ' --no-conda'
         tmpdir = tempfile.mkdtemp()
         # fix issue
-        with open(os.path.join(tmpdir, 'activate'), 'w') as fout:
+        with open(os.path.join(tmpdir, 'pyenv'), 'w') as fout:
             fout.write('#/bin/bash')
-            fout.write('conda activate %1')
-        cmd = fr'PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./activate; mlflow run {options} {self.uri}'
+            fout.write('conda activate $1')
+        cmd = fr'PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./pyenv; mlflow run {options} {self.uri}'
         print(cmd)
         output = run(cmd, capture_output=True, shell=True)
         print(output)

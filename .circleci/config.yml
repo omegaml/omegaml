@@ -69,15 +69,7 @@ jobs:
               make -e test
               conda deactivate
             }
-            if [[ $CIRCLE_BRANCH = "release-build" ]]; then
-              # remove .gitlinks so we only use released packages (see Makefile:install)
-              rm .gitlinks
-              # actual specs are in scripts/docker/test_images.txt
-              scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
-            else
-              # if this is not a release build, do a quick build for speed
-              dotest 3.9
-            fi
+            dotest 3.11
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
@@ -99,7 +91,7 @@ jobs:
             apt update && apt install -y docker-compose
             pip3 install tox tox-run-before tox-conda
       - run:
-          name: Make image and pypi
+          name: run tests in multiple images
           command: |
             source miniforge3/etc/profile.d/conda.sh
             mkdir -p ~/.omegaml
@@ -109,9 +101,23 @@ jobs:
             cd omegaml-ce
             VERSION=`cat omegaml/VERSION`
             docker login -u omegaml -p $DOCKER_PASS
+            # run all tests inside runtime docker images 
+            make runtime-tests
+      - run:
+          name: Make image and pypi
+          command: |
+            source miniforge3/etc/profile.d/conda.sh
+            cd omegaml-ce
+            VERSION=`cat omegaml/VERSION`
+            docker login -u omegaml -p $DOCKER_PASS
+            # ensure docker user can write to /tmp
+            mkdir -p /tmp/screenshots
+            mkdir -p /tmp/testlogs
+            chmod -R 777 /tmp/screenshots
+            chmod -R 777 /tmp/testlogs
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
             # TODO consider using https://cibuildwheel.readthedocs.io or https://github.com/getsentry/milksnake or tox
-            for PYVER in 3.8 3.9; do
+            for PYVER in 3.9 3.10 3.11; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
@@ -119,7 +125,9 @@ jobs:
               pip install -e .[dev]
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
+              # set livetest options, see Makefile:livetest
               export LIVETEST_BEHAVE_EXTRA_OPTS="--tags ~tfestimator --tags ~tfkeras --tags ~snowflake" 
+              # build release artifacts and deploy to pypi and docker (if not rc or dev) 
               if [[ "$VERSION" =~ "-dev" ]]; then
                 make livetest
               elif [[ "$VERSION" =~ "-rc" ]]; then

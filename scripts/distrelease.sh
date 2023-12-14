@@ -8,6 +8,7 @@
 ##    --distname=VALUE  the name of the distribution. defaults to basename
 ##    --version=VALUE   the version to build
 ##    --buildarg=VALUE  arg passed to docker build --build-arg
+##    --pyver=VALUE     the python version for the livetest image, defaults to current python version
 ##    --push            push to dockerhub
 # script setup to parse options
 script_dir=$(dirname "$0")
@@ -15,12 +16,13 @@ script_dir=$(realpath $script_dir)
 source $script_dir/easyoptions || exit
 source $script_dir/omutils || exit
 
-imagename="omegaml/$distname:$version"
-imagename_latest="omegaml/$distname:latest"
 builddir=build
 distdir=dist/staging/$distname
 srcdir=scripts/docker/$distname
 runtime_scripts=scripts/runtime
+pyver=${pyver:-$(python --version | cut -d' ' -f2 | cut -d'.' -f1-2)}
+imagename="omegaml/$distname:$version-$pyver"
+imagename_latest="omegaml/$distname:latest"
 
 if [[ ! -z $buildarg ]]; then
     buildarg="--build-arg $buildarg"
@@ -36,7 +38,7 @@ cp $runtime_scripts/* $distdir/scripts
 cp dist/*whl $distdir/packages
 # build and push
 pushd $distdir
-docker build $buildarg -t $imagename .
+docker build $buildarg --build-arg pyver=$pyver -t $imagename .
 popd
 docker tag $imagename $imagename_latest
 if [[ ! -z $push ]]; then

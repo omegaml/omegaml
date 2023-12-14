@@ -60,7 +60,7 @@ class TensorflowCallbackBase:
 try:
     from tensorflow import keras
 except Exception as e:
-    class TensorflowCallback:
+    class TensorflowCallback(TensorflowCallbackBase):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             warnings.warn(f'tensorflow could not be loaded, TensorflowCallback may not work due to {e}')
