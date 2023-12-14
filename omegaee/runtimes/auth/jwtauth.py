@@ -1,7 +1,10 @@
 # TODO move to landingpage
-from datetime import datetime
+import logging
+
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
+import cachetools
 import jwt
 from cryptography.hazmat.primitives import serialization
 from jwt import ExpiredSignatureError
@@ -12,6 +15,8 @@ from jwt import PyJWKClient
 from omegaee.runtimes.auth.apikey import CloudRuntimeAuthenticationEnv
 from omegaml import settings  # noqa
 from omegaml.client.auth import OmegaRuntimeAuthentication
+
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationFailed(Exception):
@@ -74,14 +79,21 @@ class JWTCloudRuntimeAuthenticationEnv(CloudRuntimeAuthenticationEnv):
             "verify_exp": settings.JWT_VERIFY_EXPIRATION,
             "verify_signature": settings.JWT_VERIFY,
         }
-        return jwt.decode(
-            jwt=token,
-            key=key or settings.JWT_SECRET_KEY,
-            algorithms=settings.JWT_ALGORITHM.split(','),
-            options=options,
-            leeway=settings.JWT_LEEWAY,
-            audience=settings.JWT_AUDIENCE,
-        )
+        try:
+            decoded = jwt.decode(
+                jwt=token,
+                key=key or settings.JWT_SECRET_KEY,
+                algorithms=settings.JWT_ALGORITHM.split(','),
+                options=options,
+                leeway=settings.JWT_LEEWAY,
+                audience=settings.JWT_AUDIENCE,
+            )
+        except Exception as e:
+            logger.debug(f'jwt {token} => {e}')
+            raise
+        else:
+            logger.debug(f'jwt {token} => {decoded}')
+        return decoded
 
     @classmethod
     def jwt_decode_from_uri(cls, token, defaults=None):
@@ -163,6 +175,14 @@ def _create_jwt_token(defaults=None, om=None):
 
 # TODO refactor into common library
 class PublicKeyResolver(PyJWKClient):
+    # TODO simplify by having one PublicKeyResolver/PyJWKClient for each URI
+    #      => PyJWKClient(uri=...).get_signing_key_from_jwt(token)
+    _keys_cache = cachetools.TTLCache(**{
+        'maxsize': 100,  # cache at most 100 sessions
+        'ttl': timedelta(seconds=3600 * 24 * 30),  # keep it 1 month
+        'timer': lambda: datetime.now(timezone.utc),
+    })
+
     # get JWT signing key from KEYCLOAK_CERT_URI
     # adopted from https://github.com/jpadilla/pyjwt/issues/722#issuecomment-1017941663
     @lru_cache(maxsize=1)
@@ -170,12 +190,19 @@ class PublicKeyResolver(PyJWKClient):
         from jwt.algorithms import get_default_algorithms
         return get_default_algorithms()
 
-    @lru_cache
-    def get_public_key(self, uri):
+    def get_public_key(self, uri, header=None):
         self.uri = uri
-        keys = self.get_signing_keys()
-        # https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
-        jwtkey = keys[0]
+        keys = self._keys_cache.setdefault(uri, self.get_signing_keys(refresh=True))
+        # check all keys for match with token header fields, choose the first that matches all fields
+        # -- if token header contains a kid, search this key
+        # -- if no matching key is found, use the first key in the key set
+        # see https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-set-properties
+        #     https://auth0.com/docs/secure/tokens/json-web-tokens/locate-json-web-key-sets
+        if header and 'kid' in header:
+            kid = header.get('kid')
+            jwtkey = self.match_kid(keys, kid) or keys[0]
+        else:
+            jwtkey = keys[0]
         pem = jwtkey.key.public_bytes(encoding=serialization.Encoding.PEM,
                                       format=serialization.PublicFormat.SubjectPublicKeyInfo)
         return pem

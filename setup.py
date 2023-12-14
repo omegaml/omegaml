@@ -62,7 +62,7 @@ setup(
         'gunicorn>=19.7.1',
         'omegaml>=0.13.4',
         'python-json-logger>=2.0.4'
-
+        'django-constance<3', # due to https://django-constance.readthedocs.io/en/latest/changes.html#v3-0-0-2023-07-27
     ],
     dependency_links=[
     ],
