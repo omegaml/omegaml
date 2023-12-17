@@ -1,16 +1,12 @@
-omega|ml
-========
+omega|ml commercial edition
+===========================
 
-*omega|ml is the enterprise-scale production and integration 
-platform for data science.*
+This is the installation and operations guide for omegaml commercial edition.
+For the omegaml user's guide, refer to the open source edition.
 
 .. toctree::
    :maxdepth: 2
 
+   architecture/index
    admin/index
    guide/index
-   devguide/index
-   reference/index
-   screenshots
-   admin/architecture
-   msp/index

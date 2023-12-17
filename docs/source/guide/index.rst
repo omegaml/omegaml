@@ -1,17 +1,13 @@
-User Guide
-==========
+Platform Operations Guide
+=========================
+
 
 .. toctree::
    :maxdepth: 2
 
+   monitoring
+   scaling
+   storage
+   issues
 
-   getstarted
-   store_retrieve
-   filterdf
-   mdfapply
-   modelstore
-   lambda
-   restapi
-   custombackends
-   runtimes
-   streaming
+

@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosummary',
+    'djcommanddoc',
     #'sphinx.ext.githubpages',
 ]
 
@@ -64,7 +65,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'omega-ml platform'
+project = u'omega|ml'
 copyright = u'2016, omegaml.io by one2seven GmbH'
 author = u'omegaml.io'
 
@@ -373,19 +374,18 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.getcwd(), '..', '..'))
+print(sys.path)
+import omegaml
+
 def setup(app):
     app.add_stylesheet('custom.css')
 
-def load_source():
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.getcwd(), '..', '..'))
-    print(sys.path)
-    import omegaml
-
-    import os
-    import sys
-    import django
-    sys.path.insert(0, os.path.abspath('..'))
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'app.settings'
-    django.setup()
+import os
+import sys
+import django
+sys.path.insert(0, os.path.abspath('..'))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'app.settings'
+django.setup()
