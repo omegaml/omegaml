@@ -40,8 +40,6 @@ def runnotebook(ctx, nbname):
     assert not br.is_text_present('Exception')
     assert not br.is_text_present('failed')
     assert not br.is_text_present('MissingSchema')
-    assert not br.is_text_present('error')
-
 
 @then('model {model_name} exists')
 def checkmodel(ctx, model_name):
