@@ -49,7 +49,7 @@ runtime-tests: devstart
 	# actual specs are in scripts/docker/test_images.txt
 	scripts/runtests.sh --rmi --specs scripts/docker/test_images_minimal.ini
 
-release-test: dist bumpbuild
+release-test: bumpbuild dist
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
@@ -75,7 +75,7 @@ release-docker:
 	sleep 5
 	scripts/livetest.sh
 
-candidate-docker: dist bumpbuild
+candidate-docker: bumpbuild dist
 	scripts/distrelease.sh --distname omegaml --version ${VERSION}
 	docker push omegaml/omegaml:${VERSION}
 
@@ -84,10 +84,10 @@ thirdparty:
 	pip-licenses > THIRDPARTY
 	python -m pylicenses
 
-release-tensorflow: dist bumpbuild
+release-tensorflow: bumpbuild dist
 	scripts/distrelease.sh --distname omegaml-tensorflow --version ${VERSION}-gpu-jupyter --push
 
-release-pytorch: dist bumpbuild
+release-pytorch: bumpbuild dist
 	scripts/distrelease.sh --distname omegaml-pytorch --version ${VERSION}-gpu-jupyter --push
 
 old:

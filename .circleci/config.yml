@@ -117,7 +117,7 @@ jobs:
             chmod -R 777 /tmp/testlogs
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
             # TODO consider using https://cibuildwheel.readthedocs.io or https://github.com/getsentry/milksnake or tox
-            for PYVER in 3.9 3.10 3.11; do
+            for PYVER in 3.10 3.11; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER

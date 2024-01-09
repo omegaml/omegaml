@@ -31,6 +31,7 @@ selenium_address="http://selenium:4444"
 docker_network="--network omegaml-ce_default"
 docker_env="-e OMEGA_MONGO_URL=$mongourl -e OMEGA_URL=$omegaurl -e JUPYTER_URL=$jupyterurl -e OMEGA_BROKER=$brokerurl -e BEHAVE_NBFILES=/app/docs -e SELENIUM_ADDRESS=$selenium_address"
 docker_image="omegaml/livetest"
+docker_resources='--cpus 2 --memory 2GB'
 behave_features="/app/features"
 chrome_debug_port="9222:9222/tcp"
 docker_tag=$(cat omegaml/VERSION)
@@ -93,11 +94,11 @@ if [ ! -z $tags ]; then
 fi
 
 echo "Running selenium grid locally"
-docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network --shm-size=2g --cpus=1 -e SE_START_VNC=false --name selenium --network-alias selenium selenium/standalone-chrome
+docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network $docker_resources -e SE_START_VNC=false --name selenium --network-alias selenium selenium/standalone-chrome
 countdown 10
-echo "Running the livetest image using port: $chrome_debug_port network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
+echo "Running the livetest image using port: $chrome_debug_port resources: $docker_resources network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS"
 mkdir -p ~/.omegaml
-docker run -it -p $chrome_debug_port $BEHAVE_DEBUG -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v ~/.omegaml:/root/.omegaml -v /tmp/screenshots:/tmp/screenshots $docker_network $docker_env $docker_image behave --no-capture $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS $behave_options
+docker run -it -p $chrome_debug_port $BEHAVE_DEBUG -e CHROME_HEADLESS=1 -e CHROME_SCREENSHOTS=/tmp/screenshots -v ~/.omegaml:/root/.omegaml -v /tmp/screenshots:/tmp/screenshots $docker_resources $docker_network $docker_env $docker_image behave --no-capture $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS $behave_options
 success=$?
 rm -f $script_dir/livetest/packages/*whl
 docker-compose stop
