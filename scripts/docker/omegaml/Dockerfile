@@ -6,6 +6,7 @@ USER root
 COPY . /app
 RUN pip install /app/packages/*whl -i $pypi -U --progress-bar off omegaml[all]
 RUN /app/scripts/setupnb.sh
+RUN /app/scripts/setup-r.sh
 #ensure PYTHONUSERBASE is created
 USER jovyan
 RUN pip install --ignore-installed --user -U six
