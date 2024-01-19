@@ -49,9 +49,7 @@ if [ "$local" == "yes" ]; then
    echo "Using local packages from $script_dir/../dist"
    mkdir -p $script_dir/docker/packages
    rm -rf $script_dir/docker/packages/*
-   rm -rf $script_dir/docker/jyhub/packages/*
    rm -rf $script_dir/docker/livetest/packages/*
-   cp $script_dir/../dist/*whl $script_dir/docker/jyhub/packages
    cp $script_dir/../dist/*whl $script_dir/docker/livetest/packages
 fi
 
