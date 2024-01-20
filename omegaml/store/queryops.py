@@ -405,6 +405,9 @@ def ensure_index_limit(idx, **kwargs):
     """
     # avoid generating a name if already given
     if not 'name' in kwargs:
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: hashcode is used purely for name resolution, not a security function
         name = md5(str(idx).encode('utf8')).hexdigest()
         kwargs.setdefault('name', name)
     return idx, kwargs

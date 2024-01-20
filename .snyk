@@ -4,7 +4,9 @@ version: v1.25.0
 language-settings:
   python: "3.11"
 ignore:
-  # start: CWE-444
+  # -- specify the SNYK-### vuln id to have issues ignored
+  # -- the path is as reported by snyk test, without the @version specifiers
+  # start: tornado@6.3.2
   CWE-444:
     - sphinx-autobuild > livereload > tornado:
         reason: >
@@ -19,9 +21,59 @@ ignore:
       reason:
         Tornado is only used in local and build environment that are not exploitable,
         it is a transient dependency by sphinx-autobuild.
-  SNYK-SNYK-PYTHON-TORNADO-5840803:
+  SNYK-PYTHON-TORNADO-5840803:
     - sphinx-autobuild > livereload > tornado:
         reason:
           Tornado is only used in local and build environment that are not exploitable,
           it is a transient dependency by sphinx-autobuild.
-  # end: CWE-444
+    - nbsphinx > nbconvert > nbclient > jupyter-client > tornado:
+        reason:
+          Tornado is only used in local and build environment that are not exploitable,
+          it is a transient dependency by sphinx-autobuild.
+  SNYK-PYTHON-TORNADO-5537286:
+    - sphinx-autobuild > livereload > tornado:
+        reason:
+          Tornado is only used in local and build environment that are not exploitable,
+          it is a transient dependency by sphinx-autobuild.
+    - nbsphinx > nbconvert > nbclient > jupyter-client > tornado:
+        reason:
+          Tornado is only used in local and build environment that are not exploitable,
+          it is a transient dependency by sphinx-autobuild.
+  # end: tornado@6.3.2
+  # start: snyk code
+  # -- note these ignores do not actually work, listed for documentation purpose
+  CWE-918:
+    - omegaml/client/cli/runtime.py:
+        reason: input is validated
+    - omegaml/client/cli/cloud.py:
+        reason: input is validated
+  CWE-400:
+    - omegaml/restapi/app.py:
+        reason: input length is restricted to avoid ReDoS (see OmegaResourceMixin.check_object_authorization)
+  CWE-94:
+    - omegaml/util.py:
+        reason: input is sanitized to be a valid python module; input is not executed as Python code.
+  CWE-916:
+    - omegaml/runtimes/mixins/nbtasks.py JobTasks._make_task_group:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml/store/streams.py StreamsProxy._cached_get:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml/mixins/mdf/apply.py ApplyMixin._make_cache_key:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml/store/base.py OmegaStore.object_store_key:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml/mixins/store/modelversion.py ModelVersionMixin._model_version_hash:
+        reason: hashcode is used purely for name resolution, not a security function
+  CWE-22:
+    - omegaml/mixins/store/imexport.py ObjectImportExportMixin.decompress:
+        reason: files are extracted using Python's tarfile 'data' filter which fixes the issue
+  # end: snyk code
+exclude:
+  global:
+    # excludes for snyk code, respective vunl reasons are given above
+    - omegaml/client/cli/runtime.py
+    - omegaml/client/cli/cloud.py
+    - omegaml/restapi/__main__.py
+    - omegaml/restapi/app.py
+    - omegaml/util.py
+    - omegaml/mixins/store/imexport.py

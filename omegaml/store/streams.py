@@ -92,6 +92,9 @@ class StreamsProxy(OmegaStore):
         return stream
 
     def _cached_get(self, name, reload=False, _cachex=None):
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: hashcode is used purely for name resolution, not a security function
         if reload:
             # force to avoid cache
             return self.get(name, _cachex=md5().hexdigest())

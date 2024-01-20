@@ -261,6 +261,9 @@ class JobTasks:
 
         om = self.runtime.omega
         nbname = self.jobname
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: hashcode is used purely for name resolution, not a security function
         value = md5(uuid4().bytes).hexdigest()
         existing = ','.join(om.jobs.list(f'tasks/{nbname}*'))
         while True:

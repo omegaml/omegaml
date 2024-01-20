@@ -1,10 +1,5 @@
 from __future__ import absolute_import
 
-import pathlib
-
-from pathlib import Path
-
-from copy import deepcopy
 from importlib import import_module
 
 import json
@@ -13,10 +8,14 @@ import os
 import sys
 import tempfile
 import uuid
+import validators
 import warnings
 from base64 import b64encode
 from bson import UuidRepresentation
+from copy import deepcopy
 from datetime import datetime
+from importlib.util import find_spec
+from pathlib import Path
 from shutil import rmtree
 
 try:
@@ -781,7 +780,11 @@ def base_loader(_base_config):
     _omega = None
 
     def load_customized():
-        mod = import_module(os.environ.get('OMEGA_CUSTOM_LOADER', ''))
+        # SEC: CWE-94 avoid code injection by ensuring we only load modules that have a valid spec
+        # - status: fixed
+        modname = os.environ.get('OMEGA_CUSTOM_LOADER', '')
+        assert find_spec(modname) is not None, f"{modname} is not a valid module (OMEGA_CUSTOM_LOADER)"
+        mod = import_module(modname)
         _omega = mod.omega
         _base_config_client = mod.defaults
         _base_config.update_from_obj(_base_config_client, attrs=_base_config)
@@ -1125,3 +1128,8 @@ class KeepMissing(dict):
     def __missing__(self, key):
         return '{' + key + '}'
 
+
+def sec_validate_url(url):
+    assert validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
+    assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
+    return True

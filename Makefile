@@ -20,8 +20,8 @@ test:
 	unset DJANGO_SETTINGS_MODULE; PATH=${HOME}/.local/bin:${PATH} OMEGA_TEST_MODE=1 pytest -v -s --tb=native ${TESTS}
 
 freeze:
-	echo "Writing pip requirements to pip-requirements.lst"
-	pip list --format freeze
+	echo "Writing pip requirements to requirements.txt"
+	pip-compile --output-file requirements.txt
 
 sanity:
 	# quick sanity check -- avoid easy mistakes
@@ -122,3 +122,10 @@ devstart:
 
 devstop:
 	docker-compose -f docker-compose-dev.yml stop
+
+pipsync:
+	pip-sync
+
+scan: freeze pipsync
+	snyk test --policy-path=./.snyk
+	snyk code test

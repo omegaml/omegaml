@@ -40,6 +40,7 @@ class OmegaResourceMixin(object):
     """
     helper mixin to resolve the request to a configured Omega instance
     """
+    max_url_length = 2048
 
     def __init__(self, *args, **kwargs):
         self._omega_instance = None
@@ -64,8 +65,14 @@ class OmegaResourceMixin(object):
 
     def check_object_authorization(self, pattern):
         from omegaml.restapi import resource_filter
-        if resource_filter and not any(rx.match(pattern) for rx in resource_filter):
-            return False
+        if resource_filter:
+            if len(pattern) > self.max_url_length:
+                # SEC: Avoid ReDoS on admin-provided regular expression
+                # -- https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+                # -- for practical matters we limit the input length
+                raise ValueError(f'processing of URLs longer than {self.max_url_length} is not supported')
+            if not any(rx.match(pattern) for rx in resource_filter):
+                return False
         return True
 
     def create_response_from_resource(self, generic_resource, resource_method, resource_name, resource_pk, *args,

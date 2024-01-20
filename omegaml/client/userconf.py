@@ -1,13 +1,13 @@
 import json
-
-import warnings
-
 import os
 import sys
+import warnings
 import yaml
 from urllib3 import Retry
 
+from omegaml import _base_config
 from omegaml.client.auth import AuthenticationEnv
+from omegaml.util import sec_validate_url
 
 default_key = 'OMEGA_RESTAPI_URL'
 fallback_url = 'https://hub.omegaml.io'
@@ -16,6 +16,9 @@ fallback_url = 'https://hub.omegaml.io'
 def ensure_api_url(api_url, defaults, key=default_key, fallback=fallback_url):
     api_url_default = os.environ.get(key) or os.environ.get(default_key) or fallback
     api_url = api_url or getattr(defaults, key, getattr(defaults, default_key, api_url_default))
+    allow_test_local = _base_config.is_test_run and not api_url.startswith('http')
+    valid_url = sec_validate_url(api_url) if not allow_test_local else api_url == 'local'
+    assert valid_url, f"expected a valid url, got {api_url}"
     return api_url
 
 

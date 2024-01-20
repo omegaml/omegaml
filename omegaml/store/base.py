@@ -1137,6 +1137,9 @@ class OmegaStore(object):
         hashed = hashed if hashed is not None else self.defaults.OMEGA_STORE_HASHEDNAMES
         if hashed:
             from hashlib import sha1
+            # SEC: CWE-916
+            # - status: wontfix
+            # - reason: hashcode is used purely for name resolution, not a security function
             hasher = sha1()
             hasher.update(_u8(key))
             key = hasher.hexdigest()

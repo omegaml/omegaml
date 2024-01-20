@@ -414,6 +414,9 @@ class RuntimeCommandBase(CommandBase):
         qualifier = om.runtime.auth.qualifier
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
         headers = {'Qualifier': qualifier}
+        # SEC: CWE-918
+        # -- status: resolved
+        # -- explain: url is validated according to OWASP recommendation by ensure_api_url
         appsurl = ensure_api_url(apphub_url, om.defaults, key='OMEGA_APPHUB_URL')
         name = name.replace('apps/', '')
         stop = requests.get(f'{appsurl}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
