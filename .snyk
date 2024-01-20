@@ -1,0 +1,12 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+# https://docs.snyk.io/scan-using-snyk/policies/the-.snyk-file
+version: v1.25.0
+ignore:
+    "CWE-444":
+        - docs > requirements.txt:
+            reason: |
+                Tornado is only used in local and build environment that are not exploitable,
+                it is a transient dependency by sphinx-autobuild.
+language-settings:
+    python: "3.11"
+
