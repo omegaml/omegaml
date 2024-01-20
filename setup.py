@@ -67,7 +67,7 @@ setup(
         'jupyter-client>=4.1.1',
         'ipython>=8.0',  # required for cli shell
         'mongoengine>=0.24.1',
-        'pandas>=2.0.0',
+        'pandas>=2.0.0,<2.2', # due to https://github.com/pandas-dev/pandas/issues/57049
         'numpy>=1.16.4',
         'scipy>=0.17.0',
         'scikit-learn>=1.2',
