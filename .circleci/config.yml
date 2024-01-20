@@ -4,11 +4,13 @@ jobs:
     working_directory: /home/circleci
     machine:
       # https://circleci.com/docs/configuration-reference#available-linux-machine-images
+      # https://circleci.com/developer/machine/image/ubuntu-2204
+      # https://discuss.circleci.com/t/linux-image-deprecations-and-eol-for-2024/50177/2
       # -- Ubuntu 20.04 LTS, Docker 20.10.x
       # -- Python 3.10 requires at least Docker 20.10
       #    https://github.com/jupyter/docker-stacks/issues/1767
       #    https://medium.com/nttlabs/ubuntu-21-10-and-fedora-35-do-not-work-on-docker-20-10-9-1cd439d9921
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce
