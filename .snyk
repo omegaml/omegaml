@@ -5,7 +5,7 @@ language-settings:
   python: "3.11"
 ignore:
   'CWE-444':
-    - docs > requirements.txt:
+    - sphinx-autobuild > livereload > tornado:
       reason: >
        Tornado is only used in local and build environment that are not exploitable,
        it is a transient dependency by sphinx-autobuild.

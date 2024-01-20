@@ -1,6 +1,6 @@
 # documentation packages
 # -- we don't specify version dependencies to always have the most recent packages for document building
-# -- if you want a working fixed set see fixed-requirements.txt
+# -- if you want a working fixed set see fixed-requirements.doc
 nbsphinx                                                                                                                                                                     
 pandoc                                                                                                                                                                       
 pandocfilters                                                                                                                                                                
