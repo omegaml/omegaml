@@ -412,12 +412,15 @@ def get_user_config(user, qualifier, view):
     # -- see if user has a defined deployment
     user_service = user.services.filter(offering__name='omegaml').first()
     user_settings = getattr(user_service, 'settings', None) or {}
-    # -- get group user's settings if so requested or as a fallback
-    # -- if user does own deployment, will revert to group settings
+    # -- get group user's settings if requested by 'group:qualifier'
+    # -- if it is just a 'group' qualifier, consider this as group:default
     if ':' in qualifier or qualifier not in user_settings.get('qualifiers', {}):
         group_settings, qualifier = get_usergroup_settings(user, qualifier)
-        user_settings = group_settings or user_settings
-    assert user_settings, f"no service available for user {user} and qualifier {qualifier}"
+        user_settings = group_settings
+    # -- if qualifier is not in user or group settings, fail the request
+    msg = f"no service available for user {user} and qualifier {qualifier}"
+    assert user_settings, msg
+    assert qualifier in user_settings.get('qualifiers', {}), msg # qualifier unknown
     # -- parse user settings to most recent version
     #    we support multiple config versions for legacy reasons
     #    every parser must return to the most recent version spec as per above
@@ -615,24 +618,32 @@ def get_usergroup_settings(user, qualifier):
 
         1. Lookup the group named <group>, of which <user> must be a member
         2. Find the group user named G<group> (note the capital G)
-        3. Return the group user's services.setting
+        3. Return the group user's services.settings
 
         Examples:
 
         * qualifier = 'foobar' => settings=Gfoobar, qualifier=default
-        * qualifier = 'foobar:default' => user Gfoobar, qualifier default
-        * qualifier = 'foobar:some' => user Gfoobar, qualifier some
+        * qualifier = 'foobar:default' => settings=Gfoobar, qualifier default
+        * qualifier = 'foobar:some' => settings=Gfoobar, qualifier some
+        * qualifier = 'bad:some' => None, some
 
         For the case where only <group> is specified without a qualifier,
-        and where the user's settings originally contain the <group> qualifier,
-        this is returned.
+        the qualifier is returned as 'default'.
+
+    Returns:
+        Either one of:
+
+        - settings, qualifier (tuple): for the case where a group user exists
+              and the user is a member of the group
+        - None, qualifier (tuple): for the case where the group user does not
+              exist or the user is not a member of the group (unauthorized)
     """
     from django.contrib.auth.models import User
 
     # e.g.
     # somegroup => somegroup, default
     # somegroup:qualif => somegroup, qualif
-    # somegroup:qualif:invalid => somegroup: qualif
+    # somegroup:qualif:invalid => somegroup, qualif
     group_name, qualifier, *_ = f'{qualifier}:default'.split(':', 2)
     group_user = re.sub(f'[{string.punctuation}]', '', f'G{group_name}')
     group_user = User.objects.filter(username=group_user,

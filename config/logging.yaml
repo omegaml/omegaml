@@ -22,6 +22,8 @@ logging:
         - data
         - result
         - request
+       mapping:
+         requestId: task_id
   handlers:
      console:
        class: logging.StreamHandler
