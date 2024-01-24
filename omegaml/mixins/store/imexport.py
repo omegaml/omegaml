@@ -113,22 +113,29 @@ class OmegaExportArchive:
             rmtree(self.path)
         self.manifest = self._read_manifest()
 
-    def compress(self):
+    def compress(self, mode='gz'):
         # create a timestamped path that does not contain :
         # -- due to https://superuser.com/a/1720174
         dt = str(datetime.utcnow().isoformat()).replace(':', '')
-        tfn = self.path.parent / f'{self.path.name}-{dt}.tgz'
+        ext = '.tgz' if mode == 'gz' else '.tar'
+        tfn = self.path.parent / f'{self.path.name}-{dt}{ext}'
         Path(tfn).unlink(missing_ok=True)
-        with tarfile.open(tfn, 'w:gz') as tar:
+        with tarfile.open(tfn, f'w:{mode}') as tar:
             tar.add(self.path, arcname=self.path.name, recursive=True)
         self.clear()
         return tfn
 
-    def decompress(self):
+    def decompress(self, mode=None):
         if self.path.is_file():
-            target = self.path.parent / self.path.name.replace('.tgz', '')
-            with tarfile.open(self.path, 'r:gz') as tar:
-                tar.extractall(target)
+            mode = mode or ('gz' if self.path.name.endswith('.tgz') else 'tar')
+            ext = '.tgz' if mode == 'gz' else '.tar'
+            target = self.path.parent / self.path.name.replace(ext, '')
+            target.mkdir(exist_ok=True)
+            with tarfile.open(self.path, f'r:{mode}') as tar:
+                # SEC: CWE-22 avoid extracting vulnerable file paths
+                # - reason: files are extracted using Python's tarfile 'data' filter which fixes the issue
+                # - status: fixed
+                tar.extractall(target, filter='data')
             # the first entry in the archive is the actual archive contents
             basename = list(target.iterdir())[0]
             arc = self.__class__(basename, self.store)
@@ -249,6 +256,28 @@ class OmegaExporter:
         self.omega = omega
 
     def to_archive(self, path, objects=None, fmt='omega', compress=False, progressfn=None):
+        """ write export archive
+
+        Export archives can be either uncompressed or compressed. Uncompressed archives
+        are written as a directory tree on the filesystem, suitable for tracking in version
+        control system such as git. Compressed archives are written as a tarfile.
+
+        Args:
+            path (str): the path to export the archive to
+            objects (list): the list of objects to be exported, with their respective store
+              denoted each omegaml store's prefix, e.g. 'data/*' or 'data/mydataset',
+              'model/mymodel', etc. If None, all objects in all stores will be exported
+            fmt (str): currently only 'omegaml' is supported
+            compress (bool|str): if True or 'tgz', the archive is exported to a gziped tarfile (.tgz).
+              If False, the archive is uncompress, using <path> as the root of the archive.
+              If 'tar' the archive is exported to an uncompressed tarfile, amenable to updates.
+              Defaults to False.
+            progressfn (fn): if a callable is given, will be called for each member to report
+              progress
+
+        Returns:
+            archive_path (Path): path of the written archive (a directory or the tarfile)
+        """
         obj: Metadata | str
         store: ObjectImportExportMixin | OmegaStore
         if not objects:
@@ -256,7 +285,7 @@ class OmegaExporter:
         with OmegaExporter.archive(path, fmt=fmt) as arc:
             arc.clear()
             for obj in objects:
-                progressfn(obj) if progressfn else None
+                progressfn(obj) if callable(progressfn) else None
                 if isinstance(obj, Metadata):
                     store = self.omega.store_by_meta(obj)
                     store.to_archive(obj.name, arc)
@@ -274,7 +303,8 @@ class OmegaExporter:
                     for objname in objects:
                         store.to_archive(objname, arc)
         if compress:
-            archive_path = arc.compress()
+            mode = '' if compress == 'tar' else 'gz'
+            archive_path = arc.compress(mode=mode)
         else:
             archive_path = path
         return archive_path

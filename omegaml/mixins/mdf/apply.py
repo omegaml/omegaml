@@ -79,6 +79,9 @@ class ApplyMixin(object):
             pipeline = list(pipeline)[:-1]
         spipeline = json.dumps(pipeline, sort_keys=True)
         data = '{}_{}'.format(collection.name, spipeline).encode('utf-8')
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: hashcode is used purely for name resolution, not a security function
         key = hashlib.md5(data).hexdigest()
         return key
 

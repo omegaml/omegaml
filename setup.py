@@ -14,7 +14,7 @@ snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
 tf_deps = ['tensorflow>2']
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion']
+dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools']
 backtracking_deps = [
     'json5>0.9',  # nobody knows
     'google_auth_oauthlib>=1',  # nobody knows
@@ -94,6 +94,7 @@ setup(
         'marshmallow>=3.17.0',  # required for openapi generation
         'sqlalchemy<2',  # currently no support for sqlalchemy 2
         'minibatch[all]',  # required for streaming
+        'validators', # required for sec validations
     ],
     extras_require={
         'all': test_deps,

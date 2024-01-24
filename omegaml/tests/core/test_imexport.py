@@ -217,6 +217,21 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('mydf', om_restore.datasets.list())
         self.assertEqual(imported, [meta])
 
+    def test_runtime_exporter_export_import_bare_tarfile(self):
+        om = self.om
+        om_restore = self.om_restore
+        df = pd.DataFrame({'x': range(10)})
+        om.datasets.put(df, 'mydf', append=False)
+        arcfile = OmegaExporter(om).to_archive('/tmp/test', ['data/mydf'], compress='tar')
+        with self.assertRaises(FileNotFoundError):
+            OmegaExporter(om_restore).from_archive('/tmp/test')
+        meta = om_restore.datasets.metadata('mydf')
+        self.assertIsNone(meta)
+        imported = OmegaExporter(om_restore).from_archive(arcfile)
+        meta = om_restore.datasets.metadata('mydf')
+        self.assertIn('mydf', om_restore.datasets.list())
+        self.assertEqual(imported, [meta])
+
     def test_runtime_exporter_export_promote(self):
         om = self.om
         om_restore = self.om_restore

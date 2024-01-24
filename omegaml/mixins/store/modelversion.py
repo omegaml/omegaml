@@ -166,6 +166,9 @@ class ModelVersionMixin(object):
         return actual_name
 
     def _model_version_hash(self, meta):
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: hashcode is used purely for name resolution, not a security function
         hasher = sha1()
         hasher.update(_u8(meta.name))
         hasher.update(_u8(str(meta.modified)))
