@@ -1,7 +1,7 @@
 # TODO implement drop for revisions!
-from datetime import datetime
-
 import pandas as pd
+import sys
+from datetime import datetime
 from tqdm import tqdm
 
 from omegaml.util import tryOr
@@ -74,11 +74,19 @@ class DataRevisionMixin:
     def supports(cls, store, **kwargs):
         return store.prefix == 'data/'
 
+    def metadata(self, name, raw=False, **kwargs):
+        return (super().metadata(name, **kwargs) if not raw
+                else super().metadata(self._revname(name), **kwargs))
+
     def _has_revisions(self, name, revisions=False):
         # return True if revisions exist for dataset name, or if requested
         meta = self.metadata(name)
         revisions = revisions or (meta is not None and 'revisions' in meta.kind_meta)
         return revisions
+
+    def _revname(self, name):
+        name, tag = name.split('@') if '@' in name else (name, '')
+        return f'.revisions.{name}'
 
     def _build_revision(self, df, name, append=True, revision_dt=None, tag=None, delete=False, **kwargs):
         """ build a new revision
@@ -99,7 +107,7 @@ class DataRevisionMixin:
         """
         # build a new revision
         # -- set revision dataset
-        revname = '.revisions.{name}'.format(**locals())
+        revname = self._revname(name)
         # -- deal with replacement, dropping dataset and all revisions
         if not append:
             super().drop(name, force=True)
@@ -109,6 +117,8 @@ class DataRevisionMixin:
             df['_delete_'] = delete
         meta = self.metadata(name)
         if meta is not None:
+            if 'revisions' not in meta.kind_meta:
+                raise ValueError(f'adding revisions to existing dataset {name} is not supported')
             # _calculate and record revision
             revision = meta.kind_meta['revisions'].get('seq', 0) + 1
             df['_om#revision'] = revision
@@ -298,10 +308,13 @@ class DataRevisionMixin:
               are flagged as the _delete_ flag, not applied)
         """
         # we pass revisions=None to enforce decision by meta data
-        if not self._has_revisions(name, revisions=None):
+        if '@' in name:
+            name, revision = name.split('@')
+        if not self._has_revisions(name):
             return super().get(name, **kwargs)
-        # check if revision is a datetime value
+        # check if revision is a number, tag or a datetime value
         if isinstance(revision, str):
+            revision = tryOr(lambda: int(revision), revision)
             revision = tryOr(lambda: pd.to_datetime(revision).to_pydatetime(), revision)
         data = self._retrieve_revision(name,
                                        revision=revision,
@@ -310,7 +323,12 @@ class DataRevisionMixin:
                                        **kwargs)
         return data
 
-    def revisions(self, name):
-        meta = self.metadata(name)
-        changes = meta.kind_meta['revisions']['changes']
-        return pd.DataFrame(changes)
+    def revisions(self, name, raw=False):
+        if self._has_revisions(name):
+            meta = self.metadata(name)
+            changes = meta.kind_meta.get('revisions', {}).get('changes', [])
+            as_list = lambda v : [f'{name}@{c.get("tag", i)}' for i, c in enumerate(v)]
+            as_raw = lambda v : [self.metadata(m, raw=True) for m in as_list(v)]
+            display = (lambda v: pd.DataFrame(v)) if sys.flags.interactive else as_list
+            return display(changes) if not raw else as_raw(changes)
+        return None

@@ -194,4 +194,19 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         # without
         store.get('mymodel')
 
+    def test_revisions(self):
+        store = self.om.models
+        store.register_mixin(ModelVersionMixin)
+        clf = LinearRegression()
+        # no model, no revisions
+        revisions = store.revisions('regmodel')
+        self.assertIsNone(revisions)
+        # store model and check revisions
+        store.put(clf, 'regmodel', tag='version1')
+        store.put(clf, 'regmodel', tag='version2')
+        revisions = store.revisions('regmodel')
+        self.assertEqual(revisions, ['regmodel@latest', 'regmodel@version1', 'regmodel@version2'])
+        revisions = store.revisions('regmodel', raw=True)
+        self.assertIsInstance(revisions[-1], store._Metadata)
+
 

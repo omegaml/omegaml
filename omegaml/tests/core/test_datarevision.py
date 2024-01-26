@@ -1,7 +1,6 @@
+import pandas as pd
 import unittest
 from datetime import datetime
-
-import pandas as pd
 from pandas._testing import assert_frame_equal
 
 from omegaml import Omega
@@ -122,6 +121,10 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # retrieve by string-specified date
         dfx = om.datasets.get('revtest', revision=dt_a.isoformat())
         assert_frame_equal(dfx, df_a)
+        # retrieve by name@dt
+        revision = dt_a.isoformat()
+        dfx = om.datasets.get(f'revtest@{revision}', )
+        assert_frame_equal(dfx, df_a)
 
     def test_revisions_bytag(self):
         om = self.om
@@ -133,6 +136,9 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
                                tag='rev_a')
         # get back original revision by atag
         dfx = om.datasets.get('revtest', revision='rev_a')
+        assert_frame_equal(dfx, df_a)
+        # get back by name@tag
+        dfx = om.datasets.get('revtest@rev_a')
         assert_frame_equal(dfx, df_a)
 
     def test_revisions_bynegativeindex(self):
@@ -168,6 +174,11 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         assert_frame_equal(dfx.iloc[0:3], df_a.iloc[0:3])
         assert_frame_equal(dfx.iloc[3:6], df_b.iloc[0:])
         assert_frame_equal(dfx.iloc[6:], df_c.iloc[0:])
+        # test by name@-1
+        dfx = om.datasets.get('revtest@-1')
+        assert_frame_equal(dfx.iloc[0:3], df_a.iloc[0:3])
+        assert_frame_equal(dfx.iloc[3:6], df_b.iloc[0:])
+        assert_frame_equal(dfx.iloc[6:], df_c.iloc[0:])
 
     def test_revisions_list(self):
         om = self.om
@@ -182,9 +193,9 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         })
         om.datasets.put(df_b, 'revtest')
         # check revisions list
-        revs = om.datasets.revisions('revtest')
+        revs = om.datasets.revisions('revtest', raw=True)
         self.assertEqual(len(revs), 2)
-        self.assertEqual(['dt', 'seq', 'tags', 'delete'], list(revs.columns))
+        self.assertIsInstance(revs[-1], om.datasets._Metadata)
 
     def test_revisions_delete_byindex(self):
         om = self.om
@@ -264,4 +275,17 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         assert_frame_equal(dfx[['x']], df_a)
         self.assertIn('_om#revision', dfx.columns)
         self.assertIn('_delete_', dfx.columns)
+
+    def test_revision_revision_existing(self):
+        """ check storing revisions works as expected"""
+        om = self.om
+        # storing dataset by numeric index, 0-9
+        df_a = pd.DataFrame({
+            'x': range(0, 10)
+        })
+        om.datasets.put(df_a, 'revtest', append=False)
+        with self.assertRaises(ValueError) as cm:
+            om.datasets.put(df_a, 'revtest', revisions=True)
+        self.assertEquals(str(cm.exception),
+                          "adding revisions to existing dataset revtest is not supported")
 

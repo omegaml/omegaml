@@ -129,7 +129,8 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(om.models.list(hidden=True), ['mymodel'])
         self.assertNotIn('mymodel@version1', om.models.list())
         self.assertNotIn('mymodel@version2', om.models.list())
-        self.assertEqual(len(om.models.revisions('mymodel')), 2)
+        # -- expected @latest, @version1, @version2
+        self.assertEqual(len(om.models.revisions('mymodel')), 3)
         # check we can access the versioned model
         mdl = om.models.get('mymodel@version1')
         self.assertIsInstance(mdl, LinearRegression)
@@ -263,7 +264,8 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
                                                    promote_to=om_restore)
             self.assertIn('mydf', om_restore.datasets.list())
             self.assertIn('mymodel', om_restore.models.list())
-            self.assertEqual(len(om_restore.models.revisions('mymodel')), 3)
+            # expected model versions @latest, @version1, @version2 + base version
+            self.assertEqual(len(om_restore.models.revisions('mymodel')), 4)
             # check model versions are as expected
             # -- latest
             mdl = om_restore.models.get('mymodel')
@@ -281,7 +283,8 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
                                                    pattern='jobs/.*')
             self.assertEqual(om_restore.jobs.list(), ['myjob.ipynb'])
             # ensure models were not touched
-            self.assertEqual(len(om_restore.models.revisions('mymodel')), 3)
+            # -- expect @latest, @version1, @version2 + base version
+            self.assertEqual(len(om_restore.models.revisions('mymodel')), 4)
 
 
 if __name__ == '__main__':
