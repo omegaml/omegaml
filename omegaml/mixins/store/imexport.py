@@ -13,7 +13,7 @@ from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
-from omegaml.util import IterableJsonDump, load_class, SystemPosixPath
+from omegaml.util import IterableJsonDump, load_class, SystemPosixPath, tarfile_safe_extractall
 
 
 class ObjectImportExportMixin:
@@ -135,7 +135,7 @@ class OmegaExportArchive:
                 # SEC: CWE-22 avoid extracting vulnerable file paths
                 # - reason: files are extracted using Python's tarfile 'data' filter which fixes the issue
                 # - status: fixed
-                tar.extractall(target, filter='data')
+                tarfile_safe_extractall(tar, target, filter='data')
             # the first entry in the archive is the actual archive contents
             basename = list(target.iterdir())[0]
             arc = self.__class__(basename, self.store)

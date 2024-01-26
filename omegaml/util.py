@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import tarfile
 from importlib import import_module
 
 import json
@@ -1130,6 +1131,39 @@ class KeepMissing(dict):
 
 
 def sec_validate_url(url):
-    assert validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
+    assert validators.url(url, skip_ipv4_addr=True,
+                          skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
     assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
     return True
+
+
+def tarfile_safe_extractall(tar, dest_path, filter='data'):
+    # backport of tarfile.extractall(..., filter=) kwarg
+    # -- this ensures safe tarfile extract in all Python versions
+    # -- can be removed once support for Python < 3.12 is dropped
+    # -- adopted from https://github.com/encukou/cpython/pull/26/files
+    # -- Python 3.12 https://docs.python.org/3/library/tarfile.html#tarfile.TarFile.extractall
+    # SEC: CVE-2007-4559 avoid extracting vulnerable file paths
+    # - reason: tarfile members are checked for
+    # - status: fixed
+    try:
+        # Python since 3.12
+        # -- there is a security backport to 3.11, 3.10, 3.9
+        # -- if respective release installed we will use it
+        return tar.extractall(dest_path, filter=filter)
+    except TypeError:
+        pass
+    for member in tar.getmembers():
+        name = member.name
+        if name.startswith(('/', os.sep)):
+            name = member.path.lstrip('/' + os.sep)
+        if os.path.isabs(name):
+            # Path is absolute even after stripping.
+            # For example, 'C:/foo' on Windows.
+            raise ValueError(f"tarfile: {member} is an absolute path")
+            # Ensure we stay in the destination
+        target_path = os.path.realpath(os.path.join(dest_path, name))
+        if os.path.commonpath([target_path, dest_path]) != dest_path:
+            raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
+    # Python before 3.12, before backports to 3.11, 3.10, 3.9
+    return tar.extractall(dest_path)

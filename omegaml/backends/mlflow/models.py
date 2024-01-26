@@ -5,6 +5,7 @@ import os
 from tarfile import TarFile
 
 from omegaml.backends.basemodel import BaseModelBackend
+from omegaml.util import tarfile_safe_extractall
 
 
 class MLFlowModelBackend(BaseModelBackend):
@@ -118,7 +119,7 @@ class MLFlowModelBackend(BaseModelBackend):
         with open(tmpfn, 'wb') as fout:
             fout.write(infile.read())
         with TarFile(tmpfn, mode='r') as tarf:
-            tarf.extractall(model_path)
+            tarfile_safe_extractall(tarf, model_path, filter='data')
         for fn in glob.glob(f'{model_path}/**/MLmodel', recursive=True):
             model = mlflow.pyfunc.load_model(os.path.dirname(fn))
             break
