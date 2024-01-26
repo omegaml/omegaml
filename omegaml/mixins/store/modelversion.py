@@ -85,33 +85,38 @@ class ModelVersionMixin(object):
             meta = super().metadata(name)
         return meta
 
-    def revisions(self, name):
-        if self._model_version_applies(name):
-            meta = self.metadata(name)
+    def revisions(self, name, raw=False):
+        meta = self.metadata(name)
+        if meta and self._model_version_applies(name):
             versions = meta.attributes.get('versions', {})
             commits = versions.get('commits', [])
             tags = versions.get('tags', {})
             commit_tags = defaultdict(list)
             for k, v in tags.items():
                 commit_tags[v].append(k)
-            revisions = [
-                (commit['ref'], commit_tags.get(commit['ref'], ''))
-                for commit in commits
+            tagged_revs = [
+                f'{name}@{tag}' for tag in tags.keys()
             ]
-            return revisions
-        raise NotImplementedError
+            non_tagged_revs  = [
+                f'{name}@{commit["ref"]}' for commit in commits
+                if not commit_tags.get(commit['ref'])
+            ]
+            revisions = tagged_revs + non_tagged_revs
+            as_raw = lambda v: [self.metadata(m, raw=True) for m in revisions]
+            return as_raw(revisions) if raw else revisions
+        return None
 
     def _versioned_metas(self, name):
         # get all metas that match a given name
         # return list of tuples(actual-meta, actual-name)
-        meta = self.metadata(name)
-        versions = meta.attributes.get('versions')
+        meta = self.metadata(name, raw=True)
+        base_meta, *_ = self._base_metadata(name)
+        versions = base_meta.attributes.get('versions')
         metas = []
         # if the base version is requested (no @version tag in name)
         # -- update the latest version's metadata with current
         # -- include all tags and versions
         if '@' not in name:
-            base_meta = self.metadata(name)
             base_meta.attributes.update(meta.attributes)
             metas.append((base_meta, name))
             # -- add all tagged versions
@@ -120,10 +125,9 @@ class ModelVersionMixin(object):
                 metas.append((self.metadata(asname, raw=True), asname))
         else:
             # always add the base version's metadata to ensure the version is linked
-            base_meta = self.metadata(name)
             metas.append((base_meta, base_meta.name))
             # a specific version is requested, get that
-            metas.append((self.metadata(name, raw=True), name))
+            metas.append((meta, name))
         return metas
 
     def _base_metadata(self, name, **kwargs):
@@ -189,7 +193,7 @@ class ModelVersionMixin(object):
 
     def _put_version(self, obj, meta, tag=None, commit=None, previous=None, **kwargs):
         version_hash = commit or self._model_version_hash(meta)
-        previous = meta.attributes['versions']['tags'].get(previous) or previous
+        previous = meta.attributes['versions']['tags'].get(previous) or None
         version_name = self._model_version_store_key(meta.name, version_hash)
         version_meta = self.put(obj, version_name, noversion=True, **kwargs)
         version_meta.attributes = deepcopy(meta.attributes)
