@@ -1100,8 +1100,9 @@ class SystemPosixPath(type(Path()), Path):
 
 
 class ProcessLocal(dict):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, cache=None, **kwargs):
         self._pid = os.getpid()
+        self._cache = cache
         super().__init__(*args, **kwargs)
 
     def _check_pid(self):
@@ -1111,15 +1112,19 @@ class ProcessLocal(dict):
 
     def __getitem__(self, k):
         self._check_pid()
-        return super().__getitem__(k)
+        return (self._cache or super()).__getitem__(k)
 
     def keys(self):
         self._check_pid()
-        return super().keys()
+        return (self._cache or super()).keys()
+
+    def clear(self):
+        self._cache.clear() if self._cache else None
+        return super().clear()
 
     def __contains__(self, item):
         self._check_pid()
-        return super().__contains__(item)
+        return (self._cache or super()).__contains__(item)
 
 
 class KeepMissing(dict):
