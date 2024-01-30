@@ -128,6 +128,11 @@ else:
             self.assertEqual(meta.kind, MLFlowModelBackend.KIND)
             model_ = om.models.get('mymodel')
             self.assertIsInstance(model_, mlflow.pyfunc.PyFuncModel)
+            # test saving again to the same path should work
+            try:
+                meta = om.models.put(model, 'mymodel', kind='mlflow.model')
+            except:
+                self.fail('saving the same model twice should not raise error')
 
         def test_save_mlflow_model_run(self):
             """ test deploying an MLModel from a tracking server URI """
