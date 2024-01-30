@@ -2,10 +2,13 @@ import os
 import subprocess
 
 
-def run(om, *args, package=None, file=None, action='install', options=None, **kwargs):
+def run(om, *args, package=None, requirements=None, action='install', options=None, **kwargs):
     """ install packages in user environment
 
     Installation:
+        # from the command line
+        om runtime env install
+        # from the omegaml/runtimes/envinstall directory
         om scripts put envinstall envinstall
 
     Usage:
@@ -16,14 +19,14 @@ def run(om, *args, package=None, file=None, action='install', options=None, **kw
         # uninstall
         om runtime script envinstall run action=uninstall
     """
-    lockfile = '/app/pylib/user/envinstall.lock'
-    reqfile = '.system/requirements.txt'
+    lockfile = '/tmp/envinstall.lock'
+    reqfile = requirements or '.system/requirements.txt'
     package = package or ' '
     try:
         with open(lockfile, 'x') as flock:
             # only run if we can get an exclusive lock
             reqfn = '/tmp/envreq.txt'
-            if file:
+            if reqfile:
                 with open(reqfn, 'wb') as fout:
                     reqs = om.scripts.get(reqfile).read()
                     fout.write(reqs)

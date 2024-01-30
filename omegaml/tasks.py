@@ -5,22 +5,10 @@ from __future__ import absolute_import
 
 import datetime
 import os
-import sys
 from celery import shared_task
 from celery.signals import worker_process_init
 
 from omegaml.celery_util import OmegamlTask, sanitized
-
-if os.path.basename(sys.argv[0]) == 'celery':
-    try:
-        # ensure tensorflow is loaded -- this avoids AttributeError for tf.estimator later
-        # we do this here instead of in tfestimatormodel to avoid loading tensorflow if it
-        # is not needed. loading means this happens at runtime worker startup
-        import tensorflow as tf
-
-        tf.version
-    except:
-        pass
 
 
 @shared_task(base=OmegamlTask, bind=True)
@@ -129,6 +117,12 @@ def omega_ping(task, *args, exception=False, **kwargs):
     return data
 
 
+@shared_task(base=OmegamlTask, bind=True)
+def omega_preload(task, *args, items=None, **kwargs):
+    """ preload models, datasets and other items into worker process """
+    pass
+
+
 @worker_process_init.connect
 def fix_multiprocessing(**kwargs):
     # allow celery to start sub processes
@@ -140,3 +134,11 @@ def fix_multiprocessing(**kwargs):
         current_process()._config
     except AttributeError:
         current_process()._config = {'semprefix': '/mp'}
+
+
+@worker_process_init.connect
+def preload_frameworks(**kwargs):
+    # TODO in light of PR#253 startup-performance this may be needed
+    #      until then omegaml.defaults does this already, kept here for reference
+    from omegaml import _base_config
+    _base_config.load_framework_support()
