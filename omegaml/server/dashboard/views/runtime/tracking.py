@@ -2,6 +2,8 @@ from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 from plotly.io import json
 
+from omegaml.server.util import datatables_ajax
+
 
 class TrackingView(RepositoryBaseView):
     list_template = 'runtime/{self.segment}.html'
@@ -45,11 +47,7 @@ class TrackingView(RepositoryBaseView):
         nrows = int(self.request.args.get('length', 10))
         data, totalRows = self._experiment_data(name, start=start, nrows=nrows,
                                                 run='all')
-        return {
-            'data': data,
-            'recordsTotal': totalRows,
-            'recordsFiltered': totalRows,
-        }
+        return datatables_ajax(data, n_total=totalRows)
 
     @fv.route('/{self.segment}/experiment/plot/<name>')
     def api_plot_metrics(self, name):

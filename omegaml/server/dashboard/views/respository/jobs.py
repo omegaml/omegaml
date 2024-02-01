@@ -1,11 +1,13 @@
+from cron_descriptor import get_description
+
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 from omegaml.server import flaskview as fv
+from omegaml.server.util import datatables_ajax
 
 
 class JobsRepositoryView(RepositoryBaseView):
     def detail_data(self, name, data=None, meta=None):
-        run_at, triggers = self.store.get_schedule(name, only_pending=True)
-        return {'run_at': run_at, 'triggers': triggers}
+        return self.api_get_schedule(name)['data']
 
     @fv.route('/{self.segment}/runs/<path:name>')
     def api_list_runs(self, name):
@@ -13,12 +15,18 @@ class JobsRepositoryView(RepositoryBaseView):
         meta = self.store.metadata(name)
         runs = meta.attributes.get('job_runs', [])
         runs = [r for r in runs if query in r['results']] if query else runs
-        totalRows = len(runs)
-        return {
-            'data': runs,
-            'recordsTotal': totalRows,
-            'recordsFiltered': totalRows,
-        }
+        return datatables_ajax(runs)
+
+    @fv.route('/{self.segment}/schedule/<path:name>')
+    def api_get_schedule(self, name):
+        run_at, triggers = self.store.get_schedule(name, only_pending=True)
+        schedule = {
+            'triggers': triggers,
+            'schedule': {
+                'text': get_description(run_at),
+                'cron': run_at,
+            }}
+        return datatables_ajax(schedule)
 
     @fv.route('/{self.segment}/results/<path:name>')
     def api_get_results(self, name):

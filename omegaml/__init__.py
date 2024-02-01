@@ -47,6 +47,8 @@ scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')
 runtime = _omega.OmegaDeferredInstance(_omega._om, 'runtime')
 #: stream helper
 streams = _omega.OmegaDeferredInstance(_omega._om, 'streams')
+#: buckets helper
+buckets = _omega.OmegaDeferredInstance(_omega._om, 'buckets')
 #: the OmegaSimpleLogger for easy log access
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object

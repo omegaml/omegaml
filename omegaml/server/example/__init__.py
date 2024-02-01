@@ -7,7 +7,6 @@ from omegaml.tests.util import clear_om
 
 
 def create_testdata(om):
-    om = om.setup()
     reg = LinearRegression()
     df = pd.DataFrame({
         'a': range(1, 3)
@@ -25,9 +24,10 @@ def create_testdata(om):
         for i in range(10):
             omx.models.put(reg, f'{bx}-reg-{i}')
             omx.datasets.put(df, f'{bx}-data-{i}', revisions=True)
-            om.scripts.put(myservice, 'hello', replace=True)
+            omx.scripts.put(myservice, 'hello', replace=True)
             omx.jobs.create(code, 'hello')
-            if i == 0:
+            omx.jobs.schedule('hello', 'every Saturday, at 05:00')
+            if i < 3:
                 omx.runtime.job('hello').run().get()
             with omx.runtime.experiment('test') as exp:
                 exp.track(f'{bx}-reg-{i}')
@@ -40,5 +40,6 @@ if __name__ == '__main__':
     import omegaml as om
     om._base_config.OMEGA_LOCAL_RUNTIME = True
     settings(reload=True)
+    om = om.setup()
     clear_om(om)
     create_testdata(om)

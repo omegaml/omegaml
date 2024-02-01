@@ -1,8 +1,9 @@
-import json
 import mimetypes
+from base64 import encodebytes, decodebytes
+
+import json
 import nbformat
 import os
-from base64 import encodebytes, decodebytes
 from datetime import datetime
 from io import BytesIO
 from jupyter_server.services.contents.manager import ContentsManager
@@ -23,12 +24,13 @@ class OmegaStoreContentsManager(ContentsManager):
     see https://jupyter-server.readthedocs.io/en/latest/developers/contents.html
     """
 
-    checkpoints_class = NoOpCheckpoints
-
     def __init__(self, **kwargs):
         # pass omega= for testing purpose
         self._omega = kwargs.pop('omega', None)
         super(OmegaStoreContentsManager, self).__init__(**kwargs)
+
+    def _checkpoints_class_default(self):
+        return NoOpCheckpoints
 
     @property
     def omega(self):

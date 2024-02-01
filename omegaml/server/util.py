@@ -10,3 +10,14 @@ def configure_database(db, app):
         db.create_all()
         Migrate(app, db)
 
+
+def datatables_ajax(data, n_total=None, n_filtered=None):
+    # return datatables ajax response
+    # https://datatables.net/manual/server-side#Returned-data
+    n_total = n_total or len(data)
+    n_filtered = n_filtered or len(data)
+    return {
+        'data': data,
+        'recordsTotal': n_total,
+        'recordsFiltered': n_filtered,
+    }

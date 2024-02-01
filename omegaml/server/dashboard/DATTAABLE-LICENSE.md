@@ -1,4 +1,4 @@
-** THIS LICENSE APPLIES TO dashboard/templates and parts marked (c) CodedThemes only
+\*\* THIS LICENSE APPLIES TO dashboard/templates and parts marked (c) CodedThemes only
 
 MIT License
 
@@ -24,5 +24,6 @@ SOFTWARE.
 
 sources:
 
-* https://codedthemes.com/demos/admin-templates/datta-able/bootstrap/default/navigation/index.html
-* https://github.com/codedthemes/datta-able-bootstrap-dashboard 
+- https://codedthemes.com/demos/admin-templates/datta-able/bootstrap/default/navigation/index.html
+- https://github.com/codedthemes/datta-able-bootstrap-dashboard
+- https://lite.codedthemes.com/datta-able/bootstrap/
