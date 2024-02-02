@@ -55,7 +55,7 @@ cron-descriptor==1.4.0
     # via omegaml (setup.py)
 croniter==2.0.1
     # via omegaml (setup.py)
-dash==2.14.2
+dash==2.15.0
     # via minibatch
 dash-core-components==2.0.0
     # via dash
