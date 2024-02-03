@@ -1,6 +1,5 @@
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
-from plotly.io import json
 
 from omegaml.server.util import datatables_ajax
 
@@ -52,6 +51,7 @@ class TrackingView(RepositoryBaseView):
     @fv.route('/{self.segment}/experiment/plot/<name>')
     def api_plot_metrics(self, name):
         import plotly.express as px
+        from plotly.io import json
         multicharts = int(self.request.args.get('multicharts', 0))
         metrics, totalRows = self._experiment_data(name,
                                                    run='all', event='metric')

@@ -19,7 +19,8 @@ class FlaskView:
             kwargs = dict(options)
             kwargs.pop('order', None) # drop order, it's not a valid kwarg to bp.add_url_rule()
             kwargs.update(
-                endpoint=kwargs.get('endpoint') or f'{self.segment}_{view}'
+                endpoint=kwargs.get('endpoint') or f'{self.segment}_{view}',
+                strict_slashes=kwargs.get('strict_slashes', False),
             )
             view_fn = view if callable(view) else getattr(self, view)
             route = route.format(self=self)

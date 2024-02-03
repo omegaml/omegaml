@@ -5,6 +5,7 @@ from ._version import version
 from .mixins.store.requests import CombinedStoreRequestCache
 from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
+from .util import LunaMonitor
 
 
 class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
@@ -58,6 +59,10 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
         # stores
         self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
+        # monitoring
+        # self._monitor = self._make_monitor()
+        # check connections
+        # self._check_connections()
 
     def __repr__(self):
         return 'Omega()'.format()
@@ -82,6 +87,15 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
+
+    def _make_monitor(self):
+        return LunaMonitor(self)
+
+    def status(self):
+        return self._monitor.status()
+
+    def _check_connections(self):
+        return self._monitor.wait_ok()
 
     def __getitem__(self, bucket):
         """
@@ -111,7 +125,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     def _get_bucket(self, bucket):
         # enable patching in testing
-        bucket = None if bucket == 'default' else bucket
+        bucket = None if (not bucket or bucket == 'default') else bucket
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)
@@ -208,6 +222,10 @@ class OmegaDeferredInstance(object):
             return repr(getattr(self.base, self.attribute))
         self.setup()
         return repr(self.omega)
+
+    @property
+    def instance(self):
+        return self.base
 
 
 def setup(*args, **kwargs):

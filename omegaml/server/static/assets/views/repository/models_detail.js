@@ -1,0 +1,61 @@
+$(document).ready(function () {
+  // build experiment data viewer
+  var expViewer = $("#expviewer").DataTable({
+    ajax: `/tracking/experiment/data/_empty_`,
+    dom:
+      "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'fp>>" +
+      "<'row'<'col-sm-12'tr>>" +
+      "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+    serverSide: true,
+    search: {
+      return: true,
+    },
+    processing: true,
+    responsive: true,
+    //scrollX: true,
+    columns: [
+      { data: "run" },
+      { data: "event" },
+      { data: "step" },
+      { data: "key" },
+      { data: "value" },
+      { data: "dt" },
+    ],
+  });
+  // query experiment data and show as a table
+  function showTable(exp) {
+    $("#expchart").hide();
+    $("#exptable").show();
+    expViewer.ajax.url(`/tracking/experiment/data/${exp}`).load();
+    $("#dropdownMenuButton").text(exp);
+  }
+  $(".dropdown-item.exp").on("click", function () {
+    var exp = $(this).text();
+    showTable(exp);
+  });
+  $("#showtable").on("click", function () {
+    var exp = $("#dropdownMenuButton").text();
+    showTable(exp);
+  });
+  // plot experiment data
+  function plotchart(exp, multi = false) {
+    var multi = multi ? 1 : 0;
+    $.ajax({
+      dataType: "json",
+      url: `/tracking/experiment/plot/${exp}?multicharts=${multi}`,
+      success: function (data) {
+        $("#exptable").hide();
+        $("#expchart").show();
+        Plotly.newPlot("expchart", data, {});
+      },
+    });
+  }
+  $("#plotchart").on("click", function () {
+    var exp = $("#dropdownMenuButton").text();
+    plotchart(exp, false);
+  });
+  $("#multicharts").on("click", function () {
+    var exp = $("#dropdownMenuButton").text();
+    plotchart(exp, true);
+  });
+});

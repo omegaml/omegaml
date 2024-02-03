@@ -1,11 +1,12 @@
 from flask import render_template, request
 
+from omegaml.server import flaskview as fv
+from omegaml.server.dashboard.views.base import BaseView
 
-def create_view(bp):
-    import omegaml as om
 
-    @bp.route('/runtime')
-    def summary():
+class RuntimeView(BaseView):
+    @fv.route('/runtime')
+    def summary(self):
         workers = [
             {'name': 'worker-1', 'status': 'running', 'activity': '10% / 10'},
             {'name': 'worker-2', 'status': 'running', 'activity': '10% / 10'},
@@ -16,8 +17,12 @@ def create_view(bp):
                                attributes={},
                                buckets=['default'])
 
-    @bp.route('/runtime/log')
-    def logviewer():
+    @fv.route('/runtime/worker/<name>')
+    def worker(self, name):
+        return name
+
+    @fv.route('/runtime/log')
+    def api_get_log(self):
         logdata = [
             {'datetime': '2020-01-01 00:00:00',
              'level': 'info',
@@ -27,7 +32,7 @@ def create_view(bp):
              'text': 'this is a log message',
              }
         ]
-        mdf = om.logger.dataset.get(lazy=True)
+        mdf = self.om.logger.dataset.get(lazy=True)
         # parse datatable serverside params
         start = int(request.args.get('start', 0))
         nrows = int(request.args.get('length', 10))
@@ -54,10 +59,38 @@ def create_view(bp):
             'recordsFiltered': len(logdata) if query else len(mdf),
         }
 
-    @bp.route('/runtime/worker/<name>')
-    def worker(name):
-        return name
+    @fv.route('/runtime/status/plot/health')
+    def api_status_plot_health(self):
+        import plotly.express as px
+        from plotly.io import json
+        import pandas as pd
+        by_status = pd.DataFrame({
+            'status': ['failed', 'healthy', 'pending'],
+            'count': [2, 9, 0],
+        })
+        fig = px.pie(data_frame=by_status,
+                     values='count',
+                     names='status')  # explicitley mark each data point
+        return json.to_json(fig)
+
+    @fv.route('/runtime/status/plot/uptime')
+    def api_status_plot_uptime(self):
+        import plotly.express as px
+        from plotly.io import json
+        import pandas as pd
+        from random import sample
+
+        long_df = pd.DataFrame({
+            'date': pd.date_range('1.1.2024', '31.1.2024'),
+            'status': [sample(['failed', 'healthy'], 1, counts=(2, 29))[0] for i in range(0, 31)],
+            'count': [1] * 31,
+        })
+        fig = px.bar(long_df, x="date", y="count", color="status",
+                     color_discrete_map={'failed': 'red', 'healthy': 'green'})
+        return json.to_json(fig)
 
 
-
-
+def create_view(bp):
+    view = RuntimeView('runtime')
+    view.create_routes(bp)
+    print(list(view.routes))

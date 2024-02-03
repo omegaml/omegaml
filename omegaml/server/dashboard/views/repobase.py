@@ -8,7 +8,7 @@ class RepositoryBaseView(BaseView):
     list_template = 'repository/{self.segment}.html'
     detail_template = 'repository/{self.segment}_detail.html'
 
-    @fv.route('/{self.segment}/')
+    @fv.route('/{self.segment}')
     def view_list(self, template=None):
         template = template or self.list_template.format(self=self)
         items = self.members()

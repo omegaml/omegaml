@@ -14,7 +14,9 @@ class OmegaTestMixin(object):
         for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
             part = getattr(om, element)
             drop = part.drop
-            [drop(m.name, force=True) for m in part.list(hidden=True, include_temp=True, raw=True)]
+            [drop(m.name,
+                  force=True,
+                  keep_data=False) for m in part.list(hidden=True, include_temp=True, raw=True)]
             self.assertListEqual(part.list(hidden=True, include_temp=True), [])
 
     @property
