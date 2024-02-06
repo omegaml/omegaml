@@ -1,7 +1,5 @@
 import os
 
-from flask_migrate import Migrate
-
 from omegaml.server.app import create_app
 
 if __name__ == '__main__':

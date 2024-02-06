@@ -32,6 +32,9 @@ def create_app(*args, **kwargs):
     app.url_map.strict_slashes = True
     # use Flask json encoder to support datetime
     app.config['RESTX_JSON'] = {'cls': JSONEncoder}
+    # configure swagger ui (flask-restx)
+    # -- https://flask-restx.readthedocs.io/en/latest/swagger.html
+    app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
     app.config.from_object(config)
     configure_database(db, app)
     login_manager.init_app(app)

@@ -64,7 +64,7 @@ class OmegaResourceMixin(object):
         return query, payload
 
     def check_object_authorization(self, pattern):
-        from omegaml.restapi import resource_filter
+        from omegaml.server.restapi import resource_filter
         if resource_filter:
             if len(pattern) > self.max_url_length:
                 # SEC: Avoid ReDoS on admin-provided regular expression

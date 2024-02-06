@@ -7,8 +7,8 @@ from werkzeug.utils import redirect
 
 
 def create_app(*args, **kwargs):
-    from omegaml.restapi.resources import omega_bp
-    from omegaml.restapi.util import JSONEncoder
+    from omegaml.server.restapi.resources import omega_bp
+    from omegaml.server.restapi.util import JSONEncoder
 
     app = Flask(__name__)
     # ensure slashes in URIs are matched as specified
@@ -28,7 +28,7 @@ def create_app(*args, **kwargs):
 
 
 def serve_objects():
-    from omegaml.restapi import resource_filter
+    from omegaml.server.restapi import resource_filter
     import re
 
     specs = os.environ.get('OMEGA_RESTAPI_FILTER')

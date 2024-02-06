@@ -60,11 +60,11 @@
                     </li>
                     <li class="nav-item">
                       <a class="nav-link text-uppercase"
-                         id="workers-tab"
+                         id="restapi-tab"
                          data-toggle="tab"
-                         href="#workers-content"
+                         href="#restapi-content"
                          role="tab"
-                         aria-controls="workers"
+                         aria-controls="restapi"
                          aria-selected="false">REST API</a>
                     </li>
                     <li class="nav-item">
@@ -78,20 +78,20 @@
                     </li>
                     <li class="nav-item">
                       <a class="nav-link text-uppercase"
-                         id="workers-tab"
+                         id="database-tab"
                          data-toggle="tab"
-                         href="#workers-content"
+                         href="#database-content"
                          role="tab"
-                         aria-controls="workers"
+                         aria-controls="database"
                          aria-selected="false">Database</a>
                     </li>
                     <li class="nav-item">
                       <a class="nav-link text-uppercase"
-                         id="workers-tab"
+                         id="cluster-tab"
                          data-toggle="tab"
-                         href="#workers-content"
+                         href="#cluster-content"
                          role="tab"
-                         aria-controls="workers"
+                         aria-controls="cluster"
                          aria-selected="false">Cluster</a>
                     </li>
                   </ul>
@@ -105,7 +105,7 @@
                         <div class="col-md-6 col-xl-6">
                           <div class="card">
                             <div class="card-header">
-                              <h5>Runtime status</h5>
+                              <h5>Service Health</h5>
                             </div>
                             <div class="card-block">
                               <div id="status-chart"></div>
@@ -141,7 +141,7 @@
                             {% for item in items %}
                               <tr>
                                 <td>
-                                  <a href="/{{ segment }}/worker/{{ item.name }}">{{ item.name }}</a>
+                                  <a class="worker-item" worker-id="{{ item.name }}" href="#void">{{ item.name }}</a>
                                 </td>
                                 <td>{{ item.status }}</td>
                                 <td>{{ item.activity }}</td>
@@ -150,6 +150,26 @@
                           </tbody>
                         </table>
                       </div>
+                    </div>
+                    <div class="tab-pane fade"
+                         id="restapi-content"
+                         role="tabpanel"
+                         aria-labelledby="restapi-tab">
+                      <div class="embed-responsive embed-responsive-16by9">
+                        <iframe class="embed-responsive-item" src="/api/docs" allowfullscreen></iframe>
+                      </div>
+                    </div>
+                    <div class="tab-pane fade"
+                         id="database-content"
+                         role="tabpanel"
+                         aria-labelledby="database-tab">
+                      <p>database</p>
+                    </div>
+                    <div class="tab-pane fade"
+                         id="cluster-content"
+                         role="tabpanel"
+                         aria-labelledby="cluster-tab">
+                      <p>cluster</p>
                     </div>
                     <div class="tab-pane fade"
                          id="logview-content"
@@ -173,6 +193,26 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          <!-- [ Modals ] end -->
+          <div class="modal fade"
+               id="worker-modal"
+               tabindex="-1"
+               role="dialog"
+               aria-labelledby="worker-modal"
+               aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-slideout" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="worker-modal-title">Details</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                <div class="modal-body">...</div>
+                <div class="modal-footer"></div>
               </div>
             </div>
           </div>

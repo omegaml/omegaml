@@ -4,7 +4,7 @@ import flask
 import numpy as np
 import pandas as pd
 import re
-from flask import Blueprint
+from flask import Blueprint, render_template, request
 from flask_restx import Resource, fields, Api
 from mongoengine import DoesNotExist
 from urllib.parse import unquote
@@ -15,7 +15,9 @@ from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
 from omegaml.util import isTrue
 
 omega_bp = Blueprint('omega-api', __name__)
-omega_api = api = Api(omega_bp, doc='/api/doc')
+omega_api = api = Api(omega_bp, doc='/api/doc',
+                      default='omegaml-restapi',
+                      default_label='omega-ml REST API')
 
 PredictInput = strict(api).model('ModelInputSchema', {
     'columns': fields.List(fields.String),
@@ -303,3 +305,13 @@ class DatasetResource(OmegaResourceMixin, Resource):
         else:
             status = 200
         return '', status
+
+@omega_bp.route('/api/docs')
+def api_docs():
+    # convenience redirect to the API documentation
+    return flask.redirect("/api/doc", code=302)
+
+@api.documentation
+def custom_ui():
+    swagger_json_url = request.args.get('specs', '/swagger.json')
+    return render_template("swagger-ui.html", title=api.title, specs_url=swagger_json_url)

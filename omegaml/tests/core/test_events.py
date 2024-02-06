@@ -20,7 +20,7 @@ class EventsTestClass(TestCase):
         pass
 
     def test_connection_checks(self):
-        monitor = LunaMonitor(self.om, timeout=.1)
+        monitor = LunaMonitor(self.om, interval=.1)
         reports = []
         monitor.notify(on_status=lambda status: reports.append(status))
         sleep(2)

@@ -1,20 +1,14 @@
 from __future__ import absolute_import
 
-from time import sleep
-
-import concurrent
-
-import atexit
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-
-import pymongo
-import tarfile
 from importlib import import_module
 
+import atexit
 import json
 import logging
 import os
+import pymongo
 import sys
 import tempfile
 import uuid
@@ -27,6 +21,7 @@ from datetime import datetime, date
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
+from time import sleep
 from tqdm import tqdm
 
 try:
@@ -1185,7 +1180,7 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
     # backport of tarfile.extractall(..., filter=) kwarg
     # -- this ensures safe tarfile extract in all Python versions
     # -- can be removed once support for Python < 3.12 is dropped
-    # -- adopted from https://github.com/encukou/cpython/pull/26/files
+    # --    adopted from https://github.com/encukou/cpython/pull/26/files
     # -- Python 3.12 https://docs.python.org/3/library/tarfile.html#tarfile.TarFile.extractall
     # SEC: CVE-2007-4559 avoid extracting vulnerable file paths
     # - reason: tarfile members are checked for
@@ -1223,11 +1218,28 @@ class LunaMonitor:
         monitor = LunaMonitor(om)
         monitor.assert_ok('health')
         monitor.stop()
+
+    Args:
+        om (Omega): the Omega instance to monitor
+        interval (int): the interval in seconds to run checks, defaults to 60
+        timeout (int): the timeout in seconds for each check, defaults to 5
+        checks (dict): the checks to run, defaults to a set of built-in checks,
+           'check' => fn, where fn is a callable that returns True or None if the
+           check is ok
+        on_error (callable): the callback to call on error, defaults to None
+        on_status (callable): the callback to call on status, defaults to None
+
+    Returns:
+        LunaMonitor: the monitor instance
+
+    Notes:
+        -
     """
     _ALL_MONITORS = []
-    DEFAULT_TIMEOUT = 60
+    DEFAULT_INTERVAL = 60  # the interval in seconds to run checks
+    DEFAULT_CHECK_TIMEOUT = 5  # the timeout in seconds for each check
 
-    def __init__(self, om, timeout=None, checks=None, on_error=None, on_status=None):
+    def __init__(self, om, interval=None, timeout=None, checks=None, on_error=None, on_status=None):
         self.om = om
         self.checks = checks or {
             'monitor': self._check_monitor,
@@ -1237,7 +1249,9 @@ class LunaMonitor:
             'stores': self._check_stores,
             'health': self.healthy,
         }
-        self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
+        self.interval = interval if interval is not None else self.DEFAULT_INTERVAL
+        self.timeout = timeout if timeout is not None else self.DEFAULT_CHECK_TIMEOUT
+        self.check_timeout = self.DEFAULT_CHECK_TIMEOUT
         self._logger = logging.getLogger(__name__ + '.monitor')
         self._logger.propagate = False
         if os.environ.get('LUNA_MONITOR_DEBUG'):
@@ -1249,31 +1263,42 @@ class LunaMonitor:
             'error': [on_error] if on_error else [],
             'status': [on_status] if on_status else []
         }
-        self._max_buffer = 2 * 3600 // self.timeout  # max entries to keep in buffer, per check
+        self._max_buffer = 2 * 3600 // self.interval  # max entries to keep in buffer, per check
         for check in self.checks:
             self._record_status(check, 'pending')
         self._ALL_MONITORS.append(self)
         self._start_monitor()
 
-    def status(self, check=None, data=False):
+    def status(self, check=None, data=False, by_status=False):
         """ get the status of a check
 
         Args:
             check (str|list): the check to get the status for, or None to get all,
                or a list of checks
             data (bool): if True, return the full status dict, otherwise return just
-               the status as one of 'ok', 'failed. Defaults to False
+               the status as one of 'ok', 'failed'. Defaults to False
+            by_status (bool): if True, return the status as a dict of status => [check, ...],
+               else return the status as a dict check => status. Defaults to False. Only
+               applies if check is a list or None
 
         Returns:
-            (dict|str): the status of a single check (if check= is a str)
-                - dict: the status of multiple checks
-                - str: the status of a single check
+            (dict|str): the status for each check
+                - dict: the status of multiple checks (if check= is a list),
+                        check => 'status' (ok|failed|pending) for by_status=False (default),
+                        'status' => ['check', ...] for by_status=True
+                - str: the status of a single check (if check= is a str)
         """
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
         report = {c: (self._status[c]['status']
                       if not data else dict(self._status[c]))
-                       for c in checks}
-        return report[check] if isinstance(check, str) else report
+                  for c in checks}
+        if by_status:
+            data, report = report, defaultdict(list)
+            for check, status in data.items():
+                report[status].append(check)
+        else:
+            report = report[check] if isinstance(check, str) else report
+        return report
 
     def failed(self):
         """ get all failed checks
@@ -1332,7 +1357,7 @@ class LunaMonitor:
         """
         t = tqdm(desc='waiting for checks to be ok', unit='checks', total=len(self.checks))
         while not self.healthy():
-            active =  len(self.checks) - len(self.failed())
+            active = len(self.checks) - len(self.failed())
             t.update(active - t.n)
             t.set_postfix_str(','.join(self.failed()))
             sleep(1)
@@ -1390,10 +1415,10 @@ class LunaMonitor:
         self._check_pool.shutdown(wait=wait, cancel_futures=True)
 
     def _monitor(self):
-        self._logger.debug(f'monitor starting, using timeout {self.timeout}')
+        self._logger.debug(f'monitor starting, running checks every {self.interval} seconds')
         i = 0
         status = {}
-        while i == 0 or not self._stop.wait(timeout=self.timeout):
+        while i == 0 or not self._stop.wait(timeout=self.interval):
             self._logger.debug(f'monitor iteration {i}')
             try:
                 self._run_checks()
@@ -1403,7 +1428,7 @@ class LunaMonitor:
                 self.stop()
                 break
             except (Exception, RuntimeError) as e:
-                self._logger.exception('monitor failed')
+                self._logger.debug('monitor failed', exc_info=True)
                 status = self._record_status('monitor', 'failed', exc=e)
                 self.stop()
                 break
@@ -1414,34 +1439,53 @@ class LunaMonitor:
             i += 1
         self._logger.debug(f'monitor exit, ran {i} check iterations')
 
-    def _run_checks(self):
+    def _run_checks(self, checks=None):
         self._logger.debug('running checks')
-        for check, fn in self.checks.items():
+        for check, fn in (checks or self.checks.items()):
             self._logger.debug(f'submitting check {check} using {fn}')
             if self._stop.wait(timeout=0):
                 break
-            future = self._check_pool.submit(self._timed(fn))
+            # add decoraters to fn
+            fn = self._jitter(self._timed(self._safe_call(fn)))
+            # run check in a separate thread
+            future = self._check_pool.submit(fn, monitor=self, check=check)
+            # add a callback on success or failure
+            # -- a single lambda is created for each check and future,
+            #    thus we bind each check/future's actual values, not the loop vars
             recorder = (lambda c, f: lambda f: self._record_status_from_future(c, f))
             future.add_done_callback(recorder(check, future))
         self._logger.debug('done running checks')
 
     def _record_status_from_future(self, check, future):
         try:
-            elapsed, data = future.result()
+            elapsed, rc = future.result()
         except Exception as e:
-            status = 'failed'
-            elapsed, exc = e.args
-            rc = f'check {check} failed with {exc}'
-            data = None
+            rc = False
+            elapsed, exc = e.args # _timed() re-raises user exception as Exception(elapsed, exc)
         else:
             exc = None
+        if bool(rc) or rc is None and not exc:
+            # bool(rc) is True or None and no exception was raised, i.e. successful
+            data = rc if not isinstance(rc, bool) else None # allow for data to be returned
+            exc = None
             status = 'ok'
-            rc = f'check {check} was successful'
-        self._record_status(check, status, exc=exc, rc=rc, data=data, elapsed=elapsed)
+            msg = f'check {check} was successful'
+        elif bool(rc) is False or exc:
+            # bool(rc) is False or an exception was raised, i.e. failed
+            status = 'failed'
+            msg = f'check {check} failed with {exc}'
+            data = rc
+        else:
+            # we should never get here
+            status = 'failed'
+            msg = f'check {check} failed with {exc} and rc={rc} [weird]'
+            data = rc
+        self._record_status(check, status, msg=msg, exc=exc, rc=rc, data=data, elapsed=elapsed)
 
-    def _record_status(self, check, status, exc=None, rc=None, data=None, elapsed=None):
+    def _record_status(self, check, status, msg=None, exc=None, rc=None, data=None, elapsed=None):
         status = self._status[check] = {
             'status': status,
+            'rc': rc,
             'message': str(rc) if rc else None,
             'error': str(exc) if exc else '<empty>',
             'timestamp': datetime.utcnow().isoformat(),
@@ -1470,8 +1514,20 @@ class LunaMonitor:
         except Exception as e:
             self._logger.exception(f'failed to forward status due to {e}')
 
+    def _jitter(self, fn):
+        # add jitter to avoid thundering herd problem
+        def _w(*args, **kwargs):
+            import random
+            from time import sleep
+            jitter = random.uniform(0.01, 1.0)
+            sleep(jitter)
+            return fn(*args, **kwargs)
+
+        return _w
+
     def _timed(self, func):
-        # source: https://stackoverflow.com/a/57561056/890242
+        # time a function and return elapsed time in seconds
+        # https://stackoverflow.com/a/57561056/890242
         def _w(*a, **k):
             import time
             then = time.time()
@@ -1484,8 +1540,19 @@ class LunaMonitor:
 
         return _w
 
+    def _safe_call(self, fn):
+        # try calling the check function with arguments, fallback to
+        # calling without arguments
+        def _w(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except Exception as e:
+                return fn()
+
+        return _w
+
     def _check_monitor(self):
-        pass  # we get called only if monitor runs
+        pass  # we get called only if monitor runs, so we're ok without doing anything
 
     def _check_stores(self):
         with pymongo.timeout(1):
@@ -1493,10 +1560,10 @@ class LunaMonitor:
 
     def _check_runtime(self):
         with pymongo.timeout(1):
-            self.om.runtime.ping()
+            self.om.runtime.ping(timeout=1)
 
-    def _check_database(self):
-        with pymongo.timeout(1):
+    def _check_database(self, monitor=None, **kwargs):
+        with pymongo.timeout(monitor.timeout):
             self.om.datasets.mongodb.command('ping')
 
     def _check_broker(self):
@@ -1509,8 +1576,9 @@ class LunaMonitor:
         with pymongo.timeout(1):
             self.om.runtime.celeryapp.control.ping()
 
+
 def omega_exit():
     LunaMonitor.stop_all()
 
-atexit.register(omega_exit)
 
+atexit.register(omega_exit)

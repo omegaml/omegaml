@@ -21,4 +21,21 @@ $(document).ready(function () {
       { data: "logger" },
     ],
   });
+  $(".worker-item").click(function () {
+    var workerId = $(this).attr("worker-id");
+    console.log(workerId);
+    $("#worker-modal").modal("show");
+  });
+  $("#worker-modal").on("show.bs.modal", function (e) {
+    var workerId = $(e.relatedTarget).attr("worker-id");
+    console.log(workerId);
+    $.ajax({
+      url: "/index?data=" + workerId,
+      success: function (data) {
+        console.log(data);
+        $("#worker-modal .modal-title").text(data.id);
+        $("#worker-modal .modal-body").html(data);
+      },
+    });
+  });
 });
