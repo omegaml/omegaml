@@ -30,6 +30,8 @@ class JobsRepositoryView(RepositoryBaseView):
 
     @fv.route('/{self.segment}/results/<path:name>')
     def api_get_results(self, name):
+        if name.endswith('_empty_'):
+            return {}
         if not name.startswith('results'):
             name = f'results/{name}'
         return self.om.jobs.export(name)

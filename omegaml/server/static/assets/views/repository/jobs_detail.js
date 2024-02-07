@@ -19,13 +19,34 @@ $(document).ready(function () {
         {
           data: "results",
           render: function (data, type, row, meta) {
-            return `<a href="/jobs/${data}" target=_blank>${data}</a>`;
+            return `<a class="job-result" result-url="/jobs/${data}" href="/jobs/${data}">${data}</a>`;
           },
         },
         { data: "ts" },
         { data: "status" },
       ],
     });
+    resultsViewer.ajax.reload(function (data) {
+      // install click handler for job result links
+      setInterval(function () {
+        $(".job-result").click(function (e) {
+          e.preventDefault();
+          var result_url = $(e.target).attr("result-url");
+          if (e.shiftKey) {
+            window.open(result_url, "_blank");
+          } else {
+            $("#jobview-modal").attr("result-url", result_url);
+            $("#jobview-modal").modal("show");
+          }
+        });
+      }, 100);
+    }, false);
+  });
+  // load job results into modal
+  $("#jobview-modal").on("show.bs.modal", function (e) {
+    var result_url = $(e.target).attr("result-url");
+    $("#jobview-modal .modal-body iframe").attr("src", result_url);
+    $("#jobview-modal .modal-title").text(result_url);
   });
   $("#schedule-tab").on("shown.bs.tab", function (e) {
     scheduleViewer ? scheduleViewer.ajax.reload() : null;

@@ -68,64 +68,66 @@
                   <span class="input-group-text input-group-addon success"
                         id="schedule-valid"><i class="fa-solid fa-check"></i></span>
                 </div>
-              </div>
-              &nbsp;
+                &nbsp;
+              </input>
             </div>
           </div>
-        </div>
-        <div id="schedule-table" class="table-responsive">
-          <table id="schedule-viewer"
-                 class="table nowrap table-hover display compact"
-                 style="width: 100%">
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>Trigger</th>
-                <th>Start</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-    {% endblock tabcontents %}
-    <div>
-      <div class="modal fade"
-           id="exampleModal"
-           tabindex="-1"
-           aria-labelledby="exampleModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Modal Title</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <p>This is the content of the modal. You can add any HTML or components here.</p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
+          <div id="schedule-table" class="table-responsive">
+            <table id="schedule-viewer"
+                   class="table nowrap table-hover display compact"
+                   style="width: 100%">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Trigger</th>
+                  <th>Start</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+            </table>
           </div>
         </div>
       </div>
     </div>
-  {% endblock content %}
-  {% block javascripts %}
-    {{ super() }} <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
-    <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/views/repository/jobs_detail.js') }}"></script>
-    <script>
+  {% endblock tabcontents %}
+  <div id="modals">
+    <!-- [ Modals ] end -->
+    <div class="modal fade"
+         id="jobview-modal"
+         tabindex="-1"
+         role="dialog"
+         aria-labelledby="jobview-modal"
+         aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-slideout" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="jobview-modal-title">Details</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="embed-responsive embed-responsive-16by9">
+              <iframe class="embed-responsive-item"
+                      src="/jobs/results/_empty_"
+                      allowfullscreen></iframe>
+            </div>
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ super() }} <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/views/repository/jobs_detail.js') }}"></script>
+  <script>
   var context = {
       "name": "{{ meta.name }}",
       "triggers": {{ triggers|tojson }},
       "schedule": {{ schedule|tojson }},
   };
-  console.log(context);
-    </script>
-  {% endblock javascripts %}
+  </script>
+{% endblock javascripts %}
