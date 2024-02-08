@@ -130,6 +130,22 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName, **kwargs)
 
+    def complete(self, Xname, rName=None, **kwargs):
+        """
+        complete
+
+        Calls :code:`.complete(X)`. If rName is given the result is
+        stored as object rName
+
+        :param Xname: name of the X dataset
+        :param rName: name of the resulting dataset (optional)
+        :return: the data returned by .complete, or the metadata of the rName
+            dataset if rName was given
+        """
+        omega_complete = self.task('omegaml.tasks.omega_complete')
+        Xname = self._ensure_data_is_stored(Xname)
+        return omega_complete.delay(self.modelname, Xname, rName=rName, **kwargs)
+
     def score(self, Xname, Yname=None, rName=None, **kwargs):
         """
         calculate score

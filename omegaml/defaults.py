@@ -121,6 +121,9 @@ OMEGA_STORE_BACKENDS_R = {
     'model.r': 'omegaml.backends.rsystem.rmodels.RModelBackend',
     'package.r': 'omegaml.backends.rsystem.rscripts.RPackageData',
 }
+OMEGA_STORE_BACKENDS_OPENAI = {
+    'genai.openai': 'omegaml.backends.genai.openai.OpenAIModelBackend',
+}
 #: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
@@ -412,6 +415,9 @@ def load_framework_support(vars=globals()):
     #: mlflow backends
     if module_available('mlflow'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
+    #: openapi backend
+    if module_available('openai'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
 
 
 def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):

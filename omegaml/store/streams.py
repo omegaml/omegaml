@@ -82,7 +82,8 @@ class StreamsProxy(OmegaStore):
                                       prefix=self.prefix,
                                       bucket=self.bucket,
                                       kind_meta=kind_meta).save()
-        stream_name = meta.kind_meta['stream']
+        stream_specs = meta.kind_meta['stream']
+        stream_name = stream if isinstance(stream_specs, str) else stream_specs['name']
         stream_kwargs = dict(self._stream_kwargs)
         stream_kwargs.update(meta.kind_meta.get('kwargs', {}))
         if not lazy:
