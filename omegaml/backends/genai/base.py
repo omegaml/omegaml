@@ -39,14 +39,17 @@ class GenAIBaseBackend(VirtualObjectBackend):
         if isinstance(data, dict):
             prompt = data.get('prompt', '')
             messages = data.get('messages')
+            user_data = data.get('data')
             conversation_id = data.get('conversation_id')
         elif isinstance(data, str):
             prompt = data or ''
             messages = None
             conversation_id = None
+            user_data = None
         else:
             raise ValueError(f'Invalid input data, expected dict or str, got {type(data)}')
-        return model.complete(prompt, messages=messages, conversation_id=conversation_id, **kwargs)
+        return model.complete(prompt, messages=messages, conversation_id=conversation_id,
+                              data=user_data, **kwargs)
 
     def generate(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)

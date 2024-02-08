@@ -37,7 +37,7 @@ class OpenAIModelBackend(GenAIBaseBackend):
         return ParseResult(vendor, scheme, path, params, netloc, hostname, port, parsed.username,
                            parsed.password, parsed.query)
 
-    def put(self, obj, name, template=None, **kwargs):
+    def put(self, obj, name, template=None, pipeline=None, **kwargs):
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
         params = parse_qs(parsed.params)
@@ -63,6 +63,7 @@ class OpenAIModelBackend(GenAIBaseBackend):
         attributes = {
             'template': template,
             'dataset': self._messages_dataset(name),
+            'pipeline': pipeline or None,
         }
         kwargs.update(attributes=attributes)
         meta = self.model_store.make_metadata(name,
@@ -79,11 +80,13 @@ class OpenAIModelBackend(GenAIBaseBackend):
         query = kind_meta['query']
         params = kind_meta['params']
         creds = kind_meta['creds']
+        pipeline = meta.attributes.get('pipeline')
         params.update(kwargs)
         template = template or meta.attributes.get('template')
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
+        pipeline = self.model_store.get(pipeline) if pipeline else None
         return OpenAIModel(base_url, model, api_key=creds, template=template,
-                           data_store=data_store,
+                           data_store=data_store, pipeline=pipeline,
                            dataset=self._messages_dataset(name, meta=meta),
                            **params)
 
@@ -100,7 +103,7 @@ class OpenAIModelBackend(GenAIBaseBackend):
 
 class OpenAIModel:
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
-                 dataset=None, **kwargs):
+                 dataset=None, pipeline=None, **kwargs):
         super().__init__(**kwargs)
         self.base_url = base_url
         self.model = model
@@ -112,16 +115,19 @@ class OpenAIModel:
         self.client = OpenAI(
             api_key=api_key,
             base_url=base_url)
+        self.pipeline = pipeline or (lambda *args, **kwargs: None)
 
     def load(self, method):
         pass
 
-    def complete(self, prompt, messages=None, conversation_id=None, raw=False, **kwargs):
+    def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None, **kwargs):
         if conversation_id is None:
-            response, *_ = self._do_complete(prompt, messages=messages, **kwargs)
+            response, _, response_message = self._do_complete(prompt, messages=messages, data=data, **kwargs)
         else:
-            conversation_id, response, *_ = self._do_chat(prompt, conversation_id=conversation_id, **kwargs)
-        return response if raw else self._parsed_completion(response)
+            conversation_id, response, _, response_message = self._do_chat(prompt, conversation_id=conversation_id,
+                                                                           data=data,
+                                                                           **kwargs)
+        return response_message if raw else response_message
 
     def chat(self, prompt, conversation_id=None, raw=False, **kwargs):
         conversation_id, response, *_ = self._do_chat(prompt,
@@ -129,7 +135,7 @@ class OpenAIModel:
                                                       **kwargs)
         return conversation_id, (response if raw else self._parsed_completion(response))
 
-    def _do_chat(self, prompt, conversation_id=None, **kwargs):
+    def _do_chat(self, prompt, conversation_id=None, data=None, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         conversation_id = conversation_id or uuid4().hex
         messages = self.conversation(conversation_id)
@@ -139,7 +145,7 @@ class OpenAIModel:
         if messages is None:
             messages = [self._system_message()]
             self.data_store.put(messages, self.dataset, kind='pandas.rawdict')
-        resp = self._do_complete(prompt, messages, conversation_id=conversation_id, **kwargs)
+        resp = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data, **kwargs)
         response, prompt_message, response_message = resp
         to_store = [
             prompt_message,
@@ -163,13 +169,24 @@ class OpenAIModel:
             "conversation_id": conversation_id or uuid4().hex,
         }
 
-    def _do_complete(self, prompt, messages=None, conversation_id=None, **kwargs):
+    def _do_complete(self, prompt, messages=None, conversation_id=None, data=None, **kwargs):
         messages = messages or [self._system_message()]
         prompt_message = {
             "role": "user",
             "content": prompt,
             "conversation_id": conversation_id or uuid4().hex,
         }
+        _template = self._prepare_template(self.template,
+                                          data=data)
+        template = self.pipeline(method='template', conversation_id=None,
+                                 prompt_message=prompt_message,
+                                 messages=messages,
+                                 template=self.template, data=data, **kwargs) or _template
+        messages = self.pipeline(method='prepare',
+                                 prompt_message=prompt_message,
+                                 messages=messages,
+                                 template=template,
+                                 conversation_id=conversation_id, **kwargs) or messages
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages + [prompt_message],
@@ -180,7 +197,17 @@ class OpenAIModel:
             "content": response.choices[0].message.content,
             "conversation_id": conversation_id or uuid4().hex,
         }
+        response_message = self.pipeline(method='process', response_message=response_message,
+                                         prompt_message=prompt_message,
+                                         messages=messages,
+                                         template=template,
+                                         conversation_id=conversation_id,
+                                         **kwargs) or response_message
         return response, prompt_message, response_message
 
     def _parsed_completion(self, response):
         return response.choices[0].message.content
+
+    def _prepare_template(self, template, data=None):
+        _template = (template or '').format(**(data or {}))
+        return template
