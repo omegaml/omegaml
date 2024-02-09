@@ -10,6 +10,27 @@ from omegaml.store import OmegaStore
 
 
 class OpenAIModelBackend(GenAIBaseBackend):
+    """ Backend for OpenAI models
+
+    Enables creating an OpenAI model via a connection string, e.g.
+    om.models.put('openai://<base_url>;model=<model>', 'mymodel'). The connection
+    string must be in the format openai://<base_url>;model=<model> where <base_url>
+    is the base URL of the OpenAI-compatible model server's REST API, and <model>
+    is the model name as known to the model server. The connection string may also
+    include an apikey, e.g. 'openai://<apikey>@<base_url>;model=<model>'.
+
+    Usage:
+        # create a model
+        om.models.put('openai://localhost:8000/mymodel', 'mymodel')
+        # get the model
+        model = om.models.get('mymodel')
+        # use the model
+        result = model.complete('hello, how are you?')
+
+    Notes:
+        * the actual implementation of the model handling logic is in OpenAIModel,
+          this only provides the model store interface and acts as any VirtualObjectHandler
+    """
     KIND = 'genai.openai'
 
     @classmethod
@@ -72,7 +93,7 @@ class OpenAIModelBackend(GenAIBaseBackend):
                                               **kwargs)
         return meta.save()
 
-    def get(self, name, template=None, data_store=None, **kwargs):
+    def get(self, name, template=None, data_store=None, pipeline=None, **kwargs):
         meta = self.model_store.metadata(name)
         kind_meta = meta.kind_meta
         base_url = kind_meta['base_url']
@@ -80,11 +101,11 @@ class OpenAIModelBackend(GenAIBaseBackend):
         query = kind_meta['query']
         params = kind_meta['params']
         creds = kind_meta['creds']
-        pipeline = meta.attributes.get('pipeline')
+        pipeline = pipeline or meta.attributes.get('pipeline')
         params.update(kwargs)
         template = template or meta.attributes.get('template')
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
-        pipeline = self.model_store.get(pipeline) if pipeline else None
+        pipeline = pipeline if callable(pipeline) else (self.model_store.get(pipeline) if isinstance(pipeline, str) else None)
         return OpenAIModel(base_url, model, api_key=creds, template=template,
                            data_store=data_store, pipeline=pipeline,
                            dataset=self._messages_dataset(name, meta=meta),
@@ -97,11 +118,22 @@ class OpenAIModelBackend(GenAIBaseBackend):
             self.data_store.drop(self._messages_dataset(name, meta=meta), force=force, **kwargs)
         return self.model_store._drop(name, force=force, **kwargs)
 
-    def _messages_dataset(self, name, meta=None):
-        return f'./openai/messages/{name}' if meta is None else meta.attributes.get('dataset')
+    def _messages_dataset(self, name, meta=None, user=None):
+        user = user or self.model_store.defaults.get('OMEGA_USERID', 'default')
+        return f'./openai/messages/{name}' if meta is None else meta.attributes.get('dataset').format(name=name, user=user)
 
 
-class OpenAIModel:
+class OpenAIModel(GenAIModel):
+    """ OpenAI model
+
+    This implements the OpenAI model interface. It is a thin wrapper around the OpenAI API,
+    and adds conversation tracking and data storage for the conversation history. For chat completions,
+    the conversation history is stored in a dataset named ./openai/messages/<modelname>/<user>. For
+    completions without a conversation id, a new conversation id is generated and returned in each
+    message, however the conversation history is not stored in this case. The complete() method
+    can be called with a conversation id to continue a conversation, in this case it is equivalent
+    to chat()
+    """
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
                  dataset=None, pipeline=None, **kwargs):
         super().__init__(**kwargs)
@@ -120,10 +152,12 @@ class OpenAIModel:
     def load(self, method):
         pass
 
-    def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None, **kwargs):
-        if conversation_id is None:
+    def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
+                 chat=False, **kwargs):
+        if not chat and conversation_id is None:
             response, _, response_message = self._do_complete(prompt, messages=messages, data=data, **kwargs)
         else:
+            # chat or conversation id provided
             conversation_id, response, _, response_message = self._do_chat(prompt, conversation_id=conversation_id,
                                                                            data=data,
                                                                            **kwargs)

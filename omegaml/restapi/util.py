@@ -2,7 +2,6 @@ import flask
 from flask_restx import Model, fields
 from werkzeug.exceptions import BadRequest, HTTPException
 
-import omegaml as om
 from omegaml.util import MongoEncoder
 
 
@@ -54,7 +53,13 @@ class OmegaResourceMixin(object):
     def _omega(self):
         if self._omega_instance is None:
             bucket = flask.request.headers.get('bucket')
-            self._omega_instance = om.setup()[bucket]
+            om = self._omega_instance = om.setup()[bucket]
+            try:
+                import flask_login
+                om.defaults.OMEGA_USERID = flask_login.current_user.get_id()
+            except:
+                import getpass
+                om.defaults.OMEGA_USERID = getpass.getuser()
         return self._omega_instance
 
     def get_query_payload(self):

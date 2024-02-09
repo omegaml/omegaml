@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from omegaml.backends.genai.base import GenAIBaseBackend, GenAIModel, virtual_genai
+from omegaml.backends.genai.base import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.openai import OpenAIModelBackend, OpenAIModel
 from omegaml.tests.util import OmegaTestMixin
 
@@ -15,7 +15,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
 
     def test_put_get(self):
         # create a model
-        class MyModel(GenAIModel):
+        class MyModel(GenAIModelHandler):
             def complete(self, X):
                 return X
         # test save and restore
