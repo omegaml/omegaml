@@ -132,7 +132,60 @@ class OpenAIModel(GenAIModel):
     completions without a conversation id, a new conversation id is generated and returned in each
     message, however the conversation history is not stored in this case. The complete() method
     can be called with a conversation id to continue a conversation, in this case it is equivalent
-    to chat()
+    to chat().
+
+    The model implements a callback to a user function or virtul object handler, called the pipeline.
+    The pipeline is called with the method name, the conversation id, the prompt message, and
+    the messages so far. It can be used to implement custom logic for preparing the messages and
+    the response.
+
+    Usage:
+
+        Create and access a model::
+
+            # create a model
+            om.models.put('openai://localhost:8000/mymodel', 'mymodel')
+            model = om.models.get('mymodel')
+            # complete a prompt
+            result = model.complete('hello, how are you?')
+            # chat
+            conversation_id, result = model.chat('hello, how are you?')
+            # continue a conversation
+            result = model.complete('I am fine, thank you.', conversation_id=conversation_id)
+
+        Implement a pipeline::
+
+            # add a pipeline
+            @virtual_genai
+            def my_pipeline(method, conversation_id, prompt_message, messages):
+                # implement your logic here
+                if method == 'prepare':
+                    # prepare the initial messages
+                    return messages
+                elif method == 'template':
+                    # prepare the template
+                    return 'You are a helpful assistant.'
+                elif method == 'process':
+                    # process the response
+                    return response_message
+
+            model = om.models.get('mymodel', pipeline=my_pipeline)
+            result = model.complete('hello, how are you?')
+
+            # store the pipeline in a virtual object
+            om.models.put(my_pipeline, 'my_pipeline')
+            model = om.models.put('openai://localhost:8000/mymodel', 'mymodel', pipeline='my_pipeline')
+            # this will automatically load the pipeline, and get it called for each stage
+            result = model.complete('hello, how are you?')
+
+        A pipeline can be used to implement custom logic for preparing the messages and to check
+        or change the response. The pipeline can return any messages, a custom template, or
+        a custom response.
+
+        Get back the conversation history::
+
+            model = om.models.get('mymodel')
+            messages = model.conversation(conversation_id)
     """
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
                  dataset=None, pipeline=None, **kwargs):
