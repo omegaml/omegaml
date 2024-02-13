@@ -1,3 +1,5 @@
+from types import GeneratorType
+
 import warnings
 
 from omegaml.backends.basedata import BaseDataBackend
@@ -20,13 +22,17 @@ class VectorStore(BaseDataBackend):
     KIND = 'vector.conx'
     PROMOTE = 'metadata'
 
-    def get(self, name, obj=None, collection=None, vector_size=None, raw=False, top=1, distance=None, **kwargs):
+    def get(self, name, obj=None, collection=None, vector_size=None, embedding_model=None,
+            raw=False, top=1, distance=None, **kwargs):
+        index = DocumentIndex(name, store=self, vector_size=vector_size,
+                              embedding_model=embedding_model)
         if obj is not None:
-            data = self.find_similar(name, obj, top=top, distance=distance)
+            data = index.retrieve(obj, top=top, distance=distance)
             return data
-        return DocumentIndex(name, embedding_model=None, store=self)
+        return index
 
-    def put(self, obj, name, collection=None, vector_size=None, attributes=None, append=True, **kwargs):
+    def put(self, obj, name, collection=None, vector_size=None, embedding_model=None,
+            attributes=None, append=True, **kwargs):
         if append is False:
             self.delete(name)
         meta = self.data_store.metadata(name)
@@ -36,7 +42,7 @@ class VectorStore(BaseDataBackend):
             meta = self._put_as_connection(url, name, collection=collection,
                                            attributes=attributes, **kwargs)
         elif meta is not None:
-            self._put_via(name, obj, collection=collection, vector_size=vector_size)
+            self._put_via(name, obj, collection=collection, vector_size=vector_size, embedding_model=embedding_model)
         else:
             raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
         # update kind_meta to reflect all collections stored through this vectordb
@@ -69,7 +75,7 @@ class VectorStore(BaseDataBackend):
     def _put_as_connection(self, url, name, attributes=None,
                            collection=None, **kwargs):
         kind_meta = {
-            'sqlalchemy_connection': str(url),
+            'connection': str(url),
             'collection': collection,
             'kwargs': kwargs,
         }
@@ -82,11 +88,13 @@ class VectorStore(BaseDataBackend):
                                                  attributes=attributes)
         return meta.save()
 
-    def _put_via(self, name, obj, collection=None, vector_size=None, **kwargs):
+    def _put_via(self, name, obj, collection=None, vector_size=None, embedding_model=None, **kwargs):
         meta = self.data_store.metadata(name)
         collection = collection or meta.kind_meta.get('collection') or self._default_collection(name)
         vector_size = vector_size or meta.kind_meta['collections'][collection]['vector_size']
-        self.insert_chunk(obj, name, collection, vector_size, **kwargs)
+        index: DocumentIndex = self.get(name, vector_size=vector_size, embedding_model=embedding_model)
+        index.insert(obj)
+        return index
 
     def _get_collection(self, name):
         meta = self.data_store.metadata(name)
@@ -105,44 +113,69 @@ class VectorStore(BaseDataBackend):
 
 
 class DocumentIndex:
-    def __init__(self, name, embedding_model=None, store=None):
+    def __init__(self, name, store=None, vector_size=None, embedding_model=None):
         self.name = name
-        self.model: GenAIModel = embedding_model
         self.store: VectorStore = store
+        self.model: GenAIModel = embedding_model
+        self.vector_size = vector_size
 
     def __repr__(self):
         return f'DocumentIndex({self.name})'
 
-    def build(self, documents, loader=None):
+    def build(self, documents, append=False, loader=None):
+        assert self._type_of_obj(documents) == 'documents', f"{type(documents)} is not iterable as documents"
+        if not append:
+            self.clear()
         for document in documents:
             if callable(loader):
                 document = loader(document)
-            self._insert_document(document)
+            self.insert(document)
 
-    def _insert_document(self, document):
-        if isinstance(document, (list, tuple)):
-            # (text, embedding [, attributes])
-            text, embedding, *attributes = document
-            self.insert_document(text, embedding, attributes)
-        elif isinstance(document, dict) and 'text' in document:
-            # dict(text=, embedding=, attribute=)
-            self.insert_document(document['text'], document['embedding'],
-                                 document.get('attributes'))
-        elif isinstance(document, str):
-            # pure text, let's embed first
-            text = document
-            embedding = self.model.embed(text)
-            attributes = None
-            self.insert_document(text, embedding, attributes)
-        elif callable(document):
-            document = document(document)
-            self._insert_document(document)
+    def insert(self, document):
+        self._insert_document(document)
+
+    def retrieve(self, document, top=1, filter=None, distance=None, **kwargs):
+        return self.store.find_similar(self.name, document,
+                                       top=top, filter=filter, distance=distance, **kwargs)
 
     def clear(self, filter=None, **kwargs):
-        self.store.drop(self.name, )
+        self.store.delete(self.name, filter=filter, **kwargs)
 
-    def insert_document(self, text, embedding, attributes):
-        self.store.insert_chunk(self.name, text, embedding, attributes)
+    def _type_of_obj(self, obj):
+        TYPES = {
+            'documents': lambda obj: isinstance(obj, (list, tuple, GeneratorType)) and isinstance(obj[0], (list, tuple, dict)),
+            'embedded_tuple': lambda obj: isinstance(obj, (list, tuple)) and not isinstance(obj[0], (list, tuple, GeneratorType)),
+            'embedded_dict': lambda obj: isinstance(obj, dict) and 'text' in obj,
+            'text': lambda obj: isinstance(obj, str),
+            'loader': lambda obj: callable(obj),
+        }
+        for k, testfn in TYPES.items():
+            if testfn(obj):
+                return k
+        raise ValueError(f'Cannot process obj of type {type(obj)}, it must be one of {TYPES.keys()}')
 
-    def retrieve(self, document, n=1, filter=None, **kwargs):
-        self.store.find_similar(self.name, document, n=1, filter=filter, **kwargs)
+    def _insert_document(self, document):
+        doc_type = self._type_of_obj(document)
+        if doc_type == 'embedded_tuple':
+            # (text, embedding [, attributes])
+            text, embedding, *attributes = document
+            self._index_chunk(text, embedding, attributes)
+        elif doc_type == 'embedded_dict':
+            # dict(text=, embedding=, attribute=)
+            self._index_chunk(document['text'], document['embedding'],
+                              document.get('attributes'))
+        elif doc_type == 'text':
+            # pure text, let's embed first
+            text = document
+            assert self.model is not None, "need an embedding model to insert raw text"
+            embedding = self.model.embed(text)
+            attributes = None
+            self._index_chunk(text, embedding, attributes)
+        elif doc_type == 'loader':
+            document = document(document)
+            self._insert_document(document)
+        elif doc_type == 'documents':
+            self.build(document, append=True)
+
+    def _index_chunk(self, text, embedding, attributes):
+        self.store.insert_chunk(text, self.name, embedding, attributes)

@@ -214,7 +214,7 @@ class OpenAIModel(GenAIModel):
             conversation_id, response, _, response_message = self._do_chat(prompt, conversation_id=conversation_id,
                                                                            data=data,
                                                                            **kwargs)
-        return response_message if raw else response_message
+        return response if raw else response_message
 
     def chat(self, prompt, conversation_id=None, raw=False, **kwargs):
         conversation_id, response, *_ = self._do_chat(prompt,
@@ -257,18 +257,21 @@ class OpenAIModel(GenAIModel):
         }
 
     def _do_complete(self, prompt, messages=None, conversation_id=None, data=None, **kwargs):
-        messages = messages or [self._system_message()]
+        conversation_id = conversation_id or uuid4().hex
+        messages = messages or [self._system_message(conversation_id=conversation_id)]
         prompt_message = {
             "role": "user",
             "content": prompt,
-            "conversation_id": conversation_id or uuid4().hex,
+            "conversation_id": conversation_id,
         }
         _template = self._prepare_template(self.template,
                                           data=data)
-        template = self.pipeline(method='template', conversation_id=None,
+        template = self.pipeline(method='template',
                                  prompt_message=prompt_message,
                                  messages=messages,
-                                 template=self.template, data=data, **kwargs) or _template
+                                 template=self.template,
+                                 conversation_id=conversation_id,
+                                 **kwargs) or _template
         messages = self.pipeline(method='prepare',
                                  prompt_message=prompt_message,
                                  messages=messages,
@@ -282,7 +285,7 @@ class OpenAIModel(GenAIModel):
         response_message = {
             "role": response.choices[0].message.role,
             "content": response.choices[0].message.content,
-            "conversation_id": conversation_id or uuid4().hex,
+            "conversation_id": conversation_id,
         }
         response_message = self.pipeline(method='process', response_message=response_message,
                                          prompt_message=prompt_message,

@@ -17,16 +17,15 @@ class PGVectorBackend(VectorStore):
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
         return _is_valid_url(obj)  # or data_store.exists(name) and isinstance()
 
-    def insert_chunk(self, obj, name, embedding, attributes, **kwargs):
+    def insert_chunk(self, text, name, embedding, attributes, **kwargs):
         collection, vector_size = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
         with Session as session:
             doc = Document(source='some source')
+            chunk = Chunk(document=doc, text=text, embedding=embedding)
             session.add(doc)
-            for text, embedding in obj:
-                chunk = Chunk(document=doc, text=text, embedding=embedding)
-                session.add(chunk)
+            session.add(chunk)
             session.commit()
 
     def find_similar(self, name, obj, top=1, filter=None, distance=None, **kwargs):
@@ -88,7 +87,7 @@ class PGVectorBackend(VectorStore):
     def _get_connection(self, name, session=False):
         from sqlalchemy import create_engine
         meta = self.data_store.metadata(name)
-        connection_str = meta.kind_meta['sqlalchemy_connection']
+        connection_str = meta.kind_meta['connection']
         connection_str = connection_str.replace('pgvector', 'postgresql').replace('sqla+', '')
         import sqlalchemy
         # https://docs.sqlalchemy.org/en/14/changelog/migration_20.html
