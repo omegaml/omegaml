@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from omegaml.backends.genai.base import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
+from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.openai import OpenAIModelBackend, OpenAIModel
 from omegaml.tests.util import OmegaTestMixin
 

@@ -1,3 +1,3 @@
-from .base import GenAIModel, virtual_genai
+from .models import GenAIModel, virtual_genai
 
 

@@ -5,7 +5,7 @@ import re
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
 
-from omegaml.backends.genai.base import GenAIBaseBackend, GenAIModel
+from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.store import OmegaStore
 
 

@@ -27,7 +27,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
 
     def _resolve_input_data(self, method, Xname, **kwargs):
         # TODO this should not be necessary, the data should be resolved by super()
-        #      it is not because VirtualObjectBackend is not a ModelBackend
+        #      we need this only due to VirtualObjectBackend not being a ModelBackend
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
         if self.tracking:
