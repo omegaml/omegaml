@@ -1,5 +1,9 @@
+from flask import current_app
+from functools import wraps
+
 from flask_migrate import Migrate
 from pathlib import Path
+from werkzeug.exceptions import abort
 
 
 def configure_database(db, app):
@@ -21,3 +25,14 @@ def datatables_ajax(data, n_total=None, n_filtered=None):
         'recordsTotal': n_total,
         'recordsFiltered': n_filtered,
     }
+
+
+def debug_only(f):
+    # https://stackoverflow.com/a/55729767/890242
+    @wraps(f)
+    def wrapped(**kwargs):
+        if not current_app.debug:
+            abort(404)
+        return f(**kwargs)
+
+    return wrapped

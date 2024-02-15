@@ -23,7 +23,7 @@ class JobsRepositoryView(RepositoryBaseView):
         schedule = {
             'triggers': triggers,
             'schedule': {
-                'text': get_description(run_at),
+                'text': get_description(run_at) if run_at else 'not scheduled',
                 'cron': run_at,
             }}
         return datatables_ajax(schedule)

@@ -43,10 +43,14 @@ $(document).ready(function () {
     }, false);
   });
   // load job results into modal
-  $("#jobview-modal").on("show.bs.modal", function (e) {
+  $("#jobview-modal").on("shown.bs.modal", function (e) {
     var result_url = $(e.target).attr("result-url");
     $("#jobview-modal .modal-body iframe").attr("src", result_url);
     $("#jobview-modal .modal-title").text(result_url);
+  });
+  $("#jobview-modal").on("hidden.bs.modal", function (e) {
+    $("#jobview-modal .modal-body iframe").attr("src", "");
+    $("#jobview-modal .modal-title").text("");
   });
   $("#schedule-tab").on("shown.bs.tab", function (e) {
     scheduleViewer ? scheduleViewer.ajax.reload() : null;

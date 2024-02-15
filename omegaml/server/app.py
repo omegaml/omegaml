@@ -1,12 +1,13 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.exceptions import abort
 from werkzeug.utils import redirect
 
 from omegaml.server.config import config_dict
 from omegaml.server.restapi.util import JSONEncoder
-from omegaml.server.util import configure_database
+from omegaml.server.util import configure_database, debug_only
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -49,6 +50,13 @@ def create_app(*args, **kwargs):
     @app.route('/docs')
     def docs():
         return redirect("https://omegaml.github.io/omegaml/", code=302)
+
+    @debug_only
+    @app.route('/test/modal/<path:template>')
+    def modal_test(template):
+        if not app.debug:
+            abort(401)
+        return render_template(f'dashboard/{template}')
 
     return app
 

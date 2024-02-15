@@ -26,13 +26,12 @@ $(document).ready(function () {
     console.log(workerId);
     $("#worker-modal").modal("show");
   });
-  $("#worker-modal").on("show.bs.modal", function (e) {
+  $("#worker-modal").on("shown.bs.modal", function (e) {
     var workerId = $(e.relatedTarget).attr("worker-id");
     console.log(workerId);
     $.ajax({
-      url: "/index?data=" + workerId,
+      url: "/runtime/worker/" + workerId,
       success: function (data) {
-        console.log(data);
         $("#worker-modal .modal-title").text(data.id);
         $("#worker-modal .modal-body").html(data);
       },

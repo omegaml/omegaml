@@ -223,6 +223,14 @@ class OmegaDeferredInstance(object):
         self.setup()
         return repr(self.omega)
 
+    def __call__(self, *args, **kwargs):
+        if self.base:
+            base = getattr(self.base, self.attribute)
+            return base(*args, **kwargs)
+        if not self.initialized:
+            self.setup()
+        return self(*args, **kwargs)
+
     @property
     def instance(self):
         return self.base

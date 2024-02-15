@@ -53,3 +53,11 @@ buckets = _omega.OmegaDeferredInstance(_omega._om, 'buckets')
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
+#: list()
+list = _omega.OmegaDeferredInstance(_omega._om, 'list')
+#: stats()
+stats = _omega.OmegaDeferredInstance(_omega._om, 'stats')
+#: metadata
+metadata = _omega.OmegaDeferredInstance(_omega._om, 'metadata')
+#: help()
+help = _omega.OmegaDeferredInstance(_omega._om, 'help')

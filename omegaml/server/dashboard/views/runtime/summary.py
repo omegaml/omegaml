@@ -1,3 +1,4 @@
+import numpy as np
 from flask import render_template, request
 
 from omegaml.server import flaskview as fv
@@ -19,7 +20,8 @@ class RuntimeView(BaseView):
 
     @fv.route('/runtime/worker/<name>')
     def worker(self, name):
-        return name
+        return render_template('dashboard/runtime/worker_detail.html',
+                               attributes={})
 
     @fv.route('/runtime/log')
     def api_get_log(self):
@@ -87,6 +89,39 @@ class RuntimeView(BaseView):
         })
         fig = px.bar(long_df, x="date", y="count", color="status",
                      color_discrete_map={'failed': 'red', 'healthy': 'green'})
+        return json.to_json(fig)
+
+    @fv.route('/runtime/worker/plot/load')
+    def api_worker_plot_load(self):
+        import pandas as pd
+        import plotly.express as px
+        from plotly.io import json
+
+        df = pd.DataFrame({
+            'date': pd.date_range('1.1.2024', '31.1.2024'),
+            'load_pct': np.random.rand(31),
+        })
+
+        fig = px.line(df, x='date', y='load_pct')
+        return json.to_json(fig)
+
+    @fv.route('/runtime/database/dbstats/plot')
+    def api_runtime_dbstats_plot(self):
+        import plotly.express as px
+        from plotly.io import json
+        om = self.om
+        dbstats = om.datasets.dbstats(scale='gb')
+        dfx = dbstats.loc[['fsAvailableSize', 'totalSize']]
+        fig = px.pie(dbstats, names=dfx.index, values=dfx['db'])
+        return json.to_json(fig)
+
+    @fv.route('/runtime/database/repostats/plot')
+    def api_runtime_repostats_plot(self):
+        import plotly.express as px
+        from plotly.io import json
+        om = self.om
+        stats = om.stats()
+        fig = px.pie(stats, names=stats.index, values=stats['totalSize%'])
         return json.to_json(fig)
 
 
