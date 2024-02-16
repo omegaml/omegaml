@@ -85,15 +85,17 @@
                          aria-controls="database"
                          aria-selected="false">Database</a>
                     </li>
-                    <li class="nav-item">
-                      <a class="nav-link text-uppercase"
-                         id="cluster-tab"
-                         data-toggle="tab"
-                         href="#cluster-content"
-                         role="tab"
-                         aria-controls="cluster"
-                         aria-selected="false">Cluster</a>
-                    </li>
+                    {% if clustertab %}
+                      <li class="nav-item">
+                        <a class="nav-link text-uppercase"
+                           id="cluster-tab"
+                           data-toggle="tab"
+                           href="#cluster-content"
+                           role="tab"
+                           aria-controls="cluster"
+                           aria-selected="false">Cluster</a>
+                      </li>
+                    {% endif %}
                   </ul>
                   <!-- tab contents -->
                   <div class="tab-content" id="myTabContent">
@@ -186,12 +188,14 @@
                         </div>
                       </div>
                     </div>
-                    <div class="tab-pane fade"
-                         id="cluster-content"
-                         role="tabpanel"
-                         aria-labelledby="cluster-tab">
-                      <p>cluster</p>
-                    </div>
+                    {% if clustertab %}
+                      <div class="tab-pane fade"
+                           id="cluster-content"
+                           role="tabpanel"
+                           aria-labelledby="cluster-tab">
+                        <p>cluster</p>
+                      </div>
+                    {% endif %}
                     <div class="tab-pane fade"
                          id="logview-content"
                          role="tabpanel"

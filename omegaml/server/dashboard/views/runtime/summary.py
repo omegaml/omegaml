@@ -111,7 +111,7 @@ class RuntimeView(BaseView):
         from plotly.io import json
         om = self.om
         dbstats = om.datasets.dbstats(scale='gb')
-        dfx = dbstats.loc[['fsAvailableSize', 'totalSize']]
+        dfx = dbstats.loc[['fsAvailableSize', 'fsUsedSize']]
         fig = px.pie(dbstats, names=dfx.index, values=dfx['db'])
         return json.to_json(fig)
 

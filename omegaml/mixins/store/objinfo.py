@@ -10,6 +10,11 @@ class ObjectInformationMixin:
         't': 1e12 * 1.024,  # terabytes
     }
 
+    @classmethod
+    def supports(cls, obj, **kwargs):
+        # support all store types
+        return True
+
     def summary(self, name):
         self: OmegaStore | ObjectInformationMixin
         meta = self.metadata(name)
