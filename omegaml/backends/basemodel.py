@@ -202,7 +202,7 @@ class BaseModelBackend(BackendBaseCommon):
     def _resolve_input_data(self, method, Xname, **kwargs):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
-        if self.tracking:
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
             self.tracking.log_event(method, 'X', {
                 'Xname': Xname,
                 'data': data,
@@ -216,7 +216,7 @@ class BaseModelBackend(BackendBaseCommon):
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta
-        if self.tracking:
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
             self.tracking.log_event(method, 'Y', {
                 'result': result if rName is None else rName,
                 'kind': str(type(result)) if rName is None else meta.kind,

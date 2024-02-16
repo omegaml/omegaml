@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-from omegaml.util import ensure_index, load_class
+from omegaml.util import ensure_index, load_class, ensure_index_relaxed
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
 python_logger = logging.getLogger(__name__)
@@ -216,7 +216,7 @@ class OmegaSimpleLogger:
         Returns:
             None
         """
-        self._level = self.levels.index(level)
+        self._level = self.levels.index(level.upper())
 
     @property
     def level(self):
@@ -435,7 +435,7 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
         store.mongodb.command('convertToCapped', collection.name, size=size)
     # ensure indexed
     for idx in ('levelname', 'levelno', 'created'):
-        ensure_index(collection, {idx: pymongo.ASCENDING}, replace=False)
+        ensure_index_relaxed(collection, {idx: pymongo.ASCENDING}, replace=False)
     return collection
 
 

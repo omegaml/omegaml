@@ -78,6 +78,7 @@ class TrackingProvider:
         label = label or 'default'
         store = store or self._model_store
         meta = store.metadata(obj)
+        assert meta is not None, f"{obj} does not exist in {store}"
         store.link_experiment(obj, self._experiment, label=label)
         meta.save()
         return meta
