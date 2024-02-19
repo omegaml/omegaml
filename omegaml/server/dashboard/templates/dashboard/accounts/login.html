@@ -1,65 +1,56 @@
 {% extends "dashboard/layouts/base-fullscreen.html" %}
-
-{% block title %} Login {% endblock %}
-
+{% block title %}Login{% endblock %}
 {% block content %}
-
-    <div class="auth-wrapper">
-        <div class="auth-content">
-            <div class="auth-bg">
-                <span class="r"></span>
-                <span class="r s"></span>
-                <span class="r s"></span>
-                <span class="r"></span>
-            </div>
-            <div class="card">
-                <div class="card-body text-center">
-
-                    <h3 class="mb-4">Login</h3>
-
-                    <span class="mb-0 text-muted">
-                        {% if msg %}
-                            <span class="text-danger">{{ msg | safe }}</span>
-                        {% else %}
-                            Add your credentials
-                        {% endif %}
-                    </span>
-
-                    <br />
-                    <br />
-
-                    <form role="form" method="post" action="">
-
-                        {{ form.hidden_tag() }}
-
-                        <div class="input-group mb-3">
-                            {{ form.username(placeholder="Username or eMail", class="form-control") }}
-                        </div>
-
-                        <div class="input-group mb-4">
-                            {{ form.password(placeholder="Password", class="form-control", type="password") }}
-                        </div>
-
-                        <button type="submit" name="login" class="btn btn-primary shadow-2 mb-4">Login</button>
-
-                    </form>
-
-                    <p class="mb-0 text-muted">Don’t have an account? <a href="{{ url_for('authentication_blueprint.register') }}" >Sign UP</a></p>
-
-                    {% if config.SOCIAL_AUTH_GITHUB %}
-                        <div class="mx-2">
-
-                            <a href="{{url_for('authentication_blueprint.login_github')}}" class="btn">
-                                <i class="feather icon-github auth-icon"></i>
-
-                            </a>
-                            <br />
-                            <span class="mx-2">Sign IN with GitHub</span>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+  <div class="container d-flex h-100">
+    <div class="row justify-content-center align-self-center">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{ segment | title }}login</h5>
+          <div style="float: right; font-size: 80%; position: relative;">
+            <a href="/accounts/password/reset/">Forgot password?</a>
+          </div>
+          {% block segmentheader %}
+          {% endblock segmentheader %}
         </div>
+        <div class="card-body">
+          <form id="login_form"
+                class="form-horizontal"
+                method="post"
+                role="form"
+                action="">
+            <div style="margin-bottom: 25px" class="input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+              <input id="id_login"
+                     type="text"
+                     class="form-control"
+                     name="login"
+                     value=""
+                     placeholder="email">
+            </div>
+            <div style="margin-bottom: 25px" class="input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+              <input id="id_password"
+                     type="password"
+                     class="form-control"
+                     name="password"
+                     placeholder="password">
+            </div>
+            <div style="margin-top: 10px" class="form-group">
+              <!-- Button -->
+              <div class="col-sm-12 controls">
+                <a id="btn-login" href="#" class="btn btn-success">Login</a>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-md-12 control">
+                <div style="border-top: 1px solid #888; padding-top: 15px; font-size: 85%">
+                  Don't have an account yet? <a href="/accounts/signup/">Sign up here</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-
+  </div>
 {% endblock content %}

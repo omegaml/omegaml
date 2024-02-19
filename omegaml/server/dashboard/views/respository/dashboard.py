@@ -14,13 +14,13 @@ class Metadata:
     kind: str
 
 
-def create_view(bp):
-    class DashboardView(BaseView):
-        @route('/index')
-        def index(self):
-            return render_template('dashboard/index.html',
-                                   segment='index', buckets=self.buckets)
+class DashboardView(BaseView):
+    @route('/index')
+    def index(self):
+        return render_template('dashboard/index.html',
+                               segment='index', buckets=self.buckets)
 
+
+def create_view(bp):
     view = DashboardView('index')
     view.create_routes(bp)
-

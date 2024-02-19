@@ -8,6 +8,7 @@ from werkzeug.utils import redirect
 from omegaml.server.config import config_dict
 from omegaml.server.restapi.util import JSONEncoder
 from omegaml.server.util import configure_database, debug_only
+from omegaml.store import OmegaStore
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -42,6 +43,7 @@ def create_app(*args, **kwargs):
     app.register_blueprint(accounts_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(restapi_bp)
+    app.current_om = setup_omega()
 
     @app.route('/')
     def index():
@@ -59,6 +61,15 @@ def create_app(*args, **kwargs):
         return render_template(f'dashboard/{template}')
 
     return app
+
+def setup_omega():
+    import omegaml as om
+    om = om.setup()
+    om.system : OmegaStore = getattr(om, 'system', om._make_store('.system'))
+    admin_user = om.system.metadata('users/admin')
+    if not admin_user:
+        admin_user = om.system.put({}, 'users/admin', replace=True)
+    return om
 
 
 def serve_objects():

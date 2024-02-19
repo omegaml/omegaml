@@ -90,3 +90,21 @@ body>header>div.collapse.navbar-collapse {
 .modal-dialog-slideout .modal-header, .modal-dialog-slideout .modal-footer {height: 69px; display: block;} 
 .modal-dialog-slideout .modal-header h5 {float:left;}
 .modal-xxl { max-width: 90%; width: 90%; }
+
+/* card header buttons */
+.card-header .card-tools {
+  float: right;
+  font-size: 5px;
+  position: relative;
+  top: -8px;
+  right: -10px;
+}
+
+.card-header:has(.card-tools) {
+  padding-bottom: 0px;
+}
+
+.card-tools .btn, i {
+  margin-left: 10px;
+  margin-right: 10px;
+}
