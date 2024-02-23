@@ -31,6 +31,15 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         idxs_keys = [list(sorted(d.keys())) for d in idxs]
         self.assertTrue(any(keys == ['data.event', 'data.run'] for keys in idxs_keys))
 
+    def test_clear(self):
+        om = self.om
+        exp = om.runtime.experiment('test')
+        with exp:
+            exp.log_metric('accuracy', .98)
+        self.assertEqual(len(exp.data()), 3)
+        exp.clear(force=True)
+        self.assertIsNone(exp.data())
+
     def test_ensure_active(self):
         # explicit start
         om = self.om
@@ -176,7 +185,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel')
-        tracker = om.runtime.experiment('expfoo')
+        tracker = om.runtime.experiment('expfoo', autotrack=True)
         tracker.track('mymodel')
         om.runtime.model('mymodel').score(X, Y)
         exp = tracker.experiment
@@ -199,7 +208,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         lr = LogisticRegression(solver='liblinear', multi_class='auto')
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel')
-        tracker = om.runtime.experiment('expfoo')
+        tracker = om.runtime.experiment('expfoo', autotrack=True)
         tracker.track('mymodel')
         resp = om.runtime.model('mymodel').score(X, Y)
         exp = tracker.experiment

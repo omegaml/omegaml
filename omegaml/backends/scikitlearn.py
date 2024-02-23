@@ -78,7 +78,7 @@ class ScikitLearnBackendV1(BaseModelBackend):
         model = self._v1_extract_model(packagefname)
         return model
 
-    def _v1_put_model(self, obj, name, attributes=None):
+    def _v1_put_model(self, obj, name, attributes=None, **kwargs):
         """
         Packages a model using joblib and stores in GridFS
         """
@@ -100,7 +100,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
     OmegaML backend to use with ScikitLearn
     """
 
-    def _package_model(self, model, key, tmpfn):
+    def _package_model(self, model, key, tmpfn, **kwargs):
         """
         Dumps a model using joblib and packages all of joblib files into a zip
         file
@@ -108,7 +108,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         joblib.dump(model, tmpfn, protocol=4, compress=True)
         return tmpfn
 
-    def _extract_model(self, infile, key, tmpfn):
+    def _extract_model(self, infile, key, tmpfn, **kwargs):
         """
         Loads a model using joblib from a zip file created with _package_model
         """
@@ -117,23 +117,23 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         model = joblib.load(tmpfn)
         return model
 
-    def get_model(self, name, version=-1):
+    def get_model(self, name, version=-1, **kwargs):
         """
         Retrieves a pre-stored model
         """
         meta = self.model_store.metadata(name)
         if self._backend_version != meta.kind_meta.get(self._backend_version_tag):
             return super()._v1_get_model(name, version=version)
-        return super().get_model(name, version=version)
+        return super().get_model(name, version=version, **kwargs)
 
-    def put_model(self, obj, name, attributes=None, _kind_version=None):
+    def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
         if _kind_version and _kind_version != self._backend_version:
-            return super()._v1_put_model(obj, name, attributes=attributes)
+            return super()._v1_put_model(obj, name, attributes=attributes, **kwargs)
         return super().put_model(obj, name, attributes=attributes)
 
     def predict(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self._resolve_input_data('predict', Xname, **kwargs)
+        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
@@ -147,7 +147,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
     def predict_proba(
           self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self._resolve_input_data('predict', Xname, **kwargs)
+        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
@@ -161,8 +161,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
-        X = self.data_store.get(Xname)
-        Y = self.data_store.get(Yname) if Yname is not None else None
+        X = self._resolve_input_data('fit', Xname, 'X')
+        Y = self._resolve_input_data('fit', Xname, 'Y') if Yname is not None else None
         model.fit(reshaped(X), reshaped(Y), **kwargs)
         meta = self.model_store.put(model, modelname)
         return meta
@@ -309,6 +309,7 @@ def process(it, fn=None, keep=False, keep_last=False):
         None if keep and keep_last are False
     """
     results = [] if keep else None
+    result = None
     for result in it:
         result = fn(result) if fn else result
         results.append(result) if keep else None
