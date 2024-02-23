@@ -643,6 +643,7 @@ def module_available(modname):
 
 
 def tensorflow_available():
+    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
     return module_available('tensorflow')
 
 
