@@ -192,22 +192,18 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the predicted outcome
         """
         model = self.model_store.get(modelname)
-        data = self._resolve_input_data('predict', Xname, **kwargs)
+        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         if not hasattr(model, 'predict'):
             raise NotImplementedError
         result = model.predict(reshaped(data))
         return self._prepare_result('predict', result, rName=rName,
                                     pure_python=pure_python, **kwargs)
 
-    def _resolve_input_data(self, method, Xname, **kwargs):
+    def _resolve_input_data(self, method, Xname, key, **kwargs):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
-        if self.tracking:
-            self.tracking.log_event(method, 'X', {
-                'Xname': Xname,
-                'data': data,
-                'kind': meta.kind,
-            })
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
+            self.tracking.log_data(key, data, dataset=Xname, kind=meta.kind, event=method)
         return data
 
     def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
@@ -216,11 +212,8 @@ class BaseModelBackend(BackendBaseCommon):
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta
-        if self.tracking:
-            self.tracking.log_event(method, 'Y', {
-                'result': result if rName is None else rName,
-                'kind': str(type(result)) if rName is None else meta.kind,
-            })
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
+            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind, event=method)
         return result
 
     def predict_proba(
@@ -243,7 +236,7 @@ class BaseModelBackend(BackendBaseCommon):
         fit the model with data
 
         :param modelname: the name of the model object
-        :param Xname: the name of the X data set
+        ci:param Xname: the name of the X data set
         :param Yname: the name of the Y data set
         :param pure_python: if True return a python object. If False return
            a dataframe. Defaults to True to support any client.

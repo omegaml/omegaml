@@ -1,6 +1,6 @@
 import getpass
 
-from omegaml import settings
+from omegaml import settings, load_class
 
 
 class TrackingProvider:
@@ -31,12 +31,13 @@ class TrackingProvider:
            for an example.
     """
 
-    def __init__(self, experiment, store=None, model_store=None):
+    def __init__(self, experiment, store=None, model_store=None, autotrack=False):
         self._experiment = experiment
         self._run = None
         self._store = store
         self._model_store = model_store
         self._extra_log = None
+        self._autotrack = autotrack
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._experiment})"
@@ -46,11 +47,19 @@ class TrackingProvider:
         defaults = getattr(self._store, 'defaults', None) or settings()
         return getattr(defaults, 'OMEGA_USERID', getpass.getuser())
 
+    @property
+    def autotrack(self):
+        return self._autotrack
+
+    @autotrack.setter
+    def autotrack(self, value):
+        self._autotrack = value
+
     def experiment(self, name=None):
         self._experiment = name or self._experiment
         return self
 
-    def track(self, obj, store=None, label=None):
+    def track(self, obj, store=None, label=None, monitor=False, **monitor_kwargs):
         """ attach this experiment to the named object
 
         Usage:
@@ -69,18 +78,69 @@ class TrackingProvider:
                     If not provided will use om.models
                 label (str): optional, the label of the worker, default is
                     'default'
+                monitor (bool|str): optional, truthy sets up a monitor to track
+                    drift in the object, if a string is provided it is used as
+                    the monitoring provider
+                monitor_kwargs (dict): optional, additional keyword arguments
+                    to pass to the monitor
 
         Note:
                 This modifies the object's metadata.attributes::
 
                     { 'tracking': { label: self._experiment } }
+
+                If monitor is set, a monitor definition is added to the object's metadata::
+
+                    { 'tracking': { 'monitors': [ { 'experiment': self._experiment,
+                                       'provider': monitor } ] } }
         """
         label = label or 'default'
         store = store or self._model_store
         meta = store.metadata(obj)
         store.link_experiment(obj, self._experiment, label=label)
+        if monitor:
+            monitor_provider = monitor if isinstance(monitor, str) else None
+            self.as_monitor(obj, store=store, provider=monitor_provider, **monitor_kwargs)
         meta.save()
         return meta
+
+    def as_monitor(self, obj, alerts=None, schedule=None, store=None, provider=None):
+        """
+        Return and attach a drift monitor to this experiment
+
+        Args:
+            obj (str): the name of the model
+            alerts (list): a list of alert definitions. Each alert definition is a dict
+                with keys 'event', 'recipients'. 'event' is the event to get from the
+                tracking log, 'recipients' is a list of recipients (e.g. email address,
+                notification channel)
+            schedule (str): the job scheduling interval for the monitoring job, as used
+                in om.jobs.schedule() when the job is created
+            store (OmegaStore): the store to use, defaults to self._model_store
+            provider (str): the name of the monitoring provider, defaults to store.prefix
+
+        Returns:
+            monitor (DriftMonitor): a drift monitor for the object
+        """
+        store = store or self._model_store
+        mon = self._has_monitor(obj, store=store)
+        assert getattr(self, 'autotrack',
+                       False), "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
+        provider = provider or mon.get('provider') if mon else None
+        provider = provider or store.prefix.replace('/', '')
+        store.link_monitor(obj, self._experiment, provider=provider,
+                           alerts=alerts, schedule=schedule)
+        ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
+        return ProviderClass(obj, tracking=self, store=store)
+
+    def _has_monitor(self, obj, store=None):
+        store = store or self._model_store
+        meta = store.metadata(obj)
+        monitors = meta.attributes.setdefault('tracking', {}).setdefault('monitors', [])
+        for mon in monitors:
+            if mon.get('experiment') == self._experiment:
+                return mon
+        return None
 
     def active_run(self):
         self._run = (self._run or 0) + 1
@@ -123,11 +183,17 @@ class TrackingProvider:
         # add extra logging information for every subsequent log_xyz call
         raise NotImplementedError
 
+    def log_data(self, key, data, step=None, **extra):
+        raise NotImplementedError
+
     def tensorflow_callback(self):
         from omegaml.backends.tracking import TensorflowCallback
         return TensorflowCallback(self)
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
+    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):
+        raise NotImplementedError
+
+    def clear(self, force=False):
         raise NotImplementedError
 
     def flush(self):

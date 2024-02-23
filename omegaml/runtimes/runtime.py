@@ -307,19 +307,24 @@ class OmegaRuntime(object):
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
-    def experiment(self, experiment, provider=None, implied_run=True):
+    def experiment(self, experiment, provider=None, implied_run=True, recreate=False, **tracker_kwargs):
         """ set the tracking backend and experiment
 
         Args:
             experiment (str): the name of the experiment
             provider (str): the name of the provider
+            tracker_kwargs (dict): additional kwargs for the tracker
+            recreate (bool): if True, recreate the experiment (i.e. drop and recreate,
+              this is useful to change the provider or other settings. All previous data will
+              be kept)
 
         Returns:
             OmegaTrackingProxy
         """
         from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
-        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run)
+        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run,
+                                     recreate=recreate, **tracker_kwargs)
         return tracker
 
     def task(self, name, **kwargs):

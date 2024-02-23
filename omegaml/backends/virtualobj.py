@@ -130,6 +130,24 @@ class VirtualObjectBackend(BaseDataBackend):
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
                        tracking=self.tracking, **kwargs)
 
+    def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
+        # make this work as a model backend too
+        meta = self.model_store.metadata(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
+        X = self.data_store.get(xName)
+        y = self.data_store.get(yName) if yName else None
+        return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
+
+    def score(self, modelname, xName, yName=None, rName=None, **kwargs):
+        # make this work as a model backend too
+        meta = self.model_store.metadata(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
+        X = self.data_store.get(xName)
+        y = self.data_store.get(yName) if yName else None
+        return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
+
     def run(self, scriptname, *args, **kwargs):
         # run as a script
         meta = self.model_store.metadata(scriptname)
