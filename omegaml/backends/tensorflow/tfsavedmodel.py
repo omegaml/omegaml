@@ -144,7 +144,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
 
         """
         model = self.get_model(modelname)
-        X = self._resolve_input_data('predict', Xname, **kwargs)
+        X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         result = model.predict(X)
 
         def ensure_serializable(data):

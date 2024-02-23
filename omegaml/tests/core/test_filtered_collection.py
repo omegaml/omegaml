@@ -1,16 +1,13 @@
 from __future__ import absolute_import
 
-from hashlib import sha256
-
-import warnings
-
 import pandas as pd
 import random
+import warnings
+from hashlib import sha256
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
-from unittest.case import TestCase
-
 from omegaml.util import signature
+from unittest.case import TestCase
 
 
 class FilteredCollectionTests(TestCase):
@@ -122,14 +119,14 @@ class FilteredCollectionTests(TestCase):
                 fcoll = FilteredCollection(self.coll, query=filter, trusted=trusted)
                 result = fcoll.count_documents()
                 warnlog = str(list(w.message for w in wrn))
-                self.assertIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog)
+                self.assertIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.',
+                              warnlog)
                 self.assertEqual(result, 4)
         with warnings.catch_warnings(record=True) as wrn:
             warnings.simplefilter('always')
             fcoll = FilteredCollection(self.coll, query=filter, trusted=signature(filter))
             result = fcoll.count_documents()
             warnlog = str(list(w.message for w in wrn))
-            self.assertNotIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog)
+            self.assertNotIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.',
+                             warnlog)
             self.assertEqual(result, 4)
-
-

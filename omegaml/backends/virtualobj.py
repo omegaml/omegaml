@@ -130,6 +130,24 @@ class VirtualObjectBackend(BaseDataBackend):
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
                        tracking=self.tracking, **kwargs)
 
+    def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
+        # make this work as a model backend too
+        meta = self.model_store.metadata(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
+        X = self.data_store.get(xName)
+        y = self.data_store.get(yName) if yName else None
+        return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
+
+    def score(self, modelname, xName, yName=None, rName=None, **kwargs):
+        # make this work as a model backend too
+        meta = self.model_store.metadata(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
+        X = self.data_store.get(xName)
+        y = self.data_store.get(yName) if yName else None
+        return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
+                       tracking=self.tracking, **kwargs)
+
     def run(self, scriptname, *args, **kwargs):
         # run as a script
         meta = self.model_store.metadata(scriptname)
@@ -301,14 +319,14 @@ class _DillDip:
         else:
             # check obvious references in source
             if '__main__' in source_obj.get('source', []):
-                warnings.warn(f'The {repr(obj)} module references __main__, this may lead to unexpected results')
+                warnings.warn(f'The {repr(obj)} references __main__, this may lead to unexpected results')
         if as_source and source_obj:
             # if source code was requested, transport as source code
             data = dill.dumps(source_obj, **dill_kwargs)
         elif source_obj and dill.detect.getmodule(obj) != '__main__':
             # we have a source obj, make sure we can dill it and have source to revert from
             # compile to __main__ module to enable full serialization
-            warnings.warn(f'The {repr(obj)} module is defined outside of __main__, recompiling in __main__.')
+            warnings.warn(f'The {repr(obj)} is defined outside of __main__, recompiling in __main__.')
             obj = self._dynamic_compile(source_obj, module='__main__')
             source_obj['dill'] = dill.dumps(obj, **dill_kwargs)
             data = dill.dumps(source_obj, **dill_kwargs)
@@ -349,7 +367,7 @@ class _DillDip:
         return obj
 
     def isdipped(self, data_or_obj):
-        obj = tryOr(lambda : dill.loads(data_or_obj), None) if not isinstance(data_or_obj, dict) else data_or_obj
+        obj = tryOr(lambda: dill.loads(data_or_obj), None) if not isinstance(data_or_obj, dict) else data_or_obj
         return isinstance(obj, dict) and obj.get('__dipped__') == self.__calories
 
 

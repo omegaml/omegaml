@@ -82,8 +82,17 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             bucket = self.system_kwargs.get('__bucket')
             auth = self.system_kwargs.get('__auth')
             om = self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
+            # TODO link the global om to this actual linked om instance
+            # -- this ensure that import omegaml as om will use the correct instance, including the bucket
+            # -- might have unintended side effects, e.g. usually the global om is the default instance/bucket
+            # -- to be tested before enabling.
+            # -- alternative: make this a respnosibility of get_omega_for_task, passing the bucket as kwarg
+            # link(om)
             self.auth_env.prepare_env(om.defaults)
             self.request._auth = om.runtime.auth
+            # TODO the runtime should be set to the task's actual label (routing key)
+            #      so that any user code using om.runtime is using the same label, e.g. for tracking
+            # om.runtime.require(label=self.request.label)
         return self.request._om
 
     def get_delegate(self, name, kind='models', pass_as='model_store'):

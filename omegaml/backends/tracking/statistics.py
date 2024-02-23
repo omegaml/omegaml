@@ -14,6 +14,9 @@ class ExperimentStatistics:
     def __init__(self, tracker):
         self.tracker = tracker
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.tracker})"
+
     def data(self, **kwargs):
         return self.tracker.data(**kwargs)
 
@@ -85,7 +88,10 @@ class ExperimentStatistics:
             DataFrame with percentiles for each metric
         """
         # metrics - percentiles for each metric
-        metrics = (self.data(event='metric', **kwargs)
+        data = self.data(event='metric', **kwargs)
+        if data.empty:
+            return pd.DataFrame()
+        metrics = (data
                    .groupby(['event', 'key'])
                    .apply(lambda v: (v['value']
                                      .describe(percentiles=percentiles)))
@@ -173,8 +179,8 @@ class ExperimentStatistics:
         groupby = groupby or self.options.groupby
         throughput = (time_data
                       .groupby(groupby)
-                      .apply(lambda v: (tp_unit / (v['dt'].max() - v['dt'].min())
-                                        .total_seconds())
+                      .apply(lambda v: (tp_unit / max((v['dt'].max() - v['dt'].min())
+                                                      .total_seconds(), 1))
                              )
                       .describe(percentiles=percentiles)
                       .to_frame()
@@ -214,8 +220,8 @@ class ExperimentStatistics:
         bins = pd.cut(time_data['dt'], bins=time_slots)
         latency = (time_data
                    .groupby(bins)
-                   .apply(lambda v: ((v['dt'].max() - v['dt'].min())
-                                     .total_seconds())
+                   .apply(lambda v: (max((v['dt'].max() - v['dt'].min())
+                                         .total_seconds(), 1))
                           )
                    .describe(percentiles=percentiles)
                    .to_frame()
@@ -256,8 +262,8 @@ class ExperimentStatistics:
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
         throughput_eff = (time_data
                           .groupby(bins)
-                          .apply(lambda v: ((len(v) // 2) / (v['dt'].max() - v['dt'].min())
-                                            .total_seconds() * tp_unit)
+                          .apply(lambda v: ((len(v) // 2) / max((v['dt'].max() - v['dt'].min())
+                                                                .total_seconds() * tp_unit, 1))
                                  )
                           .describe(percentiles=percentiles)
                           .to_frame()
