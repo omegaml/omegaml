@@ -244,12 +244,13 @@ class SQLAlchemyBackend(BaseDataBackend):
         if not raw and valid_sql(sql):
             index_cols = _meta_to_indexcols(meta) if index else kwargs.get('index_col')
             stmt = self._sanitize_statement(sql, sqlvars)
-            kwargs = meta.kind_meta.get('kwargs') or {}
-            kwargs.update(kwargs)
+            # TODO unit test to ensure kind_meta is overriden by kwargs
+            _kwargs = meta.kind_meta.get('kwargs') or {}
+            _kwargs.update(kwargs)
             if not lazy:
                 logger.debug(f'executing sql {stmt} with parameters {sqlvars}')
                 pd_kwargs = {**dict(chunksize=chunksize, index_col=index_cols,
-                                    params=(sqlvars or {})), **kwargs}
+                                    params=(sqlvars or {})), **_kwargs}
                 result = pd.read_sql(stmt, connection, **pd_kwargs)
             else:
                 # lazy returns a cursor

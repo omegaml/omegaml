@@ -56,7 +56,7 @@ class OmegaModelProxy(RuntimeProxyBase):
         """
         return self.runtime.task(name)
 
-    def experiment(self, experiment=None, label=None, provider=None):
+    def experiment(self, experiment=None, label=None, provider=None, **tracker_kwargs):
         """ return the experiment for this model
 
         If an experiment does not exist yet, it will be created. The
@@ -69,6 +69,7 @@ class OmegaModelProxy(RuntimeProxyBase):
             experiment (str): the experiment name, defaults to the modelname
             label (str): the runtime label, defaults to 'default'
             provider (str): the provider to use, defaults to 'default'
+            tracker_kwargs (dict): additional kwargs to pass to the tracker
 
         Returns:
             OmegaTrackingProxy() instance
@@ -78,7 +79,7 @@ class OmegaModelProxy(RuntimeProxyBase):
         exp = exps[0] if exps else None
         experiment = experiment or self.modelname
         if exp is None:
-            exp = self.runtime.experiment(experiment, provider=provider)
+            exp = self.runtime.experiment(experiment, provider=provider, **tracker_kwargs)
             if not label in self.experiments():
                 exp.track(self.modelname, label=label)
         return exp

@@ -30,12 +30,13 @@ class OmegaTrackingProxy(RuntimeProxyBase):
         * ExperimentBackend
     """
 
-    def __init__(self, experiment=None, provider=None, runtime=None, implied_run=True):
+    def __init__(self, experiment=None, provider=None, runtime=None, implied_run=True, **tracker_kwargs):
         self.provider = provider
         self._experiment = experiment
         self._implied_run = implied_run
         self._with_experiment = None
         self._tracker = None
+        self._tracker_kwargs = tracker_kwargs
         super().__init__(experiment, runtime=runtime)
 
 
@@ -69,7 +70,7 @@ class OmegaTrackingProxy(RuntimeProxyBase):
             om = self.runtime.omega
             fqdn = SystemPosixPath(ExperimentBackend.exp_prefix) / self._experiment
             exp = (om.models.get(str(fqdn), data_store=om.datasets) or
-                   self.create_experiment(self._experiment, provider=self.provider))
+                   self.create_experiment(self._experiment, provider=self.provider, **self._tracker_kwargs))
             self._tracker = exp
         return self._tracker
 

@@ -677,7 +677,7 @@ class OmegaStore(object):
             return backend.drop(name, force=force, version=version, **kwargs)
         return self._drop(name, force=force, version=version)
 
-    def _drop(self, name, force=False, version=-1):
+    def _drop(self, name, force=False, version=-1, **kwargs):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
             raise DoesNotExist()

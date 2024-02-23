@@ -192,18 +192,18 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the predicted outcome
         """
         model = self.model_store.get(modelname)
-        data = self._resolve_input_data('predict', Xname, **kwargs)
+        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         if not hasattr(model, 'predict'):
             raise NotImplementedError
         result = model.predict(reshaped(data))
         return self._prepare_result('predict', result, rName=rName,
                                     pure_python=pure_python, **kwargs)
 
-    def _resolve_input_data(self, method, Xname, **kwargs):
+    def _resolve_input_data(self, method, Xname, key, **kwargs):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
-        if self.tracking:
-            self.tracking.log_event(method, 'X', {
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
+            self.tracking.log_event(method, key, {
                 'Xname': Xname,
                 'data': data,
                 'kind': meta.kind,
@@ -216,7 +216,7 @@ class BaseModelBackend(BackendBaseCommon):
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta
-        if self.tracking:
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
             self.tracking.log_event(method, 'Y', {
                 'result': result if rName is None else rName,
                 'kind': str(type(result)) if rName is None else meta.kind,
