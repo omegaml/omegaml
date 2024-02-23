@@ -1,8 +1,11 @@
-import joblib
+from pathlib import Path
+
 import shutil
+
+import joblib
+
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
-from pathlib import Path
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -49,7 +52,7 @@ class BaseModelBackend(BackendBaseCommon):
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
-    
+
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
@@ -200,7 +203,11 @@ class BaseModelBackend(BackendBaseCommon):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
         if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data(key, data, dataset=Xname, kind=meta.kind, event=method)
+            self.tracking.log_event(method, key, {
+                'Xname': Xname,
+                'data': data,
+                'kind': meta.kind,
+            })
         return data
 
     def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
@@ -210,8 +217,10 @@ class BaseModelBackend(BackendBaseCommon):
             meta = self.data_store.put(result, rName)
             result = meta
         if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
-                                   event=method)
+            self.tracking.log_event(method, 'Y', {
+                'result': result if rName is None else rName,
+                'kind': str(type(result)) if rName is None else meta.kind,
+            })
         return result
 
     def predict_proba(

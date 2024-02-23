@@ -1,12 +1,13 @@
 import datetime
-import pandas as pd
 import platform
-import pymongo
 import unittest
+from time import sleep
+
+import pandas as pd
+import pymongo
 from numpy.testing import assert_almost_equal
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from time import sleep
 
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
