@@ -146,6 +146,27 @@ class OmegaSimpleTracker(TrackingProvider):
                             noversion=True, as_many=True)
             self.log_buffer.clear()
 
+    def clear(self, force=False):
+        """ clear all data
+
+        All data is removed from the experiment's dataset. This is not recoverable.
+
+        Args:
+            force (bool): if True, clears all data, otherwise raises an error
+
+        Caution:
+            * this will clear all data and is not recoverable
+
+        Raises:
+            AssertionError: if force is not True
+
+        .. versionadded:: 0.16.2
+
+        """
+        assert force, "clear() requires force=True to prevent accidental data loss. This will clear all experiment data and is not recoverable."
+        self._store.drop(self._data_name, force=True)
+        self._initialize_dataset(force=True)
+
     def _common_log_data(self, event, key, value, step=None, dt=None, **extra):
         if isinstance(value, dict):
             # shortcut to resolve PassthroughDataset actual values
@@ -308,7 +329,8 @@ class OmegaSimpleTracker(TrackingProvider):
 
         Args:
             experiment (str|list): the name of the experiment, defaults to its current value
-            run (int|list): the run(s) to get data back, defaults to current run, use 'all' for all
+            run (int|list): the run(s) to get data back, defaults to current run, use 'all' for all,
+               1-indexed since first run, or -1 indexed from latest run, can combine both.
             event (str|list): the event(s) to include
             step (int|list): the step(s) to include
             key (str|list): the key(s) to include
@@ -319,11 +341,31 @@ class OmegaSimpleTracker(TrackingProvider):
             * data (DataFrame) if raw == False
             * data (list of dicts) if raw == True
             * None if no data exists
+
+        .. versionchanged:: 0.16.2
+            run supports negative indexing, run='*' is a shortcut for run='all'
         """
-        filter = {}
         experiment = experiment or self._experiment
         run = run or self._run
-        valid = lambda s: s is not None and str(s).lower() != 'all'
+        if isinstance(run, list) and any(r < 0 for r in run):
+            latest = self._latest_run
+            run = [(r if r >= 0 else latest + r) for r in run]
+        elif isinstance(run, int) and run < 0:
+            run = self._latest_run + run
+        filter = self._build_data_filter(experiment, run, event, step, key, extra)
+        self.flush()
+        data = self._store.get(self._data_name, filter=filter, lazy=lazy)
+        if data is not None and not raw and not lazy:
+            data = pd.DataFrame.from_records(data)
+            if 'dt' in data.columns:
+                data['dt'] = pd.to_datetime(data['dt'], errors='coerce')
+                data.sort_values('dt', inplace=True)
+        return data
+
+    def _build_data_filter(self, experiment, run, event, step, key, extra):
+        # build a filter for the data query, suitable for OmegaStore.get()
+        filter = {}
+        valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
         op = lambda s: {'$in': list(s)} if isinstance(s, (list, tuple)) else s
         if valid(experiment):
             filter['data.experiment'] = op(experiment)
@@ -338,13 +380,7 @@ class OmegaSimpleTracker(TrackingProvider):
         for k, v in extra.items():
             if valid(k):
                 filter[f'data.{k}'] = op(v)
-        data = self._store.get(self._data_name, filter=filter, lazy=lazy)
-        if data is not None and not raw and not lazy:
-            data = pd.DataFrame.from_records(data)
-            if 'dt' in data.columns:
-                data['dt'] = pd.to_datetime(data['dt'], errors='coerce')
-                data.sort_values('dt', inplace=True)
-        return data
+        return filter
 
     @property
     def dataset(self):
