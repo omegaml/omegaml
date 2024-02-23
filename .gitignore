@@ -248,4 +248,4 @@ mlops-export/**
 mlruns/**
 .vscode/**
 .dccache
-/scripts/mongoinit.js
+omegaml/tests/**/*.db
