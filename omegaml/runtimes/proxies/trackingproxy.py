@@ -28,16 +28,22 @@ class OmegaTrackingProxy(RuntimeProxyBase):
 
         * OmegaSimpleTracker
         * ExperimentBackend
+
+    .. versionchanged:: 0.17
+          with om.runtime.experiment() now returns the OmegaTrackingProxy instance
+          instead of the underlying TrackingProvider
     """
 
-    def __init__(self, experiment=None, provider=None, runtime=None, implied_run=True):
+    def __init__(self, experiment=None, provider=None, runtime=None, implied_run=True,
+                 recreate=False, **tracker_kwargs):
         self.provider = provider
         self._experiment = experiment
         self._implied_run = implied_run
         self._with_experiment = None
         self._tracker = None
+        self._tracker_kwargs = tracker_kwargs
+        self._recreate = recreate
         super().__init__(experiment, runtime=runtime)
-
 
     def _apply_require(self):
         # require is not applicable for experiments, as it is implied with the model/script/job
@@ -68,8 +74,11 @@ class OmegaTrackingProxy(RuntimeProxyBase):
         if self._tracker is None:
             om = self.runtime.omega
             fqdn = SystemPosixPath(ExperimentBackend.exp_prefix) / self._experiment
+            if self._recreate:
+                om.models.drop(str(fqdn), force=True)
+                self._recreate = False
             exp = (om.models.get(str(fqdn), data_store=om.datasets) or
-                   self.create_experiment(self._experiment, provider=self.provider))
+                   self.create_experiment(self._experiment, provider=self.provider, **self._tracker_kwargs))
             self._tracker = exp
         return self._tracker
 
@@ -82,7 +91,7 @@ class OmegaTrackingProxy(RuntimeProxyBase):
             experiment.start()
             self._implied_run = True if no_active_run else self._implied_run
         experiment.start_runtime()
-        return experiment
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         experiment = self._with_experiment or self.experiment

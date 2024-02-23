@@ -34,7 +34,7 @@ class RuntimeProxyBase:
 
     def _apply_require(self):
         self.meta = meta = self.store.metadata(self.name)
-        assert meta is not None, f"{self.store.prefix}/{self.name} does not exist".format(**locals())
+        assert meta is not None, f"{self.store.prefix}{self.name} does not exist".format(**locals())
         # get common require kwargs
         require_kwargs = meta.attributes.get('require', {})
         # enable default tracking, unless explicitly tracked

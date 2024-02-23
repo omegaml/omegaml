@@ -244,8 +244,9 @@ class OmegaRuntime(object):
                                **self._require_kwargs['task'])
                 ex_routing = dict(**self._task_default_kwargs['routing'],
                                   **self._require_kwargs['routing'])
-                task = {k: v for k, v in task.items() if k not in ex_task}
-                routing = {k: v for k, v in routing.items() if k not in ex_routing}
+                exists_or_none = lambda k, d: k not in d or d.get(k, False) is None
+                task = {k: v for k, v in task.items() if exists_or_none(k, ex_task)}
+                routing = {k: v for k, v in routing.items() if exists_or_none(k, ex_routing)}
             if always:
                 self._task_default_kwargs['routing'].update(routing)
                 self._task_default_kwargs['task'].update(task)
@@ -308,19 +309,24 @@ class OmegaRuntime(object):
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
-    def experiment(self, experiment, provider=None, implied_run=True):
+    def experiment(self, experiment, provider=None, implied_run=True, recreate=False, **tracker_kwargs):
         """ set the tracking backend and experiment
 
         Args:
             experiment (str): the name of the experiment
             provider (str): the name of the provider
+            tracker_kwargs (dict): additional kwargs for the tracker
+            recreate (bool): if True, recreate the experiment (i.e. drop and recreate,
+              this is useful to change the provider or other settings. All previous data will
+              be kept)
 
         Returns:
             OmegaTrackingProxy
         """
         from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
-        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run)
+        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run,
+                                     recreate=recreate, **tracker_kwargs)
         return tracker
 
     def task(self, name, **kwargs):

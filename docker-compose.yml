@@ -1,4 +1,3 @@
-version: '3'
 services:
    omegaml:
        image: omegaml/omegaml:latest
