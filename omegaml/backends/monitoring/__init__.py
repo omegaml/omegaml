@@ -39,17 +39,17 @@ class DriftStatsCalc:
 
 
 class DriftMonitorBase:
-    def __init__(self, name, resource=None, store=None, query=None, **kwargs):
+    def __init__(self, name, resource=None, store=None, query=None, tracking=None, **kwargs):
         self.name = name
         self.store = store
         self._resource = resource
         self._query = query or kwargs
+        self.tracking = tracking
 
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
 
     def drift(self, seq=None, d1=None, d2=None, ci=.95):
-        seq = seq or [-2, -1]
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
@@ -68,17 +68,21 @@ class DriftMonitorBase:
         if d1 or d2:
             s1 = self.snapshot(d1) if d1 else None
             s2 = self.snapshot(d2) if d2 else None
+            seq = seq or [-2, -1]
         else:
             s1, s2 = None, None
+            seq = seq or []
         if not all((s1, s2)):
             snapshots = self.data()
             if len(snapshots) > 1:
+                seq = seq or [-2, -1]
                 _s1 = snapshots[seq[0]]
                 _s2 = snapshots[seq[1]]
             else:
+                seq = seq or [-1, -1]
                 _s1 = _s2 = snapshots[seq[-1]]
-        s1 = s1 or _s1
-        s2 = s2 or _s2
+            s1 = s1 or _s1
+            s2 = s2 or _s2
         drift = self._calc_drift(s1, s2, ci=ci)
         drift['info']['seq'] = list(seq)
         return drift
@@ -107,7 +111,7 @@ class DriftMonitorBase:
         # make more efficient
         return len(self.data())
 
-    def _do_snapshot(self, df1: pd.DataFrame, columns=None):
+    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None):
         df1 = df1[columns] if columns else df1
         numeric_columns = list(df1.select_dtypes(include='number').columns)
         cat_columns = list(set(df1.columns) - set(numeric_columns))
@@ -115,6 +119,7 @@ class DriftMonitorBase:
         snapshot = {}
         stats = snapshot.setdefault('stats', {})
         info = snapshot.setdefault('info', {})
+        info['resource'] = name
         info['num_columns'] = numeric_columns
         info['cat_columns'] = cat_columns
         info['dt'] = datetime.utcnow().isoformat()
@@ -188,19 +193,60 @@ class DriftMonitorBase:
 
 
 class DataDriftMonitor(DriftMonitorBase):
-    def __init__(self, name, dataset=None, store=None, query=None, **kwargs):
-        super().__init__(name, resource=dataset, store=store, query=query, **kwargs)
+    def __init__(self, name, dataset=None, store=None, query=None, tracking=None, **kwargs):
+        super().__init__(name, resource=dataset, store=store, query=query,
+                         tracking=tracking, **kwargs)
 
     def snapshot(self, dataset=None, chunksize=None, columns=None, **query):
         # TODO: for chunksizes need to combine hist for multiple chunks
         # -- https://stackoverflow.com/a/57884457/890242
-        dataset = dataset or self._resource
+        dataset = dataset if dataset is not None else self._resource
         query = query or self._query
         if isinstance(dataset, pd.DataFrame):
             df = dataset
         else:
             df = self.store.get(dataset, **query)
-        snapshot = self._do_snapshot(df, columns=columns)
+        snapshot = self._do_snapshot(df, columns=columns, name=str(dataset))
         return snapshot
+
+
+class ModelMonitor(DriftMonitorBase):
+    def __init__(self, name, model=None, tracking=None, store=None):
+        super().__init__(name, resource=model, store=store, tracking=tracking)
+
+    def snapshot(self, model=None, run=None):
+        # what do we snapshot?
+        # - validation metric (accuracy, f1, f2, confusion matrix etc)
+        # - data input distribution (i.e. training/validation X)
+        # - (expected) label distribution (Y)
+        # NEXT:
+        # - track labels (Y)
+        # - track inputs (X)
+        # - metrics, Y and X should also be possible to override via kwargs (instead of taking from tracking)
+        model = model or self._resource
+        run = run or 'all'
+        df: pd.DataFrame = self.tracking.data(run=run, event='metric')
+        index_cols = ['experiment', 'run', 'step', 'dt']
+        key_cols = ['key']
+        value_cols = ['value']
+        # - reshape from long to wide format
+        df = (pd.pivot_table(df.fillna(1),
+                             index=index_cols,
+                             columns=key_cols,
+                             values=value_cols,
+                             dropna=True)
+              .droplevel(0, axis=1)
+              .reset_index())
+        mon_columns = list(set(df.columns) - set(index_cols + key_cols))
+        snapshot = self._do_snapshot(df, columns=mon_columns)
+        return snapshot
+
+    def _calc_model_drift(self):
+        # what do we measure
+        # - metric: we measure a drift in metric/confusion matrix
+        # - X: measure drift in input data, where some sequence of recent predict() input data is taken as d2
+        # - Y: measure drift in output, where some sequence of recent predict() output is taken as d2
+        # - is confusion matrix like a category or a numeric.var? (e.g. each value in cm is a category?, each value in cm is a )
+        pass
 
 

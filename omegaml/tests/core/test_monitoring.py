@@ -1,7 +1,10 @@
-from pprint import pprint
 from unittest import TestCase
 
-from omegaml.backends.monitoring import DataDriftMonitor
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+
+from omegaml.backends.monitoring import DataDriftMonitor, ModelMonitor
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -22,6 +25,26 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         return gapminder
 
     def test_datadrift(self):
+        om = self.om
+        mon = DataDriftMonitor('foo', store=om.datasets)
+        df = pd.DataFrame({
+            'x': np.random.uniform(0, 1, 100),
+        })
+        snapshot = mon.snapshot(df)
+        self.assertIn('stats', snapshot)
+        self.assertIn('info', snapshot)
+        self.assertIn('num_columns', snapshot['info'])
+        self.assertEqual(snapshot['info']['num_columns'], ['x'])
+        self.assertEqual(snapshot['info']['cat_columns'], [])
+        data = mon.data()
+        self.assertEqual(len(data), 1)
+        drift = mon.drift()
+        self.assertIn('info', drift)
+        self.assertIn('stats', drift)
+        self.assertEqual(drift['info']['seq'], [-1, -1])
+        self.assertEqual(drift['result']['drift'], False)
+
+    def test_datadrift_drift(self):
         om = self.om
         mon = DataDriftMonitor('foo', store=om.datasets)
         mon.clear()
@@ -121,7 +144,6 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
         drifts = mon.drift(seq=True)
-        pprint(drifts)
         # expect 3 drift calculations
         self.assertEqual(len(drifts), 3)
         # -- 1960/1970, 1970/1980, 1980/now
@@ -151,7 +173,6 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # -- get all drifts since baseline
         #    comparing each snapshot to the baseline
         drifts = mon.drift(seq='baseline')
-        pprint(drifts)
         # expect 3 drift calculations
         # -- note how this is different from test_datadrift_sequence
         self.assertEqual(len(drifts), 3)
@@ -167,5 +188,35 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[0]['result']['columns'], ['lifeExp'])
         self.assertEqual(drifts[1]['result']['columns'], ['lifeExp'])
         self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'gdpPercap'])
+
+    def _setup_model(self):
+        om = self.om
+        with om.runtime.experiment('test') as exp:
+            #exp.clear(force=True)
+            for i in range(100):
+                exp.start()
+                if i == 0:
+                    X = np.array(np.random.random(size=(10, 4)))
+                    y = np.dot(X, np.random.random(size=(4, 1))) + np.random.random()
+                    lm = LinearRegression()
+                    lm.fit(X, y)
+                else:
+                    y = np.dot(X, np.random.random(size=(4, 1)) * 1000) + np.random.random()
+                exp.log_metric('acc', lm.score(X[5:], y[5:]))
+                exp.stop()
+
+        return exp
+        acc = exp.data(run='all', event='metric', key='acc')['value']
+        # (acc
+        #  .transform(lambda s: (s - s.mean()) / s.std())
+        #  .hist())
+
+
+    def test_model_drift(self):
+        om = self.om
+        exp = self._setup_model()
+        mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon.snapshot(run=[-1])
+        mon.drift(seq=[0] + list(range(-3, 0)), ci=.9)
 
 
