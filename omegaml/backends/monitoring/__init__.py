@@ -54,7 +54,7 @@ class DriftMonitorBase:
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
             # return a drift history
-            if seq is True or seq == 'series':
+            if seq is True or seq == 'series' or recursive_seq:
                 # [0, 1, 2, ...] => compare each snapshot to the previous
                 seq = range(0, len(self)) if seq is True else seq
                 drifts = [self.drift(seq=[i, j], ci=ci) for i, j in pairwise(seq)]
@@ -111,7 +111,7 @@ class DriftMonitorBase:
         # make more efficient
         return len(self.data())
 
-    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None):
+    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None):
         df1 = df1[columns] if columns else df1
         numeric_columns = list(df1.select_dtypes(include='number').columns)
         cat_columns = list(set(df1.columns) - set(numeric_columns))
@@ -120,6 +120,7 @@ class DriftMonitorBase:
         stats = snapshot.setdefault('stats', {})
         info = snapshot.setdefault('info', {})
         info['resource'] = name
+        info['kind'] = kind
         info['num_columns'] = numeric_columns
         info['cat_columns'] = cat_columns
         info['dt'] = datetime.utcnow().isoformat()
@@ -206,7 +207,7 @@ class DataDriftMonitor(DriftMonitorBase):
             df = dataset
         else:
             df = self.store.get(dataset, **query)
-        snapshot = self._do_snapshot(df, columns=columns, name=str(dataset))
+        snapshot = self._do_snapshot(df, columns=columns, name=str(dataset), kind='data')
         return snapshot
 
 
@@ -226,6 +227,7 @@ class ModelMonitor(DriftMonitorBase):
         model = model or self._resource
         run = run or 'all'
         df: pd.DataFrame = self.tracking.data(run=run, event='metric')
+        assert not df.empty, f"could not find any metrics for model in {self.tracking=} {run=}"
         index_cols = ['experiment', 'run', 'step', 'dt']
         key_cols = ['key']
         value_cols = ['value']
@@ -238,7 +240,7 @@ class ModelMonitor(DriftMonitorBase):
               .droplevel(0, axis=1)
               .reset_index())
         mon_columns = list(set(df.columns) - set(index_cols + key_cols))
-        snapshot = self._do_snapshot(df, columns=mon_columns)
+        snapshot = self._do_snapshot(df, columns=mon_columns, name=str(model), kind='model')
         return snapshot
 
     def _calc_model_drift(self):

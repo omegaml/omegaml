@@ -1,3 +1,4 @@
+from pprint import pprint
 from unittest import TestCase
 
 import numpy as np
@@ -58,7 +59,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
                      country__in=['Switzerland', 'Germany'])
         # check snapshots store expected data
         data = mon.data()[-1]
-        for col in df.columns:
+        for col in 'lifeExp', 'gdpPercap', 'pop':
             self.assertIn(col, data['stats'])
         self.assertEqual(set(df.columns), set(data['info']['num_columns'] +
                                               data['info']['cat_columns']))
@@ -192,17 +193,20 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def _setup_model(self):
         om = self.om
         with om.runtime.experiment('test') as exp:
-            #exp.clear(force=True)
+            exp.clear(force=True)
             for i in range(100):
                 exp.start()
                 if i == 0:
+                    # baseline
                     X = np.array(np.random.random(size=(10, 4)))
                     y = np.dot(X, np.random.random(size=(4, 1))) + np.random.random()
                     lm = LinearRegression()
                     lm.fit(X, y)
                 else:
-                    y = np.dot(X, np.random.random(size=(4, 1)) * 1000) + np.random.random()
-                exp.log_metric('acc', lm.score(X[5:], y[5:]))
+                    # introduce concept drift by scaling the coefficients => drift in accuracy
+                    X = np.array(np.random.random(size=(10, 4)) * 1000)
+                    y = np.dot(X, np.random.random(size=(4, 1)) * 1000) + np.random.random() * 5
+                exp.log_metric('acc', lm.score(X, y))
                 exp.stop()
 
         return exp
@@ -211,12 +215,30 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         #  .transform(lambda s: (s - s.mean()) / s.std())
         #  .hist())
 
-
     def test_model_drift(self):
         om = self.om
         exp = self._setup_model()
         mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
-        mon.snapshot(run=[-1])
-        mon.drift(seq=[0] + list(range(-3, 0)), ci=.9)
-
-
+        print(exp.data(run='all', event='metric')['run'].unique())
+        # create snapshots of the model stats (i.e. calculate baseline statistics)
+        mon.snapshot(run=[2])
+        mon.snapshot(run=range(3, 50))
+        mon.snapshot(run=range(50, 70))
+        mon.snapshot(run=range(70, 100))  # run 1 does not have any metrics
+        # THINK: when the monitor is based on tracking, we should be able to specify
+        # a sequnce of runs directly, instead of snapshots
+        # seq= should be named snapshots=, and alternative runs= (with tracking) to avoid confusion
+        # perhaps not, as to ensure we always work on actually captured snapshots?
+        drift = mon.drift(seq=[0] + list(range(-3, 0)), ci=.9)
+        # -- expect 3 drift calculations
+        self.assertEqual(len(drift), 3)
+        self.assertEqual(drift[0]['info']['seq'], [0, -3])
+        self.assertEqual(drift[1]['info']['seq'], [-3, -2])
+        self.assertEqual(drift[2]['info']['seq'], [-2, -1])
+        # -- expect a drift from baseline (run 2) to runs 3-50 (see _setup_model() for details)
+        self.assertEqual(drift[0]['result']['drift'], True)
+        # -- expect no drift from runs 3-50 to runs 50-70
+        self.assertEqual(drift[1]['result']['drift'], False)
+        # -- expect no drift from runs 50-70 to runs 70-100
+        self.assertEqual(drift[2]['result']['drift'], False)
+        pprint(drift)

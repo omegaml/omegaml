@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import os
 import platform
 import warnings
@@ -347,6 +349,7 @@ class OmegaSimpleTracker(TrackingProvider):
         """
         experiment = experiment or self._experiment
         run = run or self._run
+        run = list(run) if not isinstance(run, str) and isinstance(run, Iterable) else run
         if isinstance(run, list) and any(r < 0 for r in run):
             latest = self._latest_run
             run = [(r if r >= 0 else latest + r) for r in run]
