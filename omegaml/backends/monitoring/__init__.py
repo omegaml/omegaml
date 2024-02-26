@@ -2,6 +2,7 @@ from itertools import product, pairwise
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from scipy.stats import ks_2samp, chisquare
 from datetime import datetime
 
@@ -38,6 +39,77 @@ class DriftStatsCalc:
         }
 
 
+class DriftAnalysis:
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def df(self):
+        if isinstance(self.data, list):
+            return pd.concat([self._as_dataframe(d) for d in self.data])
+        return self._as_dataframe(self.data)
+
+    def __getitem__(self, column):
+        df =  self.df
+        column, statistic = column if isinstance(column, (list, tuple)) else (column, None)
+        flt = df['column'] == column
+        flt &= df['statistic'] == statistic if statistic else True
+        return df[flt]
+
+    def plot(self, column, statistic=None, seq=-1, kind='line', ax=None, **kwargs):
+        statistic = statistic or 'mean'
+        s1 = seq[0] if isinstance(seq, (list, tuple)) else seq
+        s2 = seq[1] if isinstance(seq, (list, tuple)) else seq
+        baseline = self[column, statistic].iloc[s1]['baseline']
+        target = self[column, statistic].iloc[s2]['target']
+        d1 = self[column, statistic].iloc[s1]['dt_from']
+        d2 = self[column, statistic].iloc[s2]['dt_to']
+        # prepare drift message
+        drift_ind = 'detected' if self[column, statistic].iloc[s2]['drift'] else 'not detected'
+        drift_stats = self[column, statistic].iloc[s2]['stats']
+        drift_pvalue = self[column, statistic].iloc[s2]['pvalue']
+        drift_msg = ", ".join((f'P={drift_pvalue:.3f}', f'{drift_stats}'))
+        drift_text = f'{drift_ind} ({drift_msg})'
+        # plot feature distribution
+        for period in (baseline, target):
+            if 'hist' in period:
+                counts, edges = period['hist']
+                ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
+            if 'groups' in period:
+                ax = plt.bar(period['groups'].keys(), period['groups'].values(), **kwargs)
+        if ax:
+            plt.suptitle(f'{column} distribution')
+            plt.title(f'Drift {drift_text}\nBaseline: {d1} Target: {d2}', fontsize=8)
+            plt.xlabel(column)
+            plt.legend(['baseline', 'target'])
+        return ax
+
+    def _as_dataframe(self, drift):
+        info = drift['info']
+        stats = drift['stats']
+
+        def drift_records(stats):
+            for column in stats:
+                for stat, values in stats[column].items():
+                    yield {
+                        'column': column,
+                        'statistic': stat,
+                        'drift': values['drift'],
+                        'metric': values['metric'],
+                        'pvalue': values.get('pvalue'),
+                        'stats': ','.join(values.get('stats', [stat])),
+                        'dt_from': info['dt_from'],
+                        'dt_to': info['dt_to'],
+                        'seq_from': info['seq'][0],
+                        'seq_to': info['seq'][1],
+                        'baseline': info['baseline']['stats'][column],
+                        'target': info['target']['stats'][column],
+                    }
+
+        return pd.DataFrame(drift_records(stats))
+
+
+
 class DriftMonitorBase:
     def __init__(self, name, resource=None, store=None, query=None, tracking=None, **kwargs):
         self.name = name
@@ -49,7 +121,7 @@ class DriftMonitorBase:
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95):
+    def drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False):
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
@@ -57,14 +129,15 @@ class DriftMonitorBase:
             if seq is True or seq == 'series' or recursive_seq:
                 # [0, 1, 2, ...] => compare each snapshot to the previous
                 seq = range(0, len(self)) if seq is True else seq
-                drifts = [self.drift(seq=[i, j], ci=ci) for i, j in pairwise(seq)]
+                drifts = [self.drift(seq=[i, j], ci=ci, raw=True) for i, j in pairwise(seq)]
             elif seq == 'baseline':
                 # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline
                 seq = list(product([0], range(1, len(self))))
-                drifts = [self.drift(seq=pair, ci=ci) for pair in seq]
+                drifts = [self.drift(seq=pair, ci=ci, raw=True) for pair in seq]
             else:
-                raise ValueError(f'invalid drift sequence {seq}, must be True, "baseline", "series" or a list of snapshot indices.')
-            return drifts
+                raise ValueError(
+                    f'invalid drift sequence {seq}, must be True, "baseline", "series" or a list of snapshot indices.')
+            return DriftAnalysis(drifts)
         if d1 or d2:
             s1 = self.snapshot(d1) if d1 else None
             s2 = self.snapshot(d2) if d2 else None
@@ -85,7 +158,7 @@ class DriftMonitorBase:
             s2 = s2 or _s2
         drift = self._calc_drift(s1, s2, ci=ci)
         drift['info']['seq'] = list(seq)
-        return drift
+        return drift if raw else DriftAnalysis(drift)
 
     @property
     def dataset(self):
@@ -171,8 +244,8 @@ class DriftMonitorBase:
         info['dt_from'] = s1['info'].get('dt')
         info['dt_to'] = s2['info'].get('dt')
         info['ci'] = ci
-        info['baseline'] = s1['info']
-        info['target'] = s2['info']
+        info['baseline'] = s1
+        info['target'] = s2
         # summarize drift metrics
         # -- per column: mean of drift statistics (1 = drift, 0 = no drift)
         # -- per dataset: mean of column drift statistics
@@ -205,6 +278,9 @@ class DataDriftMonitor(DriftMonitorBase):
         query = query or self._query
         if isinstance(dataset, pd.DataFrame):
             df = dataset
+            query = query.get('query')
+            if query:
+                df = df.query(query) if isinstance(query, str) else df[query]
         else:
             df = self.store.get(dataset, **query)
         snapshot = self._do_snapshot(df, columns=columns, name=str(dataset), kind='data')
@@ -250,5 +326,3 @@ class ModelMonitor(DriftMonitorBase):
         # - Y: measure drift in output, where some sequence of recent predict() output is taken as d2
         # - is confusion matrix like a category or a numeric.var? (e.g. each value in cm is a category?, each value in cm is a )
         pass
-
-
