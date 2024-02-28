@@ -56,7 +56,7 @@ class DriftAnalysis:
         flt &= df['statistic'] == statistic if statistic else True
         return df[flt]
 
-    def plot(self, column, statistic=None, seq=-1, kind='line', ax=None, **kwargs):
+    def plot(self, column, statistic=None, seq=-1, kind='dist', ax=None, **kwargs):
         statistic = statistic or 'mean'
         s1 = seq[0] if isinstance(seq, (list, tuple)) else seq
         s2 = seq[1] if isinstance(seq, (list, tuple)) else seq
@@ -64,6 +64,12 @@ class DriftAnalysis:
         target = self[column, statistic].iloc[s2]['target']
         d1 = self[column, statistic].iloc[s1]['dt_from']
         d2 = self[column, statistic].iloc[s2]['dt_to']
+        if kind == 'dist':
+            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs)
+        elif kind == 'line':
+            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs)
+
+    def _plot_dist(self, column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs):
         # prepare drift message
         drift_ind = 'detected' if self[column, statistic].iloc[s2]['drift'] else 'not detected'
         drift_stats = self[column, statistic].iloc[s2]['stats']
@@ -84,6 +90,20 @@ class DriftAnalysis:
             plt.legend(['baseline', 'target'])
         return ax
 
+    def _plot_timeline(self, column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs):
+        from matplotlib.dates import DateFormatter
+        date_form = DateFormatter("%Y-%m-%d")
+        df = self.df
+        flt = df['column'] == column
+        flt &= df['statistic'] == statistic
+        dfx = (df[flt]
+               .pivot_table(index='seq_from',
+                            columns='column',
+                            values='metric')
+               )
+        ax = dfx.plot.line(style='-', marker='X')
+        return ax
+
     def _as_dataframe(self, drift):
         info = drift['info']
         stats = drift['stats']
@@ -98,8 +118,8 @@ class DriftAnalysis:
                         'metric': values['metric'],
                         'pvalue': values.get('pvalue'),
                         'stats': ','.join(values.get('stats', [stat])),
-                        'dt_from': info['dt_from'],
-                        'dt_to': info['dt_to'],
+                        'dt_from': pd.to_datetime(info['dt_from']),
+                        'dt_to': pd.to_datetime(info['dt_to']),
                         'seq_from': info['seq'][0],
                         'seq_to': info['seq'][1],
                         'baseline': info['baseline']['stats'][column],
