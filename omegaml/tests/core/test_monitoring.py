@@ -25,7 +25,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         om.datasets.put(gapminder, 'gapminder')
         return gapminder
 
-    def test_datadrift(self):
+    def test_dataframe_drift(self):
         om = self.om
         mon = DataDriftMonitor('foo', store=om.datasets)
         df = pd.DataFrame({
@@ -39,13 +39,13 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(snapshot['info']['cat_columns'], [])
         data = mon.data()
         self.assertEqual(len(data), 1)
-        drift = mon.drift()
+        drift = mon.drift(raw=True)
         self.assertIn('info', drift)
         self.assertIn('stats', drift)
         self.assertEqual(drift['info']['seq'], [-1, -1])
         self.assertEqual(drift['result']['drift'], False)
 
-    def test_datadrift_drift(self):
+    def test_dataset_drift(self):
         om = self.om
         mon = DataDriftMonitor('foo', store=om.datasets)
         mon.clear()
@@ -144,7 +144,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__lte=1980)
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
-        drifts = mon.drift(seq=True)
+        drifts = mon.drift(seq=True, raw=True)
         # expect 3 drift calculations
         self.assertEqual(len(drifts), 3)
         # -- 1960/1970, 1970/1980, 1980/now
@@ -173,7 +173,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
         #    comparing each snapshot to the baseline
-        drifts = mon.drift(seq='baseline')
+        drifts = mon.drift(seq='baseline', raw=True)
         # expect 3 drift calculations
         # -- note how this is different from test_datadrift_sequence
         self.assertEqual(len(drifts), 3)
@@ -190,7 +190,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[1]['result']['columns'], ['lifeExp'])
         self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'gdpPercap'])
 
-    def _setup_model(self):
+    def _setup_model(self, save_xy=False):
         om = self.om
         with om.runtime.experiment('test') as exp:
             exp.clear(force=True)
@@ -202,34 +202,38 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
                     y = np.dot(X, np.random.random(size=(4, 1))) + np.random.random()
                     lm = LinearRegression()
                     lm.fit(X, y)
+                    if save_xy:
+                        om.datasets.put(X, f'X_{i}')
+                        om.datasets.put(y, f'Y_{i}')
                 else:
                     # introduce concept drift by scaling the coefficients => drift in accuracy
                     X = np.array(np.random.random(size=(10, 4)) * 1000)
                     y = np.dot(X, np.random.random(size=(4, 1)) * 1000) + np.random.random() * 5
+                    if save_xy:
+                        om.datasets.put(X, f'X_{i}')
+                        om.datasets.put(y, f'Y_{i}')
                 exp.log_metric('acc', lm.score(X, y))
                 exp.stop()
 
         return exp
-        acc = exp.data(run='all', event='metric', key='acc')['value']
-        # (acc
-        #  .transform(lambda s: (s - s.mean()) / s.std())
-        #  .hist())
 
     def test_model_drift(self):
         om = self.om
         exp = self._setup_model()
         mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
         print(exp.data(run='all', event='metric')['run'].unique())
-        # create snapshots of the model stats (i.e. calculate baseline statistics)
-        mon.snapshot(run=[2])
-        mon.snapshot(run=range(3, 50))
-        mon.snapshot(run=range(50, 70))
-        mon.snapshot(run=range(70, 100))  # run 1 does not have any metrics
+        # create several snapshots of the model stats (i.e. calculate baseline statistics)
+        # -- we simulate taking arbitrary snapshots, every time snapshotting different run sequences
+        # -- run #1 does not have any snapshots, hence exclude it
+        for runs in [range(2, 3), range(2, 50), range(50, 70), range(70, 100)]:
+            snapshot = mon.snapshot(run=runs)
+            self.assertIsInstance(snapshot, dict)
+            self.assertEqual(snapshot['info']['run'], list(runs))
         # THINK: when the monitor is based on tracking, we should be able to specify
         # a sequnce of runs directly, instead of snapshots
         # seq= should be named snapshots=, and alternative runs= (with tracking) to avoid confusion
         # perhaps not, as to ensure we always work on actually captured snapshots?
-        drift = mon.drift(seq=[0] + list(range(-3, 0)), ci=.9)
+        drift = mon.drift(seq=[0] + list(range(-3, 0)), ci=.9, raw=True)
         # -- expect 3 drift calculations
         self.assertEqual(len(drift), 3)
         self.assertEqual(drift[0]['info']['seq'], [0, -3])
@@ -242,3 +246,13 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # -- expect no drift from runs 50-70 to runs 70-100
         self.assertEqual(drift[2]['result']['drift'], False)
         pprint(drift)
+
+    def test_model_drift_x(self):
+        om = self.om
+        exp = self._setup_model(save_xy=True)
+        mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon.snapshot(X='X_0', Y='Y_0')
+        mon.snapshot(X='X_99', Y='Y_99')
+        drift = mon.drift()
+        pprint(drift.df)
+
