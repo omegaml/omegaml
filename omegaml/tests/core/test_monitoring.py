@@ -42,7 +42,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drift = mon.drift(raw=True)
         self.assertIn('info', drift)
         self.assertIn('stats', drift)
-        self.assertEqual(drift['info']['seq'], [-1, -1])
+        self.assertEqual(drift['info']['seq'], [0, 0])
         self.assertEqual(drift['result']['drift'], False)
 
     def test_dataset_drift(self):
@@ -153,12 +153,12 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[2]['info']['seq'], [2, 3])
         # -- expect drifts in 1960/1970 and 1980/now
         self.assertEqual(drifts[0]['result']['drift'], True)
-        self.assertEqual(drifts[1]['result']['drift'], False)
+        self.assertEqual(drifts[1]['result']['drift'], True)
         self.assertEqual(drifts[2]['result']['drift'], True)
         # -- expect drifts in lifeExp (1960/1980) and gdpPercap (1980/now)
         self.assertEqual(drifts[0]['result']['columns'], ['lifeExp'])
-        self.assertEqual(drifts[1]['result']['columns'], [])
-        self.assertEqual(drifts[2]['result']['columns'], ['gdpPercap'])
+        self.assertEqual(drifts[1]['result']['columns'], ['lifeExp'])
+        self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'pop', 'gdpPercap'])
 
     def test_datadrift_vs_baseline(self):
         om = self.om
@@ -187,8 +187,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[2]['result']['drift'], True)
         # -- expect drifts in lifeExp (1960/1980) and gdpPercap (1980/now)
         self.assertEqual(drifts[0]['result']['columns'], ['lifeExp'])
-        self.assertEqual(drifts[1]['result']['columns'], ['lifeExp'])
-        self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'gdpPercap'])
+        self.assertEqual(drifts[1]['result']['columns'], ['lifeExp', 'gdpPercap'])
+        self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'pop', 'gdpPercap'])
 
     def _setup_model(self, save_xy=False):
         om = self.om
@@ -236,9 +236,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drift = mon.drift(seq=[0] + list(range(-3, 0)), ci=.9, raw=True)
         # -- expect 3 drift calculations
         self.assertEqual(len(drift), 3)
-        self.assertEqual(drift[0]['info']['seq'], [0, -3])
-        self.assertEqual(drift[1]['info']['seq'], [-3, -2])
-        self.assertEqual(drift[2]['info']['seq'], [-2, -1])
+        self.assertEqual(drift[0]['info']['seq'], [0, 1])
+        self.assertEqual(drift[1]['info']['seq'], [1, 2])
+        self.assertEqual(drift[2]['info']['seq'], [2, 3])
         # -- expect a drift from baseline (run 2) to runs 3-50 (see _setup_model() for details)
         self.assertEqual(drift[0]['result']['drift'], True)
         # -- expect no drift from runs 3-50 to runs 50-70

@@ -3,7 +3,7 @@ from itertools import product, pairwise
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy.stats import ks_2samp, chisquare
+from scipy.stats import ks_2samp, chisquare, wasserstein_distance
 from datetime import datetime
 
 
@@ -38,75 +38,176 @@ class DriftStatsCalc:
             'location': None,
         }
 
+    def wasserstein_distance(self, d1, d2, ci=.95):
+        # Wasserstein distance between two distributions
+        # -- H0: d1, d2 are from the same distribution (=> no drift)
+        # -- H1: alternative (=> drift)
+        # -- H0 is rejected if pvalue < 1 - ci (default: 0.05)
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html
+        result = wasserstein_distance(d1, d2)
+        is_drift = result > ci
+        return {
+            'metric': result,
+            'drift': is_drift,
+            'pvalue': None,
+            'location': None,
+        }
+
+    def sample_from_hist(self, hist, edges, n=100):
+        probs = hist / np.sum(hist)
+        return np.random.choice(np.linspace(edges[0], edges[-1], len(edges) - 1), n, p=probs)
+
 
 class DriftStats:
     def __init__(self, data, monitor=None):
         self.drifts = data
         self.monitor = monitor
+        self._df = None
 
     @property
     def df(self):
-        if isinstance(self.drifts, list):
-            return pd.concat([self._as_dataframe(d) for d in self.drifts])
-        return self._as_dataframe(self.drifts)
+        if self._df is None:
+            self._df = self.as_dataframe(self.drifts)
+        return self._df
+
+    @property
+    def features(self):
+        return self.df['column'].unique()
+
+    @property
+    def columns(self):
+        return self.features
+
+    @property
+    def stats(self):
+        return self.df.groupby('column')['statistic'].unique()
+
+    def seq(self, column=None, statistic=None):
+        df = self[column, statistic]
+        return df['seq_from'].min(), df['seq_to'].max()
+
+    def describe(self, column=None, statistic=None, percentiles=None, **query):
+        df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
+        return df.groupby(['column', 'statistic'])[['metric', 'pvalue']].describe(percentiles=percentiles).fillna(
+            0).round(2)
+
+    def drifted(self, column=None, statistic=None, summary=False, details=False, **query):
+        df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
+        if summary:
+            return (df.groupby(['kind'])['drift'].sum() > 0).to_dict()
+        flt = df['drift'] == True
+        return df[flt]['drift'].sum() > 0 if not details else df[flt]
 
     def __getitem__(self, column):
         df = self.df
-        column, statistic = column if isinstance(column, (list, tuple)) else (column, None)
-        flt = df['column'] == column
+        column, statistic, *seq = column if isinstance(column, (list, tuple)) else (column, None)
+        seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (None, None)
+        flt = df['column'] == column if column else (df.index == df.index)
         flt &= df['statistic'] == statistic if statistic else True
+        flt &= df['seq_from'] == seq_from if seq_from is not None else True
+        flt &= df['seq_to'] == seq_to if seq_to is not None else True
         return df[flt]
 
-    def plot(self, column, statistic=None, seq=-1, kind='dist', ax=None, **kwargs):
+    def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, **kwargs):
         statistic = statistic or 'mean'
-        s1 = seq[0] if isinstance(seq, (list, tuple)) else seq
-        s2 = seq[1] if isinstance(seq, (list, tuple)) else seq
-        baseline = self[column, statistic].iloc[s1]['baseline']
-        target = self[column, statistic].iloc[s2]['target']
-        d1 = self[column, statistic].iloc[s1]['dt_from']
-        d2 = self[column, statistic].iloc[s2]['dt_to']
+        seq = seq or self.seq(column=column, statistic=statistic)
+        if column:
+            return self._plot_column(column, statistic, seq, kind, ax, **kwargs)
+        return self._plot_all(statistic, seq, kind, ax, **kwargs)
+
+    def _plot_column(self, column, statistic, seq, kind, ax, **kwargs):
+        s1, s2 = seq if isinstance(seq, (list, tuple)) else [seq, seq]
+        baseline_df = self[column, statistic, (s1, None)]
+        target_df = self[column, statistic, (None, s2)]
+        baseline = baseline_df['baseline'].iloc[0]
+        target = target_df['target'].iloc[0]
+        dt1 = baseline_df['dt_from'].iloc[0]
+        dt2 = target_df['dt_to'].iloc[0]
         if kind == 'dist':
-            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs)
+            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs)
         elif kind == 'line':
-            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs)
+            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs)
         return ax
 
-    def _plot_dist(self, column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs):
+    def _plot_all(self, statistic, seq, kind, ax, **kwargs):
+        return self.as_dataframe(statistic=statistic).plot.bar('column', 'metric')
+
+    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs):
         # prepare drift message
-        drift_ind = 'detected' if self[column, statistic].iloc[s2]['drift'] else 'not detected'
-        drift_stats = self[column, statistic].iloc[s2]['stats']
-        drift_pvalue = self[column, statistic].iloc[s2]['pvalue']
+        drift_ind = 'detected' if self[column, statistic]['drift'].sum() > 0 else 'not detected'
+        drift_stats = self[column, statistic, (None, s2)].iloc[0]['stats']
+        drift_pvalue = self[column, statistic, (None, s2)].iloc[0]['pvalue']
         drift_msg = ", ".join((f'P={drift_pvalue:.3f}', f'{drift_stats}'))
         drift_text = f'{drift_ind} ({drift_msg})'
         # plot feature distribution
         for period in (baseline, target):
             if 'hist' in period:
                 counts, edges = period['hist']
+                print(counts, edges)
                 ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
             if 'groups' in period:
                 ax = plt.bar(period['groups'].keys(), period['groups'].values(), **kwargs)
         if ax:
             plt.suptitle(f'{column} distribution')
-            plt.title(f'Drift {drift_text}\nBaseline: {d1} Target: {d2}', fontsize=8)
+            plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
             plt.xlabel(column)
             plt.legend(['baseline', 'target'])
         return ax
 
-    def _plot_timeline(self, column, statistic, s1, s2, baseline, target, d1, d2, ax, **kwargs):
+    def _plot_timeline(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs):
         from matplotlib.dates import DateFormatter
         date_form = DateFormatter("%Y-%m-%d")
         df = self.df
         flt = df['column'] == column
         flt &= df['statistic'] == statistic
-        dfx = (df[flt]
+        dff = df[flt]
+        dfx = (dff
                .pivot_table(index='seq_from',
                             columns='column',
                             values='metric')
                )
         ax = dfx.plot.line(style='-', marker='X')
+        if ax:
+            drift_text = 'detected' if dff['drift'].sum() > 0 else 'not detected'
+            plt.suptitle(f'{column} distribution')
+            plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
+            #plt.xlabel('seq_from')
         return ax
 
-    def _as_dataframe(self, drift):
+    def _expand_seq(self, seq, default=None, column=None, statistic=None):
+        if isinstance(seq, (list, tuple)):
+            if len(seq) and isinstance(seq[0], (list, tuple)):
+                seq_from, seq_to = seq[0]
+            elif len(seq) and default == 'baseline':
+                seq_from, seq_to = seq[0], None
+            elif len(seq) and default == 'target':
+                seq_from, seq_to = None, seq[0]
+            else:
+                seq_from, seq_to = None, None
+        elif default == 'baseline':
+            seq_from, seq_to = seq, None
+        elif default == 'target':
+            seq_from, seq_to = None, seq
+        else:
+            seq_from, seq_to = seq, seq
+        seq_min, seq_max = self.seq(column=column, statistic=statistic)
+        seq_from = seq_from if seq_from is None or seq_from >= 0 else (seq_max + seq_from)
+        seq_to = seq_to if seq_to is None or seq_to >= 0 else (seq_max + seq_to + 1)
+        seq_to = seq_to if int(seq_to or 0) > int(seq_from or 0) else None
+        return seq_from, seq_to
+
+    def baseline(self, column, statistic, seq=None):
+        return self[column, statistic, (seq, None)]['baseline']
+
+    def target(self, column, statistic, seq=None):
+        return self[column, statistic, (None, seq)]
+
+    def as_dataframe(self, drift_data=None, **query):
+        drift = drift_data or self.drifts
+
+        if isinstance(drift, list):
+            return self._filter_df(pd.concat([self.as_dataframe(d) for d in drift]), **query)
+
         info = drift['info']
         stats = drift['stats']
 
@@ -120,6 +221,7 @@ class DriftStats:
                         'metric': values['metric'],
                         'pvalue': values.get('pvalue'),
                         'stats': ','.join(values.get('stats', [stat])),
+                        'kind': info['baseline']['info']['kind'],
                         'dt_from': pd.to_datetime(info['dt_from']),
                         'dt_to': pd.to_datetime(info['dt_to']),
                         'seq_from': info['seq'][0],
@@ -128,7 +230,18 @@ class DriftStats:
                         'target': info['target']['stats'][column],
                     }
 
-        return pd.DataFrame(drift_records(stats))
+        return self._filter_df(pd.DataFrame(drift_records(stats)), **query)
+
+    def _filter_df(self, df, **criterias):
+        filters = {}
+        for column, criteria in criterias.items():
+            if criteria:
+                criteria = list(criteria) if isinstance(criteria, (list, tuple)) else [criteria]
+                filters[column] = df[column].isin(criteria)
+        flt = None
+        for column, colflt in filters.items():
+            flt = (flt & colflt) if flt is not None else colflt
+        return df[flt] if flt is not None else df
 
 
 class DriftMonitorBase:
@@ -181,12 +294,13 @@ class DriftMonitorBase:
                 _s1 = snapshots[seq[0]]
                 _s2 = snapshots[seq[1]]
             else:
-                seq = seq or [-1, -1] # always specify from/to
+                seq = seq or [-1, -1]  # always specify from/to
                 _s1 = _s2 = snapshots[seq[-1]]
             s1 = s1 or _s1
             s2 = s2 or _s2
         drift = self._calc_drift(s1, s2, ci=ci)
-        drift['info']['seq'] = list(seq)
+        eff_seq = lambda s: s if s >= 0 else len(snapshots) + s
+        drift['info']['seq'] = [eff_seq(seq[0]), eff_seq(seq[1])]
         return DriftStats(drift) if not raw else drift
 
     @property
@@ -228,9 +342,11 @@ class DriftMonitorBase:
         info['dt'] = datetime.utcnow().isoformat()
         for col in numeric_columns:
             s_col = col if not _prefix else f'{_prefix}_{col}'
+            values = df1[col].values
+            bins = 10 if len(values) < 1000 else 100
             stats[s_col] = {
                 'dtype': str(df1.dtypes[col]),
-                'hist': np.histogram(df1[col].values)
+                'hist': np.histogram(values, bins=bins, density=False)
             }
         for col in cat_columns:
             s_col = col if not _prefix else f'{_prefix}_{col}'
@@ -253,12 +369,20 @@ class DriftMonitorBase:
         metrics = drift.setdefault('stats', {})
         result = drift.setdefault('result', {})
         for col in numeric_columns:
-            d1 = s1['stats'][col]['hist'][0]
-            d2 = s2['stats'][col]['hist'][0]
+            # ks_2samp: two-sample Kolmogorov-Smirnov test for goodness of fit
+            # -- we compare the cumulative histograms of the two datasets
+            # -- hist[0] is the frequences for each bin
+            # -- hist[1] is the bin edges
+            h1, e1 = s1['stats'][col]['hist']
+            h2, e2 = s2['stats'][col]['hist']
+            samples = 100 if len(e1) < 100 else 1000
+            d1 = calc.sample_from_hist(h1, e1, n=samples)
+            d2 = calc.sample_from_hist(h2, e2, n=samples)
             metrics[col] = {
                 # KS statistic, p_value
                 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
                 'ks': calc.ks_2samp(d1, d2, ci=ci),
+                'wasserstein': calc.wasserstein_distance(d1, d2, ci=ci),
             }
         for col in cat_columns:
             g1 = s1['stats'][col]['groups']
@@ -303,7 +427,7 @@ class DataDriftMonitor(DriftMonitorBase):
         super().__init__(name, resource=dataset, store=store, query=query,
                          tracking=tracking, **kwargs)
 
-    def snapshot(self, dataset=None, chunksize=None, columns=None, _prefix=None, **query):
+    def snapshot(self, dataset=None, chunksize=None, columns=None, _prefix=None, kind='data', **query):
         """
         Take a snapshot of a dataset and log its feature distribution for later drift detection
 
@@ -331,8 +455,9 @@ class DataDriftMonitor(DriftMonitorBase):
             df = self.store.get(dataset, **query)
             if isinstance(df, np.ndarray):
                 df = pd.DataFrame(df)
-                df.columns = [str(col) for col in df.columns] # ensure column names are strings (needed for json storage)
-        snapshot = self._do_snapshot(df, columns=columns, name=str(dataset), kind='data', _prefix=_prefix)
+                df.columns = [str(col) for col in
+                              df.columns]  # ensure column names are strings (needed for json storage)
+        snapshot = self._do_snapshot(df, columns=columns, name=str(dataset), kind=kind, _prefix=_prefix)
         return snapshot
 
 
@@ -354,9 +479,9 @@ class ModelMonitor(DriftMonitorBase):
         snapshots = {}
         x_mon, y_mon = self._xy_monitor(model)
         if X is not None:
-            snapshots['X'] = x_mon.snapshot(X, _prefix='X')
+            snapshots['X'] = x_mon.snapshot(X, _prefix='X', kind='feature')
         if Y is not None:
-            snapshots['Y'] = y_mon.snapshot(Y, _prefix='Y')
+            snapshots['Y'] = y_mon.snapshot(Y, _prefix='Y', kind='label')
         # return snapshot as expected
         # -- if no X or Y, return model snapshot
         # -- if X or Y, return X or Y snapshot
