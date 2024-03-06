@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-from omegaml.backends.monitoring import DataDriftMonitor, ModelMonitor
+from omegaml.backends.monitoring.datadrift import DataDriftMonitor
+from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -220,7 +221,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_model_drift(self):
         om = self.om
         exp = self._setup_model()
-        mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
         print(exp.data(run='all', event='metric')['run'].unique())
         # create several snapshots of the model stats (i.e. calculate baseline statistics)
         # -- we simulate taking arbitrary snapshots, every time snapshotting different run sequences
@@ -250,7 +251,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_model_drift_x(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
-        mon = ModelMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
         mon.snapshot(X='X_0', Y='Y_0')
         mon.snapshot(X='X_99', Y='Y_99')
         drift = mon.drift()
