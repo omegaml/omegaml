@@ -5,6 +5,7 @@ import types
 import warnings
 
 from omegaml.backends.basedata import BaseDataBackend
+from omegaml.util import tryOr
 
 
 class VirtualObjectBackend(BaseDataBackend):
@@ -255,7 +256,7 @@ class _DillDip:
             # this is to deal with functions created outside of __main__
             # see https://stackoverflow.com/q/26193102/890242
             #     https://stackoverflow.com/a/70513630/890242
-            mod = types.ModuleType(e.name, 'dynamic module')
+            mod = types.ModuleType(e.name, '__dynamic__')
             sys.modules[e.name] = mod  # sys.modules['__main__']
             obj = dill.loads(data)
         return obj
@@ -348,7 +349,7 @@ class _DillDip:
         return obj
 
     def isdipped(self, data_or_obj):
-        obj = dill.loads(data_or_obj) if not isinstance(data_or_obj, dict) else data_or_obj
+        obj = tryOr(lambda : dill.loads(data_or_obj), None) if not isinstance(data_or_obj, dict) else data_or_obj
         return isinstance(obj, dict) and obj.get('__dipped__') == self.__calories
 
 

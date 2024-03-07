@@ -129,3 +129,4 @@ pipsync:
 scan: freeze pipsync
 	snyk test --policy-path=./.snyk
 	snyk code test
+	mv requirements.txt scanned-pipreqs.txt

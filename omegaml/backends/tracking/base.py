@@ -31,12 +31,13 @@ class TrackingProvider:
            for an example.
     """
 
-    def __init__(self, experiment, store=None, model_store=None):
+    def __init__(self, experiment, store=None, model_store=None, autotrack=False):
         self._experiment = experiment
         self._run = None
         self._store = store
         self._model_store = model_store
         self._extra_log = None
+        self._autotrack = autotrack
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._experiment})"
@@ -45,6 +46,14 @@ class TrackingProvider:
     def userid(self):
         defaults = getattr(self._store, 'defaults', None) or settings()
         return getattr(defaults, 'OMEGA_USERID', getpass.getuser())
+
+    @property
+    def autotrack(self):
+        return self._autotrack
+
+    @autotrack.setter
+    def autotrack(self, value):
+        self._autotrack = value
 
     def experiment(self, name=None):
         self._experiment = name or self._experiment
@@ -127,7 +136,10 @@ class TrackingProvider:
         from omegaml.backends.tracking import TensorflowCallback
         return TensorflowCallback(self)
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
+    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):
+        raise NotImplementedError
+
+    def clear(self, force=False):
         raise NotImplementedError
 
     def flush(self):

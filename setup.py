@@ -9,7 +9,7 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 # extras
 tables = ['tables>=3.7']
 graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
-dashserve_deps = ['dash>=2.9']
+dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']

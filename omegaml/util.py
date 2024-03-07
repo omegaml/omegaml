@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import tarfile
 from importlib import import_module
 
 import json
@@ -14,7 +13,7 @@ import warnings
 from base64 import b64encode
 from bson import UuidRepresentation
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, date
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
@@ -644,6 +643,7 @@ def module_available(modname):
 
 
 def tensorflow_available():
+    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
     return module_available('tensorflow')
 
 
@@ -999,37 +999,68 @@ def migrate_unhashed_datasets(store):
 
 
 class MongoEncoder(json.JSONEncoder):
-    """ Special json encoder for numpy types
+    """ A safe encoder for mongodb
 
-    adopted from https://stackoverflow.com/a/49677241/890242
-                 https://stackoverflow.com/a/11875813/890242
+    Encoder for python object to its corresponding JSON/BSON-compatible type,
+    defaulting to a value's string representation if no other conversion is possible.
+    In this case a warning is issued to the user.
+
+    Usage:
+        collection.insert(mongo_compatible(obj))
+
+    See Also:
+        https://stackoverflow.com/a/49677241/890242
+        https://stackoverflow.com/a/11875813/890242
     """
 
     def default(self, obj):
+        # TODO improve for speed
         import numpy as np
-
-        if isinstance(obj, np.integer):
+        try:
+            from pandas.api.types import is_integer_dtype, is_float_dtype, is_array_like
+        except:
+            is_integer_dtype = lambda v: isinstance(v, int)
+            is_float_dtype = lambda v: isinstance(v, float)
+            is_array_like = lambda v: isinstance(v, (list, tuple, np.ndarray))
+        # PERF cosider rewrite using a MAP type => lambda v: cast(v)
+        #      e.g. return MAP[type(obj)](obj)
+        #      where MAP.__missing__ returns lambda v: str(v)
+        if isinstance(obj, (np.integer)):
             return int(obj)
         elif isinstance(obj, np.floating):
-            return float(obj)
+            return float(obj) if not np.isnan(obj) else None
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, pd.DataFrame):
             return obj.to_dict(orient='records')
         elif isinstance(obj, pd.Series):
             return obj.tolist()
+        elif is_array_like(obj) and is_integer_dtype(obj):
+            return pd.to_numeric(obj, downcast='float')
+        elif is_array_like(obj) and is_float_dtype(obj):
+            return pd.to_numeric(obj, downcast='float')
         elif isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, date):
+            return obj.isoformat()
         elif isinstance(obj, pd.Timedelta):
-            return obj.value()
+            return obj.value
         elif isinstance(obj, bytes):
             return b64encode(obj).decode('utf8')
         elif isinstance(obj, range):
             return list(obj)
-        return json.JSONEncoder.default(self, obj)
+        try:
+            # PERF consider doing this first, only check for special types on exception
+            return json.JSONEncoder.default(self, obj)
+        except Exception as e:
+            # ignore exception in favor of string repr
+            msg = f'Could not encode value of {type(obj)} natively due to {e}, resolved to str(obj)'
+            warnings.warn(msg)
+            pass
+        return str(obj)
 
 
-json_dumps_np = lambda *args, cls=None, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
+json_dumps_np = lambda *args, cls=None, fail=False, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
 mongo_compatible = lambda *args: json.loads(json_dumps_np(*args))
 
 
@@ -1088,7 +1119,7 @@ class SystemPosixPath(type(Path()), Path):
         => str(path) => will always be './foo/bar')
 
     Rationale:
-        pathlib.Path('./foo/bar') will render as '\\foo\bar' on Windows
+        pathlib.Path('./foo/bar') will render as '\\foo\\bar' on Windows
         while pathlib.PosixPath cannot be imported in Windows
     """
 
@@ -1166,9 +1197,9 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
             # Path is absolute even after stripping.
             # For example, 'C:/foo' on Windows.
             raise ValueError(f"tarfile: {member} is an absolute path")
-            # Ensure we stay in the destination
-        target_path = os.path.realpath(os.path.join(dest_path, name))
-        if os.path.commonpath([target_path, dest_path]) != dest_path:
+        # Ensure we stay in the destination
+        target_path = (Path(dest_path) / name).resolve()
+        if not target_path.is_relative_to(dest_path):
             raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
     # Python before 3.12, before backports to 3.11, 3.10, 3.9
     return tar.extractall(dest_path)
