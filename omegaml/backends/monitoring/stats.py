@@ -12,7 +12,7 @@ class DriftStatsCalc:
         # -- H0 is rejected if pvalue < 1 - ci (default: 0.05)
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
         result = ks_2samp(d1, d2)
-        score = self.sigmoid(result.statistic)
+        score = self.calculate_score(result.statistic)
         is_drift = result.pvalue < (1 - ci)
         return {
             'metric': result.statistic,
@@ -30,7 +30,7 @@ class DriftStatsCalc:
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html#scipy.stats.chisquare
         result = chisquare(f_obs=d2, f_exp=d1)
         is_drift = result.pvalue < 1
-        score = self.sigmoid(result.statistic)
+        score = self.calculate_score(result.statistic)
         return {
             'metric': result.statistic,
             'score': score,
@@ -49,7 +49,7 @@ class DriftStatsCalc:
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html
         sd = sd or np.std(d1, ddof=1)
         wd = wasserstein_distance(d1, d2)
-        score = self.sigmoid(wd / sd)
+        score = self.calculate_score(wd / sd)
         is_drift = (score > ci)
         return {
             'metric': wd,
@@ -80,6 +80,10 @@ class DriftStatsCalc:
 
     def sigmoid(self, x):
         return 1 / (1 + 1 / np.exp(x))
+
+    def calculate_score(self, metric, pvalue=None, ci=.95, sd=None):
+        return self.sigmoid(metric)
+
 
 class DriftStats:
     def __init__(self, data, monitor=None):
@@ -124,7 +128,8 @@ class DriftStats:
     def __getitem__(self, column):
         df = self.df
         column, statistic, *seq = column if isinstance(column, (list, tuple)) else (column, None)
-        seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (None, None)
+        seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (
+        None, None)
         flt = df['column'] == column if column else (df.index == df.index)
         flt &= df['statistic'] == statistic if statistic else True
         flt &= df['seq_from'] == seq_from if seq_from is not None else True
@@ -194,7 +199,7 @@ class DriftStats:
             drift_text = 'detected' if dff['drift'].sum() > 0 else 'not detected'
             plt.suptitle(f'{column} distribution')
             plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
-            #plt.xlabel('seq_from')
+            # plt.xlabel('seq_from')
         return ax
 
     def _expand_seq(self, seq, default=None, column=None, statistic=None):

@@ -248,7 +248,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drift[2]['result']['drift'], False)
         pprint(drift)
 
-    def test_model_drift_x(self):
+    def test_model_drift_xy(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
         mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
