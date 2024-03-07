@@ -38,7 +38,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIn('num_columns', snapshot['info'])
         self.assertEqual(snapshot['info']['num_columns'], ['x'])
         self.assertEqual(snapshot['info']['cat_columns'], [])
-        data = mon.data()
+        data = mon.data
         self.assertEqual(len(data), 1)
         drift = mon.drift(raw=True)
         self.assertIn('info', drift)
@@ -59,7 +59,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
                      year__gt=1985,
                      country__in=['Switzerland', 'Germany'])
         # check snapshots store expected data
-        data = mon.data()[-1]
+        data = mon.data[-1]
         for col in 'lifeExp', 'gdpPercap', 'pop':
             self.assertIn(col, data['stats'])
         self.assertEqual(set(df.columns), set(data['info']['num_columns'] +
@@ -257,3 +257,23 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drift = mon.drift()
         pprint(drift.df)
 
+    def test_capture_event(self):
+        om = self.om
+        exp = self._setup_model(save_xy=True)
+        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon.snapshot(X='X_0', Y='Y_0')
+        mon.snapshot(X='X_99', Y='Y_99')
+        # capture overall model drift
+        captured = mon.capture()
+        self.assertTrue(captured)
+        events = exp.data(event='drift')
+        self.assertEqual(events.iloc[0]['value'], {'feature': True, 'label': True, 'model': False})
+        self.assertEqual(events.iloc[0]['seq'], [0, 1])
+        self.assertEqual(events.iloc[0]['column'], '*')
+        # capture specific feature drift
+        captured = mon.capture(column='X_0')
+        self.assertTrue(captured)
+        events = exp.data(event='drift')
+        self.assertEqual(events.iloc[-1]['value'], {'X_0': True})
+        self.assertEqual(events.iloc[-1]['seq'], [0, 1])
+        self.assertEqual(events.iloc[-1]['column'], 'X_0')

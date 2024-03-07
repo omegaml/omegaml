@@ -41,7 +41,7 @@ class NoTrackTracker(TrackingProvider):
     def log_extra(self, **kwargs):
         pass
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False):
+    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):
         pass
 
 

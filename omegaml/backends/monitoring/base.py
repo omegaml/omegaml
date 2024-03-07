@@ -1,7 +1,6 @@
 import numpy as np
-from datetime import datetime
-
 import pandas as pd
+from datetime import datetime
 from itertools import pairwise, product
 
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
@@ -48,8 +47,10 @@ class DriftMonitorBase:
             s1, s2 = None, None
             seq = seq or []
         if not all((s1, s2)):
-            snapshots = self.data()
-            if snapshots is None:
+            # TODO snapshot querying should be in self.data(), not here
+            #      to be scalable
+            snapshots = self.data
+            if snapshots is None or len(snapshots) < 1:
                 # no snapshots, no drift
                 return None
             if len(snapshots) > 1:
@@ -70,6 +71,7 @@ class DriftMonitorBase:
     def dataset(self):
         return f'.monitor/{self.name}'
 
+    @property
     def data(self):
         # TODO use tracking.data(event='snapshot')
         return self.store.get(self.dataset)
@@ -88,7 +90,7 @@ class DriftMonitorBase:
 
     def __len__(self):
         # make more efficient
-        return len(self.data() or [])
+        return len(self.data or [])
 
     def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None):
         extra_info = info or {}
@@ -196,3 +198,38 @@ class DriftMonitorBase:
         result['metric'] = np.mean(column_scores)
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift
+
+    def capture(self, column=None, statistic=None):
+        """
+        capture detected drift, if any, by logging an event in tracking
+
+        This method is called by a drift detection job to log a drift event in
+        the tracking system. It logs a 'drift' event with the resource name
+        as the event key, and the drift indicator as the event value. Extra
+        information is logged to link back to the monitoring system, such as
+        the monitor name, the sequence number and the column that drifted.
+
+        To retrieve the drift events, use the tracking system to query for
+        events of type 'drift' and the resource name as the event key::
+
+            tracking.data(event='drift', key='resource_name')
+
+        Args:
+            column (str): the column that drifted, optional
+            statistic (str): the statistic that drifted, optional
+
+        Returns:
+            bool: True if drift was detected and logged, False otherwise
+        """
+        drift = self.drift()
+        event =  drift.drifted(column=column, statistic=statistic, summary=True)
+        if any(drifted for part, drifted in event.items()):
+            extra = {
+                'seq': drift.seq(),
+                'column': column or '*',
+                'monitor': self.name,
+            }
+            self.tracking.log_event('drift', self._resource, event, **extra)
+            return True
+        return False
+

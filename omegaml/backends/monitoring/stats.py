@@ -79,9 +79,10 @@ class DriftStatsCalc:
         return cdf
 
     def sigmoid(self, x):
-        return 1 / (1 + 1 / np.exp(x))
+        return 1 / (1 + np.exp(-x))
 
     def calculate_score(self, metric, pvalue=None, ci=.95, sd=None):
+        # TODO need a better generic score
         return self.sigmoid(metric)
 
 
@@ -109,9 +110,13 @@ class DriftStats:
     def stats(self):
         return self.df.groupby('column')['statistic'].unique()
 
+    @property
+    def data(self):
+        return self.drifts
+
     def seq(self, column=None, statistic=None):
         df = self[column, statistic]
-        return df['seq_from'].min(), df['seq_to'].max()
+        return [df['seq_from'].min(), df['seq_to'].max()]
 
     def describe(self, column=None, statistic=None, percentiles=None, **query):
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
@@ -121,7 +126,8 @@ class DriftStats:
     def drifted(self, column=None, statistic=None, summary=False, details=False, **query):
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
         if summary:
-            return (df.groupby(['kind'])['drift'].sum() > 0).to_dict()
+            key = ['column'] if column else ['kind']
+            return (df.groupby(key)['drift'].sum() > 0).to_dict()
         flt = df['drift'] == True
         return df[flt]['drift'].sum() > 0 if not details else df[flt]
 

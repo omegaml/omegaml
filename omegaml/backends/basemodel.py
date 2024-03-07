@@ -205,7 +205,7 @@ class BaseModelBackend(BackendBaseCommon):
         if self.tracking and getattr(self.tracking, 'autotrack', False):
             self.tracking.log_event(method, key, {
                 'Xname': Xname,
-                'data': data,
+                'data': data, # TODO this is not good for large data
                 'kind': meta.kind,
             })
         return data
