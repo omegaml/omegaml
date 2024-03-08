@@ -25,7 +25,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [--apphub-url=<url>] [options]
-      om runtime serve [<rule>...] [--rules=<rulefile>] [options]
+      om runtime serve [<rule>...] [--rules=<rulefile>] [--port=<port>] [--ip=<ip>] [options]
       om runtime deploy [<deploy-action>] [--steps=<deployfile>] [--specs=<specs>] [--select=<filter>] [--dry] [options]
       om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
@@ -45,6 +45,8 @@ class RuntimeCommandBase(CommandBase):
       --rules=VALUE       /path/to/specs.txt, where each line is a <spec>
       --compress          if specified the archive will be compress (tgz format) [default: True]
       --path=PATH         path to directory where the archive should be written [default: ./mlops-export]
+      --port=VALUE        the port to use for the server [default: 8000]
+      --ip=VALUE          the ip to use for the server [default: localhost]
       --list              if specified, print members of archive
       --promote           if specified, import and promote objects
       --steps=VALUE       /path/to/deployfile.yaml [default: ./deployfile.yaml]
@@ -429,11 +431,13 @@ class RuntimeCommandBase(CommandBase):
         om = get_omega(self.args, require_config=False)
         specs = self.args.get('<rule>')
         specfile = self.args.get('--rules')
+        port = self.args.get('--port', 8000)
+        host = self.args.get('--host', 'localhost')
         if specfile:
             with open(specfile, 'r') as fin:
                 specs = [s.replace('\n', '') for s in fin.readlines() if not s.startswith('#')]
         os.environ['OMEGA_RESTAPI_FILTER'] = ';'.join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
-        subprocess.run("gunicorn 'omegaml.restapi.app:serve_objects()'", shell=True)
+        subprocess.run(f"gunicorn 'omegaml.restapi.app:serve_objects()' --bind {host}:{port}", shell=True)
 
     def deploy(self):
         om = get_omega(self.args, require_config=False)

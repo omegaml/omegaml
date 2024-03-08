@@ -644,6 +644,7 @@ def module_available(modname):
 
 
 def tensorflow_available():
+    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
     return module_available('tensorflow')
 
 
@@ -1088,7 +1089,7 @@ class SystemPosixPath(type(Path()), Path):
         => str(path) => will always be './foo/bar')
 
     Rationale:
-        pathlib.Path('./foo/bar') will render as '\\foo\bar' on Windows
+        pathlib.Path('./foo/bar') will render as '\\foo\\bar' on Windows
         while pathlib.PosixPath cannot be imported in Windows
     """
 
@@ -1166,9 +1167,9 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
             # Path is absolute even after stripping.
             # For example, 'C:/foo' on Windows.
             raise ValueError(f"tarfile: {member} is an absolute path")
-            # Ensure we stay in the destination
-        target_path = os.path.realpath(os.path.join(dest_path, name))
-        if os.path.commonpath([target_path, dest_path]) != dest_path:
+        # Ensure we stay in the destination
+        target_path = (Path(dest_path) / name).resolve()
+        if not target_path.is_relative_to(dest_path):
             raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
     # Python before 3.12, before backports to 3.11, 3.10, 3.9
     return tar.extractall(dest_path)

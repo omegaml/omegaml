@@ -121,7 +121,7 @@ OMEGA_STORE_BACKENDS_R = {
     'model.r': 'omegaml.backends.rsystem.rmodels.RModelBackend',
     'package.r': 'omegaml.backends.rsystem.rscripts.RPackageData',
 }
-#: supported frameworks
+#: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
     OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras')
@@ -394,14 +394,14 @@ def load_framework_support(vars=globals()):
     # -- note we do this here to ensure this happens after config updates
     if OMEGA_DISABLE_FRAMEWORKS:
         return
-    if 'tensorflow' in vars['OMEGA_FRAMEWORKS'] and tensorflow_available():
+    if tensorflow_available():
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
         logging.getLogger('tensorflow').setLevel(logging.ERROR)
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
     #: keras backend
-    if 'keras' in vars['OMEGA_FRAMEWORKS'] and keras_available():
+    if keras_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_KERAS'])
     #: sqlalchemy backend
     if module_available('sqlalchemy'):

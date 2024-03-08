@@ -53,7 +53,8 @@ release-test: bumpbuild dist
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository testpypi-omegaml dist/*gz dist/*whl
+	twine upload --skip-existing --repository testpypi-omegaml dist/*gz
+	twine upload --repository testpypi-omegaml dist/*whl
 	sleep 5
 	scripts/livetest.sh --testpypi --build
 
@@ -106,7 +107,7 @@ bumpminor:
 	bumpversion minor
 
 bumpbuild:
-	bumpversion build
+	[ ! -z "${CI_PULL_REQUEST}" ] && echo "CI_PULL_REQUEST is set, not bumping" || bumpversion build
 
 bumpfinal:
 	bumpversion release
@@ -129,3 +130,4 @@ pipsync:
 scan: freeze pipsync
 	snyk test --policy-path=./.snyk
 	snyk code test
+	mv requirements.txt scanned-pipreqs.txt
