@@ -7,8 +7,7 @@ from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
 
 
 class DriftMonitorBase:
-    def __init__(self, name, resource=None, store=None, query=None, tracking=None, **kwargs):
-        self.name = name
+    def __init__(self, resource=None, store=None, query=None, tracking=None, **kwargs):
         self.store = store
         self._resource = resource
         self._query = query or kwargs
@@ -69,7 +68,7 @@ class DriftMonitorBase:
 
     @property
     def dataset(self):
-        return f'.monitor/{self.name}'
+        return f'.monitor/{self._resource}'
 
     @property
     def data(self):
@@ -227,7 +226,7 @@ class DriftMonitorBase:
             extra = {
                 'seq': drift.seq(),
                 'column': column or '*',
-                'monitor': self.name,
+                'monitor': self._resource,
             }
             self.tracking.log_event('drift', self._resource, event, **extra)
             return True

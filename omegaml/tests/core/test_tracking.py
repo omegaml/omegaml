@@ -375,10 +375,12 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # get all experiments for the model, by default runtime label
         rtmdl = om.runtime.model('foo')
         exps = rtmdl.experiments()
-        self.assertIsInstance(exps[0], OmegaTrackingProxy)
+        self.assertIsInstance(exps['_all_'][0], OmegaTrackingProxy)
+        self.assertIsInstance(exps['default'], OmegaTrackingProxy)
         # get metadata of experiments, instead of tracking proxies
         exps = rtmdl.experiments(raw=True)
-        self.assertIsInstance(exps[0], om.models._Metadata)
+        self.assertIsInstance(exps['_all_'][0], om.models._Metadata)
+        self.assertIsInstance(exps['default'], om.models._Metadata)
 
     def test_summary(self):
         om = self.om

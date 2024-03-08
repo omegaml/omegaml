@@ -5,8 +5,8 @@ from omegaml.backends.monitoring.base import DriftMonitorBase
 
 
 class DataDriftMonitor(DriftMonitorBase):
-    def __init__(self, name, dataset=None, store=None, query=None, tracking=None, **kwargs):
-        super().__init__(name, resource=dataset, store=store, query=query,
+    def __init__(self, dataset=None, store=None, query=None, tracking=None, **kwargs):
+        super().__init__(resource=dataset, store=store, query=query,
                          tracking=tracking, **kwargs)
 
     def snapshot(self, dataset=None, chunksize=None, columns=None, _prefix=None, kind='data', **query):

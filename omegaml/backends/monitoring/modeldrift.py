@@ -6,8 +6,8 @@ from omegaml.backends.monitoring.stats import DriftStats
 
 
 class ModelDriftMonitor(DriftMonitorBase):
-    def __init__(self, name, model=None, tracking=None, store=None):
-        super().__init__(name, resource=model, store=store, tracking=tracking)
+    def __init__(self, model=None, tracking=None, store=None):
+        super().__init__(resource=model, store=store, tracking=tracking)
 
     def snapshot(self, model=None, X=None, Y=None, run=None):
         # what do we snapshot?

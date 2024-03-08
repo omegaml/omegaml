@@ -76,7 +76,7 @@ class OmegaModelProxy(RuntimeProxyBase):
         """
         label = label or self.runtime._default_label
         exps = self.experiments(label=label) if experiment is None else None
-        exp = exps[0] if exps else None
+        exp = exps.get(label or 'default') if exps else None
         experiment = experiment or self.modelname
         if exp is None:
             exp = self.runtime.experiment(experiment, provider=provider, **tracker_kwargs)
@@ -92,11 +92,20 @@ class OmegaModelProxy(RuntimeProxyBase):
             raw (bool): if True return the metadata for the experiment, else return the OmegaTrackingProxy
 
         Returns:
-            list of OmegaTrackingProxy instances or Metadata objects
+            instances (dict): mapping of label => instance of OmegaTrackingProxy if not raw, else Metadata,
+              includes a dummy label '_all_', listing all experiments that track this model.
+
+        .. versionchanged:: 0.17
+            returns a dict instead of a list
         """
         store = self.store
         tracking = (store.metadata(self.modelname).attributes.get('tracking', {}))
-        names = [tracking.get(label)] if label in tracking else None
-        names = names or (tracking.get('experiments', []) if not (label or names) else [])
-        return [self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
-                for name in names]
+        by_label = {
+            label: self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
+            for label, name in tracking.items() if label != 'experiments'
+        }
+        unlabeled = {
+            '_all_': [self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
+                        for name in tracking.get('experiments', [])]
+        }
+        return dict(**by_label, **unlabeled)

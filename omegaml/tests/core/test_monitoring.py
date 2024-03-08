@@ -30,6 +30,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_dataframe_drift(self):
         om = self.om
         mon = DataDriftMonitor('foo', store=om.datasets)
+        meta = om.models.put(mon, 'foo')
+        print(meta)
         df = pd.DataFrame({
             'x': np.random.uniform(0, 1, 100),
         })
@@ -222,7 +224,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_model_drift(self):
         om = self.om
         exp = self._setup_model()
-        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('foo', tracking=exp, store=om.datasets)
         print(exp.data(run='all', event='metric')['run'].unique())
         # create several snapshots of the model stats (i.e. calculate baseline statistics)
         # -- we simulate taking arbitrary snapshots, every time snapshotting different run sequences
@@ -252,16 +254,17 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_model_drift_xy(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
-        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('foo', tracking=exp, store=om.datasets)
         mon.snapshot(X='X_0', Y='Y_0')
         mon.snapshot(X='X_99', Y='Y_99')
         drift = mon.drift()
-        pprint(drift.df)
+        self.assertTrue(drift.drifted('X_0'))
+        self.assertTrue(drift.drifted('Y_0'))
 
     def test_capture_event(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
-        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('foo', tracking=exp, store=om.datasets)
         mon.snapshot(X='X_0', Y='Y_0')
         mon.snapshot(X='X_99', Y='Y_99')
         # capture overall model drift
@@ -282,7 +285,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_alert_notify(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
-        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon = ModelDriftMonitor('foo', tracking=exp, store=om.datasets)
         mon.snapshot(X='X_0', Y='Y_0')
         mon.snapshot(X='X_99', Y='Y_99')
         # capture overall model drift
