@@ -1,10 +1,11 @@
 from pprint import pprint
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
+from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.tests.util import OmegaTestMixin
@@ -277,3 +278,18 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(events.iloc[-1]['value'], {'X_0': True})
         self.assertEqual(events.iloc[-1]['seq'], [0, 1])
         self.assertEqual(events.iloc[-1]['column'], 'X_0')
+
+    def test_alert_notify(self):
+        om = self.om
+        exp = self._setup_model(save_xy=True)
+        mon = ModelDriftMonitor('modelmon', 'foo', tracking=exp, store=om.datasets)
+        mon.snapshot(X='X_0', Y='Y_0')
+        mon.snapshot(X='X_99', Y='Y_99')
+        # capture overall model drift
+        captured = mon.capture()
+        self.assertTrue(captured)
+        rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
+        with mock.patch.object(rule, 'notify') as m_notify:
+            rule.check()
+            m_notify.assert_called_once()
+        rule.check()

@@ -326,7 +326,7 @@ class OmegaSimpleTracker(TrackingProvider):
             self._extra_log = {}
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
-             lazy=False, **extra):
+             lazy=False, since=None, **extra):
         """ build a dataframe of all stored data
 
         Args:
@@ -355,7 +355,7 @@ class OmegaSimpleTracker(TrackingProvider):
             run = [(r if r >= 0 else latest + r) for r in run]
         elif isinstance(run, int) and run < 0:
             run = self._latest_run + run
-        filter = self._build_data_filter(experiment, run, event, step, key, extra)
+        filter = self._build_data_filter(experiment, run, event, step, key, since, extra)
         self.flush()
         data = self._store.get(self._data_name, filter=filter, lazy=lazy)
         if data is not None and not raw and not lazy:
@@ -365,7 +365,7 @@ class OmegaSimpleTracker(TrackingProvider):
                 data.sort_values('dt', inplace=True)
         return data
 
-    def _build_data_filter(self, experiment, run, event, step, key, extra):
+    def _build_data_filter(self, experiment, run, event, step, key, since, extra):
         # build a filter for the data query, suitable for OmegaStore.get()
         filter = {}
         valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
@@ -380,6 +380,10 @@ class OmegaSimpleTracker(TrackingProvider):
             filter['data.step'] = op(step)
         if valid(key):
             filter['data.key'] = op(key)
+        if valid(since):
+            if isinstance(since, datetime):
+                since = since.isoformat()
+            filter['data.dt'] = {'$gte': since}
         for k, v in extra.items():
             if valid(k):
                 filter[f'data.{k}'] = op(v)
