@@ -1,16 +1,15 @@
-from time import sleep
-
-import platform
-
 import pandas as pd
+import platform
+import pymongo
 import unittest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
+from time import sleep
 
 from omegaml import Omega
-from omegaml.backends.tracking.simple import OmegaSimpleTracker
-from omegaml.backends.tracking.profiling import OmegaProfilingTracker
 from omegaml.backends.tracking.experiment import ExperimentBackend
+from omegaml.backends.tracking.profiling import OmegaProfilingTracker
+from omegaml.backends.tracking.simple import OmegaSimpleTracker
 from omegaml.documents import Metadata
 from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
 from omegaml.tests.util import OmegaTestMixin
@@ -395,6 +394,50 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         latency_perc = exp.stats.latency(run='all', percentiles=True)
         self.assertEqual(len(latency_perc), 1)
         self.assertIn('50%', latency_perc.columns)
+
+    def test_lazy_data(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', i)
+            exp.flush()
+        data = exp.data(lazy=True)
+        self.assertIsInstance(data, pymongo.cursor.Cursor)
+
+    def test_raw_data(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', i)
+            exp.flush()
+        data = exp.data(run='all', raw=True)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 10 * 3)  # each run has 3 events
+
+    def test_batched_data(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', i)
+            exp.flush()
+        # raw=True yields DataFrames, raw=False yields lists of rows
+        for raw, result_type in zip((True, False), (list, pd.DataFrame)):
+            data = exp.data(run='all', batchsize=5, raw=raw)
+            total_rows = sum(len(rows) for rows in data if isinstance(rows, result_type))
+            self.assertEqual(total_rows, 10 * 3)  # each run has 3 events
+
+    def test_current_vs_all_data(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', i)
+            exp.flush()
+        data = exp.data()
+        # only current run
+        self.assertEqual(len(data), 3)
+        # all runs
+        data = exp.data(run='*')
+        self.assertEqual(len(data), 10 * 3)  # each run has 3 events
 
 
 if __name__ == '__main__':
