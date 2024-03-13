@@ -27,12 +27,30 @@ class TrackableMetadataMixin:
         tracking = meta.attributes.setdefault('tracking', {})
         exps = tracking.setdefault('experiments', [])
         if experiment not in exps:
-            meta.attributes['tracking']['experiments'].append(experiment)
+            tracking['experiments'].append(experiment)
         if label:
-            meta.attributes.setdefault('tracking', {})
-            meta.attributes['tracking'].update({
+            tracking.update({
                 label: experiment
             })
+        return meta.save()
+
+    def link_monitor(self, name, experiment):
+        """
+        This links a model to a monitor by adding the experiment name to the
+        list of metadata.tracking.monitors.
+
+        Args:
+            name (str): the name of the model
+            experiment (str): the name of the experiment
+
+        Returns:
+            Metadata()
+        """
+        meta = self.metadata(name)
+        tracking = meta.attributes.setdefault('tracking', {})
+        monitors = tracking.setdefault('monitors', [])
+        if experiment not in monitors:
+            meta.attributes['tracking']['monitors'].append(experiment)
         return meta.save()
 
 
@@ -46,4 +64,7 @@ class UntrackableMetadataMixin:
         return not store.prefix in ('models/')
 
     def link_experiment(self, name, experiment, label=None):
+        return self.metadata(name)
+
+    def link_monitor(self, name, experiment):
         return self.metadata(name)

@@ -177,7 +177,6 @@ class DriftStats:
         for period in (baseline, target):
             if 'hist' in period:
                 counts, edges = period['hist']
-                print(counts, edges)
                 ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
             if 'groups' in period:
                 ax = plt.bar(period['groups'].keys(), period['groups'].values(), **kwargs)
@@ -196,7 +195,7 @@ class DriftStats:
         flt &= df['statistic'] == statistic
         dff = df[flt]
         dfx = (dff
-               .pivot_table(index='seq_from',
+               .pivot_table(index='seq_to',
                             columns='column',
                             values='metric')
                )

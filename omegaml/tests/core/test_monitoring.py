@@ -30,8 +30,6 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def test_dataframe_drift(self):
         om = self.om
         mon = DataDriftMonitor('foo', store=om.datasets)
-        meta = om.models.put(mon, 'foo')
-        print(meta)
         df = pd.DataFrame({
             'x': np.random.uniform(0, 1, 100),
         })
@@ -194,9 +192,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drifts[1]['result']['columns'], ['lifeExp', 'gdpPercap'])
         self.assertEqual(drifts[2]['result']['columns'], ['lifeExp', 'pop', 'gdpPercap'])
 
-    def _setup_model(self, save_xy=False):
+    def _setup_model(self, exp_name='test', model_name='test', save_xy=False):
         om = self.om
-        with om.runtime.experiment('test') as exp:
+        with om.runtime.experiment(exp_name) as exp:
             exp.clear(force=True)
             for i in range(100):
                 exp.start()
@@ -206,6 +204,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
                     y = np.dot(X, np.random.random(size=(4, 1))) + np.random.random()
                     lm = LinearRegression()
                     lm.fit(X, y)
+                    om.models.put(lm, model_name)
                     if save_xy:
                         om.datasets.put(X, f'X_{i}')
                         om.datasets.put(y, f'Y_{i}')
@@ -282,7 +281,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(events.iloc[-1]['seq'], [0, 1])
         self.assertEqual(events.iloc[-1]['column'], 'X_0')
 
-    def test_alert_notify(self):
+    def test_alert_rule_notify(self):
         om = self.om
         exp = self._setup_model(save_xy=True)
         mon = ModelDriftMonitor('foo', tracking=exp, store=om.datasets)
@@ -291,8 +290,22 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # capture overall model drift
         captured = mon.capture()
         self.assertTrue(captured)
+        # check alert rule is called upon detected drift
         rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
         with mock.patch.object(rule, 'notify') as m_notify:
             rule.check()
             m_notify.assert_called_once()
         rule.check()
+
+    def test_runtime_integration_model(self):
+        om = self.om
+        self._setup_model()
+        with om.runtime.experiment('test') as exp:
+            exp.track('test')
+            mon = exp.monitor('test')
+        meta = om.models.metadata('test')
+        self.assertIsInstance(mon, ModelDriftMonitor)
+        self.assertIn('tracking', meta.attributes)
+        self.assertIn('monitors', meta.attributes['tracking'])
+        self.assertIn('test', meta.attributes['tracking']['monitors'])
+

@@ -1,6 +1,7 @@
 import getpass
 
 from omegaml import settings
+from omegaml.backends.monitoring import ModelDriftMonitor
 
 
 class TrackingProvider:
@@ -59,7 +60,7 @@ class TrackingProvider:
         self._experiment = name or self._experiment
         return self
 
-    def track(self, obj, store=None, label=None):
+    def track(self, obj, store=None, label=None, monitor=False):
         """ attach this experiment to the named object
 
         Usage:
@@ -78,6 +79,8 @@ class TrackingProvider:
                     If not provided will use om.models
                 label (str): optional, the label of the worker, default is
                     'default'
+                monitor (bool): optional, if True sets up a monitor to track
+                    drift in the object
 
         Note:
                 This modifies the object's metadata.attributes::
@@ -90,6 +93,13 @@ class TrackingProvider:
         store.link_experiment(obj, self._experiment, label=label)
         meta.save()
         return meta
+
+    def monitor(self, obj, store=None, ):
+        store = store or self._model_store
+        meta = store.metadata(obj)
+        store.link_monitor(obj, self._experiment)
+        meta.save()
+        return ModelDriftMonitor(obj, tracking=self, store=store)
 
     def active_run(self):
         self._run = (self._run or 0) + 1
