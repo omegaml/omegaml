@@ -39,5 +39,6 @@ class DataDriftMonitor(DriftMonitorBase):
                 df = pd.DataFrame(df)
                 df.columns = [str(col) for col in
                               df.columns]  # ensure column names are strings (needed for json storage)
+        assert len(df), f'dataset {dataset}, using query {query}, is empty, cannot take a snapshot'
         snapshot = self._do_snapshot(df, columns=columns, name=str(dataset), kind=kind, _prefix=_prefix)
         return snapshot

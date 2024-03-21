@@ -16,6 +16,7 @@ with om.runtime.model(name).experiment(experiment) as exp:
     mon.capture(alerts=alerts)
 """
 
+
 @shared_task(base=OmegamlTask, bind=True)
 def ensure_monitors(self, **kwargs):
     """
@@ -52,7 +53,6 @@ def ensure_monitors(self, **kwargs):
             if not om.jobs.list(job):
                 # if job does not exist yet create it
                 code = code_block.format(**locals())
-                print(code)
                 om.jobs.create(code, job)
                 om.jobs.schedule(job, schedule=schedule)
                 mon['job'] = job
