@@ -34,7 +34,7 @@ class TrackableMetadataMixin:
             })
         return meta.save()
 
-    def link_monitor(self, name, experiment):
+    def link_monitor(self, name, experiment, provider=None):
         """
         This links a model to a monitor by adding the experiment name to the
         list of metadata.tracking.monitors.
@@ -50,7 +50,10 @@ class TrackableMetadataMixin:
         tracking = meta.attributes.setdefault('tracking', {})
         monitors = tracking.setdefault('monitors', [])
         if experiment not in monitors:
-            meta.attributes['tracking']['monitors'].append(experiment)
+            monitors.append({
+                'experiment': experiment,
+                'provider': provider or 'default',
+            })
         return meta.save()
 
 

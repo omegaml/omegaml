@@ -1,7 +1,6 @@
 import getpass
 
-from omegaml import settings
-from omegaml.backends.monitoring import ModelDriftMonitor
+from omegaml import settings, load_class
 
 
 class TrackingProvider:
@@ -79,27 +78,54 @@ class TrackingProvider:
                     If not provided will use om.models
                 label (str): optional, the label of the worker, default is
                     'default'
-                monitor (bool): optional, if True sets up a monitor to track
-                    drift in the object
+                monitor (bool|str): optional, truthy sets up a monitor to track
+                    drift in the object, if a string is provided it is used as
+                    the monitoring provider
 
         Note:
                 This modifies the object's metadata.attributes::
 
                     { 'tracking': { label: self._experiment } }
+
+                If monitor is set, a monitor definition is added to the object's metadata::
+
+                    { 'tracking': { 'monitors': [ { 'experiment': self._experiment,
+                                       'provider': monitor } ] } }
         """
         label = label or 'default'
         store = store or self._model_store
         meta = store.metadata(obj)
         store.link_experiment(obj, self._experiment, label=label)
+        if monitor:
+            monitor_provider = monitor if isinstance(monitor, str) else None
+            self.as_monitor(obj, store=store, provider=monitor_provider)
         meta.save()
         return meta
 
-    def monitor(self, obj, store=None, ):
+    def as_monitor(self, obj, store=None, provider=None):
+        """
+        Return and attach a drift monitor to this experiment
+
+        Args:
+            obj (str): the name of the object
+            store (OmegaStore): the store to use, defaults to self._model_store
+            provider (str): the name of the monitoring provider, defaults to store.prefix
+
+        Returns:
+            monitor (DriftMonitor): a drift monitor for the object
+        """
         store = store or self._model_store
         meta = store.metadata(obj)
-        store.link_monitor(obj, self._experiment)
-        meta.save()
-        return ModelDriftMonitor(obj, tracking=self, store=store)
+        monitors = meta.attributes.setdefault('tracking', {}).setdefault('monitors', [])
+        for mon in monitors:
+            if mon.get('experiment') == self._experiment:
+                provider = provider or mon.get('provider')
+                break
+        else:
+            provider = provider or store.prefix.replace('/', '')
+            store.link_monitor(obj, self._experiment, provider=provider)
+        ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
+        return ProviderClass(obj, tracking=self, store=store)
 
     def active_run(self):
         self._run = (self._run or 0) + 1

@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 from itertools import pairwise, product
 
+from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
 
 
@@ -15,6 +16,11 @@ class DriftMonitorBase:
 
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
+
+    def drifted(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None, summary=False):
+        seq = seq or 'baseline'
+        drift = self.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
+        return drift.drifted(column=column, statistic=statistic, summary=summary)
 
     def drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False):
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
@@ -71,9 +77,13 @@ class DriftMonitorBase:
         return f'.monitor/{self._resource}'
 
     @property
+    def _drift_alert_key(self):
+        return f'drift:{self._resource}'
+
+    @property
     def data(self):
-        # TODO use tracking.data(event='snapshot')
-        return self.store.get(self.dataset)
+        df = self.tracking.data(run='all', event='snapshot', key=self._resource)
+        return df['value'].to_list() if not df.empty else []
 
     def report(self, seq=None, format='html'):
         data = self.drift(seq=seq, raw=True)
@@ -85,7 +95,7 @@ class DriftMonitorBase:
         return FORMATS[format](data) if format in FORMATS else data
 
     def clear(self):
-        self.store.drop(self.dataset, force=True)
+        self.tracking.clear(force=True)
 
     def __len__(self):
         # make more efficient
@@ -125,10 +135,14 @@ class DriftMonitorBase:
                 'groups': df1[col].value_counts().to_dict()
             }
         snapshot['info'].update(extra_info)
-        # TODO report in tracking, not here
-        # -- tracking.log_snapshot() ?
-        self.store.put(snapshot, self.dataset)
+        self._log_snapshot(snapshot)
         return snapshot
+
+    def _log_snapshot(self, snapshot):
+        self.tracking.log_event('snapshot', self._resource, snapshot)
+
+    def _log_drift(self, drift, **extra):
+        self.tracking.log_event('drift', self._resource, drift, **extra)
 
     def _calc_drift(self, s1, s2, ci=.95):
         calc = DriftStatsCalc()
@@ -198,11 +212,11 @@ class DriftMonitorBase:
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift
 
-    def capture(self, column=None, statistic=None):
+    def capture(self, column=None, statistic=None, alerts=None):
         """
         capture detected drift, if any, by logging an event in tracking
 
-        This method is called by a drift detection job to log a drift event in
+        This method is called by a monitor job to log a drift event in
         the tracking system. It logs a 'drift' event with the resource name
         as the event key, and the drift indicator as the event value. Extra
         information is logged to link back to the monitoring system, such as
@@ -216,11 +230,12 @@ class DriftMonitorBase:
         Args:
             column (str): the column that drifted, optional
             statistic (str): the statistic that drifted, optional
+            alerts (list): a list of alert rules to apply, optional
 
         Returns:
             bool: True if drift was detected and logged, False otherwise
         """
-        drift = self.drift()
+        drift = self.drift(seq='baseline')
         event =  drift.drifted(column=column, statistic=statistic, summary=True)
         if any(drifted for part, drifted in event.items()):
             extra = {
@@ -228,7 +243,57 @@ class DriftMonitorBase:
                 'column': column or '*',
                 'monitor': self._resource,
             }
-            self.tracking.log_event('drift', self._resource, event, **extra)
+            self._log_drift(event, **extra)
+            self.check(alerts) if alerts else None
             return True
         return False
+
+    def check(self, alerts, notify=True):
+        """ check for drift and notify recipients
+
+        Args:
+            alerts (list): a list of alert rules
+            notify (bool): whether to notify recipients, defaults to True
+        """
+        rules = self._make_alert_rules(alerts or [])
+        for rule in rules:
+            rule.check(notify=notify, run=self.tracking.active_run())
+
+    def _make_alert_rules(self, alerts):
+        rules = []
+        for alert in alerts:
+            rules.append(AlertRule(monitor=self, **alert))
+        return rules
+
+    def alerts(self, run=None, since=None, raw=False, stats=False):
+        run = run or '*'
+        data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key,
+                                  since=since)
+        if not raw and stats:
+            # -- data['value'] is a series of dicts, each dict is a drift event
+            # -- each drift event is a list of drift indicators, see .capture()
+            # -- 'seq' is the respective (min, max) sequence associated with the drift event
+            # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
+            drifted_seqs = data.explode('value')['value'].apply(lambda v: v['seq']).to_list()
+            drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
+            return DriftStats(drifts)
+        return data if not raw else data.to_dict(orient='records')
+
+    def captured(self, column=None, statistic=None, run=None, since=None, stats=True, raw=False):
+        run = run or '*'
+        column = column or '*'
+        data = self.tracking.data(run=run, event='drift', key=self._resource, since=since,
+                                  column=column, statistic=statistic)
+        if not raw and stats:
+            # -- each drift event is a list of drift indicators, see .capture()
+            # -- 'seq' is the respective (min, max) sequence associated with the drift event
+            # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
+            drifted_seqs = data['seq'].to_list()
+            drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
+            return DriftStats(drifts)
+        return data if not raw else data.to_dict(orient='records')
+
+
+
+
 

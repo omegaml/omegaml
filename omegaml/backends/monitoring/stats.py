@@ -125,11 +125,19 @@ class DriftStats:
 
     def drifted(self, column=None, statistic=None, summary=False, details=False, **query):
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
+        flt = df['drift'] == True
+        drifted_seqs = (df[flt][['seq_from', 'seq_to']]
+                        .drop_duplicates()
+                        .apply(lambda v: (v['seq_from'], v['seq_to']), axis=1)
+                        .tolist())
+        result = False if not summary else {}
         if summary:
             key = ['column'] if column else ['kind']
-            return (df.groupby(key)['drift'].sum() > 0).to_dict()
-        flt = df['drift'] == True
-        return df[flt]['drift'].sum() > 0 if not details else df[flt]
+            result = (df.groupby(key)['drift'].sum() > 0).to_dict()
+            result['seqs'] = drifted_seqs
+        elif not df.empty:
+            result = df[flt] if details else df[flt]['drift'].sum() > 0
+        return result
 
     def __getitem__(self, column):
         df = self.df
@@ -239,7 +247,8 @@ class DriftStats:
         drift = drift_data or self.drifts
 
         if isinstance(drift, list):
-            return self._filter_df(pd.concat([self.as_dataframe(d) for d in drift]), **query)
+            return self._filter_df(pd.concat([self.as_dataframe(d) for d in drift]
+                                             or [pd.DataFrame()]), **query)
 
         info = drift['info']
         stats = drift['stats']

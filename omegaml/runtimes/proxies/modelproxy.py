@@ -102,7 +102,7 @@ class OmegaModelProxy(RuntimeProxyBase):
         tracking = (store.metadata(self.modelname).attributes.get('tracking', {}))
         by_label = {
             label: self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
-            for label, name in tracking.items() if label != 'experiments'
+            for label, name in tracking.items() if label not in ['experiments', 'monitors']
         }
         unlabeled = {
             '_all_': [self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')

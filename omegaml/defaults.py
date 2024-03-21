@@ -76,6 +76,10 @@ OMEGA_CELERY_CONFIG = {
             'task': 'omegaml.notebook.tasks.execute_scripts',
             'schedule': 60,
         },
+        'ensure_monitors': {
+            'task': 'omegaml.backends.monitoring.tasks.ensure_monitors',
+            'schedule': 60,
+        },
     },
     'BROKER_USE_SSL': OMEGA_USESSL,
 }
@@ -84,7 +88,8 @@ OMEGA_TASK_ROUTING_ENABLED = os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False)
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.notebook',
-                        'omegaml.backends.package']
+                        'omegaml.backends.package',
+                        'omegaml.backends.monitoring']
 #: REST API available objects
 OMEGA_RESTAPI_FILTER = os.environ.get('OMEGA_RESTAPI_FILTER', '.*/.*/.*')
 #: storage backends
@@ -193,6 +198,11 @@ OMEGA_TRACKING_PROVIDERS = {
     'default': 'omegaml.backends.tracking.OmegaSimpleTracker',
     'profiling': 'omegaml.backends.tracking.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.tracking.NoTrackTracker',
+}
+OMEGA_MONITORING_PROVIDERS = {
+    'models': 'omegaml.backends.monitoring.ModelDriftMonitor',
+    'data': 'omegaml.backends.monitoring.DataDriftMonitor',
+    'default': 'omegaml.backends.monitoring.DataDriftMonitor',
 }
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {

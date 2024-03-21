@@ -1,13 +1,14 @@
-from pprint import pprint
 from unittest import TestCase, mock
 
 import numpy as np
 import pandas as pd
+from pprint import pprint
 from sklearn.linear_model import LinearRegression
 
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
+from omegaml.backends.monitoring.stats import DriftStats
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -29,7 +30,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_dataframe_drift(self):
         om = self.om
-        mon = DataDriftMonitor('foo', store=om.datasets)
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
         df = pd.DataFrame({
             'x': np.random.uniform(0, 1, 100),
         })
@@ -49,8 +51,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_dataset_drift(self):
         om = self.om
-        mon = DataDriftMonitor('foo', store=om.datasets)
-        mon.clear()
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+            mon.clear()
         df = self.df
         # -- baseline
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__lte=1960)
@@ -136,8 +139,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_datadrift_sequence(self):
         om = self.om
-        mon = DataDriftMonitor('foo', store=om.datasets)
-        mon.clear()
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+            mon.clear()
         df = self.df
         # -- baseline
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__lte=1960)
@@ -164,8 +168,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_datadrift_vs_baseline(self):
         om = self.om
-        mon = DataDriftMonitor('foo', store=om.datasets)
-        mon.clear()
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+            mon.clear()
         df = self.df
         # -- baseline
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__lte=1960)
@@ -289,7 +294,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot(X='X_99', Y='Y_99')
         # capture overall model drift
         captured = mon.capture()
-        self.assertTrue(captured)
+        stats = mon.captured(stats=True)
+        self.assertTrue(stats.drifted())
         # check alert rule is called upon detected drift
         rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
         with mock.patch.object(rule, 'notify') as m_notify:
@@ -297,15 +303,90 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             m_notify.assert_called_once()
         rule.check()
 
-    def test_runtime_integration_model(self):
+    def test_runtime_integration_modeldrift(self):
         om = self.om
         self._setup_model()
+        # test creating a monitor from a runtime experiment
         with om.runtime.experiment('test') as exp:
-            exp.track('test')
-            mon = exp.monitor('test')
+            exp.track('test', monitor=True)
+        meta = om.models.metadata('test')
+        mon = exp.as_monitor('test')
+        self.assertIsInstance(mon, ModelDriftMonitor)
+        self.assertIn('tracking', meta.attributes)
+        self.assertIn('monitors', meta.attributes['tracking'])
+        self.assertIn({'experiment': 'test', 'provider': 'models'},
+                      meta.attributes['tracking']['monitors'])
+        # test getting the monitor does not add it again
+        mon = exp.as_monitor('test')
+        self.assertIsInstance(mon, ModelDriftMonitor)
+        meta = om.models.metadata('test')
+        self.assertIn({'experiment': 'test', 'provider': 'models'},
+                      meta.attributes['tracking']['monitors'])
+        self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
+
+    def test_modeldrift_alert(self):
+        om = self.om
+        self._setup_model()
+        # test creating a monitor job from a runtime experiment
+        # -- create the monitor
+        with om.runtime.experiment('test') as exp:
+            exp.track('test', monitor=True)
+            mon = exp.as_monitor('test')
+        # -- add snapshots
+        mon.snapshot(run=range(2, 3))
+        mon.snapshot(run=range(3, 100))
+        self.assertTrue(mon.drifted())
         meta = om.models.metadata('test')
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
-        self.assertIn('test', meta.attributes['tracking']['monitors'])
+        self.assertIn({'experiment': 'test', 'provider': 'models'},
+                      meta.attributes['tracking']['monitors'])
+        # test getting the monitor does not add it again
+        # -- get the monitor
+        mon = exp.as_monitor('test')
+        self.assertIsInstance(mon, ModelDriftMonitor)
+        # -- ensure the monitor is not added again
+        meta = om.models.metadata('test')
+        self.assertIn({'experiment': 'test', 'provider': 'models'},
+                      meta.attributes['tracking']['monitors'])
+        self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
+        # -- ensure the monitor job is created, run it
+        # -- in a real setup this is done by the scheduled celery task
+        om.runtime.task('omegaml.backends.monitoring.tasks.ensure_monitors').run()
+        self.assertIn('monitors/test/test', om.jobs.list())
+        om.runtime.job('monitors/test/test').run()
+        # -- check the monitor ran and created an alert
+        jobmeta = om.jobs.metadata('monitors/test/test')
+        alerts = mon.alerts(raw=True)
+        self.assertEqual(jobmeta.attributes['job_runs'][-1]['status'], 'OK')
+        self.assertEqual(len(alerts), 1)
+        # -- check the alert is as expected
+        # -- remove runtime dependent keys
+        # -- note that the alert's value is a list of drifts
+        drifts = alerts[0]['value']
+        for k in 'userid', 'dt', 'node', 'run', 'step':
+            del drifts[0][k]
+        self.assertDictEqual({'column': '*',
+                              'event': 'drift',
+                              'experiment': 'test',
+                              'key': 'test',
+                              'monitor': 'test',
+                              'seq': [0, 2],
+                              'value': {'model': True, 'seqs': [[0, 1], [0, 2]]}}, drifts[0])
 
+        # -- check can get back drift stats from alerts
+        drifts = mon.alerts(stats=True)
+        self.assertIsInstance(drifts, DriftStats)
+        self.assertTrue(drifts.drifted())
+        # configure
+        import omegaml as om
+        experiment = 'test'
+        name = 'test'
+        provider = 'models'
+        alerts = [{'event': 'drift', 'recipients': []}]
+        # snapshot recent state and capture drift
+        with om.runtime.experiment(experiment) as exp:
+            mon = exp.as_monitor(name, store=om.models, provider=provider)
+            mon.snapshot()
+            mon.capture(alerts=alerts)

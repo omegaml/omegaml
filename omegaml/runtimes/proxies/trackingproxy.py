@@ -83,7 +83,7 @@ class OmegaTrackingProxy(RuntimeProxyBase):
             experiment.start()
             self._implied_run = True if no_active_run else self._implied_run
         experiment.start_runtime()
-        return experiment
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         experiment = self._with_experiment or self.experiment
