@@ -113,9 +113,10 @@ class StreamsProxy(OmegaStore):
         meta.delete() if meta is not None else None
         return True
 
-    def _recreate(self, name):
+    def _recreate(self, name, **kwargs):
         self.drop(name)
-        return self.get(name)
+        return self.get(name, **kwargs)
 
-    def put(self, data, name, append=True):
-        (self._cached_get(name) if append else self._recreate()).append(data)
+    def put(self, data, name, append=True, **kwargs):
+        stream = (self._cached_get(name) if append else self._recreate(name, **kwargs)).append(data)
+        return self.metadata(name)
