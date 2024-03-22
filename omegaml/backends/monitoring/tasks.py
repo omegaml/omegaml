@@ -5,9 +5,13 @@ from omegaml.celery_util import OmegamlTask
 code_block = """
 # configure
 import omegaml as om
+# -- the name of the experiment
 experiment = '{experiment}'
+# -- the name of the model
 name = '{meta.name}'
+# -- the name of the monitoring provider
 provider = '{provider}'
+# -- the alert rules
 alerts = {alerts}
 # snapshot recent state and capture drift 
 with om.runtime.model(name).experiment(experiment) as exp:
@@ -46,10 +50,7 @@ def ensure_monitors(self, **kwargs):
             provider = mon['provider']
             job = mon.get('job', f'monitors/{experiment}/{meta.name}')
             schedule = mon.get('schedule', 'daily')
-            alerts = mon.get('alerts', [{
-                'event': 'drift',
-                'recipients': [],
-            }])
+            alerts = mon.get('alerts', [])
             if not om.jobs.list(job):
                 # if job does not exist yet create it
                 code = code_block.format(**locals())

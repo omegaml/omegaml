@@ -22,7 +22,25 @@ class DriftMonitorBase:
         drift = self.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
         return drift.drifted(column=column, statistic=statistic, summary=summary)
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False):
+    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False):
+        """ calculate drift
+
+        Args:
+            seq (list|str): a list of snapshot indices to compare in the format [i, j],
+               or one of 'baseline', 'seq'. Use 'baseline' to compare every snapshot
+               to the first snapshot, or 'seq' to compare each snapshot to the previous.
+               [i, j] are 0-indexed snapshot indices, can be specified as negative indices
+               to indicate the last n-th snapshot.
+            d1 (int): the first snapshot index to compare, optional
+            d2 (int): the second snapshot index to compare, optional
+            ci (float): the confidence interval for the drift test, defaults to .95
+            baseline (int): the baseline snapshot index to compare to, defaults to 0
+            raw (bool): if True, returns drift statistics as a dict, otherwise
+                returns a DriftStats instance
+
+        Returns:
+            DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
+        """
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
@@ -33,7 +51,7 @@ class DriftMonitorBase:
                 drifts = [self._single_drift(seq=[i, j], ci=ci, raw=True) for i, j in pairwise(seq)]
             elif seq == 'baseline':
                 # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline
-                seq = list(product([0], range(1, len(self))))
+                seq = list(product([baseline], range(1, len(self))))
                 drifts = [self._single_drift(seq=pair, ci=ci, raw=True) for pair in seq]
             else:
                 raise ValueError(
@@ -212,7 +230,7 @@ class DriftMonitorBase:
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift
 
-    def capture(self, column=None, statistic=None, alerts=None):
+    def capture(self, column=None, statistic=None, alerts=None, seq='baseline', baseline=0):
         """
         capture detected drift, if any, by logging an event in tracking
 
@@ -231,11 +249,13 @@ class DriftMonitorBase:
             column (str): the column that drifted, optional
             statistic (str): the statistic that drifted, optional
             alerts (list): a list of alert rules to apply, optional
+            seq (str): the sequence to compare to, defaults to 'baseline'
+            baseline (int): the baseline sequence to compare to, defaults to 0
 
         Returns:
             bool: True if drift was detected and logged, False otherwise
         """
-        drift = self.drift(seq='baseline')
+        drift = self.drift(seq=seq, baseline=baseline)
         event =  drift.drifted(column=column, statistic=statistic, summary=True)
         if any(drifted for part, drifted in event.items()):
             extra = {
@@ -260,15 +280,17 @@ class DriftMonitorBase:
             rule.check(notify=notify, run=self.tracking.active_run())
 
     def _make_alert_rules(self, alerts):
+        # ensure we have a list of AlertRule instances
         rules = []
         for alert in alerts:
-            rules.append(AlertRule(monitor=self, **alert))
+            rule = AlertRule(monitor=self, **alert) if not isinstance(alert, AlertRule) else alert
+            rules.append(rule)
         return rules
 
     def alerts(self, run=None, since=None, raw=False, stats=False):
         run = run or '*'
         data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key,
-                                  since=since)
+                                  since=None)
         if not raw and stats:
             # -- data['value'] is a series of dicts, each dict is a drift event
             # -- each drift event is a list of drift indicators, see .capture()

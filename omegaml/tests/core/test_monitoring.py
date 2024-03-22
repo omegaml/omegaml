@@ -307,18 +307,22 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # test creating a monitor from a runtime experiment
         with om.runtime.experiment('test') as exp:
             exp.track('test', monitor=True)
+        mon = exp.as_monitor('test', schedule='weekly')
         meta = om.models.metadata('test')
-        mon = exp.as_monitor('test')
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
-        self.assertIn({'experiment': 'test', 'provider': 'models'},
+        self.assertIn({'experiment': 'test', 'provider': 'models',
+                       'alerts': [{'event': 'drift', 'recipients': []}],
+                       'schedule': 'weekly'},
                       meta.attributes['tracking']['monitors'])
         # test getting the monitor does not add it again
-        mon = exp.as_monitor('test')
+        mon = exp.as_monitor('test', alerts=[{'event': 'drift', 'recipients': ['me']}])
         self.assertIsInstance(mon, ModelDriftMonitor)
         meta = om.models.metadata('test')
-        self.assertIn({'experiment': 'test', 'provider': 'models'},
+        self.assertIn({'experiment': 'test', 'provider': 'models',
+                       'alerts': [{'event': 'drift', 'recipients': ['me']}],
+                       'schedule': 'weekly'},
                       meta.attributes['tracking']['monitors'])
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
 
@@ -338,7 +342,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
-        self.assertIn({'experiment': 'test', 'provider': 'models'},
+        self.assertIn({'experiment': 'test', 'provider': 'models',
+                       'alerts': [{'event': 'drift', 'recipients': []}],
+                       'schedule': 'daily'},
                       meta.attributes['tracking']['monitors'])
         # test getting the monitor does not add it again
         # -- get the monitor
@@ -346,7 +352,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(mon, ModelDriftMonitor)
         # -- ensure the monitor is not added again
         meta = om.models.metadata('test')
-        self.assertIn({'experiment': 'test', 'provider': 'models'},
+        self.assertIn({'experiment': 'test', 'provider': 'models',
+                       'alerts': [{'event': 'drift', 'recipients': []}],
+                       'schedule': 'daily'},
                       meta.attributes['tracking']['monitors'])
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
         # ensure the monitor job is created, run it

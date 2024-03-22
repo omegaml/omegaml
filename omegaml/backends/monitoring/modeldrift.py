@@ -67,8 +67,24 @@ class ModelDriftMonitor(DriftMonitorBase):
                                      info={'run': ensure_list(run)})
         return snapshot
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False):
-        model_drift = super().drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True)
+    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False):
+        """ Measure drift in the model, X and Y
+
+        Args:
+            seq: sequence of recent predictions to consider
+            d1: sequence of recent predictions to consider
+            d2: sequence of recent predictions to consider
+            ci: confidence interval
+            baseline: baseline to compare against
+            raw: return raw drift stats or DriftStats object
+
+        Returns:
+            DriftStats|[dict]: drift stats or raw drift stats as list of dicts
+
+        See Also:
+            - DriftMonitorBase.drift for details
+        """
+        model_drift = super().drift(seq=seq, d1=d1, d2=d2, ci=ci, baseline=baseline, raw=True)
         x_mon, y_mon = self._xy_monitor(self._resource)
         x_drift = x_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True)
         y_drift = y_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True)

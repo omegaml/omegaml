@@ -59,7 +59,7 @@ class TrackingProvider:
         self._experiment = name or self._experiment
         return self
 
-    def track(self, obj, store=None, label=None, monitor=False):
+    def track(self, obj, store=None, label=None, monitor=False, **monitor_kwargs):
         """ attach this experiment to the named object
 
         Usage:
@@ -81,6 +81,8 @@ class TrackingProvider:
                 monitor (bool|str): optional, truthy sets up a monitor to track
                     drift in the object, if a string is provided it is used as
                     the monitoring provider
+                monitor_kwargs (dict): optional, additional keyword arguments
+                    to pass to the monitor
 
         Note:
                 This modifies the object's metadata.attributes::
@@ -98,16 +100,22 @@ class TrackingProvider:
         store.link_experiment(obj, self._experiment, label=label)
         if monitor:
             monitor_provider = monitor if isinstance(monitor, str) else None
-            self.as_monitor(obj, store=store, provider=monitor_provider)
+            self.as_monitor(obj, store=store, provider=monitor_provider, **monitor_kwargs)
         meta.save()
         return meta
 
-    def as_monitor(self, obj, store=None, provider=None):
+    def as_monitor(self, obj, alerts=None, schedule=None, store=None, provider=None):
         """
         Return and attach a drift monitor to this experiment
 
         Args:
             obj (str): the name of the object
+            alerts (list): a list of alert definitions. Each alert definition is a dict
+                with keys 'event', 'recipients'. 'event' is the event to get from the
+                tracking log, 'recipients' is a list of recipients (e.g. email address,
+                notification channel)
+            schedule (str): the job scheduling interval for the monitoring job, as used
+                in om.jobs.schedule() when the job is created
             store (OmegaStore): the store to use, defaults to self._model_store
             provider (str): the name of the monitoring provider, defaults to store.prefix
 
@@ -115,17 +123,22 @@ class TrackingProvider:
             monitor (DriftMonitor): a drift monitor for the object
         """
         store = store or self._model_store
+        mon = self._has_monitor(obj, store=store)
+        provider = provider or mon.get('provider') if mon else None
+        provider = provider or store.prefix.replace('/', '')
+        store.link_monitor(obj, self._experiment, provider=provider,
+                           alerts=alerts, schedule=schedule)
+        ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
+        return ProviderClass(obj, tracking=self, store=store)
+
+    def _has_monitor(self, obj, store=None):
+        store = store or self._model_store
         meta = store.metadata(obj)
         monitors = meta.attributes.setdefault('tracking', {}).setdefault('monitors', [])
         for mon in monitors:
             if mon.get('experiment') == self._experiment:
-                provider = provider or mon.get('provider')
-                break
-        else:
-            provider = provider or store.prefix.replace('/', '')
-            store.link_monitor(obj, self._experiment, provider=provider)
-        ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
-        return ProviderClass(obj, tracking=self, store=store)
+                return mon
+        return None
 
     def active_run(self):
         self._run = (self._run or 0) + 1

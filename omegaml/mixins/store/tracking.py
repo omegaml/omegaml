@@ -34,7 +34,8 @@ class TrackableMetadataMixin:
             })
         return meta.save()
 
-    def link_monitor(self, name, experiment, provider=None):
+    def link_monitor(self, name, experiment, provider=None, event='drift',
+                     alerts=None, schedule=None):
         """
         This links a model to a monitor by adding the experiment name to the
         list of metadata.tracking.monitors.
@@ -42,6 +43,13 @@ class TrackableMetadataMixin:
         Args:
             name (str): the name of the model
             experiment (str): the name of the experiment
+            event (str): the event to monitor, defaults to 'drift'
+            alerts (list): a list of alert definitions. Each alert definition
+              is a dict with keys 'event', 'recipients'. 'event' is the event
+              to get from the tracking log, 'recipients' is a list of recipients
+              (e.g. email address, notification channel)
+            schedule (str): the job scheduling interval for the monitoring job,
+               as used in om.jobs.schedule() when the job is created
 
         Returns:
             Metadata()
@@ -49,11 +57,26 @@ class TrackableMetadataMixin:
         meta = self.metadata(name)
         tracking = meta.attributes.setdefault('tracking', {})
         monitors = tracking.setdefault('monitors', [])
-        if experiment not in monitors:
-            monitors.append({
+        # update existing monitor, if any
+        for mon in monitors:
+            if mon['experiment'] == experiment:
+                mon.update({
+                    'provider': provider or mon.get('provider'),
+                    'alerts': alerts or mon.get('alerts'),
+                    'schedule': schedule or mon.get('schedule')
+                })
+                break
+        else:
+            specs = {
                 'experiment': experiment,
                 'provider': provider or 'default',
-            })
+                'alerts': alerts or [{
+                    'event': event,
+                    'recipients': [],
+                }],
+                'schedule': schedule or 'daily',
+            }
+            monitors.append(specs)
         return meta.save()
 
 
@@ -66,8 +89,8 @@ class UntrackableMetadataMixin:
     def supports(cls, store, **kwargs):
         return not store.prefix in ('models/')
 
-    def link_experiment(self, name, experiment, label=None):
+    def link_experiment(self, name, experiment, **kwargs):
         return self.metadata(name)
 
-    def link_monitor(self, name, experiment):
+    def link_monitor(self, name, **kwargs):
         return self.metadata(name)
