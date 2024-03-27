@@ -47,6 +47,7 @@ class OmegaResourceMixin(object):
             self.celeryapp = om.runtime.celeryapp
             # ensure tracking id is set on every request for traceability
             # https://docs.celeryq.dev/en/stable/faq.html?highlight=task_id#can-i-specify-a-custom-task-id
+            # -- source of _requestId is the middleware.RequestTrackingMiddleware
             tracking_id = getattr(request, '_requestid', None) or uuid4().hex
             om.runtime.require(routing=dict(task_id=tracking_id))
             self._omega_instance = om

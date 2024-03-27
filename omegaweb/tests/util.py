@@ -25,6 +25,8 @@ class OmegaResourceTestMixin:
                                user_config['mongopassword'],
                                dbname=user_config['mongodbname'])
         self.deployment = add_service_deployment(self.user, self.config)
+        from omegaml import _base_config
+        _base_config.is_test_run = True
 
     @property
     def _async_headers(self):

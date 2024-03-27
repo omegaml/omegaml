@@ -1,12 +1,17 @@
+import logging
+
 import os
 import sys
 from unittest import mock
+
+from celery.app.log import Logging
 from uuid import uuid4
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from tastypie.test import ResourceTestCaseMixin
 
+from config.logutil import configure_logging
 from omegaml import Omega
 from omegaops import get_client_config
 from omegaweb.tests.util import OmegaResourceTestMixin
@@ -69,6 +74,8 @@ class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCas
         self.assertEqual(data['result'], expected)
 
     def test_script_run_request_id_header(self):
+        # if this test fails, check test_runtime.test_runtime_logging
+        # -- there is some interference with the celery logging setup
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
@@ -78,12 +85,16 @@ class ScriptResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCas
         # run the script on the cluster
         # -- we pass a custom request id
         # -- request id is expected to show up in log
+        # simulate celery worker logging setup
+        # -- this will trigger celery setup_logging signal
+        # -- which will call omegaee.tasks.config_loggers to attach json logging formatters
         request_id = uuid4().hex
         with self.assertLogs(logger='root', level='INFO') as log:
             # note assertLogs does its own log formatting, so no json output here
             resp = self.api_client.post(self.url('helloworld', action='run', query='text=foo'),
                                         authentication=self.get_credentials(),
                                         HTTP_X_REQUEST_ID=request_id)
+            print(log.output)
             self.assertIn(request_id, ' '.join(log.output))
         # we run another request again to check the runtime resets the task id
         request_id = uuid4().hex

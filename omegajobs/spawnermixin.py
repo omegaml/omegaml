@@ -93,6 +93,8 @@ class OmegaNotebookSpawnerMixin:
             'CA_CERTS_PATH': os.environ.get('CA_CERTS_PATH'),
             'SSL_CERT_FILE': os.environ.get('SSL_CERT_FILE'),
             'JYHUB_VERSION': jupyterhub.__version__,
+            # required since jupyterhub version? (see KubeSpawner, HubAuth)
+            'JUPYTERHUB_API_URL': os.environ.get('JUPYTERHUB_API_URL'),
         }
         custom_envs = configs.get('JUPYTER_CONFIG', {}).get('ENVS', {})
         dict_merge(om_env, custom_envs)

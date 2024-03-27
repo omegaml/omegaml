@@ -217,7 +217,9 @@ class LoggingRequestContextFilter(logging.Filter):
             for k, v in context.data.items():
                 setattr(record, k, v)
             for tgt, src in context.mapping.items():
-                setattr(record, tgt, getattr(record, src, os.environ.get(src)))
+                v = getattr(record, src, os.environ.get(src))
+                va = getattr(record, tgt, None)
+                setattr(record, tgt, v or va)
             for k in self.drop:
                 if hasattr(record, k):
                     delattr(record, k)

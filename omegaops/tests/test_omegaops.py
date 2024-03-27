@@ -170,7 +170,12 @@ class OmegaOpsTests(TestCase):
         username3 = qualified_config.get('brokeruser')
         password3 = qualified_config.get('brokerpassword')
         dbname3 = qualified_config.get('brokervhost')
-        config4 = get_client_config(self.user2, qualifier=self.user.username)
+        with self.assertRaises(AssertionError):
+            # direct user-to-user access is disabled
+            # -- TODO write test case for group access
+            get_client_config(self.user2, qualifier=self.user.username)
+        # check broker access
+        config4 = get_client_config(self.user)
         broker_url = config4['OMEGA_CELERY_CONFIG']['BROKER_URL']
         use_ssl = config4['OMEGA_CELERY_CONFIG']['BROKER_USE_SSL']
         if use_ssl:
@@ -328,11 +333,9 @@ class OmegaOpsTests(TestCase):
         group_user.groups.add(group)
         add_service_deployment(self.user, config)
         add_service_deployment(group_user, group_config)
-        # expect the user's default to be returned (not member of group)
-        config = get_client_config(self.user, qualifier='foobar')
-        parsed = urlparse(defaults.OMEGA_MONGO_URL)
-        mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
-        self.assertEqual(config['OMEGA_MONGO_URL'], mongo_url)
+        # expect an error because user is not a member of group
+        with self.assertRaises(AssertionError):
+            config = get_client_config(self.user, qualifier='foobar')
         # expect the group's default to be returned (user is member of group)
         self.user.groups.add(group)
         config = get_client_config(self.user, qualifier='foobar')
