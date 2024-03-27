@@ -1,11 +1,15 @@
 from __future__ import absolute_import
 
+import json
+
 import hashlib
 from unittest.mock import patch
 
 from allauth.account.utils import sync_user_email_addresses
 from django.contrib.auth.models import User
 from django.test import TestCase
+
+from config.logutil import HostnameInjectingFilter
 from omegaml import Omega
 from omegaml import _base_config
 from omegaml.client.auth import OmegaRuntimeAuthentication, AuthenticationEnv
@@ -197,3 +201,43 @@ class AuthenticatedRuntimeTests(OmegaResourceTestMixin, TestCase):
         self.assertEquals(om.runtime.auth.apikey, defaults.OMEGA_APIKEY)
         defaults.OMEGA_USERID = _userid
         defaults.OMEGA_APIKEY = _apikey
+
+    def test_runtime_logging(self):
+        # set auth explicitely, test om.runtime is initialized properly
+        from celery.app.log import Logging
+        import logging
+        from mock import patch
+        from omegaml.celeryapp import app
+        # simulate celery worker logging setup
+        # -- this will trigger celery setup_logging signal
+        # -- which will call omegaee.tasks.config_loggers to attach json logging formatters
+        Logging(app).setup(redirect_stdouts=False)
+        auth = OmegaRuntimeAuthentication(self.user.username,
+                                          self.user.api_key.key)
+        om = Omega(auth=auth)
+        om.runtime.pure_python = True
+        om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
+        # simulate formatting
+        # -- self.assertLogs() failed to capture the log records for some reason
+        # -- we patch the celery.task handler to capture log records
+        # -- then format each log record by the logger handler
+        logger = logging.getLogger('celery.task')
+        handler = logger.handlers[0]
+        self.assertIsInstance(handler.filters[0], HostnameInjectingFilter)
+        with patch.object(handler, 'emit') as hdx:
+            # cause log messages to be issued by celery
+            om.runtime.require(logging='info').ping()
+            # check
+            # -- each message is a json record
+            # -- each message contains the requestId set to the task_id
+            # -- this corresponds to the logging.yaml mapping setting
+            #    mapping:
+            #       requestId: task_id
+            for record in hdx.call_args_list:
+                msg = handler.format(*record.args)
+                msg = json.loads(msg)
+                self.assertIsInstance(msg, dict)
+                self.assertEqual(msg['requestId'], msg['task_id'])
+
+
+
