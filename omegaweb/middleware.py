@@ -47,11 +47,12 @@ class RequestTrackingMiddleware:
         self.request_header_id = 'HTTP_{}'.format(_header_id)
 
     def track_context(self, request):
-        LoggingRequestContext.inject(clientIP=request.get_host(),
-                                     client=request.META.get('HTTP_USER_AGENT'))
         requestId = (getattr(request, '_requestid', None) or
                      request.META.get(self.request_header_id) or
                      uuid.uuid4().hex)
+        LoggingRequestContext.inject(clientIP=request.get_host(),
+                                     client=request.META.get('HTTP_USER_AGENT'),
+                                     requestId=requestId)
         setattr(request, '_requestid', requestId)
 
     def track_user(self, request):

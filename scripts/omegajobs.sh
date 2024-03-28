@@ -38,7 +38,7 @@ else
   export APPBASE=$HOME
 fi
 # get python dependencies
-get_module_basename() { python -c "import importlib;from pathlib import Path;print(Path(importlib.util.find_spec('$1').origin).parent)"; }
+get_module_basename() { python -c "import importlib.util;from pathlib import Path;print(Path(importlib.util.find_spec('$1').origin).parent)"; }
 omegaml_dir=$(get_module_basename omegaml)
 omegaee_dir=$(get_module_basename omegaee)
 omegajobs_dir=$(get_module_basename omegajobs)

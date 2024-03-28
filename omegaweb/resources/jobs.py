@@ -105,6 +105,7 @@ class JobResource(CQRSApiMixin, OmegaResourceMixin, AsyncResponseMixinTastypie, 
 
         This creates a new job as a IPython notebook
         """
+        # SECOPS: Disable until we can secure on a per-user/job basis
         name = kwargs.get('pk')
         om = self.get_omega(request)
         try:

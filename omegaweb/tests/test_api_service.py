@@ -262,9 +262,13 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         @virtualobj
         def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
             if kwargs.get('invalid'):
-                result = {'data': data, 'method': method}
-            else:
                 result = {'a': [1.0], 'b': [2.0]}
+            elif kwargs.get('error'):
+                result = Exception('error message', 404)
+            elif kwargs.get('exception'):
+                raise Exception('error message', 404)
+            else:
+                result = {'data': data, 'method': method}
             return result
 
         # specify service input and output
@@ -286,12 +290,26 @@ class ServiceDirectResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, 
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertTrue('ValidationError', data['message'])
+        # -- expected error (from exception)
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='exception=1'),
+                                    data={'factor': 1.0}, authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 404)
+        data = self.deserialize(resp)
+        expected = {'message': 'error message'}
+        self.assertEqual(data, expected)
+        # -- expected error (from return value)
+        resp = self.api_client.post(self.url('service/mymodel', action='predict', query='error=1'),
+                                    data={'factor': 1.0}, authentication=self.get_credentials())
+        self.assertEqual(resp.status_code, 404)
+        data = self.deserialize(resp)
+        expected = {'message': 'error message'}
+        self.assertEqual(data, expected)
         # -- valid response, expect response data
         resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),
                                     data={'factor': 1.0}, authentication=self.get_credentials())
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
-        expected = {'a': [1], 'b': [2]}
+        expected = {'data': [{'factor': 1.0}], 'method': 'predict'}
         self.assertEqual(data, expected)
         # run again with invalid signature
         resp = self.api_client.post(self.url('service/mymodel', action='predict', query='text=foo'),

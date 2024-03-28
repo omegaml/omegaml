@@ -91,3 +91,8 @@ baseimages:
 	docker images | grep jupyter/datascience-notebook | xargs -L1 | cut -d ' ' -f 2 | xargs -I{} docker tag jupyter/datascience-notebook:{} omegaml/datascience-notebook:{}
 	docker images | grep jupyter/datascience-notebook | xargs -L1 | cut -d ' ' -f 2 | xargs -I{} docker tag jupyter/datascience-notebook:{} ghcr.io/omegaml/datascience-notebook:{}
 	docker images | grep omegaml/datascience-notebook | xargs -L1 | cut -d ' ' -f 1-2 | tr ' ' : | xargs -L1 docker push
+
+dockercompose:
+	curl -L https://github.com/docker/compose/releases/download/v2.26.0/docker-compose-linux-x86_64 > docker-compose
+	chmod +x docker-compose
+	mv docker-compose ${HOME}/.local/bin

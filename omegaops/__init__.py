@@ -415,8 +415,9 @@ def get_user_config(user, qualifier, view):
     # -- get group user's settings if requested by 'group:qualifier'
     # -- if it is just a 'group' qualifier, consider this as group:default
     if ':' in qualifier or qualifier not in user_settings.get('qualifiers', {}):
-        group_settings, qualifier = get_usergroup_settings(user, qualifier)
+        group_settings, g_qualifier = get_usergroup_settings(user, qualifier)
         user_settings = group_settings
+        qualifier = g_qualifier if group_settings else qualifier
     # -- if qualifier is not in user or group settings, fail the request
     msg = f"no service available for user {user} and qualifier {qualifier}"
     assert user_settings, msg

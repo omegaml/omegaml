@@ -36,7 +36,11 @@ class ClientConfigResource(Resource):
         """
         # by default return current user's config
         requested_user = bundle.request.user
-        qualifier = bundle.request.GET.get('qualifier', 'default')
+        # get qualifier from request or default
+        # -- qualifier header gets priority (as it is used for authentication)
+        # -- allow for query parameter alternative (for testing)
+        qualifier = bundle.request.META.get('HTTP_QUALIFIER', 'default')
+        qualifier = qualifier or bundle.request.GET.get('qualifier')
         view = isTrue(bundle.request.GET.get('view', False))
         # allow admin users to request some other user's config
         # FIXME only allow query for members in admin's organization
