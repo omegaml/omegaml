@@ -1173,3 +1173,14 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
             raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
     # Python before 3.12, before backports to 3.11, 3.10, 3.9
     return tar.extractall(dest_path)
+
+
+def batched(iterable, batch_size):
+    """ split an iterable into batches of batch_size """
+    from itertools import islice
+    it = iter(iterable)
+    while True:
+        batch = list(islice(it, batch_size))
+        if not batch:
+            break
+        yield batch

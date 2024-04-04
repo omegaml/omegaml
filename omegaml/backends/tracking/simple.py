@@ -12,7 +12,7 @@ import pymongo
 
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
-from omegaml.util import _raise, ensure_index
+from omegaml.util import _raise, ensure_index, batched
 
 
 class NoTrackTracker(TrackingProvider):
@@ -303,8 +303,8 @@ class OmegaSimpleTracker(TrackingProvider):
             self._extra_log = {}
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
-             lazy=False, **extra):
-        """ build a dataframe of all stored data
+             lazy=False, batchsize=None, **extra):
+        """ return stored data for the current run, or all runs
 
         Args:
             experiment (str|list): the name of the experiment, defaults to its current value
@@ -314,16 +314,33 @@ class OmegaSimpleTracker(TrackingProvider):
             key (str|list): the key(s) to include
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
+            batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
+               note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
+               yields a list of dicts
 
         Returns:
+            For lazy == False:
             * data (DataFrame) if raw == False
             * data (list of dicts) if raw == True
             * None if no data exists
+
+            For lazy == True, no batchsize, regardless of raw:
+            * data (Cursor) for any value of raw
+
+            For lazy == True, with batchsize:
+            * data(generator of list[dict]) if raw = True
+            * data(generator of DataFrame) if raw = False
+
+        .. versionchanged:: 0.17
+            added batchsize
+
+        .. versionchanged:: 0.17
+            enabled the use of run='*' to retrieve all runs, equivalent of run='all'
         """
         filter = {}
         experiment = experiment or self._experiment
         run = run or self._run
-        valid = lambda s: s is not None and str(s).lower() != 'all'
+        valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
         op = lambda s: {'$in': list(s)} if isinstance(s, (list, tuple)) else s
         if valid(experiment):
             filter['data.experiment'] = op(experiment)
@@ -338,12 +355,24 @@ class OmegaSimpleTracker(TrackingProvider):
         for k, v in extra.items():
             if valid(k):
                 filter[f'data.{k}'] = op(v)
-        data = self._store.get(self._data_name, filter=filter, lazy=lazy)
-        if data is not None and not raw and not lazy:
-            data = pd.DataFrame.from_records(data)
+
+        def read_data(cursor):
+            data = pd.DataFrame.from_records(cursor)
             if 'dt' in data.columns:
                 data['dt'] = pd.to_datetime(data['dt'], errors='coerce')
                 data.sort_values('dt', inplace=True)
+            return data
+
+        def read_data_batched(cursor):
+            for rows in batched(cursor, batchsize):
+                yield read_data(rows) if not raw else rows
+
+        if batchsize:
+            data = self._store.get(self._data_name, filter=filter, lazy=True)
+            data = read_data_batched(data)
+        else:
+            data = self._store.get(self._data_name, filter=filter, lazy=lazy)
+            data = read_data(data) if data is not None and not lazy and not raw else data
         return data
 
     @property
@@ -368,8 +397,8 @@ class OmegaSimpleTracker(TrackingProvider):
     def restore_artifact(self, *args, **kwargs):
         """ restore a specific logged artifact
 
-        Updates:
-            * since 0.17: Deprecated, use exp.restore_artifacts() instead
+        .. versionchanged:: 0.17
+             deprecated, use exp.restore_artifacts() instead
         """
         warnings.warn('deprecated, use exp.restore_artifacts() instead', DeprecationWarning)
         restored = self.restore_artifacts(*args, **kwargs)
