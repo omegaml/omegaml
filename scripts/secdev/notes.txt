@@ -1,0 +1,6 @@
+this directory contains resources and files relevant for security scanning
+
+scanned-pipreqs.txt
+- this lists all dependencies last scanned by snyk, when installing omegaml[all]
+- we don't list this as requirements.txt because these are not technically requirements of omegaml
+- a few extra packages are supported by omegaml, however the user is responsible for ensure version updates

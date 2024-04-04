@@ -13,8 +13,7 @@ dashserve_deps = ['dash>=2.9']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
-llm_deps = ['langchain[all]']
-tf_deps = ['tensorflow>2']
+tf_deps = ['tensorflow>2,<2.16'] # due to 2.16 dropping support for tf-estimators
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools']
 backtracking_deps = [
     'json5>0.9',  # nobody knows
@@ -101,7 +100,6 @@ setup(
         'all': test_deps,
         'client': client_deps,
         'dev': dev_deps,
-        'llm': llm_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],
