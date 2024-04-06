@@ -128,6 +128,8 @@ pipsync:
 	pip-sync
 
 scan: freeze pipsync
-	snyk test --policy-path=./.snyk
-	snyk code test
+	snyk test --policy-path=./.snyk > scripts/secdev/.snyk-test.report
+	snyk code test --policy-path=./.snyk > scripts/secdev/.snyk-code-test.report
 	mv requirements.txt scripts/secdev/scanned-pipreqs.txt
+	cat scripts/secdev/*.report
+

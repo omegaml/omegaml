@@ -1,0 +1,52 @@
+
+Testing /home/patrick/projects/omegaml-ce ...
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/store/base.py, line 1145 
+   Info: hashlib.sha1 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/mixins/store/modelversion.py, line 179 
+   Info: hashlib.sha1 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/mixins/mdf/apply.py, line 85 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/store/streams.py, line 100 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/runtimes/mixins/nbtasks.py, line 267 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaml/store/queryops.py, line 411 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaml/tests/core/cli/test_cli_runtime.py, line 173 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in userid.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaml/tests/features/steps/notebook.py, line 11 
+   Info: Do not hardcode passwords in code. Found hardcoded password used in password.
+
+ ✗ [Medium] Use of Hardcoded Credentials 
+   Path: scripts/mongoinit.js, line 4 
+   Info: Do not hardcode passwords in code. Found hardcoded password used in pwd.
+
+
+✔ Test completed
+
+Organization:      omegaml-v5v
+Test type:         Static code analysis
+Project path:      /home/patrick/projects/omegaml-ce
+
+Summary:
+
+  9 Code issues found
+  1 [Medium]   8 [Low] 
+
+

@@ -55,6 +55,7 @@ jobs:
           command: |
             source miniforge3/etc/profile.d/conda.sh
             cd omegaml-ce
+            cp scripts/mongoinit.js.example scripts/mongoinit.js
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
             sleep 10
