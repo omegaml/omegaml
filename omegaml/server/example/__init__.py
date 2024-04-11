@@ -29,10 +29,11 @@ def create_testdata(om):
             omx.jobs.schedule('hello', 'every Saturday, at 05:00')
             if i < 3:
                 omx.runtime.job('hello').run().get()
-            with omx.runtime.experiment('test') as exp:
-                exp.track(f'{bx}-reg-{i}')
-                exp.log_metric('acc', .1 + (i * 10 / 100))
-                exp.log_metric('loss', .97 - (i * 10 / 100))
+            for j in range(10):
+                with omx.runtime.experiment(f'{bx}-reg-{i}') as exp:
+                    exp.track(f'{bx}-reg-{i}')
+                    exp.log_metric('acc', .1 + (j * 10 / 100))
+                    exp.log_metric('loss', .97 - (j * 10 / 100))
         [omx.logger.info(f'{bx}-test {i}') for i in range(100)]
 
 
