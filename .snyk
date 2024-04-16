@@ -43,37 +43,48 @@ ignore:
   # start: snyk code
   # -- note these ignores do not actually work, listed for documentation purpose
   CWE-918:
-    - omegaml/client/cli/runtime.py:
+    - omegaml > client > cli > runtime.py:
         reason: input is validated
-    - omegaml/client/cli/cloud.py:
+    - omegaml > client > cli > cloud.py:
         reason: input is validated
   CWE-400:
-    - omegaml/restapi/app.py:
+    - omegaml > restapi > app.py:
         reason: input length is restricted to avoid ReDoS (see OmegaResourceMixin.check_object_authorization)
   CWE-94:
-    - omegaml/util.py:
+    - omegaml > util.py:
         reason: input is sanitized to be a valid python module; input is not executed as Python code.
   CWE-916:
-    - omegaml/runtimes/mixins/nbtasks.py JobTasks._make_task_group:
+    - omegaml > runtimes > mixins > nbtasks.py JobTasks._make_task_group:
         reason: hashcode is used purely for name resolution, not a security function
-    - omegaml/store/streams.py StreamsProxy._cached_get:
+    - omegaml > store > streams.py > StreamsProxy._cached_get:
         reason: hashcode is used purely for name resolution, not a security function
-    - omegaml/mixins/mdf/apply.py ApplyMixin._make_cache_key:
+    - omegaml > mixins > mdf > apply.py > ApplyMixin._make_cache_key:
         reason: hashcode is used purely for name resolution, not a security function
-    - omegaml/store/base.py OmegaStore.object_store_key:
+    - omegaml > store > base.py > OmegaStore.object_store_key:
         reason: hashcode is used purely for name resolution, not a security function
-    - omegaml/mixins/store/modelversion.py ModelVersionMixin._model_version_hash:
+    - omegaml > mixins > store > modelversion.py > ModelVersionMixin > _model_version_hash:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml > store > queryops > ensure_index_limit:
+        reason: hashcode is used purely for name resolution, not a security function
+    - omegaml > tests > core > cli > test_cli_runtime > CliRuntimeTests > test_cli_restart_app:
         reason: hashcode is used purely for name resolution, not a security function
   CWE-22:
-    - omegaml/mixins/store/imexport.py ObjectImportExportMixin.decompress:
+    - omegaml > mixins > store > imexport.py > ObjectImportExportMixin.decompress:
         reason: files are extracted using Python's tarfile 'data' filter which fixes the issue
   # end: snyk code
 exclude:
   global:
     # excludes for snyk code, respective vunl reasons are given above
-    - omegaml/client/cli/runtime.py
     - omegaml/client/cli/cloud.py
-    - omegaml/restapi/__main__.py
-    - omegaml/restapi/app.py
-    - omegaml/util.py
+    - omegaml/client/cli/runtime.py
+    - omegaml/mixins/mdf/apply.py
     - omegaml/mixins/store/imexport.py
+    - omegaml/mixins/store/modelversion.py
+    - omegaml/restapi/app.py
+    - omegaml/restapi/__main__.py
+    - omegaml/runtimes/mixins/nbtasks.py
+    - omegaml/store/base.py
+    - omegaml/store/streams.py
+    - omegaml/util.py
+    - omegaml/tests/core/cli/test_cli_runtime.py
+    - omegaml/store/queryops.py

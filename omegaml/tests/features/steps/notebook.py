@@ -8,6 +8,10 @@ from omegaml.tests.features.util import Notebook, jburl
 def open_jupyter(ctx):
     br = ctx.browser
     br.visit(jburl(ctx.feature.jynb_url, ''))
+    # SEC: CWE-916
+    # - status: update
+    # - reason: this is purely for unit testing purpose, not a vulnerability
+    # - reference: https://github.com/omegaml/omegaml/issues/394
     nb = Notebook(br, password='omegamlisfun')
     nb.login()
     nb.jupyter_home

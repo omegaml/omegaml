@@ -165,16 +165,18 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.cli(f'runtime deploy export --steps {deployfile} --dry')
         expected = self.pretend_log('DRY: om runtime foobar test')
 
-
     def test_cli_restart_app(self):
         om = self.om
         om.runtime = MagicMock()
+        # SEC: CWE-916
+        # - status: wontfix
+        # - reason: this is purely for unit testing purpose, not a vulnerability
         om.runtime.auth.userid = 'testuser'
         om.runtime.auth.apikey = 'apikey'
         self.make_model('reg')
         # use the default REST API as the /apps url
         with patch('omegaml.client.cli.runtime.requests') as requests, \
-             patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+                patch('omegaml.client.cli.runtime.get_omega') as get_omega:
             get_omega.return_value = om
             self.cli('runtime restart app apps/test')
             requests.get.assert_called()
@@ -182,10 +184,9 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
             self.assertEqual(requests.get.call_args_list[1][0], ('local/apps/api/start/testuser/test',))
         # use a specific apphub URL
         with patch('omegaml.client.cli.runtime.requests') as requests, \
-             patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+                patch('omegaml.client.cli.runtime.get_omega') as get_omega:
             get_omega.return_value = om
             self.cli('runtime restart app apps/test --apphub-url http://myapphub.com')
             requests.get.assert_called()
             self.assertEqual(requests.get.call_args_list[0][0], ('http://myapphub.com/apps/api/stop/testuser/test',))
             self.assertEqual(requests.get.call_args_list[1][0], ('http://myapphub.com/apps/api/start/testuser/test',))
-

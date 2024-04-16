@@ -1,0 +1,21 @@
+
+Testing /home/patrick/projects/omegaml-ce...
+
+Organization:      omegaml-v5v
+Package manager:   pip
+Target file:       requirements.txt
+Project name:      omegaml-ce
+Open source:       no
+Project path:      /home/patrick/projects/omegaml-ce
+Local Snyk policy: found
+Licenses:          enabled
+
+✔ Tested 112 dependencies for known issues, no vulnerable paths found.
+
+Tip: Detected multiple supported manifests (2), use --all-projects to scan all of them at once.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+
