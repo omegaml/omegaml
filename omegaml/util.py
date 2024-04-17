@@ -1184,3 +1184,55 @@ def batched(iterable, batch_size):
         if not batch:
             break
         yield batch
+
+
+def tqdm_if_interactive():
+    # return the tqdm module, if available and the interpreter is in interactive mode
+    # provides a dummy tqdm for non-interactive use
+    class tqdm:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+        @classmethod
+        def tqdm(*args, **kwargs):
+            return tqdm(*args, **kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def __iter__(self):
+            return iter(self.args)
+
+        def update(self, *args):
+            pass
+
+        def close(self):
+            pass
+
+    if is_interactive():
+        try:
+            import tqdm as real_tqdm
+        except ImportError:
+            pass
+        else:
+            tqdm = real_tqdm
+    return tqdm
+
+
+def is_interactive():
+    # adopted from https://stackoverflow.com/a/47428575/890242
+    try:
+        from IPython import get_ipython
+        ipy_str = str(type(get_ipython()))
+    except:
+        # we're not in IPython
+        pass
+    else:
+        # 'zmqshell' is IPython, 'jupyter' is Jupyter
+        if any(t in ipy_str for t in ('zmqshell', 'jupyter')):
+            return True
+    return sys.flags.interactive

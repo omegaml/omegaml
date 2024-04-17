@@ -1,16 +1,19 @@
+from logging import warning
+
 import logging
 import os
+import pandas as pd
+import sqlalchemy
 import string
+import threading
 import warnings
 from getpass import getuser
 from hashlib import sha256
-from logging import warning
+from sqlalchemy.exc import StatementError
 from urllib.parse import quote_plus
 
-import pandas as pd
-import sqlalchemy
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.util import ProcessLocal, KeepMissing
+from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive
 
 try:
     import snowflake
@@ -172,8 +175,14 @@ class SQLAlchemyBackend(BaseDataBackend):
             self.__CNX_CACHE.clear()
         return super().drop(name, **kwargs)
 
+    def sign(self, values):
+        # sign a set of values
+        # -- this is used to ensure the values are not tampered with
+        # -- when passed to a SQL query
+        return sha256((str(threading.get_ident()) + str(values)).encode('utf-8')).hexdigest()
+
     def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
-            secrets=None, index=True, keep=None, lazy=False, table=None, *args, **kwargs):
+            secrets=None, index=True, keep=None, lazy=False, table=None, trusted=False, *args, **kwargs):
         """ retrieve a stored connection or query data from connection
 
         Args:
@@ -183,6 +192,8 @@ class SQLAlchemyBackend(BaseDataBackend):
               default by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE = False)
             table (str): the name of the table, will be prefixed with the
                store's bucket name unless the table is specified as ':name'
+            trusted (bool|str): if passed must be the value for store.sign(sqlvars or kwargs),
+               otherwise a warning is issued for any remaining variables in the sql statement
 
         Returns:
             connection
@@ -230,7 +241,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         sqlvars = sqlvars or {}
         table = self._default_table(table or meta.kind_meta.get('table') or name)
         if not raw and not valid_sql(sql):
-            sql = f'select * from {table}'
+            sql = f'select * from :sqltable'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
         _default_keep = getattr(self.data_store.defaults,
                                 'SQLALCHEMY_ALWAYS_CACHE',
@@ -242,8 +253,9 @@ class SQLAlchemyBackend(BaseDataBackend):
         else:
             raise ValueError('no connection string')
         if not raw and valid_sql(sql):
+            sql = sql.replace(':sqltable', table)
             index_cols = _meta_to_indexcols(meta) if index else kwargs.get('index_col')
-            stmt = self._sanitize_statement(sql, sqlvars)
+            stmt = self._sanitize_statement(sql, sqlvars, trusted=trusted)
             kwargs = meta.kind_meta.get('kwargs') or {}
             kwargs.update(kwargs)
             if not lazy:
@@ -428,15 +440,9 @@ class SQLAlchemyBackend(BaseDataBackend):
         connection = self._get_connection(name, connstr, secrets=secrets)
         chunksize = chunksize or 10000  # avoid None
         pditer = pd.read_sql(sql, connection, chunksize=chunksize, **kwargs)
-        try:
-            import tqdm
-        except:
+        with tqdm_if_interactive().tqdm(unit='rows') as pbar:
             meta = self._chunked_insert(pditer, name, append=append,
-                                        transform=transform)
-        else:
-            with tqdm.tqdm(unit='rows') as pbar:
-                meta = self._chunked_insert(pditer, name, append=append,
-                                            transform=transform, pbar=pbar)
+                                        transform=transform, pbar=pbar)
         connection.close()
         return meta
 
@@ -448,7 +454,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         def chunker(seq, size):
             return (seq.iloc[pos:pos + size] for pos in range(0, len(seq), size))
 
-        def to_sql(df, table, connection, pbar=False):
+        def to_sql(df, table, connection, pbar=None):
             for i, cdf in enumerate(chunker(df, chunksize)):
                 exists_action = if_exists if i == 0 else "append"
                 cdf.to_sql(table, con=connection, if_exists=exists_action, **kwargs)
@@ -457,15 +463,8 @@ class SQLAlchemyBackend(BaseDataBackend):
                 else:
                     print("writing chunk {}".format(i))
 
-        try:
-            import tqdm
-            if pbar is False:
-                pbar = None
-        except Exception as e:
+        with tqdm_if_interactive().tqdm(total=len(df), unit='rows') as pbar:
             to_sql(df, table, connection, pbar=pbar)
-        else:
-            with tqdm.tqdm(total=len(df), unit='rows') as pbar:
-                to_sql(df, table, connection, pbar=pbar)
 
     def _chunked_insert(self, pditer, name, append=True, transform=None, pbar=None):
         # insert into om dataset
@@ -525,7 +524,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             name = name[1:]
         return name
 
-    def _sanitize_statement(self, sql, sqlvars):
+    def _sanitize_statement(self, sql, sqlvars, trusted=False):
         # sanitize sql:string statement in two steps
         # -- step 1: replace all {} variables by :notation
         # -- step 2: replace all remaining {} variables from sqlvars
@@ -538,7 +537,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         # replace all {...} variables with bound parameters
         #    sql = "select * from foo where user={username}"
         #       => "select * from foo where user=:username"
-        placeholders = string.Formatter().parse(sql)
+        placeholders = list(string.Formatter().parse(sql))
         vars = [spec[1] for spec in placeholders if spec[1]]
         safe_replacements = {var: f':{var}' for var in vars}
         sql = sql.format(**safe_replacements)
@@ -562,7 +561,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             #    =>    "select a, b from foo where user=:username
             placeholders = list(string.Formatter().parse(sql))
             vars = [spec[1] for spec in placeholders if spec[1]]
-            if vars:
+            if vars and trusted != self.sign(sqlvars):
                 warnings.warn(f'Statement >{sql}< contains unsafe variables {vars}. Use :notation or sanitize input.')
             sql = sql.format(**{**sqlvars, **safe_replacements})
         except KeyError as e:
@@ -570,7 +569,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         # prepare sql statement with bound variables
         try:
             stmt = sqlalchemy.sql.text(sql)
-        except sqlalchemy.exc.StatementError as exc:
+        except StatementError as exc:
             raise
         return stmt
 
@@ -657,7 +656,7 @@ def load_sql(om=None, kind=SQLAlchemyBackend.KIND):
     from unittest.mock import MagicMock
     from IPython import get_ipython
     import omegaml as om
-    from sql.connection import Connection
+    from sql.connection import Connection # noqa
 
     class ConnectionShim:
         # this is required to trick sql magic into accepting existing connection objects
