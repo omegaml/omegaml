@@ -187,6 +187,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
             if kwargs.get('invalid'):
                 result = {'data': data, 'method': method}
+            elif kwargs.get('error'):
+                result = Exception('error message', 404)
+            elif kwargs.get('exception'):
+                raise Exception('error message', 404)
             else:
                 result = {'a': [1.0], 'b': [2.0]}
             return result
@@ -210,6 +214,20 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertIn('ValidationError', str(data))
+        # -- expected error (from exception)
+        resp = self.client.post(self.url('service/mymodel', action='predict', query='exception=1'),
+                                    json={'factor': 1.0})
+        self.assertEqual(resp.status_code, 404)
+        data = self.deserialize(resp)
+        expected = {'message': 'error message'}
+        self.assertEqual(data, expected)
+        # -- expected error (from return value)
+        resp = self.client.post(self.url('service/mymodel', action='predict', query='error=1'),
+                                    json={'factor': 1.0})
+        self.assertEqual(resp.status_code, 404)
+        data = self.deserialize(resp)
+        expected = {'message': 'error message'}
+        self.assertEqual(data, expected)
         # -- valid response, expect response data
         resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'factor': 1.0})
         self.assertHttpOK(resp)

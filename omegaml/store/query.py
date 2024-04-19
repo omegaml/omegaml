@@ -44,8 +44,8 @@ class MongoQ(object):
     2. return the dataframe
 
     """
-    def __init__(self, **kwargs):
-        self.conditions = self._sanitize_filter(kwargs)
+    def __init__(self, _trusted=False, **kwargs):
+        self.conditions = self._sanitize_filter(kwargs, trusted=_trusted)
         self.qlist = [('', self)]
         # should we return ~(conditions)
         self._inv = False
@@ -233,9 +233,9 @@ class MongoQ(object):
         notq = copy.deepcopy(self).negate()
         return notq
 
-    def _sanitize_filter(self, filter):
+    def _sanitize_filter(self, filter, trusted=False):
         from omegaml.store.queryops import sanitize_filter
-        return sanitize_filter(filter)
+        return sanitize_filter(filter, trusted=trusted)
 
 
 
@@ -266,7 +266,7 @@ class Filter(object):
     """
     _debug = False
 
-    def __init__(self, coll, __query=None, **kwargs):
+    def __init__(self, coll, __query=None, _trusted=False, **kwargs):
         """
         Filter objects use MongoQ query expression to build
         complex filters.
@@ -291,9 +291,9 @@ class Filter(object):
         self.coll = coll
         self.trace = False
         self.exc = None
-        self.q = self.build_query(__query, **kwargs)
+        self.q = self.build_query(__query, _trusted=_trusted, **kwargs)
 
-    def build_query(self, __query=None, **kwargs):
+    def build_query(self, __query=None, _trusted=False, **kwargs):
         """
         build the MongoQ object from given kwargs
 
@@ -312,7 +312,7 @@ class Filter(object):
         if __query:
             q = __query
         else:
-            q = MongoQ(**kwargs)
+            q = MongoQ(_trusted=_trusted, **kwargs)
         return q
 
     @property

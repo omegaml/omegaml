@@ -86,9 +86,11 @@ from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, mongo_compatible
+    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, \
+    mongo_compatible, signature
 from uuid import uuid4
 
+from .queryops import sanitize_filter
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
@@ -677,7 +679,7 @@ class OmegaStore(object):
             return backend.drop(name, force=force, version=version, **kwargs)
         return self._drop(name, force=force, version=version)
 
-    def _drop(self, name, force=False, version=-1):
+    def _drop(self, name, force=False, version=-1, **kwargs):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
             raise DoesNotExist()
@@ -866,7 +868,7 @@ class OmegaStore(object):
 
     def get_dataframe_documents(self, name, columns=None, lazy=False,
                                 filter=None, version=-1, is_series=False,
-                                chunksize=None, sanitize=True,
+                                chunksize=None, sanitize=True, trusted=None,
                                 **kwargs):
         """
         Internal method to return DataFrame from documents
@@ -891,10 +893,10 @@ class OmegaStore(object):
 
         collection = self.collection(name)
         meta = self.metadata(name)
+        filter = filter or kwargs
+        filter = sanitize_filter(filter, no_ops=sanitize, trusted=trusted)
         if lazy or chunksize:
             from ..mdataframe import MDataFrame
-            filter = filter or kwargs
-            filter = sanitize_filter(filter, no_ops=sanitize)
             df = MDataFrame(collection,
                             metadata=meta.kind_meta,
                             columns=columns).query(**filter)
@@ -905,10 +907,8 @@ class OmegaStore(object):
         else:
             # TODO ensure the same processing is applied in MDataFrame
             # TODO this method should always use a MDataFrame disregarding lazy
-            filter = filter or kwargs
             if filter:
                 from .query import Filter
-                filter = sanitize_filter(filter, no_ops=sanitize)
                 query = Filter(collection, **filter).query
                 cursor = FilteredCollection(collection).find(filter=query, projection=columns)
             else:
@@ -1019,7 +1019,7 @@ class OmegaStore(object):
                 "{0} does not exist in mongo collection '{1}'".format(
                     name, self.bucket))
 
-    def get_python_data(self, name, version=-1, lazy=False, **kwargs):
+    def get_python_data(self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs):
         """
         Retrieve objects as python data
 
@@ -1029,7 +1029,9 @@ class OmegaStore(object):
         :return: Returns the object as python list object
         """
         datastore = self.collection(name)
-        cursor = datastore.find(**kwargs)
+        filter = filter or kwargs
+        sanitize_filter(filter) if trusted is False or trusted != signature(filter) else filter
+        cursor = datastore.find(filter, **kwargs)
         if lazy:
             return cursor
         data = (d.get('data') for d in cursor)
@@ -1216,3 +1218,6 @@ class OmegaStore(object):
         # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
         ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
         ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})
+
+    def sign(self, filter):
+        return signature(filter)
