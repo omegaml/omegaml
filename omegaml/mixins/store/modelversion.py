@@ -141,7 +141,7 @@ class ModelVersionMixin(object):
         if '^' in str(name):
             version = -1 * (name.count('^') + 1)
             name = name.split('^')[0].split('@')[0]
-        elif '@' in name:
+        elif '@' in str(name):
             name, tag = name.split('@')
         return name, tag, version
 

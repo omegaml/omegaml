@@ -13,7 +13,7 @@ from sqlalchemy.exc import StatementError
 from urllib.parse import quote_plus
 
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive
+from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive, signature
 
 try:
     import snowflake
@@ -176,10 +176,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         return super().drop(name, **kwargs)
 
     def sign(self, values):
-        # sign a set of values
-        # -- this is used to ensure the values are not tampered with
-        # -- when passed to a SQL query
-        return sha256((str(threading.get_ident()) + str(values)).encode('utf-8')).hexdigest()
+        return signature(values)
 
     def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
             secrets=None, index=True, keep=None, lazy=False, table=None, trusted=False, *args, **kwargs):

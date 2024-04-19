@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-import warnings
-
 import json
 import pymongo
 import sys
+import warnings
 from hashlib import md5
 
-from omegaml.util import make_tuple
+from omegaml.util import make_tuple, is_interactive
 
 
 class GeoJSON(dict):
@@ -413,11 +412,12 @@ def ensure_index_limit(idx, **kwargs):
     return idx, kwargs
 
 
-def sanitize_filter(filter, no_ops=False):
+def sanitize_filter(filter, no_ops=False, trusted=False):
     """ sanitize mongodb filter statements """
+    no_ops = no_ops if no_ops is not None else is_interactive()
     injection_ops = ['$where', '$mapReduce']
     user_ops = [k for k in filter if k.strip().startswith('$') and k not in injection_ops]
-    ops_to_remove = user_ops + injection_ops if no_ops else injection_ops
+    ops_to_remove = (user_ops + injection_ops) if no_ops else injection_ops
     # sanitize user and default operators
     if user_ops and not no_ops:
         warnings.warn(f'Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized.')

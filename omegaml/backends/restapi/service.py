@@ -43,7 +43,7 @@ class GenericServiceResource:
         self.om.models.validate(model_id, X=payload)
         promise = self.om.runtime.model(model_id).predict(payload, **query)
         result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
-        self.om.models.validate(model_id, Y=result)
+        self.om.models.validate(model_id, Y=result, result=result)
         return result
 
     def predict_proba(self, model_id, query, payload):
@@ -95,7 +95,12 @@ class GenericServiceResource:
         else:
             data = result
         # ensure response is json serializable
-        if not isinstance(data, (list, dict, tuple)):
+        # -- json-serializable data is returned as is
+        # -- exceptions are raised as is
+        # -- all other data is wrapped in a dict
+        if isinstance(data, Exception):
+            raise data
+        elif not isinstance(data, (list, dict, tuple)):
             data = {'data': data}
         return data
 

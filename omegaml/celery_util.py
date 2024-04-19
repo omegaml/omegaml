@@ -84,6 +84,9 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             om = self.request._om = self.auth_env.get_omega_for_task(self, auth=auth)[bucket]
             self.auth_env.prepare_env(om.defaults)
             self.request._auth = om.runtime.auth
+            # TODO the runtime should be set to the task's actual label (routing key)
+            #      so that any user code using om.runtime is using the same label, e.g. for tracking
+            # om.runtime.require(label=self.request.label)
         return self.request._om
 
     def get_delegate(self, name, kind='models', pass_as='model_store'):
