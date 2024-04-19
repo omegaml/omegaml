@@ -83,7 +83,8 @@ class OmegaSimpleTracker(TrackingProvider):
 
         Args:
             run (int|str): optional or unique task id, if None the
-               latest active run will be set, or
+               latest active run will be set, or a new run is created if
+               no active run exists.
 
         Returns:
             current run (int)
@@ -550,7 +551,7 @@ class OmegaSimpleTracker(TrackingProvider):
             restored.append(obj)
         return restored
 
-    def restore_data(self, key, event=None, concat=False, **extra):
+    def restore_data(self, key, event=None, concat=True, **extra):
         """ restore x/y data for model predictions
 
         This is semantic sugar for restore_artifacts() using the event='data' event.
@@ -559,7 +560,7 @@ class OmegaSimpleTracker(TrackingProvider):
             key (str): the name of the artifact
             event (str): the event, defaults to 'data'
             concat (bool): if True, concatenates the data into a single object,
-               in this case all data must be of the same type
+               in this case all data must be of the same type. Defaults to True.
             **extra: any other values to store with event
 
         Returns:
@@ -578,4 +579,5 @@ class OmegaSimpleTracker(TrackingProvider):
             # -- https://stackoverflow.com/a/56407963/890242
             return list(chain(*values))
 
-        return _concat(self.restore_artifacts(key=key, event=event, **extra))
+        restored = self.restore_artifacts(key=key, event=event, **extra)
+        return restored if not concat else _concat(restored)

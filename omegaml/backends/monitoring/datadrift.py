@@ -6,6 +6,7 @@ from omegaml.backends.monitoring.base import DriftMonitorBase
 
 class DataDriftMonitor(DriftMonitorBase):
     def __init__(self, dataset=None, store=None, query=None, tracking=None, kind=None, **kwargs):
+        kind = kind or 'data'
         super().__init__(resource=dataset, store=store, query=query,
                          tracking=tracking, kind=kind, **kwargs)
 

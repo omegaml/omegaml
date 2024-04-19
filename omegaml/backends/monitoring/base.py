@@ -15,6 +15,9 @@ class DriftMonitorBase:
         self._kind = kind
         self.tracking = tracking
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self._resource})'
+
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
 
@@ -26,27 +29,27 @@ class DriftMonitorBase:
     def compare(self, *args, **kwargs):
         """ calculate drift
 
-                Args:
-                    seq (list|str): a list of snapshot indices to compare in the format [i, j],
-                       or one of 'baseline', 'seq'. Use 'baseline' to compare every snapshot
-                       to the first snapshot, or 'seq' to compare each snapshot to the previous.
-                       [i, j] are 0-indexed snapshot indices, can be specified as negative indices
-                       to indicate the last n-th snapshot.
-                    d1 (int): the first snapshot index to compare, optional
-                    d2 (int): the second snapshot index to compare, optional
-                    ci (float): the confidence interval for the drift test, defaults to .95
-                    baseline (int): the baseline snapshot index to compare to, defaults to 0
-                    raw (bool): if True, returns drift statistics as a dict, otherwise
-                        returns a DriftStats instance
-                    matcher (dict): a dict that maps columns 'old' => 'new', e.g. {'Y_y': 'Y_0'}.
-                       this is useful to map columns from one snapshot to another, e.g. when
-                       column names change between snapshots. Pass as dict(d1={...}, d2={...})
-                       to specifically map columns for the first and second snapshot. By default
-                       all columns are assumed to be the same.
+        Args:
+            seq (list|str): a list of snapshot indices to compare in the format [i, j],
+               or one of 'baseline', 'seq'. Use 'baseline' to compare every snapshot
+               to the first snapshot, or 'seq' to compare each snapshot to the previous.
+               [i, j] are 0-indexed snapshot indices, can be specified as negative indices
+               to indicate the last n-th snapshot.
+            d1 (int): the first snapshot index to compare, optional
+            d2 (int): the second snapshot index to compare, optional
+            ci (float): the confidence interval for the drift test, defaults to .95
+            baseline (int): the baseline snapshot index to compare to, defaults to 0
+            raw (bool): if True, returns drift statistics as a dict, otherwise
+                returns a DriftStats instance
+            matcher (dict): a dict that maps columns 'old' => 'new', e.g. {'Y_y': 'Y_0'}.
+               this is useful to map columns from one snapshot to another, e.g. when
+               column names change between snapshots. Pass as dict(d1={...}, d2={...})
+               to specifically map columns for the first and second snapshot. By default
+               columns present in d1 but missing in d2 are auto-matched by position.
 
-                Returns:
-                    DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
-                """
+        Returns:
+            DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
+        """
         return self.drift(*args, **kwargs)
 
     def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None):
@@ -66,7 +69,7 @@ class DriftMonitorBase:
                 raise ValueError(
                     f'invalid drift sequence {seq}, must be True, "baseline", "series" or a list of snapshot indices.')
             drifts = [d for d in drifts if d is not None]
-            return DriftStats(drifts) if not raw else drifts
+            return DriftStats(drifts, monitor=self) if not raw else drifts
         return self._single_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw, matcher=matcher)
 
     def _single_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None):
@@ -97,7 +100,7 @@ class DriftMonitorBase:
         drift = self._calc_drift(s1, s2, ci=ci, matcher=matcher)
         eff_seq = lambda s: s if s >= 0 else len(snapshots) + s
         drift['info']['seq'] = [eff_seq(seq[0]), eff_seq(seq[1])]
-        return DriftStats(drift) if not raw else drift
+        return DriftStats(drift, monitor=self) if not raw else drift
 
     @property
     def dataset(self):
@@ -170,9 +173,11 @@ class DriftMonitorBase:
         return snapshot
 
     def _log_snapshot(self, snapshot):
+        self.tracking.use()  # ensure we have an active run
         self.tracking.log_event('snapshot', self._resource, snapshot, kind=snapshot['info']['kind'])
 
     def _log_drift(self, drift, **extra):
+        self.tracking.use()  # ensure we have an active run
         self.tracking.log_event('drift', self._resource, drift, **extra)
 
     def _calc_drift(self, s1, s2, ci=.95, matcher=None):
@@ -187,7 +192,8 @@ class DriftMonitorBase:
         # specific or auto column name matcher
         # -- auto matches columns by position
         # -- in particular Y_y => Y_0, Y_1, ...
-        auto_matcher = { k:v for k, v in zip(s1['stats'].keys(), s2['stats'].keys()) }
+        # -- only applies to columns in s1['stats'] that are not in s2['stats']
+        auto_matcher = {k: v for k, v in zip(s1['stats'].keys(), s2['stats'].keys())}
         matcher = matcher or auto_matcher
         _c = lambda d, s, c: matcher.get(d, matcher).get(c, c) if c not in s['stats'] else c
         info.setdefault('columns_map', {}).update(matcher)
@@ -296,7 +302,7 @@ class DriftMonitorBase:
             bool: True if drift was detected and logged, False otherwise
         """
         drift = self.drift(seq=seq, baseline=baseline)
-        event =  drift.drifted(column=column, statistic=statistic, summary=True)
+        event = drift.drifted(column=column, statistic=statistic, summary=True)
         if any(drifted for part, drifted in event.items()):
             extra = {
                 'seq': drift.seq(),
@@ -327,7 +333,7 @@ class DriftMonitorBase:
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
             drifted_seqs = data.explode('value')['value'].apply(lambda v: v['seq']).to_list()
             drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
-            return DriftStats(drifts)
+            return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')
 
     def captured(self, column=None, statistic=None, run=None, since=None, stats=True, raw=False):
@@ -341,7 +347,7 @@ class DriftMonitorBase:
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
             drifted_seqs = data['seq'].to_list()
             drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
-            return DriftStats(drifts)
+            return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')
 
     def combine_snapshots(self, snapshots):
@@ -362,23 +368,23 @@ class DriftMonitorBase:
 
     def _assert_dataframe(self, dataset, rename=None, **query):
         def _ensure_dataframe(df):
-            if isinstance(df, (list, np.ndarray)):
+            if isinstance(df, (list, np.ndarray, pd.Series)):
                 df = pd.DataFrame(df)
                 df.columns = [str(col) for col in
                               df.columns]  # ensure column names are strings (needed for json storage)
             assert isinstance(df, pd.DataFrame), f'dataset {dataset!r} cannot be processed as a DataFrame'
             return df
 
-        if isinstance(dataset, pd.DataFrame) or isinstance(dataset, (list, np.ndarray)):
+        if isinstance(dataset, (list, np.ndarray, pd.DataFrame, pd.Series)):
             df = _ensure_dataframe(dataset)
             query = query.get('query')
             if query:
                 df = df.query(query) if isinstance(query, str) else df[query]
-        else:
+        elif isinstance(dataset, str):
             df = _ensure_dataframe(self.store.get(dataset, **query))
+        else:
+            df = _ensure_dataframe(dataset)
         assert len(df), f'dataset {dataset}, using query {query}, is empty, cannot take a snapshot'
         if rename:
             df.columns = [rename.get(col, col) for col in df.columns]
         return df
-
-

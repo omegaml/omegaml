@@ -1,4 +1,4 @@
-from unittest import TestCase, mock
+from unittest import TestCase, mock, skip
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats
+from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -497,3 +498,54 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.capture()
         compared = mon.compare()
         compared.plot()
+
+    @skip('autotracking for virtualobj models is not yet implemented, pending virtualobj.model support')
+    def test_autotracking_virtualobj(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(*args, **kwargs):
+            return [42]
+
+        om.models.put(mymodel, 'mymodel')
+        df = pd.DataFrame({
+            'x': range(1, 10)
+        })
+        df['y'] = df['x'] * 5 + 3
+        om.datasets.put(df, 'sample', append=False)
+        with om.runtime.experiment('foo', autotrack=True) as exp:
+            exp.clear(force=True)
+            exp.track('mymodel', monitor=True)
+            mon = exp.as_monitor('mymodel')
+            om.runtime.model('mymodel').fit('sample[x]', 'sample[y]').get()
+            om.runtime.model('mymodel').score('sample[x]', 'sample[y]').get()
+            mon.snapshot(run=-1)
+            om.runtime.model('mymodel').predict('sample[x]').get()
+            exp.log_data('XX', df)
+            mon.snapshot(run=-1)
+            mon.drift(seq='baseline').describe()
+
+    def test_explicit_xy_model_tracking(self):
+        import omegaml as om
+        # create a model
+        reg = LinearRegression()
+        om.models.put(reg, 'mymodel')
+        # create a dataset
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df['y'] = df['x'] * 2 + 3
+        om.datasets.put(df, 'sample')
+        # autotrack model
+        exp = om.runtime.experiment('myexp', autotrack=True, recreate=True)
+        exp.track('mymodel', monitor=True)
+        exp.clear(force=True)
+        mon = exp.as_monitor('mymodel')
+        # explicitely track a dataset
+        snapshot = mon.snapshot(X=df['x'], Y=df['y'])
+        self.assertIn('X', snapshot)
+        self.assertIn('Y', snapshot)
+        self.assertIsNotNone(snapshot['X'])
+        self.assertIsNotNone(snapshot['Y'])
+
+

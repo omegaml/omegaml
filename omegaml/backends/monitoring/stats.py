@@ -3,6 +3,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import ks_2samp, chisquare, wasserstein_distance
 
+from omegaml.util import ensure_list
+
 
 class DriftStatsCalc:
     def ks_2samp(self, d1, d2, ci=.95):
@@ -92,6 +94,9 @@ class DriftStats:
         self.monitor = monitor
         self._df = None
 
+    def __repr__(self):
+        return f'DriftStats({self.monitor},drifts={len(self.drifts)})'
+
     @property
     def df(self):
         if self._df is None:
@@ -145,15 +150,16 @@ class DriftStats:
             result = df[flt] if details else df[flt]['drift'].sum() > 0
         return result
 
-    def __getitem__(self, column):
+    def __getitem__(self, spec):
         df = self.df
-        column, statistic, *seq = column if isinstance(column, (list, tuple)) else (column, None)
+        column, statistic, *seq = spec if isinstance(spec, (list, tuple)) else (spec, None)
+        column = None if column == '*' else column
         seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (
             None, None)
-        flt = df['column'] == column if column else (df.index == df.index)
-        flt &= df['statistic'] == statistic if statistic else True
-        flt &= df['seq_from'] == seq_from if seq_from is not None else True
-        flt &= df['seq_to'] == seq_to if seq_to is not None else True
+        flt = df['column'].isin(ensure_list(column)) if column else (df.index == df.index)
+        flt &= df['statistic'].isin(ensure_list(statistic)) if statistic else True
+        flt &= df['seq_from'].isin(ensure_list(seq_from)) if seq_from is not None else True
+        flt &= df['seq_to'].isin(ensure_list(seq_to)) if seq_to is not None else True
         return df[flt]
 
     def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, **kwargs):

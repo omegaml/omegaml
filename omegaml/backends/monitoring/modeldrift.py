@@ -14,6 +14,21 @@ class ModelDriftMonitor(DriftMonitorBase):
         super().__init__(resource=resource, store=store, tracking=tracking, query=query, kind=kind, **kwargs)
 
     def snapshot(self, model=None, run=None, X=None, Y=None, rename=None, event=None):
+        """
+        Take a snapshot of a model and log its metrics, X features and Y targets distribution for later
+        drift detection
+
+        Args:
+            model (str): the model to snapshot
+            X (str|pd.DataFrame|np.ndarray): the input data to snapshot
+            Y (str|pd.DataFrame|np.ndarray): the target data to snapshot
+            rename (dict): a dict that maps columns new -> old, e.g. {'Y_y': 'Y_0'}
+            event (str): the event to snapshot, defaults to 'fit' and 'predict'
+            run (int): the experiment's run to snapshot, defaults to all runs
+
+        Returns:
+            dict: the snapshot
+        """
         # what do we snapshot?
         # - validation metric (accuracy, f1, f2, confusion matrix etc)
         # - data input distribution (i.e. training/validation X)
@@ -120,7 +135,7 @@ class ModelDriftMonitor(DriftMonitorBase):
             elif s_drift is not None:
                 drifts.append(s_drift)
         drifts = drifts[0] if len(drifts) == 1 else drifts
-        return drifts if raw else DriftStats(drifts)
+        return drifts if raw else DriftStats(drifts, monitor=self)
 
     def clear(self, force=False):
         super().clear(force=force)
