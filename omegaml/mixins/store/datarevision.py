@@ -168,7 +168,7 @@ class DataRevisionMixin:
             requested = revision
             revision = changes[0]['seq']  # earliest revision by default
             for cs in changes:
-                if cs['dt'] > requested:
+                if cs['dt'] >= requested:
                     break
                 revision = cs['seq']
             else:
@@ -213,12 +213,14 @@ class DataRevisionMixin:
             revcols = []
             for col in [c for c in base.columns if not c.endswith('_r_')]:
                 revcol = col + '_r_'
+                if revcol not in base.columns:
+                    continue
                 base[col] = base[revcol].fillna(base[col]).astype(base_types[col])
                 revcols.append(revcol)
             base.index = base.index.astype(idx_type)
             if revcols:
                 base.drop(columns=revcols, inplace=True)
-            # apply deletions
+            # apply row deletions
             if not trace_revisions:
                 flt_delete = base['_delete_'] == True  # noqa
                 base = base[~flt_delete]
