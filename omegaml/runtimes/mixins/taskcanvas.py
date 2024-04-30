@@ -21,24 +21,25 @@ class CanvasTask:
     def add(self, task):
         self.sigs.append(task)
 
-    def delay(self, *args, **kwargs):
-        return self.apply_async(args=args, kwargs=kwargs)
+    def delay(self, *args, chained=False, **kwargs):
+        return self.apply_async(args=args, kwargs=kwargs, chained=chained)
 
-    def apply_async(self, args=None, kwargs=None, **celery_kwargs):
+    def apply_async(self, args=None, kwargs=None, chained=False, **celery_kwargs):
         task = self.sigs[-1]
         if self.canvasfn is chord:
+            # immutable=False means results are passed on from task to task
             sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=False)
         else:
-            # immutable means results are not passed on from task to task
-            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=True)
+            # immutable=True means results are not passed on from task to task
+            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=not chained)
         self.sigs[-1] = sig
         return sig
 
-    def run(self):
+    def run(self, chained=False):
         if self.canvasfn is chord:
             result = self.canvasfn(self.sigs[:-1])(self.sigs[-1])
         else:
-            result = self.canvasfn(*self.sigs).apply_async()
+            result = self.canvasfn(*self.sigs).apply_async(chained=chained)
         # add easy result collection
         self._easy_collect(result)
         return result
