@@ -56,6 +56,26 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(mdl, LinearRegression)
         self.assertEqual(mdl.coef_, 1)
 
+    def test_model_export_singleversion_subpaths(self):
+        om = self.om
+        om_restore = self.om_restore
+        model = LinearRegression()
+        model.coef_ = 1
+        om.models.put(model, 'foo/bar/mymodel')
+        om.models.to_archive('foo/bar/mymodel', '/tmp/test')
+        om.models.put(model, 'foo/bar/mymodel_helper')
+        om.models.to_archive('foo/bar/mymodel_helper', '/tmp/test')
+        om.models.drop('foo/bar/mymodel', force=True)
+        om.models.drop('foo/bar/mymodel/helper', force=True)
+        om.models.from_archive('/tmp/test', 'foo/bar/mymodel')
+        om.models.from_archive('/tmp/test', 'foo/bar/mymodel_helper')
+        mdl = om.models.get('foo/bar/mymodel')
+        self.assertIsInstance(mdl, LinearRegression)
+        om_restore.models.from_archive('/tmp/test', 'foo/bar/mymodel')
+        mdl = om_restore.models.get('foo/bar/mymodel')
+        self.assertIsInstance(mdl, LinearRegression)
+        self.assertEqual(mdl.coef_, 1)
+
     def test_model_export_multiversion(self):
         om = self.om
         om_restore = self.om_restore
