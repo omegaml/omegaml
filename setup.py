@@ -9,7 +9,7 @@ version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).re
 # extras
 tables = ['tables>=3.7']
 graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
-dashserve_deps = ['dash>=2.9']
+dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
@@ -27,6 +27,12 @@ backtracking_deps = [
     'asttokens>=2.4',  # nobody knows
     'anyio>=3.7',  # nobody knows
     'tomli>=2.0.0',  # nobody knows
+]
+# required based on github dependency advisories
+sec_deps = [
+    'dnspython>=2.6.1', # https://github.com/advisories/GHSA-3rq5-2g8h-59hc
+    'idna>=3.7', # https://github.com/advisories/GHSA-jjg7-2v4v-x38h
+    'pymongo>=4.6.3', # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
 ]
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
 client_deps = (tables + dashserve_deps)
@@ -95,7 +101,7 @@ setup(
         'sqlalchemy<2',  # currently no support for sqlalchemy 2
         'minibatch[all]',  # required for streaming
         'validators', # required for sec validations
-    ],
+    ] + sec_deps,
     extras_require={
         'all': test_deps,
         'client': client_deps,
