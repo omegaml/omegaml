@@ -1,5 +1,3 @@
-import warnings
-
 import atexit
 import getpass
 
@@ -12,7 +10,7 @@ from contextlib import contextmanager
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-from omegaml.util import ensure_index, load_class, mongo_compatible
+from omegaml.util import ensure_index, load_class
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
 python_logger = logging.getLogger(__name__)
@@ -41,11 +39,6 @@ class OmegaLoggingHandler(logging.Handler):
 
     See Also:
         OmegaSimpleLogger for notes about the log dataset format
-
-    Notes:
-        OmegaLoggingHandler does not support pymongo DEBUG messages as of pymongo 4.7,
-        due to pymongo supporting python native logging since 4.7, and issuing
-        logger.debug messages on its own, resulting in recursion calls to .emit()
     """
 
     def __init__(self, store, dataset, collection, level=None, userid=None):
@@ -64,13 +57,6 @@ class OmegaLoggingHandler(logging.Handler):
                                     record.msg, text=self.format(record),
                                     hostname=getattr(record, 'hostname', LOGGER_HOSTNAME),
                                     userid=self.userid)
-        # FIXME pymongo 4.7 will issue logger.debug on its own, so we need to avoid recursion
-        # -- we disable pymongo debug logging here to avoid recursion
-        # -- this is due to pymongo since 4.7 supporing python native logging
-        # -- https://pymongo.readthedocs.io/en/4.7.0/examples/logging.html
-        # -- e.g. Topology._select_servers_loop() will issue logger.debug
-        # -- this is a workaround until we can disable pymongo logging in a better way
-        logging.getLogger('pymongo').setLevel(logging.ERROR)
         self.collection.insert_one(log_entry)
 
     def tail(self, wait=False):
@@ -82,7 +68,7 @@ class OmegaLoggingHandler(logging.Handler):
         """
         Args:
             dataset (str): the name of the dataset
-            level (int|str): set any logging.INFO, logging.ERROR, logging.DEBUG, defaults to INFO
+            level (int): set any logging.INFO, logging.ERROR, logging.DEBUG, defaults to INFO
             size (int): maxium size in bytes (defaults to 1MB)
             target (Omega): omega instance to create the dataset in, defaults to the default om
             size (int): the maximum size of the log in bytes (capped), defaults to 1MB, set to -1
@@ -420,14 +406,14 @@ def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', h
     text = text if text is not None else fmt.format(**locals())
     hostname = hostname or LOGGER_HOSTNAME
     return {
-        'level': str(level),
+        'level': level,
         'levelno': levelno,
-        'logger': str(name),
-        'msg': str(message),
-        'text': str(text),
-        'hostname': str(hostname),
+        'logger': name,
+        'msg': message,
+        'text': text,
+        'hostname': hostname,
         'created': created,
-        'userid': str(userid) or getpass.getuser(),
+        'userid': userid or getpass.getuser(),
     }
 
 

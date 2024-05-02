@@ -64,9 +64,9 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertTrue(len(df) == 0)
 
     def test_loghandler(self):
-        pylogger = logging.getLogger('root')
+        pylogger = logging.getLogger()
         omlogger = self.om.logger
-        handler = OmegaLoggingHandler.setup(logger=pylogger, level='DEBUG', exit_hook=True)
+        handler = OmegaLoggingHandler.setup(logger=pylogger, level='DEBUG')
         pylogger.setLevel('DEBUG')
         pylogger.info('info message')
         pylogger.error('error message')
@@ -112,7 +112,6 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         # -- get a python logger and add message
         # -- expect message is not in om logger dataset
         logger = logging.getLogger('mytestlogger')
-        logger.setLevel('INFO')
         logger.info('foo')
         df = om.logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 0)
@@ -121,5 +120,5 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         with om.logger.capture(logger):
             logger.info('foo')
         df = om.logger.dataset.get(level='INFO')
-        self.assertEqual(len(df), 1)
+        self.assertTrue(len(df) == 1)
 
