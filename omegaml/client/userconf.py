@@ -17,7 +17,10 @@ def ensure_api_url(api_url, defaults, key=default_key, fallback=fallback_url):
     api_url_default = os.environ.get(key) or os.environ.get(default_key) or fallback
     api_url = api_url or getattr(defaults, key, getattr(defaults, default_key, api_url_default))
     allow_test_local = _base_config.is_test_run and not api_url.startswith('http')
-    valid_url = sec_validate_url(api_url) if not allow_test_local else api_url == 'local'
+    # SEC: ensure we only allow local urls in test mode, all else must be valid urls
+    if allow_test_local and api_url in ('local', ''):
+        return api_url
+    valid_url = sec_validate_url(api_url)
     assert valid_url, f"expected a valid url, got {api_url}"
     return api_url
 

@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-import warnings
-
 import json
 import pymongo
 import sys
+import warnings
 from hashlib import md5
 
-from omegaml.util import make_tuple
+from omegaml.util import make_tuple, is_interactive, signature
 
 
 class GeoJSON(dict):
@@ -413,13 +412,15 @@ def ensure_index_limit(idx, **kwargs):
     return idx, kwargs
 
 
-def sanitize_filter(filter, no_ops=False):
+def sanitize_filter(filter, no_ops=False, trusted=False):
     """ sanitize mongodb filter statements """
+    no_ops = no_ops if no_ops is not None else is_interactive()
     injection_ops = ['$where', '$mapReduce']
     user_ops = [k for k in filter if k.strip().startswith('$') and k not in injection_ops]
-    ops_to_remove = user_ops + injection_ops if no_ops else injection_ops
+    ops_to_remove = (user_ops + injection_ops) if no_ops else injection_ops
     # sanitize user and default operators
-    if user_ops and not no_ops:
+    query_trusted = not no_ops and (not trusted or trusted != signature(filter))
+    if user_ops and not query_trusted:
         warnings.warn(f'Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized.')
     for op in ops_to_remove:
         value = filter.pop(op, None)
@@ -430,11 +431,13 @@ def sanitize_filter(filter, no_ops=False):
     # sanitize nested operators
     for k, v in filter.items():
         if isinstance(v, dict):
-            sanitize_filter(v, no_ops=no_ops)
+            subquery_trusted = signature(v) if query_trusted else False
+            sanitize_filter(v, no_ops=no_ops, trusted=subquery_trusted)
         elif isinstance(v, (list, tuple)):
             for el in v:
                 if isinstance(el, dict):
-                    sanitize_filter(el, no_ops=no_ops)
+                    subquery_trusted = signature(v) if query_trusted else False
+                    sanitize_filter(el, no_ops=no_ops, trusted=subquery_trusted)
     return filter
 
 

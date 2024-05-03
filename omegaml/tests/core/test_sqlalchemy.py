@@ -1,3 +1,7 @@
+from hashlib import sha256
+
+import warnings
+
 from getpass import getuser
 from unittest import TestCase
 
@@ -8,6 +12,8 @@ from omegaml.backends.sqlalchemy import SQLAlchemyBackend
 from omegaml.tests.util import OmegaTestMixin
 from pandas.testing import assert_frame_equal
 from sqlalchemy.engine import Connection, create_engine, ResultProxy
+
+from omegaml.util import signature
 
 
 class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
@@ -355,3 +361,36 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(dfx), 0)
         self.assertIn("select * from foobar where x=:x", str(cm.output))
         self.assertIn("{'x': '-1 or 0=0 --'}", str(cm.output))
+
+    def test_trusted_sqlvars(self):
+        om = self.om
+        cnx_str = 'sqlite:///test.db'
+        engine = create_engine(cnx_str)
+        cnx = engine.connect()
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        om.datasets.put(cnx_str, 'foobar',
+                        sql='select * from foobar where x={{x}}',
+                        kind=SQLAlchemyBackend.KIND)
+        self.assertIn('foobar', om.datasets.list())
+        meta = om.datasets.metadata('foobar')
+        self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
+        sqlvars = {'x': '1 or 0=0'}
+        # we don't trust the sqlvars -- this will issue a warning
+        for trusted in [False, True, None, sha256(str(sqlvars).encode('utf-8')).hexdigest()]:
+            with warnings.catch_warnings(record=True) as wrn:
+                dfx = om.datasets.get('foobar', sqlvars=sqlvars, trusted=trusted)
+                self.assertEqual(len(dfx), 10)
+                warnlog = str(list(w.message for w in wrn))
+                self.assertIn('Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.', warnlog)
+        # we trust the sqlvars -- no warning will be issued
+        with warnings.catch_warnings(record=True) as wrn:
+            dfx = om.datasets.get('foobar', sqlvars=sqlvars, trusted=signature(sqlvars))
+            self.assertEqual(len(dfx), 10)
+            warnlog = str(list(w.message for w in wrn))
+            self.assertNotIn('Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.', warnlog)
+
+
+

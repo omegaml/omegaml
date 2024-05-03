@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from hashlib import sha256
+
 import warnings
 
 import pandas as pd
@@ -7,6 +9,8 @@ import random
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
 from unittest.case import TestCase
+
+from omegaml.util import signature
 
 
 class FilteredCollectionTests(TestCase):
@@ -107,4 +111,25 @@ class FilteredCollectionTests(TestCase):
         result = fcoll.count_documents()
         # if $where is executed we get rows back, else None (x == -1 is never true)
         self.assertEqual(result, 0)
+
+    def test_trusted_filter(self):
+        filter = {
+            "x": {'$in': [1, 2]}
+        }
+        for trusted in [False, True, None, sha256(str(filter).encode('utf-8')).hexdigest()]:
+            with warnings.catch_warnings(record=True) as wrn:
+                warnings.simplefilter('always')
+                fcoll = FilteredCollection(self.coll, query=filter, trusted=trusted)
+                result = fcoll.count_documents()
+                warnlog = str(list(w.message for w in wrn))
+                self.assertIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog)
+                self.assertEqual(result, 4)
+        with warnings.catch_warnings(record=True) as wrn:
+            warnings.simplefilter('always')
+            fcoll = FilteredCollection(self.coll, query=filter, trusted=signature(filter))
+            result = fcoll.count_documents()
+            warnlog = str(list(w.message for w in wrn))
+            self.assertNotIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog)
+            self.assertEqual(result, 4)
+
 

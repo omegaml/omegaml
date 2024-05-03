@@ -219,7 +219,11 @@ class SignatureMixin:
     def validate(self, name, X=None, Y=None, result=None, error=None, **kwargs):
         meta = self.metadata(name, **kwargs)
         signature = meta.attributes.get('signature')
+
         def _do_validate(k, v):
+            vv = v.get('data') if isinstance(v, dict) else None
+            v = vv if isinstance(vv, Exception) else v
+            status_code = None
             if isinstance(v, Exception) or k == 'error':
                 status_code = v.args[-1] if len(v.args) > 0 else 400
                 schema = (signature.get('errors') or {}).get(str(status_code), {}).get('schema')

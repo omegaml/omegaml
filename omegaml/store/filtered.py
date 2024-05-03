@@ -2,13 +2,12 @@ from __future__ import absolute_import
 
 import logging
 
-import warnings
-
 from omegaml.store import qops
 from omegaml.store.query import Filter
-from omegaml.util import PickableCollection, ensure_base_collection
+from omegaml.util import PickableCollection, ensure_base_collection, signature
 
 logger = logging.getLogger(__name__)
+
 
 class FilteredCollection:
     """
@@ -54,7 +53,7 @@ class FilteredCollection:
     """
 
     def __init__(self, collection, query=None, projection=None,
-                 **kwargs):
+                 trusted=False, **kwargs):
         if isinstance(collection, FilteredCollection):
             # avoid cascading of FilteredCollections
             query = query or collection._fixed_query
@@ -63,6 +62,7 @@ class FilteredCollection:
         else:
             query = query or {}
         self._fixed_query = query
+        self._trusted = trusted
         self.projection = projection
         self.collection = PickableCollection(collection)
 
@@ -80,7 +80,7 @@ class FilteredCollection:
 
     @property
     def query(self):
-        return Filter(self.collection, **self._fixed_query).query
+        return Filter(self.collection, _trusted=self._trusted, **self._fixed_query).query
 
     def aggregate(self, pipeline, filter=None, **kwargs):
         query = dict(self.query)
@@ -89,9 +89,9 @@ class FilteredCollection:
         kwargs.update(allowDiskUse=True)
         return self.collection.aggregate(pipeline, **kwargs)
 
-    def find(self, filter=None, **kwargs):
+    def find(self, filter=None, trusted=False, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
+        query.update(self._sanitize_filter(filter or {}, trusted=trusted))
         return self.collection.find(filter=query, **kwargs)
 
     def find_one(self, filter=None, *args, **kwargs):
@@ -122,9 +122,9 @@ class FilteredCollection:
     def estimated_document_count(self, **kwargs):
         return self.collection.estimated_document_count(**kwargs)
 
-    def count_documents(self, filter=None, **kwargs):
+    def count_documents(self, filter=None, trusted=False, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
+        query.update(self._sanitize_filter(filter or {}, trusted=trusted))
         return self.collection.count_documents(query, **kwargs)
 
     def distinct(self, key, filter=None, **kwargs):
@@ -162,9 +162,10 @@ class FilteredCollection:
         raise NotImplementedError(
             "deprecated in Collection and not implemented in FilteredCollection")
 
-    def _sanitize_filter(self, filter):
+    def _sanitize_filter(self, filter, trusted=False):
         from omegaml.store.queryops import sanitize_filter
-        sanitize_filter(filter)
+        trusted = trusted or self._trusted
+        should_sanitize = not trusted or trusted != signature(filter)
+        sanitize_filter(filter) if should_sanitize else filter
         logger.debug(f'executing mongodb query filter {filter}')
         return filter
-

@@ -244,8 +244,9 @@ class OmegaRuntime(object):
                                **self._require_kwargs['task'])
                 ex_routing = dict(**self._task_default_kwargs['routing'],
                                   **self._require_kwargs['routing'])
-                task = {k: v for k, v in task.items() if k not in ex_task}
-                routing = {k: v for k, v in routing.items() if k not in ex_routing}
+                exists_or_none = lambda k, d: k not in d or d.get(k, False) is None
+                task = {k: v for k, v in task.items() if exists_or_none(k, ex_task)}
+                routing = {k: v for k, v in routing.items() if exists_or_none(k, ex_routing)}
             if always:
                 self._task_default_kwargs['routing'].update(routing)
                 self._task_default_kwargs['task'].update(task)
