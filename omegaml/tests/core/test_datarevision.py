@@ -276,6 +276,31 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('_om#revision', dfx.columns)
         self.assertIn('_delete_', dfx.columns)
 
+    def test_revisions_trace_column_changes(self):
+        # test for fix on issue #400
+        om = self.om
+        # storing dataset by numeric index, 0-9
+        df_a = pd.DataFrame({
+            'x': range(0, 10),
+        })
+        df_b = pd.DataFrame({
+            'x': range(0, 10),
+            'y': range(0, 10),
+        })
+        om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
+        om.datasets.put(df_b, 'revtest', tag='rev_b')
+        # check we can get back revisions
+        dfx = om.datasets.get('revtest', revision='rev_a')
+        assert_frame_equal(dfx, df_a)
+        dfx = om.datasets.get('revtest', revision='rev_b')
+        assert_frame_equal(dfx, df_b)
+        # check we can trace revisions
+        dfx = om.datasets.get('revtest', revision='rev_b', trace_revisions=True)
+        assert_frame_equal(dfx[['x']], df_a)
+        assert_frame_equal(dfx[['x', 'y']], df_b)
+        self.assertIn('_om#revision', dfx.columns)
+        self.assertIn('_delete_', dfx.columns)
+
     def test_revision_revision_existing(self):
         """ check storing revisions works as expected"""
         om = self.om
@@ -288,4 +313,3 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
             om.datasets.put(df_a, 'revtest', revisions=True)
         self.assertEquals(str(cm.exception),
                           "adding revisions to existing dataset revtest is not supported")
-
