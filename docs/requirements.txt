@@ -1,4 +1,6 @@
-Sphinx==1.4.8
+nbsphinx==0.8.8
+pandoc==1.0.2
+pandocfilters==1.4.2
+Sphinx==4.4.0
 sphinx-autobuild==0.6.0
-sphinx-rtd-theme==0.2.4
-sphinx-autobuild==0.6.0
+sphinx-rtd-theme==1.0.0
