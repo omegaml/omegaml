@@ -1,0 +1,5 @@
+.tox
+.venv
+.git
+.local
+

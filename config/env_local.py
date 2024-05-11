@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from urllib.parse import urlparse
 
 from config.conf_databaseurl import Config_DatabaseUrl
@@ -39,7 +40,8 @@ class EnvSettings_Local(Config_EnvOverrides,
                         Config_DatabaseUrl,
                         # Config_DjangoDebugPermissions,
                         EnvSettingsGlobal):
-    _prefix_admin = ('jazzmin',)
+    _prefix_admin = ('jazzmin',
+                     'reversion')
     _prefix_apps = ('omegaweb',
                     'landingpage',
                     'paasdeploy',
@@ -213,6 +215,10 @@ class EnvSettings_Local(Config_EnvOverrides,
     FERNET_KEYS = [k for k in _fernet_keys if k]
 
     # secretsvault
+    if sys.version_info.minor < 10:  # 3.9
+        constance_app = 'database.Constance'
+    else:  # >= 3.11
+        constance_app = 'constance.Constance'
     SECRETS_AUTOSEAL = {
         'tastypie.ApiKey': ['key'],
         'landingpage.ServiceDeployment': ['settings', 'text'],
@@ -220,7 +226,7 @@ class EnvSettings_Local(Config_EnvOverrides,
         'paasdeploy.ServiceDeployTask': ['params'],
         'paasdeploy.ServiceDeployConfiguration': ['deploy_keys', 'env_vars'],
         'paasdeploy.ServiceDeployEnvironment': ['config'],
-        'database.Constance': ['value'],
+        constance_app: ['value'],
         'socialaccount.SocialToken': ['token', 'token_secret'],
         'socialaccount.SocialApp': ['secret', 'key'],
     }
@@ -237,3 +243,10 @@ class EnvSettings_Local(Config_EnvOverrides,
     REQUEST_ID_HEADER = 'X-REQUEST-ID'
     _request_mw = ['omegaweb.middleware.RequestTrackingMiddleware']
     StackableSettings.patch_list('MIDDLEWARE', _request_mw, prepend=True)
+    # Jazzmin
+    JAZZMIN_SETTINGS = {
+        "copyright": "(c) one2seven GmbH",
+        "hide_apps": ['cities_light', 'post_office', 'organizations', 'sites'],
+        "order_with_respect_to": ['auth', 'landingpage.PermissionedResource'],
+        "use_google_fonts_cdn": False,
+    }

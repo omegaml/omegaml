@@ -96,3 +96,20 @@ dockercompose:
 	curl -L https://github.com/docker/compose/releases/download/v2.26.0/docker-compose-linux-x86_64 > docker-compose
 	chmod +x docker-compose
 	mv docker-compose ${HOME}/.local/bin
+
+freeze:
+	echo "Writing pip requirements to requirements.txt"
+	pip-compile --output-file requirements.txt
+
+pipsync: freeze
+	pip-sync
+
+scan: freeze pipsync
+	mkdir -p scripts/secdev
+	-snyk test --policy-path=./.snyk > scripts/secdev/.snyk-test.report
+	-snyk code test --policy-path=./.snyk > scripts/secdev/.snyk-code-test.report
+	cp requirements.txt pip-requirements.txt
+	mv requirements.txt scripts/secdev/scanned-pipreqs.txt
+	bash -c "cat $(find scripts/secdev/ -name *report)"
+
+

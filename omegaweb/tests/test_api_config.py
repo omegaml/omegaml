@@ -1,9 +1,16 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
+from tastypie.authentication import ApiKeyAuthentication
+from tastypie.serializers import Serializer
 from tastypie.test import ResourceTestCaseMixin
+from tastypie.throttle import BaseThrottle
+from unittest.mock import patch
 
-from landingpage.models import ServicePlan
+from landingpage.authz import RolePermissionsAuthorization
+from landingpage.models import PermissionedResource
+from landingpage.permutil import PermissionUtil
 from omegaops import add_service_deployment, get_client_config
+from omegaweb.resources.clientconfig import ClientConfigResource
 
 
 class ClientConfigResourceTests(ResourceTestCaseMixin, TestCase):
@@ -75,8 +82,9 @@ class ClientConfigResourceTests(ResourceTestCaseMixin, TestCase):
             url += '?{query}'.format(**locals())
         return url
 
-    def credentials(self):
-        return self.create_apikey(self.user.username, self.user.api_key.key)
+    def credentials(self, user=None):
+        user = user or self.user
+        return self.create_apikey(user.username, user.api_key.key)
 
     def admin_credentials(self):
         return self.create_apikey(self.admin_user.username, self.admin_user.api_key.key)
@@ -110,3 +118,50 @@ class ClientConfigResourceTests(ResourceTestCaseMixin, TestCase):
         # get expected config from omegaops and compare
         actual_config = get_client_config(self.user)
         self.assertDictEqual(service_config, actual_config)
+
+    def test_get_config_by_permission(self):
+        """
+        test client config is only accessible when permissioned
+        """
+        # set up permissions
+        res = PermissionedResource.objects.create(uri='/api/v1/config/', actions='list', methods='get')
+        Group.objects.create(name='service_user')
+        res.allow('service_user')
+        user = self.user  # User.objects.create_user('john', 'john@example.com')
+        with patch.object(ClientConfigResource, '_meta') as config_api_meta:
+            # mock the api meta
+            # -- we do it like this because we don't have a way to set the meta on the actual resource
+            config_api_meta.authentication = ApiKeyAuthentication()
+            config_api_meta.authorization = RolePermissionsAuthorization()
+            config_api_meta.list_allowed_methods = ['get']
+            config_api_meta.throttle = BaseThrottle()
+            config_api_meta.serializer = Serializer()
+            # get config from api
+            # -- expect failure (user is not member of service_user)
+            auth = self.credentials(user=user)
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            # get config from api
+            # -- expect works ok (user is member of service_user)
+            PermissionUtil.assign_role(self.user, 'service_user')
+            auth = self.credentials(user=user)
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertHttpOK(resp)
+            # remove permission
+            # -- expect failure (user is not member of service_user)
+            res.deny('service_user')
+            auth = self.credentials(user=user)
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+
+    def test_get_invalid_config(self):
+        """
+        test useful response in case of invalid request
+        """
+        # get config from api
+        auth = self.credentials()
+        resp = self.api_client.get(self.url(query='qualifier=None'), authentication=auth)
+        self.assertHttpOK(resp)
+        resp = self.api_client.get(self.url(), authentication=auth,
+                                   headers={'Qualifier': str(None)})
+        self.assertHttpBadRequest(resp)

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
+from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.fields import DictField
+from tastypie.http import HttpUnauthorized, HttpBadRequest, HttpNotFound
 from tastypie.resources import Resource
 
 from omegaops import get_client_config
@@ -48,7 +50,17 @@ class ClientConfigResource(Resource):
             if 'user' in bundle.request.GET:
                 username = bundle.request.GET.get('user')
                 requested_user = User.objects.get(username=username)
-        config = get_client_config(requested_user, qualifier=qualifier, view=view)
+        try:
+            config = get_client_config(requested_user, qualifier=qualifier, view=view)
+        except AssertionError as e:
+            raise ImmediateHttpResponse(response=HttpNotFound(str(e)))
+        except Exception as e:
+            raise ImmediateHttpResponse(response=HttpBadRequest(str(e)))
         bundle.data = config or {}
         bundle.pk = qualifier
-        return [bundle]
+        objects = [bundle]
+        try:
+            objects = self._meta.authorization.read_list(objects, bundle)
+        except Unauthorized:
+            raise ImmediateHttpResponse(response=HttpUnauthorized())
+        return objects

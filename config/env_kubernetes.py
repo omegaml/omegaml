@@ -7,7 +7,7 @@ from .env_local import EnvSettings_Local
 
 class EnvSettings_kubernetes(Config_ApiKeys,
                              Config_Anymail,
-                             #Config_Airbrake,
+                             # Config_Airbrake,
                              EnvSettings_Local):
     _allowed_hosts = 'omegaml.me,localhost,omegaml'
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', _allowed_hosts).split(',')
@@ -63,7 +63,3 @@ class EnvSettings_kubernetes(Config_ApiKeys,
     # PERFUNTED
     # -- keep django sql connections open (seconds)
     CONN_MAX_AGE = 3600
-
-
-
-

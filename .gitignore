@@ -237,3 +237,4 @@ fabric.properties
 /config.yml
 /.jupyter
 /Miniforge3-Linux-x86_64.sh
+.dccache

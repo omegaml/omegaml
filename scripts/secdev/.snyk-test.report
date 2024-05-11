@@ -1,0 +1,20 @@
+
+Testing /home/patrick/projects/omegaml...
+
+Organization:      omegaml-v5v
+Package manager:   pip
+Target file:       requirements.txt
+Project name:      omegaml
+Open source:       no
+Project path:      /home/patrick/projects/omegaml
+Licenses:          enabled
+
+✔ Tested 122 dependencies for known issues, no vulnerable paths found.
+
+Tip: Detected multiple supported manifests (5), use --all-projects to scan all of them at once.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+

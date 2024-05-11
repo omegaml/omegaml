@@ -1,7 +1,6 @@
-import sys
-
 import multiprocessing
 import os
+
 from stackable.stackable import StackableSettings
 
 concurrency = lambda: multiprocessing.cpu_count() * 2 + 1
@@ -23,11 +22,12 @@ class Config_Gunicorn(object):
     max_requests_jitter = 100
     graceful_timeout = 30
 
+
 config = os.environ.get('GUNICORN_CONFIG', 'Config_Gunicorn')
 StackableSettings.setup(globals(), locals()[config], use_lowercase=True)
 
 # debug gunicorn worker timeouts
 # https://stackoverflow.com/a/65438492/890242
 import faulthandler
-faulthandler.enable()
 
+faulthandler.enable()

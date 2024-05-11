@@ -21,4 +21,4 @@ class Command(BaseCommand):
         dbpassword = User.objects.make_random_password(length=36)
         omegaops.authorize_userdb(giver, grantee, dbuser, dbpassword)
         omegaops.authorize_user_vhost(giver, grantee, dbuser, dbpassword)
-        print("User {grantee_name} granted access to qualifer={giver_name}".format(**locals()))
+        print("User {grantee_name} granted access to qualifier={giver_name}".format(**locals()))

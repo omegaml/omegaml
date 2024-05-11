@@ -30,6 +30,8 @@ headerfqn=${header:=$releasefilesdir/source/COPYRIGHT}
 headerfqn=$(realpath $headerfqn)
 distdir=$script_dir/../dist
 distdir=$(realpath $distdir)
+tarignore=${tarignore:-$script_dir/../.tarignore}
+tarignore=$(realpath $tarignore)
 
 # execute
 setup() {
@@ -48,11 +50,11 @@ build_sdist () {
     pushd $sourcedir
     PYTHONPATH=$sourcedir:$PYTHONPATH python setup.py sdist
     # 1. copy all code into a safe place
-    tar --exclude-vcs -czf $distdir/$release.tgz .
+    tar --exclude-vcs --exclude-ignore=$tarignore -czf $distdir/$release.tgz .
     popd
     # -- unpack distbuild
     pushd $distdir/$release
-    tar --exclude-vcs -xzf $distdir/$release.tgz
+    tar --exclude-vcs --exclude-ignore=$tarignore -xzf $distdir/$release.tgz
     popd
 }
 

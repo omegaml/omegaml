@@ -1,19 +1,28 @@
-import os
 from unittest import mock
+
 import numpy as np
+import os
 import pandas as pd
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from pandas._testing import assert_almost_equal
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import SGDRegressor, LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tastypie.authentication import ApiKeyAuthentication
+from tastypie.serializers import Serializer
 from tastypie.test import ResourceTestCaseMixin
+from tastypie.throttle import BaseThrottle
+from unittest.mock import patch
 
+from landingpage.authz import RolePermissionsAuthorization
+from landingpage.models import PermissionedResource
+from landingpage.permutil import PermissionUtil
 from omegaml import Omega
 from omegaml.sklext import OnlinePipeline
 from omegaops import get_client_config
+from omegaweb.resources import ModelResource
 from omegaweb.tests.util import OmegaResourceTestMixin
 
 
@@ -54,8 +63,9 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase
             url += '?{query}'.format(**locals())
         return url
 
-    def get_credentials(self):
-        return self.create_apikey(self.username, self.apikey)
+    def get_credentials(self, user=None):
+        user = user or self.user
+        return self.create_apikey(user.username, user.api_key.key)
 
     def test_get_modelinfo(self):
         om = self.om
@@ -368,4 +378,54 @@ class ModelResourceTests(OmegaResourceTestMixin, ResourceTestCaseMixin, TestCase
         local_result = p.decision_function(X).flatten().tolist()
         assert_almost_equal(data.get('result'), local_result)
 
-
+    def test_model_api_permissions(self):
+        """
+        test client config is only accessible when permissioned
+        """
+        # set up permissions
+        res = PermissionedResource.objects.create(uri='/api/v1/model', actions='list,predict', methods='get,put')
+        Group.objects.create(name='service_user')
+        res.allow('service_user')
+        user = self.user  # User.objects.create_user('john', 'john@example.com')
+        with patch.object(ModelResource, '_meta') as api_meta:
+            # mock the api meta
+            # -- we do it like this because we don't have a way to set the meta on the actual resource
+            api_meta.authentication = ApiKeyAuthentication()
+            api_meta.authorization = RolePermissionsAuthorization()
+            api_meta.list_allowed_methods = ['get']
+            api_meta.throttle = BaseThrottle()
+            api_meta.serializer = Serializer()
+            # get config from api
+            # -- expect failure (user is not member of service_user)
+            auth = self.get_credentials(user=user)
+            # -- list
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            # -- predict
+            resp = self.api_client.get(self.url(pk='foo', action='predict'), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            # get config from api
+            # -- expect works ok (user is member of service_user)
+            PermissionUtil.assign_role(self.user, 'service_user')
+            auth = self.get_credentials(user=user)
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertHttpOK(resp)
+            resp = self.api_client.get(self.url(pk='foo', action='predict'), authentication=auth)
+            # -- permission is ok, but object foo does not exist
+            self.assertHttpBadRequest(resp)
+            resp = self.api_client.put(self.url(pk='foo', action='predict'), authentication=auth)
+            # -- permission is ok, but object foo does not exist
+            self.assertHttpBadRequest(resp)
+            # remove permission
+            # -- expect failure (user is not member of service_user)
+            res.deny('service_user')
+            auth = self.get_credentials(user=user)
+            resp = self.api_client.get(self.url(), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            resp = self.api_client.get(self.url(pk='foo', action='predict'), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            resp = self.api_client.put(self.url(pk='foo', action='predict'), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
+            # try creating
+            resp = self.api_client.post(self.url(), authentication=auth)
+            self.assertEqual(resp.status_code, 401)
