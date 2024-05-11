@@ -10,7 +10,6 @@ from stackable.contrib.config.conf_bootstrap import Config_Bootstrap3
 from stackable.contrib.config.conf_cities_light import Config_Cities_Light
 from stackable.contrib.config.conf_constance import Config_DjangoConstance
 from stackable.contrib.config.conf_djangoadmin import Config_DjangoAdmin
-from stackable.contrib.config.conf_djangologging import Config_DjangoLogging
 from stackable.contrib.config.conf_payment import Config_DjangoPayments
 from stackable.contrib.config.conf_postoffice import Config_DjangoPostOffice
 from stackable.contrib.config.conf_sekizai import Config_DjangoSekizai

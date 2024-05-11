@@ -142,7 +142,8 @@ def run_user_scheduler():
         for qualifier in settings.get('qualifiers', {}).keys():
             # enable group qualifiers to be used as scheduler accounts
             if user.username.startswith('G'):
-                qualifier = f'{user.username}:{qualifier}'
+                group = user.username[1:]
+                qualifier = f'{group}:{qualifier}'
             schedule_for_user(user, qualifier, view)
 
 

@@ -171,7 +171,7 @@ services:
       ports:
          - "15672:15672"
    mongodb:
-      # initialize by running cat scripts/mongoinit.js | docker exec -i mongodb_1 mongo
+      # initialize by running cat scripts/mongoinit.js.example | docker exec -i mongodb_1 mongo
       image: mongo:4.4.13-focal
       container_name: mongodb
       hostname: mongodb
