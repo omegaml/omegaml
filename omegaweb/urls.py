@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.urls import re_path as url, include
 from django.urls import path
 from jwt_auth import views as jwt_auth_views
 
