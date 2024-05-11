@@ -13,7 +13,7 @@ dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
-tf_deps = ['tensorflow>2,<2.16'] # due to 2.16 dropping support for tf-estimators
+tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools']
 backtracking_deps = [
     'json5>0.9',  # nobody knows
@@ -30,9 +30,9 @@ backtracking_deps = [
 ]
 # required based on github dependency advisories
 sec_deps = [
-    'dnspython>=2.6.1', # https://github.com/advisories/GHSA-3rq5-2g8h-59hc
-    'idna>=3.7', # https://github.com/advisories/GHSA-jjg7-2v4v-x38h
-    'pymongo>=4.6.3', # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
+    'dnspython>=2.6.1',  # https://github.com/advisories/GHSA-3rq5-2g8h-59hc
+    'idna>=3.7',  # https://github.com/advisories/GHSA-jjg7-2v4v-x38h
+    'pymongo>=4.6.3',  # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
 ]
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
 client_deps = (tables + dashserve_deps)
@@ -52,14 +52,20 @@ setup(
     long_description=README,
     long_description_content_type='text/x-rst',
     url='https://omegaml.io/',
+    project_urls={
+        "Documentation": "https://omegaml.github.io/omegaml/",
+        "Issues": "https://github.com/omegaml/omegaml/issues",
+        "Source": "https://github.com/omegaml/omegaml",
+    },
     author='Patrick Senti',
     author_email='patrick.senti@omegaml.io',
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: Implementation :: CPython',
         'Development Status :: 4 - Beta',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
