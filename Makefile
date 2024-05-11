@@ -124,12 +124,13 @@ devstart:
 devstop:
 	docker-compose -f docker-compose-dev.yml stop
 
-pipsync:
+pipsync: freeze
 	pip-sync
 
 scan: freeze pipsync
-	snyk test --policy-path=./.snyk > scripts/secdev/.snyk-test.report
-	snyk code test --policy-path=./.snyk > scripts/secdev/.snyk-code-test.report
+	-snyk test --policy-path=./.snyk > scripts/secdev/.snyk-test.report
+	-snyk code test --policy-path=./.snyk > scripts/secdev/.snyk-code-test.report
 	mv requirements.txt scripts/secdev/scanned-pipreqs.txt
-	cat scripts/secdev/*.report
+	cat $(find scripts/secdev/ -name *report)
+
 
