@@ -1,10 +1,8 @@
-import numpy as np
-from datetime import datetime
-
 import json
-
+import numpy as np
 import pandas as pd
 import unittest
+from datetime import datetime
 from marshmallow import Schema, fields, ValidationError
 from numpy.testing import assert_array_equal
 from sklearn.linear_model import LinearRegression
@@ -58,6 +56,23 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         meta = om.models.metadata('mymodel')
         self.assertEqual(meta.attributes['dataset']['Xname'], 'test[x]')
         self.assertEqual(meta.attributes['dataset']['Yname'], 'test[y]')
+
+    def test_link_schema_with_null_data(self):
+        om = self.om
+
+        @virtualobj
+        def myhandler(*args, **kwargs):
+            return {'dt': None}
+
+        om.scripts.put(myhandler, 'myhandler')
+
+        class MyResultSchema(Schema):
+            dt = fields.DateTime(allow_none=True)
+
+        om.scripts.link_datatype('myhandler', X=None, result=MyResultSchema)
+        resp = om.runtime.script('myhandler').run({'foo': 'bar', }).get()
+        resp = json.loads(resp)
+        self.assertEqual({'dt': None}, resp['result'])
 
     def test_link_script_signature(self):
         om = self.om
