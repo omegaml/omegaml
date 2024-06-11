@@ -1,9 +1,7 @@
 import os
-
-from requests.auth import AuthBase
-
 from omegaml import session_cache
 from omegaml.util import load_class, settings, DefaultsContext
+from requests.auth import AuthBase
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -165,8 +163,14 @@ class AuthenticationEnv(object):
         for k in defaults or cls.env_keys:
             if not k.isupper():
                 continue
+            # if k in cls.env_keys and not clear:
             if k in cls.env_keys and not clear:
-                envstr = lambda v: str(int(v) if isinstance(v, bool) else v)
+                # prepare a valid env value
+                # -- boolean => 0/1
+                # -- None => '' (empty string), avoid setting as 'None' (#414)
+                # -- any False value => '' (empty string)
+                # -- otherwise str(v)
+                envstr = lambda v: str(int(v) if isinstance(v, bool) else (v or ''))
                 os.environ[k] = envstr(defaults[k])
             else:
                 os.environ.pop(k, None)

@@ -1,10 +1,11 @@
-from io import StringIO
 from unittest import TestCase
-from unittest.mock import patch
 
+import os
+from io import StringIO
 from omegaml import Omega
 from omegaml.client.auth import AuthenticationEnv
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
+from unittest.mock import patch
 
 
 class BareObj(object):
@@ -185,3 +186,25 @@ class ConfigurationTests(TestCase):
         else:
             not_raised = True
         self.assertTrue(not_raised)
+
+    def test_auth_env_setup(self):
+        # setup a new Omega instance
+        # -- test fix #414
+        # -- we set OMEGA_BROKER to None to ensure it is cleared
+        om = Omega()
+        om.defaults.OMEGA_BROKER = None
+        self.assertTrue(om.runtime.omega.defaults.OMEGA_BROKER is None)
+        auth_env = AuthenticationEnv.active()
+        env = dict(os.environ)
+        # check prepare_env() clears OMEGA_BROKER
+        # -- start with $OMEGA_BROKER set to a value
+        # -- prepare_env() should clear it to be '' (blank)
+        # -- prepare_env(clear=True) should pop it
+        # -- finally the original env is unchanged
+        with patch('os.environ', new=dict(OMEGA_BROKER='foo')):
+            self.assertEqual(os.environ['OMEGA_BROKER'], 'foo')
+            auth_env.prepare_env(om.defaults)
+            self.assertEqual(os.environ['OMEGA_BROKER'], '')
+            auth_env.prepare_env(om.defaults, clear=True)
+            self.assertNotIn('OMEGA_BROKER', os.environ)
+        self.assertEqual(env, os.environ)
