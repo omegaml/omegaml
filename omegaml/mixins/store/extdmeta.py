@@ -250,6 +250,8 @@ class SignatureMixin:
         return True
 
     def _datatype_from_schema(self, schema, name=None, orient='records', many=False):
+        # from an apispec schema, create a marshmallow Schema
+        #
         # orient 'records' => every instance of the Schema reflects one item (default)
         #                     where each field is a distinct value of its type
         #        'columns' => every instance of the Schema reflects a full dataset, where
@@ -259,6 +261,8 @@ class SignatureMixin:
         # -- nested types are not supported (except arrays)
         # https://swagger.io/specification/
         # https://marshmallow.readthedocs.io/en/stable/marshmallow.fields.html
+        # convert apispec schema to marshmallow Schema
+        # -- type conversions from apispec to marshmallow
         TYPE_MAP = {
             'integer': fields.Integer,
             'number': fields.Float,
@@ -272,21 +276,33 @@ class SignatureMixin:
             'default': fields.String,
             'object': fields.Raw,
         }
+        # -- properties conversion from apispec to marhsmallow
+        PROPS_MAP = {
+            'nullable': 'allow_none',
+        }
+        # -- determine Schema type, Fields and respective properties
         prop = schema['properties']
         sdict = {}
         for prop, pspec in prop.items():
+            # -- ptype is the apispec type of the property (e.g. integer, string, array)
             ptype = pspec.get('type', 'object')
+            # -- fptype is the formatted type (fully qualified) of the property (e.g. string.byte, string.date-time)
             pformat = pspec.get('format', '')
             fptype = '.'.join((ptype, pformat))
+            # -- ftype is the marshmallow type of the property (e.g. fields.Integer, fields.String, fields.List)
             ftype = TYPE_MAP.get(fptype) or TYPE_MAP.get(ptype) or TYPE_MAP.get('default')
+            # -- props are the properties of the field (e.g. nullable, allow_none)
+            #    in case of arrays, a nested type is determined (TODO: support nested schemas)
+            props = {PROPS_MAP.get(p): v for p, v in pspec.items() if p in PROPS_MAP}
             if ptype == 'array':
                 ptype = TYPE_MAP.get(pspec['items'].get('type'))
                 ftype = ftype(ptype) if ptype else ftype(fields.Dict())
             else:
-                ftype = ftype()
+                ftype = ftype(**props)
             if orient == 'columns':
                 ftype = fields.List(ftype)
             sdict[prop] = ftype
+        # -- finally, create the schema
         schema = Schema.from_dict(sdict, name=name)
         schema.error_messages = {
             'type': f'invalid input for schema {name}'
