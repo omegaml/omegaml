@@ -1,14 +1,11 @@
 from __future__ import absolute_import
 
-from copy import deepcopy
-
 import logging
 from celery import Celery
-
+from copy import deepcopy
 from omegaml.mongoshim import mongo_url
-from socket import gethostname
-
 from omegaml.util import dict_merge
+from socket import gethostname
 
 logger = logging.getLogger(__name__)
 
@@ -232,9 +229,9 @@ class OmegaRuntime(object):
                 self.mode(local=True)
             elif override:
                 self.mode(local=False)
-            routing = routing or {
-                'label': label or self._default_label
-            }
+            # update routing, don't replace (#416)
+            routing = routing or {}
+            routing.update({'label': label or self._default_label})
         task = task or {}
         routing = routing or {}
         if task or routing:
@@ -254,6 +251,7 @@ class OmegaRuntime(object):
                 self._require_kwargs['routing'].update(routing)
                 self._require_kwargs['task'].update(task)
         else:
+            # FIXME this does not work as expected (will only reset if both task and routing are False)
             if not task:
                 self._require_kwargs['task'] = {}
             if not routing:

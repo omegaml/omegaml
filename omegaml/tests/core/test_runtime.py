@@ -1,11 +1,10 @@
-import os
-import sys
-import unittest
 from unittest import TestCase
-from unittest.mock import patch
 
 import numpy as np
+import os
 import pandas as pd
+import sys
+import unittest
 from numpy.testing import assert_array_almost_equal
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
@@ -20,6 +19,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
+from unittest.mock import patch
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
@@ -724,3 +724,38 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
         self.assertEqual(task.kwargs['routing']['label'], 'foo')
 
+    def test_require_apply_routing_label(self):
+        om = Omega()
+        # using require(label=...)
+        om.runtime.require(label='foo')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        om.runtime.require(label='bar')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'bar')
+        # using require(routing=dict(label='foo')
+        om.runtime.require(routing=dict(label='foo'))
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        om.runtime.require(routing=dict(label='bar', ))
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'bar')
+
+    def test_require_apply_routing_update(self):
+        # test that routing options are updated, not replaced
+        # -- related #416
+        om = Omega()
+        #  set routing options as permanent
+        om.runtime.require(label='foo', routing=dict(timeout=5), always=True)
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        self.assertEqual(task.kwargs['routing']['timeout'], 5)
+        # update routing options temporarily
+        om.runtime.require(label='bar')
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'bar')
+        self.assertEqual(task.kwargs['routing']['timeout'], 5)
+        # check that permanent routing options are kept
+        task = om.runtime.task('omegaml.tasks.omega_ping')
+        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        self.assertEqual(task.kwargs['routing']['timeout'], 5)
