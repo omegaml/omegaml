@@ -6,9 +6,8 @@ import logging
 import os
 import shutil
 import sys
+from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge, inprogress
 from pathlib import Path
-
-from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
@@ -341,6 +340,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
     return None
 
 
+@inprogress(text="loading extensions...")
 def load_user_extensions(vars=globals()):
     """
     user extensions are extensions to settings
@@ -389,6 +389,7 @@ def load_user_extensions(vars=globals()):
             raise ValueError(msg)
 
 
+@inprogress(text='loading frameworks...')
 def load_framework_support(vars=globals()):
     # load framework-specific backends
     # -- note we do this here to ensure this happens after config updates
@@ -396,9 +397,6 @@ def load_framework_support(vars=globals()):
         return
     if tensorflow_available():
         #: tensorflow backend
-        # https://stackoverflow.com/a/38645250
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
-        logging.getLogger('tensorflow').setLevel(logging.ERROR)
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
     #: keras backend
     if keras_available():
@@ -414,6 +412,7 @@ def load_framework_support(vars=globals()):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
 
 
+@inprogress(text='loading configuration...')
 def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     config_file = locate_config_file(config_file)
     vars['OMEGA_CONFIG_FILE'] = config_file
