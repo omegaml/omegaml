@@ -1,3 +1,4 @@
+import logging
 from pymongo import MongoClient as RealMongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 from time import sleep
@@ -30,6 +31,16 @@ def sanitize_mongo_kwargs(kwargs):
         del kwargs['tlsCAFile']
     if 'ssl_ca_certs' in kwargs and not kwargs.get('tls'):
         del kwargs['ssl_ca_certs']
+    logger = logging.getLogger('pymongo.serverSelection')
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('MongoDB connection kwargs: %s', kwargs)
+    else:
+        # silence pymongo debug logging for server selection
+        # -- since pymongo 4.7 pymongo logs server selection at INFO level
+        # -- this is too verbose for normal operation
+        # -- will be fixed in pymongo 4.7.3
+        # -- https://jira.mongodb.org/browse/PYTHON-4261
+        logger.setLevel(logging.ERROR)
     return kwargs
 
 
