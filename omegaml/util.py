@@ -1,10 +1,5 @@
 from __future__ import absolute_import
 
-import threading
-
-from hashlib import sha256
-
-import tarfile
 from importlib import import_module
 
 import json
@@ -12,6 +7,7 @@ import logging
 import os
 import sys
 import tempfile
+import threading
 import uuid
 import validators
 import warnings
@@ -19,6 +15,7 @@ from base64 import b64encode
 from bson import UuidRepresentation
 from copy import deepcopy
 from datetime import datetime, date
+from hashlib import sha256
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
@@ -648,7 +645,9 @@ def module_available(modname):
 
 
 def tensorflow_available():
-    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
+    # https://stackoverflow.com/a/38645250
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+    logging.getLogger('tensorflow').setLevel(logging.ERROR)
     return module_available('tensorflow')
 
 
@@ -1270,7 +1269,7 @@ def is_interactive():
     # adopted from https://stackoverflow.com/a/47428575/890242
     try:
         from IPython import get_ipython
-        ipy_str = str(type(get_ipython()))
+        ipy_str = str(type(get_ipython())).lower()
     except:
         # we're not in IPython
         pass
@@ -1279,6 +1278,30 @@ def is_interactive():
         if any(t in ipy_str for t in ('zmqshell', 'jupyter')):
             return True
     return sys.flags.interactive
+
+
+def inprogress(text="running {fn}", **__kwargs):
+    # print a message when entering a function
+    # -- useful for debugging
+    # -- use as a decorator
+    if not module_available('yaspin'):
+        @contextmanager
+        def yaspin(*args, text=None, **kwargs):
+            logger.debug(text)
+            yield
+    else:
+        from yaspin import yaspin
+
+    def decorator(fn):
+        def wrapper(*args, **kwargs):
+            text.format(fn=fn.__name__)
+            with yaspin(text=text, **__kwargs) as sp:
+                fn.__yaspin = sp
+                return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def signature(filter):

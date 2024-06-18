@@ -1,4 +1,5 @@
 import os
+from omegaml.util import inprogress
 from uuid import uuid4
 
 from ._version import version
@@ -131,6 +132,7 @@ class OmegaDeferredInstance(object):
         self.base = base
         self.attribute = attribute
 
+    @inprogress(text='connecting ...')
     def setup(self, *args, **kwargs):
         """loads omegaml
 
