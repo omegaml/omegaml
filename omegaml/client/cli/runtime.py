@@ -296,7 +296,7 @@ class RuntimeCommandBase(CommandBase):
             df = om.logger.dataset.get()
             with pd.option_context('display.max_rows', None,
                                    'display.max_columns', None,
-                                   'display.max_colwidth', -1):
+                                   'display.max_colwidth', None):
                 print(df[['text']])
         else:
             om.logger.dataset.tail()
@@ -473,8 +473,8 @@ class RuntimeCommandBase(CommandBase):
         promote = self.args.get('--promote')
         pattern = '|'.join(names)
         if (not archive.is_file()
-              and not archive.exists()
-              and archive.parent.exists()):
+                and not archive.exists()
+                and archive.parent.exists()):
             archives = list(archive.parent.glob(f'{archive.name}*'))
             if len(archives) > 1:
                 archive = Path(self.ask("Select an archive", options=archives, select=True, default=1))
