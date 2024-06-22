@@ -2,11 +2,6 @@ from setuptools import setup, find_packages
 
 setup(
     name='envinstall',
-    version='',
+    version='1.0.0',
     packages=find_packages(),
-    url='',
-    license='',
-    author='patrick',
-    author_email='',
-    description=''
 )
