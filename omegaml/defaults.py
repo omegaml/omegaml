@@ -53,6 +53,10 @@ OMEGA_NOTEBOOK_COLLECTION = 'ipynb'
 OMEGA_RESULT_BACKEND = os.environ.get('OMEGA_RESULT_BACKEND', 'rpc://')
 #: the omega worker label
 OMEGA_WORKER_LABEL = os.environ.get('OMEGA_WORKER_LABEL') or os.environ.get('CELERY_Q', 'default')
+#: the omega worker concurrency setting, defaults to 4
+WORKER_CONCURRENCY = int(os.environ.get('OMEGA_WORKER_CONCURRENCY', 4))
+WORKER_CONCURRENCY = WORKER_CONCURRENCY if WORKER_CONCURRENCY > 0 else os.cpu_count()
+
 #: the celery configurations
 OMEGA_CELERY_CONFIG = {
     # FIXME should work with json (the default celery serializer)
@@ -77,6 +81,10 @@ OMEGA_CELERY_CONFIG = {
         },
     },
     'BROKER_USE_SSL': OMEGA_USESSL,
+    # keep behavior of retrying broker connections on startup
+    'BROKER_CONNECTION_RETRY_ON_STARTUP': True,
+    # limit concurrency
+    'CELERYD_CONCURRENCY': WORKER_CONCURRENCY,
 }
 #: enable cloud worker routing
 OMEGA_TASK_ROUTING_ENABLED = os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False)
