@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import tensorflow_available, keras_available, module_available, markup, dict_merge, inprogress
+from omegaml.util import dict_merge, markup, inprogress
 from pathlib import Path
 
 # determine how we're run
@@ -401,10 +401,15 @@ def load_user_extensions(vars=globals()):
 def load_framework_support(vars=globals()):
     # load framework-specific backends
     # -- note we do this here to ensure this happens after config updates
+    from omegaml.util import tensorflow_available, keras_available, module_available
+
     if OMEGA_DISABLE_FRAMEWORKS:
         return
     if tensorflow_available():
         #: tensorflow backend
+        # https://stackoverflow.com/a/38645250
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+        logging.getLogger('tensorflow').setLevel(logging.ERROR)
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
     #: keras backend
     if keras_available():
@@ -443,5 +448,3 @@ else:
 
 # load extensions, always last step to ensure we have user configs loaded
 update_from_env()
-load_framework_support()
-load_user_extensions()
