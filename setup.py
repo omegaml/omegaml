@@ -99,8 +99,8 @@ setup(
         'apispec>=5.2.2',  # required for openapi generation
         'marshmallow>=3.17.0',  # required for openapi generation
         'sqlalchemy<2',  # currently no support for sqlalchemy 2
-        'minibatch[all]',  # required for streaming
-        'validators', # required for sec validations
+        'minibatch[omegaml]',  # required for streaming
+        'validators',  # required for sec validations
     ] + sec_deps,
     extras_require={
         'all': test_deps,
