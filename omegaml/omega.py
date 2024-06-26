@@ -147,6 +147,9 @@ class OmegaDeferredInstance(object):
         from omegaml import _base_config
 
         def setup_base():
+            from omegaml import _base_config
+            _base_config.load_framework_support()
+            _base_config.load_user_extensions()
             return Omega(*args, **kwargs)
 
         def setup_cloud():
