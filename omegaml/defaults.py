@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress
+from omegaml.util import dict_merge, markup, inprogress, tryOr
 from pathlib import Path
 
 # determine how we're run
@@ -17,6 +17,9 @@ truefalse = lambda v: (v if isinstance(v, bool) else
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = truefalse(os.environ.get('OMEGA_TEST_MODE'))
 is_test_run |= len(set(test_runners) & set(cmd_args)) and 'omegaml-ce' in str(Path().cwd())
+
+# enable unicode emoijs in stdout
+tryOr(lambda: sys.stdout.reconfigure(encoding='utf-8'), None)
 
 #: configuration file, by default will be searched in current directory, user config or site config
 OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
