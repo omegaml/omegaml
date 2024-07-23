@@ -799,6 +799,8 @@ def base_loader(_base_config):
         from omegaee import omega as _omega
         from omegaee import eedefaults as _base_config_ee
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
+        # ensure django settings are reloaded
+        settings(reload=True)
         return _omega, 'commercial'
 
     def load_base():
@@ -817,7 +819,6 @@ def base_loader(_base_config):
             logger.info(f'loaded omegaml from {source}')
             break
 
-    settings(reload=True)
     return _omega
 
 
