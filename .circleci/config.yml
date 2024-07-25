@@ -82,7 +82,7 @@ jobs:
   release:
     working_directory: /home/circleci
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     steps:
       - checkout:
           path: /home/circleci/omegaml-ce
@@ -102,6 +102,7 @@ jobs:
             echo $PYPIRC_INI | base64 -d > ~/.pypirc
             ls -lart ~/.omegaml
             cd omegaml-ce
+            cp scripts/mongoinit.js.example scripts/mongoinit.js
             VERSION=`cat omegaml/VERSION`
             docker login -u omegaml -p $DOCKER_PASS
             # run all tests inside runtime docker images 
