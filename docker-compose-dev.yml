@@ -1,11 +1,10 @@
-version: '3'
 services:
   mongo:
     image: mongo:5.0.9-focal
     ports:
       - "27017:27017"
       - "28017:28017"
-    command: ["--auth", "--oplogSize", "100"]
+    command: [ "--auth", "--oplogSize", "100" ]
   rabbitmq:
     image: rabbitmq:3.11.15
     ports:
