@@ -1,4 +1,5 @@
 from omegaml.client.util import get_omega
+from omegaml.util import c
 
 
 class StoresCommandMixin:
@@ -27,8 +28,9 @@ class StoresCommandMixin:
         hidden = self.args.get('--hidden')
         kwargs = dict(regexp=pattern) if regexp else dict(pattern=pattern)
         store = getattr(om, self.command)
-        self.logger.info(store.list(raw=raw, hidden=hidden, **kwargs))
-
+        data = [m.to_dict() for m in store.list(raw=True, hidden=hidden, **kwargs)]
+        self.console.write(data, columns=c('name,kind,created,modified'))
+        
     def drop(self):
         om = get_omega(self.args)
         name = self.args.get('<name>')

@@ -1310,3 +1310,8 @@ def signature(filter):
     # SEC: CWE-345 ensure user-provided values are not tampered with
     # -- this is used to ensure the values are not tampered with when passed to a query
     return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
+
+
+def c(v, sep=','):
+    # cast to list
+    return v if isinstance(v, (list, tuple)) else v.split(sep)

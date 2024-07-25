@@ -1,15 +1,16 @@
 """
 A parser/processor to simplify modular docopt cli
 """
-from getpass import getpass
-
 import inspect
 import logging
 import os
 import re
 import sys
 from docopt import docopt
+from getpass import getpass
 from pprint import pprint
+from rich.console import Console
+from rich.table import Table
 from textwrap import dedent
 
 
@@ -393,6 +394,8 @@ class CommandParser:
                 # custom handling should be provided by a Command with command='catchall'
                 elif self.argv[0] == '--copyright':
                     self.args = {
+                        '<command>': 'catchall',
+                        '<action>': None,
                         '--copyright': True,
                     }
                 else:
@@ -565,7 +568,7 @@ class CommandParser:
                 if not select:
                     assert value.lower() in options.lower()
                 else:
-                    assert value.isnumeric() and int(value) in range(1, len(options)+1)
+                    assert value.isnumeric() and int(value) in range(1, len(options) + 1)
                     value = options[int(value) - 1]
         return value
 
@@ -629,6 +632,7 @@ class CommandBase:
         # be updated accordingly.
         self.argv = argv or sys.argv[1:]
         self.logger = logger
+        self.console = RichConsole()
         self.docs = docs or self.__doc__
         self.parser = parser
         self.global_docs = self.parser.docs if self.parser else None
@@ -912,3 +916,34 @@ def setup_console_logger():
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
+
+
+class RichConsole:
+    def __init__(self):
+        self._console = Console()
+
+    @property
+    def console(self):
+        return self._console
+
+    def write(self, data, format='table', columns=None):
+        if format == 'table':
+            self.console.print(self.tabulate(data, columns=columns))
+        else:
+            self.console.print(data)
+
+    def tabulate(self, data, columns=None):
+        table = Table()
+        columns = columns or []
+        if data:
+            columns = data[0].keys()
+            for k in data[0]:
+                table.add_column(k) if k in columns else None
+            for r in data:
+                table.add_row(*(str(v) for k, v in r.items() if k in columns))
+        elif columns:
+            for c in columns:
+                table.add_column(c)
+        else:
+            self.console.print('no data')
+        return table
