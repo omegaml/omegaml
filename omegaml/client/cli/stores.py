@@ -35,7 +35,7 @@ class StoresCommandMixin:
         om = get_omega(self.args)
         name = self.args.get('<name>')
         store = getattr(om, self.command)
-        self.logger.info(store.drop(name))
+        self.console.print(f'dropped {name}' if store.drop(name, force=True) else f'{name} does not exist')
 
     def metadata(self):
         om = get_omega(self.args)
