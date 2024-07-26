@@ -2,9 +2,11 @@
 A parser/processor to simplify modular docopt cli
 """
 import inspect
+import json
 import logging
 import os
 import re
+import rich
 import sys
 from docopt import docopt
 from getpass import getpass
@@ -394,7 +396,7 @@ class CommandParser:
                 # custom handling should be provided by a Command with command='catchall'
                 elif self.argv[0] == '--copyright':
                     self.args = {
-                        '<command>': 'catchall',
+                        '<command>': self.catchall,
                         '<action>': None,
                         '--copyright': True,
                     }
@@ -410,7 +412,6 @@ class CommandParser:
             self.command = self.parse_command()
             # -- no command?!
             if not self.command:
-                self.help()
                 raise SystemExit()
         except SystemExit as e:
             if self.should_debug:
@@ -926,21 +927,26 @@ class RichConsole:
     def console(self):
         return self._console
 
-    def write(self, data, format='table', columns=None):
-        if format == 'table':
-            self.console.print(self.tabulate(data, columns=columns))
+    def print(self, data, format='table', columns=None):
+        if isinstance(data, (list, tuple)):
+            if format == 'table':
+                self.console.print(self.tabulate(data, columns=columns))
+            elif format == 'json':
+                self.console.print_json(json.dumps(data))
+        elif isinstance(data, dict):
+            self.console.print_json(data=data, default=str)
         else:
             self.console.print(data)
 
-    def tabulate(self, data, columns=None):
-        table = Table()
+    def tabulate(self, data, columns=None, box='SIMPLE'):
+        table = Table(box=getattr(rich.box, box))
         columns = columns or []
         if data:
-            columns = data[0].keys()
-            for k in data[0]:
-                table.add_column(k) if k in columns else None
+            columns = columns or data[0].keys()
+            for k in columns:
+                table.add_column(k)
             for r in data:
-                table.add_row(*(str(v) for k, v in r.items() if k in columns))
+                table.add_row(*(str(r[k]) for k in columns))
         elif columns:
             for c in columns:
                 table.add_column(c)

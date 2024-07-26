@@ -12,7 +12,7 @@ class StoresCommandMixin:
         This will automatically provide list, drop, metadata
         commands for the store given by the command variable
     """
-    command = 'unspecified'
+    command = 'repo'
 
     def put(self):
         raise NotImplementedError()
@@ -29,8 +29,8 @@ class StoresCommandMixin:
         kwargs = dict(regexp=pattern) if regexp else dict(pattern=pattern)
         store = getattr(om, self.command)
         data = [m.to_dict() for m in store.list(raw=True, hidden=hidden, **kwargs)]
-        self.console.write(data, columns=c('name,kind,created,modified'))
-        
+        self.console.print(data, columns=c('name,prefix,bucket,kind,created,modified'))
+
     def drop(self):
         om = get_omega(self.args)
         name = self.args.get('<name>')
@@ -41,7 +41,7 @@ class StoresCommandMixin:
         om = get_omega(self.args)
         name = self.args.get('<name>')
         store = getattr(om, self.command)
-        self.logger.info(store.metadata(name).to_json())
+        self.console.print(store.metadata(name).to_dict())
 
     def plugins(self):
         om = get_omega(self.args)
