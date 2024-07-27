@@ -9,6 +9,9 @@ User Guide
    datasets/index
    models/index
    jobs/index
+   scripts/index
+   streams/index
+   advanced/
    clusters/index
    cli/index
    advanced/index

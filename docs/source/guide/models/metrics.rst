@@ -3,7 +3,6 @@ Capturing model metrics
 
 .. contents::
 
-
 omega-ml provides experiment and model tracking for all models using its
 built-in metrics store.
 
@@ -167,5 +166,4 @@ The following tracking providers are available:
 * :code:`profiling` - the profiling tracker, :code:`OmegaProfilingTracker`
 * :code:`notrack` - the no-operation tracker, :code:`NoTrackTracker`. Use
   this to disable tracking.
-
 

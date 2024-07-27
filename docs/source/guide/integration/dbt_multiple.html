@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.21.2: https://docutils.sourceforge.io/" />
+<title>Deploying dbt projects</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 9511 2024-01-13 09:50:07Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+Despite the name, some widely supported CSS2 features are used.
+
+See https://docutils.sourceforge.io/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+.subscript {
+  vertical-align: sub;
+  font-size: smaller }
+
+.superscript {
+  vertical-align: super;
+  font-size: smaller }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left, table.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right, table.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+.align-top    {
+  vertical-align: top }
+
+.align-middle {
+  vertical-align: middle }
+
+.align-bottom {
+  vertical-align: bottom }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+pre.code .ln { color: gray; } /* line numbers */
+pre.code, code { background-color: #eeeeee }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic, pre.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="deploying-dbt-projects">
+<h1 class="title">Deploying dbt projects</h1>
+
+<p>dbt projects can be deployed to run on the omega-ml runtime as an ad-hoc or a scheduled
+job as follows. dbt projects are essentially a collection of files that make up a SQL-based
+workflow. This means we can easily deploy dbt projects to omega-ml as a script, and run them
+on schedule or on-demand.</p>
+<p>The steps to deploy dbt projects to omega-ml are as follows:</p>
+<ol class="arabic simple">
+<li>Package the dbt project(s) and deploy to omega-ml</li>
+<li>Schedule a job to run the dbt project(s)</li>
+<li>Serve the dbt project(s) documentation via omegaml's apphub (or browse locally)</li>
+</ol>
+<p>Here's a quick schematic overview of the components involved:</p>
+<img alt="dbt-deploy" class="align-center" src="dbt-deploy.png" />
+<p>The following sections provide a step-by-step guide to deploy dbt projects to omega-ml,
+explaining each component. If you are just looking to deploy dbt projects without regard
+to all the gory details, follow the Quick Start section.</p>
+<div class="section" id="quick-start">
+<h1>Quick Start</h1>
+<p>If you are looking to deploy dbt projects to omega-ml without going through all the details,
+here's a quick start guide:</p>
+<ol class="arabic">
+<li><p class="first">Copy the <cite>dbtdeploy</cite> application to your dbt project's root directory:</p>
+<pre class="literal-block">
+$ cp -r /path/to/omegaml/examples/dbt/dbtdeploy /path/to/dbt
+</pre>
+</li>
+<li><p class="first">Update the <cite>profiles.yml</cite> file in the <cite>dbtdeploy</cite> directory with your connection details:</p>
+<pre class="literal-block">
+$ cp /path/to/dbt/myproject/profiles.yml /path/to/dbt/dbtdeploy/profiles.yml
+</pre>
+</li>
+<li><p class="first">Link your dbt project(s) into the <cite>dbtdeploy</cite> directory:</p>
+<pre class="literal-block">
+$ ln -s /path/to/dbt/myproject /path/to/dbt/dbtdeploy/myproject
+</pre>
+</li>
+<li><p class="first">Package the <cite>dbtdeploy</cite> application and deploy to omega-ml:</p>
+<pre class="literal-block">
+$ om scripts put /path/to/dbt/dbtdeploy dbt/dbtdeploy
+</pre>
+</li>
+<li><p class="first">Run the dbt project on-demand:</p>
+<pre class="literal-block">
+$ om runtime script dbtdeploy run project=myproject
+</pre>
+</li>
+<li><p class="first">Schedule the dbt project to run on a schedule:</p>
+<pre class="literal-block">
+# store the dbt_run notebook in om.jobs
+$ om jobs put /path/to/dbt/dbt_run.ipynb dbt_run
+
+# update the dbt_run notebook to run the dbt project(s)
+$ om shell jupyter
+</pre>
+</li>
+<li><p class="first">Serve the dbt project documentation via omegaml's apphub:</p>
+<pre class="literal-block">
+# package the app
+$ om scripts put /path/to/dbt/dbtdeploy apps/dbtdeploy
+$ om runtime restart app dbtdeploy
+
+Alternatively, serve the docs locally by running the following command:
+
+$ FLASK_APP=/path/to/dbt/dbtdeploy:create_app flask run
+</pre>
+</li>
+</ol>
+</div>
+<div class="section" id="create-the-dbtdeploy-application">
+<h1>Create the dbtdeploy application</h1>
+<p>While we could package each dbt project separately, it is easier to use
+a single package, and include all dbt projects in one step. We'll call
+this the <cite>dbtdeploy</cite> script.</p>
+<p>The <cite>dbtdeploy</cite> script is a small Python package that provides a utility function,
+<cite>update_dbt_profile</cite>, that updates the dbt <cite>profiles.yml</cite> file with omega-ml
+defaults. This is useful to ensure that the dbt project can connect to the
+SQL database, however without storing the connection details in the dbt project
+itself. We also include a <cite>run</cite> function in order to run the dbt project on demand
+using the omega-ml runtime. Later we will add a Flask application to serve the
+dbt project documentation, and also provide an example of how to run dbt projects
+on a schedule.</p>
+<p>Here's how to create the &quot;dbtdeploy&quot; application:</p>
+<ol class="arabic">
+<li><p class="first">Create the dbtdeploy application directory structure:</p>
+<pre class="literal-block">
+# in /path/to/dbt
+$ mkdir dbtdeploy
+$ touch dbtdeploy/__init__.py
+$ touch dbtdeploy/setup.py
+$ touch dbtdeploy/MANIFEST.in
+$ touch dbtdeploy/profiles.yml
+</pre>
+</li>
+<li><p class="first">Update the <cite>setup.py</cite> and <cite>MANIFEST.in</cite> files:</p>
+<pre class="literal-block">
+# dbtdeploy/setup.py
+from setuptools import setup, find_packages
+
+setup(
+    name='dbtdeploy',
+    version='0.1',
+    packages=find_packages(),
+    include_package_data=True,
+    install_requires=[
+        'dbt-core',
+    ]
+)
+
+# dbtdeploy/MANIFEST.in
+include *.in
+recursive-include dbtdeploy *
+</pre>
+</li>
+<li><p class="first">Update the __init__.py file for the dbtdeploy application:</p>
+<pre class="literal-block">
+# /path/to/dbt/myproject/__init__.py
+def update_dbt_profile(fn=None, mod=None, om=None, **vars):
+    &quot;&quot;&quot;
+    update dbt profiles.yaml with omegaml defaults
+
+    Usage:
+        import omegaml as om
+        mod = om.scripts.get('dbt/foo', install=True)
+        update_dbt_profile(mod=mod, om=om)
+    &quot;&quot;&quot;
+    from pathlib import Path
+    default_fn = Path(getattr(mod, '__file__', __file__)).parent / 'profiles.yml'
+    fn = Path(fn) if fn else default_fn
+    if not fn.exists():
+        raise FileNotFoundError(f'dbt profiles.yml not found at {fn}')
+    vars.update(**om.defaults) if om else None
+    with open(fn, 'r') as f:
+        profiles = f.read()
+    with open(fn, 'w') as f:
+        profiles = profiles.format(**vars)
+        f.write(profiles)
+    return fn.parent
+
+def run(om=None, project=None, *args, **kwargs):
+    from pathlib import Path
+    import subprocess
+    dbt_dir = Path(__file__).parent
+    project_dir = dbt_dir / project
+    cmd = f&quot;dbt run -d --profiles-dir {dbt_dir} --project-dir {project_dir}&quot;
+    update_dbt_profile(f&quot;{dbt_dir}/profiles.yml&quot;, om=om, **kwargs)
+    results = subprocess.run(cmd, shell=True, check=True, capture_output=True)
+    return results.stdout.decode('utf-8')
+</pre>
+</li>
+</ol>
+</div>
+<div class="section" id="include-your-dbt-project-s">
+<h1>Include your dbt project(s)</h1>
+<p>Now we're ready to package up all dbt projects, by linking each dbt project
+into the <cite>dbtdeploy</cite> script. This way we can keep the dbt project(s) as is,
+and update the <cite>dbtdeploy</cite> script with a single command.</p>
+<ol class="arabic">
+<li><p class="first">Copy your profiles.yml from <cite>$HOME/.dbt/profiles.yml</cite></p>
+<blockquote>
+<p>$ cp /path/to/dbt/myproject/profiles.yml dbtdeploy/profiles.yml</p>
+</blockquote>
+</li>
+<li><p class="first">Update the <cite>profiles.yml</cite> to remove any secrets and replace with
+them with <cite>{OMEGA_VARIABLE}</cite> placeholders.</p>
+<p>The <cite>profiles.yml</cite> file should look something like this (adopt to the specific variables used
+in your omega-ml qualifier context):</p>
+</li>
+</ol>
+<pre class="code yaml literal-block">
+<span class="name tag">myproject</span><span class="punctuation">:</span><span class="whitespace">
+    </span><span class="name tag">target</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="literal scalar plain">prod</span><span class="whitespace">
+    </span><span class="name tag">outputs</span><span class="punctuation">:</span><span class="whitespace">
+      </span><span class="name tag">prod</span><span class="punctuation">:</span><span class="whitespace">
+        </span><span class="name tag">type</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="literal scalar plain">sqlserver</span><span class="whitespace">
+        </span><span class="name tag">driver</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="literal string">'{OMEGA_SQL_SERVER_DRIVER}'</span><span class="whitespace"> </span><span class="comment single"># (The ODBC Driver installed on your system)</span><span class="whitespace">
+        </span><span class="name tag">server</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="punctuation indicator">{</span><span class="name variable">OMEGA_SQL_SERVER_HOST</span><span class="punctuation indicator">}</span><span class="whitespace">
+        </span><span class="name tag">port</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="literal scalar plain">1433</span><span class="whitespace">
+        </span><span class="name tag">database</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="punctuation indicator">{</span><span class="name variable">OMEGA_SQL_SERVER_DB</span><span class="punctuation indicator">}</span><span class="whitespace">
+        </span><span class="name tag">schema</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="literal scalar plain">schema_name</span><span class="whitespace">
+        </span><span class="name tag">user</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="punctuation indicator">{</span><span class="name variable">OMEGA_SQL_SERVER_USER</span><span class="punctuation indicator">}</span><span class="whitespace">
+        </span><span class="name tag">password</span><span class="punctuation">:</span><span class="whitespace"> </span><span class="punctuation indicator">{</span><span class="name variable">OMEGA_SQL_SERVER_PASSWORD</span><span class="punctuation indicator">}</span>
+</pre>
+<ol class="arabic" start="3">
+<li><p class="first">Link each dbt project into the directory of the dbtdeploy application:</p>
+<pre class="literal-block">
+$ ln -s /path/to/dbt/myproject dbtdeploy/myproject
+</pre>
+</li>
+</ol>
+</div>
+<div class="section" id="deploy-and-run-the-dbtdeploy-application">
+<h1>Deploy and run the dbtdeploy application</h1>
+<p>Every time we update the dbt project(s), we need to update the
+dbtdeploy application and deploy it to omega-ml.</p>
+<ol class="arabic">
+<li><p class="first">Package the dbtdeploy application:</p>
+<pre class="literal-block">
+$ om scripts put . dbtdeploy dbt/dbtdeploy
+</pre>
+</li>
+<li><p class="first">We can now run the dbt project on-demand, running in the omega-ml runtime,
+using the following command:</p>
+<pre class="literal-block">
+$ om runtime script dbtdeploy run project=myproject
+</pre>
+</li>
+<li><p class="first">For testing and debugging, add <cite>--local</cite> to run the script locally:</p>
+<pre class="literal-block">
+$ om runtime --local script dbtdeploy run project=myproject
+</pre>
+</li>
+</ol>
+</div>
+<div class="section" id="schedule-dbt-projects">
+<h1>Schedule dbt projects</h1>
+<p>To run the dbt project as a scheduled job, we need to create a job (notebook) that runs one or
+all dbt projects. This notebook, we'll call it <cite>dbt_run</cite>, should look as follows
+and be stored in om.jobs.</p>
+<p>The notebook essentially has three parts:</p>
+<ol class="arabic simple">
+<li>Import the dbtdeploy application, and update the dbt profile with omega-ml defaults</li>
+<li>Run each dbt project</li>
+<li>Generate and save the dbt docs, so they is available for later inspection or
+serving via omegaml's apphub</li>
+</ol>
+<p>Here's how to create the job:</p>
+<ol class="arabic">
+<li><p class="first">Create a job (notebook) to run the dbtdeploy application:</p>
+<pre class="literal-block">
+# in /path/to/dbt/dbt_run.ipynb
+# store this in om.jobs (om jobs put dbt_run.ipynb dbt_run)
+[1] # cron: 0 0 * * 1
+    # comment: run every Monday at midnight
+[2] # (1) import dbt project and prepare dbt profile
+    dbtdeploy = om.scripts.get('dbt/dbtdeploy', install=True)
+    dbt_dir = Path(dbtdeploy.__file__).parent
+    dbtdeploy.update_dbt_profile(f&quot;{dbt_dir}/profiles.yml&quot;, om=om)
+[3] # (2) run dbt projects (repeat (2) and (3) for each dbt project)
+    project_dir =  dbt_dir / 'foo`
+    !dbt run --profiles-dir $dbt_dir --project-dir $project_dir
+[4] # (3) generate docs and save to om.datasets as dbt/&lt;project&gt;/report.zip
+    # generate docs
+    !dbt docs generate --profiles-dir $dbt_dir --project-dir $project_dir --target-path report
+    !python -m zipfile -c report.zip $project_dir/report
+    !om datasets put ./report.zip $project/report.zip
+</pre>
+</li>
+<li><p class="first">Save the notebook to om.jobs:</p>
+<pre class="literal-block">
+$ om jobs put dbtdeploy/dbt_run.ipynb dbt_run
+</pre>
+</li>
+</ol>
+</div>
+<div class="section" id="serve-the-dbt-project-documentation">
+<h1>Serve the dbt project documentation</h1>
+<p>Finally, we can serve the dbt project documentation via omegaml's apphub or
+locally. For this we need to create a Flask application that serves the dbt project:</p>
+<ol class="arabic">
+<li><p class="first">Update the <cite>dbtdeploy/__init__.py</cite> file:</p>
+<pre class="literal-block">
+# add this to path/to/dbt/myproject/__init__.py
+def create_app(server=None, uri=None, **kwargs):
+    import os
+    import uuid
+
+    from functools import lru_cache
+    from flask import Flask, abort
+    from flask import Blueprint
+    from zipfile import ZipFile
+
+    import omegaml as om
+
+    server = server or Flask(__name__)
+    server.config.setdefault('SECRET_KEY', os.environ.get('SECRET_KEY') or uuid.uuid4().hex)
+
+    app = Blueprint('foo', __name__,
+                    url_prefix=uri,
+                    template_folder='templates')
+
+    file_cache = lru_cache(maxsize=100)
+    om = om.setup()
+
+    &#64;app.route('/')
+    def index():
+        # present a list of project reports stored in om.datasets
+        # -- each project report is stored as dbt/&lt;project&gt;/report.zip
+        href = &quot;&lt;a href='{uri}/{project}/index'&gt;{project}&lt;/a&gt;&lt;br&gt;&quot;
+        projects = [href.format(project=os.path.basename(os.path.dirname(project)),
+                                uri=uri or '') for project in om.datasets.list('dbt/*')]
+        text = &quot;&lt;p&gt;select a project to view its dbt report&lt;/p&gt;&quot;
+        return text + &quot;\n&quot;.join(projects) if projects else &quot;No projects found&quot;
+
+    &#64;app.route('/&lt;project&gt;/index')
+    def project(project):
+        # open the project report's index.html
+        _send_report_file.cache_clear()
+        project_dir = f'dbt/{project}'
+        return _send_report_file(project_dir, 'index.html')
+
+    &#64;app.route('/&lt;project&gt;/&lt;path:path&gt;')
+    def static_file(project, path):
+        # open a static file from the project report
+        project_dir = f'dbt/{project}'
+        return _send_report_file(project_dir, path)
+
+    &#64;app.errorhandler(404)
+    def handle_exception(e):
+        return {
+            &quot;code&quot;: e.code,
+            &quot;description&quot;: e.description,
+            &quot;exception&quot;: str(e),
+        }, 404
+
+    &#64;file_cache
+    def _send_report_file(project_dir, filename):
+        report_fn = f'{project_dir}/report.zip'
+        try:
+            with om.datasets.get(report_fn) as f:
+                zipfile = ZipFile(f)
+                data = zipfile.read(f'report/{filename}')
+                zipfile.close()
+        except Exception as e:
+            abort(404, str(e))
+        return data
+
+    server.register_blueprint(app)
+    return server
+</pre>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p class="first">Serve the docs locally by running the following command:</p>
+<blockquote>
+<p>$ FLASK_APP=dbtdeploy:create_app flask run</p>
+</blockquote>
+</li>
+</ol>
+<ol class="arabic" start="2">
+<li><p class="first">Serve the dbt project documentation via omegaml's apphub:</p>
+<pre class="literal-block">
+# package the app
+$ om scripts put . dbtdeploy apps/dbtdeploy
+$ om runtime restart app dbtdeploy
+</pre>
+</li>
+</ol>
+</div>
+</div>
+</body>
+</html>
