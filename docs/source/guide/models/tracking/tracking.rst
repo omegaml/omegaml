@@ -1,5 +1,5 @@
-Step by step
-------------
+A Step by step guide
+--------------------
 
 To set up experiment tracking, we specify the experiment as a context to the runtime:
 
