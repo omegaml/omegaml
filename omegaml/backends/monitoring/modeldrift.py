@@ -1,7 +1,4 @@
-import warnings
-
 import pandas as pd
-
 from omegaml.backends.monitoring.base import DriftMonitorBase
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats
@@ -11,9 +8,11 @@ from omegaml.util import tryOr, ensure_list
 class ModelDriftMonitor(DriftMonitorBase):
     def __init__(self, resource=None, store=None, query=None, tracking=None, kind=None, **kwargs):
         kind = kind or 'model'
+        resource = resource or 'a_model'
         super().__init__(resource=resource, store=store, tracking=tracking, query=query, kind=kind, **kwargs)
 
-    def snapshot(self, model=None, run=None, X=None, Y=None, rename=None, event=None):
+    def snapshot(self, model=None, run=None, X=None, Y=None, rename=None, event=None,
+                 catcols=None, since=None):
         """
         Take a snapshot of a model and log its metrics, X features and Y targets distribution for later
         drift detection
@@ -25,6 +24,9 @@ class ModelDriftMonitor(DriftMonitorBase):
             rename (dict): a dict that maps columns new -> old, e.g. {'Y_y': 'Y_0'}
             event (str): the event to snapshot, defaults to 'fit' and 'predict'
             run (int): the experiment's run to snapshot, defaults to all runs
+            catcols (list): the columns to treat as categorical
+            since (datetime): the datetime from which to snapshot X and Y data. If specified,
+              X and Y data is collected from all runs since the given datetime, inclusive.
 
         Returns:
             dict: the snapshot
@@ -46,9 +48,9 @@ class ModelDriftMonitor(DriftMonitorBase):
         # -- if no X or Y, return model snapshot
         # -- if X or Y, return X or Y snapshot
         # -- else return all snapshots as a dict(model=, X=, Y=)
-        snapshots.setdefault('metrics', self._snapshot_model_metrics(model, run=run))
+        snapshots.setdefault('metrics', self._snapshot_model_metrics(model, run=run, since=since))
         snapshots.update(self._snapshot_model_xy(model, run=run, X=X, Y=Y, event=event, Xrename=rename.get('X', rename),
-                                                 Yrename=rename.get('Y', rename)))
+                                                 Yrename=rename.get('Y', rename), catcols=catcols, since=since))
         # log each partial snapshot for this model
         # -- this enables retrieval of partial components by their respective kind (metrics, X, Y)
         partial_snapshots = (v for k, v in snapshots.items() if v and k in ('metrics', 'X', 'Y'))
@@ -65,11 +67,11 @@ class ModelDriftMonitor(DriftMonitorBase):
     def _metrics_monitor(self, model):
         return DataDriftMonitor(f'{model}', store=self.store, tracking=self.tracking, kind='metrics')
 
-    def _snapshot_model_metrics(self, model, run):
+    def _snapshot_model_metrics(self, model, run=None, since=None):
         metrics_mon = self._metrics_monitor(model)
-        df: pd.DataFrame = self.tracking.data(run=run, event='metric', kind=None)
+        run = run if since is None else None
+        df: pd.DataFrame = self.tracking.data(run=run, event='metric', kind=None, since=since)
         if df is None or len(df) == 0:
-            warnings.warn(f"could not find any metrics for model in {self.tracking=} {run=}")
             return
         index_cols = ['experiment', 'run', 'step', 'dt']
         key_cols = ['key']
@@ -84,29 +86,31 @@ class ModelDriftMonitor(DriftMonitorBase):
               .reset_index())
         mon_columns = list(set(df.columns) - set(index_cols + key_cols))
         snapshot = metrics_mon._do_snapshot(df, columns=mon_columns, name=str(model), kind='metrics',
-                                     info={'run': ensure_list(run)})
+                                            info={'run': ensure_list(run)})
         return snapshot
 
-    def _snapshot_model_xy(self, model, run=None, X=None, Y=None, Xrename=None, Yrename=None, event=None):
+    def _snapshot_model_xy(self, model, run=None, X=None, Y=None, Xrename=None, Yrename=None, event=None, catcols=None,
+                           since=None):
         x_mon, y_mon = self._xy_monitor(model)
         event = event or ['fit', 'predict']
         ifElse = lambda v, d: v if v is not None else d
-        X = ifElse(X, self.tracking.restore_data(run=run, event=event, key='X'))
-        Y = ifElse(Y, self.tracking.restore_data(run=run, event=event, key='Y'))
+        run = run if since is None else None
+        X = ifElse(X, self.tracking.restore_data(run=run, event=event, key='X', since=since))
+        Y = ifElse(Y, self.tracking.restore_data(run=run, event=event, key='Y', since=since))
         # TODO document naming convention
         # - tr:resource[run:run,event:event] => tracking for resource with given run, event, key
         Xname = f'tr:{self._resource}[run:{run},event:{event},key:X]'
         Yname = f'tr:{self._resource}[run:{run},event:{event},key:Y]'
         snapshots = {
             'X': tryOr(lambda: x_mon._do_snapshot(self._assert_dataframe(X, rename=Xrename),
-                                                  kind='feature', _prefix='X', name=Xname), None),
+                                                  kind='feature', _prefix='X', name=Xname, catcols=catcols), None),
             'Y': tryOr(lambda: y_mon._do_snapshot(self._assert_dataframe(Y, rename=Yrename),
-                                                  kind='label', _prefix='Y', name=Yname), None),
+                                                  kind='label', _prefix='Y', name=Yname, catcols=catcols), None),
         }
         return snapshots
 
     def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None):
-        """ Measure drift in the model, X and Y
+        """ Measure drift in a model's metrics, X and Y
 
         Args:
             seq: sequence of recent predictions to consider

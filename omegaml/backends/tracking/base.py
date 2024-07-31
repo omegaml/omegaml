@@ -59,7 +59,7 @@ class TrackingProvider:
         self._experiment = name or self._experiment
         return self
 
-    def track(self, obj, store=None, label=None, monitor=False, **monitor_kwargs):
+    def track(self, obj, store=None, label=None, monitor=False, monitor_kwargs=None, **kwargs):
         """ attach this experiment to the named object
 
         Usage:
@@ -99,12 +99,13 @@ class TrackingProvider:
         meta = store.metadata(obj)
         store.link_experiment(obj, self._experiment, label=label)
         if monitor:
+            monitor_kwargs = monitor_kwargs or kwargs
             monitor_provider = monitor if isinstance(monitor, str) else None
             self.as_monitor(obj, store=store, provider=monitor_provider, **monitor_kwargs)
         meta.save()
         return meta
 
-    def as_monitor(self, obj, alerts=None, schedule=None, store=None, provider=None):
+    def as_monitor(self, obj, alerts=None, schedule=None, store=None, provider=None, **kwargs):
         """
         Return and attach a drift monitor to this experiment
 
@@ -131,7 +132,7 @@ class TrackingProvider:
         store.link_monitor(obj, self._experiment, provider=provider,
                            alerts=alerts, schedule=schedule)
         ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
-        return ProviderClass(obj, tracking=self, store=store)
+        return ProviderClass(obj, tracking=self, store=store, **kwargs)
 
     def _has_monitor(self, obj, store=None):
         store = store or self._model_store

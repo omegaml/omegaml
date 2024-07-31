@@ -14,9 +14,14 @@ class DriftMonitorBase:
         self._query = query or kwargs
         self._kind = kind
         self.tracking = tracking
+        self.samples = [1000, 10000]  # small and large sample sizes
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self._resource})'
+
+    @property
+    def df(self):
+        return pd.json_normalize(self.data)
 
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
@@ -31,8 +36,8 @@ class DriftMonitorBase:
 
         Args:
             seq (list|str): a list of snapshot indices to compare in the format [i, j],
-               or one of 'baseline', 'seq'. Use 'baseline' to compare every snapshot
-               to the first snapshot, or 'seq' to compare each snapshot to the previous.
+               or one of 'baseline', 'series'. Use 'baseline' to compare every snapshot
+               to the first snapshot, or 'series' to compare each snapshot to the previous.
                [i, j] are 0-indexed snapshot indices, can be specified as negative indices
                to indicate the last n-th snapshot.
             d1 (int): the first snapshot index to compare, optional
@@ -59,7 +64,7 @@ class DriftMonitorBase:
             # return a drift history (call this method recursively)
             if recursive_seq or seq in (True, 'series'):
                 # [0, 1, 2, ...] => compare each snapshot to the previous
-                seq = range(0, len(self)) if seq is True else seq
+                seq = range(0, len(self))
                 drifts = [self._single_drift(seq=[i, j], ci=ci, raw=True) for i, j in pairwise(seq)]
             elif seq == 'baseline':
                 # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline
@@ -74,17 +79,17 @@ class DriftMonitorBase:
 
     def _single_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None):
         # return a single drift
-        if d1 or d2:
-            s1 = self.snapshot(d1) if d1 else None
-            s2 = self.snapshot(d2) if d2 else None
-            seq = seq or [-2, -1]
+        if any(d is not None for d in (d1, d2)):
+            s1 = self.snapshot(d1, logged=False) if d1 is not None else None
+            s2 = self.snapshot(d2, logged=False) if d2 is not None else None
+            seq = seq or [0, 1]
         else:
             s1, s2 = None, None
             seq = seq or []
+        snapshots = self.data
         if not all((s1, s2)):
             # TODO snapshot querying should be in self.data(), not here
             #      to be scalable
-            snapshots = self.data
             if snapshots is None or len(snapshots) < 1:
                 # no snapshots, no drift
                 return None
@@ -140,10 +145,13 @@ class DriftMonitorBase:
         info.update(kwargs)
         return info
 
-    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None):
+    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None,
+                     catcols=None):
+        # TODO allow specification of category columns, e.g. categorical=['col1', 'col2']
         extra_info = info or {}
         df1 = df1[columns] if columns else df1
-        numeric_columns = list(df1.select_dtypes(include='number').columns)
+        catcols = [c for c in catcols if c in df1.columns] if catcols else []
+        numeric_columns = list(set(df1.select_dtypes(include='number').columns) - set(catcols))
         cat_columns = list(set(df1.columns) - set(numeric_columns))
         snapshot = {}
         stats = snapshot.setdefault('stats', {})
@@ -205,7 +213,7 @@ class DriftMonitorBase:
             h1, e1 = s1['stats'][_c('d1', s1, col)]['hist']
             h2, e2 = s2['stats'][_c('d2', s2, col)]['hist']
             sd = s1['stats'][_c(None, s1, col)]['std']
-            samples = 100 if len(e1) < 100 else 1000
+            samples = self.samples[0] if len(e1) < 100 else self.samples[1]
             d1 = calc.sample_from_hist(h1, e1, n=samples)
             d2 = calc.sample_from_hist(h2, e2, n=samples)
             cdf1 = calc.cdf_from_hist(h1, e1)
@@ -265,14 +273,18 @@ class DriftMonitorBase:
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift
 
-    def check(self, alerts, notify=True):
+    def check(self, alerts=None, notify=True):
         """ check for drift and notify recipients
 
         Args:
             alerts (list): a list of alert rules
             notify (bool): whether to notify recipients, defaults to True
         """
-        rules = self._make_alert_rules(alerts or [])
+        rules = self._make_alert_rules(alerts or [{
+            'event': 'drift',
+            'action': 'notify',
+            'recipients': ['users'],
+        }])
         for rule in rules:
             rule.check(notify=notify, run=self.tracking.active_run())
 
@@ -310,7 +322,7 @@ class DriftMonitorBase:
                 'monitor': self._resource,
             }
             self._log_drift(event, **extra)
-            self.check(alerts) if alerts else None
+            self.check(alerts)
             return True
         return False
 

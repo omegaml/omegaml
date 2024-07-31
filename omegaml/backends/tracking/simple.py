@@ -1,23 +1,19 @@
-from itertools import chain
-
+import dill
 import numpy as np
-from typing import Iterable
-
 import os
+import pandas as pd
+import pkg_resources
 import platform
+import pymongo
 import warnings
 from base64 import b64encode, b64decode
 from datetime import datetime, date
-from uuid import uuid4
-
-import dill
-import pandas as pd
-import pkg_resources
-import pymongo
-
+from itertools import chain
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
 from omegaml.util import _raise, ensure_index, batched, signature
+from typing import Iterable
+from uuid import uuid4
 
 
 class NoTrackTracker(TrackingProvider):
@@ -111,7 +107,7 @@ class OmegaSimpleTracker(TrackingProvider):
 
     @property
     def _latest_run(self):
-        cursor = self.data(event='start', lazy=True)
+        cursor = self.data(event='start', run='*', lazy=True)
         data = list(cursor.sort('data.run', -1).limit(1)) if cursor else None
         run = data[-1].get('data', {}).get('run') if data is not None and len(data) > 0 else None
         return run
@@ -313,7 +309,7 @@ class OmegaSimpleTracker(TrackingProvider):
 
         Args:
             key (str): the name of the artifact
-            value (dict): the x/y data
+            value (any): the x/y data
             step (int): the step
             dt (datetime): the datetime
             event (str): the event, defaults to 'data'
@@ -373,7 +369,7 @@ class OmegaSimpleTracker(TrackingProvider):
 
         Args:
             experiment (str|list): the name of the experiment, defaults to its current value
-            run (int|list): the run(s) to get data back, defaults to current run, use 'all' for all,
+            run (int|list|str): the run(s) to get data back, defaults to current run, use 'all' for all,
                1-indexed since first run, or -1 indexed from latest run, can combine both. If run < 0
                would go before the first run, run 1 will be returned.
             event (str|list): the event(s) to include
@@ -381,6 +377,8 @@ class OmegaSimpleTracker(TrackingProvider):
             key (str|list): the key(s) to include
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
+            since (datetime): only return data since this date. If both since and run are specified,
+               run is ignored and all runs since the date are returned
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
                note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
                yields a list of dicts
@@ -409,23 +407,28 @@ class OmegaSimpleTracker(TrackingProvider):
         """
         from functools import cache
         experiment = experiment or self._experiment
-        run = run or self._run
-        run = list(run) if not isinstance(run, str) and isinstance(run, Iterable) else run
-        # actual run
-        # -- run is 1-indexed, so we need to adjust for -1 indexing
-        #    e.g. -1 means the latest run, -2 the run before that
-        #    e.g. latest_run = 5, run=-1 means 5, run=-2 means 4 etc.
-        # -- run can be a list, in which case we adjust run < 0 for each element
-        # -- run can never be less than 1 (1-indexed), even if run << 0
-        last_run = cache(
-            lambda: int(self._latest_run or 0))  # PERF/consistency: memoize the last run per each .data() call
-        relative_run = lambda r: max(1, 1 + last_run() + r)
-        if isinstance(run, list) and any(r < 0 for r in run):
-            run = [(r if r >= 0 else relative_run(r)) for r in run]
-        elif isinstance(run, int) and run < 0:
-            run = relative_run(run)
-        filter = self._build_data_filter(experiment, run, event, step, key, since, extra)
+        # -- flush all buffers before querying
         self.flush()
+        # -- build filter
+        if since is None:
+            run = run or self._run
+            run = list(run) if not isinstance(run, str) and isinstance(run, Iterable) else run
+            # actual run
+            # -- run is 1-indexed, so we need to adjust for -1 indexing
+            #    e.g. -1 means the latest run, -2 the run before that
+            #    e.g. latest_run = 5, run=-1 means 5, run=-2 means 4 etc.
+            # -- run can be a list, in which case we adjust run < 0 for each element
+            # -- run can never be less than 1 (1-indexed), even if run << 0
+            last_run = cache(
+                lambda: int(self._latest_run or 0))  # PERF/consistency: memoize the last run per each .data() call
+            relative_run = lambda r: max(1, 1 + last_run() + r)
+            if isinstance(run, list) and any(r < 0 for r in run):
+                run = [(r if r >= 0 else relative_run(r)) for r in run]
+            elif isinstance(run, int) and run < 0:
+                run = relative_run(run)
+        else:
+            run = None
+        filter = self._build_data_filter(experiment, run, event, step, key, since, extra)
 
         def read_data(cursor):
             data = pd.DataFrame.from_records(cursor)
@@ -436,7 +439,8 @@ class OmegaSimpleTracker(TrackingProvider):
 
         def read_data_batched(cursor):
             for rows in batched(cursor, batchsize):
-                yield read_data(rows) if not raw else rows
+                data = (r.get('data') for r in rows)
+                yield read_data(data) if not raw else list(data)
 
         if batchsize:
             data = self._store.get(self._data_name, filter=filter, lazy=True, trusted=signature(filter))
@@ -503,12 +507,14 @@ class OmegaSimpleTracker(TrackingProvider):
         restored = self.restore_artifacts(*args, **kwargs)
         return restored[-1] if restored else None
 
-    def restore_artifacts(self, key=None, experiment=None, run=None, step=None, value=None, event=None, name=None):
+    def restore_artifacts(self, key=None, experiment=None, run=None, since=None, step=None, value=None, event=None,
+                          name=None):
         """ restore logged artifacts
 
         Args:
             key (str): the name of the artifact as provided in log_artifact
             run (int): the run for which to query, defaults to current run
+            since (datetime): only return data since this date
             step (int): the step for which to query, defaults to all steps in run
             value (dict|list): dict or list of dict, this value is used instead of
                querying data, use to retrieve an artifact from contents of ``.data()``
@@ -527,7 +533,7 @@ class OmegaSimpleTracker(TrackingProvider):
         event = event or 'artifact'
         name = name or '*'
         if value is None:
-            all_data = self.data(experiment=experiment, run=run, event=event,
+            all_data = self.data(experiment=experiment, run=run, since=since, event=event,
                                  step=step, key=key, raw=True, name=name)
         else:
             all_data = [{'value': value}] if isinstance(value, dict) else value
@@ -551,14 +557,16 @@ class OmegaSimpleTracker(TrackingProvider):
             restored.append(obj)
         return restored
 
-    def restore_data(self, key, event=None, concat=True, **extra):
+    def restore_data(self, key, run=None, event=None, since=None, concat=True, **extra):
         """ restore x/y data for model predictions
 
         This is semantic sugar for restore_artifacts() using the event='data' event.
 
         Args:
             key (str): the name of the artifact
+            run (int): the run for which to query, defaults to current run
             event (str): the event, defaults to 'data'
+            since (datetime): only return data since this date
             concat (bool): if True, concatenates the data into a single object,
                in this case all data must be of the same type. Defaults to True.
             **extra: any other values to store with event
@@ -572,12 +580,13 @@ class OmegaSimpleTracker(TrackingProvider):
             if values is None:
                 return None
             if len(values) and isinstance(values[0], (pd.DataFrame, pd.Series)):
-                return pd.concat(values, axis=0)
+                ensure_df_or_series = lambda v: pd.Series(v) if isinstance(v, (np.ndarray, list)) else v
+                return pd.concat((ensure_df_or_series(v) for v in values), axis=0)
             elif len(values) and isinstance(values[0], np.ndarray):
                 return np.concatenate(values, axis=0)
             # chain seems to be the fastests approach
             # -- https://stackoverflow.com/a/56407963/890242
             return list(chain(*values))
 
-        restored = self.restore_artifacts(key=key, event=event, **extra)
+        restored = self.restore_artifacts(run=run, key=key, event=event, since=since, **extra)
         return restored if not concat else _concat(restored)

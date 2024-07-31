@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy.stats import ks_2samp, chisquare, wasserstein_distance
-
 from omegaml.util import ensure_list
+from scipy.stats import ks_2samp, chisquare, wasserstein_distance
 
 
 class DriftStatsCalc:
@@ -13,7 +12,7 @@ class DriftStatsCalc:
         # -- H1: alternative (=> drift)
         # -- H0 is rejected if pvalue < 1 - ci (default: 0.05)
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
-        result = ks_2samp(d1, d2)
+        result = ks_2samp(d1, d2, method='asymp')
         score = self.calculate_score(result.statistic)
         is_drift = result.pvalue < (1 - ci)
         return {
@@ -93,7 +92,7 @@ class DriftStats:
         self.drifts = data
         self.monitor = monitor
         self._df = None
-
+        
     def __repr__(self):
         return f'DriftStats({self.monitor},drifts={len(self.drifts)})'
 
@@ -151,6 +150,23 @@ class DriftStats:
         return result
 
     def __getitem__(self, spec):
+        """
+        Get drift statistics for a given column, statistic, seq_from, seq_to
+
+        Args:
+            spec (tuple): (column, statistic, seq_from, seq_to), or a subset therefor,
+               e.g. (column,), (column, statistic), (column, statistic, seq_from),
+                (column, statistic, seq_from, seq_to)
+
+        Usage:
+            stats['column'] -- get all statistics for a column
+            stats['column', 'mean'] -- get mean statistics for a column
+            stats['column', 'mean', 0] -- get mean statistics for a column at seq_from=0
+            stats['column', 'mean', 0, 1] -- get mean statistics for a column at seq_from=0, seq_to=1
+
+        Returns:
+            The .df dataframe filtered by the given spec
+        """
         df = self.df
         column, statistic, *seq = spec if isinstance(spec, (list, tuple)) else (spec, None)
         column = None if column == '*' else column
@@ -162,14 +178,26 @@ class DriftStats:
         flt &= df['seq_to'].isin(ensure_list(seq_to)) if seq_to is not None else True
         return df[flt]
 
-    def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, **kwargs):
+    def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, sample=None, logx=False,
+             logy=False, xlim=None, ylim=None, **kwargs):
         statistic = statistic or 'mean'
         seq = seq or self.seq(column=column, statistic=statistic)
-        if column:
-            return self._plot_column(column, statistic, seq, kind, ax, **kwargs)
-        return self._plot_all(statistic, seq, kind, ax, **kwargs)
+        if isinstance(column, str):
+            ax = self._plot_column(column, statistic, seq, kind, ax, sample=sample, **kwargs)
+        else:
+            columns = list(column) if isinstance(column, (list, tuple)) else None
+            ax = self._plot_all(statistic, seq, kind, ax, columns=columns, **kwargs)
+        if logx:
+            plt.xscale('log')
+        if logy:
+            plt.yscale('log')
+        if xlim:
+            plt.xlim(*xlim)
+        if ylim:
+            plt.ylim(*ylim)
+        return ax
 
-    def _plot_column(self, column, statistic, seq, kind, ax, **kwargs):
+    def _plot_column(self, column, statistic, seq, kind, ax, sample=None, **kwargs):
         s1, s2 = seq if isinstance(seq, (list, tuple)) else [seq, seq]
         baseline_df = self[column, statistic, (s1, None)]
         target_df = self[column, statistic, (None, s2)]
@@ -178,15 +206,23 @@ class DriftStats:
         dt1 = baseline_df['dt_from'].iloc[0]
         dt2 = target_df['dt_to'].iloc[0]
         if kind == 'dist':
-            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs)
+            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=sample, **kwargs)
         elif kind == 'time':
             ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs)
         return ax
 
-    def _plot_all(self, statistic, seq, kind, ax, **kwargs):
-        return self.as_dataframe(statistic=statistic).plot.bar('column', 'metric')
+    def _plot_all(self, statistic, seq, kind, ax, columns=None, **kwargs):
+        df = self.as_dataframe(statistic=statistic)
+        df = df[df['column'].isin(columns)] if columns else df
+        # -- convert to column oriented data to plot all features for each seq
+        dfx = pd.pivot_table(df, index='column', columns='seq_to', values='metric')
+        ax = dfx.plot.bar()
+        plt.title('Drift statistics for all features')
+        # -- move legend outside of plot
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        return ax
 
-    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs):
+    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=None, **kwargs):
         # prepare drift message
         drift_ind = 'detected' if self[column, statistic]['drift'].sum() > 0 else 'not detected'
         drift_stats = self[column, statistic, (None, s2)].iloc[0]['stats']
@@ -197,9 +233,14 @@ class DriftStats:
         for period in (baseline, target):
             if 'hist' in period:
                 counts, edges = period['hist']
-                ax = plt.hist(counts, edges, fill=True, alpha=.8, **kwargs)
+                if sample:
+                    # perform re-sampling of data if requested
+                    stats_calc = DriftStatsCalc()
+                    h = stats_calc.sample_from_hist(counts, edges, n=sample)
+                    counts, edges = np.histogram(h, bins=len(edges))
+                ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
             if 'groups' in period:
-                ax = plt.bar(period['groups'].keys(), period['groups'].values(), **kwargs)
+                ax = plt.bar(period['groups'].keys(), period['groups'].values(), alpha=.8, **kwargs)
         if ax:
             plt.suptitle(f'{column} distribution')
             plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
@@ -253,7 +294,7 @@ class DriftStats:
         return self[column, statistic, (seq, None)]['baseline']
 
     def target(self, column, statistic, seq=None):
-        return self[column, statistic, (None, seq)]
+        return self[column, statistic, (None, seq)]['target']
 
     def as_dataframe(self, drift_data=None, **query):
         drift = drift_data or self.drifts
@@ -289,6 +330,7 @@ class DriftStats:
                         'baseline': d1['stats'][_c('d1', column, d1)],
                         'target': d2['stats'][_c('d2', column, d2)],
                     }
+
         return self._filter_df(pd.DataFrame(drift_records(stats)), **query)
 
     def _filter_df(self, df, **criterias):

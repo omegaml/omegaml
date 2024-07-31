@@ -14,9 +14,12 @@ from sklearn.linear_model import LinearRegression
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def setUp(self):
+        import matplotlib as mpl
         super().setUp()
         self.df = self.setup_testdata()
         random.seed(seed=42)  # ensure we always get the same sampling data
+        # enable interactive plot output
+        mpl.use('TkAgg')
 
     def tearDown(self):
         pass
@@ -441,8 +444,8 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             exp.track('regmodel', monitor=True)
             mon = exp.as_monitor('regmodel')
             om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
-            om.runtime.model('regmodel').score('sample[x]', 'sample[y]').get()
             mon.snapshot(run=-1)
+            om.runtime.model('regmodel').score('sample[x]', 'sample[y]').get()
             om.runtime.model('regmodel').predict('sample[x]').get()
             exp.log_data('XX', df)
             mon.snapshot(run=-1)
@@ -546,3 +549,16 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIn('Y', snapshot)
         self.assertIsNotNone(snapshot['X'])
         self.assertIsNotNone(snapshot['Y'])
+
+    def test_catcol_xy_tracking(self):
+        import omegaml as om
+        from sklearn import datasets
+        from omegaml.backends.monitoring import ModelDriftMonitor
+        x, y = datasets.load_iris(return_X_y=True, as_frame=True)
+        with om.runtime.experiment('foo', recreate=True) as exp:
+            mon = ModelDriftMonitor(tracking=exp)
+            snapshot = mon.snapshot(X=x, Y=y, catcols=['target'])
+            self.assertIn('X', snapshot)
+            self.assertIn('Y', snapshot)
+            # note the column is renamed to Y_target (to make it unique among all columns)
+            self.assertIn('Y_target', snapshot['Y']['info']['cat_columns'])

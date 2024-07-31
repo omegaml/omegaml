@@ -1,12 +1,10 @@
+import datetime
+
 import pandas as pd
 import platform
 import pymongo
 import unittest
 from numpy.testing import assert_almost_equal
-from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from time import sleep
-
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
 from omegaml.backends.tracking.profiling import OmegaProfilingTracker
@@ -14,6 +12,9 @@ from omegaml.backends.tracking.simple import OmegaSimpleTracker
 from omegaml.documents import Metadata
 from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
 from omegaml.tests.util import OmegaTestMixin
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from time import sleep
 
 
 class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
@@ -220,7 +221,6 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             tracked_Y = exp.restore_data(event='predict', key='Y', run=i_run)
             self.assertEqual(len(tracked_X), len(X))
             self.assertEqual(len(tracked_Y), len(Y))
-
 
     def test_tracking_runtime_taskid(self):
         # create a model
@@ -506,8 +506,42 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         data = exp.data(run=1)
         self.assertEqual(data['run'].unique(), [1])
 
+    def test_since_filter(self):
+        om = self.om
+        dt_start = dt = datetime.datetime.utcnow()
+        for i in range(0, 10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('acc', 0, dt=dt)
+                dt = dt + datetime.timedelta(hours=1)
+        # all data since start
+        data = exp.data(event='metric', key='acc', since=dt_start)
+        self.assertEqual(len(data), 10)
+        # only last 5 hours
+        data = exp.data(event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
+        self.assertEqual(len(data), 5)
+        # only last hour
+        data = exp.data(event='metric', key='acc', since=dt_start + datetime.timedelta(hours=9))
+        self.assertEqual(len(data), 1)
+        # all data since start - 1 hour
+        data = exp.data(event='metric', key='acc', since=dt_start - datetime.timedelta(hours=1))
+        self.assertEqual(len(data), 10)
+        # make sure run=1 is ignored when since is set
+        data = exp.data(run=1, event='metric', key='acc')
+        self.assertEqual(len(data), 1)
+        data = exp.data(run=1, event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
+        self.assertEqual(len(data), 5)
 
-
+    def test_restore_xy_data(self):
+        om = self.om
+        exp: OmegaSimpleTracker
+        with om.runtime.experiment('myexp') as exp:
+            df = pd.DataFrame({'x': range(0, 10)})
+            exp.log_data('Y', df['x'])
+        with om.runtime.experiment('myexp') as exp:
+            ds = pd.Series(range(0, 10)).values
+            exp.log_data('Y', ds)
+        dfx = exp.restore_data('Y', run='*')
+        self.assertEqual(len(dfx), 20)
 
 
 if __name__ == '__main__':
