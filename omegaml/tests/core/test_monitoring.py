@@ -1,5 +1,7 @@
 from unittest import TestCase, mock, skip
 
+import datetime
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from numpy import random
@@ -14,7 +16,6 @@ from sklearn.linear_model import LinearRegression
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        import matplotlib as mpl
         super().setUp()
         self.df = self.setup_testdata()
         random.seed(seed=42)  # ensure we always get the same sampling data
@@ -562,3 +563,55 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             self.assertIn('Y', snapshot)
             # note the column is renamed to Y_target (to make it unique among all columns)
             self.assertIn('Y_target', snapshot['Y']['info']['cat_columns'])
+
+    def test_most_recent_snapshot(self):
+        """ get the most recent snapshots and respective time """
+        om = self.om
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+        df = pd.DataFrame({
+            'x': np.random.uniform(0, 1, 100),
+        })
+        # -- no snapshot
+        self.assertEqual(datetime.datetime.min, mon._most_recent_snapshot_time())
+        # -- test various snapshot ranges
+        for i in range(5):
+            snapshot1 = mon.snapshot(df)
+            snapshot2 = mon.snapshot(df)
+            self.assertEqual(snapshot1['info'], mon._most_recent_snapshots(n=2)[-2]['info'])
+            self.assertEqual(snapshot2['info'], mon._most_recent_snapshots(n=2)[-1]['info'])
+            self.assertEqual(snapshot1['info']['dt'], mon._most_recent_snapshot_time(n=2))
+            self.assertEqual(snapshot2['info']['dt'], mon._most_recent_snapshot_time())
+
+    def test_model_snapshot_since(self):
+        """ automatically snapshot model metrics, X, Y from multiple subsequent runs """
+        om = self.om
+        df = pd.DataFrame({
+            'x': range(1, 10)
+        })
+        df['y'] = df['x'] * 5 + 3
+        reg = LinearRegression()
+        om.models.put(reg, 'regmodel')
+        om.datasets.put(df, 'sample')
+        # set up monitoring
+        with om.runtime.experiment('myexp', autotrack=True) as exp:
+            exp.track('regmodel', monitor=True)
+            om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+            mon = exp.as_monitor('regmodel')
+            mon.snapshot(event='fit')
+            latest_snapshot_dt = mon._most_recent_snapshot_time()
+        for i in range(10):
+            # force multiple runs
+            om.runtime.model('regmodel').predict('sample[x]').get()
+        # snapshot all predict events since last snapshot
+        # -- expect to get all predict events since last
+        snapshot = mon.snapshot(event='predict', since='last')
+        self.assertEqual(snapshot['info']['since'], latest_snapshot_dt)
+        self.assertEqual(snapshot['X']['info']['len'], 10 * len(df))
+        self.assertEqual(snapshot['Y']['info']['len'], 10 * len(df))
+        # snapshot all predict events since last snapshot
+        # -- should raise assertion error since there are no predict events since last
+        with self.assertRaises(AssertionError) as cm:
+            mon.snapshot(event='predict', since='last')
+        self.assertIn('no model events using query', str(cm.exception))
+        mon.capture(since='last')

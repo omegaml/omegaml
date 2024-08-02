@@ -16,9 +16,8 @@ alerts = {alerts}
 # snapshot recent state and capture drift 
 with om.runtime.model(name).experiment(experiment) as exp:
     mon = exp.as_monitor(name, store=om.models, provider=provider)
-    # TODO run=-1, or since=dt for last run? in production we have many runs since the last one
-    mon.snapshot(run='*') 
-    mon.capture(alerts=alerts)
+    mon.snapshot(since='last', ignore_empty=True) 
+    mon.capture(alerts=alerts, since='last')
 """
 
 
@@ -49,14 +48,14 @@ def ensure_monitors(self, **kwargs):
         for mon in monitors:
             experiment = mon['experiment']
             provider = mon['provider']
-            job = mon.get('job') or f'monitors/{experiment}/{meta.name}'
+            jobname = mon.get('job') or f'monitors/{experiment}/{meta.name}'
             schedule = mon.get('schedule', 'daily')
             alerts = mon.get('alerts', [])
-            if not om.jobs.list(job):
+            if not om.jobs.list(jobname):
                 # if job does not exist yet create it
                 code = code_block.format(**locals())
-                om.jobs.create(code, job)
-                om.jobs.schedule(job, schedule=schedule)
-                mon['job'] = job
+                om.jobs.create(code, jobname)
+                om.jobs.schedule(jobname, schedule=schedule)
+                mon['job'] = jobname
                 mon['schedule'] = schedule
                 meta.save()

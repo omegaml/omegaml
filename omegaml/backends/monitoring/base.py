@@ -44,6 +44,9 @@ class DriftMonitorBase:
             d2 (int): the second snapshot index to compare, optional
             ci (float): the confidence interval for the drift test, defaults to .95
             baseline (int): the baseline snapshot index to compare to, defaults to 0
+            since (datetime|str): only consider snapshots since this date. If type(str), must
+                be an ISO8601 formatted date string or 'last'. For 'last', the last snapshot's
+                'since' value is used, and if not present, the previous snapshot's dt is used.
             raw (bool): if True, returns drift statistics as a dict, otherwise
                 returns a DriftStats instance
             matcher (dict): a dict that maps columns 'old' => 'new', e.g. {'Y_y': 'Y_0'}.
@@ -57,7 +60,7 @@ class DriftMonitorBase:
         """
         return self.drift(*args, **kwargs)
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None):
+    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
@@ -65,20 +68,21 @@ class DriftMonitorBase:
             if recursive_seq or seq in (True, 'series'):
                 # [0, 1, 2, ...] => compare each snapshot to the previous
                 seq = range(0, len(self))
-                drifts = [self._single_drift(seq=[i, j], ci=ci, raw=True) for i, j in pairwise(seq)]
+                drifts = [self._single_drift(seq=[i, j], ci=ci, raw=True, since=since) for i, j in pairwise(seq)]
             elif seq == 'baseline':
                 # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline
                 seq = list(product([baseline], range(1, len(self))))
-                drifts = [self._single_drift(seq=pair, ci=ci, raw=True) for pair in seq]
+                drifts = [self._single_drift(seq=pair, ci=ci, raw=True, since=since) for pair in seq]
             else:
                 raise ValueError(
                     f'invalid drift sequence {seq}, must be True, "baseline", "series" or a list of snapshot indices.')
             drifts = [d for d in drifts if d is not None]
             return DriftStats(drifts, monitor=self) if not raw else drifts
-        return self._single_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw, matcher=matcher)
+        return self._single_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw, matcher=matcher, since=since)
 
-    def _single_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None):
+    def _single_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None, since=None):
         # return a single drift
+        since = since.isoformat() if isinstance(since, datetime) else since
         if any(d is not None for d in (d1, d2)):
             s1 = self.snapshot(d1, logged=False) if d1 is not None else None
             s2 = self.snapshot(d2, logged=False) if d2 is not None else None
@@ -102,9 +106,22 @@ class DriftMonitorBase:
                 _s1 = _s2 = snapshots[seq[-1]]
             s1 = s1 or _s1
             s2 = s2 or _s2
-        drift = self._calc_drift(s1, s2, ci=ci, matcher=matcher)
-        eff_seq = lambda s: s if s >= 0 else len(snapshots) + s
-        drift['info']['seq'] = [eff_seq(seq[0]), eff_seq(seq[1])]
+        if since == 'last':
+            # align with last snapshots's period
+            # -- rationale: upon mon.snapshot(since='last') a new snapshot is taken
+            #               according to the previous most recent snapshot's dt. This
+            #               value is stored as the 'since' value in the snapshot['info'].
+            #               Thus upon since=='last' we align the drift calculation with
+            #               the last snapshot's 'since' period, assuming previous drifts are
+            #               already calculated or not of interest.
+            since = snapshots[-1]['info'].get('since') or snapshots[seq[0]]['info']['dt']
+        if since and s2['info']['dt'] < since:
+            # we only compare s2 because for any (s2 is newer than s1), drift calculation is necessary
+            drift = []
+        else:
+            drift = self._calc_drift(s1, s2, ci=ci, matcher=matcher)
+            eff_seq = lambda s: s if s >= 0 else len(snapshots) + s
+            drift['info']['seq'] = [eff_seq(seq[0]), eff_seq(seq[1])]
         return DriftStats(drift, monitor=self) if not raw else drift
 
     @property
@@ -145,15 +162,27 @@ class DriftMonitorBase:
         info.update(kwargs)
         return info
 
+    def _most_recent_snapshots(self, n=1):
+        snapshots = self.data
+        start = max(0, len(snapshots) - n)
+        stop = len(snapshots)
+        return snapshots[start:stop] if snapshots else []
+
+    def _most_recent_snapshot_time(self, n=1):
+        recent = self._most_recent_snapshots(n=n)
+        return recent[0]['info']['dt'] if recent else datetime.min
+
     def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None,
                      catcols=None):
-        # TODO allow specification of category columns, e.g. categorical=['col1', 'col2']
         extra_info = info or {}
         df1 = df1[columns] if columns else df1
         catcols = [c for c in catcols if c in df1.columns] if catcols else []
         numeric_columns = list(set(df1.select_dtypes(include='number').columns) - set(catcols))
         cat_columns = list(set(df1.columns) - set(numeric_columns))
         snapshot = {}
+        extra_info.update({
+            'len': len(df1),
+        })
         stats = snapshot.setdefault('stats', {})
         info = snapshot.setdefault('info', self._snapshot_info(name, kind, **extra_info))
         info['num_columns'] = numeric_columns if not _prefix else [f'{_prefix}_{col}' for col in numeric_columns]
@@ -208,7 +237,7 @@ class DriftMonitorBase:
         for col in numeric_columns:
             # ks_2samp: two-sample Kolmogorov-Smirnov test for goodness of fit
             # -- we compare the cumulative histograms of the two datasets
-            # -- hist[0] is the frequences for each bin
+            # -- hist[0] is the frequencies for each bin
             # -- hist[1] is the bin edges
             h1, e1 = s1['stats'][_c('d1', s1, col)]['hist']
             h2, e2 = s2['stats'][_c('d2', s2, col)]['hist']
@@ -288,7 +317,7 @@ class DriftMonitorBase:
         for rule in rules:
             rule.check(notify=notify, run=self.tracking.active_run())
 
-    def capture(self, column=None, statistic=None, alerts=None, seq='baseline', baseline=0):
+    def capture(self, column=None, statistic=None, alerts=None, seq='baseline', since=None, baseline=0):
         """
         capture detected drift, if any, by logging an event in tracking
 
@@ -313,11 +342,11 @@ class DriftMonitorBase:
         Returns:
             bool: True if drift was detected and logged, False otherwise
         """
-        drift = self.drift(seq=seq, baseline=baseline)
-        event = drift.drifted(column=column, statistic=statistic, summary=True)
+        stats = self.compare(seq=seq, baseline=baseline, since=since)
+        event = stats.drifted(column=column, statistic=statistic, summary=True)
         if any(drifted for part, drifted in event.items()):
             extra = {
-                'seq': drift.seq(),
+                'seq': stats.seq(),
                 'column': column or '*',
                 'monitor': self._resource,
             }
@@ -337,7 +366,7 @@ class DriftMonitorBase:
     def alerts(self, run=None, since=None, raw=False, stats=False):
         run = run or '*'
         data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key,
-                                  since=None)
+                                  since=since)
         if not raw and stats:
             # -- data['value'] is a series of dicts, each dict is a drift event
             # -- each drift event is a list of drift indicators, see .capture()

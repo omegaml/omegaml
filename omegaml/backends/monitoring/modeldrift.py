@@ -12,7 +12,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         super().__init__(resource=resource, store=store, tracking=tracking, query=query, kind=kind, **kwargs)
 
     def snapshot(self, model=None, run=None, X=None, Y=None, rename=None, event=None,
-                 catcols=None, since=None):
+                 catcols=None, since=None, ignore_empty=False):
         """
         Take a snapshot of a model and log its metrics, X features and Y targets distribution for later
         drift detection
@@ -25,8 +25,12 @@ class ModelDriftMonitor(DriftMonitorBase):
             event (str): the event to snapshot, defaults to 'fit' and 'predict'
             run (int): the experiment's run to snapshot, defaults to all runs
             catcols (list): the columns to treat as categorical
-            since (datetime): the datetime from which to snapshot X and Y data. If specified,
-              X and Y data is collected from all runs since the given datetime, inclusive.
+            since (datetime|str): the datetime from which to snapshot X and Y data. If specified,
+              X and Y data is collected from all runs since the given datetime, inclusive. If
+              'last', the datetime is set to be > last snapshot time.
+            ignore_empty (bool): whether to ignore empty snapshots, if True returns None and
+               does not log the snapshot. If False, an AssertionError is raised in case of no data.
+               Defaults to False
 
         Returns:
             dict: the snapshot
@@ -42,8 +46,10 @@ class ModelDriftMonitor(DriftMonitorBase):
         model = model or self._resource
         run = run or '*'
         rename = rename or {}
+        if since == 'last':
+            since = self._most_recent_snapshot_time()
         snapshots = {}
-        snapshots.setdefault('info', self._snapshot_info(model, 'model', run=ensure_list(run)))
+        snapshots.setdefault('info', self._snapshot_info(model, 'model', run=ensure_list(run), since=since))
         # return snapshot as expected
         # -- if no X or Y, return model snapshot
         # -- if X or Y, return X or Y snapshot
@@ -53,9 +59,14 @@ class ModelDriftMonitor(DriftMonitorBase):
                                                  Yrename=rename.get('Y', rename), catcols=catcols, since=since))
         # log each partial snapshot for this model
         # -- this enables retrieval of partial components by their respective kind (metrics, X, Y)
-        partial_snapshots = (v for k, v in snapshots.items() if v and k in ('metrics', 'X', 'Y'))
+        partial_snapshots = list(v for k, v in snapshots.items()
+                                 if v and k in ('metrics', 'X', 'Y') and v is not None)
+        if ignore_empty and not partial_snapshots:
+            return
+        assert len(partial_snapshots), f'no model events using query {run=} {since=}, cannot take a snapshot'
         for snapshot in partial_snapshots:
             self._log_snapshot(snapshot)
+        # -- log the full snapshot
         self._log_snapshot(snapshots)
         return snapshots
 
@@ -109,7 +120,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         }
         return snapshots
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None):
+    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
         """ Measure drift in a model's metrics, X and Y
 
         Args:
@@ -129,9 +140,10 @@ class ModelDriftMonitor(DriftMonitorBase):
         """
         metrics_mon = self._metrics_monitor(self._resource)
         x_mon, y_mon = self._xy_monitor(self._resource)
-        model_drift = metrics_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, baseline=baseline, raw=True, matcher=matcher)
-        x_drift = x_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher)
-        y_drift = y_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher)
+        model_drift = metrics_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, baseline=baseline, raw=True, matcher=matcher,
+                                        since=since)
+        x_drift = x_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
+        y_drift = y_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
         drifts = []
         for s_drift in (model_drift, x_drift, y_drift):
             if isinstance(s_drift, list):
@@ -146,11 +158,3 @@ class ModelDriftMonitor(DriftMonitorBase):
         x_mon, y_mon = self._xy_monitor(self._resource)
         x_mon.clear(force=force)
         y_mon.clear(force=force)
-
-    def _calc_model_drift(self):
-        # what do we measure
-        # - metric: we measure a drift in metric/confusion matrix
-        # - X: measure drift in input data, where some sequence of recent predict() input data is taken as d2
-        # - Y: measure drift in output, where some sequence of recent predict() output is taken as d2
-        # - is confusion matrix like a category or a numeric.var? (e.g. each value in cm is a category?, each value in cm is a )
-        pass
