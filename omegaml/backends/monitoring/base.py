@@ -26,10 +26,10 @@ class DriftMonitorBase:
     def snapshot(self, *args, **kwargs):
         raise NotImplementedError
 
-    def drifted(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None, summary=False):
+    def summary(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None):
         seq = seq or 'baseline'
-        drift = self.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
-        return drift.drifted(column=column, statistic=statistic, summary=summary)
+        stats = self.compare(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
+        return stats.summary(column=column, statistic=statistic)
 
     def compare(self, *args, **kwargs):
         """ calculate drift
@@ -330,7 +330,25 @@ class DriftMonitorBase:
         To retrieve the drift events, use the tracking system to query for
         events of type 'drift' and the resource name as the event key::
 
-            tracking.data(event='drift', key='resource_name')
+            event = tracking.data(event='drift', key='resource_name')
+
+        The event['value'] is a dict with the drift indicators, of the following
+        format:
+
+           {'columns': {'X_0': True},
+            'info': {
+               'feature': ['X_0'], # the feature that drifted
+               'seq': [[0, 1]]}, # the sequence that drifted
+            'summary': {'feature': True}} # the summary of the drift
+
+        * `columns` is a dict of columns that drifted, with the column name as key
+        * `info` is a dict with additional information about the drift, in particular
+            * `feature` is a list of features that drifted (ModelMonitor)
+            * `label` is a list of labels that drifted (ModelMonitor)
+            * `data` is a list of data columns that drifted (DataMonitor)
+            * `seq` is the sequence number that drifted (all monitors)
+        * `summary` is a dict with a summary of the drift, with each kind of drift
+            listed (e.g. 'feature', 'label', 'data')
 
         Args:
             column (str): the column that drifted, optional
@@ -343,14 +361,9 @@ class DriftMonitorBase:
             bool: True if drift was detected and logged, False otherwise
         """
         stats = self.compare(seq=seq, baseline=baseline, since=since)
-        event = stats.drifted(column=column, statistic=statistic, summary=True)
-        if any(drifted for part, drifted in event.items()):
-            extra = {
-                'seq': stats.seq(),
-                'column': column or '*',
-                'monitor': self._resource,
-            }
-            self._log_drift(event, **extra)
+        summary = stats.summary(column=column, statistic=statistic)
+        if summary['info']['seq']:
+            self._log_drift(summary, monitor=self._resource)
             self.check(alerts)
             return True
         return False
@@ -372,7 +385,11 @@ class DriftMonitorBase:
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
-            drifted_seqs = data.explode('value')['value'].apply(lambda v: v['seq']).to_list()
+            drifted_seqs = (data['value']
+                            .explode('value')  # get all events as a list
+                            .apply(lambda v: v['value']['info']['seq'])  # get all seqs as a list of lists
+                            .explode()  # get all seqs as a series
+                            .to_list())  # get all seqs as a flattened list
             drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
             return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')
@@ -386,7 +403,10 @@ class DriftMonitorBase:
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
-            drifted_seqs = data['seq'].to_list()
+            drifted_seqs = (data['value']  # all drift summaries
+                            .apply(lambda v: v['info']['seq'])  # extract seqs
+                            .explode()  # flatten seqs
+                            .to_list())  # get a list of lists
             drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
             return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')

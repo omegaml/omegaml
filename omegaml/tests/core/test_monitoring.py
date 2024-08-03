@@ -279,9 +279,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot(run=range(70, 100))
         mon.snapshot(X='X_0', Y='Y_0')
         mon.snapshot(X='X_99', Y='Y_99')
-        drift = mon.drift()
-        self.assertTrue(drift.drifted('X_0'))
-        self.assertTrue(drift.drifted('Y_0'))
+        drift = mon.compare()
+        self.assertTrue(drift.summary('X_0')['columns']['X_0'])
+        self.assertTrue(drift.summary('Y_0')['columns']['Y_0'])
         plot = drift.plot('acc', 'ks')
         drift.describe()
 
@@ -318,16 +318,18 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         captured = mon.capture()
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertEqual(events.iloc[0]['value'], {'feature': True, 'label': True, 'metrics': False, 'seqs': [[0, 1]]})
-        self.assertEqual(events.iloc[0]['seq'], [0, 1])
-        self.assertEqual(events.iloc[0]['column'], '*')
+        self.assertEqual(events.iloc[0]['value'],
+                         {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True, 'acc': False},
+                          'summary': {'feature': True, 'label': True, 'metrics': False},
+                          'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'], 'metrics': ['acc'],
+                                   'seq': [[0, 1]]}})
         # capture specific feature drift
         captured = mon.capture(column='X_0')
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertEqual(events.iloc[-1]['value'], {'X_0': True, 'seqs': [[0, 1]]})
-        self.assertEqual(events.iloc[-1]['seq'], [0, 1])
-        self.assertEqual(events.iloc[-1]['column'], 'X_0')
+        self.assertEqual(events.iloc[-1]['value'],
+                         {'columns': {'X_0': True}, 'info': {'feature': ['X_0'], 'seq': [[0, 1]]},
+                          'summary': {'feature': True}})
 
     def test_alert_rule_notify(self):
         om = self.om
@@ -338,7 +340,11 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # capture overall model drift
         captured = mon.capture()
         stats = mon.captured(stats=True)
-        self.assertTrue(stats.drifted())
+        self.assertDictEqual(stats.summary(),
+                             {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
+                                          'acc': False}, 'summary': {'feature': True, 'label': True, 'metrics': False},
+                              'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'], 'metrics': ['acc'],
+                                       'seq': [[0, 1]]}})
         # check alert rule is called upon detected drift
         rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
         with mock.patch.object(rule, 'notify') as m_notify:
@@ -382,7 +388,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # -- add snapshots
         mon.snapshot(run=range(2, 3))
         mon.snapshot(run=range(3, 100))
-        self.assertTrue(mon.drifted())
+        self.assertTrue(mon.summary()['info']['seq'])
         meta = om.models.metadata('test')
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
@@ -410,6 +416,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # -- check the monitor ran and created an alert
         jobmeta = om.jobs.metadata('monitors/test/test')
         alerts = mon.alerts(raw=True)
+        print(jobmeta.attributes['job_runs'][-1]['message'])
         self.assertEqual(jobmeta.attributes['job_runs'][-1]['status'], 'OK')
         self.assertEqual(len(alerts), 1)
         # check the alert is as expected
@@ -418,18 +425,34 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drifts = alerts[0]['value']
         for k in 'userid', 'dt', 'node', 'run', 'step':
             del drifts[0][k]
-        self.assertDictEqual({'column': '*',
-                              'event': 'drift',
+        exp_drift_summary = {'columns': {'acc': True},
+                             'info': {'metrics': ['acc'], 'seq': [[0, 1]]},
+                             'summary': {'metrics': True}}
+        self.assertDictEqual({'event': 'drift',
                               'experiment': 'test',
                               'key': 'test',
                               'monitor': 'test',
-                              'seq': [0, 2],
-                              'value': {'metrics': True, 'seqs': [[0, 1], [0, 2]]}}, drifts[0])
+                              'value': exp_drift_summary}, drifts[0])
 
         # check can get back drift stats from alerts
-        drifts = mon.alerts(stats=True)
-        self.assertIsInstance(drifts, DriftStats)
-        self.assertTrue(drifts.drifted())
+        stats = mon.alerts(stats=True)
+        self.assertIsInstance(stats, DriftStats)
+        self.assertDictEqual(stats.summary(), exp_drift_summary)
+
+    def test_modeldrift_capture_nodata(self):
+        om = self.om
+        # create a model and track it
+        # -- note we don't record any events, hence there can be no snapshot
+        lm = LinearRegression()
+        om.models.put(lm, 'test')
+        with om.runtime.experiment('test', autotrack=True, recreate=True) as exp:
+            exp.track('test', monitor=True)
+            mon = exp.as_monitor('test')
+        # test the monitor does not capture anything
+        snapshot = mon.snapshot(since='last', ignore_empty=True)
+        has_captured = mon.capture(since='last')
+        self.assertIsNone(snapshot)
+        self.assertFalse(has_captured)
 
     def test_model_autotrack_realistic(self):
         om = self.om

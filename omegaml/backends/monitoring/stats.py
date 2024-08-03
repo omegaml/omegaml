@@ -92,7 +92,7 @@ class DriftStats:
         self.drifts = data
         self.monitor = monitor
         self._df = None
-        
+
     def __repr__(self):
         return f'DriftStats({self.monitor},drifts={len(self.drifts)})'
 
@@ -133,20 +133,65 @@ class DriftStats:
             return None
         return result
 
-    def drifted(self, column=None, statistic=None, summary=False, details=False, **query):
+    def summary(self, column=None, statistic=None, **query):
+        """ describe drifted features
+
+        Args:
+            column (str): the column to filter by
+            statistic (str): the statistic to filter by
+            summary (bool): return a summary of drifted features
+            **query: additional query parameters
+
+        Returns:
+            result (dict|None): a summary of drifted features or the detailed drifts
+                * if summary is True, returns a dict with the following keys:
+                    - columns: a dict of columns (str) => drifted (bool)
+                    - summary: a dict of kinds (str) => drifted (bool)
+                    - info: a dict of kinds (str) => columns (list) and seqs with drift (list)
+
+        Usage:
+            stats = mon.compare()
+            stats.summary() -- get a summary of drifted features
+            =>
+              # indicates a drift in data features, specifically column '0'
+              {
+               'columns': {'0': True},
+               'summary': {'data': True},
+               'info': {'data': ['0'], 'seq': [(0, 1)]}
+              }
+
+            The summary indicates that feature '0' has drifted in the 'data' kind. Other
+            kinds include 'feature' and 'label', for model features and labels respectively,
+            when DriftStats are created from a ModelMonitor. For a quick check if any drift has occurred,
+            check the ['info']['seq'] list; if it is empty, no drift has been detected.
+
+        See Also:
+            * DriftMonitorBase.compare() for details on drift events, which are effectively logs
+              of DriftStats.summary() results
+        """
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
-        flt = df['drift'] == True
-        drifted_seqs = (df[flt][['seq_from', 'seq_to']]
-                        .drop_duplicates()
-                        .apply(lambda v: (v['seq_from'], v['seq_to']), axis=1)
-                        .tolist())
-        result = False if not summary else {}
-        if summary:
-            key = ['column'] if column else ['kind']
-            result = (df.groupby(key)['drift'].sum() > 0).to_dict()
-            result['seqs'] = drifted_seqs
-        elif not df.empty:
-            result = df[flt] if details else df[flt]['drift'].sum() > 0
+        if df.empty:
+            result = {
+                'columns': {},
+                'summary': {},
+                'info': {'seq': []},
+            }
+        else:
+            drifted = df['drift'] == True
+            drifted_seqs = (df[drifted][['seq_from', 'seq_to']]
+                            .drop_duplicates()
+                            .apply(lambda v: [v['seq_from'], v['seq_to']], axis=1)
+                            .tolist())
+            result = {
+                'columns': (df.groupby('column')
+                            ['drift'].sum() > 0).to_dict(),
+                'summary': (df.groupby('kind')
+                            ['drift'].sum() > 0).to_dict(),
+                'info': (df.groupby('kind')
+                         .apply(lambda v: list(v['column'].sort_values().unique()))
+                         .to_dict()),
+            }
+            result['info']['seq'] = drifted_seqs
         return result
 
     def __getitem__(self, spec):
