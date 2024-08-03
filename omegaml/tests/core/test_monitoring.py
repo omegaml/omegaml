@@ -48,7 +48,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(snapshot['info']['cat_columns'], [])
         data = mon.data
         self.assertEqual(len(data), 1)
-        drift = mon.drift(raw=True)
+        drift = mon.compare(raw=True)
         self.assertIn('info', drift)
         self.assertIn('stats', drift)
         self.assertEqual(drift['info']['seq'], [0, 0])
@@ -63,7 +63,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon = ModelDriftMonitor('test', store=om.datasets, tracking=exp)
         mon.snapshot(run=1)
         mon.snapshot(run=range(1, 5))
-        print(mon.drift(seq='baseline').describe())
+        print(mon.compare(seq='baseline').describe())
 
     def test_dataset_drift(self):
         om = self.om
@@ -175,7 +175,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1970, year__lte=1980)
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
-        drifts = mon.drift(seq=True, raw=True)
+        drifts = mon.compare(seq=True, raw=True)
         # expect 3 drift calculations
         self.assertEqual(len(drifts), 3)
         # -- 1960/1970, 1970/1980, 1980/now
@@ -199,7 +199,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__gt=1980)
         # -- get all drifts since baseline
         #    comparing each snapshot to the baseline
-        drifts = mon.drift(seq='baseline', raw=True)
+        drifts = mon.compare(seq='baseline', raw=True)
         # expect 3 drift calculations
         # -- note how this is different from test_datadrift_sequence
         self.assertEqual(len(drifts), 3)
@@ -260,7 +260,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # a sequence of runs directly, instead of snapshots
         # seq= should be named snapshots=, and alternative runs= (with tracking) to avoid confusion
         # perhaps not, as to ensure we always work on actually captured snapshots?
-        drift = mon.drift(seq=[0] + list(range(-3, 0)), ci=.9, raw=True)
+        drift = mon.compare(seq=[0] + list(range(-3, 0)), ci=.9, raw=True)
         # -- expect 3 drift calculations
         self.assertEqual(len(drift), 3)
         self.assertEqual(drift[0]['info']['seq'], [0, 1])
@@ -306,7 +306,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # -- fit: X, Y
         # -- predict: X, Y
         self.assertEqual(len(mon.data), 2)
-        mon.drift(matcher={'Y_y': 'Y_0'})
+        mon.compare(matcher={'Y_y': 'Y_0'})
 
     def test_capture_event(self):
         om = self.om
@@ -339,7 +339,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot(X='X_99', Y='Y_99')
         # capture overall model drift
         captured = mon.capture()
-        stats = mon.captured(stats=True)
+        stats = mon.events(stats=True)
         self.assertDictEqual(stats.summary(),
                              {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
                                           'acc': False}, 'summary': {'feature': True, 'label': True, 'metrics': False},
@@ -473,7 +473,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             om.runtime.model('regmodel').predict('sample[x]').get()
             exp.log_data('XX', df)
             mon.snapshot(run=-1)
-            mon.drift(seq='baseline').describe()
+            mon.compare(seq='baseline').describe()
 
     def test_model_autotrack_california(self):
         from sklearn.datasets import fetch_california_housing
@@ -549,7 +549,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             om.runtime.model('mymodel').predict('sample[x]').get()
             exp.log_data('XX', df)
             mon.snapshot(run=-1)
-            mon.drift(seq='baseline').describe()
+            mon.compare(seq='baseline').describe()
 
     def test_explicit_xy_model_tracking(self):
         import omegaml as om

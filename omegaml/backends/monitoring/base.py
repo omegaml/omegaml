@@ -27,11 +27,36 @@ class DriftMonitorBase:
         raise NotImplementedError
 
     def summary(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None):
+        """ Calculate and summarize drift statistics
+
+        This effectively calls DriftMonitor.compare() and DriftStats.summary() on the
+        drift statistics
+
+        Args:
+            seq (list|str): a list of snapshot indices to compare in the format [i, j],
+               or one of 'baseline', 'series'. Use 'baseline' to compare every snapshot
+               to the first snapshot, or 'series' to compare each snapshot to the previous.
+               [i, j] are 0-indexed snapshot indices, can be specified as negative indices
+               to indicate the last n-th snapshot.
+            d1 (int): the first snapshot index to compare, optional
+            d2 (int): the second snapshot index to compare, optional
+            ci (float): the confidence interval for the drift test, defaults to .95
+            raw (bool): if True, returns drift statistics as a dict, otherwise
+                returns a DriftStats instance
+            column (str): the column to summarize, optional
+            statistic (str): the statistic to summarize, optional
+
+        Returns:
+            DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
+
+        See Also:
+            - DriftStats.summary for details
+        """
         seq = seq or 'baseline'
         stats = self.compare(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
         return stats.summary(column=column, statistic=statistic)
 
-    def compare(self, *args, **kwargs):
+    def compare(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
         """ calculate drift
 
         Args:
@@ -58,9 +83,6 @@ class DriftMonitorBase:
         Returns:
             DriftStats|[dict]: a drift statistics instance (if raw=False), or a list of dicts
         """
-        return self.drift(*args, **kwargs)
-
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
         recursive_seq = isinstance(seq, (list, tuple)) and len(seq) > 2
         template_seq = seq in (True, 'baseline', 'series')
         if recursive_seq or template_seq:
@@ -138,7 +160,7 @@ class DriftMonitorBase:
         return df['value'].to_list() if not df.empty else []
 
     def report(self, seq=None, format='html'):
-        data = self.drift(seq=seq, raw=True)
+        data = self.compare(seq=seq, raw=True)
         FORMATS = {
             'html': lambda v: pd.json_normalize(v).T.to_html(),
             'json': lambda v: pd.DataFrame(v).to_json(),
@@ -147,6 +169,19 @@ class DriftMonitorBase:
         return FORMATS[format](data) if format in FORMATS else data
 
     def clear(self, force=False):
+        """ clear all data associated with this monitor
+
+        All data is removed from the experiment's dataset. This is not recoverable.
+
+        Args:
+            force (bool): if True, clears all data, otherwise raises an error
+
+        Caution:
+            * this will clear all experiment data and is not recoverable
+
+        Raises:
+            AssertionError: if force is not True
+        """
         self.tracking.clear(force=force)
 
     def __len__(self):
@@ -302,7 +337,7 @@ class DriftMonitorBase:
         result['columns'] = [col for col in numeric_columns + cat_columns if metrics[col]['mean']['drift']]
         return drift
 
-    def check(self, alerts=None, notify=True):
+    def _notify_alerts(self, alerts=None, notify=True):
         """ check for drift and notify recipients
 
         Args:
@@ -317,7 +352,7 @@ class DriftMonitorBase:
         for rule in rules:
             rule.check(notify=notify, run=self.tracking.active_run())
 
-    def capture(self, column=None, statistic=None, alerts=None, seq='baseline', since=None, baseline=0):
+    def capture(self, column=None, statistic=None, rules=None, seq='baseline', since=None, baseline=0):
         """
         capture detected drift, if any, by logging an event in tracking
 
@@ -353,7 +388,7 @@ class DriftMonitorBase:
         Args:
             column (str): the column that drifted, optional
             statistic (str): the statistic that drifted, optional
-            alerts (list): a list of alert rules to apply, optional
+            rules (list): a list of alert rules to apply, optional
             seq (str): the sequence to compare to, defaults to 'baseline'
             baseline (int): the baseline sequence to compare to, defaults to 0
 
@@ -364,7 +399,7 @@ class DriftMonitorBase:
         summary = stats.summary(column=column, statistic=statistic)
         if summary['info']['seq']:
             self._log_drift(summary, monitor=self._resource)
-            self.check(alerts)
+            self._notify_alerts(rules)
             return True
         return False
 
@@ -377,10 +412,23 @@ class DriftMonitorBase:
         return rules
 
     def alerts(self, run=None, since=None, raw=False, stats=False):
+        """ Retrieve drift alerts
+
+        Args:
+            run (str): the run to query, defaults to all runs
+            since (datetime|str): only consider alerts since this date. If type(str), must
+                be an ISO8601 formatted date string.
+            raw (bool): if True, return raw alert data, defaults to False
+            stats (bool): if True, return a DriftStats instance, defaults to False
+
+        Returns:
+            pd.DataFrame|[dict]|DriftStats: the alerts as a DataFrame if raw=False,
+              else a list of dicts. If stats=True, returns a DriftStats instance.
+        """
         run = run or '*'
         data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key,
                                   since=since)
-        if not raw and stats:
+        if stats:
             # -- data['value'] is a series of dicts, each dict is a drift event
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
@@ -390,16 +438,32 @@ class DriftMonitorBase:
                             .apply(lambda v: v['value']['info']['seq'])  # get all seqs as a list of lists
                             .explode()  # get all seqs as a series
                             .to_list())  # get all seqs as a flattened list
-            drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
-            return DriftStats(drifts, monitor=self)
+            drifts = [self.compare(seq=seq, raw=True) for seq in drifted_seqs]
+            return DriftStats(drifts, monitor=self) if not raw else drifts
         return data if not raw else data.to_dict(orient='records')
 
-    def captured(self, column=None, statistic=None, run=None, since=None, stats=True, raw=False):
+    def events(self, column=None, statistic=None, run=None, since=None, stats=True, raw=False):
+        """
+        Retrieve drift events
+
+        Args:
+            column (str): the column to retrieve drift events for, defaults to all columns
+            statistic (str): the statistic to retrieve drift events for, defaults to all statistics
+            run (str): the run to query, defaults to all runs
+            since (datetime|str): only consider events since this date. If type(str), must
+                be an ISO8601 formatted date string.
+            stats (bool): if True, return a DriftStats instance, defaults to True
+            raw (bool): if True, return raw event data, defaults to False
+
+        Returns:
+            pd.DataFrame|[dict]|DriftStats: the drift events as a DataFrame if raw=False,
+              else a list of dicts. If stats=True, returns a DriftStats instance.
+        """
         run = run or '*'
         column = column or '*'
         data = self.tracking.data(run=run, event='drift', key=self._resource, since=since,
                                   column=column, statistic=statistic)
-        if not raw and stats:
+        if stats:
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
@@ -407,11 +471,11 @@ class DriftMonitorBase:
                             .apply(lambda v: v['info']['seq'])  # extract seqs
                             .explode()  # flatten seqs
                             .to_list())  # get a list of lists
-            drifts = [self.drift(seq=seq, raw=True) for seq in drifted_seqs]
+            drifts = [self.compare(seq=seq, raw=True) for seq in drifted_seqs]
             return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')
 
-    def combine_snapshots(self, snapshots):
+    def _combine_snapshots(self, snapshots):
         # combine snapshots into a single snapshot
         # -- snapshots is a dict or list of snapshots, each snapshot is a dict
         # -- each snapshot has a 'stats' and 'info' key

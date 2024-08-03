@@ -17,7 +17,7 @@ alerts = {alerts}
 with om.runtime.model(name).experiment(experiment) as exp:
     mon = exp.as_monitor(name, store=om.models, provider=provider)
     mon.snapshot(since='last', ignore_empty=True) 
-    mon.capture(alerts=alerts, since='last')
+    mon.capture(rules=alerts, since='last')
 """
 
 

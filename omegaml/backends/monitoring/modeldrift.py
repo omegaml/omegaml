@@ -120,7 +120,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         }
         return snapshots
 
-    def drift(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
+    def compare(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
         """ Measure drift in a model's metrics, X and Y
 
         Args:
@@ -140,10 +140,10 @@ class ModelDriftMonitor(DriftMonitorBase):
         """
         metrics_mon = self._metrics_monitor(self._resource)
         x_mon, y_mon = self._xy_monitor(self._resource)
-        model_drift = metrics_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, baseline=baseline, raw=True, matcher=matcher,
-                                        since=since)
-        x_drift = x_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
-        y_drift = y_mon.drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
+        model_drift = metrics_mon.compare(seq=seq, d1=d1, d2=d2, ci=ci, baseline=baseline, raw=True, matcher=matcher,
+                                          since=since)
+        x_drift = x_mon.compare(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
+        y_drift = y_mon.compare(seq=seq, d1=d1, d2=d2, ci=ci, raw=True, matcher=matcher, since=since)
         drifts = []
         for s_drift in (model_drift, x_drift, y_drift):
             if isinstance(s_drift, list):
