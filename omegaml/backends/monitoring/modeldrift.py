@@ -23,7 +23,7 @@ class ModelDriftMonitor(DriftMonitorBase):
             Y (str|pd.DataFrame|np.ndarray): the target data to snapshot
             rename (dict): a dict that maps columns new -> old, e.g. {'Y_y': 'Y_0'}
             event (str): the event to snapshot, defaults to 'fit' and 'predict'
-            run (int): the experiment's run to snapshot, defaults to all runs
+            run (int|sequence): the experiment's run to snapshot, defaults to all runs
             catcols (list): the columns to treat as categorical
             since (datetime|str): the datetime from which to snapshot X and Y data. If specified,
               X and Y data is collected from all runs since the given datetime, inclusive. If
