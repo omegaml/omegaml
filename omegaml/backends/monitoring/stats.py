@@ -61,6 +61,7 @@ class DriftStatsCalc:
         }
 
     def sample_from_hist(self, hist, edges, n=100):
+        n = 100 if n is True else n
         probs = hist / np.sum(hist)
         return np.random.choice(np.linspace(edges[0], edges[-1], len(edges) - 1), n, p=probs)
 
@@ -133,17 +134,18 @@ class DriftStats:
             return None
         return result
 
-    def summary(self, column=None, statistic=None, **query):
+    def summary(self, column=None, statistic=None, raw=False, **query):
         """ describe drifted features
 
         Args:
             column (str): the column to filter by
             statistic (str): the statistic to filter by
             summary (bool): return a summary of drifted features
+            raw (bool): return the raw drift statistics as a dict
             **query: additional query parameters
 
         Returns:
-            result (dict|None): a summary of drifted features or the detailed drifts
+            result (pd.Series|dict|None): a summary of drifted features or the detailed drifts
                 * if summary is True, returns a dict with the following keys:
                     - columns: a dict of columns (str) => drifted (bool)
                     - summary: a dict of kinds (str) => drifted (bool)
@@ -177,6 +179,7 @@ class DriftStats:
                 'info': {'seq': []},
             }
         else:
+            # prepare summary
             drifted = df['drift'] == True
             drifted_seqs = (df[drifted][['seq_from', 'seq_to']]
                             .drop_duplicates()
@@ -192,6 +195,18 @@ class DriftStats:
                          .to_dict()),
             }
             result['info']['seq'] = drifted_seqs
+        if not raw:
+            # convert summary to pd.DataFrame
+            s = result
+            col_by_kind = {col: kind for kind, cols in s['info'].items()
+                           for col in cols if kind != 'seq'}
+            df = pd.DataFrame({
+                'column': s['columns'].keys(),
+                'drift': s['columns'].values(),
+            })
+            df['kind'] = df['column'].apply(lambda v: col_by_kind.get(v))
+            df['seq'] = pd.Series(s['info']['seq'] * len(df))
+            result = df
         return result
 
     def __getitem__(self, spec):
@@ -225,6 +240,36 @@ class DriftStats:
 
     def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, sample=None, logx=False,
              logy=False, xlim=None, ylim=None, **kwargs):
+        """ plot drift statistics
+
+        Plots drift statistics for a given column, statistic, seq_from, seq_to. If no column is given,
+        plots all columns for the given seq_from, seq_to. If no seq_from, seq_to is given, plots the
+        statistics for the entire sequence.
+
+        Can plot either a distribution or a timeline plot, depending on the kind= parameter.
+        For distributions, the baseline and target histograms are plotted. For timelines, the metric is
+        plotted over the sequence. For numeric columns, the histogram is plotted. For categorical
+        columns, the group counts are plotted.
+
+        Distribution plots use the sample statistics taken at snapshot time. If sample=N is given,
+        the histogram is re-sampled to N samples for numeric columns.
+
+        Args:
+            column (str|list): the column to plot, or a list of columns
+            statistic (str): the statistic to plot, defaults to 'mean'
+            seq (int|tuple): the sequence to plot, or a tuple of (seq_from, seq_to)
+            kind (str): the kind of plot, one of 'dist', 'time'
+            ax (matplotlib.Axes): the axes to plot on
+            sample (int): the number of samples to draw from the histogram
+            logx (bool): whether to use a log scale on the x-axis
+            logy (bool): whether to use a log scale on the y-axis
+            xlim (tuple): the x-axis limits
+            ylim (tuple): the y-axis limits
+            **kwargs: additional keyword arguments to pass to the plot function
+
+        Returns:
+            matplotlib.Axes: the axes the plot was drawn on
+        """
         statistic = statistic or 'mean'
         seq = seq or self.seq(column=column, statistic=statistic)
         if isinstance(column, str):
@@ -319,7 +364,7 @@ class DriftStats:
                 seq_from, seq_to = seq[0]
             elif len(seq) and default == 'baseline':
                 seq_from, seq_to = seq[0], None
-            elif len(seq) and default == 'target':
+            elif len(seq):
                 seq_from, seq_to = None, seq[0]
             else:
                 seq_from, seq_to = None, None
@@ -328,18 +373,46 @@ class DriftStats:
         elif default == 'target':
             seq_from, seq_to = None, seq
         else:
-            seq_from, seq_to = seq, seq
+            seq_from, seq_to = None, seq
         seq_min, seq_max = self.seq(column=column, statistic=statistic)
         seq_from = seq_from if seq_from is None or seq_from >= 0 else (seq_max + seq_from)
         seq_to = seq_to if seq_to is None or seq_to >= 0 else (seq_max + seq_to + 1)
         seq_to = seq_to if int(seq_to or 0) > int(seq_from or 0) else None
         return seq_from, seq_to
 
-    def baseline(self, column, statistic, seq=None):
-        return self[column, statistic, (seq, None)]['baseline']
+    def baseline(self, column, seq=None):
+        """ get the baseline statistics
 
-    def target(self, column, statistic, seq=None):
-        return self[column, statistic, (None, seq)]['target']
+        Args:
+            column (str): the column to get statistics for
+            seq (int): the sequence to get statistics for
+
+        Returns:
+            DriftStatsSeries: the statistics for the target period, this is a pd.Series with
+              convenience methods for plotting and describing the statistics, using .hist() and
+              .describe() respectively
+        """
+        return self._stats_series('baseline', column, seq)
+
+    def target(self, column, seq=None):
+        """ get the target statistics
+
+        Args:
+            column (str): the column to get statistics for
+            seq (int): the sequence to get statistics for
+
+        Returns:
+            DriftStatsSeries: the statistics for the target period, this is a pd.Series with
+              convenience methods for plotting and describing the statistics, using .hist() and
+              .describe() respectively
+        """
+        return self._stats_series('target', column, seq)
+
+    def _stats_series(self, period, column, seq):
+        # return a StatsSeries for a given period, column, statistic, seq
+        col_df = self[column, None, seq].iloc[0]
+        col_s = DriftStatsSeries(col_df[period], name=col_df['column'])
+        return col_s
 
     def as_dataframe(self, drift_data=None, **query):
         drift = drift_data or self.drifts
@@ -388,3 +461,35 @@ class DriftStats:
         for column, colflt in filters.items():
             flt = (flt & colflt) if flt is not None else colflt
         return df[flt] if flt is not None else df
+
+
+class DriftStatsSeries(pd.Series):
+    def __init__(self, values, **kwargs):
+        super().__init__(values, **kwargs)
+
+    def hist(self, *args, sample=False, **kwargs):
+        return self.plot(sample=sample, **kwargs)
+
+    def plot(self, sample=False, **kwargs):
+        if 'hist' in self:
+            counts, edges = self['hist']
+            if sample:
+                # perform re-sampling of data if requested
+                stats_calc = DriftStatsCalc()
+                h = stats_calc.sample_from_hist(counts, edges, n=sample)
+                counts, edges = np.histogram(h, bins=len(edges))
+            ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
+        elif 'groups' in self:
+            ax = plt.bar(self['groups'].keys(), self['groups'].values(), alpha=.8, **kwargs)
+        else:
+            raise ValueError('no histogram or groups found in drift data')
+        return ax
+
+    def describe(self, **kwargs):
+        if 'hist' in self:
+            percentiles = pd.Series(self['percentiles'][0], index=self['percentiles'][1])
+            info = pd.concat([self, percentiles], axis=0)
+            info = info.drop(['hist', 'percentiles'])
+        else:
+            info = self
+        return info
