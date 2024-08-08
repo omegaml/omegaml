@@ -359,14 +359,14 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # test creating a monitor from a runtime experiment
         with om.runtime.experiment('test', autotrack=True, recreate=True) as exp:
             exp.track('test', monitor=True)
-        mon = exp.as_monitor('test', schedule='weekly')
+        mon = exp.as_monitor('test', schedule='daily')
         meta = om.models.metadata('test')
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
         self.assertIn({'experiment': 'test', 'provider': 'models',
                        'alerts': [{'event': 'drift', 'recipients': []}],
-                       'schedule': 'weekly'},
+                       'schedule': 'daily', 'job': 'monitors/test/test'},
                       meta.attributes['tracking']['monitors'])
         # test getting the monitor does not add it again
         mon = exp.as_monitor('test', alerts=[{'event': 'drift', 'recipients': ['me']}])
@@ -374,7 +374,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         meta = om.models.metadata('test')
         self.assertIn({'experiment': 'test', 'provider': 'models',
                        'alerts': [{'event': 'drift', 'recipients': ['me']}],
-                       'schedule': 'weekly'},
+                       'schedule': 'daily', 'job': 'monitors/test/test'},
                       meta.attributes['tracking']['monitors'])
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
 
@@ -410,8 +410,6 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
                       meta.attributes['tracking']['monitors'])
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
         # ensure the monitor job is created, run it
-        # -- in a real setup this is done by the scheduled celery task
-        om.runtime.task('omegaml.backends.monitoring.tasks.ensure_monitors').run()
         self.assertIn('monitors/test/test.ipynb', om.jobs.list())
         om.runtime.job('monitors/test/test').run()
         # -- check the monitor ran and created an alert

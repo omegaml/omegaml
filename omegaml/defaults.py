@@ -81,11 +81,7 @@ OMEGA_CELERY_CONFIG = {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',
             'schedule': 60,
-        },
-        'ensure_monitors': {
-            'task': 'omegaml.backends.monitoring.tasks.ensure_monitors',
-            'schedule': 60,
-        },
+        }
     },
     'BROKER_USE_SSL': OMEGA_USESSL,
     # keep behavior of retrying broker connections on startup

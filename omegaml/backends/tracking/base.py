@@ -129,13 +129,32 @@ class TrackingProvider:
         assert is_autotracked, "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
         provider = provider or mon.get('provider') if mon else None
         provider = provider or store.prefix.replace('/', '')
-        store.link_monitor(obj, self._experiment, provider=provider,
-                           alerts=alerts, schedule=schedule)
+        store.link_monitor(obj, self._experiment, provider=provider, alerts=alerts, schedule=schedule)
         self._create_monitor_job(obj, model_store=store)
         ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
         return ProviderClass(obj, tracking=self, store=store, **kwargs)
 
     def _create_monitor_job(self, obj, model_store=None, jobs_store=None):
+        """
+        Ensure monitors are created for a model
+
+        This creates a job for each monitor definition in the model's metadata. The job
+        will run at the specified interval and capture the model's state and drift.
+        Alerts are sent to the recipients specified in the monitor definition. If a job
+        already exists it is not created again.
+
+        The name of the job is derived from the model's name and the experiment's name in
+        the form 'monitors/{experiment}/{modelname}'. The schedule is set to 'daily'
+        unless specified in the monitor definition in
+
+        Args:
+            obj (str): the name of the model
+            model_store (OmegaStore): the store to use, defaults to self._model_store
+            jobs_store (OmegaJobs): the jobs store to use, defaults to om.jobs
+
+        Returns:
+            list of jobs created as [Metadata, ...]
+        """
         # create and schedule a monitoring job for the object
         # -- assumes the object has a monitor definition
         # -- the experiment associated with the monitor must be autotracked
