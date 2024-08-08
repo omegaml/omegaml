@@ -11,7 +11,10 @@ from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
-from sklearn.linear_model import LinearRegression
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
@@ -315,6 +318,51 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertTrue(drift.summary('Y_0', raw=True)['columns']['Y_0'])
         plot = drift.plot('acc', 'ks')
         drift.describe()
+
+    def test_model_drift_xy_groupby(self):
+        om = self.om
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', Pipeline([
+                    ('scaler', StandardScaler()),
+                ]), ['gdpPercap', 'pop', 'year']),  # Numerical features
+                ('cat', OneHotEncoder(), ['county'])  # Categorical feature
+            ]
+        )
+
+        # Create the pipeline
+        pipeline = Pipeline([
+            ('preprocessor', preprocessor),
+            ('logreg', LogisticRegression())
+        ])
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+        mon = DataDriftMonitor(tracking=exp, store=om.datasets)
+        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
+                     filter=dict(country__in=['Switzerland', 'Germany'],
+                                 year__lte=1960),
+                     groupby=['country', 'year'])
+        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
+                     filter=dict(country__in=['Switzerland', 'Germany'],
+                                 year__gte=1980),
+                     groupby=['country', 'year'])
+        stats = mon.compare()
+        self.assertDictEqual(stats.summary(raw=True)['columns'],
+                             {'country': False,
+                              'country_Germany:1952': False,
+                              'country_Germany:1957': False,
+                              'country_Switzerland:1952': False,
+                              'country_Switzerland:1957': False,
+                              'gdpPercap': True,
+                              'gdpPercap_Germany:1952': True,
+                              'gdpPercap_Germany:1957': True,
+                              'gdpPercap_Switzerland:1952': True,
+                              'gdpPercap_Switzerland:1957': True,
+                              'year': True,
+                              'year_Germany:1952': True,
+                              'year_Germany:1957': True,
+                              'year_Switzerland:1952': True,
+                              'year_Switzerland:1957': True})
 
     def test_model_drift_autotrack(self):
         om = self.om

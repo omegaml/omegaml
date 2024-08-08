@@ -12,7 +12,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         super().__init__(resource=resource, store=store, tracking=tracking, query=query, kind=kind, **kwargs)
 
     def snapshot(self, model=None, run=None, X=None, Y=None, rename=None, event=None,
-                 catcols=None, since=None, ignore_empty=False):
+                 catcols=None, since=None, ignore_empty=False, groupby=None):
         """
         Take a snapshot of a model and log its metrics, X features and Y targets distribution for later
         drift detection
@@ -28,6 +28,7 @@ class ModelDriftMonitor(DriftMonitorBase):
             since (datetime|str): the datetime from which to snapshot X and Y data. If specified,
               X and Y data is collected from all runs since the given datetime, inclusive. If
               'last', the datetime is set to be > last snapshot time.
+            groupby (str): group the X, Y datasets by this column before taking the snapshot
             ignore_empty (bool): whether to ignore empty snapshots, if True returns None and
                does not log the snapshot. If False, an AssertionError is raised in case of no data.
                Defaults to False
@@ -56,7 +57,8 @@ class ModelDriftMonitor(DriftMonitorBase):
         # -- else return all snapshots as a dict(model=, X=, Y=)
         snapshots.setdefault('metrics', self._snapshot_model_metrics(model, run=run, since=since))
         snapshots.update(self._snapshot_model_xy(model, run=run, X=X, Y=Y, event=event, Xrename=rename.get('X', rename),
-                                                 Yrename=rename.get('Y', rename), catcols=catcols, since=since))
+                                                 Yrename=rename.get('Y', rename), catcols=catcols, since=since,
+                                                 groupby=groupby))
         # log each partial snapshot for this model
         # -- this enables retrieval of partial components by their respective kind (metrics, X, Y)
         partial_snapshots = list(v for k, v in snapshots.items()
@@ -104,7 +106,7 @@ class ModelDriftMonitor(DriftMonitorBase):
         return snapshot
 
     def _snapshot_model_xy(self, model, run=None, X=None, Y=None, Xrename=None, Yrename=None, event=None, catcols=None,
-                           since=None):
+                           since=None, groupby=None):
         x_mon, y_mon = self._xy_monitor(model)
         event = event or ['fit', 'predict']
         ifElse = lambda v, d: v if v is not None else d
@@ -116,10 +118,10 @@ class ModelDriftMonitor(DriftMonitorBase):
         Xname = f'tr:{self._resource}[run:{run},event:{event},key:X]'
         Yname = f'tr:{self._resource}[run:{run},event:{event},key:Y]'
         snapshots = {
-            'X': tryOr(lambda: x_mon._do_snapshot(self._dataset_as_dataframe(X, rename=Xrename),
-                                                  kind='feature', prefix='X', name=Xname, catcols=catcols), None),
-            'Y': tryOr(lambda: y_mon._do_snapshot(self._dataset_as_dataframe(Y, rename=Yrename),
-                                                  kind='label', prefix='Y', name=Yname, catcols=catcols), None),
+            'X': tryOr(lambda: x_mon.snapshot(dataset=X, rename=Xrename, kind='feature', prefix='X', name=Xname,
+                                              catcols=catcols, groupby=groupby, logged=False), None),
+            'Y': tryOr(lambda: y_mon.snapshot(dataset=Y, rename=Yrename, kind='label', prefix='Y', name=Yname,
+                                              catcols=catcols, groupby=groupby, logged=False), None),
         }
         return snapshots
 
