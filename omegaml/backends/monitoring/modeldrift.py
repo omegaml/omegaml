@@ -84,10 +84,13 @@ class ModelDriftMonitor(DriftMonitorBase):
         df: pd.DataFrame = self.tracking.data(run=run, event='metric', kind=None, since=since)
         if df is None or len(df) == 0:
             return
+        # reshape events from long to wide format
+        # => one row per experiment, run, step, dt
+        # => one column per metric (key)
+        # => thus we can snapshot metrics as any other numeric data
         index_cols = ['experiment', 'run', 'step', 'dt']
         key_cols = ['key']
         value_cols = ['value']
-        # - reshape from long to wide format
         df = (pd.pivot_table(df.fillna(1),
                              index=index_cols,
                              columns=key_cols,
@@ -114,9 +117,9 @@ class ModelDriftMonitor(DriftMonitorBase):
         Yname = f'tr:{self._resource}[run:{run},event:{event},key:Y]'
         snapshots = {
             'X': tryOr(lambda: x_mon._do_snapshot(self._dataset_as_dataframe(X, rename=Xrename),
-                                                  kind='feature', _prefix='X', name=Xname, catcols=catcols), None),
+                                                  kind='feature', prefix='X', name=Xname, catcols=catcols), None),
             'Y': tryOr(lambda: y_mon._do_snapshot(self._dataset_as_dataframe(Y, rename=Yrename),
-                                                  kind='label', _prefix='Y', name=Yname, catcols=catcols), None),
+                                                  kind='label', prefix='Y', name=Yname, catcols=catcols), None),
         }
         return snapshots
 
@@ -124,19 +127,23 @@ class ModelDriftMonitor(DriftMonitorBase):
         """ Measure drift in a model's metrics, X and Y
 
         Args:
-            seq: sequence of recent predictions to consider
-            d1: sequence of recent predictions to consider
-            d2: sequence of recent predictions to consider
+            seq (list): sequence of recent predictions to consider, use [-i] to refer to the ith last prediction (e.g. [-1])
+            d1 (pd.DataFrame): the first dataset to compare, optional
+            d2 (pd.DataFrame): the second dataset to compare, optional
             ci: confidence interval
             baseline: baseline to compare against
             raw: return raw drift stats or DriftStats object
             matcher (dict): a dict that maps columns new -> old, e.g. {'Y_y': 'Y_0'}
+            since (datetime|str): the datetime from which to snapshot X and Y data. If specified,
+                X and Y data is collected from all runs since the given datetime, inclusive. If
+                'last', the datetime is set to be > last snapshot time. If str is given, it is parsed
+                as a datetime string, see .compare() for details.
 
         Returns:
             DriftStats|[dict]: drift stats or raw drift stats as list of dicts
 
         See Also:
-            - DriftMonitorBase.drift for details
+            - DriftMonitorBase.compare() for details
         """
         metrics_mon = self._metrics_monitor(self._resource)
         x_mon, y_mon = self._xy_monitor(self._resource)

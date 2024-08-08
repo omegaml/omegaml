@@ -5,6 +5,7 @@ from itertools import pairwise, product
 
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
+from omegaml.util import dict_merge
 
 
 class DriftMonitorBase:
@@ -71,8 +72,10 @@ class DriftMonitorBase:
                'recent' to compare the most recent snapshot to the previous. [i, j] are 0-indexed
                snapshot indices, can be specified as negative indices to indicate the last n-th snapshot.
                Defaults to 'recent'.
-            d1 (int): the first snapshot index to compare, optional
-            d2 (int): the second snapshot index to compare, optional
+            d1 (pd.DataFrame): the first dataset to compare, optional. If specified d2 must also be specified.
+               A snapshot is taken from the data before comparing. Use seq=None to compare d1 and d2 directly.
+            d2 (pd.DataFrame): the second dataset to compare, optional. If specified d1 must also be specified.
+                A snapshot is taken from the data before comparing. Use seq=None to compare d1 and d2 directly.
             ci (float): the confidence interval for the drift test, defaults to .95
             baseline (int): the baseline snapshot index to compare to, defaults to 0
             since (datetime|str): only consider snapshots since this date. If type(str), must
@@ -216,8 +219,8 @@ class DriftMonitorBase:
         recent = self._most_recent_snapshots(n=n)
         return recent[0]['info']['dt'] if recent else datetime.min
 
-    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None,
-                     catcols=None):
+    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, prefix=None,
+                     postfix=None, catcols=None):
         """ calculate a snapshot of the data
 
         This method calculates a snapshot for a DataFrame, including statistics and histograms or group frequencies
@@ -235,7 +238,8 @@ class DriftMonitorBase:
             name (str): the name of the snapshot
             kind (str): the kind of the snapshot
             info (dict): additional information to include in the snapshot
-            _prefix (str): the prefix to apply to all columns
+            prefix (str): the prefix to apply to all columns
+            postfix (str): the postfix to apply to all columns
             catcols (list): the columns to treat as categorical
 
         Returns:
@@ -274,11 +278,15 @@ class DriftMonitorBase:
         })
         stats = snapshot.setdefault('stats', {})
         info = snapshot.setdefault('info', self._snapshot_info(name, kind, **extra_info))
-        info['num_columns'] = numeric_columns if not _prefix else [f'{_prefix}_{col}' for col in numeric_columns]
-        info['cat_columns'] = cat_columns if not _prefix else [f'{_prefix}_{col}' for col in cat_columns]
+        prefixed = lambda col: f'{prefix}_{col}' if prefix else col
+        postfixed = lambda col: f'{col}_{postfix}' if postfix else col
+        pre_or_post_fixed = lambda col: (postfixed(prefixed(col)) if isinstance(col, str)
+                                         else [postfixed(prefixed(c)) for c in col])
+        info['num_columns'] = pre_or_post_fixed(numeric_columns)
+        info['cat_columns'] = pre_or_post_fixed(cat_columns)
         # calculate numeric statistics
         for col in numeric_columns:
-            s_col = col if not _prefix else f'{_prefix}_{col}'
+            s_col = pre_or_post_fixed(col)
             values = df1[col].values
             bins = 10 if len(values) < 1000 else 100
             probs = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, .95]
@@ -293,7 +301,7 @@ class DriftMonitorBase:
             }
         # calculate categorical statistics
         for col in cat_columns:
-            s_col = col if not _prefix else f'{_prefix}_{col}'
+            s_col = pre_or_post_fixed(col)
             stats[s_col] = {
                 'dtype': str(df1.dtypes[col]),
                 'groups': df1[col].value_counts().to_dict()
@@ -605,8 +613,8 @@ class DriftMonitorBase:
         for snapshot in as_list(snapshots):
             if snapshot is None:
                 continue
-            stats.update(snapshot.get('stats', {}))
-            info.update(snapshot.get('info', {}))
+            dict_merge(stats, snapshot.get('stats', {}))
+            dict_merge(info, snapshot.get('info', {}))
         return result
 
     def _dataset_as_dataframe(self, dataset, rename=None, filter=None, **query):

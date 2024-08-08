@@ -54,6 +54,37 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertEqual(drift['info']['seq'], [0, 0])
         self.assertEqual(drift['result']['drift'], False)
 
+    def test_dataframe_drift_groupby(self):
+        om = self.om
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+        mon = DataDriftMonitor(tracking=exp, store=om.datasets)
+        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
+                     filter=dict(country__in=['Switzerland', 'Germany'],
+                                 year__lte=1960),
+                     groupby=['country', 'year'])
+        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
+                     filter=dict(country__in=['Switzerland', 'Germany'],
+                                 year__gte=1980),
+                     groupby=['country', 'year'])
+        stats = mon.compare()
+        self.assertDictEqual(stats.summary(raw=True)['columns'],
+                             {'country': False,
+                              'country_Germany:1952': False,
+                              'country_Germany:1957': False,
+                              'country_Switzerland:1952': False,
+                              'country_Switzerland:1957': False,
+                              'gdpPercap': True,
+                              'gdpPercap_Germany:1952': True,
+                              'gdpPercap_Germany:1957': True,
+                              'gdpPercap_Switzerland:1952': True,
+                              'gdpPercap_Switzerland:1957': True,
+                              'year': True,
+                              'year_Germany:1952': True,
+                              'year_Germany:1957': True,
+                              'year_Switzerland:1952': True,
+                              'year_Switzerland:1957': True})
+
     def test_model_drift_stats(self):
         om = self.om
         with om.runtime.experiment('test') as exp:

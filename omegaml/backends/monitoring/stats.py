@@ -414,21 +414,31 @@ class DriftStats:
         seq_to = seq_to if int(seq_to or 0) > int(seq_from or 0) else None
         return seq_from, seq_to
 
-    def baseline(self, column, seq=None):
+    def baseline(self, column=None, seq=None):
         """ get the baseline statistics
 
         Args:
-            column (str): the column to get statistics for
+            column (str): the column to get statistics for. If None, returns all a DataFrame with
+                all columns
             seq (int): the sequence to get statistics for
 
         Returns:
-            DriftStatsSeries: the statistics for the target period, this is a pd.Series with
+            results (DriftStatsDataFrame|DriftStatsSeries): the statistics for the baseline period
+
+            * DriftStatsSeries: the statistics for the baseline period, this is a pd.Series with
+              convenience methods for plotting and describing the statistics, using .hist() and
+              .describe() respectively. If column is None, returns a DriftStatsDataFrame
+
+            * DriftStatsDataFrame: the statistics for the baseline period, this is a pd.DataFrame with
               convenience methods for plotting and describing the statistics, using .hist() and
               .describe() respectively
         """
+        if column is None:
+            return DriftStatsDataFrame([self._stats_series('baseline', column, seq)
+                                        for column in self.columns])
         return self._stats_series('baseline', column, seq)
 
-    def target(self, column, seq=None):
+    def target(self, column=None, seq=None):
         """ get the target statistics
 
         Args:
@@ -436,10 +446,19 @@ class DriftStats:
             seq (int): the sequence to get statistics for
 
         Returns:
-            DriftStatsSeries: the statistics for the target period, this is a pd.Series with
+            results (DriftStatsDataFrame|DriftStatsSeries): the statistics for the target period
+
+            * DriftStatsSeries: the statistics for the target period, this is a pd.Series with
+              convenience methods for plotting and describing the statistics, using .hist() and
+              .describe() respectively. If column is None, returns a DriftStatsDataFrame
+
+            * DriftStatsDataFrame: the statistics for the target period, this is a pd.DataFrame with
               convenience methods for plotting and describing the statistics, using .hist() and
               .describe() respectively
         """
+        if column is None:
+            return DriftStatsDataFrame([self._stats_series('target', column, seq)
+                                        for column in self.columns])
         return self._stats_series('target', column, seq)
 
     def _stats_series(self, period, column, seq):
@@ -479,8 +498,8 @@ class DriftStats:
                         'dt_to': pd.to_datetime(info['dt_to']),
                         'seq_from': info['seq'][0],
                         'seq_to': info['seq'][1],
-                        'baseline': d1['stats'][_c('d1', column, d1)],
-                        'target': d2['stats'][_c('d2', column, d2)],
+                        'baseline': d1['stats'][_c('d1', column, d1)] | {'len': d1['info']['len']},
+                        'target': d2['stats'][_c('d2', column, d2)] | {'len': d2['info']['len']},
                     }
 
         return self._filter_df(pd.DataFrame(drift_records(stats)), **query)
@@ -502,9 +521,30 @@ class DriftStatsSeries(pd.Series):
         super().__init__(values, **kwargs)
 
     def hist(self, *args, sample=False, **kwargs):
+        """ plot a histogram of the drift statistics
+
+        Args:
+            sample (int): the number of samples to draw from the histogram
+            *args: additional arguments to pass to the plot
+
+        Returns:
+            matplotlib.Axes: the axes the plot was drawn on
+        """
         return self.plot(sample=sample, **kwargs)
 
     def plot(self, sample=False, **kwargs):
+        """ plot the drift statistics
+
+        Plot the drift statistics as a histogram or bar plot, depending on the data type.
+        For numeric data, a histogram is plotted. For categorical data, a bar plot is plotted.
+
+        Args:
+            sample (int): the number of samples to draw from the histogram
+            **kwargs:
+
+        Returns:
+            matplotlib.Axes: the axes the plot was drawn on
+        """
         if 'hist' in self:
             counts, edges = self['hist']
             if sample:
@@ -520,6 +560,10 @@ class DriftStatsSeries(pd.Series):
         return ax
 
     def describe(self, **kwargs):
+        """ describe the drift statistics
+
+        Describe the drift statistics for the given column, statistic, seq_from, seq_to
+        """
         if 'hist' in self:
             percentiles = pd.Series(self['percentiles'][0], index=self['percentiles'][1])
             info = pd.concat([self, percentiles], axis=0)
@@ -527,3 +571,84 @@ class DriftStatsSeries(pd.Series):
         else:
             info = self
         return info
+
+    def sample(self, n=100, **kwargs):
+        """ sample from the drift statistics
+
+        Sample from the drift statistics for the given column, statistic, seq_from, seq_to
+
+        Args:
+            n (int): the number of samples to take, defaults to 100
+            **kwargs: additional keyword arguments to pass to the sample function
+
+        Returns:
+            pd.Series: a Series with the sampled values
+        """
+        if 'hist' in self:
+            counts, edges = self['hist']
+            values = DriftStatsCalc().sample_from_hist(counts, edges)
+        elif 'groups' in self:
+            probs = np.array(list(self['groups'].values())) / np.sum(list(self['groups'].values()))
+            values = np.random.choice(list(self['groups'].keys()), n, p=probs)
+        else:
+            raise ValueError('no histogram or groups found in drift data')
+        return pd.Series(values)
+
+
+class DriftStatsDataFrame(pd.DataFrame):
+    def __init__(self, driftseries, **kwargs):
+        df = pd.concat(driftseries, axis=1)
+        super().__init__(df, **kwargs)
+
+    def __getitem__(self, column):
+        return DriftStatsSeries(super().__getitem__(column).dropna())
+
+    def describe(self, **kwargs):
+        """
+        Describe the drift statistics for all columns
+
+        Args:
+            **kwargs: additional keyword arguments to pass to the describe function
+
+        Returns:
+            pd.DataFrame: a DataFrame with the drift statistics for all columns
+        """
+        df = pd.concat([self[c].describe(**kwargs) for c in self.columns], axis=1)
+        df.columns = list(self.columns)
+        return df
+
+    def sample(self, n=100, **kwargs):
+        """ sample from all columns
+
+        This samples from all columns in the DataFrame. The sample function is called with the
+        given arguments for each column in the DataFrame. The resulting samples are concatenated
+        into a new DataFrame with the same columns as the original DataFrame. Note that the
+        resulting DataFrame may not match the original dataframe multivariate distribution,
+        as each column is sampled independently.
+
+        Args:
+            n (int): the number of samples to take, defaults to 100
+            **kwargs: additional keyword arguments to pass to the sample function
+
+        Returns:
+            pd.DataFrame: a DataFrame with the sampled values for all columns
+        """
+        df = pd.concat([self[c].sample(n, **kwargs) for c in self.columns], axis=1)
+        df.columns = list(self.columns)
+        return df
+
+    def plot(self, column, sample=False, **kwargs):
+        """ plot histograms for a given column
+
+        this is equivalent to calling DriftStatsDataFrame[column].plot(sample=sample, **kwargs) or
+        DriftStatsSeries.plot(sample=sample, **kwargs) for the given column.
+
+        Args:
+            column (str): the column to plot
+            sample (int): the number of samples to draw from the histogram
+            **kwargs: additional keyword arguments to pass to the plot function
+
+        Returns:
+            matplotlib.Axes: the axes the plot was drawn on
+        """
+        return self[column].plot(sample=sample, **kwargs)
