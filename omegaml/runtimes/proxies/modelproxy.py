@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
 
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ class OmegaModelProxy(RuntimeProxyBase):
 
         If an experiment does not exist yet, it will be created. The
         experiment is automatically set to track this model, unless another
-        model has already been set to track this model for the same label.
+        experiment has already been set to track this model for the same label.
         If a previous model has been set to track this model it will be
         returned. If an experiment name is passed it will be used.
 
@@ -75,9 +74,9 @@ class OmegaModelProxy(RuntimeProxyBase):
         Returns:
             OmegaTrackingProxy() instance
         """
-        label = label or self.runtime._default_label
+        label = label or self.runtime._default_label or 'default'
         exps = self.experiments(label=label) if experiment is None else None
-        exp = exps.get(label or 'default') if exps else None
+        exp = exps.get(label) if exps else None
         experiment = experiment or self.modelname
         if exp is None:
             exp = self.runtime.experiment(experiment, provider=provider, **tracker_kwargs)

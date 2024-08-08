@@ -2,24 +2,6 @@ from celery import shared_task
 
 from omegaml.celery_util import OmegamlTask
 
-code_block = """
-# configure
-import omegaml as om
-# -- the name of the experiment
-experiment = '{experiment}'
-# -- the name of the model
-name = '{meta.name}'
-# -- the name of the monitoring provider
-provider = '{provider}'
-# -- the alert rules
-alerts = {alerts}
-# snapshot recent state and capture drift 
-with om.runtime.model(name).experiment(experiment) as exp:
-    mon = exp.as_monitor(name, store=om.models, provider=provider)
-    mon.snapshot(since='last', ignore_empty=True) 
-    mon.capture(rules=alerts, since='last')
-"""
-
 
 @shared_task(base=OmegamlTask, bind=True)
 def ensure_monitors(self, **kwargs):
@@ -43,19 +25,8 @@ def ensure_monitors(self, **kwargs):
         None
     """
     om = self.om
-    for meta in om.models.list(raw=True):
-        monitors = meta.attributes.get('tracking', {}).get('monitors', [])
-        for mon in monitors:
-            experiment = mon['experiment']
-            provider = mon['provider']
-            jobname = mon.get('job') or f'monitors/{experiment}/{meta.name}'
-            schedule = mon.get('schedule', 'daily')
-            alerts = mon.get('alerts', [])
-            if not om.jobs.list(jobname):
-                # if job does not exist yet create it
-                code = code_block.format(**locals())
-                om.jobs.create(code, jobname)
-                om.jobs.schedule(jobname, schedule=schedule)
-                mon['job'] = jobname
-                mon['schedule'] = schedule
-                meta.save()
+    for obj in om.models.list():
+        if obj.startswith('experiments'):
+            continue
+        with om.runtime.model(obj).experiment() as exp:
+            exp._create_monitor_job(obj, om.models, om.jobs)

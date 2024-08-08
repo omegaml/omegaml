@@ -125,14 +125,67 @@ class TrackingProvider:
         """
         store = store or self._model_store
         mon = self._has_monitor(obj, store=store)
-        assert getattr(self, 'autotrack',
-                       False), "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
+        is_autotracked = getattr(self, 'autotrack', False)
+        assert is_autotracked, "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
         provider = provider or mon.get('provider') if mon else None
         provider = provider or store.prefix.replace('/', '')
         store.link_monitor(obj, self._experiment, provider=provider,
                            alerts=alerts, schedule=schedule)
+        self._create_monitor_job(obj, model_store=store)
         ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
         return ProviderClass(obj, tracking=self, store=store, **kwargs)
+
+    def _create_monitor_job(self, obj, model_store=None, jobs_store=None):
+        # create and schedule a monitoring job for the object
+        # -- assumes the object has a monitor definition
+        # -- the experiment associated with the monitor must be autotracked
+        # -- if the job does not exist yet, create it
+        # -- if the job exists, do nothing
+        # Returns: list of jobs created as [Metadata, ...]
+        import omegaml as om
+        store = model_store or self._model_store
+        jobs = jobs_store or om.jobs
+        code_block = self._monitor_job_template()
+        meta = store.metadata(obj)
+        tracking = meta.attributes.setdefault('tracking', {})
+        monitors = tracking.setdefault('monitors', [])
+        jobs_created = []
+        for mon in monitors:
+            experiment = mon['experiment']
+            provider = mon['provider']
+            jobname = mon.get('job') or f'monitors/{experiment}/{meta.name}'
+            schedule = mon.get('schedule', 'daily')
+            alerts = mon.get('alerts', [])
+            if not jobs.list(jobname):
+                # if job does not exist yet create it
+                code = code_block.format(**locals())
+                job_meta = jobs.create(code, jobname)
+                jobs.schedule(jobname, schedule)
+                mon['job'] = jobname
+                mon['schedule'] = schedule
+                meta.save()
+                jobs_created.append(job_meta)
+        return jobs_created
+
+    def _monitor_job_template(self):
+        code_block = """
+        # configure
+        import omegaml as om
+        # -- the name of the experiment
+        experiment = '{experiment}'
+        # -- the name of the model
+        name = '{meta.name}'
+        # -- the name of the monitoring provider
+        provider = '{provider}'
+        # -- the alert rules
+        alerts = {alerts}
+        # snapshot recent state and capture drift 
+        with om.runtime.model(name).experiment(experiment) as exp:
+            mon = exp.as_monitor(name, store=om.models, provider=provider)
+            mon.snapshot(since='last', ignore_empty=True) 
+            mon.capture(rules=alerts, since='last')
+        """
+        return code_block
 
     def _has_monitor(self, obj, store=None):
         store = store or self._model_store
