@@ -113,9 +113,9 @@ class ModelDriftMonitor(DriftMonitorBase):
         Xname = f'tr:{self._resource}[run:{run},event:{event},key:X]'
         Yname = f'tr:{self._resource}[run:{run},event:{event},key:Y]'
         snapshots = {
-            'X': tryOr(lambda: x_mon._do_snapshot(self._assert_dataframe(X, rename=Xrename),
+            'X': tryOr(lambda: x_mon._do_snapshot(self._dataset_as_dataframe(X, rename=Xrename),
                                                   kind='feature', _prefix='X', name=Xname, catcols=catcols), None),
-            'Y': tryOr(lambda: y_mon._do_snapshot(self._assert_dataframe(Y, rename=Yrename),
+            'Y': tryOr(lambda: y_mon._do_snapshot(self._dataset_as_dataframe(Y, rename=Yrename),
                                                   kind='label', _prefix='Y', name=Yname, catcols=catcols), None),
         }
         return snapshots

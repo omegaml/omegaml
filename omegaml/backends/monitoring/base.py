@@ -213,6 +213,7 @@ class DriftMonitorBase:
 
     def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None,
                      catcols=None):
+        # prepare info
         extra_info = info or {}
         df1 = df1[columns] if columns else df1
         catcols = [c for c in catcols if c in df1.columns] if catcols else []
@@ -226,6 +227,7 @@ class DriftMonitorBase:
         info = snapshot.setdefault('info', self._snapshot_info(name, kind, **extra_info))
         info['num_columns'] = numeric_columns if not _prefix else [f'{_prefix}_{col}' for col in numeric_columns]
         info['cat_columns'] = cat_columns if not _prefix else [f'{_prefix}_{col}' for col in cat_columns]
+        # calculate numeric statistics
         for col in numeric_columns:
             s_col = col if not _prefix else f'{_prefix}_{col}'
             values = df1[col].values
@@ -240,6 +242,7 @@ class DriftMonitorBase:
                 'max': np.max(values),
                 'percentiles': [np.quantile(values, probs), probs],
             }
+        # calculate categorical statistics
         for col in cat_columns:
             s_col = col if not _prefix else f'{_prefix}_{col}'
             stats[s_col] = {
@@ -510,7 +513,9 @@ class DriftMonitorBase:
             info.update(snapshot.get('info', {}))
         return result
 
-    def _assert_dataframe(self, dataset, rename=None, **query):
+    def _dataset_as_dataframe(self, dataset, rename=None, filter=None, **query):
+        query = filter or query or self._query
+
         def _ensure_dataframe(df):
             if isinstance(df, (list, np.ndarray, pd.Series)):
                 df = pd.DataFrame(df)

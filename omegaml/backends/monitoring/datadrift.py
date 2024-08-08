@@ -11,7 +11,7 @@ class DataDriftMonitor(DriftMonitorBase):
                          tracking=tracking, kind=kind, **kwargs)
 
     def snapshot(self, dataset=None, chunksize=None, columns=None, _prefix=None, name=None, kind=None, catcols=None,
-                 filter=None, logged=True, **query):
+                 rename=None, filter=None, logged=True, **query):
         """
         Take a snapshot of a dataset and log its feature distribution for later drift detection
 
@@ -22,6 +22,7 @@ class DataDriftMonitor(DriftMonitorBase):
             prefix (str): prefix to apply to all columns
             kind (str): the kind of the snapshot (model, data)
             catcols (list): the columns to treat as categorical
+            rename (dict): columns to rename before snapshotting, e.g. {'oldname': 'newname'}
             filter (dict): the filter to apply to the dataset, if no specified **query takes precedence
             logged (bool): whether to log the snapshot, defaults to True
             query (str|kwargs): additional query parameters to use when reading the dataset.
@@ -36,8 +37,7 @@ class DataDriftMonitor(DriftMonitorBase):
         kind = kind or self._kind
         dataset = dataset if dataset is not None else self._resource
         name = name or (dataset if isinstance(dataset, str) else f'{kind}:{type(dataset)}')
-        query = filter or query or self._query
-        df = self._assert_dataframe(dataset, **query)
+        df = self._dataset_as_dataframe(dataset, rename=rename, filter=filter, **query)
         snapshot = self._do_snapshot(df, columns=columns, name=name, kind=kind, _prefix=_prefix,
                                      catcols=catcols)
         self._log_snapshot(snapshot) if logged else None
