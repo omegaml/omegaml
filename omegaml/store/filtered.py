@@ -1,13 +1,18 @@
 from __future__ import absolute_import
 
+import threading
+
+from hashlib import sha256
+
 import logging
+
+import warnings
 
 from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.util import PickableCollection, ensure_base_collection, signature
 
 logger = logging.getLogger(__name__)
-
 
 class FilteredCollection:
     """
@@ -169,3 +174,4 @@ class FilteredCollection:
         sanitize_filter(filter) if should_sanitize else filter
         logger.debug(f'executing mongodb query filter {filter}')
         return filter
+

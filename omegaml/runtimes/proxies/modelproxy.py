@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
 
 logger = logging.getLogger(__name__)
@@ -35,6 +34,7 @@ class OmegaModelProxy(RuntimeProxyBase):
         * ModelMixin
         * GridSearchMixin
     """
+
     #     Implementation note:
     #
     #     We decided to implement each method call explicitely in both
@@ -56,12 +56,12 @@ class OmegaModelProxy(RuntimeProxyBase):
         """
         return self.runtime.task(name)
 
-    def experiment(self, experiment=None, label=None, provider=None):
+    def experiment(self, experiment=None, label=None, provider=None, **tracker_kwargs):
         """ return the experiment for this model
 
         If an experiment does not exist yet, it will be created. The
         experiment is automatically set to track this model, unless another
-        model has already been set to track this model for the same label.
+        experiment has already been set to track this model for the same label.
         If a previous model has been set to track this model it will be
         returned. If an experiment name is passed it will be used.
 
@@ -69,16 +69,17 @@ class OmegaModelProxy(RuntimeProxyBase):
             experiment (str): the experiment name, defaults to the modelname
             label (str): the runtime label, defaults to 'default'
             provider (str): the provider to use, defaults to 'default'
+            tracker_kwargs (dict): additional kwargs to pass to the tracker
 
         Returns:
             OmegaTrackingProxy() instance
         """
-        label = label or self.runtime._default_label
+        label = label or self.runtime._default_label or 'default'
         exps = self.experiments(label=label) if experiment is None else None
-        exp = exps[0] if exps else None
+        exp = exps.get(label) if exps else None
         experiment = experiment or self.modelname
         if exp is None:
-            exp = self.runtime.experiment(experiment, provider=provider)
+            exp = self.runtime.experiment(experiment, provider=provider, **tracker_kwargs)
             if not label in self.experiments():
                 exp.track(self.modelname, label=label)
         return exp
@@ -87,15 +88,25 @@ class OmegaModelProxy(RuntimeProxyBase):
         """ return list of experiments tracking this model
 
         Args:
-            label (None|str): if set, return only the experiment for this label
+            label (None|str): the label for which to return the experiments, or None for all
             raw (bool): if True return the metadata for the experiment, else return the OmegaTrackingProxy
 
         Returns:
-            list of OmegaTrackingProxy instances or Metadata objects
+            instances (dict): mapping of label => instance of OmegaTrackingProxy if not raw, else Metadata,
+              includes a dummy label '_all_', listing all experiments that track this model.
+
+        .. versionchanged:: 0.17
+            returns a dict instead of a list
         """
         store = self.store
         tracking = (store.metadata(self.modelname).attributes.get('tracking', {}))
-        names = [tracking.get(label)] if label in tracking else None
-        names = names or (tracking.get('experiments', []) if not (label or names) else [])
-        return [self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
-                for name in names]
+        by_label = {
+            label: self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
+            for label, name in tracking.items() if label not in ['experiments', 'monitors']
+        }
+        unlabeled = {
+            '_all_': [self.runtime.experiment(name) if not raw else store.metadata(f'experiments/{name}')
+                      for name in tracking.get('experiments', [])]
+        }
+        all_exps = dict(**by_label, **unlabeled)
+        return {k: v for k, v in all_exps.items() if not label or k == label}

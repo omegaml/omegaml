@@ -14,6 +14,9 @@ class ExperimentStatistics:
     def __init__(self, tracker):
         self.tracker = tracker
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.tracker})"
+
     def data(self, **kwargs):
         return self.tracker.data(**kwargs)
 
