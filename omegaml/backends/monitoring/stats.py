@@ -89,6 +89,40 @@ class DriftStatsCalc:
 
 
 class DriftStats:
+    """ Drift statistics for a given column, statistic or sequence
+
+    Drift statistics are represented for a given column, statistic or sequence, or a combination
+    of these.
+
+    Usage:
+        stats = DriftStats(drifts)
+        stats['column'] -- get all statistics for a column
+        stats['column', 'mean'] -- get mean statistics for a column
+        stats['column', 'mean', 0] -- get mean statistics for a column at seq_from=0
+        stats['column', 'mean', 0, 1] -- get mean statistics for a column at seq_from=0, seq_to=1
+
+    Args:
+        data (dict): the drift statistics data, a dict with the following keys:
+            * info: the drift info, a dict with the following
+                - dt_from: the datetime of the baseline period
+                - dt_to: the datetime of the target period
+                - ci: the confidence interval of the test
+                - seq: the sequence of the drift
+                - baseline: the baseline snapshot
+                - target: the target snapshot
+            * stats: the drift statistics, a dict with the following
+                - column: the column name
+                - statistic: the statistic name
+                - drift: a boolean indicating drift
+                - metric: the drift metric
+                - score: the drift score
+                - pvalue: the pvalue of the test
+                - stats: the statistics used for the test
+            * kind: the kind of drift, one of 'data', 'feature', 'label'
+        monitor (ModelMonitor): the monitor that generated the drift statistics
+
+    """
+
     def __init__(self, data, monitor=None):
         self.drifts = data
         self.monitor = monitor

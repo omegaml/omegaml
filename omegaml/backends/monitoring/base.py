@@ -24,6 +24,11 @@ class DriftMonitorBase:
         return pd.json_normalize(self.data)
 
     def snapshot(self, *args, **kwargs):
+        """ take a snapshot of the data
+
+        This method is called by a monitor job to take a snapshot of the data to monitor.
+        The specific implementation is subject to the monitor type, e.g. a DataDriftMonitor
+        """
         raise NotImplementedError
 
     def summary(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None):
@@ -92,19 +97,19 @@ class DriftMonitorBase:
             if recursive_seq or seq in (True, 'series'):
                 # [0, 1, 2, ...] => compare each snapshot to the previous
                 seq = range(0, len(self))
-                drifts = [self._single_drift(seq=[i, j], ci=ci, raw=True, since=since) for i, j in pairwise(seq)]
+                drifts = [self._calculate_drift(seq=[i, j], ci=ci, raw=True, since=since) for i, j in pairwise(seq)]
             elif seq == 'baseline':
                 # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline
                 seq = list(product([baseline], range(1, len(self))))
-                drifts = [self._single_drift(seq=pair, ci=ci, raw=True, since=since) for pair in seq]
+                drifts = [self._calculate_drift(seq=pair, ci=ci, raw=True, since=since) for pair in seq]
             else:
                 raise ValueError(
                     f'invalid drift sequence {seq}, must be True, "baseline", "series" or a list of snapshot indices.')
             drifts = [d for d in drifts if d is not None]
             return DriftStats(drifts, monitor=self) if not raw else drifts
-        return self._single_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw, matcher=matcher, since=since)
+        return self._calculate_drift(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw, matcher=matcher, since=since)
 
-    def _single_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None, since=None):
+    def _calculate_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None, since=None):
         # return a single drift
         since = since.isoformat() if isinstance(since, datetime) else since
         if any(d is not None for d in (d1, d2)):
@@ -213,6 +218,50 @@ class DriftMonitorBase:
 
     def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, _prefix=None,
                      catcols=None):
+        """ calculate a snapshot of the data
+
+        This method calculates a snapshot for a DataFrame, including statistics and histograms or group frequencies
+        for numeric and categorical columns, respectively. Use the _log_snapshot method to log the snapshot to
+        the tracking system.
+
+        Note this an internal method to calculate a single DataFrame snapshot. Use the monitor.snapshot() method to
+        calculate a snapshot for the monitor's data. For example, a DataDriftMonitor would use this method directly
+        to calculate the snapshots of two datasets to compare for drift. A ModelDriftMonitor would use this method
+        multiple times to calculate the snapshot of the model's features (X), labels (Y) and metrics.
+
+        Args:
+            df1 (pd.DataFrame): the data to snapshot
+            columns (list): the columns to snapshot, defaults to all columns
+            name (str): the name of the snapshot
+            kind (str): the kind of the snapshot
+            info (dict): additional information to include in the snapshot
+            _prefix (str): the prefix to apply to all columns
+            catcols (list): the columns to treat as categorical
+
+        Returns:
+            dict: the snapshot, with the following keys:
+                - stats (dict): the statistics of the snapshot
+                    - '<numeric column>' (dict): the statistics for column X
+                        * 'dtype' (str): the data type of the column
+                        * 'hist' (tuple): the histogram of the column, (frequencies, edges)
+                        * 'std' (float): the standard deviation of the column
+                        * 'mean' (float): the mean of the column
+                        * 'min' (float): the minimum value of the column
+                        * 'max' (float): the maximum value of the column
+                        * 'percentiles' (list): the percentiles of the column
+                    - '<categorical column>' (dict): the statistics for column X
+                        * 'dtype' (str): the data type of the column
+                        * 'groups' (dict): the group frequencies of the column
+                            - '<group>' (str): the group name
+                            - '<count>' (int): the group frequency
+                - info (dict): the meta information of the snapshot
+                    - resource (str): the resource name
+                    - kind (str): the kind of the snapshot
+                    - dt (str): the datetime of the snapshot
+                    - len (int): the number of rows in the snapshot
+                    - num_columns (list): the numeric columns in the snapshot
+                    - cat_columns (list): the categorical columns in the snapshot
+        """
         # prepare info
         extra_info = info or {}
         df1 = df1[columns] if columns else df1
@@ -260,6 +309,53 @@ class DriftMonitorBase:
         self.tracking.log_event('drift', self._resource, drift, **extra)
 
     def _calc_drift(self, s1, s2, ci=.95, matcher=None):
+        """ calculate drift between two snapshots
+
+        Args:
+            s1 (dict): the first snapshot, see DriftMonitor.snapshot()
+            s2 (dict): the second snapshot, see DriftMonitor.snapshot()
+            ci (float): the confidence interval for the drift test, defaults to .95
+            matcher (dict): a dict that maps columns 'old' => 'new', e.g. {'Y_y': 'Y_0'}.
+               this is useful to map columns from one snapshot to another, e.g. when
+               column names change between snapshots. Pass as dict(d1={...}, d2={...})
+               to specifically map columns for the first and second snapshot. By default
+               columns present in d1 but missing in d2 are auto-matched by position.
+
+        Returns:
+            dict: the drift statistics, with keys 'info', 'stats', 'sample', 'result'
+                * 'info' (dict): meta information about the drift
+                    - 'dt_from' (str): the datetime of the first snapshot
+                    - 'dt_to' (str): the datetime of the second snapshot
+                    - 'ci' (float): the confidence interval for the drift test
+                    - 'baseline' (dict): the first snapshot
+                    - 'target' (dict): the second snapshot
+                    - 'columns_map' (dict): the column name matcher, if any,
+                        e.g. {'Y_y': 'Y_0'}, mapping column Y_y to Y_0
+                * 'stats' (dict): the drift statistics per column
+                    - '<numeric column>' (dict): the drift statistics for column X
+                        * 'ks' (tuple): the KS statistic and p-value
+                        * 'wasserstein' (float): the Wasserstein distance
+                        * 'mean' (dict): the mean drift statistics
+                            - 'metric' (float): the mean drift metric
+                            - 'score' (float): the mean drift score
+                            - 'stats' (list): the columns that drifted
+                            - 'drift' (bool): True if drift was detected, False otherwise
+                    - '<categorical column>' (dict): the drift statistics for column X
+                        * 'chisq' (tuple): the chi-square statistic and p-value
+                        * 'mean' (dict): the mean drift statistics
+                            - 'metric' (float): the mean drift metric
+                            - 'score' (float): the mean drift score
+                            - 'stats' (list): the columns that drifted
+                            - 'drift' (bool): True if drift was detected, False otherwise
+                * 'sample' (dict): the sampled data for each column
+                    - 'd1' (list): the sampled data from s1
+                    - 'd2' (list): the sampled data from s2
+                * 'result' (dict): the drift summary
+                    - 'drift' (bool): True if drift was detected, False otherwise
+                    - 'method' (str): the method used to calculate drift
+                    - 'metric' (float): the drift metric, 0 = no drift, > 0 = drift
+                    - 'columns' (list): the columns that drifted
+        """
         calc = DriftStatsCalc()
         numeric_columns = s1['info']['num_columns']
         cat_columns = s1['info']['cat_columns']

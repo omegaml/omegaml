@@ -30,7 +30,16 @@ class DataDriftMonitor(DriftMonitorBase):
                stored resource, this is passed as store.get(, **query)
 
         Returns:
-            dict: the snapshot
+            dict: the snapshot, with the following keys:
+                - name (str): the name of the snapshot
+                - kind (str): the kind of the snapshot ('data', 'model')
+                - columns (list): the columns snapshotted
+                - catcols (list): the columns treated as categorical
+                - data (pd.DataFrame): the snapshot data
+                - hist (dict): the histograms of the snapshot data
+                    - stats (dict): the statistics of the snapshot data
+                    - hist (dict): the histograms of the snapshot data
+                    - groups (dict): the histograms of the snapshot data by group
         """
         # TODO: for chunksizes need to combine hist for multiple chunks
         # -- https://stackoverflow.com/a/57884457/890242
