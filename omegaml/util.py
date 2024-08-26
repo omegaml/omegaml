@@ -936,10 +936,13 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
     for key, value in source.items():
         if callable(subset) and not subset(key, value):
             continue
-        if isinstance(value, dict):
+        elif isinstance(value, dict):
             # get node or create one
             node = destination.setdefault(key, {})
             dict_merge(node, value, delete_on=delete_on)
+        elif isinstance(value, list):
+            node = destination.setdefault(key, [])
+            node.extend(value)
         else:
             if value == dict_merge.DELETE and key in destination:
                 del destination[key]

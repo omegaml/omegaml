@@ -5,7 +5,6 @@ import pymongo
 import sys
 import warnings
 from hashlib import md5
-
 from omegaml.util import make_tuple, is_interactive, signature
 
 
@@ -53,7 +52,7 @@ class GeoJSON(dict):
         if 'coordinates' in d:
             coordinates = d.get('coordinates')
         elif 'geometry' in d \
-              and d.get('geometry').get('type') == 'Point':
+                and d.get('geometry').get('type') == 'Point':
             coordinates = d.get('geometry').get('coordinates')
         else:
             raise ValueError(
@@ -419,14 +418,15 @@ def sanitize_filter(filter, no_ops=False, trusted=False):
     user_ops = [k for k in filter if k.strip().startswith('$') and k not in injection_ops]
     ops_to_remove = (user_ops + injection_ops) if no_ops else injection_ops
     # sanitize user and default operators
-    query_trusted = not no_ops and (not trusted or trusted != signature(filter))
+    query_trusted = not no_ops and (trusted is not False and trusted == signature(filter))
     if user_ops and not query_trusted:
         warnings.warn(f'Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized.')
     for op in ops_to_remove:
         value = filter.pop(op, None)
         if value is not None:
             repl_op = op.replace('$', '-')
-            warnings.warn(f'{op} clauses are not permitted and replaced by {repl_op} for security reasons.')
+            warnings.warn(
+                f'{op} clauses are not permitted and replaced by {repl_op} for security reasons. Use sanitize_filter(query, trusted=signature(query)) to allow.')
             filter[repl_op] = value
     # sanitize nested operators
     for k, v in filter.items():

@@ -71,7 +71,7 @@ class KerasBackend(BaseModelBackend):
 
     def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get_model(modelname)
-        X = self._resolve_input_data('predict', Xname, **kwargs)
+        X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         result = model.predict(X)
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 

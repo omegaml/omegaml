@@ -2,8 +2,14 @@ import os
 import warnings
 from http import HTTPStatus
 
+from omegaml import Omega
+
 
 class OmegaTestMixin(object):
+    def setUp(self):
+        self.om = Omega()
+        self.clean()
+
     def shortDescription(self):
         # always print method name instead of docstring
         # see unittest.TestCase for details
