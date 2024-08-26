@@ -2,12 +2,11 @@ import warnings
 
 
 class TrackableMetadataMixin:
-    """ plugin for models store to allow linking experiments
-    """
+    """plugin for models store to allow linking experiments"""
 
     @classmethod
     def supports(cls, store, **kwargs):
-        return store.prefix in ('models/')
+        return store.prefix in ("models/")
 
     def link_experiment(self, name, experiment, label=None):
         """
@@ -27,18 +26,17 @@ class TrackableMetadataMixin:
             Metadata()
         """
         meta = self.metadata(name)
-        tracking = meta.attributes.setdefault('tracking', {})
-        exps = tracking.setdefault('experiments', [])
+        tracking = meta.attributes.setdefault("tracking", {})
+        exps = tracking.setdefault("experiments", [])
         if experiment not in exps:
-            tracking['experiments'].append(experiment)
+            tracking["experiments"].append(experiment)
         if label:
-            tracking.update({
-                label: experiment
-            })
+            tracking.update({label: experiment})
         return meta.save()
 
-    def link_monitor(self, name, experiment, provider=None, event='drift',
-                     alerts=None, schedule=None):
+    def link_monitor(
+        self, name, experiment, provider=None, event="drift", alerts=None, schedule=None
+    ):
         """
         This links a model to a monitor by adding the experiment name to the
         list of metadata.tracking.monitors.
@@ -58,43 +56,47 @@ class TrackableMetadataMixin:
             Metadata()
         """
         meta = self.metadata(name)
-        tracking = meta.attributes.setdefault('tracking', {})
-        monitors = tracking.setdefault('monitors', [])
+        tracking = meta.attributes.setdefault("tracking", {})
+        monitors = tracking.setdefault("monitors", [])
         # update existing monitor, if any
         for mon in monitors:
-            if mon['experiment'] == experiment:
-                mon.update({
-                    'provider': provider or mon.get('provider'),
-                    'alerts': alerts or mon.get('alerts'),
-                    'schedule': schedule or mon.get('schedule')
-                })
+            if mon["experiment"] == experiment:
+                mon.update(
+                    {
+                        "provider": provider or mon.get("provider"),
+                        "alerts": alerts or mon.get("alerts"),
+                        "schedule": schedule or mon.get("schedule"),
+                    }
+                )
                 break
         else:
             specs = {
-                'experiment': experiment,
-                'provider': provider or 'default',
-                'alerts': alerts or [{
-                    'event': event,
-                    'recipients': [],
-                }],
-                'schedule': schedule or 'daily',
+                "experiment": experiment,
+                "provider": provider or "default",
+                "alerts": alerts
+                or [
+                    {
+                        "event": event,
+                        "recipients": [],
+                    }
+                ],
+                "schedule": schedule or "daily",
             }
             monitors.append(specs)
         return meta.save()
 
 
 class UntrackableMetadataMixin:
-    """ placeholder for objects other than models (future use)
-    """
+    """placeholder for objects other than models (future use)"""
 
     # this enables simplified code in OmegaTask.enable_delegate_tracking
     @classmethod
     def supports(cls, store, **kwargs):
-        return not store.prefix in ('models/')
+        return not store.prefix in ("models/")
 
     def link_experiment(self, name, experiment, **kwargs):
         return self.metadata(name)
 
     def link_monitor(self, name, experiment, **kwargs):
-        warnings.warn('link_monitor not supported for {self.prefix} store')
+        warnings.warn("link_monitor not supported for {self.prefix} store")
         return self.metadata(name)

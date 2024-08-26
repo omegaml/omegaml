@@ -27,20 +27,22 @@ class OmegaJobs(BackendBaseCommon):
 
     # TODO this class should be a proper backend class with a mixin for ipynb
 
-    _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
-    _dir_placeholder = '_placeholder.ipynb'
+    _nb_config_magic = "omega-ml", "schedule", "run-at", "cron"
+    _dir_placeholder = "_placeholder.ipynb"
 
     def __init__(self, bucket=None, prefix=None, store=None, defaults=None):
         self.defaults = defaults or omega_settings()
-        self.prefix = prefix or (store.prefix if store else None) or 'jobs'
-        self.store = store or OmegaStore(prefix=prefix, bucket=bucket, defaults=defaults)
+        self.prefix = prefix or (store.prefix if store else None) or "jobs"
+        self.store = store or OmegaStore(
+            prefix=prefix, bucket=bucket, defaults=defaults
+        )
         self.kind = MDREGISTRY.OMEGAML_JOBS
         self._include_dir_placeholder = True
         # convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))
         self.Schedule = JobSchedule
 
     def __repr__(self):
-        return 'OmegaJobs(store={})'.format(self.store.__repr__())
+        return "OmegaJobs(store={})".format(self.store.__repr__())
 
     @property
     def _db(self):
@@ -51,12 +53,12 @@ class OmegaJobs(BackendBaseCommon):
         return self.store.fs
 
     def collection(self, name):
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if not name.endswith(".ipynb"):
+            name += ".ipynb"
         return self.store.collection(name)
 
     def drop(self, name, force=False):
-        """ remove the notebook
+        """remove the notebook
 
         Args:
             name (str): the name of the notebook
@@ -74,7 +76,7 @@ class OmegaJobs(BackendBaseCommon):
         return self.store.drop(name, force=force)
 
     def metadata(self, name, **kwargs):
-        """ retrieve metadata of a notebook
+        """retrieve metadata of a notebook
 
         Args:
             name (str): the name of the notebook
@@ -83,13 +85,13 @@ class OmegaJobs(BackendBaseCommon):
             Metadata
         """
         meta = self.store.metadata(name, **kwargs)
-        if meta is None and not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if meta is None and not name.endswith(".ipynb"):
+            name += ".ipynb"
             meta = self.store.metadata(name)
         return meta
 
     def exists(self, name):
-        """ check if the notebook exists
+        """check if the notebook exists
 
         Args:
             name (str): the name of the notebook
@@ -97,7 +99,7 @@ class OmegaJobs(BackendBaseCommon):
         Returns:
             Metadata
         """
-        return len(self.store.list(name)) + len(self.store.list(name + '.ipynb')) > 0
+        return len(self.store.list(name)) + len(self.store.list(name + ".ipynb")) > 0
 
     def put(self, obj, name, attributes=None):
         """
@@ -106,26 +108,28 @@ class OmegaJobs(BackendBaseCommon):
         :param obj: the NotebookNode to store
         :param name: the name of the notebook
         """
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if not name.endswith(".ipynb"):
+            name += ".ipynb"
         sbuf = StringIO()
         bbuf = BytesIO()
         # nbwrite expects string, fs.put expects bytes
         nbwrite(obj, sbuf, version=4)
         sbuf.seek(0)
-        bbuf.write(sbuf.getvalue().encode('utf8'))
+        bbuf.write(sbuf.getvalue().encode("utf8"))
         bbuf.seek(0)
         # see if we have a file already, if so replace the gridfile
         meta = self.store.metadata(name)
         if not meta:
             filename = uuid4().hex
             fileid = self._store_to_file(self.store, bbuf, filename)
-            meta = self.store._make_metadata(name=name,
-                                             prefix=self.store.prefix,
-                                             bucket=self.store.bucket,
-                                             kind=self.kind,
-                                             attributes=attributes,
-                                             gridfile=fileid)
+            meta = self.store._make_metadata(
+                name=name,
+                prefix=self.store.prefix,
+                bucket=self.store.bucket,
+                kind=self.kind,
+                attributes=attributes,
+                gridfile=fileid,
+            )
             meta = meta.save()
         else:
             filename = uuid4().hex
@@ -133,12 +137,12 @@ class OmegaJobs(BackendBaseCommon):
             meta = meta.save()
         # set config
         nb_config = self.get_notebook_config(name)
-        meta_config = meta.attributes.get('config', {})
+        meta_config = meta.attributes.get("config", {})
         if nb_config:
             meta_config.update(dict(**nb_config))
-            meta.attributes['config'] = meta_config
+            meta.attributes["config"] = meta_config
         meta = meta.save()
-        if not name.startswith('results') and ('run-at' in meta_config):
+        if not name.startswith("results") and ("run-at" in meta_config):
             meta = self.schedule(name)
         return meta
 
@@ -146,8 +150,8 @@ class OmegaJobs(BackendBaseCommon):
         """
         Retrieve a notebook and return a NotebookNode
         """
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if not name.endswith(".ipynb"):
+            name += ".ipynb"
         meta = self.store.metadata(name)
         if meta:
             try:
@@ -158,16 +162,18 @@ class OmegaJobs(BackendBaseCommon):
             sbuf = StringIO()
             data = outf.read()
             if data is None:
-                msg = 'Expected content in {name}, got None'.format(**locals())
+                msg = "Expected content in {name}, got None".format(**locals())
                 raise ValueError(msg)
-            sbuf.write(data.decode('utf8'))
+            sbuf.write(data.decode("utf8"))
             sbuf.seek(0)
             nb = nbread(sbuf, as_version=4)
             return nb
         else:
             raise gridfs.errors.NoFile(
                 ">{0}< does not exist in jobs bucket '{1}'".format(
-                    name, self.store.bucket))
+                    name, self.store.bucket
+                )
+            )
 
     def create(self, code, name):
         """
@@ -204,7 +210,9 @@ class OmegaJobs(BackendBaseCommon):
         job_list = self.store.list(pattern=pattern, regexp=regexp, raw=raw, **kwargs)
         name = lambda v: v.name if raw else v
         if not self._include_dir_placeholder:
-            job_list = [v for v in job_list if not name(v).endswith(self._dir_placeholder)]
+            job_list = [
+                v for v in job_list if not name(v).endswith(self._dir_placeholder)
+            ]
         return job_list
 
     def get_notebook_config(self, nb_filename):
@@ -249,29 +257,28 @@ class OmegaJobs(BackendBaseCommon):
         """
         notebook = self.get(nb_filename)
         config_cell = None
-        config_magic = ['# {}'.format(kw) for kw in self._nb_config_magic]
-        for cell in notebook.get('cells'):
+        config_magic = ["# {}".format(kw) for kw in self._nb_config_magic]
+        for cell in notebook.get("cells"):
             if any(cell.source.startswith(kw) for kw in config_magic):
                 config_cell = cell
         if not config_cell:
             return {}
-        yaml_conf = '\n'.join(
-            [re.sub('#', '', x, 1) for x in str(
-                config_cell.source).splitlines()])
+        yaml_conf = "\n".join(
+            [re.sub("#", "", x, 1) for x in str(config_cell.source).splitlines()]
+        )
         try:
             yaml_conf = yaml.safe_load(yaml_conf)
             config = yaml_conf.get(self._nb_config_magic[0], yaml_conf)
         except Exception:
-            raise ValueError(
-                'Notebook configuration cannot be parsed')
+            raise ValueError("Notebook configuration cannot be parsed")
         # translate config to canonical form
         # TODO refactor to seperate method / mapped translation functions
-        if 'schedule' in config:
-            config['run-at'] = JobSchedule(text=config.get('schedule', '')).cron
-        if 'cron' in config:
-            config['run-at'] = JobSchedule.from_cron(config.get('cron')).cron
-        if 'run-at' in config:
-            config['run-at'] = JobSchedule.from_cron(config.get('run-at')).cron
+        if "schedule" in config:
+            config["run-at"] = JobSchedule(text=config.get("schedule", "")).cron
+        if "cron" in config:
+            config["run-at"] = JobSchedule.from_cron(config.get("cron")).cron
+        if "run-at" in config:
+            config["run-at"] = JobSchedule.from_cron(config.get("run-at")).cron
         return config
 
     def run(self, name, event=None, timeout=None):
@@ -319,7 +326,7 @@ class OmegaJobs(BackendBaseCommon):
         return self.run_notebook(name, event=event, timeout=timeout)
 
     def run_notebook(self, name, event=None, timeout=None):
-        """ run a given notebook immediately.
+        """run a given notebook immediately.
 
         Args:
             name (str): the name of the jobfile
@@ -340,68 +347,68 @@ class OmegaJobs(BackendBaseCommon):
         # -- see https://nbconvert.readthedocs.io/en/latest/execute_api.html
         ep_kwargs = {
             # avoid timeouts to stop kernel
-            'timeout': timeout,
+            "timeout": timeout,
             # avoid kernel at exit functions
             # -- this stops ipykernel AttributeError 'send_multipart'
-            'shutdown_kernel': 'immediate',
+            "shutdown_kernel": "immediate",
             # set kernel name, blank is default
             # -- e.g. python3, ir
             # -- see https://stackoverflow.com/a/47053020/890242
-            'kernel_name': '',
+            "kernel_name": "",
             # always use the async kernel manager
             # -- see https://github.com/jupyter/nbconvert/issues/1964
-            'kernel_manager_class': AsyncKernelManager,
+            "kernel_manager_class": AsyncKernelManager,
         }
         # overrides from metadata
-        ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
+        ep_kwargs.update(meta_job.kind_meta.get("ep_kwargs", {}))
         try:
             resources = {
-                'metadata': {
-                    'path': self.defaults.OMEGA_TMP,
+                "metadata": {
+                    "path": self.defaults.OMEGA_TMP,
                 }
             }
-            if not meta_job.kind_meta.get('keep_output', False):
+            if not meta_job.kind_meta.get("keep_output", False):
                 # https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html
                 cp = ClearOutputPreprocessor()
                 cp.preprocess(notebook, resources)
             ep = ExecutePreprocessor(**ep_kwargs)
             ep.preprocess(notebook, resources)
         except Exception as e:
-            status = 'ERROR'
+            status = "ERROR"
             message = str(e)
         else:
-            status = 'OK'
-            message = ''
+            status = "OK"
+            message = ""
         finally:
             del ep
         # record results
-        meta_results = self.put(notebook,
-                                'results/{name}_{ts}'.format(**locals()))
-        meta_results.attributes['source_job'] = name
+        meta_results = self.put(notebook, "results/{name}_{ts}".format(**locals()))
+        meta_results.attributes["source_job"] = name
         meta_results.save()
-        job_results = meta_job.attributes.get('job_results', [])
+        job_results = meta_job.attributes.get("job_results", [])
         job_results.append(meta_results.name)
-        meta_job.attributes['job_results'] = job_results
+        meta_job.attributes["job_results"] = job_results
         # record final job status
-        job_runs = meta_job.attributes.get('job_runs', [])
+        job_runs = meta_job.attributes.get("job_runs", [])
         runstate = {
-            'status': status,
-            'ts': ts,
-            'message': message,
-            'results': meta_results.name if status == 'OK' else None
+            "status": status,
+            "ts": ts,
+            "message": message,
+            "results": meta_results.name if status == "OK" else None,
         }
         job_runs.append(runstate)
-        meta_job.attributes['job_runs'] = job_runs
+        meta_job.attributes["job_runs"] = job_runs
         # set event run state if event was specified
         if event:
             attrs = meta_job.attributes
-            triggers = attrs['triggers'] = attrs.get('triggers', [])
-            scheduled = (trigger for trigger in triggers
-                         if trigger['event-kind'] == 'scheduled')
+            triggers = attrs["triggers"] = attrs.get("triggers", [])
+            scheduled = (
+                trigger for trigger in triggers if trigger["event-kind"] == "scheduled"
+            )
             for trigger in scheduled:
-                if event == trigger['event']:
-                    trigger['status'] = status
-                    trigger['ts'] = ts
+                if event == trigger["event"]:
+                    trigger["status"] = status
+                    trigger["ts"] = ts
         meta_job.save()
         return meta_results
 
@@ -433,7 +440,7 @@ class OmegaJobs(BackendBaseCommon):
         meta = self.metadata(nb_file)
         attrs = meta.attributes
         # get/set run-at spec
-        config = attrs.get('config', {})
+        config = attrs.get("config", {})
         # see what we have as a schedule
         # -- a dictionary of JobSchedule
         if isinstance(run_at, dict):
@@ -445,42 +452,42 @@ class OmegaJobs(BackendBaseCommon):
             run_at = run_at.cron
         # -- nothing, may we have it on the job's config already
         if not run_at:
-            interval = config.get('run-at')
+            interval = config.get("run-at")
         else:
             # store the new schedule
-            config['run-at'] = run_at
+            config["run-at"] = run_at
             interval = run_at
         if not interval:
             # if we don't have a run-spec, return without scheduling
-            raise ValueError('no run-at specification provided, cannot schedule')
+            raise ValueError("no run-at specification provided, cannot schedule")
         # get last time the job was run
         if last_run is None:
-            job_runs = attrs.get('job_runs')
+            job_runs = attrs.get("job_runs")
             if job_runs:
-                last_run = job_runs[-1]['ts']
+                last_run = job_runs[-1]["ts"]
             else:
                 last_run = datetime.datetime.utcnow()
         # calculate next run time
         iter_next = croniter(interval, last_run)
         run_at = iter_next.get_next(datetime.datetime)
         # store next scheduled run
-        triggers = attrs['triggers'] = attrs.get('triggers', [])
+        triggers = attrs["triggers"] = attrs.get("triggers", [])
         # set up a schedule event
         scheduled_run = {
-            'event-kind': 'scheduled',
-            'event': run_at.isoformat(),
-            'run-at': run_at,
-            'status': 'PENDING'
+            "event-kind": "scheduled",
+            "event": run_at.isoformat(),
+            "run-at": run_at,
+            "status": "PENDING",
         }
         # search for existing trigger, only add if not existing yet
         for cur in triggers:
-            if cur.get('status') != 'PENDING':
+            if cur.get("status") != "PENDING":
                 continue
-            if scheduled_run['run-at'] == cur.get('run-at'):
+            if scheduled_run["run-at"] == cur.get("run-at"):
                 break
         else:
             triggers.append(scheduled_run)
-        attrs['config'] = config
+        attrs["config"] = config
         return meta.save()
 
     def get_schedule(self, name, only_pending=False):
@@ -498,13 +505,14 @@ class OmegaJobs(BackendBaseCommon):
         """
         meta = self.metadata(name)
         attrs = meta.attributes
-        config = attrs.get('config')
-        triggers = attrs.get('triggers', [])
+        config = attrs.get("config")
+        triggers = attrs.get("triggers", [])
         if only_pending:
-            triggers = [trigger for trigger in triggers
-                        if trigger['status'] == 'PENDING']
-        if config and 'run-at' in config:
-            run_at = config.get('run-at')
+            triggers = [
+                trigger for trigger in triggers if trigger["status"] == "PENDING"
+            ]
+        if config and "run-at" in config:
+            run_at = config.get("run-at")
         else:
             run_at = None
         return run_at, triggers
@@ -524,16 +532,16 @@ class OmegaJobs(BackendBaseCommon):
         """
         meta = self.metadata(name)
         attrs = meta.attributes
-        config = attrs.get('config')
-        triggers = attrs.get('triggers')
-        if 'run-at' in config:
-            del config['run-at']
+        config = attrs.get("config")
+        triggers = attrs.get("triggers")
+        if "run-at" in config:
+            del config["run-at"]
         for trigger in triggers:
-            if trigger['event-kind'] == 'scheduled' and trigger['status'] == 'PENDING':
-                trigger['status'] = 'CANCELLED'
+            if trigger["event-kind"] == "scheduled" and trigger["status"] == "PENDING":
+                trigger["status"] = "CANCELLED"
         return meta.save()
 
-    def export(self, name, localpath, format='html'):
+    def export(self, name, localpath, format="html"):
         """
         Export a job or result file to HTML
 
@@ -555,34 +563,43 @@ class OmegaJobs(BackendBaseCommon):
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
         # (exporter class, filemode, config-values
         EXPORTERS = {
-            'html': (HTMLExporter, '', {}),
-            'htmlbody': (HTMLExporter, '', {}),
-            'pdf': (PDFExporter, 'b', {}),
-            'slides': (SlidesExporter, '', {'RevealHelpPreprocessor.url_prefix':
-                                                'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/'}),
+            "html": (HTMLExporter, "", {}),
+            "htmlbody": (HTMLExporter, "", {}),
+            "pdf": (PDFExporter, "b", {}),
+            "slides": (
+                SlidesExporter,
+                "",
+                {
+                    "RevealHelpPreprocessor.url_prefix": "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/"
+                },
+            ),
         }
         # get exporter according to format
         if format not in EXPORTERS:
-            raise ValueError('format {} is invalid. Choose one of {}'.format(format, EXPORTERS.keys()))
+            raise ValueError(
+                "format {} is invalid. Choose one of {}".format(
+                    format, EXPORTERS.keys()
+                )
+            )
         exporter_cls, fmode, configkw = EXPORTERS[format]
         # prepare config
         # http://nbconvert.readthedocs.io/en/latest/nbconvert_library.html#Using-different-preprocessors
         c = Config()
         for k, v in configkw.items():
-            context, key = k.split('.')
+            context, key = k.split(".")
             setattr(c[context], key, v)
         # get configured exporter
         exporter = exporter_cls(config=c)
         # get notebook, convert and store in file if requested
         notebook = self.get(name)
         (data, resources) = exporter.from_notebook_node(notebook)
-        if localpath and localpath != 'memory':
-            with open(localpath, 'w' + fmode) as fout:
+        if localpath and localpath != "memory":
+            with open(localpath, "w" + fmode) as fout:
                 fout.write(data)
         return data, resources
 
     def help(self, name_or_obj=None, kind=None, raw=False):
-        """ get help for a notebook
+        """get help for a notebook
 
         Args:
             name_or_obj (str|obj): the name or actual object to get help for
@@ -599,19 +616,17 @@ class OmegaJobs(BackendBaseCommon):
 
     def to_archive(self, name, path, **kwargs):
         # TODO remove, pending #218
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if not name.endswith(".ipynb"):
+            name += ".ipynb"
         return self.store.to_archive(name, path, **kwargs)
 
     def from_archive(self, path, name, **kwargs):
         # TODO remove, pending #218
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
+        if not name.endswith(".ipynb"):
+            name += ".ipynb"
         return self.store.from_archive(path, name, **kwargs)
 
     def promote(self, name, other, **kwargs):
         # TODO remove, pending #218
         nb = self.get(name)
         return other.put(nb, name)
-
-

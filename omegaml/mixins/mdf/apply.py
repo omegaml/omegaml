@@ -27,15 +27,15 @@ class ApplyMixin(object):
         self._init_mixin(*args, **kwargs)
 
     def _init_mixin(self, *args, **kwargs):
-        self.apply_fn = kwargs.get('apply_fn', None)
+        self.apply_fn = kwargs.get("apply_fn", None)
         # set to True if the pipeline is a facet operation
-        self.is_from_facet = kwargs.get('is_from_facet', False)
+        self.is_from_facet = kwargs.get("is_from_facet", False)
         # index columns
-        self.index_columns = kwargs.get('index_columns', [])
+        self.index_columns = kwargs.get("index_columns", [])
         # db alias
-        self._db_alias = kwargs.get('db_alias', self._ensure_db_connection())
+        self._db_alias = kwargs.get("db_alias", self._ensure_db_connection())
         # cache used on persist()
-        self.cache = kwargs.get('cache', ApplyCache(self._db_alias))
+        self.cache = kwargs.get("cache", ApplyCache(self._db_alias))
 
     def _ensure_db_connection(self):
         from mongoengine.connection import _dbs, _connections
@@ -47,7 +47,7 @@ class ApplyMixin(object):
                 break
         else:
             # fake connection register
-            alias = self._db_alias = 'omega-{}'.format(uuid4().hex)
+            alias = self._db_alias = "omega-{}".format(uuid4().hex)
             _connections[alias] = seek_db.client
             _dbs[alias] = seek_db
         return self._db_alias
@@ -75,10 +75,10 @@ class ApplyMixin(object):
 
     def _make_cache_key(self, collection, pipeline):
         # remove random output value
-        if '$out' in pipeline[-1] and pipeline[-1]['$out'].startswith('cache'):
+        if "$out" in pipeline[-1] and pipeline[-1]["$out"].startswith("cache"):
             pipeline = list(pipeline)[:-1]
         spipeline = json.dumps(pipeline, sort_keys=True)
-        data = '{}_{}'.format(collection.name, spipeline).encode('utf-8')
+        data = "{}_{}".format(collection.name, spipeline).encode("utf-8")
         # SEC: CWE-916
         # - status: wontfix
         # - reason: hashcode is used purely for name resolution, not a security function
@@ -87,10 +87,12 @@ class ApplyMixin(object):
 
     def _getcopy_kwargs(self, **kwargs):
         kwargs = super(ApplyMixin, self)._getcopy_kwargs(**kwargs)
-        kwargs.update(is_from_facet=self.is_from_facet,
-                      index_columns=self.index_columns,
-                      cache=self.cache,
-                      apply_fn=self.apply_fn)
+        kwargs.update(
+            is_from_facet=self.is_from_facet,
+            index_columns=self.index_columns,
+            cache=self.cache,
+            apply_fn=self.apply_fn,
+        )
         return kwargs
 
     def noapply(self):
@@ -120,16 +122,18 @@ class ApplyMixin(object):
         # generate a cache key
         pipeline = self._build_pipeline()
         key = self._make_cache_key(self.collection, pipeline)
-        outname = 'cache_{}'.format(uuid4().hex)
+        outname = "cache_{}".format(uuid4().hex)
         value = {
-            'collection': self.collection.name,
-            'result': outname,
+            "collection": self.collection.name,
+            "result": outname,
         }
         # do usual processing, store result
         # -- note we pass pipeline to avoid processing iterators twice
-        pipeline.append({
-            '$out': outname,
-        })
+        pipeline.append(
+            {
+                "$out": outname,
+            }
+        )
         cursor = self._get_cursor(pipeline=pipeline, use_cache=False)
         # consume cursor to store output (via $out)
         for v in cursor:
@@ -144,9 +148,7 @@ class ApplyMixin(object):
 
     def inspect(self, explain=False, *args, **kwargs):
         if self.apply_fn:
-            details = {
-                'pipeline': self._build_pipeline()
-            }
+            details = {"pipeline": self._build_pipeline()}
             if explain:
                 details.update(self.__dict__)
             return details
@@ -174,19 +176,17 @@ class ApplyMixin(object):
                 if isinstance(expr, ApplyContext):
                     facets[col] = list(expr)
                     project = {
-                        '$project': {
-                            col: '$' + expr.columns[0]
-                        },
+                        "$project": {col: "$" + expr.columns[0]},
                     }
                     facets[col].append(project)
                 else:
                     facets[col] = expr
-            facet = {
-                '$facet': facets
-            }
+            facet = {"$facet": facets}
             self.is_from_facet = True
             return [facet]
-        raise ValueError('Cannot build pipeline from apply result of type {}'.format(type(result)))
+        raise ValueError(
+            "Cannot build pipeline from apply result of type {}".format(type(result))
+        )
 
     def _build_pipeline(self):
         pipeline = []
@@ -196,7 +196,7 @@ class ApplyMixin(object):
         return pipeline
 
     def _amend_pipeline(self, pipeline):
-        """ amend pipeline with default ops on coll.aggregate() calls """
+        """amend pipeline with default ops on coll.aggregate() calls"""
         if self.sort_order:
             sort = qops.SORT(**dict(qops.make_sortkey(self.sort_order)))
             pipeline.append(sort)
@@ -209,7 +209,7 @@ class ApplyMixin(object):
             entry = self.cache.get(key)
             if entry is not None:
                 # read result
-                outname = entry.value['result']
+                outname = entry.value["result"]
                 return self.collection.database[outname].find()
 
     def _get_cursor(self, pipeline=None, use_cache=True):
@@ -219,7 +219,9 @@ class ApplyMixin(object):
             cursor = self._get_cached_cursor(pipeline=pipeline, use_cache=use_cache)
             if cursor is None:
                 filter_criteria = self._get_filter_criteria()
-                cursor = FilteredCollection(self.collection).aggregate(pipeline, filter=filter_criteria, allowDiskUse=True)
+                cursor = FilteredCollection(self.collection).aggregate(
+                    pipeline, filter=filter_criteria, allowDiskUse=True
+                )
         else:
             cursor = super(ApplyMixin, self)._get_cursor()
         return cursor
@@ -231,7 +233,7 @@ class ApplyMixin(object):
             # $facet returns one document for each stage.
             frames = []
             for col in df.columns:
-                coldf = pd.DataFrame(df[col].iloc[0]).set_index('_id')
+                coldf = pd.DataFrame(df[col].iloc[0]).set_index("_id")
                 frames.append(coldf)
             df = pd.concat(frames, axis=1).reset_index()
             df = self._restore_dataframe_proper(df)
@@ -299,9 +301,10 @@ class ApplyContext(object):
         apply mixins in defaults.OMEGA_MDF_APPLY_MIXINS
         """
         from omegaml import settings
+
         defaults = settings()
         for mixin, applyto in defaults.OMEGA_MDF_APPLY_MIXINS:
-            if any(v in self.caller._applyto for v in applyto.split(',')):
+            if any(v in self.caller._applyto for v in applyto.split(",")):
                 extend_instance(self, mixin)
 
     def __iter__(self):
@@ -317,7 +320,9 @@ class ApplyContext(object):
         """
         return a stage subset on a column
         """
-        subctx = ApplyContext(self.caller, columns=make_tuple(sel), index=self.index_columns)
+        subctx = ApplyContext(
+            self.caller, columns=make_tuple(sel), index=self.index_columns
+        )
         self.add(subctx)
         return subctx
 
@@ -327,13 +332,13 @@ class ApplyContext(object):
 
         ctx['col'] = value-expression
         """
-        mapping = {
-            col: v
-            for (col, v) in zip(make_tuple(sel), make_tuple(val))}
+        mapping = {col: v for (col, v) in zip(make_tuple(sel), make_tuple(val))}
         self.project(mapping)
 
     def __repr__(self):
-        return 'ApplyContext(stages={}, expressions={})'.format(self.stages, self.expressions)
+        return "ApplyContext(stages={}, expressions={})".format(
+            self.stages, self.expressions
+        )
 
     def add(self, stage):
         """
@@ -346,12 +351,8 @@ class ApplyContext(object):
 
     def project_keeper_columns(self):
         # keep index, computed
-        index = {
-            col: '$' + col
-            for col in self.index_columns}
-        computed = {
-            col: '$' + col
-            for col in self.computed}
+        index = {col: "$" + col for col in self.index_columns}
+        computed = {col: "$" + col for col in self.computed}
         keep = {}
         keep.update(index)
         keep.update(computed)
@@ -365,27 +366,27 @@ class ApplyContext(object):
                 return stage
 
     def _getProjection(self, append=False):
-        stage = self._getLastStageKind('$project')
+        stage = self._getLastStageKind("$project")
         if stage is None or append:
             stage = {
-                '$project': {
-                    '_id': 1,
+                "$project": {
+                    "_id": 1,
                 }
             }
             self.stages.append(stage)
         return stage
 
     def _getGroupBy(self, by=None, append=False):
-        stage = self._getLastStageKind('$group')
-        if stage and stage['$group']['_id'] != by and by != '$$last':
+        stage = self._getLastStageKind("$group")
+        if stage and stage["$group"]["_id"] != by and by != "$$last":
             # if a different groupby criteria, add a new one
             stage = None
-        if stage is None and by == '$$last':
+        if stage is None and by == "$$last":
             by = None
         if stage is None or append:
             stage = {
-                '$group': {
-                    '_id': by,
+                "$group": {
+                    "_id": by,
                 }
             }
             self.stages.append(stage)
@@ -405,30 +406,20 @@ class ApplyContext(object):
         by = make_tuple(by)
         self.index_columns = self.index_columns + list(by)
         # define groupby
-        by = {col: '$' + col for col in by}
+        by = {col: "$" + col for col in by}
         stage = self._getGroupBy(by)
-        groupby = stage['$group']
+        groupby = stage["$group"]
         # add acccumulators
-        expr = expr or {
-            col: colExpr
-            for col, colExpr in kwargs.items()}
+        expr = expr or {col: colExpr for col, colExpr in kwargs.items()}
         groupby.update(expr)
         # add a projection to extract groupby values
-        extractId = {
-            col: '$_id.' + col
-            for col in by}
+        extractId = {col: "$_id." + col for col in by}
         # add a projection to keep accumulator columns
-        keepCols = {
-            col: 1
-            for col in expr}
+        keepCols = {col: 1 for col in expr}
         keepCols.update(extractId)
         self.project(keepCols, append=True)
         # sort by groupby keys
-        self.add({
-            '$sort': {
-                col: 1
-                for col in by}
-        })
+        self.add({"$sort": {col: 1 for col in by}})
         return self
 
     def project(self, expr=None, append=False, keep=False, **kwargs):
@@ -447,18 +438,14 @@ class ApplyContext(object):
         self.expressions.append(expr)
         for k, v in expr.items():
             # only append to stage if no other column projection was there
-            project = stage.get('$project')
+            project = stage.get("$project")
             if k not in project:
-                project.update({
-                    k: v
-                })
+                project.update({k: v})
             elif not keep:
                 # if a column is already projected, add a new projection stage
                 stage = self._getProjection(append=True)
-                project = stage.get('$project')
-                project.update({
-                    k: v
-                })
+                project = stage.get("$project")
+                project.update({k: v})
         return self
 
 
@@ -500,21 +487,23 @@ class ApplyArithmetics(object):
             terms = []
             for term in make_tuple(other):
                 if isinstance(term, str):
-                    term = '$' + term
+                    term = "$" + term
                 terms.append(term)
+
             def wrap(expr):
                 if wrap_op is not None:
-                    expr = {
-                        wrap_op: expr
-                    }
+                    expr = {wrap_op: expr}
                 return expr
+
             mapping = {
-                col: wrap({
-                    op: ['$' + col] + terms,
-                }) for col in self.columns}
-            keepCols = {
-                col: '$' + col
-                for col in self.index_columns}
+                col: wrap(
+                    {
+                        op: ["$" + col] + terms,
+                    }
+                )
+                for col in self.columns
+            }
+            keepCols = {col: "$" + col for col in self.index_columns}
             mapping.update(keepCols)
             self.project(mapping)
             return self
@@ -522,30 +511,30 @@ class ApplyArithmetics(object):
         return inner
 
     #: multiply
-    __mul__ = __arithmop__('$multiply')
+    __mul__ = __arithmop__("$multiply")
     #: add
-    __add__ = __arithmop__('$add')
+    __add__ = __arithmop__("$add")
     #: subtract
-    __sub__ = __arithmop__('$subtract')
+    __sub__ = __arithmop__("$subtract")
     #: divide
-    __div__ = __arithmop__('$divide')
-    __truediv__ = __arithmop__('$divide')
+    __div__ = __arithmop__("$divide")
+    __truediv__ = __arithmop__("$divide")
     #: divide integer
-    __floordiv__ = __arithmop__('$divide', wrap_op='$floor')
+    __floordiv__ = __arithmop__("$divide", wrap_op="$floor")
     #: modulo (%)
-    __mod__ = __arithmop__('$mod')
+    __mod__ = __arithmop__("$mod")
     #: pow
-    __pow_ = __arithmop__('$pow')
+    __pow_ = __arithmop__("$pow")
     #: ceil
-    __ceil__ = __arithmop__('$ceil')
+    __ceil__ = __arithmop__("$ceil")
     #: floor
-    __floor__ = __arithmop__('$floor')
+    __floor__ = __arithmop__("$floor")
     #: truncate
-    __trunc__ = __arithmop__('$trunc')
+    __trunc__ = __arithmop__("$trunc")
     #: absolute
-    __abs__ = __arithmop__('$abs')
+    __abs__ = __arithmop__("$abs")
     #: square root
-    sqrt = __arithmop__('sqrt')
+    sqrt = __arithmop__("sqrt")
 
 
 class ApplyDateTime(object):
@@ -570,29 +559,30 @@ class ApplyDateTime(object):
             columns = make_tuple(columns or self.columns)
             mapping = {
                 col: {
-                    op: '$' + col,
+                    op: "$" + col,
                 }
-                for col in columns}
+                for col in columns
+            }
             self.project(mapping)
             return self
 
-        inner.__doc__ = op.replace('$', '')
+        inner.__doc__ = op.replace("$", "")
         return inner
 
     # mongodb mappings
-    _year = __dtop__('$year')
-    _month = __dtop__('$month')
-    _week = __dtop__('$week')
-    _dayOfWeek = __dtop__('$dayOfWeek')
-    _dayOfMonth = __dtop__('$dayOfMonth')
-    _dayOfYear = __dtop__('$dayOfYear')
-    _hour = __dtop__('$hour')
-    _minute = __dtop__('$minute')
-    _second = __dtop__('$second')
-    _millisecond = __dtop__('$millisecond')
-    _isoDayOfWeek = __dtop__('$isoDayOfWeek')
-    _isoWeek = __dtop__('$isoWeek')
-    _isoWeekYear = __dtop__('$isoWeekYear')
+    _year = __dtop__("$year")
+    _month = __dtop__("$month")
+    _week = __dtop__("$week")
+    _dayOfWeek = __dtop__("$dayOfWeek")
+    _dayOfMonth = __dtop__("$dayOfMonth")
+    _dayOfYear = __dtop__("$dayOfYear")
+    _hour = __dtop__("$hour")
+    _minute = __dtop__("$minute")
+    _second = __dtop__("$second")
+    _millisecond = __dtop__("$millisecond")
+    _isoDayOfWeek = __dtop__("$isoDayOfWeek")
+    _isoWeek = __dtop__("$isoWeek")
+    _isoWeekYear = __dtop__("$isoWeekYear")
 
     # .dt accessor convenience similar to pandas.dt
     # see https://pandas.pydata.org/pandas-docs/stable/api.html#datetimelike-properties
@@ -634,9 +624,9 @@ class ApplyString(object):
                 if isinstance(term, str):
                     # if the term is a column name, add as a column name
                     if term in self.columns:
-                        term = '$' + term
+                        term = "$" + term
                     # allow to specify values explicitely by $$<value> => <value>
-                    term = term.replace('$$', '')
+                    term = term.replace("$$", "")
                 terms.append(term)
             # limit number of terms if requested
             if max_terms:
@@ -644,18 +634,18 @@ class ApplyString(object):
             # add projection of output columns to operator
             mapping = {
                 col: {
-                    op: terms if base is None else ['$' + col] + terms,
-                } for col in self.columns}
+                    op: terms if base is None else ["$" + col] + terms,
+                }
+                for col in self.columns
+            }
             self.project(mapping)
             # unwind all columns if requested
             if unwind:
-                exprs = [{'$unwind': {
-                    'path': '$' + col
-                }} for col in self.columns]
+                exprs = [{"$unwind": {"path": "$" + col}} for col in self.columns]
                 self.stages.extend(exprs)
             return self
 
-        inner.__doc__ = op.replace('$', '')
+        inner.__doc__ = op.replace("$", "")
         return inner
 
     def __strunary__(op, unwind=False):
@@ -671,19 +661,16 @@ class ApplyString(object):
             columns = make_tuple(columns or self.columns)
             mapping = {
                 col: {
-                    op: '$' + col,
+                    op: "$" + col,
                 }
-                for col in columns}
+                for col in columns
+            }
             self.project(mapping)
             if unwind:
-                self.stages.append({
-                    '$unwind': {
-                        ''
-                    }
-                })
+                self.stages.append({"$unwind": {""}})
             return self
 
-            inner.__doc__ = op.replace('$', '')
+            inner.__doc__ = op.replace("$", "")
 
         return inner
 
@@ -693,34 +680,35 @@ class ApplyString(object):
         # https://docs.mongodb.com/manual/reference/operator/aggregation/strcasecmp/
         mapping = {
             col: {
-                '$cond': {
-                    'if': {'$eq': ['$' + col, 0]},
-                    'then': True,
-                    'else': False,
+                "$cond": {
+                    "if": {"$eq": ["$" + col, 0]},
+                    "then": True,
+                    "else": False,
                 }
             }
-            for col in self.columns}
+            for col in self.columns
+        }
         self.project(mapping)
 
-    concat = __strexpr__('$concat', base=True)
-    split = __strexpr__('$split', unwind=True, base=True, max_terms=2)
-    usplit = __strexpr__('$split', unwind=False, base=True, max_terms=2)
-    upper = __strunary__('$toUpper')
-    lower = __strunary__('$toLower')
-    substr = __strexpr__('$substr', base=True)
-    strcasecmp = __strexpr__('$strcasecmp', base=True)
-    len = __strunary__('$strLenBytes')
-    index = __strexpr__('$indexOfBytes', base=True)
+    concat = __strexpr__("$concat", base=True)
+    split = __strexpr__("$split", unwind=True, base=True, max_terms=2)
+    usplit = __strexpr__("$split", unwind=False, base=True, max_terms=2)
+    upper = __strunary__("$toUpper")
+    lower = __strunary__("$toLower")
+    substr = __strexpr__("$substr", base=True)
+    strcasecmp = __strexpr__("$strcasecmp", base=True)
+    len = __strunary__("$strLenBytes")
+    index = __strexpr__("$indexOfBytes", base=True)
 
 
 class ApplyAccumulators(object):
     def agg(self, map=None, **kwargs):
-        stage = self._getGroupBy(by='$$last')
+        stage = self._getGroupBy(by="$$last")
         specs = map or kwargs
         for col, colExpr in specs.items():
             if isinstance(colExpr, dict):
                 # specify an arbitrary expression
-                groupby = stage['$group']
+                groupby = stage["$group"]
                 groupby[col] = colExpr
             elif isinstance(colExpr, str):
                 # specify some known operator
@@ -728,7 +716,7 @@ class ApplyAccumulators(object):
                     method = getattr(self, colExpr)
                     method(col)
                 else:
-                    raise SyntaxError('{} is not known'.format(colExpr))
+                    raise SyntaxError("{} is not known".format(colExpr))
             elif isinstance(colExpr, (tuple, list)):
                 # specify a list of some known operators
                 for statExpr in colExpr:
@@ -736,53 +724,55 @@ class ApplyAccumulators(object):
                         method = getattr(self, statExpr)
                         method(col)
                     else:
-                        raise SyntaxError('{} is not known'.format(statExpr))
+                        raise SyntaxError("{} is not known".format(statExpr))
             elif callable(colExpr):
                 # specify a callable that returns an expression
-                groupby = stage['$group']
+                groupby = stage["$group"]
                 groupby[col] = colExpr(col)
             else:
-                SyntaxError('{} on column {} is unknown or invalid'.format(colExpr, col))
+                SyntaxError(
+                    "{} on column {} is unknown or invalid".format(colExpr, col)
+                )
         return self
 
     def __statop__(op, opname=None):
-        opname = opname or op.replace('$', '')
+        opname = opname or op.replace("$", "")
 
         def inner(self, columns=None):
             columns = make_tuple(columns or self.columns)
-            stage = self._getGroupBy(by='$$last')
-            groupby = stage['$group']
-            groupby.update({
-                               '{}_{}'.format(col, opname): {
-                                   op: '$' + col
-                               } for col in columns
-                               })
+            stage = self._getGroupBy(by="$$last")
+            groupby = stage["$group"]
+            groupby.update(
+                {"{}_{}".format(col, opname): {op: "$" + col} for col in columns}
+            )
             self.computed.extend(groupby.keys())
             self.project_keeper_columns()
             return self
 
         return inner
 
-    sum = __statop__('$sum')
-    avg = __statop__('$avg')
-    mean = __statop__('$avg')
-    min = __statop__('$min')
-    max = __statop__('$max')
-    std = __statop__('$stdDevSamp', 'std')
+    sum = __statop__("$sum")
+    avg = __statop__("$avg")
+    mean = __statop__("$avg")
+    min = __statop__("$min")
+    max = __statop__("$max")
+    std = __statop__("$stdDevSamp", "std")
 
 
 class ApplyCache(object):
     """
     A Cache that works on collections and pipelines
     """
+
     def __init__(self, db_alias):
         self._db_alias = db_alias
 
     def set(self, key, value):
         # https://stackoverflow.com/a/22003440/890242
         QueryCache = make_QueryCache(self._db_alias)
-        QueryCache.objects(key=key).update_one(set__key="{}".format(key),
-                                               set__value=value, upsert=True)
+        QueryCache.objects(key=key).update_one(
+            set__key="{}".format(key), set__value=value, upsert=True
+        )
 
     def get(self, key):
         QueryCache = make_QueryCache(self._db_alias)
@@ -794,25 +784,28 @@ class ApplyCache(object):
 
 
 class ApplyStatistics(object):
-    def quantile(self, q=.5):
+    def quantile(self, q=0.5):
         def preparefn(val):
-            return val.pivot(columns='var', index='percentile', values='value')
+            return val.pivot(columns="var", index="percentile", values="value")
+
         return self.apply(self._percentile(q), preparefn=preparefn)
 
     def cov(self):
         def preparefn(val):
-            val = val.pivot(columns='y', index='x', values='cov')
+            val = val.pivot(columns="y", index="x", values="cov")
             val.index.name = None
             val.columns.name = None
             return val
+
         return self.apply(self._covariance, preparefn=preparefn)
 
     def corr(self):
         def preparefn(val):
-            val = val.pivot(columns='y', index='x', values='rho')
+            val = val.pivot(columns="y", index="x", values="rho")
             val.index.name = None
             val.columns.name = None
             return val
+
         return self.apply(self._pearson, preparefn=preparefn)
 
     def _covariance(self, ctx):
@@ -823,61 +816,46 @@ class ApplyStatistics(object):
         unwinds = []
         count = len(ctx.caller.noapply()) - 1
         for x, y in product(ctx.columns, ctx.columns):
-            xcol = '$' + x
-            ycol = '$' + y
+            xcol = "$" + x
+            ycol = "$" + y
             # only calculate the same column's mean once
             if xcol not in means:
                 means[xcol] = ctx.caller[x].noapply().mean().values[0, 0]
             if ycol not in means:
                 means[ycol] = ctx.caller[y].noapply().mean().values[0, 0]
             sumands = {
-                xcol: {
-                    '$subtract': [xcol, means[xcol]]
-                },
-                ycol: {
-                    '$subtract': [ycol, means[ycol]]
-                }
+                xcol: {"$subtract": [xcol, means[xcol]]},
+                ycol: {"$subtract": [ycol, means[ycol]]},
             }
-            multiply = {
-                '$multiply': [sumands[xcol], sumands[ycol]]
-            }
-            agg = {
-                '$group': {
-                    '_id': None,
-                    'value': {
-                        '$sum': multiply
-                    }
-                }
-            }
+            multiply = {"$multiply": [sumands[xcol], sumands[ycol]]}
+            agg = {"$group": {"_id": None, "value": {"$sum": multiply}}}
             project = {
-                '$project': {
-                    'cov': {
-                        '$divide': ['$value', count],
+                "$project": {
+                    "cov": {
+                        "$divide": ["$value", count],
                     },
-                    'x': x,
-                    'y': y,
+                    "x": x,
+                    "y": y,
                 }
             }
             pipeline = [agg, project]
-            outcol = '{}_{}'.format(x, y)
+            outcol = "{}_{}".format(x, y)
             facets[outcol] = pipeline
-            unwinds.append({'$unwind': '$' + outcol})
+            unwinds.append({"$unwind": "$" + outcol})
         facet = {
-            '$facet': facets,
+            "$facet": facets,
         }
-        expand = [{
-            '$project': {
-                'value': {
-                    '$objectToArray': '$$CURRENT',
+        expand = [
+            {
+                "$project": {
+                    "value": {
+                        "$objectToArray": "$$CURRENT",
+                    }
                 }
-            }
-        }, {
-            '$unwind': '$value'
-        }, {
-            '$replaceRoot': {
-                'newRoot': '$value.v'
-            }
-        }]
+            },
+            {"$unwind": "$value"},
+            {"$replaceRoot": {"newRoot": "$value.v"}},
+        ]
         return [facet, *unwinds, *expand]
 
     def _pearson(self, ctx):
@@ -886,101 +864,90 @@ class ApplyStatistics(object):
         facets = {}
         unwinds = []
         for x, y in product(ctx.columns, ctx.columns):
-            xcol = '$' + x
-            ycol = '$' + y
-            sumcolumns = {'$group': {'_id': None,
-                                     'count': {'$sum': 1},
-                                     'sumx': {'$sum': xcol},
-                                     'sumy': {'$sum': ycol},
-                                     'sumxsquared': {'$sum': {'$multiply': [xcol, xcol]}},
-                                     'sumysquared': {'$sum': {'$multiply': [ycol, ycol]}},
-                                     'sumxy': {'$sum': {'$multiply': [xcol, ycol]}}
-                                     }}
-
-            multiply_sumx_sumy = {'$multiply': ["$sumx", "$sumy"]}
-            multiply_sumxy_count = {'$multiply': ["$sumxy", "$count"]}
-            partone = {'$subtract': [multiply_sumxy_count, multiply_sumx_sumy]}
-
-            multiply_sumxsquared_count = {'$multiply': ["$sumxsquared", "$count"]}
-            sumx_squared = {'$multiply': ["$sumx", "$sumx"]}
-            subparttwo = {'$subtract': [multiply_sumxsquared_count, sumx_squared]}
-
-            multiply_sumysquared_count = {'$multiply': ["$sumysquared", "$count"]}
-            sumy_squared = {'$multiply': ["$sumy", "$sumy"]}
-            subpartthree = {'$subtract': [multiply_sumysquared_count, sumy_squared]}
-
-            parttwo = {'$sqrt': {'$multiply': [subparttwo, subpartthree]}}
-
-            rho = {'$project': {
-                'rho': {
-                    '$divide': [partone, parttwo]
-                },
-                'x': x,
-                'y': y
-            }}
-            pipeline = [sumcolumns, rho]
-            outcol = '{}_{}'.format(x, y)
-            facets[outcol] = pipeline
-            unwinds.append({'$unwind': '$' + outcol})
-        facet = {
-            '$facet': facets,
-        }
-        expand = [{
-            '$project': {
-                'value': {
-                    '$objectToArray': '$$CURRENT',
+            xcol = "$" + x
+            ycol = "$" + y
+            sumcolumns = {
+                "$group": {
+                    "_id": None,
+                    "count": {"$sum": 1},
+                    "sumx": {"$sum": xcol},
+                    "sumy": {"$sum": ycol},
+                    "sumxsquared": {"$sum": {"$multiply": [xcol, xcol]}},
+                    "sumysquared": {"$sum": {"$multiply": [ycol, ycol]}},
+                    "sumxy": {"$sum": {"$multiply": [xcol, ycol]}},
                 }
             }
-        }, {
-            '$unwind': '$value'
-        }, {
-            '$replaceRoot': {
-                'newRoot': '$value.v'
-            }
-        }]
+
+            multiply_sumx_sumy = {"$multiply": ["$sumx", "$sumy"]}
+            multiply_sumxy_count = {"$multiply": ["$sumxy", "$count"]}
+            partone = {"$subtract": [multiply_sumxy_count, multiply_sumx_sumy]}
+
+            multiply_sumxsquared_count = {"$multiply": ["$sumxsquared", "$count"]}
+            sumx_squared = {"$multiply": ["$sumx", "$sumx"]}
+            subparttwo = {"$subtract": [multiply_sumxsquared_count, sumx_squared]}
+
+            multiply_sumysquared_count = {"$multiply": ["$sumysquared", "$count"]}
+            sumy_squared = {"$multiply": ["$sumy", "$sumy"]}
+            subpartthree = {"$subtract": [multiply_sumysquared_count, sumy_squared]}
+
+            parttwo = {"$sqrt": {"$multiply": [subparttwo, subpartthree]}}
+
+            rho = {"$project": {"rho": {"$divide": [partone, parttwo]}, "x": x, "y": y}}
+            pipeline = [sumcolumns, rho]
+            outcol = "{}_{}".format(x, y)
+            facets[outcol] = pipeline
+            unwinds.append({"$unwind": "$" + outcol})
+        facet = {
+            "$facet": facets,
+        }
+        expand = [
+            {
+                "$project": {
+                    "value": {
+                        "$objectToArray": "$$CURRENT",
+                    }
+                }
+            },
+            {"$unwind": "$value"},
+            {"$replaceRoot": {"newRoot": "$value.v"}},
+        ]
         return [facet, *unwinds, *expand]
 
     def _percentile(self, pctls=None):
         """
         calculate percentiles for all columns
         """
-        pctls = pctls or [.25, .5, .75]
+        pctls = pctls or [0.25, 0.5, 0.75]
         if not isinstance(pctls, (list, tuple)):
-                pctls = [pctls]
+            pctls = [pctls]
 
         def calc(col, p, outcol):
             # sort values
             sort = {
-                '$sort': {
+                "$sort": {
                     col: 1,
                 }
             }
             # group/push to get an array of all values
             group = {
-                '$group': {
-                    '_id': col,
-                    'values': {
-                        '$push': "$" + col
-                    },
+                "$group": {
+                    "_id": col,
+                    "values": {"$push": "$" + col},
                 }
             }
             # find value at requested percentile
             perc = {
-                '$arrayElemAt': [
-                    '$values', {
-                        '$floor': {
-                        '$multiply': [{
-                            '$size': '$values'
-                        }, p]
-                    }}
+                "$arrayElemAt": [
+                    "$values",
+                    {"$floor": {"$multiply": [{"$size": "$values"}, p]}},
                 ]
             }
             # map percentile value to output column
             project = {
-                '$project': {
-                    'var': col,
-                    'percentile': 'p{}'.format(p),
-                    'value': perc,
+                "$project": {
+                    "var": col,
+                    "percentile": "p{}".format(p),
+                    "value": perc,
                 }
             }
             return [sort, group, project]
@@ -995,32 +962,26 @@ class ApplyStatistics(object):
             for col in ctx.columns:
                 for p in pctls:
                     # e.g. outcol for perc .25 of column abc => abcp25
-                    outcol = '{}_p{}'.format(col, p).replace('0.', '')
+                    outcol = "{}_p{}".format(col, p).replace("0.", "")
                     facets[outcol] = calc(col, p, outcol)
-                    unwind.append({'$unwind': '$'+ outcol})
+                    unwind.append({"$unwind": "$" + outcol})
             # process per-column pipelines in parallel, resulting in one
             # document for each variable + percentile combination
-            facet = {
-                '$facet': facets
-            }
+            facet = {"$facet": facets}
             # expand single document into one document per variable + percentile combo
             # the resulting set of documents contains var/percentile/value
-            expand = [{
-                '$project': {
-                    'value': {
-                        '$objectToArray': '$$CURRENT',
+            expand = [
+                {
+                    "$project": {
+                        "value": {
+                            "$objectToArray": "$$CURRENT",
+                        }
                     }
-                }
-            }, {
-                '$unwind': '$value'
-            }, {
-                '$replaceRoot': {
-                    'newRoot': '$value.v'
-                }
-            }]
+                },
+                {"$unwind": "$value"},
+                {"$replaceRoot": {"newRoot": "$value.v"}},
+            ]
             pipeline = [facet, *unwind, *expand]
             return pipeline
 
         return inner
-
-

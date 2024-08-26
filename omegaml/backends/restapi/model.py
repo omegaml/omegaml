@@ -10,20 +10,20 @@ class GenericModelResource(object):
         self.is_async = is_async
 
     def is_eager(self):
-        return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
+        return getattr(self.om.runtime.celeryapp.conf, "CELERY_ALWAYS_EAGER", False)
 
     def metadata(self, model_id, query, payload):
         meta = self.om.models.metadata(model_id)
         if meta is not None:
             data = {
-                'model': meta.name,
-                'result': {
-                    'name': meta.name,
-                    'kind': meta.kind,
-                    'created': meta.created,
-                    'modified': meta.modified,
-                    'bucket': meta.bucket,
-                }
+                "model": meta.name,
+                "result": {
+                    "name": meta.name,
+                    "kind": meta.kind,
+                    "created": meta.created,
+                    "modified": meta.modified,
+                    "bucket": meta.bucket,
+                },
             }
         else:
             data = {}
@@ -39,11 +39,11 @@ class GenericModelResource(object):
         Returns:
             dict(model: id, result: dict)
         """
-        data = (payload or {}).get('data')
-        dataset = query.get('datax')
+        data = (payload or {}).get("data")
+        dataset = query.get("datax")
         if data is not None:
-            columns = payload.get('columns')
-            shape = payload.get('shape')
+            columns = payload.get("columns")
+            shape = payload.get("shape")
             df = pd.DataFrame(data)[columns]
             if shape is not None:
                 assert len(columns) == 1, "only 1 column allowed to be reshaped"
@@ -55,50 +55,80 @@ class GenericModelResource(object):
             promise = self.om.runtime.model(model_id).predict(dataset)
         else:
             raise ValueError('require either "data" key in body, or ?datax=dataset')
-        result = self.prepare_result(promise.get(), resource_name=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), resource_name=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def prepare_result(self, result, resource_name=None, **kwargs):
-        return {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name }
+        return {
+            "model": resource_name,
+            "result": ensure_json_serializable(result),
+            "resource_uri": resource_name,
+        }
 
     def fit(self, model_id, query, payload):
-        datax = query.get('datax')
-        datay = query.get('datay')
+        datax = query.get("datax")
+        datay = query.get("datay")
         promise = self.om.runtime.model(model_id).fit(datax, datay)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def predict_proba(self, model_id, query, payload):
-        datax = query.get('datax')
-        datay = query.get('datay')
+        datax = query.get("datax")
+        datay = query.get("datay")
         promise = self.om.runtime.model(model_id).predict_proba(datax, datay)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def partial_fit(self, model_id, query, payload):
-        datax = query.get('datax')
-        datay = query.get('datay')
+        datax = query.get("datax")
+        datay = query.get("datay")
         promise = self.om.runtime.model(model_id).partial_fit(datax, datay)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def score(self, model_id, query, payload):
-        datax = query.get('datax')
-        datay = query.get('datay')
+        datax = query.get("datax")
+        datay = query.get("datay")
         promise = self.om.runtime.model(model_id).score(datax, datay)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def transform(self, model_id, query, payload):
-        datax = query.get('datax')
+        datax = query.get("datax")
         promise = self.om.runtime.model(model_id).transform(datax)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def decision_function(self, model_id, query, payload):
-        datax = query.get('datax')
+        datax = query.get("datax")
         promise = self.om.runtime.model(model_id).decision_function(datax)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), model_id=model_id)
+            if not self.is_async
+            else promise
+        )
         return result
-
-

@@ -17,7 +17,7 @@ from omegaml.documents import MDREGISTRY
 from omegaml.util import reshaped, gsreshaped
 
 # byte string
-_u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
+_u8 = lambda t: t.encode("UTF-8", "replace") if isinstance(t, str) else t
 
 
 class ScikitLearnBackendV1(BaseModelBackend):
@@ -34,13 +34,14 @@ class ScikitLearnBackendV1(BaseModelBackend):
         file
         """
         import joblib
+
         lpath = tempfile.mkdtemp()
         fname = os.path.basename(filename)
         mklfname = os.path.join(lpath, fname)
         zipfname = os.path.join(self.model_store.tmppath, fname)
         joblib.dump(model, mklfname, protocol=4)
-        with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
-            for part in glob.glob(os.path.join(lpath, '*')):
+        with ZipFile(zipfname, "w", compression=ZIP_DEFLATED) as zipf:
+            for part in glob.glob(os.path.join(lpath, "*")):
                 zipf.write(part, os.path.basename(part))
         rmtree(lpath)
         return zipfname
@@ -50,6 +51,7 @@ class ScikitLearnBackendV1(BaseModelBackend):
         Loads a model using joblib from a zip file created with _package_model
         """
         import joblib
+
         lpath = tempfile.mkdtemp()
         fname = os.path.basename(packagefname)
         mklfname = os.path.join(lpath, fname)
@@ -63,7 +65,7 @@ class ScikitLearnBackendV1(BaseModelBackend):
         """
         Retrieves a pre-stored model
         """
-        filename = self.model_store._get_obj_store_key(name, '.omm')
+        filename = self.model_store._get_obj_store_key(name, ".omm")
         packagefname = os.path.join(self.model_store.tmppath, name)
         dirname = os.path.dirname(packagefname)
         try:
@@ -73,7 +75,7 @@ class ScikitLearnBackendV1(BaseModelBackend):
             pass
         meta = self.model_store.metadata(name, version=version)
         outf = self.model_store.fs.get_version(filename, version=version)
-        with open(packagefname, 'wb') as zipf:
+        with open(packagefname, "wb") as zipf:
             zipf.write(meta.gridfile.read())
         model = self._v1_extract_model(packagefname)
         return model
@@ -83,16 +85,18 @@ class ScikitLearnBackendV1(BaseModelBackend):
         Packages a model using joblib and stores in GridFS
         """
         zipfname = self._v1_package_model(obj, name)
-        with open(zipfname, 'rb') as fzip:
+        with open(zipfname, "rb") as fzip:
             gridfile = self.model_store.fs.put(
-                fzip, filename=self.model_store._get_obj_store_key(name, 'omm'))
+                fzip, filename=self.model_store._get_obj_store_key(name, "omm")
+            )
         return self.model_store._make_metadata(
             name=name,
             prefix=self.model_store.prefix,
             bucket=self.model_store.bucket,
             kind=MDREGISTRY.SKLEARN_JOBLIB,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
 
 class ScikitLearnBackendV2(ScikitLearnBackendV1):
@@ -112,7 +116,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         """
         Loads a model using joblib from a zip file created with _package_model
         """
-        with open(tmpfn, 'wb') as pkgf:
+        with open(tmpfn, "wb") as pkgf:
             pkgf.write(infile.read())
         model = joblib.load(tmpfn)
         return model
@@ -131,59 +135,74 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
             return super()._v1_put_model(obj, name, attributes=attributes, **kwargs)
         return super().put_model(obj, name, attributes=attributes)
 
-    def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+        data = self._resolve_input_data("predict", Xname, "X", **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
-            return self._prepare_result('predict', result, rName=rName,
-                                        pure_python=pure_python, **kwargs)
+            return self._prepare_result(
+                "predict", result, rName=rName, pure_python=pure_python, **kwargs
+            )
 
-        result = process(maybe_chunked(model.predict,
-                                       lambda data: as_args(reshaped(data)),
-                                       data, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(
+                model.predict, lambda data: as_args(reshaped(data)), data, **kwargs
+            ),
+            fn=store,
+            keep_last=True,
+        )
         return result
 
-    def predict_proba(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
-        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
+    def predict_proba(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+        data = self._resolve_input_data("predict", Xname, "X", **kwargs)
         model = self.model_store.get(modelname)
 
         def store(result):
-            return self._prepare_result('predict', result, rName=rName,
-                                        pure_python=pure_python, **kwargs)
+            return self._prepare_result(
+                "predict", result, rName=rName, pure_python=pure_python, **kwargs
+            )
 
-        result = process(maybe_chunked(model.predict_proba,
-                                       lambda data: as_args(reshaped(data)),
-                                       data, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(
+                model.predict_proba,
+                lambda data: as_args(reshaped(data)),
+                data,
+                **kwargs,
+            ),
+            fn=store,
+            keep_last=True,
+        )
         return result
 
     def fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
-        X = self._resolve_input_data('fit', Xname, 'X')
-        Y = self._resolve_input_data('fit', Yname, 'Y') if Yname is not None else None
+        X = self._resolve_input_data("fit", Xname, "X")
+        Y = self._resolve_input_data("fit", Yname, "Y") if Yname is not None else None
         model.fit(reshaped(X), reshaped(Y), **kwargs)
         meta = self.model_store.put(model, modelname)
         return meta
 
-    def partial_fit(
-          self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    def partial_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None
         if Yname:
-            Y, metaY = (self.data_store.get(Yname),
-                        self.data_store.metadata(Yname))
-        process(maybe_chunked(model.partial_fit,
-                              lambda X, Y: as_args(reshaped(X), reshaped(Y)),
-                              X, Y, **kwargs))
+            Y, metaY = (self.data_store.get(Yname), self.data_store.metadata(Yname))
+        process(
+            maybe_chunked(
+                model.partial_fit,
+                lambda X, Y: as_args(reshaped(X), reshaped(Y)),
+                X,
+                Y,
+                **kwargs,
+            )
+        )
         meta = self.model_store.put(model, modelname)
         return meta
 
     def score(
-          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-          **kwargs):
+        self, modelname, Xname, Yname=None, rName=None, pure_python=True, **kwargs
+    ):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
@@ -194,22 +213,29 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                 result = meta
             return result
 
-        result = process(maybe_chunked(model.score,
-                                       lambda X, Y: as_args(reshaped(X), reshaped(Y)),
-                                       X, Y, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(
+                model.score,
+                lambda X, Y: as_args(reshaped(X), reshaped(Y)),
+                X,
+                Y,
+                **kwargs,
+            ),
+            fn=store,
+            keep_last=True,
+        )
 
-        self.tracking.log_metric('score', result)
+        self.tracking.log_metric("score", result)
         return result
 
     def fit_transform(
-          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-          **kwargs):
+        self, modelname, Xname, Yname=None, rName=None, pure_python=True, **kwargs
+    ):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None
         if Yname:
-            Y, metaY = (self.data_store.get(Yname),
-                        self.data_store.metadata(Yname))
+            Y, metaY = (self.data_store.get(Yname), self.data_store.metadata(Yname))
 
         def store(result):
             if pure_python:
@@ -219,9 +245,17 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                 result = meta
             return result
 
-        result = process(maybe_chunked(model.fit_transform,
-                                       lambda X, Y: as_args(reshaped(X), reshaped(Y)),
-                                       X, Y, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(
+                model.fit_transform,
+                lambda X, Y: as_args(reshaped(X), reshaped(Y)),
+                X,
+                Y,
+                **kwargs,
+            ),
+            fn=store,
+            keep_last=True,
+        )
 
         model_meta = self.model_store.put(model, modelname)
         return result if rName else model_meta
@@ -238,12 +272,16 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                 result = meta
             return result
 
-        result = process(maybe_chunked(model.transform,
-                                       lambda X: as_args(reshaped(X)),
-                                       X, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(model.transform, lambda X: as_args(reshaped(X)), X, **kwargs),
+            fn=store,
+            keep_last=True,
+        )
         return result
 
-    def decision_function(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def decision_function(
+        self, modelname, Xname, rName=None, pure_python=True, **kwargs
+    ):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
 
@@ -255,14 +293,29 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
                 result = meta
             return result
 
-        result = process(maybe_chunked(model.decision_function,
-                                       lambda X: as_args(reshaped(X)),
-                                       X, **kwargs), fn=store, keep_last=True)
+        result = process(
+            maybe_chunked(
+                model.decision_function, lambda X: as_args(reshaped(X)), X, **kwargs
+            ),
+            fn=store,
+            keep_last=True,
+        )
         return result
 
-    def gridsearch(self, modelname, Xname, Yname=None, rName=None,
-                   parameters=None, pure_python=True, **kwargs):
-        model, meta = self.model_store.get(modelname), self.model_store.metadata(modelname)
+    def gridsearch(
+        self,
+        modelname,
+        Xname,
+        Yname=None,
+        rName=None,
+        parameters=None,
+        pure_python=True,
+        **kwargs,
+    ):
+        model, meta = (
+            self.model_store.get(modelname),
+            self.model_store.metadata(modelname),
+        )
         X = self.data_store.get(Xname)
         if Yname:
             y = self.data_store.get(Yname)
@@ -274,17 +327,19 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         if rName:
             gs_modelname = rName
         else:
-            gs_modelname = '{}.{}.gs'.format(modelname, nowdt.isoformat())
+            gs_modelname = "{}.{}.gs".format(modelname, nowdt.isoformat())
         gs_meta = self.model_store.put(gs_model, gs_modelname)
         attributes = meta.attributes
-        if not 'gridsearch' in attributes:
-            attributes['gridsearch'] = []
-        attributes['gridsearch'].append({
-            'datetime': nowdt,
-            'Xname': Xname,
-            'Yname': Yname,
-            'gsModel': gs_modelname,
-        })
+        if not "gridsearch" in attributes:
+            attributes["gridsearch"] = []
+        attributes["gridsearch"].append(
+            {
+                "datetime": nowdt,
+                "Xname": Xname,
+                "Yname": Yname,
+                "gsModel": gs_modelname,
+            }
+        )
         meta.save()
         return meta
 

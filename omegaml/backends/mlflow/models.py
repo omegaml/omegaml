@@ -13,7 +13,7 @@ from omegaml.util import tarfile_safe_extractall
 
 
 class MLFlowModelBackend(BaseModelBackend):
-    """ A backend for mlflow models
+    """A backend for mlflow models
 
     This provides storage support for mlflow models. The following
     semantics are supported:
@@ -65,48 +65,66 @@ class MLFlowModelBackend(BaseModelBackend):
         om.runtime.model() as well as throught the REST API as any
         other model.
     """
-    KIND = 'mlflow.model'
+
+    KIND = "mlflow.model"
     MLFLOW_TYPES = (mlflow.models.Model, mlflow.pyfunc.PythonModel)
-    MLFLOW_PREFIX = 'mlflow://'
+    MLFLOW_PREFIX = "mlflow://"
 
     @classmethod
     def supports(cls, obj, name, **kwargs):
         if str(obj).startswith(cls.MLFLOW_PREFIX):
-            obj = obj.replace(cls.MLFLOW_PREFIX, '')
+            obj = obj.replace(cls.MLFLOW_PREFIX, "")
         is_mlflow_type = isinstance(obj, cls.MLFLOW_TYPES)
-        is_mlflow_mlfile = isinstance(obj, str) and obj.lower().endswith('mlmodel') and cls._is_path(cls, obj)
-        is_mlflow_modelpath = isinstance(obj, str) and cls._is_path(cls, os.path.join(obj, 'MLmodel'))
-        kind_requested = kwargs.get('kind') == cls.KIND
+        is_mlflow_mlfile = (
+            isinstance(obj, str)
+            and obj.lower().endswith("mlmodel")
+            and cls._is_path(cls, obj)
+        )
+        is_mlflow_modelpath = isinstance(obj, str) and cls._is_path(
+            cls, os.path.join(obj, "MLmodel")
+        )
+        kind_requested = kwargs.get("kind") == cls.KIND
         is_mlflow_flavor, _ = cls._infer_model_flavor(cls, obj)
-        return any([is_mlflow_type, is_mlflow_mlfile, is_mlflow_modelpath, kind_requested, is_mlflow_flavor])
+        return any(
+            [
+                is_mlflow_type,
+                is_mlflow_mlfile,
+                is_mlflow_modelpath,
+                kind_requested,
+                is_mlflow_flavor,
+            ]
+        )
 
     def _infer_model_flavor(self, model):
         from google.protobuf.message import Message
+
         model_type = type(model).__module__
-        model_flavor = model_type.split('.', 1)[0]
-        mlflow_flavors = [k for k in dir(mlflow) if isinstance(getattr(mlflow, k), mlflow.LazyLoader)]
+        model_flavor = model_type.split(".", 1)[0]
+        mlflow_flavors = [
+            k for k in dir(mlflow) if isinstance(getattr(mlflow, k), mlflow.LazyLoader)
+        ]
         flavor_supported = model_flavor in mlflow_flavors
-        non_models = (
-            lambda m: isinstance(m, Message),
-        )
+        non_models = (lambda m: isinstance(m, Message),)
         not_a_model = any(test(model) for test in non_models)
         return not not_a_model and flavor_supported, getattr(mlflow, model_flavor, None)
 
     def _package_model(self, model, key, tmpfn, **kwargs):
         # package the model using corresponding save or save_model method
-        model_path = os.path.join(self.model_store.tmppath, key + '.mlflow')
+        model_path = os.path.join(self.model_store.tmppath, key + ".mlflow")
         if isinstance(model, mlflow.models.Model):
             model.save(model, tmpfn)
         elif isinstance(model, mlflow.pyfunc.PythonModel):
-            mlflow.pyfunc.save_model(model_path, python_model=model,
-                                     artifacts=kwargs.get('artifacts'))
-        elif isinstance(model, str) and (self._is_path(model)
-                                         or model.startswith(self.MLFLOW_PREFIX)):
+            mlflow.pyfunc.save_model(
+                model_path, python_model=model, artifacts=kwargs.get("artifacts")
+            )
+        elif isinstance(model, str) and (
+            self._is_path(model) or model.startswith(self.MLFLOW_PREFIX)
+        ):
             # a mlflow model local storage
             # https://www.mlflow.org/docs/latest/models.html#storage-format
             if model.startswith(self.MLFLOW_PREFIX):
-                model = model.replace(self.MLFLOW_PREFIX, '')
-            if model.lower().endswith('mlmodel'):
+                model = model.replace(self.MLFLOW_PREFIX, "")
+            if model.lower().endswith("mlmodel"):
                 model_path = os.path.dirname(model)
             else:
                 model_path = model
@@ -116,17 +134,17 @@ class MLFlowModelBackend(BaseModelBackend):
             # -- mlflow chokes on existing model paths
             shutil.rmtree(model_path) if Path(model_path).exists() else None
             flavor.save_model(model, model_path, **kwargs)
-        with TarFile(tmpfn, mode='w') as tarf:
+        with TarFile(tmpfn, mode="w") as tarf:
             tarf.add(model_path, recursive=True)
         return tmpfn
 
     def _extract_model(self, infile, key, tmpfn, **kwargs):
-        model_path = os.path.join(self.model_store.tmppath, key + '.mlflow')
-        with open(tmpfn, 'wb') as fout:
+        model_path = os.path.join(self.model_store.tmppath, key + ".mlflow")
+        with open(tmpfn, "wb") as fout:
             fout.write(infile.read())
-        with TarFile(tmpfn, mode='r') as tarf:
-            tarfile_safe_extractall(tarf, model_path, filter='data')
-        for fn in glob.glob(f'{model_path}/**/MLmodel', recursive=True):
+        with TarFile(tmpfn, mode="r") as tarf:
+            tarfile_safe_extractall(tarf, model_path, filter="data")
+        for fn in glob.glob(f"{model_path}/**/MLmodel", recursive=True):
             model = mlflow.pyfunc.load_model(os.path.dirname(fn))
             break
         return model

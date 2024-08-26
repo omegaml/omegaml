@@ -8,7 +8,7 @@ from omegaml.util import tryOr
 
 
 class DataRevisionMixin:
-    """ Enable automatically versioned dataframes in om.datasets
+    """Enable automatically versioned dataframes in om.datasets
 
     Works by storing a current version of the dataframe with all changes applied
     as the most recent revision. All changes are stored separately in sequence,
@@ -72,24 +72,29 @@ class DataRevisionMixin:
 
     @classmethod
     def supports(cls, store, **kwargs):
-        return store.prefix == 'data/'
+        return store.prefix == "data/"
 
     def metadata(self, name, raw=False, **kwargs):
-        return (super().metadata(name, **kwargs) if not raw
-                else super().metadata(self._revname(name), **kwargs))
+        return (
+            super().metadata(name, **kwargs)
+            if not raw
+            else super().metadata(self._revname(name), **kwargs)
+        )
 
     def _has_revisions(self, name, revisions=False):
         # return True if revisions exist for dataset name, or if requested
         meta = self.metadata(name)
-        revisions = revisions or (meta is not None and 'revisions' in meta.kind_meta)
+        revisions = revisions or (meta is not None and "revisions" in meta.kind_meta)
         return revisions
 
     def _revname(self, name):
-        name, tag = name.split('@') if '@' in name else (name, '')
-        return f'.revisions.{name}'
+        name, tag = name.split("@") if "@" in name else (name, "")
+        return f".revisions.{name}"
 
-    def _build_revision(self, df, name, append=True, revision_dt=None, tag=None, delete=False, **kwargs):
-        """ build a new revision
+    def _build_revision(
+        self, df, name, append=True, revision_dt=None, tag=None, delete=False, **kwargs
+    ):
+        """build a new revision
 
         Creates and updates a 'revisions' entry in the datasets meta.kind_meta, keeping
         track of all changes:
@@ -113,31 +118,32 @@ class DataRevisionMixin:
             super().drop(name, force=True)
             super().drop(revname, force=True)
         # build revision metadata
-        if '_delete_' not in df.columns:
-            df['_delete_'] = delete
+        if "_delete_" not in df.columns:
+            df["_delete_"] = delete
         meta = self.metadata(name)
         if meta is not None:
-            if 'revisions' not in meta.kind_meta:
-                raise ValueError(f'adding revisions to existing dataset {name} is not supported')
+            if "revisions" not in meta.kind_meta:
+                raise ValueError(
+                    f"adding revisions to existing dataset {name} is not supported"
+                )
             # _calculate and record revision
-            revision = meta.kind_meta['revisions'].get('seq', 0) + 1
-            df['_om#revision'] = revision
+            revision = meta.kind_meta["revisions"].get("seq", 0) + 1
+            df["_om#revision"] = revision
         else:
             revision = 0
-            df['_om#revision'] = revision
+            df["_om#revision"] = revision
             meta = super().put(df, name, append=False, **kwargs)
-        revisions = meta.kind_meta.setdefault('revisions', {})
-        changesets = revisions.setdefault('changes', [])
-        revisions.update({
-            'seq': revision,
-            'name': revname
-        })
-        changesets.append({
-            'dt': revision_dt or datetime.utcnow(),
-            'seq': revision,
-            'tags': [tag] if tag else [],
-            'delete': delete,
-        })
+        revisions = meta.kind_meta.setdefault("revisions", {})
+        changesets = revisions.setdefault("changes", [])
+        revisions.update({"seq": revision, "name": revname})
+        changesets.append(
+            {
+                "dt": revision_dt or datetime.utcnow(),
+                "seq": revision,
+                "tags": [tag] if tag else [],
+                "delete": delete,
+            }
+        )
         meta.save()
         # -- record all changes to revision dataset
         self._store_changeset(df, revname, append=append)
@@ -146,41 +152,43 @@ class DataRevisionMixin:
     def _store_changeset(self, df, revname, append=True, **kwargs):
         return super().put(df, revname, append=append)
 
-    def _retrieve_revision(self, name, revision=-1, changeset=None, trace_revisions=False, **kwargs):
+    def _retrieve_revision(
+        self, name, revision=-1, changeset=None, trace_revisions=False, **kwargs
+    ):
         # retrieve a revision or a specific changeset
         # -- determine revision to get
         meta = self.metadata(name)
-        revname = meta.kind_meta['revisions']['name']
-        latest_revision = meta.kind_meta['revisions']['seq']
-        changes = meta.kind_meta['revisions']['changes']
+        revname = meta.kind_meta["revisions"]["name"]
+        latest_revision = meta.kind_meta["revisions"]["seq"]
+        changes = meta.kind_meta["revisions"]["changes"]
         # -- return changeset if requested
         if changeset is not None:
-            data = super().get(revname, filter={'_om#revision': changeset}, **kwargs)
+            data = super().get(revname, filter={"_om#revision": changeset}, **kwargs)
             return self._clean(data, trace_revisions=trace_revisions)
         if isinstance(revision, int):
             # get revision by sequence
             revision = revision if revision is not None else latest_revision
             revision = min(revision, latest_revision)
             if revision < -1:
-                revision = changes[revision]['seq']
+                revision = changes[revision]["seq"]
         elif isinstance(revision, datetime):
             # get revision by nearest date ("as before or latest at")
             requested = revision
-            revision = changes[0]['seq']  # earliest revision by default
+            revision = changes[0]["seq"]  # earliest revision by default
             for cs in changes:
-                if cs['dt'] >= requested:
+                if cs["dt"] >= requested:
                     break
-                revision = cs['seq']
+                revision = cs["seq"]
             else:
                 # we did find any before or at, return latest
                 revision = latest_revision
         else:
             # get revision by tag
-            changes = meta.kind_meta['revisions']['changes']
+            changes = meta.kind_meta["revisions"]["changes"]
             requested = revision
             for cs in changes:
-                if requested in cs['tags']:
-                    revision = cs['seq']
+                if requested in cs["tags"]:
+                    revision = cs["seq"]
                     break
             else:
                 return None
@@ -189,30 +197,34 @@ class DataRevisionMixin:
             data = super().get(name, **kwargs)
         else:
             # -- get all changesets up to requested revision
-            data = self._apply_changesets(revname, revision, trace_revisions=trace_revisions, **kwargs)
+            data = self._apply_changesets(
+                revname, revision, trace_revisions=trace_revisions, **kwargs
+            )
         self._clean(data, trace_revisions=trace_revisions)
         return data
 
     def _apply_changesets(self, revname, revision, trace_revisions=False, **kwargs):
         # get base revision and apply all changesets up to requested by merging in sequence
         # -- merge
-        base = super().get(revname, filter={'_om#revision': 0}, **kwargs)
+        base = super().get(revname, filter={"_om#revision": 0}, **kwargs)
         base_types = base.dtypes
         idx_type = base.index.dtype
         for rev in range(1, revision + 1):
-            changes = super().get(revname, filter={'_om#revision': rev}, **kwargs)
+            changes = super().get(revname, filter={"_om#revision": rev}, **kwargs)
             if changes is None:
                 continue
             # apply upserts, step 1
-            base = base.merge(changes,
-                              how='outer',
-                              left_index=True,
-                              right_index=True,
-                              suffixes=(None, '_r_'))
+            base = base.merge(
+                changes,
+                how="outer",
+                left_index=True,
+                right_index=True,
+                suffixes=(None, "_r_"),
+            )
             # apply upserts, step 2
             revcols = []
-            for col in [c for c in base.columns if not c.endswith('_r_')]:
-                revcol = col + '_r_'
+            for col in [c for c in base.columns if not c.endswith("_r_")]:
+                revcol = col + "_r_"
                 if revcol not in base.columns:
                     continue
                 base[col] = base[revcol].fillna(base[col]).astype(base_types[col])
@@ -222,7 +234,7 @@ class DataRevisionMixin:
                 base.drop(columns=revcols, inplace=True)
             # apply row deletions
             if not trace_revisions:
-                flt_delete = base['_delete_'] == True  # noqa
+                flt_delete = base["_delete_"] == True  # noqa
                 base = base[~flt_delete]
         return base
 
@@ -238,15 +250,13 @@ class DataRevisionMixin:
             for i, row in tqdm(obj.iterrows(), total=len(obj)):
                 data = row.to_dict()
                 # om rowid is re-added on insert only to preserve existing row id
-                del data['_om#rowid']
+                del data["_om#rowid"]
                 updates = {
-                    '$set': data,
-                    '$setOnInsert': {
-                        '_om#rowid': row['_om#rowid']
-                    }
+                    "$set": data,
+                    "$setOnInsert": {"_om#rowid": row["_om#rowid"]},
                 }
-                key = {k: v for k, v in data.items() if k.startswith('_idx#')}
-                if data.get('_delete_', delete):
+                key = {k: v for k, v in data.items() if k.startswith("_idx#")}
+                if data.get("_delete_", delete):
                     # collection.delete_one(key)
                     ops_deletions.append(DeleteOne(key))
                 else:
@@ -260,11 +270,20 @@ class DataRevisionMixin:
 
     def _clean(self, df, trace_revisions=False):
         if not trace_revisions:
-            df.drop(columns=['_om#revision', '_delete_'], inplace=True)
+            df.drop(columns=["_om#revision", "_delete_"], inplace=True)
         return df
 
-    def put(self, df, name, revisions=False, tag=None, revision_dt=None, trace_revisions=False, **kwargs):
-        """ store a dataset revision
+    def put(
+        self,
+        df,
+        name,
+        revisions=False,
+        tag=None,
+        revision_dt=None,
+        trace_revisions=False,
+        **kwargs,
+    ):
+        """store a dataset revision
 
         Args:
             df (pd.DataFrame): a dataframe
@@ -280,18 +299,27 @@ class DataRevisionMixin:
         if not self._has_revisions(name, revisions=revisions):
             return super().put(df, name, **kwargs)
         # revisions apply
-        append = kwargs.pop('append', True)
-        delete = kwargs.pop('delete', False)
-        meta = self._build_revision(df, name, append=append, tag=tag, delete=delete,
-                                    revision_dt=revision_dt, **kwargs)
+        append = kwargs.pop("append", True)
+        delete = kwargs.pop("delete", False)
+        meta = self._build_revision(
+            df,
+            name,
+            append=append,
+            tag=tag,
+            delete=delete,
+            revision_dt=revision_dt,
+            **kwargs,
+        )
         if append:
             # _fast_insert is a callback to process the upserts
-            super().put(df, name, _fast_insert=self._make_upsert_fn(name, delete=delete))
+            super().put(
+                df, name, _fast_insert=self._make_upsert_fn(name, delete=delete)
+            )
         self._clean(df, trace_revisions=trace_revisions)
         return meta
 
     def get(self, name, revision=-1, changeset=None, trace_revisions=False, **kwargs):
-        """ retrieve a dataset with revisions
+        """retrieve a dataset with revisions
 
         Retrieve a specific revision, including all changes applied until that point. If
         revision is -1 (latest), the current dataset is returned. For any other revision,
@@ -310,27 +338,29 @@ class DataRevisionMixin:
               are flagged as the _delete_ flag, not applied)
         """
         # we pass revisions=None to enforce decision by meta data
-        if '@' in name:
-            name, revision = name.split('@')
+        if "@" in name:
+            name, revision = name.split("@")
         if not self._has_revisions(name):
             return super().get(name, **kwargs)
         # check if revision is a number, tag or a datetime value
         if isinstance(revision, str):
             revision = tryOr(lambda: int(revision), revision)
             revision = tryOr(lambda: pd.to_datetime(revision).to_pydatetime(), revision)
-        data = self._retrieve_revision(name,
-                                       revision=revision,
-                                       changeset=changeset,
-                                       trace_revisions=trace_revisions,
-                                       **kwargs)
+        data = self._retrieve_revision(
+            name,
+            revision=revision,
+            changeset=changeset,
+            trace_revisions=trace_revisions,
+            **kwargs,
+        )
         return data
 
     def revisions(self, name, raw=False):
         if self._has_revisions(name):
             meta = self.metadata(name)
-            changes = meta.kind_meta.get('revisions', {}).get('changes', [])
-            as_list = lambda v : [f'{name}@{c.get("tag", i)}' for i, c in enumerate(v)]
-            as_raw = lambda v : [self.metadata(m, raw=True) for m in as_list(v)]
+            changes = meta.kind_meta.get("revisions", {}).get("changes", [])
+            as_list = lambda v: [f'{name}@{c.get("tag", i)}' for i, c in enumerate(v)]
+            as_raw = lambda v: [self.metadata(m, raw=True) for m in as_list(v)]
             display = (lambda v: pd.DataFrame(v)) if sys.flags.interactive else as_list
             return display(changes) if not raw else as_raw(changes)
         return None

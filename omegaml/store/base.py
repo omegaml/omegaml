@@ -71,6 +71,7 @@ as follows:
     object's type and metadata.kind, respectively. In the future
     a plugin system will enable extension to other types.
 """
+
 from __future__ import absolute_import
 
 import bson
@@ -79,22 +80,39 @@ import os
 import tempfile
 import warnings
 from datetime import datetime
-from mongoengine.connection import disconnect, \
-    connect, _connections, get_db
+from mongoengine.connection import disconnect, connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
 from omegaml.store.fastinsert import fast_insert, default_chunksize
-from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, \
-    mongo_compatible, signature
+from omegaml.util import (
+    unravel_index,
+    restore_index,
+    make_tuple,
+    jsonescape,
+    cursor_to_dataframe,
+    convert_dtypes,
+    load_class,
+    extend_instance,
+    ensure_index,
+    PickableCollection,
+    mongo_compatible,
+    signature,
+)
 from uuid import uuid4
 
 from .queryops import sanitize_filter
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
-from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
-                    settings as omega_settings, urlparse, is_series)
+from ..util import (
+    is_estimator,
+    is_dataframe,
+    is_ndarray,
+    is_spark_mllib,
+    settings as omega_settings,
+    urlparse,
+    is_series,
+)
 
 
 class OmegaStore(object):
@@ -102,7 +120,15 @@ class OmegaStore(object):
     The storage backend for models and data
     """
 
-    def __init__(self, mongo_url=None, bucket=None, prefix=None, kind=None, defaults=None, dbalias=None):
+    def __init__(
+        self,
+        mongo_url=None,
+        bucket=None,
+        prefix=None,
+        kind=None,
+        defaults=None,
+        dbalias=None,
+    ):
         """
         :param mongo_url: the mongourl to use for the gridfs
         :param bucket: the mongo collection to use for gridfs
@@ -115,7 +141,7 @@ class OmegaStore(object):
         self._fs_collection = self._ensure_fs_collection()
         self._fs = None
         self._tmppath = None
-        self.prefix = prefix or ''
+        self.prefix = prefix or ""
         self.force_kind = kind
         self._Metadata_cls = None
         # don't initialize db here to avoid using the default settings
@@ -129,7 +155,7 @@ class OmegaStore(object):
         self.register_backends()
 
     def __repr__(self):
-        return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
+        return "OmegaStore(bucket={}, prefix={})".format(self.bucket, self.prefix)
 
     def __equal__(self, other):
         """test for equality of OmegaStore instances
@@ -140,7 +166,11 @@ class OmegaStore(object):
         Returns:
             True if other is the same database, same bucket, same prefix
         """
-        return self.mongo_url == other.mongo_url and self.bucket == other.bucket and self.prefix == other.prefix
+        return (
+            self.mongo_url == other.mongo_url
+            and self.bucket == other.bucket
+            and self.prefix == other.prefix
+        )
 
     @property
     def tmppath(self):
@@ -167,10 +197,10 @@ class OmegaStore(object):
         host = self.parsed_url.netloc
         scheme = self.parsed_url.scheme
         username, password = None, None
-        if '@' in host:
-            creds, host = host.split('@', 1)
-            if ':' in creds:
-                username, password = creds.split(':')
+        if "@" in host:
+            creds, host = host.split("@", 1)
+            if ":" in creds:
+                username, password = creds.split(":")
         # connect via mongoengine
         #
         # note this uses a MongoClient in the background, with pooled
@@ -182,20 +212,22 @@ class OmegaStore(object):
         #
         # use an instance specific alias, note that access to Metadata and
         # QueryCache must pass the very same alias
-        self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
+        self._dbalias = alias = self._dbalias or "omega-{}".format(uuid4().hex)
         # always disconnect before registering a new connection because
         # mongoengine.connect() forgets all connection settings upon disconnect
         if alias not in _connections:
             disconnect(alias)
-            connection = connect(alias=alias, db=self.database_name,
-                                 host=f'{scheme}://{host}',
-                                 username=username,
-                                 password=password,
-                                 connect=False,
-                                 authentication_source='admin',
-                                 serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
-                                 **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
-                                 )
+            connection = connect(
+                alias=alias,
+                db=self.database_name,
+                host=f"{scheme}://{host}",
+                username=username,
+                password=password,
+                connect=False,
+                authentication_source="admin",
+                serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
+                **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
+            )
             # since PyMongo 4, connect() no longer waits for connection
             waitForConnection(connection)
         self._db = get_db(alias)
@@ -206,8 +238,9 @@ class OmegaStore(object):
         if self._Metadata_cls is None:
             # hack to localize metadata
             db = self.mongodb
-            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
-                                               collection=self._fs_collection)
+            self._Metadata_cls = make_Metadata(
+                db_alias=self._dbalias, collection=self._fs_collection
+            )
         return self._Metadata_cls
 
     @property
@@ -238,7 +271,11 @@ class OmegaStore(object):
         bucket = bucket or self.bucket
         # Meta is to silence lint on import error
         Meta = self._Metadata
-        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+        return (
+            Meta.objects(name=str(name), prefix=prefix, bucket=bucket)
+            .no_cache()
+            .first()
+        )
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
         """
@@ -263,8 +300,9 @@ class OmegaStore(object):
 
         """
         # TODO kept _make_metadata for backwards compatibility.
-        return self._make_metadata(name, bucket=bucket, prefix=prefix,
-                                   kind=kind, **kwargs)
+        return self._make_metadata(
+            name, bucket=bucket, prefix=prefix, kind=kind, **kwargs
+        )
 
     def _make_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
         """
@@ -289,11 +327,9 @@ class OmegaStore(object):
         """
         bucket = bucket or self.bucket
         prefix = prefix or self.prefix
-        meta = self.metadata(name=name,
-                             prefix=prefix,
-                             bucket=bucket)
+        meta = self.metadata(name=name, prefix=prefix, bucket=bucket)
         if meta:
-            dict_fields = 'attributes', 'kind_meta'
+            dict_fields = "attributes", "kind_meta"
             for k, v in kwargs.items():
                 if k in dict_fields and v is not None and len(v) > 0:
                     previous = getattr(meta, k, {})
@@ -308,8 +344,7 @@ class OmegaStore(object):
                     # by default set whatever attribute is provided
                     setattr(meta, k, v)
         else:
-            meta = self._Metadata(name=name, bucket=bucket, prefix=prefix,
-                                  **kwargs)
+            meta = self._Metadata(name=name, bucket=bucket, prefix=prefix, **kwargs)
         return meta
 
     def _drop_metadata(self, name=None, **kwargs):
@@ -334,8 +369,8 @@ class OmegaStore(object):
         meta = self.metadata(name, bucket=bucket, prefix=prefix)
         collection = meta.collection if meta else None
         if not collection:
-            collection = self.object_store_key(name, '.datastore')
-            collection = collection.replace('..', '.')
+            collection = self.object_store_key(name, ".datastore")
+            collection = collection.replace("..", ".")
         # return the collection
         try:
             datastore = getattr(self.mongodb, collection)
@@ -349,11 +384,10 @@ class OmegaStore(object):
         """
         for mixin in self.defaults.OMEGA_STORE_MIXINS:
             conditional = self._mixins_conditional
-            extend_instance(self, mixin,
-                            conditional=conditional)
+            extend_instance(self, mixin, conditional=conditional)
 
     def _mixins_conditional(self, cls, obj):
-        return cls.supports(obj) if hasattr(cls, 'supports') else True
+        return cls.supports(obj) if hasattr(cls, "supports") else True
 
     def register_backends(self):
         """
@@ -390,7 +424,9 @@ class OmegaStore(object):
         """
         if replace:
             self.drop(name, force=True)
-        backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind, **kwargs)
+        backend = self.get_backend_byobj(
+            obj, name, attributes=attributes, kind=kind, **kwargs
+        )
         if backend:
             return backend.put(obj, name, attributes=attributes, **kwargs)
         # TODO move all of the specifics to backend implementations
@@ -401,47 +437,59 @@ class OmegaStore(object):
             backend = self.get_backend_bykind(MDREGISTRY.SKLEARN_JOBLIB)
             return backend.put(obj, name, attributes=attributes, **kwargs)
         elif is_dataframe(obj) or is_series(obj):
-            groupby = kwargs.get('groupby')
+            groupby = kwargs.get("groupby")
             if obj.empty:
                 from warnings import warn
-                warn(
-                    'Provided dataframe is empty, ignoring it, doing nothing here!')
-                return None
-            if kwargs.pop('as_hdf', False):
-                return self.put_dataframe_as_hdf(
-                    obj, name, attributes, **kwargs)
-            elif groupby:
-                return self.put_dataframe_as_dfgroup(
-                    obj, name, groupby, attributes)
-            append = kwargs.pop('append', None)
-            timestamp = kwargs.pop('timestamp', None)
-            index = kwargs.pop('index', None)
-            chunksize = kwargs.pop('chunksize', default_chunksize)
-            return self.put_dataframe_as_documents(
-                obj, name, append=append, attributes=attributes, index=index,
-                timestamp=timestamp, chunksize=chunksize, **kwargs)
-        elif is_ndarray(obj):
-            if kwargs.pop('as_pydata', False):
-                return self.put_pyobj_as_document(obj.tolist(), name,
-                                                  attributes=attributes, **kwargs)
-            return self.put_ndarray_as_hdf(obj, name, attributes=attributes,
-                                           **kwargs)
-        elif isinstance(obj, (dict, list, tuple)):
-            kwargs.pop('as_pydata', None)
-            if kwargs.pop('as_hdf', False):
-                return self.put_pyobj_as_hdf(obj, name,
-                                             attributes=attributes, **kwargs)
-            return self.put_pyobj_as_document(obj, name,
-                                              attributes=attributes,
-                                              **kwargs)
-        else:
-            raise TypeError('type %s not supported' % type(obj))
 
-    def put_dataframe_as_documents(self, obj, name, append=None,
-                                   attributes=None, index=None,
-                                   timestamp=None, chunksize=None,
-                                   ensure_compat=True, _fast_insert=fast_insert,
-                                   **kwargs):
+                warn("Provided dataframe is empty, ignoring it, doing nothing here!")
+                return None
+            if kwargs.pop("as_hdf", False):
+                return self.put_dataframe_as_hdf(obj, name, attributes, **kwargs)
+            elif groupby:
+                return self.put_dataframe_as_dfgroup(obj, name, groupby, attributes)
+            append = kwargs.pop("append", None)
+            timestamp = kwargs.pop("timestamp", None)
+            index = kwargs.pop("index", None)
+            chunksize = kwargs.pop("chunksize", default_chunksize)
+            return self.put_dataframe_as_documents(
+                obj,
+                name,
+                append=append,
+                attributes=attributes,
+                index=index,
+                timestamp=timestamp,
+                chunksize=chunksize,
+                **kwargs,
+            )
+        elif is_ndarray(obj):
+            if kwargs.pop("as_pydata", False):
+                return self.put_pyobj_as_document(
+                    obj.tolist(), name, attributes=attributes, **kwargs
+                )
+            return self.put_ndarray_as_hdf(obj, name, attributes=attributes, **kwargs)
+        elif isinstance(obj, (dict, list, tuple)):
+            kwargs.pop("as_pydata", None)
+            if kwargs.pop("as_hdf", False):
+                return self.put_pyobj_as_hdf(obj, name, attributes=attributes, **kwargs)
+            return self.put_pyobj_as_document(
+                obj, name, attributes=attributes, **kwargs
+            )
+        else:
+            raise TypeError("type %s not supported" % type(obj))
+
+    def put_dataframe_as_documents(
+        self,
+        obj,
+        name,
+        append=None,
+        attributes=None,
+        index=None,
+        timestamp=None,
+        chunksize=None,
+        ensure_compat=True,
+        _fast_insert=fast_insert,
+        **kwargs,
+    ):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -464,9 +512,11 @@ class OmegaStore(object):
         :return: the Metadata object created
         """
         from .queryops import MongoQueryOps
+
         collection = self.collection(name)
         if is_series(obj):
             import pandas as pd
+
             obj = pd.DataFrame(obj, index=obj.index, columns=[str(obj.name)])
             store_series = True
         else:
@@ -475,12 +525,13 @@ class OmegaStore(object):
             self.drop(name, force=True)
         elif append is None and collection.count_documents({}, limit=1):
             from warnings import warn
-            warn('%s already exists, will append rows' % name)
+
+            warn("%s already exists, will append rows" % name)
         if index:
             # get index keys
             if isinstance(index, dict):
                 idx_kwargs = index
-                index = index.pop('columns')
+                index = index.pop("columns")
             else:
                 idx_kwargs = {}
             # create index with appropriate options
@@ -489,11 +540,11 @@ class OmegaStore(object):
         if timestamp:
             dt = datetime.utcnow()
             if isinstance(timestamp, bool):
-                col = '_created'
+                col = "_created"
             elif isinstance(timestamp, str):
                 col = timestamp
             elif isinstance(timestamp, datetime):
-                col, dt = '_created', timestamp
+                col, dt = "_created", timestamp
             elif isinstance(timestamp, tuple):
                 col, dt = timestamp
             obj[col] = dt
@@ -504,24 +555,17 @@ class OmegaStore(object):
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
         d_column_map = dict(column_map)
-        dtypes = {
-            d_column_map.get(k): v.name
-            for k, v in obj.dtypes.items()
-        }
-        kind_meta = {
-            'columns': column_map,
-            'dtypes': dtypes,
-            'idx_meta': idx_meta
-        }
+        dtypes = {d_column_map.get(k): v.name for k, v in obj.dtypes.items()}
+        kind_meta = {"columns": column_map, "dtypes": dtypes, "idx_meta": idx_meta}
         # ensure column names to be strings
         obj.columns = stored_columns
         # create mongon indicies for data frame index columns
-        df_idxcols = [col for col in obj.columns if col.startswith('_idx#')]
+        df_idxcols = [col for col in obj.columns if col.startswith("_idx#")]
         if df_idxcols:
             keys, idx_kwargs = MongoQueryOps().make_index(df_idxcols)
             ensure_index(collection, keys, **idx_kwargs)
         # create index on row id
-        keys, idx_kwargs = MongoQueryOps().make_index(['_om#rowid'])
+        keys, idx_kwargs = MongoQueryOps().make_index(["_om#rowid"])
         ensure_index(collection, keys, **idx_kwargs)
         # bulk insert
         # -- get native objects
@@ -529,20 +573,20 @@ class OmegaStore(object):
         #    pymongo raises Cannot Encode object for int64 types
         if ensure_compat:
             for col, col_dtype in dtypes.items():
-                if 'datetime' in col_dtype:
-                    obj[col].fillna('', inplace=True)
-        obj = obj.astype('O', errors='ignore')
+                if "datetime" in col_dtype:
+                    obj[col].fillna("", inplace=True)
+        obj = obj.astype("O", errors="ignore")
         _fast_insert(obj, self, name, chunksize=chunksize)
-        kind = (MDREGISTRY.PANDAS_SEROWS
-                if store_series
-                else MDREGISTRY.PANDAS_DFROWS)
-        meta = self._make_metadata(name=name,
-                                   prefix=self.prefix,
-                                   bucket=self.bucket,
-                                   kind=kind,
-                                   kind_meta=kind_meta,
-                                   attributes=attributes,
-                                   collection=collection.name)
+        kind = MDREGISTRY.PANDAS_SEROWS if store_series else MDREGISTRY.PANDAS_DFROWS
+        meta = self._make_metadata(
+            name=name,
+            prefix=self.prefix,
+            bucket=self.bucket,
+            kind=kind,
+            kind_meta=kind_meta,
+            attributes=attributes,
+            collection=collection.name,
+        )
         return meta.save()
 
     def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
@@ -564,45 +608,49 @@ class OmegaStore(object):
 
         def row_to_doc(obj):
             for gval, gdf in obj.groupby(groupby):
-                if hasattr(gval, 'astype'):
-                    gval = make_tuple(gval.astype('O'))
+                if hasattr(gval, "astype"):
+                    gval = make_tuple(gval.astype("O"))
                 else:
                     gval = make_tuple(gval)
                 doc = dict(zip(groupby, gval))
                 datacols = list(set(gdf.columns) - set(groupby))
-                doc['_data'] = gdf[datacols].astype('O').to_dict('records')
+                doc["_data"] = gdf[datacols].astype("O").to_dict("records")
                 yield doc
 
         datastore = self.collection(name)
         datastore.drop()
         datastore.insert_many(row_to_doc(obj))
-        return self._make_metadata(name=name,
-                                   prefix=self.prefix,
-                                   bucket=self.bucket,
-                                   kind=MDREGISTRY.PANDAS_DFGROUP,
-                                   attributes=attributes,
-                                   collection=datastore.name).save()
+        return self._make_metadata(
+            name=name,
+            prefix=self.prefix,
+            bucket=self.bucket,
+            kind=MDREGISTRY.PANDAS_DFGROUP,
+            attributes=attributes,
+            collection=datastore.name,
+        ).save()
 
     def put_dataframe_as_hdf(self, obj, name, attributes=None):
-        filename = self.object_store_key(name, '.hdf')
+        filename = self.object_store_key(name, ".hdf")
         hdffname = self._package_dataframe2hdf(obj, filename)
-        with open(hdffname, 'rb') as fhdf:
+        with open(hdffname, "rb") as fhdf:
             fileid = self.fs.put(fhdf, filename=filename)
-        return self._make_metadata(name=name,
-                                   prefix=self.prefix,
-                                   bucket=self.bucket,
-                                   kind=MDREGISTRY.PANDAS_HDF,
-                                   attributes=attributes,
-                                   gridfile=GridFSProxy(db_alias=self._dbalias,
-                                                        grid_id=fileid)).save()
+        return self._make_metadata(
+            name=name,
+            prefix=self.prefix,
+            bucket=self.bucket,
+            kind=MDREGISTRY.PANDAS_HDF,
+            attributes=attributes,
+            gridfile=GridFSProxy(db_alias=self._dbalias, grid_id=fileid),
+        ).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None):
-        """ store numpy array as hdf
+        """store numpy array as hdf
 
         this is hack, converting the array to a dataframe then storing
         it
         """
         import pandas as pd
+
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
@@ -614,10 +662,20 @@ class OmegaStore(object):
         a dataframe
         """
         import pandas as pd
+
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
-    def put_pyobj_as_document(self, obj, name, attributes=None, append=True, index=None, as_many=None, **kwargs):
+    def put_pyobj_as_document(
+        self,
+        obj,
+        name,
+        attributes=None,
+        append=True,
+        index=None,
+        as_many=None,
+        **kwargs,
+    ):
         """
         store a dict as a document
 
@@ -630,36 +688,42 @@ class OmegaStore(object):
             collection.drop()
         elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
-            warn('%s already exists, will append rows' % name)
+
+            warn("%s already exists, will append rows" % name)
         if index:
             # create index with appropriate options
             from omegaml.store import MongoQueryOps
+
             if isinstance(index, dict):
                 idx_kwargs = index
-                index = index.pop('columns')
+                index = index.pop("columns")
             else:
                 idx_kwargs = {}
-            index = [f'data.{c}' for c in index]
+            index = [f"data.{c}" for c in index]
             keys, idx_kwargs = MongoQueryOps().make_index(index, **idx_kwargs)
             ensure_index(collection, keys, **idx_kwargs)
         if as_many is None:
-            as_many = isinstance(obj, (list, tuple)) and isinstance(obj[0], (list, tuple))
+            as_many = isinstance(obj, (list, tuple)) and isinstance(
+                obj[0], (list, tuple)
+            )
         if as_many:
             # list of lists are inserted as many objects, as in pymongo < 4
-            records = (mongo_compatible({'data': item}) for item in obj)
+            records = (mongo_compatible({"data": item}) for item in obj)
             result = collection.insert_many(records)
             objid = result.inserted_ids[-1]
         else:
-            result = collection.insert_one(mongo_compatible({'data': obj}))
+            result = collection.insert_one(mongo_compatible({"data": obj}))
             objid = result.inserted_id
 
-        return self._make_metadata(name=name,
-                                   prefix=self.prefix,
-                                   bucket=self.bucket,
-                                   kind=MDREGISTRY.PYTHON_DATA,
-                                   collection=collection.name,
-                                   attributes=attributes,
-                                   objid=objid).save()
+        return self._make_metadata(
+            name=name,
+            prefix=self.prefix,
+            bucket=self.bucket,
+            kind=MDREGISTRY.PYTHON_DATA,
+            collection=collection.name,
+            attributes=attributes,
+            objid=objid,
+        ).save()
 
     def drop(self, name, force=False, version=-1, **kwargs):
         """
@@ -695,8 +759,7 @@ class OmegaStore(object):
             return True
         return False
 
-    def get_backend_bykind(self, kind, model_store=None, data_store=None,
-                           **kwargs):
+    def get_backend_bykind(self, kind, model_store=None, data_store=None, **kwargs):
         """
         return the backend by a given object kind
 
@@ -709,11 +772,10 @@ class OmegaStore(object):
         try:
             backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
         except KeyError as e:
-            raise ValueError('backend {kind} does not exist'.format(**locals()))
+            raise ValueError("backend {kind} does not exist".format(**locals()))
         model_store = model_store or self
         data_store = data_store or self
-        backend = backend_cls(model_store=model_store,
-                              data_store=data_store, **kwargs)
+        backend = backend_cls(model_store=model_store, data_store=data_store, **kwargs)
         return backend
 
     def get_backend(self, name, model_store=None, data_store=None, **kwargs):
@@ -728,14 +790,13 @@ class OmegaStore(object):
         """
         meta = self.metadata(name)
         if meta is not None and meta.kind in self.defaults.OMEGA_STORE_BACKENDS:
-            return self.get_backend_bykind(meta.kind,
-                                           model_store=model_store,
-                                           data_store=data_store,
-                                           **kwargs)
+            return self.get_backend_bykind(
+                meta.kind, model_store=model_store, data_store=data_store, **kwargs
+            )
         return None
 
     def help(self, name_or_obj=None, kind=None, raw=False):
-        """ get help for an object by looking up its backend and calling help() on it
+        """get help for an object by looking up its backend and calling help() on it
 
         Retrieves the object's metadata and looks up its corresponding backend. If the
         metadata.attributes['docs'] is a string it will display this as the help() contents.
@@ -756,10 +817,19 @@ class OmegaStore(object):
         import pydoc
 
         obj = self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind, raw=raw)
-        if any(str(obj.__doc__).startswith(v) for v in ('https://', 'http://')):
+        if any(str(obj.__doc__).startswith(v) for v in ("https://", "http://")):
             import webbrowser
-            return webbrowser.open(obj.__doc__) if sys.flags.interactive else print(obj.__doc__)
-        return help(obj) if sys.flags.interactive else pydoc.render_doc(obj, renderer=pydoc.plaintext)
+
+            return (
+                webbrowser.open(obj.__doc__)
+                if sys.flags.interactive
+                else print(obj.__doc__)
+            )
+        return (
+            help(obj)
+            if sys.flags.interactive
+            else pydoc.render_doc(obj, renderer=pydoc.plaintext)
+        )
 
     def _resolve_help_backend(self, name_or_obj=None, kind=None, raw=False):
         # helper so we can test help
@@ -767,21 +837,31 @@ class OmegaStore(object):
         if kind:
             backend = self.get_backend_bykind(kind)
         else:
-            backend = self.get_backend(name_or_obj) or self.get_backend_byobj(name_or_obj)
+            backend = self.get_backend(name_or_obj) or self.get_backend_byobj(
+                name_or_obj
+            )
         if backend is None:
             backend = self
-        if not raw and meta is not None and 'docs' in meta.attributes:
+        if not raw and meta is not None and "docs" in meta.attributes:
+
             def UserDocumentation():
                 pass
 
-            basedoc = backend.__doc__ or ''
-            UserDocumentation.__doc__ = (basedoc +
-                                         meta.attributes['docs'])
+            basedoc = backend.__doc__ or ""
+            UserDocumentation.__doc__ = basedoc + meta.attributes["docs"]
             backend = UserDocumentation
         return backend
 
-    def get_backend_byobj(self, obj, name=None, kind=None, attributes=None,
-                          model_store=None, data_store=None, **kwargs):
+    def get_backend_byobj(
+        self,
+        obj,
+        name=None,
+        kind=None,
+        attributes=None,
+        model_store=None,
+        data_store=None,
+        **kwargs,
+    ):
         """
         return the matching backend for the given obj
 
@@ -797,11 +877,18 @@ class OmegaStore(object):
             objtype = str(type(obj))
             if kind in self.defaults.OMEGA_STORE_BACKENDS:
                 backend = self.get_backend_bykind(kind)
-                if not backend.supports(obj, name, attributes=attributes,
-                                        data_store=data_store,
-                                        model_store=model_store,
-                                        kind=kind, **kwargs):
-                    warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
+                if not backend.supports(
+                    obj,
+                    name,
+                    attributes=attributes,
+                    data_store=data_store,
+                    model_store=model_store,
+                    kind=kind,
+                    **kwargs,
+                ):
+                    warnings.warn(
+                        "Backend {kind} does not support {objtype}".format(**locals())
+                    )
             else:
                 pass
                 # TODO refactor pandas and numpy handling into proper backend to avoid misleading warning
@@ -809,24 +896,28 @@ class OmegaStore(object):
         else:
             for backend_kind, backend_cls in self.defaults.OMEGA_STORE_BACKENDS.items():
                 backend = self.get_backend_bykind(backend_kind)
-                if backend.supports(obj, name, attributes=attributes,
-                                    data_store=data_store, model_store=model_store,
-                                    **kwargs):
+                if backend.supports(
+                    obj,
+                    name,
+                    attributes=attributes,
+                    data_store=data_store,
+                    model_store=model_store,
+                    **kwargs,
+                ):
                     break
             else:
                 backend = None
         return backend
 
     def getl(self, *args, **kwargs):
-        """ return a lazy MDataFrame for a given object
+        """return a lazy MDataFrame for a given object
 
         Same as .get, but returns a MDataFrame
 
         """
         return self.get(*args, lazy=True, **kwargs)
 
-    def get(self, name, version=-1, force_python=False,
-            kind=None, **kwargs):
+    def get(self, name, version=-1, force_python=False, kind=None, **kwargs):
         """
         Retrieve an object
 
@@ -841,7 +932,9 @@ class OmegaStore(object):
         if meta is None:
             return None
         if not force_python:
-            backend = self.get_backend(name) if not kind else self.get_backend_bykind(kind)
+            backend = (
+                self.get_backend(name) if not kind else self.get_backend_bykind(kind)
+            )
             if backend is not None:
                 return backend.get(name, **kwargs)
             if meta.kind == MDREGISTRY.SKLEARN_JOBLIB:
@@ -851,25 +944,32 @@ class OmegaStore(object):
                 backend = self.get_backend(name)
                 return backend.get_model(name, version)
             elif meta.kind == MDREGISTRY.PANDAS_DFROWS:
-                return self.get_dataframe_documents(name, version=version,
-                                                    **kwargs)
+                return self.get_dataframe_documents(name, version=version, **kwargs)
             elif meta.kind == MDREGISTRY.PANDAS_SEROWS:
-                return self.get_dataframe_documents(name, version=version,
-                                                    is_series=True,
-                                                    **kwargs)
+                return self.get_dataframe_documents(
+                    name, version=version, is_series=True, **kwargs
+                )
             elif meta.kind == MDREGISTRY.PANDAS_DFGROUP:
-                return self.get_dataframe_dfgroup(
-                    name, version=version, **kwargs)
+                return self.get_dataframe_dfgroup(name, version=version, **kwargs)
             elif meta.kind == MDREGISTRY.PYTHON_DATA:
                 return self.get_python_data(name, version=version, **kwargs)
             elif meta.kind == MDREGISTRY.PANDAS_HDF:
                 return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
 
-    def get_dataframe_documents(self, name, columns=None, lazy=False,
-                                filter=None, version=-1, is_series=False,
-                                chunksize=None, sanitize=True, trusted=None,
-                                **kwargs):
+    def get_dataframe_documents(
+        self,
+        name,
+        columns=None,
+        lazy=False,
+        filter=None,
+        version=-1,
+        is_series=False,
+        chunksize=None,
+        sanitize=True,
+        trusted=None,
+        **kwargs,
+    ):
         """
         Internal method to return DataFrame from documents
 
@@ -897,9 +997,10 @@ class OmegaStore(object):
         filter = sanitize_filter(filter, no_ops=sanitize, trusted=trusted)
         if lazy or chunksize:
             from ..mdataframe import MDataFrame
-            df = MDataFrame(collection,
-                            metadata=meta.kind_meta,
-                            columns=columns).query(**filter)
+
+            df = MDataFrame(collection, metadata=meta.kind_meta, columns=columns).query(
+                **filter
+            )
             if is_series:
                 df = df[0]
             if chunksize is not None and chunksize > 0:
@@ -909,31 +1010,39 @@ class OmegaStore(object):
             # TODO this method should always use a MDataFrame disregarding lazy
             if filter:
                 from .query import Filter
+
                 query = Filter(collection, **filter).query
-                cursor = FilteredCollection(collection).find(filter=query, projection=columns)
+                cursor = FilteredCollection(collection).find(
+                    filter=query, projection=columns
+                )
             else:
                 cursor = FilteredCollection(collection).find(projection=columns)
             # restore dataframe
             df = cursor_to_dataframe(cursor)
-            if '_id' in df.columns:
-                del df['_id']
-            if hasattr(meta, 'kind_meta'):
-                df = convert_dtypes(df, meta.kind_meta.get('dtypes', {}))
+            if "_id" in df.columns:
+                del df["_id"]
+            if hasattr(meta, "kind_meta"):
+                df = convert_dtypes(df, meta.kind_meta.get("dtypes", {}))
             # -- restore columns
-            meta_columns = dict(meta.kind_meta.get('columns'))
+            meta_columns = dict(meta.kind_meta.get("columns"))
             if meta_columns:
                 # apply projection, if any
                 if columns:
                     # get only projected columns
                     # meta_columns is {origin_column: stored_column}
-                    orig_columns = dict({k: v for k, v in meta_columns.items()
-                                         if k in columns or v in columns})
+                    orig_columns = dict(
+                        {
+                            k: v
+                            for k, v in meta_columns.items()
+                            if k in columns or v in columns
+                        }
+                    )
                 else:
                     # restore columns to original name
                     orig_columns = meta_columns
                 df.rename(columns=orig_columns, inplace=True)
             # -- restore indexes
-            idx_meta = meta.kind_meta.get('idx_meta')
+            idx_meta = meta.kind_meta.get("idx_meta")
             if idx_meta:
                 df = restore_index(df, idx_meta)
             # -- restore row order
@@ -942,7 +1051,7 @@ class OmegaStore(object):
                 name = df.columns[0]
                 df = df[name]
                 df.index = index
-                df.name = None if name == 'None' else name
+                df.name = None if name == "None" else name
         return df
 
     def rebuild_params(self, kwargs, collection):
@@ -958,12 +1067,12 @@ class OmegaStore(object):
         :return: Returns a set of parameters as dictionary.
         """
         modified_params = {}
-        db_structure = collection.find_one({}, {'_id': False})
-        groupby_columns = list(set(db_structure.keys()) - set(['_data']))
+        db_structure = collection.find_one({}, {"_id": False})
+        groupby_columns = list(set(db_structure.keys()) - set(["_data"]))
         if kwargs is not None:
             for item in kwargs:
                 if item not in groupby_columns:
-                    modified_query_param = '_data.' + item
+                    modified_query_param = "_data." + item
                     modified_params[modified_query_param] = kwargs.get(item)
                 else:
                     modified_params[item] = kwargs.get(item)
@@ -986,7 +1095,7 @@ class OmegaStore(object):
 
         def convert_doc_to_row(cursor):
             for doc in cursor:
-                data = doc.pop('_data', [])
+                data = doc.pop("_data", [])
                 for row in data:
                     doc.update(row)
                     yield doc
@@ -995,7 +1104,7 @@ class OmegaStore(object):
         kwargs = kwargs if kwargs else {}
         params = self.rebuild_params(kwargs, datastore)
         params = sanitize_filter(params, no_ops=sanitize)
-        cursor = datastore.find(params, projection={'_id': False})
+        cursor = datastore.find(params, projection={"_id": False})
         df = pd.DataFrame(convert_doc_to_row(cursor))
         return df
 
@@ -1010,16 +1119,18 @@ class OmegaStore(object):
         """
         df = None
         meta = self.metadata(name)
-        filename = getattr(meta.gridfile, 'name', self.object_store_key(name, '.hdf'))
+        filename = getattr(meta.gridfile, "name", self.object_store_key(name, ".hdf"))
         if self.fs.exists(filename=filename):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
             raise gridfs.errors.NoFile(
-                "{0} does not exist in mongo collection '{1}'".format(
-                    name, self.bucket))
+                "{0} does not exist in mongo collection '{1}'".format(name, self.bucket)
+            )
 
-    def get_python_data(self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs):
+    def get_python_data(
+        self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs
+    ):
         """
         Retrieve objects as python data
 
@@ -1030,11 +1141,13 @@ class OmegaStore(object):
         """
         datastore = self.collection(name)
         filter = filter or kwargs
-        sanitize_filter(filter) if trusted is False or trusted != signature(filter) else filter
+        sanitize_filter(filter) if trusted is False or trusted != signature(
+            filter
+        ) else filter
         cursor = datastore.find(filter, **kwargs)
         if lazy:
             return cursor
-        data = (d.get('data') for d in cursor)
+        data = (d.get("data") for d in cursor)
         return list(data)
 
     def get_object_as_python(self, meta, version=-1):
@@ -1054,8 +1167,8 @@ class OmegaStore(object):
             return list(getattr(self.mongodb, meta.collection).find())
         if meta.kind == MDREGISTRY.PYTHON_DATA:
             col = getattr(self.mongodb, meta.collection)
-            return col.find_one(dict(_id=meta.objid)).get('data')
-        raise TypeError('cannot return kind %s as a python object' % meta.kind)
+            return col.find_one(dict(_id=meta.objid)).get("data")
+        raise TypeError("cannot return kind %s as a python object" % meta.kind)
 
     def __iter__(self):
         for f in self.list(include_temp=True):
@@ -1063,11 +1176,23 @@ class OmegaStore(object):
 
     @property
     def buckets(self):
-        return ['default' if b == self.defaults.OMEGA_MONGO_COLLECTION else b
-                for b in self._Metadata.objects.distinct('bucket')]
+        return [
+            "default" if b == self.defaults.OMEGA_MONGO_COLLECTION else b
+            for b in self._Metadata.objects.distinct("bucket")
+        ]
 
-    def list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
-             include_temp=False, bucket=None, prefix=None, filter=None):
+    def list(
+        self,
+        pattern=None,
+        regexp=None,
+        kind=None,
+        raw=False,
+        hidden=None,
+        include_temp=False,
+        bucket=None,
+        prefix=None,
+        filter=None,
+    ):
         """
         List all files in store
 
@@ -1081,21 +1206,20 @@ class OmegaStore(object):
         :return: List of files in store
 
         """
-        regex = lambda pattern: bson.regex.Regex(f'{pattern}')
+        regex = lambda pattern: bson.regex.Regex(f"{pattern}")
         db = self.mongodb
-        searchkeys = dict(bucket=bucket or self.bucket,
-                          prefix=prefix or self.prefix)
+        searchkeys = dict(bucket=bucket or self.bucket, prefix=prefix or self.prefix)
         q_excludes = Q()
         if regexp:
-            searchkeys['name'] = regex(regexp)
+            searchkeys["name"] = regex(regexp)
         elif pattern:
-            re_pattern = pattern.replace('*', '.*').replace('/', r'\/')
-            searchkeys['name'] = regex(f'^{re_pattern}$')
+            re_pattern = pattern.replace("*", ".*").replace("/", r"\/")
+            searchkeys["name"] = regex(f"^{re_pattern}$")
         if not include_temp:
-            q_excludes &= Q(name__not__startswith='_')
-            q_excludes &= Q(name__not=regex(r'(.{1,*}\/?_.*)'))
+            q_excludes &= Q(name__not__startswith="_")
+            q_excludes &= Q(name__not=regex(r"(.{1,*}\/?_.*)"))
         if not hidden:
-            q_excludes &= Q(name__not__startswith='.')
+            q_excludes &= Q(name__not__startswith=".")
         if kind or self.force_kind:
             kind = kind or self.force_kind
             if isinstance(kind, (tuple, list)):
@@ -1106,10 +1230,10 @@ class OmegaStore(object):
             searchkeys.update(filter)
         q_search = Q(**searchkeys) & q_excludes
         files = self._Metadata.objects.no_cache()(q_search)
-        return [f if raw else str(f.name).replace('.omm', '') for f in files]
+        return [f if raw else str(f.name).replace(".omm", "") for f in files]
 
     def exists(self, name, hidden=False):
-        """ check if object exists
+        """check if object exists
 
         Args:
             name (str): name of object
@@ -1134,11 +1258,12 @@ class OmegaStore(object):
         :return: A filename with relative bucket, prefix and name
         """
         # byte string
-        _u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
+        _u8 = lambda t: t.encode("UTF-8", "replace") if isinstance(t, str) else t
         key = self._get_obj_store_key(name, ext)
         hashed = hashed if hashed is not None else self.defaults.OMEGA_STORE_HASHEDNAMES
         if hashed:
             from hashlib import sha1
+
             # SEC: CWE-916
             # - status: wontfix
             # - reason: hashcode is used purely for name resolution, not a security function
@@ -1149,12 +1274,17 @@ class OmegaStore(object):
 
     def _get_obj_store_key(self, name, ext, prefix=None, bucket=None):
         # backwards compatilibity implementation of object_store_key()
-        name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
-        filename = '{bucket}.{prefix}.{name}'.format(
-            bucket=bucket or self.bucket,
-            prefix=prefix or self.prefix,
-            name=name,
-            ext=ext).replace('/', '_').replace('..', '.')
+        name = "%s.%s" % (name, ext) if not name.endswith(ext) else name
+        filename = (
+            "{bucket}.{prefix}.{name}".format(
+                bucket=bucket or self.bucket,
+                prefix=prefix or self.prefix,
+                name=name,
+                ext=ext,
+            )
+            .replace("/", "_")
+            .replace("..", ".")
+        )
         return filename
 
     def _package_dataframe2hdf(self, df, filename, key=None):
@@ -1168,8 +1298,8 @@ class OmegaStore(object):
         """
         lpath = tempfile.mkdtemp()
         fname = os.path.basename(filename)
-        hdffname = os.path.join(self.tmppath, fname + '.hdf')
-        key = key or 'data'
+        hdffname = os.path.join(self.tmppath, fname + ".hdf")
+        key = key or "data"
         df.to_hdf(hdffname, key)
         return hdffname
 
@@ -1183,6 +1313,7 @@ class OmegaStore(object):
         :return: Pandas dataframe
         """
         import pandas as pd
+
         hdffname = os.path.join(self.tmppath, filename)
         dirname = os.path.dirname(hdffname)
         if not os.path.exists(dirname):
@@ -1191,7 +1322,7 @@ class OmegaStore(object):
             outf = self.fs.get_version(filename, version=version)
         except gridfs.errors.NoFile as e:
             raise e
-        with open(hdffname, 'wb') as hdff:
+        with open(hdffname, "wb") as hdff:
             hdff.write(outf.read())
         hdf = pd.HDFStore(hdffname)
         key = list(hdf.keys())[0]
@@ -1211,13 +1342,13 @@ class OmegaStore(object):
         # since 0.13.2, all buckets other than the default use a qualified collection name to
         # effectively separate files in different buckets, enabling finer-grade access control
         # and avoiding name collisions from different buckets
-        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
+        return "{}_{}".format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
 
     def _ensure_fs_index(self, fs):
         # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
         # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
-        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
-        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})
+        ensure_index(fs._GridFS__chunks, {"files_id": 1, "n": 1}, unique=True)
+        ensure_index(fs._GridFS__files, {"filename": 1, "uploadDate": 1})
 
     def sign(self, filter):
         return signature(filter)

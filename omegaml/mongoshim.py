@@ -11,6 +11,7 @@ def MongoClient(*args, **kwargs):
     each and every location
     """
     from omegaml import settings
+
     defaults = settings()
     mongo_kwargs = dict(defaults.OMEGA_MONGO_SSL_KWARGS)
     mongo_kwargs.update(kwargs)
@@ -22,18 +23,18 @@ def sanitize_mongo_kwargs(kwargs):
     # -- if we receive "use_ssl" = False from cloud config but have
     #    a local CA defined, remove it. Otherwise mongo raises ConfigurationError
     kwargs = dict(kwargs)
-    if 'ssl' in kwargs:
+    if "ssl" in kwargs:
         # ssl is alias to tls, should override tls (assume ssl is user-specified)
         # see https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
-        kwargs['tls'] = kwargs['ssl']
-        del kwargs['ssl']
-    if 'tlsCAFile' in kwargs and not kwargs.get('tls'):
-        del kwargs['tlsCAFile']
-    if 'ssl_ca_certs' in kwargs and not kwargs.get('tls'):
-        del kwargs['ssl_ca_certs']
-    logger = logging.getLogger('pymongo.serverSelection')
+        kwargs["tls"] = kwargs["ssl"]
+        del kwargs["ssl"]
+    if "tlsCAFile" in kwargs and not kwargs.get("tls"):
+        del kwargs["tlsCAFile"]
+    if "ssl_ca_certs" in kwargs and not kwargs.get("tls"):
+        del kwargs["ssl_ca_certs"]
+    logger = logging.getLogger("pymongo.serverSelection")
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('MongoDB connection kwargs: %s', kwargs)
+        logger.debug("MongoDB connection kwargs: %s", kwargs)
     else:
         # silence pymongo debug logging for server selection
         # -- since pymongo 4.7 pymongo logs server selection at INFO level
@@ -50,8 +51,8 @@ def mongo_url(om, drop_kwargs=None):
         for kw in drop_kwargs:
             url_kwargs.pop(kw, None)
     url_kwargs = urlencode(url_kwargs)
-    url_kwargs = url_kwargs.replace('True', 'true').replace('False', 'false')
-    mongo_url = (om.datasets.mongo_url + '?authSource=admin&' + url_kwargs)
+    url_kwargs = url_kwargs.replace("True", "true").replace("False", "false")
+    mongo_url = om.datasets.mongo_url + "?authSource=admin&" + url_kwargs
     return mongo_url
 
 
@@ -61,7 +62,7 @@ def waitForConnection(client):
     for i in range(100):
         try:
             # The ping command is cheap and does not require auth.
-            command('ping')
+            command("ping")
         except (ConnectionFailure, AutoReconnect) as e:
             sleep(0.01)
             _exc = e

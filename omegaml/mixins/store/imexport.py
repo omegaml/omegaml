@@ -13,19 +13,24 @@ from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
-from omegaml.util import IterableJsonDump, load_class, SystemPosixPath, tarfile_safe_extractall
+from omegaml.util import (
+    IterableJsonDump,
+    load_class,
+    SystemPosixPath,
+    tarfile_safe_extractall,
+)
 
 
 class ObjectImportExportMixin:
-    """ Provide generic import() and export() methods """
+    """Provide generic import() and export() methods"""
 
     @classmethod
     def supports(cls, store, **kwargs):
-        return store.prefix in ('data/', 'jobs/', 'models/', 'scripts/', 'streams/')
+        return store.prefix in ("data/", "jobs/", "models/", "scripts/", "streams/")
 
-    def to_archive(self, name, local, fmt='omega', **kwargs):
+    def to_archive(self, name, local, fmt="omega", **kwargs):
         backend = self.get_backend(name)
-        if hasattr(backend, 'export'):
+        if hasattr(backend, "export"):
             return backend.export(name)
         meta = self.metadata(name)
         assert meta is not None, f"{name} is not in {self.prefix}"
@@ -33,7 +38,7 @@ class ObjectImportExportMixin:
             archive = OmegaExporter.archive(local, store=self, fmt=fmt)
         else:
             archive = local
-        if 'versions' in meta.attributes:
+        if "versions" in meta.attributes:
             # for versioned objects, we defer to the versioning mixin
             # -- export specific version (@version tag in name)
             # -- or all versions (no @version tag in name)
@@ -46,7 +51,7 @@ class ObjectImportExportMixin:
                 arc.add(meta, asname=asname, store=self)
         return arc
 
-    def from_archive(self, local, name, fmt='omega', **kwargs):
+    def from_archive(self, local, name, fmt="omega", **kwargs):
         if not isinstance(local, OmegaExportArchive):
             archive = OmegaExporter.archive(local, store=self, fmt=fmt)
         else:
@@ -57,10 +62,13 @@ class ObjectImportExportMixin:
             # -- exact name matches
             # -- name@version matches
             # -- base for name@version matches
-            members = [(m, m.replace(self.prefix, '')) for m in arc.members
-                       if m == f'{self.prefix}{name}'
-                       or (f'{self.prefix}{name}'.startswith(m) and '@' in name)
-                       or (m.startswith(f'{self.prefix}{name}@') and (not '@' in name))]
+            members = [
+                (m, m.replace(self.prefix, ""))
+                for m in arc.members
+                if m == f"{self.prefix}{name}"
+                or (f"{self.prefix}{name}".startswith(m) and "@" in name)
+                or (m.startswith(f"{self.prefix}{name}@") and (not "@" in name))
+            ]
             # note we restored in opposite order so we restore versioned objects first
             # this avoids replacing the main object with a versioned object by accident
             for arc_member, member in members[::-1]:
@@ -75,7 +83,8 @@ class ObjectImportExportMixin:
             prefix=self.prefix,
             bucket=self.bucket,
             attributes=attributes,
-            gridfile=gridfile)
+            gridfile=gridfile,
+        )
 
 
 class OmegaExportArchive:
@@ -103,7 +112,7 @@ class OmegaExportArchive:
             if not self.is_readonly:
                 return fn(self, *args, **kwargs)
             else:
-                raise ValueError('archive is not writable')
+                raise ValueError("archive is not writable")
 
         return inner
 
@@ -113,29 +122,29 @@ class OmegaExportArchive:
             rmtree(self.path)
         self.manifest = self._read_manifest()
 
-    def compress(self, mode='gz'):
+    def compress(self, mode="gz"):
         # create a timestamped path that does not contain :
         # -- due to https://superuser.com/a/1720174
-        dt = str(datetime.utcnow().isoformat()).replace(':', '')
-        ext = '.tgz' if mode == 'gz' else '.tar'
-        tfn = self.path.parent / f'{self.path.name}-{dt}{ext}'
+        dt = str(datetime.utcnow().isoformat()).replace(":", "")
+        ext = ".tgz" if mode == "gz" else ".tar"
+        tfn = self.path.parent / f"{self.path.name}-{dt}{ext}"
         Path(tfn).unlink(missing_ok=True)
-        with tarfile.open(tfn, f'w:{mode}') as tar:
+        with tarfile.open(tfn, f"w:{mode}") as tar:
             tar.add(self.path, arcname=self.path.name, recursive=True)
         self.clear()
         return tfn
 
     def decompress(self, mode=None):
         if self.path.is_file():
-            mode = mode or ('gz' if self.path.name.endswith('.tgz') else 'tar')
-            ext = '.tgz' if mode == 'gz' else '.tar'
-            target = self.path.parent / self.path.name.replace(ext, '')
+            mode = mode or ("gz" if self.path.name.endswith(".tgz") else "tar")
+            ext = ".tgz" if mode == "gz" else ".tar"
+            target = self.path.parent / self.path.name.replace(ext, "")
             target.mkdir(exist_ok=True)
-            with tarfile.open(self.path, f'r:{mode}') as tar:
+            with tarfile.open(self.path, f"r:{mode}") as tar:
                 # SEC: CWE-22 avoid extracting vulnerable file paths
                 # - reason: files are extracted using Python's tarfile 'data' filter which fixes the issue
                 # - status: fixed
-                tarfile_safe_extractall(tar, target, filter='data')
+                tarfile_safe_extractall(tar, target, filter="data")
             # the first entry in the archive is the actual archive contents
             basename = list(target.iterdir())[0]
             arc = self.__class__(basename, self.store)
@@ -145,7 +154,7 @@ class OmegaExportArchive:
 
     @property
     def members(self):
-        return self.manifest['members'].keys()
+        return self.manifest["members"].keys()
 
     @_writable
     def add(self, meta, asname=None, store=None):
@@ -158,21 +167,22 @@ class OmegaExportArchive:
         data = meta.gridfile.read()
         if data is not None:
             lpaths.gridfile.write_bytes(data)
-            meta_dict['gridfile'] = lpaths.gridfile.name  # basename
+            meta_dict["gridfile"] = lpaths.gridfile.name  # basename
         # data in collection
         if meta.collection:
+
             def remove_id(obj):
-                obj.pop('_id', None)
+                obj.pop("_id", None)
                 return obj
 
             data = store.collection(name).find()
-            with lpaths.collection.open('w') as fout:
-                IterableJsonDump.dump(data, fout,
-                                      transform=remove_id,
-                                      default=bson_dumps)
+            with lpaths.collection.open("w") as fout:
+                IterableJsonDump.dump(
+                    data, fout, transform=remove_id, default=bson_dumps
+                )
         # metadata
         lpaths.meta.write_text(bson_dumps(meta_dict))
-        self.manifest['members'][self._manifest_key(name, store)] = lpaths.key
+        self.manifest["members"][self._manifest_key(name, store)] = lpaths.key
 
     @_writable
     def close(self):
@@ -181,22 +191,22 @@ class OmegaExportArchive:
     def extract(self, name, meta, asname=None, store=None):
         store = store or self.store
         lpaths = self._local_paths(self.path, name, store, expect_exist=True)
-        with lpaths.meta.open('r') as fin:
+        with lpaths.meta.open("r") as fin:
             meta_dict = bson_loads(fin.read())
-            if meta_dict['name'] not in (name, asname):
-                asname = meta_dict['name']
+            if meta_dict["name"] not in (name, asname):
+                asname = meta_dict["name"]
                 old_meta = store.metadata(asname, raw=True)
                 meta = old_meta or meta
-            meta.kind = meta_dict['kind']
-            meta.attributes.update(meta_dict['attributes'])
-            meta.kind_meta.update(meta_dict['kind_meta'])
+            meta.kind = meta_dict["kind"]
+            meta.attributes.update(meta_dict["attributes"])
+            meta.kind_meta.update(meta_dict["kind_meta"])
 
         if lpaths.gridfile.exists():
-            with lpaths.gridfile.open('rb') as fin:
+            with lpaths.gridfile.open("rb") as fin:
                 file_backend = store.get_backend_byobj(fin)
                 meta.gridfile = file_backend._store_to_file(store, fin, lpaths.key)
         if lpaths.collection.exists():
-            with lpaths.collection.open('r') as fin:
+            with lpaths.collection.open("r") as fin:
                 data = bson_loads(fin.read())
                 collection = store.collection(name)
                 collection.insert_many(data)
@@ -206,57 +216,65 @@ class OmegaExportArchive:
         return meta.save()
 
     def _manifest_key(self, name, store):
-        return f'{store.prefix}{name}'
+        return f"{store.prefix}{name}"
 
     def _local_paths(self, local, name, store, expect_exist=False):
         manifest_key = self._manifest_key(name, store)
-        in_manifest = manifest_key in self.manifest['members']
+        in_manifest = manifest_key in self.manifest["members"]
         if not in_manifest and not expect_exist:
-            local_key = SystemPosixPath(store.prefix) / store.object_store_key(name, 'omx')
+            local_key = SystemPosixPath(store.prefix) / store.object_store_key(
+                name, "omx"
+            )
         elif in_manifest:
-            local_key = self.manifest['members'][manifest_key]
+            local_key = self.manifest["members"][manifest_key]
         else:
-            raise ValueError(f'{name} expected to exist, but is not a member in archive {self.path}')
+            raise ValueError(
+                f"{name} expected to exist, but is not a member in archive {self.path}"
+            )
         local_dir = Path(local) / local_key
-        local_meta = Path(local_dir) / 'metadata.json'
-        local_gridfile = Path(local_dir) / 'gridfile.bin'
-        local_collection = Path(local_dir) / 'collection.json'
+        local_meta = Path(local_dir) / "metadata.json"
+        local_gridfile = Path(local_dir) / "gridfile.bin"
+        local_collection = Path(local_dir) / "collection.json"
         local_dir.mkdir(parents=True, exist_ok=True)
-        return AttrDict(dir=local_dir,
-                        key=str(local_key),
-                        meta=local_meta,
-                        gridfile=local_gridfile,
-                        collection=local_collection)
+        return AttrDict(
+            dir=local_dir,
+            key=str(local_key),
+            meta=local_meta,
+            gridfile=local_gridfile,
+            collection=local_collection,
+        )
 
     def _read_manifest(self):
-        manifest_path = self.path / 'manifest.json'
+        manifest_path = self.path / "manifest.json"
         if manifest_path.exists():
-            with manifest_path.open('r') as fin:
+            with manifest_path.open("r") as fin:
                 manifest = json.loads(fin.read())
         else:
             manifest = {
-                'members': {},
-                'format': 'omega',
+                "members": {},
+                "format": "omega",
             }
         return manifest
 
     def _write_manifest(self):
         self.path.mkdir(exist_ok=True)
-        with (self.path / 'manifest.json').open('w') as fout:
+        with (self.path / "manifest.json").open("w") as fout:
             json.dump(self.manifest, fout)
 
 
 class OmegaExporter:
     ARCHIVERS = {
-        'omega': 'omegaml.mixins.store.imexport.OmegaExportArchive',
+        "omega": "omegaml.mixins.store.imexport.OmegaExportArchive",
     }
-    _temp_bucket = '__exporter'  # used as the import target and source for promotion
+    _temp_bucket = "__exporter"  # used as the import target and source for promotion
 
     def __init__(self, omega):
         self.omega = omega
 
-    def to_archive(self, path, objects=None, fmt='omega', compress=False, progressfn=None):
-        """ write export archive
+    def to_archive(
+        self, path, objects=None, fmt="omega", compress=False, progressfn=None
+    ):
+        """write export archive
 
         Export archives can be either uncompressed or compressed. Uncompressed archives
         are written as a directory tree on the filesystem, suitable for tracking in version
@@ -291,33 +309,41 @@ class OmegaExporter:
                     store.to_archive(obj.name, arc)
                 elif isinstance(obj, str):
                     try:
-                        prefix, pattern = obj.split('/', 1)
+                        prefix, pattern = obj.split("/", 1)
                     except ValueError:
                         prefixes = [s.prefix for s in self.omega._stores]
                         raise ValueError(
-                            f'Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}')
-                    store = self.omega.store_by_prefix(f'{prefix}/')
+                            f"Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}"
+                        )
+                    store = self.omega.store_by_prefix(f"{prefix}/")
                     # if the pattern does not match in list, use it as a name
                     # e.g. mymodel@version1 will not show in list()
                     objects = store.list(pattern=pattern) or [pattern]
                     for objname in objects:
                         store.to_archive(objname, arc)
         if compress:
-            mode = '' if compress == 'tar' else 'gz'
+            mode = "" if compress == "tar" else "gz"
             archive_path = arc.compress(mode=mode)
         else:
             archive_path = path
         return archive_path
 
-    def from_archive(self, path, pattern=None, fmt='omega', promote=False,
-                     promote_to: Omega = None, progressfn=None):
+    def from_archive(
+        self,
+        path,
+        pattern=None,
+        fmt="omega",
+        promote=False,
+        promote_to: Omega = None,
+        progressfn=None,
+    ):
         # for promotion, use a temp bucket for import and promotion source
         promote = promote or (promote_to is not None)
         promote_to = None if not promote else (promote_to or self.omega)
         omega = self.omega if not promote else promote_to[self._temp_bucket]
         store: ObjectImportExportMixin
         imported = []
-        pattern = pattern.replace('datasets/', 'data/') if pattern else pattern
+        pattern = pattern.replace("datasets/", "data/") if pattern else pattern
         if not Path(path).exists():
             raise FileNotFoundError(path)
         with OmegaExporter.archive(path, fmt=fmt) as arc:
@@ -325,18 +351,18 @@ class OmegaExporter:
                 progressfn(member) if progressfn else None
                 if pattern and not re.match(pattern, member):
                     continue
-                prefix, name = member.split('/', 1)
-                store = omega.store_by_prefix(f'{prefix}/')
+                prefix, name = member.split("/", 1)
+                store = omega.store_by_prefix(f"{prefix}/")
                 meta = store.from_archive(arc, name)
                 if promote:
                     store: PromotionMixin
-                    to_store = promote_to.store_by_prefix(f'{prefix}/')
+                    to_store = promote_to.store_by_prefix(f"{prefix}/")
                     meta = store.promote(name, to_store, asname=name)
                 imported.append(meta)
         return imported
 
     @classmethod
-    def archive(cls, path, store=None, fmt='omega') -> OmegaExportArchive:
+    def archive(cls, path, store=None, fmt="omega") -> OmegaExportArchive:
         archiver = load_class(cls.ARCHIVERS[fmt])
         archive = archiver(path, store)
         return archive

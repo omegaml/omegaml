@@ -4,9 +4,9 @@ import sys
 
 c = get_config()  # noqa: F821
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ## This is an application.
 
 ## The date format used by logging formatters for %(asctime)s
@@ -77,9 +77,9 @@ c = get_config()  # noqa: F821
 #  Default: False
 # c.Application.show_config_json = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # JupyterApp(Application) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ## Base class for Jupyter applications
 
 ## Answer yes to any prompts.
@@ -122,9 +122,9 @@ c = get_config()  # noqa: F821
 #  See also: Application.show_config_json
 # c.JupyterApp.show_config_json = False
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ExtensionApp(JupyterApp) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ## Base class for configurable Jupyter Server Extension Applications.
 #
 #      ExtensionApp subclasses can be initialized two ways:
@@ -213,9 +213,9 @@ c = get_config()  # noqa: F821
 #  Default: []
 # c.ExtensionApp.template_paths = []
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # LabServerApp(ExtensionApp) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ## A Lab Server Application that runs out-of-the-box
 
 ## "A list of comma-separated URIs to get the allowed extensions list
@@ -398,9 +398,9 @@ c = get_config()  # noqa: F821
 #  Default: ''
 # c.LabServerApp.workspaces_dir = ''
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # LabApp(LabServerApp) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ##
 #  See also: LabServerApp.allowed_extensions_uris
 # c.LabApp.allowed_extensions_uris = ''
@@ -651,9 +651,9 @@ c = get_config()  # noqa: F821
 #  Default: '/home/patrick/.jupyter/lab/workspaces'
 # c.LabApp.workspaces_dir = '/home/patrick/.jupyter/lab/workspaces'
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ServerApp(JupyterApp) configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 ## The Jupyter Server application class.
 
 ## Set the Access-Control-Allow-Credentials: true header
@@ -703,7 +703,7 @@ c = get_config()  # noqa: F821
 #  Default: False
 # c.ServerApp.allow_root = False
 # Whether to allow the user to run the notebook as root.
-c.ServerApp.allow_root = True if os.environ.get('JY_ALLOW_ROOT') else False
+c.ServerApp.allow_root = True if os.environ.get("JY_ALLOW_ROOT") else False
 
 
 ## Answer yes to any prompts.
@@ -762,8 +762,8 @@ c.ServerApp.allow_root = True if os.environ.get('JY_ALLOW_ROOT') else False
 ## The content manager class to use.
 #  Default: 'jupyter_server.services.contents.largefilemanager.AsyncLargeFileManager'
 # c.ServerApp.contents_manager_class = 'jupyter_server.services.contents.largefilemanager.AsyncLargeFileManager'
-default_contents_manager = 'omegaml.notebook.omegacontentsmgr.OmegaStoreContentsManager'
-contents_manager = os.environ.get('JY_CONTENTS_MANAGER') or default_contents_manager
+default_contents_manager = "omegaml.notebook.omegacontentsmgr.OmegaStoreContentsManager"
+contents_manager = os.environ.get("JY_CONTENTS_MANAGER") or default_contents_manager
 c.ServerApp.contents_manager_class = contents_manager
 
 ## DEPRECATED. Use IdentityProvider.cookie_options
@@ -798,7 +798,7 @@ c.ServerApp.contents_manager_class = contents_manager
 
 ## The default URL to redirect to from `/`
 #  Default: '/'
-c.ServerApp.default_url = os.environ.get('JY_DEFAULT_URL') or '/lab'
+c.ServerApp.default_url = os.environ.get("JY_DEFAULT_URL") or "/lab"
 
 ## Disable cross-site-request-forgery protection
 #
@@ -971,19 +971,19 @@ c.ServerApp.default_url = os.environ.get('JY_DEFAULT_URL') or '/lab'
 ## DEPRECATED in 2.0. Use PasswordIdentityProvider.hashed_password
 #  Default: ''
 # c.ServerApp.password = ''
-if 'JUPYTER_PASSWORD' in os.environ:
+if "JUPYTER_PASSWORD" in os.environ:
     # unless it is actually a value in environ we must not set the attribute, as None is not a valid value
     # if the value is not set a token is generated which is what we want in this case
-    c.ServerApp.password = os.environ.get('JUPYTER_PASSWORD')
+    c.ServerApp.password = os.environ.get("JUPYTER_PASSWORD")
 
 ## DEPRECATED in 2.0. Use PasswordIdentityProvider.password_required
 #  Default: False
 # c.ServerApp.password_required = False
-c.ServerApp.password_required = 'JUPYTER_PASSWORD' in os.environ
+c.ServerApp.password_required = "JUPYTER_PASSWORD" in os.environ
 
 ## The port the server will listen on (env: JUPYTER_PORT).
 #  Default: 0
-c.ServerApp.port = int(os.environ.get('JUPYTER_PORT', 8888))
+c.ServerApp.port = int(os.environ.get("JUPYTER_PORT", 8888))
 
 ## The number of additional ports to try if the specified port is not available
 #  (env: JUPYTER_PORT_RETRIES).
@@ -1133,13 +1133,12 @@ c.ServerApp.root_dir = os.getcwd()
 import logging
 
 logger = logging.getLogger(c.NotebookApp.__class__.__name__)
-handler = logging.FileHandler(os.path.expanduser('~/jupyter.log'))
+handler = logging.FileHandler(os.path.expanduser("~/jupyter.log"))
 logger.addHandler(handler)
-logger.setLevel(os.environ.get('JY_DEBUG_LEVEL', 'INFO'))
+logger.setLevel(os.environ.get("JY_DEBUG_LEVEL", "INFO"))
 
 # if we're running inside a container, use /app
-if 'OMEGA_ROOT' in os.environ:
-    sys.path.insert(0, os.environ['OMEGA_ROOT'])
+if "OMEGA_ROOT" in os.environ:
+    sys.path.insert(0, os.environ["OMEGA_ROOT"])
 else:
-    sys.path.insert(0, '/app')
-
+    sys.path.insert(0, "/app")

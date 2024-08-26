@@ -15,13 +15,13 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
 
     def _setup_model(self, dburl=None, drop=True, table=None):
         class Product(Model):
-            name = 'products'
-            sql = '''
+            name = "products"
+            sql = """
             select pno 
                  , name
             from :sqltable
             where pno in {pno}
-            '''
+            """
             context = {}
 
             def transform(self, value, **kwargs):
@@ -31,8 +31,8 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
         Product.table = table
 
         data = [
-            dict(pno=1234, name='shoe'),
-            dict(pno=1235, name='t-shirt'),
+            dict(pno=1234, name="shoe"),
+            dict(pno=1235, name="t-shirt"),
         ]
         data = data * 10
 
@@ -44,11 +44,10 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(df), 10)
         return Product
 
-
     def test_sqlmodel(self):
         self._setup_model()
         om = self.om
-        df = om.datasets.get('products', sql='select * from :sqltable')
+        df = om.datasets.get("products", sql="select * from :sqltable")
         self.assertEqual(len(df), 20)
 
     def test_chunksize(self):
@@ -59,32 +58,35 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
 
     def test_datapipeline(self):
         Product = self._setup_model()
-        pipeline = DataPipeline(steps=[
-            Product(),
-        ])
+        pipeline = DataPipeline(
+            steps=[
+                Product(),
+            ]
+        )
         result = pipeline.process(pno=[1234])
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 10)
 
     def test_parallel_data_pipeline(self):
-        Product = self._setup_model(dburl='sqlite:////tmp/test.sqlite', drop=True)
-        pipeline = DataPipeline(steps=[
-            Product(),
-            lambda values, **kwargs: pd.concat(values),
-        ])
+        Product = self._setup_model(dburl="sqlite:////tmp/test.sqlite", drop=True)
+        pipeline = DataPipeline(
+            steps=[
+                Product(),
+                lambda values, **kwargs: pd.concat(values),
+            ]
+        )
         result = pipeline.map([dict(pno=[1234])])
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 10)
 
     def test_join_model(self):
-        Product = self._setup_model(dburl='sqlite:////tmp/test.sqlite', drop=True)
+        Product = self._setup_model(dburl="sqlite:////tmp/test.sqlite", drop=True)
 
         product = Product()
-        df = product.join(product, on=['pno'])
-        self.assertEqual(len(df), product.count(sql='select a.*, b.* from :sqltable as a join :sqltable as b on a.pno = b.pno'))
-
-
-
-
-
-
+        df = product.join(product, on=["pno"])
+        self.assertEqual(
+            len(df),
+            product.count(
+                sql="select a.*, b.* from :sqltable as a join :sqltable as b on a.pno = b.pno"
+            ),
+        )

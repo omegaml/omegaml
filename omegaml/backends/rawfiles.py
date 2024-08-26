@@ -14,19 +14,20 @@ class PythonRawFileBackend(BaseDataBackend):
     """
     OmegaStore backend to support arbitrary files
     """
-    KIND = 'python.file'
+
+    KIND = "python.file"
 
     @classmethod
     def supports(self, obj, name, open_kwargs=None, **kwargs):
-        is_filelike = hasattr(obj, 'read')
+        is_filelike = hasattr(obj, "read")
         open_kwargs = dict(open_kwargs or {})
-        if kwargs.get('kind') == self.KIND:
+        if kwargs.get("kind") == self.KIND:
             is_filelike = self._is_openable(self, obj, **open_kwargs)
         return is_filelike or self._is_path(self, obj)
 
     def _is_openable(self, obj, **kwargs):
-        if 'mode' not in 'kwargs':
-            kwargs['mode'] = 'rb'
+        if "mode" not in "kwargs":
+            kwargs["mode"] = "rb"
         try:
             with open(obj, **kwargs) as fin:
                 fin.read(1)
@@ -34,7 +35,7 @@ class PythonRawFileBackend(BaseDataBackend):
             return False
         return True
 
-    def get(self, name, local=None, mode='wb', open_kwargs=None, **kwargs):
+    def get(self, name, local=None, mode="wb", open_kwargs=None, **kwargs):
         """
         get a stored file as a file-like object with binary contents or a local file
 
@@ -58,9 +59,9 @@ class PythonRawFileBackend(BaseDataBackend):
         """
         outf = self.data_store.metadata(name, **kwargs).gridfile
         if local:
-            is_filename = '.' in basename(local)
+            is_filename = "." in basename(local)
             target_dir = dirname(local) if is_filename else local
-            local = local if is_filename else '{local}/{name}'.format(**locals())
+            local = local if is_filename else "{local}/{name}".format(**locals())
             os.makedirs(target_dir, exist_ok=True)
             open_kwargs = open_kwargs or {}
             with open(local, mode=mode, **open_kwargs) as flocal:
@@ -70,15 +71,18 @@ class PythonRawFileBackend(BaseDataBackend):
 
     def put(self, obj, name, attributes=None, encoding=None, **kwargs):
         self.data_store.drop(name, force=True)
-        storekey = self.data_store.object_store_key(name, 'file', hashed=True)
-        gridfile = self._store_to_file(self.data_store, obj, storekey, encoding=encoding)
+        storekey = self.data_store.object_store_key(name, "file", hashed=True)
+        gridfile = self._store_to_file(
+            self.data_store, obj, storekey, encoding=encoding
+        )
         return self.data_store._make_metadata(
             name=name,
             prefix=self.data_store.prefix,
             bucket=self.data_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
 
 def filelike(obj):

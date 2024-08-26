@@ -40,7 +40,7 @@ class OmegaJobProxy(RuntimeProxyBase):
         Returns:
             AsyncResult
         """
-        job_run = self.runtime.task('omegaml.notebook.tasks.run_omegaml_job')
+        job_run = self.runtime.task("omegaml.notebook.tasks.run_omegaml_job")
         return job_run.delay(self.jobname, timeout=timeout, **kwargs)
 
     def schedule(self, **kwargs):
@@ -50,7 +50,7 @@ class OmegaJobProxy(RuntimeProxyBase):
         Args:
             **kwargs: see OmegaJob.schedule()
         """
-        job_run = self.runtime.task('omegaml.notebook.tasks.schedule_omegaml_job')
+        job_run = self.runtime.task("omegaml.notebook.tasks.schedule_omegaml_job")
         return job_run.delay(self.jobname, **kwargs)
 
     @property

@@ -3,7 +3,12 @@ from os.path import basename, dirname
 import os
 
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path, RunnablePackageMixin
+from omegaml.backends.package.packager import (
+    build_sdist,
+    install_and_import,
+    load_from_path,
+    RunnablePackageMixin,
+)
 
 
 class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
@@ -28,11 +33,12 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
     See Also:
         https://packaging.python.org/tutorials/packaging-projects/
     """
-    KIND = 'python.package'
+
+    KIND = "python.package"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, str) and obj.startswith('pkg://')
+        return isinstance(obj, str) and obj.startswith("pkg://")
 
     def put(self, obj, name, attributes=None, **kwargs):
         """
@@ -48,12 +54,12 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
                      as specified in setup.py
         :return: the Metadata object
         """
-        pkgsrc = pkgdist = obj.split('//')[1]
-        if not 'tar.gz' in os.path.basename(pkgdist):
-            pkgsrc = pkgsrc.replace('setup.py', '')
-            distdir = os.path.join(pkgsrc, 'dist')
+        pkgsrc = pkgdist = obj.split("//")[1]
+        if not "tar.gz" in os.path.basename(pkgdist):
+            pkgsrc = pkgsrc.replace("setup.py", "")
+            distdir = os.path.join(pkgsrc, "dist")
             pkgdist = build_sdist(pkgsrc, distdir)
-        filename = self.data_store.object_store_key(name, 'pkg', hashed=True)
+        filename = self.data_store.object_store_key(name, "pkg", hashed=True)
         gridfile = self._store_to_file(self.data_store, pkgdist, filename)
         return self.data_store._make_metadata(
             name=name,
@@ -61,7 +67,8 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=PythonPackageData.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, localpath=None, keep=False, install=True, **kwargs):
         """
@@ -78,14 +85,16 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
         :return: the loaded module
         """
         pkgname = basename(name)
-        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.data_store.tmppath, pkgname))
+        packagefname = "{}.tar.gz".format(
+            os.path.join(localpath or self.data_store.tmppath, pkgname)
+        )
         os.makedirs(dirname(packagefname), exist_ok=True)
         self.path = self.packages_path
         dstdir = localpath or self.path
         if not os.path.exists(os.path.join(dstdir, pkgname)):
             meta = self.data_store.metadata(name)
             outf = meta.gridfile
-            with open(packagefname, 'wb') as pkgf:
+            with open(packagefname, "wb") as pkgf:
                 pkgf.write(outf.read())
             if install:
                 mod = install_and_import(packagefname, pkgname, dstdir, keep=keep)
@@ -99,4 +108,4 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
 
     @property
     def packages_path(self):
-        return os.path.join(self.data_store.tmppath, 'packages')
+        return os.path.join(self.data_store.tmppath, "packages")

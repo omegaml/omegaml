@@ -7,20 +7,20 @@ from omegaml.backends.basedata import BaseDataBackend
 
 
 class CustomBackendTests(TestCase):
-
     """
     Test custom backends with new kinds
 
     Note we are not implemented actually working backends. What we're
     interested here is that the backend API and Metadata storage work.
     """
+
     def tearDown(self):
         # remove custom backend from implementation not to disturb other tests
         try:
-            del om.defaults.OMEGA_STORE_BACKENDS['custom.foo']
-            del om.defaults.OMEGA_STORE_BACKENDS['custom.bar']
-            MDREGISTRY.KINDS.remove('custom.foo')
-            MDREGISTRY.KINDS.remove('custom.bar')
+            del om.defaults.OMEGA_STORE_BACKENDS["custom.foo"]
+            del om.defaults.OMEGA_STORE_BACKENDS["custom.bar"]
+            MDREGISTRY.KINDS.remove("custom.foo")
+            MDREGISTRY.KINDS.remove("custom.bar")
         except:
             pass
 
@@ -28,56 +28,56 @@ class CustomBackendTests(TestCase):
         """
         test custom model type
         """
-        om.models.register_backend('custom.foo', CustomModelBackend)
-        foo = dict(foo='bar')
-        meta = om.models.put(foo, 'footest')
+        om.models.register_backend("custom.foo", CustomModelBackend)
+        foo = dict(foo="bar")
+        meta = om.models.put(foo, "footest")
         self.assertIsInstance(meta, om.models._Metadata)
-        self.assertEqual(meta.kind, 'custom.foo')
-        meta_stored = om.models.metadata('footest')
-        self.assertIn('footest', om.models.list())
+        self.assertEqual(meta.kind, "custom.foo")
+        meta_stored = om.models.metadata("footest")
+        self.assertIn("footest", om.models.list())
         self.assertEqual(meta, meta_stored)
-        foox = om.models.get('footest')
+        foox = om.models.get("footest")
         self.assertEqual(foox, foo)
 
     def test_custom_dataset_backend(self):
         """
         test custom dataset type
         """
-        om.datasets.register_backend('custom.bar', CustomDataBackend)
-        foo = dict(bar='foo')
-        meta = om.datasets.put(foo, 'bartest')
+        om.datasets.register_backend("custom.bar", CustomDataBackend)
+        foo = dict(bar="foo")
+        meta = om.datasets.put(foo, "bartest")
         self.assertIsInstance(meta, om.datasets._Metadata)
-        self.assertEqual(meta.kind, 'custom.bar')
-        meta_stored = om.datasets.metadata('bartest')
-        self.assertIn('bartest', om.datasets.list())
+        self.assertEqual(meta.kind, "custom.bar")
+        meta_stored = om.datasets.metadata("bartest")
+        self.assertIn("bartest", om.datasets.list())
         self.assertEqual(meta, meta_stored)
         with self.assertRaises(NotImplementedError):
-            om.datasets.get('bartest')
+            om.datasets.get("bartest")
 
 
 class CustomModelBackend(BaseModelBackend):
-
     """
     Minimalist model backend
     """
-    KIND = 'custom.foo'
+
+    KIND = "custom.foo"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, dict) and 'foo' in obj
+        return isinstance(obj, dict) and "foo" in obj
+
 
 class CustomDataBackend(BaseDataBackend):
-
     """
     Minimalist dataset backend
     """
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, dict) and 'bar' in obj
+        return isinstance(obj, dict) and "bar" in obj
 
     def put(self, obj, name, attributes=None):
-        kind = 'custom.bar'
-        return self.model_store.make_metadata(name, kind, bucket=None,
-                                              prefix=None,
-                                              attributes=attributes).save()
+        kind = "custom.bar"
+        return self.model_store.make_metadata(
+            name, kind, bucket=None, prefix=None, attributes=attributes
+        ).save()

@@ -49,15 +49,21 @@ class StreamsProxy(OmegaStore):
     # we wanted the streams.put() method to be really fast, without any lookups
     # It may be worthwhile to reconsider an just make streams.get().append()
     # the high performance alternative
-    def __init__(self, prefix=None, bucket=None, defaults=None, mongo_url=None, **kwargs):
-        super().__init__(mongo_url=mongo_url, prefix=prefix, bucket=bucket, defaults=defaults)
+    def __init__(
+        self, prefix=None, bucket=None, defaults=None, mongo_url=None, **kwargs
+    ):
+        super().__init__(
+            mongo_url=mongo_url, prefix=prefix, bucket=bucket, defaults=defaults
+        )
         cnx_kwargs = self.defaults.OMEGA_MONGO_SSL_KWARGS
         cnx_kwargs.update(kwargs)
         self._stream_kwargs = dict(url=self.mongo_url, **cnx_kwargs)
 
     def _mixins_conditional(self, cls, obj):
         # only allow mixins that do not interfere with streams get/put
-        return cls.supports(obj, prefix='streams/') if hasattr(cls, 'supports') else False
+        return (
+            cls.supports(obj, prefix="streams/") if hasattr(cls, "supports") else False
+        )
 
     def register_backends(self):
         # TODO enable custom backends
@@ -65,26 +71,27 @@ class StreamsProxy(OmegaStore):
         pass
 
     def _qualified_stream(self, name, *args, **kwargs):
-        return f'{self.bucket}.{self.prefix}.{name}.stream'
+        return f"{self.bucket}.{self.prefix}.{name}.stream"
 
     def get(self, name, lazy=False, **kwargs):
         import minibatch as mb
+
         meta = self.metadata(name)
         if meta is None:
             kind_meta = {
-                'stream': self._qualified_stream(name),
-                'kwargs': {
-                    'batchsize': kwargs.get('batchsize')
-                },
+                "stream": self._qualified_stream(name),
+                "kwargs": {"batchsize": kwargs.get("batchsize")},
             }
-            meta = self.make_metadata(name,
-                                      'stream.minibatch',
-                                      prefix=self.prefix,
-                                      bucket=self.bucket,
-                                      kind_meta=kind_meta).save()
-        stream_name = meta.kind_meta['stream']
+            meta = self.make_metadata(
+                name,
+                "stream.minibatch",
+                prefix=self.prefix,
+                bucket=self.bucket,
+                kind_meta=kind_meta,
+            ).save()
+        stream_name = meta.kind_meta["stream"]
         stream_kwargs = dict(self._stream_kwargs)
-        stream_kwargs.update(meta.kind_meta.get('kwargs', {}))
+        stream_kwargs.update(meta.kind_meta.get("kwargs", {}))
         if not lazy:
             stream = mb.stream(stream_name, **kwargs, **self._stream_kwargs)
         else:
@@ -118,5 +125,7 @@ class StreamsProxy(OmegaStore):
         return self.get(name, **kwargs)
 
     def put(self, data, name, append=True, **kwargs):
-        stream = (self._cached_get(name) if append else self._recreate(name, **kwargs)).append(data)
+        stream = (
+            self._cached_get(name) if append else self._recreate(name, **kwargs)
+        ).append(data)
         return self.metadata(name)

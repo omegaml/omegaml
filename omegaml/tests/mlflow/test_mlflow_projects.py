@@ -11,95 +11,128 @@ from omegaml.util import module_available
 
 try:
     from omegaml.backends.mlflow.gitprojects import MLFlowGitProjectBackend
-    from omegaml.backends.mlflow.localprojects import MLFlowProjectBackend, MLFlowProject
+    from omegaml.backends.mlflow.localprojects import (
+        MLFlowProjectBackend,
+        MLFlowProject,
+    )
 except:
     warnings.warn("mlflow not installed")
 else:
-    @unittest.skipUnless(module_available('mlflow'), 'mlflow projects not available CURRENTLY DISABLED')
+
+    @unittest.skipUnless(
+        module_available("mlflow"), "mlflow projects not available CURRENTLY DISABLED"
+    )
     class TestMLFlowProjects(OmegaTestMixin, TestCase):
         def setUp(self):
             om = self.om = Omega()
             self.clean()
             om.models.register_backend(MLFlowProjectBackend.KIND, MLFlowProjectBackend)
-            om.models.register_backend(MLFlowGitProjectBackend.KIND, MLFlowGitProjectBackend)
+            om.models.register_backend(
+                MLFlowGitProjectBackend.KIND, MLFlowGitProjectBackend
+            )
 
         def test_mlflow_project_local(self):
             import omegaml
+
             # store a local MLFlow project, use kind=mlflow.project
-            project_path = Path(omegaml.__file__).parent / 'example' / 'mlflow' / 'project'
+            project_path = (
+                Path(omegaml.__file__).parent / "example" / "mlflow" / "project"
+            )
             om = self.om
-            meta = om.scripts.put(str(project_path), 'myproject', kind='mlflow.project')
+            meta = om.scripts.put(str(project_path), "myproject", kind="mlflow.project")
             self.assertEqual(meta.kind, MLFlowProjectBackend.KIND)
             # get it back
-            mod = om.scripts.get('myproject')
+            mod = om.scripts.get("myproject")
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='main.py').get()
+            result = om.runtime.script("myproject").run(entry_point="main.py").get()
             data = json.loads(result)
-            self.assertIn('output', data['result'])
-            self.assertIn('hello', data['result']['output']['stdout'])
+            self.assertIn("output", data["result"])
+            self.assertIn("hello", data["result"]["output"]["stdout"])
 
         def test_mlflow_project_local_prefix(self):
             import omegaml
+
             # store a local MLFlow project, use mlflow:// prefix
-            project_path = Path(omegaml.__file__).parent / 'example' / 'mlflow' / 'project'
+            project_path = (
+                Path(omegaml.__file__).parent / "example" / "mlflow" / "project"
+            )
             om = self.om
-            meta = om.scripts.put('mlflow://' + str(project_path), 'myproject')
+            meta = om.scripts.put("mlflow://" + str(project_path), "myproject")
             self.assertEqual(meta.kind, MLFlowProjectBackend.KIND)
             # get it back
-            mod = om.scripts.get('myproject')
+            mod = om.scripts.get("myproject")
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='main.py').get()
+            result = om.runtime.script("myproject").run(entry_point="main.py").get()
             data = json.loads(result)
-            self.assertIn('output', data['result'])
-            self.assertIn('hello', data['result']['output']['stdout'])
+            self.assertIn("output", data["result"])
+            self.assertIn("hello", data["result"]["output"]["stdout"])
 
-        @unittest.skip('enable once issue #258 is fixed')
+        @unittest.skip("enable once issue #258 is fixed")
         def test_mlflow_project_remote_https(self):
             # store a local MLFlow project
-            project_path = 'https://github.com/omegaml/omegaml#omegaml/example/mlflow/project'
+            project_path = (
+                "https://github.com/omegaml/omegaml#omegaml/example/mlflow/project"
+            )
             om = self.om
-            meta = om.scripts.put(str(project_path), 'myproject', kind='mlflow.gitproject')
+            meta = om.scripts.put(
+                str(project_path), "myproject", kind="mlflow.gitproject"
+            )
             self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
             # get it back
-            mod = om.scripts.get('myproject')
+            mod = om.scripts.get("myproject")
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='mlflow_tracking.py', conda=False).get()
+            result = (
+                om.runtime.script("myproject")
+                .run(entry_point="mlflow_tracking.py", conda=False)
+                .get()
+            )
             data = json.loads(result)
-            self.assertIn('output', data['result'])
-            self.assertIn('succeeded', data['result']['output']['stderr'])
+            self.assertIn("output", data["result"])
+            self.assertIn("succeeded", data["result"]["output"]["stderr"])
 
-        @unittest.skip('enable once issue #258 is fixed')
+        @unittest.skip("enable once issue #258 is fixed")
         def test_mlflow_gitproject_remote_ssh(self):
             # store a local MLFlow project
-            project_path = 'mlflow+ssh://git@github.com/mlflow/mlflow.git#examples/quickstart'
+            project_path = (
+                "mlflow+ssh://git@github.com/mlflow/mlflow.git#examples/quickstart"
+            )
             om = self.om
-            meta = om.scripts.put(str(project_path), 'myproject')
+            meta = om.scripts.put(str(project_path), "myproject")
             self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
             # get it back
-            mod = om.scripts.get('myproject')
+            mod = om.scripts.get("myproject")
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='mlflow_tracking.py', conda=False).get()
+            result = (
+                om.runtime.script("myproject")
+                .run(entry_point="mlflow_tracking.py", conda=False)
+                .get()
+            )
             data = json.loads(result)
-            self.assertIn('output', data['result'])
-            self.assertIn('succeeded', data['result']['output']['stderr'])
+            self.assertIn("output", data["result"])
+            self.assertIn("succeeded", data["result"]["output"]["stderr"])
 
-        @unittest.skip('enable once issue #258 is fixed')
+        @unittest.skip("enable once issue #258 is fixed")
         def test_mlflow_gitproject_remote_https(self):
             # store a local MLFlow project
-            project_path = 'mlflow+https://github.com/mlflow/mlflow.git#examples/quickstart'
+            project_path = (
+                "mlflow+https://github.com/mlflow/mlflow.git#examples/quickstart"
+            )
             om = self.om
-            meta = om.scripts.put(str(project_path), 'myproject')
+            meta = om.scripts.put(str(project_path), "myproject")
             self.assertEqual(meta.kind, MLFlowGitProjectBackend.KIND)
             # get it back
-            mod = om.scripts.get('myproject')
+            mod = om.scripts.get("myproject")
             self.assertIsInstance(mod, MLFlowProject)
             # run it on omegaml runtime
-            result = om.runtime.script('myproject').run(entry_point='mlflow_tracking.py', conda=False).get()
+            result = (
+                om.runtime.script("myproject")
+                .run(entry_point="mlflow_tracking.py", conda=False)
+                .get()
+            )
             data = json.loads(result)
-            self.assertIn('output', data['result'])
-            self.assertIn('succeeded', data['result']['output']['stderr'])
-
+            self.assertIn("output", data["result"])
+            self.assertIn("succeeded", data["result"]["output"]["stderr"])

@@ -1,7 +1,7 @@
 class RequestsLikeTestClient(object):
     # inspired by https://stackoverflow.com/a/41151251
     def __init__(self, app, is_json=True):
-        """ a in-process test client that works like the requests library
+        """a in-process test client that works like the requests library
 
         Args:
             app (Flask): the flask app
@@ -30,10 +30,10 @@ class RequestsLikeTestClient(object):
             auth(self)
         if json is not None or self.is_json:
             from json import dumps
-            self.headers.update({
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            })
+
+            self.headers.update(
+                {"Accept": "application/json", "Content-Type": "application/json"}
+            )
             # since Werkzeug 2.1, body must always include valid json
             json = json or {}
             kwargs.update(data=dumps(json))
@@ -44,12 +44,10 @@ class RequestsLikeTestClient(object):
         def inner(self, *args, **kwargs):
             kwargs = self.make_client_kwargs(**kwargs)
             return getattr(self.client, method)(*args, **kwargs)
+
         return inner
 
-    get = wrapper('get')
-    post = wrapper('post')
-    put = wrapper('put')
-    delete = wrapper('delete')
-
-
-
+    get = wrapper("get")
+    post = wrapper("post")
+    put = wrapper("put")
+    delete = wrapper("delete")

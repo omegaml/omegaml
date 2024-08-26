@@ -11,8 +11,8 @@ default_chunksize = int(1e6)
 
 
 def dfchunker(df, size=default_chunksize):
-    """ chunk a dataframe as in iterator """
-    return (df.iloc[pos:pos + size] for pos in range(0, len(df), size))
+    """chunk a dataframe as in iterator"""
+    return (df.iloc[pos : pos + size] for pos in range(0, len(df), size))
 
 
 def insert_chunk(job):
@@ -26,7 +26,7 @@ def insert_chunk(job):
     # note we do not catch exceptions as we want to propagate errors back to caller
     # rationale: if one chunk insert fails, all should fail and user be notified
     sdf, collection = job
-    result = collection.insert_many(sdf.to_dict(orient='records'))
+    result = collection.insert_many(sdf.to_dict(orient="records"))
     return len(result.inserted_ids)
 
 
@@ -69,14 +69,14 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
         jobs = zip(dfchunker(df, size=chunksize), repeat(collection))
         approx_jobs = int(len(df) / chunksize)
         # we use multiprocessing backend because
-        with Parallel(n_jobs=n_jobs, backend='omegaml', verbose=False) as p:
+        with Parallel(n_jobs=n_jobs, backend="omegaml", verbose=False) as p:
             runner = delayed(insert_chunk)
             p_jobs = (runner(job) for job in jobs)
             p._job_count = approx_jobs
             p(p_jobs)
     else:
         # still within bounds for single threaded inserts
-        omstore.collection(name).insert_many(df.to_dict(orient='records'))
+        omstore.collection(name).insert_many(df.to_dict(orient="records"))
 
 
 # ensure loky backend is registered

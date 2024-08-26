@@ -31,14 +31,15 @@ class CeleryTask(object):
     def _apply_kwargs(self, task_kwargs, celery_kwargs):
         # update task_kwargs from runtime's passed on kwargs
         # update celery_kwargs to match celery routing semantics
-        task_kwargs.update(self.kwargs.get('task', {}))
-        celery_kwargs.update(self.kwargs.get('routing', {}))
-        if 'label' in celery_kwargs:
-            celery_kwargs['queue'] = celery_kwargs['label']
-            del celery_kwargs['label']
+        task_kwargs.update(self.kwargs.get("task", {}))
+        celery_kwargs.update(self.kwargs.get("routing", {}))
+        if "label" in celery_kwargs:
+            celery_kwargs["queue"] = celery_kwargs["label"]
+            del celery_kwargs["label"]
 
     def _apply_auth(self, args, kwargs, celery_kwargs):
         from omegaml.client.auth import AuthenticationEnv
+
         AuthenticationEnv.active().taskauth(args, kwargs, celery_kwargs)
 
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
@@ -67,10 +68,11 @@ class CeleryTask(object):
         return self.apply_async(args=args, kwargs=kwargs)
 
     def signature(self, args=None, kwargs=None, immutable=False, **celery_kwargs):
-        """ return the task signature with all kwargs and celery_kwargs applied
-        """
+        """return the task signature with all kwargs and celery_kwargs applied"""
         self._apply_kwargs(kwargs, celery_kwargs)
-        sig = self.task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=immutable)
+        sig = self.task.signature(
+            args=args, kwargs=kwargs, **celery_kwargs, immutable=immutable
+        )
         return sig
 
     def run(self, *args, **kwargs):
@@ -88,7 +90,7 @@ class OmegaRuntime(object):
         self.omega = omega
         defaults = defaults or settings()
         self.bucket = bucket
-        self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)
+        self.pure_python = getattr(defaults, "OMEGA_FORCE_PYTHON_CLIENT", False)
         self.pure_python = self.pure_python or self._client_is_pure_python()
         self._create_celery_app(defaults, celeryconf=celeryconf)
         # temporary requirements, use .require() to set
@@ -96,10 +98,10 @@ class OmegaRuntime(object):
         # fixed default arguments, use .require(always=True) to set
         self._task_default_kwargs = dict(task={}, routing={})
         # default routing label
-        self._default_label = self.celeryapp.conf.get('CELERY_DEFAULT_QUEUE')
+        self._default_label = self.celeryapp.conf.get("CELERY_DEFAULT_QUEUE")
 
     def __repr__(self):
-        return 'OmegaRuntime({})'.format(self.omega.__repr__())
+        return "OmegaRuntime({})".format(self.omega.__repr__())
 
     @property
     def auth(self):
@@ -108,9 +110,9 @@ class OmegaRuntime(object):
     @property
     def _common_kwargs(self):
         common = deepcopy(self._task_default_kwargs)
-        common['task'].update(pure_python=self.pure_python, __bucket=self.bucket)
-        common['task'].update(self._require_kwargs['task'])
-        common['routing'].update(self._require_kwargs['routing'])
+        common["task"].update(pure_python=self.pure_python, __bucket=self.bucket)
+        common["task"].update(self._require_kwargs["task"])
+        common["routing"].update(self._require_kwargs["routing"])
         return common
 
     @property
@@ -119,10 +121,10 @@ class OmegaRuntime(object):
 
     @property
     def is_local(self):
-        return self.celeryapp.conf['CELERY_ALWAYS_EAGER']
+        return self.celeryapp.conf["CELERY_ALWAYS_EAGER"]
 
     def mode(self, local=None, logging=None):
-        """ specify runtime modes
+        """specify runtime modes
 
         Args:
             local (bool): if True, all execution will run locally, else on
@@ -148,8 +150,8 @@ class OmegaRuntime(object):
             om.runtime.mode(logging=False)
         """
         if isinstance(local, bool):
-            self.celeryapp.conf['CELERY_ALWAYS_EAGER'] = local
-        self._task_default_kwargs['task']['__logging'] = logging
+            self.celeryapp.conf["CELERY_ALWAYS_EAGER"] = local
+        self._task_default_kwargs["task"]["__logging"] = logging
         return self
 
     def _create_celery_app(self, defaults, celeryconf=None):
@@ -157,11 +159,13 @@ class OmegaRuntime(object):
         taskpkgs = defaults.OMEGA_CELERY_IMPORTS
         celeryconf = dict(celeryconf or defaults.OMEGA_CELERY_CONFIG)
         # ensure we use current value
-        celeryconf['CELERY_ALWAYS_EAGER'] = bool(defaults.OMEGA_LOCAL_RUNTIME)
-        if celeryconf['CELERY_RESULT_BACKEND'].startswith('mongodb://'):
-            celeryconf['CELERY_RESULT_BACKEND'] = mongo_url(self.omega, drop_kwargs=['uuidRepresentation'])
+        celeryconf["CELERY_ALWAYS_EAGER"] = bool(defaults.OMEGA_LOCAL_RUNTIME)
+        if celeryconf["CELERY_RESULT_BACKEND"].startswith("mongodb://"):
+            celeryconf["CELERY_RESULT_BACKEND"] = mongo_url(
+                self.omega, drop_kwargs=["uuidRepresentation"]
+            )
         # initialize ssl configuration
-        if celeryconf.get('BROKER_USE_SSL'):
+        if celeryconf.get("BROKER_USE_SSL"):
             # celery > 5 requires ssl options to be specific
             # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-broker_use_ssl
             # https://github.com/celery/kombu/issues/1493
@@ -170,7 +174,7 @@ class OmegaRuntime(object):
             # env variables:
             # SSL_CERT_FILE, CA_CERTS_PATH
             self._apply_broker_ssl(celeryconf)
-        self.celeryapp = Celery('omegaml')
+        self.celeryapp = Celery("omegaml")
         self.celeryapp.config_from_object(celeryconf)
         # needed to get it to actually load the tasks
         # https://stackoverflow.com/a/35735471
@@ -200,8 +204,16 @@ class OmegaRuntime(object):
             return dict(*value)
         return value
 
-    def require(self, label=None, always=False, routing=None, task=None,
-                logging=None, override=True, **kwargs):
+    def require(
+        self,
+        label=None,
+        always=False,
+        routing=None,
+        task=None,
+        logging=None,
+        override=True,
+        **kwargs,
+    ):
         """
         specify requirements for the task execution
 
@@ -225,37 +237,42 @@ class OmegaRuntime(object):
             self
         """
         if label is not None:
-            if label == 'local':
+            if label == "local":
                 self.mode(local=True)
             elif override:
                 self.mode(local=False)
             # update routing, don't replace (#416)
             routing = routing or {}
-            routing.update({'label': label or self._default_label})
+            routing.update({"label": label or self._default_label})
         task = task or {}
         routing = routing or {}
         if task or routing:
             if not override:
                 # override not allowed, remove previously existing
-                ex_task = dict(**self._task_default_kwargs['task'],
-                               **self._require_kwargs['task'])
-                ex_routing = dict(**self._task_default_kwargs['routing'],
-                                  **self._require_kwargs['routing'])
+                ex_task = dict(
+                    **self._task_default_kwargs["task"], **self._require_kwargs["task"]
+                )
+                ex_routing = dict(
+                    **self._task_default_kwargs["routing"],
+                    **self._require_kwargs["routing"],
+                )
                 exists_or_none = lambda k, d: k not in d or d.get(k, False) is None
                 task = {k: v for k, v in task.items() if exists_or_none(k, ex_task)}
-                routing = {k: v for k, v in routing.items() if exists_or_none(k, ex_routing)}
+                routing = {
+                    k: v for k, v in routing.items() if exists_or_none(k, ex_routing)
+                }
             if always:
-                self._task_default_kwargs['routing'].update(routing)
-                self._task_default_kwargs['task'].update(task)
+                self._task_default_kwargs["routing"].update(routing)
+                self._task_default_kwargs["task"].update(task)
             else:
-                self._require_kwargs['routing'].update(routing)
-                self._require_kwargs['task'].update(task)
+                self._require_kwargs["routing"].update(routing)
+                self._require_kwargs["task"].update(task)
         else:
             # FIXME this does not work as expected (will only reset if both task and routing are False)
             if not task:
-                self._require_kwargs['task'] = {}
+                self._require_kwargs["task"] = {}
             if not routing:
-                self._require_kwargs['routing'] = {}
+                self._require_kwargs["routing"] = {}
         if logging is not None:
             self.mode(logging=logging)
         return self
@@ -272,6 +289,7 @@ class OmegaRuntime(object):
             OmegaModelProxy
         """
         from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
+
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaModelProxy(modelname, runtime=self)
 
@@ -307,8 +325,15 @@ class OmegaRuntime(object):
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaScriptProxy(scriptname, runtime=self)
 
-    def experiment(self, experiment, provider=None, implied_run=True, recreate=False, **tracker_kwargs):
-        """ set the tracking backend and experiment
+    def experiment(
+        self,
+        experiment,
+        provider=None,
+        implied_run=True,
+        recreate=False,
+        **tracker_kwargs,
+    ):
+        """set the tracking backend and experiment
 
         Args:
             experiment (str): the name of the experiment
@@ -322,9 +347,16 @@ class OmegaRuntime(object):
             OmegaTrackingProxy
         """
         from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
+
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
-        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run,
-                                     recreate=recreate, **tracker_kwargs)
+        tracker = OmegaTrackingProxy(
+            experiment,
+            provider=provider,
+            runtime=self,
+            implied_run=implied_run,
+            recreate=recreate,
+            **tracker_kwargs,
+        )
         return tracker
 
     def task(self, name, **kwargs):
@@ -339,7 +371,9 @@ class OmegaRuntime(object):
             CeleryTask
         """
         taskfn = self.celeryapp.tasks.get(name)
-        assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
+        assert taskfn is not None, "cannot find task {name} in Celery runtime".format(
+            **locals()
+        )
         kwargs = dict_merge(self._common_kwargs, dict(routing=kwargs))
         task = CeleryTask(taskfn, kwargs)
         self._require_kwargs = dict(routing={}, task={})
@@ -347,14 +381,14 @@ class OmegaRuntime(object):
 
     def result(self, task_id, wait=True):
         from celery.result import AsyncResult
+
         promise = AsyncResult(task_id, app=self.celeryapp)
         return promise.get() if wait else promise
 
     def settings(self, require=None):
-        """ return the runtimes's cluster settings
-        """
+        """return the runtimes's cluster settings"""
         self.require(**require) if require else None
-        return self.task('omegaml.tasks.omega_settings').delay().get()
+        return self.task("omegaml.tasks.omega_settings").delay().get()
 
     def ping(self, *args, require=None, wait=True, **kwargs):
         """
@@ -372,11 +406,11 @@ class OmegaRuntime(object):
             * AsyncResult for wait=False
         """
         self.require(**require) if require else None
-        promise = self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs)
+        promise = self.task("omegaml.tasks.omega_ping").delay(*args, **kwargs)
         return promise.get() if wait else promise
 
     def enable_hostqueues(self):
-        """ enable a worker-specific queue on every worker host
+        """enable a worker-specific queue on every worker host
 
         Returns:
             list of labels (one entry for each hostname)
@@ -386,14 +420,14 @@ class OmegaRuntime(object):
         active = inspect.active()
         queues = []
         for worker in active.keys():
-            hostname = worker.split('@')[-1]
+            hostname = worker.split("@")[-1]
             control.cancel_consumer(hostname)
             control.add_consumer(hostname, destination=[worker])
             queues.append(hostname)
         return queues
 
     def workers(self):
-        """ list of workers
+        """list of workers
 
         Returns:
             dict of workers => list of active tasks
@@ -404,7 +438,7 @@ class OmegaRuntime(object):
         return self._inspect.active()
 
     def queues(self):
-        """ list queues
+        """list queues
 
         Returns:
             dict of workers => list of queues
@@ -412,21 +446,23 @@ class OmegaRuntime(object):
         See Also:
             celery Inspect.active_queues()
         """
-        local_q = {gethostname(): [{'name': 'local', 'is_local': True}]}
+        local_q = {gethostname(): [{"name": "local", "is_local": True}]}
         celery_qs = self._inspect.active_queues() or {}
         return dict_merge(local_q, celery_qs)
 
     def labels(self):
-        """ list available labels
+        """list available labels
 
         Returns:
             dict of workers => list of lables
         """
-        return {worker: [q.get('name') for q in queues]
-                for worker, queues in self.queues().items()}
+        return {
+            worker: [q.get("name") for q in queues]
+            for worker, queues in self.queues().items()
+        }
 
     def stats(self):
-        """ worker statistics
+        """worker statistics
 
         Returns:
             dict of workers => dict of stats
@@ -437,7 +473,7 @@ class OmegaRuntime(object):
         return self._inspect.stats()
 
     def callback(self, script_name, always=False, **kwargs):
-        """ Add a callback to a registered script
+        """Add a callback to a registered script
 
         The callback will be triggered upon successful or failed
         execution of the runtime tasks. The script syntax is::
@@ -455,23 +491,23 @@ class OmegaRuntime(object):
         Returns:
             self
         """
-        success_sig = (self.script(script_name)
-                       .task(as_callback=True)
-                       .signature(args=['SUCCESS', script_name],
-                                  kwargs=kwargs,
-                                  immutable=False))
-        error_sig = (self.script(script_name)
-                     .task(as_callback=True)
-                     .signature(args=['ERROR', script_name],
-                                kwargs=kwargs,
-                                immutable=False))
+        success_sig = (
+            self.script(script_name)
+            .task(as_callback=True)
+            .signature(args=["SUCCESS", script_name], kwargs=kwargs, immutable=False)
+        )
+        error_sig = (
+            self.script(script_name)
+            .task(as_callback=True)
+            .signature(args=["ERROR", script_name], kwargs=kwargs, immutable=False)
+        )
 
         if always:
-            self._task_default_kwargs['routing']['link'] = success_sig
-            self._task_default_kwargs['routing']['link_error'] = error_sig
+            self._task_default_kwargs["routing"]["link"] = success_sig
+            self._task_default_kwargs["routing"]["link_error"] = error_sig
         else:
-            self._require_kwargs['routing']['link'] = success_sig
-            self._require_kwargs['routing']['link_error'] = error_sig
+            self._require_kwargs["routing"]["link"] = success_sig
+            self._require_kwargs["routing"]["link_error"] = error_sig
         return self
 
 

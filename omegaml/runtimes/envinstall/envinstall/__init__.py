@@ -2,8 +2,10 @@ import os
 import subprocess
 
 
-def run(om, *args, package=None, requirements=None, action='install', options=None, **kwargs):
-    """ install packages in user environment
+def run(
+    om, *args, package=None, requirements=None, action="install", options=None, **kwargs
+):
+    """install packages in user environment
 
     Installation:
         # from the command line
@@ -19,32 +21,34 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
         # uninstall
         om runtime script envinstall run action=uninstall
     """
-    lockfile = '/tmp/envinstall.lock'
-    reqfile = requirements or '.system/requirements.txt'
-    package = package or ' '
+    lockfile = "/tmp/envinstall.lock"
+    reqfile = requirements or ".system/requirements.txt"
+    package = package or " "
     try:
-        with open(lockfile, 'x') as flock:
+        with open(lockfile, "x") as flock:
             # only run if we can get an exclusive lock
-            reqfn = '/tmp/envreq.txt'
+            reqfn = "/tmp/envreq.txt"
             if reqfile:
-                with open(reqfn, 'wb') as fout:
+                with open(reqfn, "wb") as fout:
                     reqs = om.scripts.get(reqfile).read()
                     fout.write(reqs)
-                reqspec = f'-r {reqfn}'
+                reqspec = f"-r {reqfn}"
             else:
                 reqspec = package
             action_opts = {
-                'install': f'-U --user {reqspec}',
-                'uninstall': f'-y {reqspec}'
+                "install": f"-U --user {reqspec}",
+                "uninstall": f"-y {reqspec}",
             }
-            opts = options or action_opts.get(action) or ''
-            pipcmd = f'pip {action} {opts}'
-            process = subprocess.run(pipcmd.split(' '),
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT,
-                                     encoding='utf-8')
-    except IOError as e :
-        result = f'another envinstall process is running on this node: {e}'
+            opts = options or action_opts.get(action) or ""
+            pipcmd = f"pip {action} {opts}"
+            process = subprocess.run(
+                pipcmd.split(" "),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+            )
+    except IOError as e:
+        result = f"another envinstall process is running on this node: {e}"
     else:
         result = str(process.stdout)
     finally:

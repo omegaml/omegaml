@@ -11,14 +11,15 @@ OBJECT_CACHE = ProcessLocal(cache=cachetools.TTLCache(maxsize=1000, ttl=60))
 #       solve: cached name must include database and bucket name
 #       in case of different omega users, the cache should be cleared on user change? [group users?]
 
+
 class CachedObjectMixin:
     def _should_cache(self, name, **kwargs):
-        byname = name.startswith('cached/')
+        byname = name.startswith("cached/")
         bymeta = False
         if not byname:
             meta = self.metadata(name, **kwargs)
-            bymeta = meta.attributes.get('cached', False)
-        return (byname or bymeta)
+            bymeta = meta.attributes.get("cached", False)
+        return byname or bymeta
 
     def _should_refresh(self, name, **kwargs):
         cached, last_update = self._object_cache.get(name, (None, None))

@@ -16,13 +16,14 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
     Description:
         Work with models
     """
-    command = 'models'
+
+    command = "models"
 
     def put(self):
         om = get_omega(self.args)
-        modname = self.args.get('<module.callable>')
-        name = self.args.get('<name>')
-        modname, modelfn = modname.rsplit('.', maxsplit=1)
+        modname = self.args.get("<module.callable>")
+        name = self.args.get("<name>")
+        modname, modelfn = modname.rsplit(".", maxsplit=1)
         try:
             mod = import_module(modname)
         except:
@@ -30,8 +31,3 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
         modelfn = getattr(mod, modelfn)
         model = modelfn()
         self.logger.info(om.models.put(model, name))
-
-
-
-
-

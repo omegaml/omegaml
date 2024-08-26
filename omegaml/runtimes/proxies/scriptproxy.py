@@ -45,5 +45,5 @@ class OmegaScriptProxy(RuntimeProxyBase):
         return script_run.delay(self.scriptname, *args, **kwargs)
 
     def task(self, as_callback=False):
-        task_name = 'run_omega_callback_script' if as_callback else 'run_omega_script'
-        return self.runtime.task(f'omegaml.backends.package.tasks.{task_name}')
+        task_name = "run_omega_callback_script" if as_callback else "run_omega_script"
+        return self.runtime.task(f"omegaml.backends.package.tasks.{task_name}")

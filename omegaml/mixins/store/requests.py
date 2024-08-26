@@ -6,7 +6,7 @@ nop = lambda *args, **kwargs: None
 
 
 class RequestCache:
-    """ provides caching for metadata during requests
+    """provides caching for metadata during requests
 
     While processing user requests, metadata are often queried several times for
     different attributes. To avoid repeatedly hitting the database, RequestCache
@@ -65,14 +65,14 @@ class RequestCache:
             self.close_request()
 
     def start_request(self, request=None):
-        if not getattr(self.defaults, 'OMEGA_STORE_CACHE', False):
+        if not getattr(self.defaults, "OMEGA_STORE_CACHE", False):
             return
         self._request.active = True
         self._request_cache.clear()
         self._request.request = request or self._request
 
     def close_request(self):
-        if not getattr(self.defaults, 'OMEGA_STORE_CACHE', False):
+        if not getattr(self.defaults, "OMEGA_STORE_CACHE", False):
             return
         self._request.active = False
         self._request_cache.clear()
@@ -80,11 +80,11 @@ class RequestCache:
 
     @property
     def current_request(self):
-        return getattr(self._request, 'request', None)
+        return getattr(self._request, "request", None)
 
     @property
     def _request_cache(self):
-        if getattr(self._request, 'cache', None) is None:
+        if getattr(self._request, "cache", None) is None:
             self._request.cache = {}
         return self._request.cache
 
@@ -135,11 +135,11 @@ class CombinedStoreRequestCache:
             self.close_request()
 
     def start_request(self, request=None):
-        [getattr(s, 'start_request', nop)(request=request) for s in self._stores]
+        [getattr(s, "start_request", nop)(request=request) for s in self._stores]
 
     def close_request(self):
-        [getattr(s, 'close_request', nop)() for s in self._stores]
+        [getattr(s, "close_request", nop)() for s in self._stores]
 
     @property
     def current_request(self):
-        return [getattr(s, 'current_request', None) for s in self._stores][0]
+        return [getattr(s, "current_request", None) for s in self._stores][0]

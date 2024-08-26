@@ -6,6 +6,7 @@ class ProjectedMixin(object):
     """
     A OmegaStore mixin to process column specifications in dataset name
     """
+
     colspec_pattern = re.compile(r"(?P<name>.*)\[(?P<colspec>.*)\].*$")
 
     def metadata(self, name, *args, **kwargs):
@@ -52,15 +53,15 @@ class ProjectedMixin(object):
         # see if we can get columns from metadata
         # if so we can specify the columns before getting the data
         meta = self.metadata(name)
-        if 'columns' in meta.kind_meta:
-            colmap = meta.kind_meta['columns']
+        if "columns" in meta.kind_meta:
+            colmap = meta.kind_meta["columns"]
             if isinstance(colmap, dict):
                 all_columns = list(colmap.keys())[1]
             else:
                 # colmap is list of tuples (colname, storedname)
                 all_columns = list(zip(*colmap))[1]
             columns = columnset(colspec, all_columns)
-            kwargs['columns'] = columns
+            kwargs["columns"] = columns
             data = super(ProjectedMixin, self).get(name, *args, **kwargs)
         else:
             # we don't have columns in metadata, get the data first
@@ -87,18 +88,15 @@ def columnset(colspec, all_columns):
     * a list of columns to exclude, e.g. foo[^b] => all columns except b
     """
     if colspec is not None:
-        if ':' in colspec:
-            from_col, to_col = colspec.split(':')
-            from_i = (all_columns.index(from_col)
-                      if from_col else 0)
-            to_i = (all_columns.index(to_col)
-                    if to_col else len(all_columns)) + 1
+        if ":" in colspec:
+            from_col, to_col = colspec.split(":")
+            from_i = all_columns.index(from_col) if from_col else 0
+            to_i = (all_columns.index(to_col) if to_col else len(all_columns)) + 1
             columns = all_columns[from_i:to_i]
-        elif colspec.startswith('^'):
-            columns = [col for col in all_columns
-                       if col not in colspec[1:].split(',')]
+        elif colspec.startswith("^"):
+            columns = [col for col in all_columns if col not in colspec[1:].split(",")]
         else:
-            columns = colspec.split(',')
+            columns = colspec.split(",")
     else:
         columns = all_columns
     return columns

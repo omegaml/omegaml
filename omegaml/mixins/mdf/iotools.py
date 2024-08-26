@@ -15,6 +15,7 @@ Usage:
 
 (c) 2019, 2020 omegaml.io by oneseven GmbH, Zurich, Switzerland
 """
+
 import pandas as pd
 from tqdm import tqdm
 
@@ -25,7 +26,16 @@ except:
 
 
 class IOToolsMDFMixin:
-    def to_csv(mdf, csvfn, chunksize=10000, maxobs=None, apply=None, mode='w', open_kwargs=None, **kwargs):
+    def to_csv(
+        mdf,
+        csvfn,
+        chunksize=10000,
+        maxobs=None,
+        apply=None,
+        mode="w",
+        open_kwargs=None,
+        **kwargs,
+    ):
         """
         write MDataframe to s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets
 
@@ -38,8 +48,17 @@ class IOToolsMDFMixin:
 
 
 class IOToolsStoreMixin:
-    def read_csv(self, csvfn, name, chunksize=10000, append=False, apply=None, mode='r',
-                 open_kwargs=None, **kwargs):
+    def read_csv(
+        self,
+        csvfn,
+        name,
+        chunksize=10000,
+        append=False,
+        apply=None,
+        mode="r",
+        open_kwargs=None,
+        **kwargs,
+    ):
         """
         read large files from s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets
 
@@ -107,8 +126,17 @@ class IOToolsStoreMixin:
                 pbar.close()
         return store.getl(name)
 
-    def to_csv(self, name, csvfn, chunksize=10000, apply=None, mode='w', open_kwargs=None, **kwargs):
-        """ write any dataframe to s3, hdfs, http/s, sftp, scp, ssh
+    def to_csv(
+        self,
+        name,
+        csvfn,
+        chunksize=10000,
+        apply=None,
+        mode="w",
+        open_kwargs=None,
+        **kwargs,
+    ):
+        """write any dataframe to s3, hdfs, http/s, sftp, scp, ssh
 
         Usage:
 

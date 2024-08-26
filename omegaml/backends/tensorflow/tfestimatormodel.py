@@ -27,7 +27,9 @@ class TFEstimatorModel(object):
         The estimator_fn returns a tf.estimator.Estimator or subclass.
     """
 
-    def __init__(self, estimator_fn, model=None, input_fn=None, model_dir=None, v1_compat=False):
+    def __init__(
+        self, estimator_fn, model=None, input_fn=None, model_dir=None, v1_compat=False
+    ):
         """
 
         Args:
@@ -93,6 +95,7 @@ class TFEstimatorModel(object):
         if self.v1_compat:
             # https://www.tensorflow.org/guide/migrate
             import tensorflow.compat.v1 as tf
+
             tf.disable_v2_behavior()
         else:
             import tensorflow as tf
@@ -124,7 +127,9 @@ class TFEstimatorModel(object):
             return result
 
         if isinstance(X, (dict, np.ndarray)):
-            input_fn = tf.estimator.inputs.numpy_input_fn(x=X, y=Y, num_epochs=1, shuffle=False)
+            input_fn = tf.estimator.inputs.numpy_input_fn(
+                x=X, y=Y, num_epochs=1, shuffle=False
+            )
         return input_fn
 
     def fit(self, X=None, Y=None, input_fn=None, batch_size=100, **kwargs):
@@ -133,9 +138,11 @@ class TFEstimatorModel(object):
            X (Dataset|ndarray): features
            Y (Dataset|ndarray): labels, optional
         """
-        assert (ok(X, object) or ok(input_fn, object)), "specify either X, Y or input_fn, not both"
+        assert ok(X, object) or ok(
+            input_fn, object
+        ), "specify either X, Y or input_fn, not both"
         if input_fn is None:
-            input_fn = self.make_input_fn('fit', X, Y, batch_size=batch_size)
+            input_fn = self.make_input_fn("fit", X, Y, batch_size=batch_size)
         return self.estimator.train(input_fn=input_fn, **kwargs)
 
     def score(self, X=None, Y=None, input_fn=None, batch_size=100, **kwargs):
@@ -144,9 +151,11 @@ class TFEstimatorModel(object):
            X (Dataset|ndarray): features
            Y (Dataset|ndarray): labels, optional
         """
-        assert (ok(X, object) or ok(input_fn, object)), "specify either X, Y or input_fn, not both"
+        assert ok(X, object) or ok(
+            input_fn, object
+        ), "specify either X, Y or input_fn, not both"
         if input_fn is None:
-            input_fn = self.make_input_fn('score', X, Y, batch_size=batch_size)
+            input_fn = self.make_input_fn("score", X, Y, batch_size=batch_size)
         return self.estimator.evaluate(input_fn=input_fn)
 
     def predict(self, X=None, Y=None, input_fn=None, batch_size=1, **kwargs):
@@ -159,12 +168,12 @@ class TFEstimatorModel(object):
         options2 = (X is not None) and (input_fn is None)
         assert options1 or options2, "specify either X, Y or input_fn, not both"
         if input_fn is None:
-            input_fn = self.make_input_fn('predict', X, Y, batch_size=batch_size)
+            input_fn = self.make_input_fn("predict", X, Y, batch_size=batch_size)
         return self.estimator.predict(input_fn=input_fn)
 
 
 class TFEstimatorModelBackend(BaseModelBackend):
-    KIND = 'tfestimator.model'
+    KIND = "tfestimator.model"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
@@ -175,11 +184,11 @@ class TFEstimatorModelBackend(BaseModelBackend):
         fname = os.path.basename(tmpfn)
         zipfname = os.path.join(self.model_store.tmppath, fname)
         # get relevant parts of model_dir
-        with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
-            zipf.writestr('modelobj.dill', dill.dumps(model))
-            for part in glob.glob(os.path.join(model_dir, '*')):
+        with ZipFile(zipfname, "w", compression=ZIP_DEFLATED) as zipf:
+            zipf.writestr("modelobj.dill", dill.dumps(model))
+            for part in glob.glob(os.path.join(model_dir, "*")):
                 arcname = os.path.basename(part)
-                if arcname == 'modelobj.dill':
+                if arcname == "modelobj.dill":
                     # ignore pre-existing model
                     continue
                 zipf.write(part, arcname)
@@ -187,11 +196,11 @@ class TFEstimatorModelBackend(BaseModelBackend):
 
     def _extract_model(self, infile, key, tmpfn, **kwargs):
         lpath = tempfile.mkdtemp()
-        with open(tmpfn, 'wb') as pkgf:
+        with open(tmpfn, "wb") as pkgf:
             pkgf.write(infile.read())
         with ZipFile(tmpfn) as zipf:
             zipf.extractall(lpath)
-        with open(os.path.join(lpath, 'modelobj.dill'), 'rb') as fin:
+        with open(os.path.join(lpath, "modelobj.dill"), "rb") as fin:
             model = dill.load(fin)
         model.restore(lpath)
         return model
@@ -208,21 +217,24 @@ class TFEstimatorModelBackend(BaseModelBackend):
         meta = self.model_store.put(model, modelname)
         return meta
 
-    def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         import pandas as pd
+
         model = self.model_store.get(modelname)
-        X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
+        X = self._resolve_input_data("predict", Xname, "X", **kwargs)
         if isfunction(X):
             result = pd.DataFrame(v for v in model.predict(input_fn=X))
         else:
             result = pd.DataFrame(v for v in model.predict(X))
-        return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
+        return self._prepare_result(
+            "predict", result, rName=rName, pure_python=pure_python, **kwargs
+        )
 
     def score(
-          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-          **kwargs):
+        self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs
+    ):
         import pandas as pd
+
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)

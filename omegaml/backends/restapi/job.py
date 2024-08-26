@@ -4,7 +4,7 @@ class GenericJobResource(object):
         self.is_async = is_async
 
     def is_eager(self):
-        return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
+        return getattr(self.om.runtime.celeryapp.conf, "CELERY_ALWAYS_EAGER", False)
 
     def run(self, job_id, query, payload):
         """
@@ -18,7 +18,11 @@ class GenericJobResource(object):
         """
         om = self.om
         promise = om.runtime.job(job_id).run()
-        result = self.prepare_result(promise.get(), resource_name=job_id) if not self.is_async else promise
+        result = (
+            self.prepare_result(promise.get(), resource_name=job_id)
+            if not self.is_async
+            else promise
+        )
         return result
 
     def metadata(self, job_id, query, payload):
@@ -30,11 +34,11 @@ class GenericJobResource(object):
     def _get_job_detail(self, job_id):
         meta = self.om.jobs.metadata(job_id)
         data = {
-            'job': meta.name,
-            'job_results': meta.attributes.get('job_results', {}),
-            'job_runs': meta.attributes.get('job_runs', []),
-            'created': meta.created,
+            "job": meta.name,
+            "job_results": meta.attributes.get("job_results", {}),
+            "job_runs": meta.attributes.get("job_runs", []),
+            "created": meta.created,
         }
-        if 'source_job' in meta.attributes:
-            data['source_job'] = meta.attributes['source_job']
+        if "source_job" in meta.attributes:
+            data["source_job"] = meta.attributes["source_job"]
         return data

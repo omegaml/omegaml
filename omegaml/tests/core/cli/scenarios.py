@@ -31,20 +31,20 @@ class CliTestScenarios:
             data = defaultdict(list)
 
             def info(self, *args):
-                self.data['info'].append(args)
+                self.data["info"].append(args)
 
             def error(self, *args):
-                self.data['error'].append(args)
+                self.data["error"].append(args)
 
             def debug(self, *args):
-                self.data['debug'].append(args)
+                self.data["debug"].append(args)
 
             def clear(self):
                 self.data = defaultdict(list)
 
         return TestLogger()
 
-    def pretend_log(self, *args, start_empty=False, level='info'):
+    def pretend_log(self, *args, start_empty=False, level="info"):
         """
         return what would be written in log
 
@@ -77,15 +77,15 @@ class CliTestScenarios:
         return logger.data[level]
 
     def get_log(self, level, as_text=False):
-        entries =  self.cli_logger.data[level.lower()]
-        return list(' '.join(args) for args in entries) if as_text else entries
+        entries = self.cli_logger.data[level.lower()]
+        return list(" ".join(args) for args in entries) if as_text else entries
 
     def assertLogSize(self, level, size):
-        """ assert log of level has number of entries (lines) """
+        """assert log of level has number of entries (lines)"""
         self.assertEqual(size, len(self.get_log(level)))
 
     def assertLogEqual(self, level, expected):
-        """ assert log of level has expected contents """
+        """assert log of level has expected contents"""
         self.assertEqual(expected, self.get_log(level))
 
     def assertLogContains(self, level, expected, compare_as=str):
@@ -120,7 +120,9 @@ class CliTestScenarios:
             for d in data:
                 match |= e in d
         if not match:
-            raise AssertionError(f'{expected} is not in {data} compared as {compare_as}')
+            raise AssertionError(
+                f"{expected} is not in {data} compared as {compare_as}"
+            )
 
     def cli(self, argv, new_start=False, **kwargs):
         self.cli_logger = self.get_test_logger()
@@ -128,7 +130,7 @@ class CliTestScenarios:
             self.cli_logger.clear()
             self.pretend_logger.clear() if self.pretend_logger else None
         if isinstance(argv, str):
-            argv = argv.split(' ')
+            argv = argv.split(" ")
         self.cli_parser = cli.main(argv=argv, logger=self.cli_logger, **kwargs)
         return self.cli_parser
 
@@ -145,7 +147,7 @@ class CliTestScenarios:
         om = self.om
         # add a model, see that we get it back
         reg = LinearRegression()
-        return om.models.put(reg, 'reg')
+        return om.models.put(reg, "reg")
 
     def make_dataset_from_dataframe(self, name, N=100, m=2, b=0):
         """
@@ -158,14 +160,12 @@ class CliTestScenarios:
             Metadata of the dataset
         """
         import pandas as pd
-        df = pd.DataFrame({
-            'x': range(N),
-            'y': range(N)
-        })
-        df['y'] = df['x'] * m + b
+
+        df = pd.DataFrame({"x": range(N), "y": range(N)})
+        df["y"] = df["x"] * m + b
         return self.om.datasets.put(df, name, append=False)
 
-    def create_local_csv(self, path, size=(100, 2), sep=','):
+    def create_local_csv(self, path, size=(100, 2), sep=","):
         """
         create a local dataset
 
@@ -177,13 +177,14 @@ class CliTestScenarios:
 
         """
         data = np.random.randint(0, 100, size=size)
-        df = pd.DataFrame(data, columns=list(string.ascii_uppercase[0:size[1]]))
+        df = pd.DataFrame(data, columns=list(string.ascii_uppercase[0 : size[1]]))
         df.to_csv(path, index=None, sep=sep)
         return df
 
     def create_local_image_file(self, path):
         from imageio import imsave
         import numpy as np
+
         img = np.zeros([100, 100, 3], dtype=np.uint8)
         img.fill(255)
         imsave(path, img)
@@ -198,7 +199,8 @@ class CliTestScenarios:
         return self.om.jobs.put(notebook, name)
 
     def get_package_path(self):
-        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
-        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
+        basepath = os.path.join(
+            os.path.dirname(sys.modules["omegaml"].__file__), "example"
+        )
+        pkgpath = os.path.abspath(os.path.join(basepath, "demo", "helloworld"))
         return pkgpath
-

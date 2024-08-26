@@ -21,28 +21,34 @@ class MLFlowGitProjectBackend(RunnablePackageMixin, BaseDataBackend):
         * https://packaging.python.org/tutorials/packaging-projects/
         * https://docs.github.com/en/get-started/getting-started-with-git/managing-remote-repositories#changing-a-remote-repositorys-url
     """
-    KIND = 'mlflow.gitproject'
-    MLFLOW_GIT_PREFIX = re.compile(r'^mlflow\+(git|ssh|https).*')
-    GIT_PREFIX = 'https'
+
+    KIND = "mlflow.gitproject"
+    MLFLOW_GIT_PREFIX = re.compile(r"^mlflow\+(git|ssh|https).*")
+    GIT_PREFIX = "https"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_mlflow_git = isinstance(obj, str) and self.MLFLOW_GIT_PREFIX.match(obj)
-        is_git = isinstance(obj, str) and obj.startswith(self.GIT_PREFIX) and kwargs.get('kind') == self.KIND
+        is_git = (
+            isinstance(obj, str)
+            and obj.startswith(self.GIT_PREFIX)
+            and kwargs.get("kind") == self.KIND
+        )
         return is_mlflow_git or is_git
 
     def put(self, obj, name, attributes=None, **kwargs):
         """
         save a MLFlow git-sourceable project
         """
-        git_uri = obj.replace('mlflow+', '')
+        git_uri = obj.replace("mlflow+", "")
         return self.data_store._make_metadata(
             name=name,
             prefix=self.data_store.prefix,
             bucket=self.data_store.bucket,
             kind=MLFlowGitProjectBackend.KIND,
             uri=git_uri,
-            attributes=attributes).save()
+            attributes=attributes,
+        ).save()
 
     def get(self, name, **kwargs):
         """

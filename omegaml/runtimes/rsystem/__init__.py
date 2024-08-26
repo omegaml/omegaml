@@ -1,4 +1,4 @@
-""" R system runtime support
+"""R system runtime support
 
 This implements omegaml's R interface
 
@@ -63,6 +63,7 @@ See Also
 
     https://github.com/rstudio/reticulate
 """
+
 import shutil
 
 from pathlib import Path
@@ -79,25 +80,27 @@ R_LOAD_STATUS = {}
 
 
 def rhelper(init=True):
-    r_session = getattr(sys.modules['__main__'], 'r', None)
-    load(r_session) if r_session and init and id(r_session) not in R_LOAD_STATUS else None
+    r_session = getattr(sys.modules["__main__"], "r", None)
+    load(r_session) if r_session and init and id(
+        r_session
+    ) not in R_LOAD_STATUS else None
     return r_session
 
 
 def load(r_session=None):
-    """ load omegamlr helper methods
+    """load omegamlr helper methods
 
     This is the equivalent of a future library(omegamlr) statement.
     It loads all dependencies and functions required for omegaml R support.
     """
     r = r_session or rhelper(init=False)
-    omegamlr_path = Path(__file__).parent / 'omegamlr.R'
+    omegamlr_path = Path(__file__).parent / "omegamlr.R"
     r.source(str(omegamlr_path))
     R_LOAD_STATUS[id(r)] = True
 
 
 def start_worker(om, queue=None):
-    """ start the omega runtime worker from within R env
+    """start the omega runtime worker from within R env
 
     This starts the omega worker within a R session, ensuring
     the R helper object is initialized. This is the equivalent
@@ -115,12 +118,13 @@ def start_worker(om, queue=None):
     Returns:
         this is a blocking call, does not stop until worker is stopped
     """
-    argv = 'worker --loglevel=DEBUG -E'.split(' ')
+    argv = "worker --loglevel=DEBUG -E".split(" ")
     if queue:
-        argv.extend(f'-Q {queue}'.split(' '))
+        argv.extend(f"-Q {queue}".split(" "))
     om.runtime.celeryapp.worker_main(argv=argv)
 
+
 #: determine if R is installed
-r_available = shutil.which('Rscript') is not None
+r_available = shutil.which("Rscript") is not None
 #: determine if we are running inside R reticulate
 inside_r = rhelper() is not None

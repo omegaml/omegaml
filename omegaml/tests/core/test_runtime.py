@@ -23,12 +23,11 @@ from unittest.mock import patch
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
-
     def setUp(self):
         TestCase.setUp(self)
         om = self.om = Omega()
         self.clean()
-        self.clean(bucket='test')
+        self.clean(bucket="test")
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -37,122 +36,116 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']]
-        Y = df[['y']]
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df[["x"]]
+        Y = df[["y"]]
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        om.datasets.get("datax")
+        om.datasets.get("datay")
         # create a model locally, fit it, store in Omega
         lr = LinearRegression()
         lr.fit(X, Y)
         pred = lr.predict(X)
-        om.models.put(lr, 'mymodel')
-        self.assertIn('mymodel', om.models.list('*'))
+        om.models.put(lr, "mymodel")
+        self.assertIn("mymodel", om.models.list("*"))
         # have Omega predict it
         # -- using data already in Omega
-        result = om.runtime.model('mymodel').predict('datax')
+        result = om.runtime.model("mymodel").predict("datax")
         pred1 = result.get()
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtimes.model('mymodel').predict('foo')
-        result = om.runtime.model('mymodel').predict(X)
+        result = om.runtime.model("mymodel").predict(X)
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']]
-        Y = df[['y']]
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df[["x"]]
+        Y = df[["y"]]
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        om.datasets.get("datax")
+        om.datasets.get("datay")
         # create a model locally, store (unfitted) in Omega
         lr = LinearRegression()
-        om.models.put(lr, 'mymodel2')
-        self.assertIn('mymodel2', om.models.list('*'))
+        om.models.put(lr, "mymodel2")
+        self.assertIn("mymodel2", om.models.list("*"))
         # predict locally for comparison
         lr.fit(X, Y)
         pred = lr.predict(X)
         # try predicting without fitting
         with self.assertRaises(NotFittedError):
-            result = om.runtime.model('mymodel2').predict('datax')
+            result = om.runtime.model("mymodel2").predict("datax")
             result.get()
         # have Omega fit the model then predict
-        result = om.runtime.model('mymodel2').fit('datax', 'datay')
+        result = om.runtime.model("mymodel2").fit("datax", "datay")
         result.get()
         # check the new model version metadata includes the datax/y references
-        meta = om.models.metadata('mymodel2')
-        self.assertIn('Xmeta', meta.attributes['dataset'])
-        self.assertIn('Ymeta', meta.attributes['dataset'])
+        meta = om.models.metadata("mymodel2")
+        self.assertIn("Xmeta", meta.attributes["dataset"])
+        self.assertIn("Ymeta", meta.attributes["dataset"])
         # -- using data already in Omega
-        result = om.runtime.model('mymodel2').predict('datax')
+        result = om.runtime.model("mymodel2").predict("datax")
         pred1 = result.get()
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtimes.model('mymodel2').predict('foo')
-        result = om.runtime.model('mymodel2').fit(X, Y)
-        result = om.runtime.model('mymodel2').predict(X)
+        result = om.runtime.model("mymodel2").fit(X, Y)
+        result = om.runtime.model("mymodel2").predict(X)
         pred2 = result.get()
         # -- check the local data provided to fit was stored as intended
-        meta = om.models.metadata('mymodel2')
-        self.assertIn('Xmeta', meta.attributes['dataset'])
-        self.assertIn('Ymeta', meta.attributes['dataset'])
-        self.assertIn('_fitX', meta.attributes['dataset'].get('Xmeta').get('name'))
-        self.assertIn('_fitY', meta.attributes['dataset'].get('Ymeta').get('name'))
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        meta = om.models.metadata("mymodel2")
+        self.assertIn("Xmeta", meta.attributes["dataset"])
+        self.assertIn("Ymeta", meta.attributes["dataset"])
+        self.assertIn("_fitX", meta.attributes["dataset"].get("Xmeta").get("name"))
+        self.assertIn("_fitY", meta.attributes["dataset"].get("Ymeta").get("name"))
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_partial_fit(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']][0:2]
-        Y = df[['y']][0:2]
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df[["x"]][0:2]
+        Y = df[["y"]][0:2]
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(df[['x']], 'datax-full')
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        om.datasets.put(df[["x"]], "datax-full")
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        om.datasets.get("datax")
+        om.datasets.get("datay")
         # create a model locally, store (unfitted) in Omega
         # -- ignore warnings on y shape
         import warnings
+
         warnings.filterwarnings("ignore", category=DataConversionWarning)
         lr = SGDRegressor(max_iter=1000, tol=1e-3)
-        om.models.put(lr, 'mymodel2')
+        om.models.put(lr, "mymodel2")
         # have Omega fit the model to get a start, then predict
-        result = om.runtime.model('mymodel2').fit('datax', 'datay')
+        result = om.runtime.model("mymodel2").fit("datax", "datay")
         result.get()
         # check the new model version metadata includes the datax/y references
-        result = om.runtime.model('mymodel2').predict('datax-full')
+        result = om.runtime.model("mymodel2").predict("datax-full")
         pred1 = result.get()
         mse = mean_squared_error(df.y, pred1)
         self.assertGreater(mse, 40)
@@ -160,16 +153,17 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         batch_size = 2
         for i, start in enumerate(range(0, len(df))):
             previous_mse = mse
-            X = df[['x']][start:start + batch_size]
-            Y = df[['y']][start:start + batch_size]
-            om.datasets.put(X, 'datax-update', append=False)
-            om.datasets.put(Y, 'datay-update', append=False)
-            result = om.runtime.model('mymodel2').partial_fit(
-                'datax-update', 'datay-update')
+            X = df[["x"]][start : start + batch_size]
+            Y = df[["y"]][start : start + batch_size]
+            om.datasets.put(X, "datax-update", append=False)
+            om.datasets.put(Y, "datay-update", append=False)
+            result = om.runtime.model("mymodel2").partial_fit(
+                "datax-update", "datay-update"
+            )
             result.get()
             # check the new model version metadata includes the datax/y
             # references
-            result = om.runtime.model('mymodel2').predict('datax-full')
+            result = om.runtime.model("mymodel2").predict("datax-full")
             pred1 = result.get()
             mse = mean_squared_error(df.y, pred1)
             self.assertLess(mse, previous_mse)
@@ -178,247 +172,239 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create some data
         x = np.array(list(range(0, 100)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame({"x": x, "y": y})
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
         # generate a large dataset
         for i in range(100):
-            om.datasets.put(df, 'data', append=(i > 0))
+            om.datasets.put(df, "data", append=(i > 0))
         # create a model locally, store (unfitted) in Omega
         # -- ignore warnings on y shape
         import warnings
+
         warnings.filterwarnings("ignore", category=DataConversionWarning)
         lr = SGDRegressor(max_iter=1000, tol=1e-3, random_state=42)
-        om.models.put(lr, 'mymodel2')
+        om.models.put(lr, "mymodel2")
         # have Omega fit the model to get a start, then predict
-        result = om.runtime.model('mymodel2').fit(df[['x']], df[['y']])
+        result = om.runtime.model("mymodel2").fit(df[["x"]], df[["y"]])
         result.get()
         # check the new model version metadata includes the datax/y references
-        result = om.runtime.model('mymodel2').predict('data[x]')
+        result = om.runtime.model("mymodel2").predict("data[x]")
         pred1 = result.get()
-        mse = mean_squared_error(om.datasets.get('data[y]'), pred1)
+        mse = mean_squared_error(om.datasets.get("data[y]"), pred1)
         self.assertGreater(mse, 40)
         # fit mini batches add better training data, update model
-        result = om.runtime.model('mymodel2').partial_fit('data[x]#', 'data[y]#')
-        result = om.runtime.model('mymodel2').predict('data[x]')
+        result = om.runtime.model("mymodel2").partial_fit("data[x]#", "data[y]#")
+        result = om.runtime.model("mymodel2").predict("data[x]")
         pred1 = result.get()
-        mse_2 = mean_squared_error(om.datasets.get('data[y]'), pred1)
+        mse_2 = mean_squared_error(om.datasets.get("data[y]"), pred1)
         self.assertLess(mse_2, mse)
 
     def test_predict_pure_python(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y}).astype('O')
+        df = pd.DataFrame({"x": x, "y": y}).astype("O")
         X = [[x] for x in list(df.x)]
         Y = [[y] for y in list(df.y)]
         # put into Omega -- assume a client with pandas, scikit learn
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.pure_python = True
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        Xhat = om.datasets.get('datax')
-        Yhat = om.datasets.get('datay')
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        Xhat = om.datasets.get("datax")
+        Yhat = om.datasets.get("datay")
         self.assertEqual(X, Xhat)
         self.assertEqual(Y, Yhat)
         # have Omega fit the model then predict
         lr = LinearRegression()
         lr.fit(X, Y)
         pred = lr.predict(X)
-        om.models.put(lr, 'mymodel2')
+        om.models.put(lr, "mymodel2")
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtimes.model('mymodel2').predict('foo')
-        result = om.runtime.model('mymodel2').predict(reshaped(X))
+        result = om.runtime.model("mymodel2").predict(reshaped(X))
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_predict_hdf_dataframe(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df['x']
-        Y = df['y']
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df["x"]
+        Y = df["y"]
         # put into Omega -- assume a client with pandas, scikit learn
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.pure_python = True
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax', as_hdf=True)
-        om.datasets.put(Y, 'datay', as_hdf=True)
+        om.datasets.put(X, "datax", as_hdf=True)
+        om.datasets.put(Y, "datay", as_hdf=True)
         # have Omega fit the model then predict
         lr = LinearRegression()
         lr.fit(reshaped(X), reshaped(Y))
         pred = lr.predict(reshaped(X))
-        om.models.put(lr, 'mymodel2')
+        om.models.put(lr, "mymodel2")
         # -- using data provided locally
         #    note this is the same as
         #        om.datasets.put(X, 'foo')
         #        om.runtimes.model('mymodel2').predict('foo')
-        result = om.runtime.model('mymodel2').predict('datax')
+        result = om.runtime.model("mymodel2").predict("datax")
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit_pipeline(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']]
-        Y = df[['y']]
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df[["x"]]
+        Y = df[["y"]]
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        om.datasets.get("datax")
+        om.datasets.get("datay")
         # create a pipeline locally, store (unfitted) in Omega
-        p = Pipeline([
-            ('lr', LinearRegression()),
-        ])
-        om.models.put(p, 'mymodel2')
-        self.assertIn('mymodel2', om.models.list('*'))
+        p = Pipeline(
+            [
+                ("lr", LinearRegression()),
+            ]
+        )
+        om.models.put(p, "mymodel2")
+        self.assertIn("mymodel2", om.models.list("*"))
         # predict locally for comparison
         p.fit(reshaped(X), reshaped(Y))
         pred = p.predict(reshaped(X))
         # have Omega fit the model then predict
-        result = om.runtime.model('mymodel2').fit('datax', 'datay')
+        result = om.runtime.model("mymodel2").fit("datax", "datay")
         result.get()
-        result = om.runtime.model('mymodel2').predict('datax')
+        result = om.runtime.model("mymodel2").predict("datax")
         pred1 = result.get()
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
 
     def test_score(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
-        X = df[['x']]
-        Y = df[['y']]
+        df = pd.DataFrame({"x": x, "y": y})
+        X = df[["x"]]
+        Y = df[["y"]]
         # put into Omega
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.datasets.put(X, 'datax')
-        om.datasets.put(Y, 'datay')
-        om.datasets.get('datax')
-        om.datasets.get('datay')
+        om.datasets.put(X, "datax")
+        om.datasets.put(Y, "datay")
+        om.datasets.get("datax")
+        om.datasets.get("datay")
         # create a model locally, fit it, store in Omega
         lr = LinearRegression()
         lr.fit(X, Y)
         scores = lr.score(X, Y)
-        om.models.put(lr, 'mymodel')
+        om.models.put(lr, "mymodel")
         # fit in omegaml
-        r_scores = om.runtime.model('mymodel').score('datax', 'datay').get()
+        r_scores = om.runtime.model("mymodel").score("datax", "datay").get()
         self.assertEqual(scores, r_scores)
 
     def test_gridsearch(self):
         X, y = make_classification()
-        logreg = LogisticRegression(solver='liblinear')
-        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+        logreg = LogisticRegression(solver="liblinear")
+        os.environ["DJANGO_SETTINGS_MODULE"] = ""
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
-        om.models.put(logreg, 'logreg')
-        params = {
-            'C': [0.1, 0.5, 1.0]
-        }
+        om.models.put(logreg, "logreg")
+        params = {"C": [0.1, 0.5, 1.0]}
         # gridsearch on runtimes
-        om.runtime.model('logreg').gridsearch(X, y, parameters=params).get()
-        meta = om.models.metadata('logreg')
+        om.runtime.model("logreg").gridsearch(X, y, parameters=params).get()
+        meta = om.models.metadata("logreg")
         # check gridsearch was saved
-        self.assertIn('gridsearch', meta.attributes)
-        self.assertEqual(len(meta.attributes['gridsearch']), 1)
-        self.assertIn('gsModel', meta.attributes['gridsearch'][0])
+        self.assertIn("gridsearch", meta.attributes)
+        self.assertEqual(len(meta.attributes["gridsearch"]), 1)
+        self.assertIn("gsModel", meta.attributes["gridsearch"][0])
         # check we can get back the gridsearch model
-        gs_model = om.models.get(meta.attributes['gridsearch'][0]['gsModel'])
+        gs_model = om.models.get(meta.attributes["gridsearch"][0]["gsModel"])
         self.assertIsInstance(gs_model, GridSearchCV)
 
     def test_gridsearch_iris(self):
         om = Omega()
         from sklearn.datasets import load_iris
+
         X, y = load_iris(return_X_y=True)
         df = pd.DataFrame(X)
-        df['y'] = y
-        om.datasets.put(df, 'iris', append=False)
+        df["y"] = y
+        om.datasets.put(df, "iris", append=False)
         from sklearn.cluster import KMeans
-        model = KMeans(n_clusters=8, n_init='auto')
+
+        model = KMeans(n_clusters=8, n_init="auto")
         # fit & predict remote
-        om.models.drop('iris-model', True)
-        om.models.put(model, 'iris-model')
-        om.runtime.model('iris-model').fit(X, y).get()
+        om.models.drop("iris-model", True)
+        om.models.put(model, "iris-model")
+        om.runtime.model("iris-model").fit(X, y).get()
         params = {
-            'n_clusters': range(1, 8),
+            "n_clusters": range(1, 8),
         }
-        om.runtime.model('iris-model').gridsearch('iris[^y]', 'iris[y]', parameters=params).get()
+        om.runtime.model("iris-model").gridsearch(
+            "iris[^y]", "iris[y]", parameters=params
+        ).get()
 
     def test_ping(self):
         om = Omega()
-        result = om.runtime.ping(fox='bar')
-        self.assertIn('message', result)
-        self.assertIn('worker', result)
-        self.assertEqual(result['kwargs'], dict(fox='bar'))
+        result = om.runtime.ping(fox="bar")
+        self.assertIn("message", result)
+        self.assertIn("worker", result)
+        self.assertEqual(result["kwargs"], dict(fox="bar"))
 
     def test_task_sequence(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        om.datasets.put(df, 'sample')
-        om.models.put(lr, 'regmodel')
+        om.datasets.put(df, "sample")
+        om.models.put(lr, "regmodel")
         with om.runtime.sequence() as ctr:
             ctr.ping(wait=False)
-            ctr.model('regmodel').fit('sample[x]', 'sample[y]')
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").fit("sample[x]", "sample[y]")
+            ctr.model("regmodel").predict("sample[x]")
             result = ctr.run()
 
         data = result.get()
-        assert_array_almost_equal(df['y'].values, data[:, 0])
+        assert_array_almost_equal(df["y"].values, data[:, 0])
 
     def test_task_parallel(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        om.datasets.put(df, 'sample')
-        om.models.put(lr, 'regmodel')
-        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+        om.datasets.put(df, "sample")
+        om.models.put(lr, "regmodel")
+        om.runtime.model("regmodel").fit("sample[x]", "sample[y]").get()
         with om.runtime.parallel() as ctr:
-            ctr.model('regmodel').predict('sample[x]')
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").predict("sample[x]")
+            ctr.model("regmodel").predict("sample[x]")
             result = ctr.run()
 
         data = result.get()
-        assert_array_almost_equal(df['y'].values, data[0][:, 0])
-        assert_array_almost_equal(df['y'].values, data[1][:, 0])
+        assert_array_almost_equal(df["y"].values, data[0][:, 0])
+        assert_array_almost_equal(df["y"].values, data[1][:, 0])
 
     def test_task_mapreduce_virtualfn(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        om.datasets.put(df, 'sample')
-        om.models.put(lr, 'regmodel')
-        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+        om.datasets.put(df, "sample")
+        om.models.put(lr, "regmodel")
+        om.runtime.model("regmodel").fit("sample[x]", "sample[y]").get()
 
         @virtualobj
         def combined(data=None, method=None, meta=None, store=None, **kwargs):
@@ -426,18 +412,18 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             # we scale results to verify combined actually runs
             return [y * 5 for y in data]
 
-        om.models.put(combined, 'combined')
+        om.models.put(combined, "combined")
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
-            ctr.model('regmodel').predict('sample[x]')
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").predict("sample[x]")
+            ctr.model("regmodel").predict("sample[x]")
             # one task to reduce
-            ctr.model('combined').reduce()
+            ctr.model("combined").reduce()
             result = ctr.run()
 
         data = result.get()
-        assert_array_almost_equal(df['y'].values * 5, data[0][:, 0])
-        assert_array_almost_equal(df['y'].values * 5, data[1][:, 0])
+        assert_array_almost_equal(df["y"].values * 5, data[0][:, 0])
+        assert_array_almost_equal(df["y"].values * 5, data[1][:, 0])
 
         @virtualobj
         def combined(data=None, method=None, meta=None, store=None, **kwargs):
@@ -445,222 +431,223 @@ class RuntimeTests(OmegaTestMixin, TestCase):
             # we return only one result, simulating selection
             return data[0][:, 0]
 
-        om.models.put(combined, 'combined', replace=True)
+        om.models.put(combined, "combined", replace=True)
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
-            ctr.model('regmodel').predict('sample[x]')
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").predict("sample[x]")
+            ctr.model("regmodel").predict("sample[x]")
             # one task to reduce
-            ctr.model('combined').reduce()
+            ctr.model("combined").reduce()
             result = ctr.run()
 
         data = result.get()
-        assert_array_almost_equal(df['y'].values, data)
+        assert_array_almost_equal(df["y"].values, data)
 
     def test_task_mapreduce_script(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        om.datasets.put(df, 'sample')
-        om.models.put(lr, 'regmodel')
-        om.runtime.model('regmodel').fit('sample[x]', 'sample[y]').get()
+        om.datasets.put(df, "sample")
+        om.models.put(lr, "regmodel")
+        om.runtime.model("regmodel").fit("sample[x]", "sample[y]").get()
 
         om = Omega()
-        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
-        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
-        om.scripts.put(pkgsrc, 'callback')
+        basepath = os.path.join(
+            os.path.dirname(sys.modules["omegaml"].__file__), "example"
+        )
+        pkgpath = os.path.abspath(os.path.join(basepath, "demo", "callback"))
+        pkgsrc = "pkg://{}".format(pkgpath)
+        om.scripts.put(pkgsrc, "callback")
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
-            ctr.model('regmodel').predict('sample[x]')
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").predict("sample[x]")
+            ctr.model("regmodel").predict("sample[x]")
             # one task to reduce
-            ctr.script('callback').run(as_callback=True)
+            ctr.script("callback").run(as_callback=True)
             result = ctr.run()
 
         result.get()
-        self.assertEqual(len(om.datasets.get('callback_results')), 18)
+        self.assertEqual(len(om.datasets.get("callback_results")), 18)
 
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
-            ctr.model('regmodel').predict('sample[x]')
+            ctr.model("regmodel").predict("sample[x]")
             # one task to reduce
-            ctr.script('callback').run(as_callback=True)
+            ctr.script("callback").run(as_callback=True)
             result = ctr.run()
 
         result.get()
-        self.assertEqual(len(om.datasets.get('callback_results')), 27)
+        self.assertEqual(len(om.datasets.get("callback_results")), 27)
 
     def test_task_callback(self):
         om = Omega()
-        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
-        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
-        om.scripts.put(pkgsrc, 'callback')
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        basepath = os.path.join(
+            os.path.dirname(sys.modules["omegaml"].__file__), "example"
+        )
+        pkgpath = os.path.abspath(os.path.join(basepath, "demo", "callback"))
+        pkgsrc = "pkg://{}".format(pkgpath)
+        om.scripts.put(pkgsrc, "callback")
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        lr.fit(df[['x']], df['y'])
-        om.datasets.put(df, 'sample')
-        om.models.put(lr, 'regmodel')
-        result = (om.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 1)
-        result = (om.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
-        self.assertEqual(len(om.datasets.get('callback_results')), 2)
+        lr.fit(df[["x"]], df["y"])
+        om.datasets.put(df, "sample")
+        om.models.put(lr, "regmodel")
+        result = (
+            om.runtime.callback("callback").model("regmodel").predict("sample[x]").get()
+        )
+        self.assertEqual(len(om.datasets.get("callback_results")), 1)
+        result = (
+            om.runtime.callback("callback").model("regmodel").predict("sample[x]").get()
+        )
+        self.assertEqual(len(om.datasets.get("callback_results")), 2)
 
     def test_task_callback_bucket(self):
         om = Omega()
-        omb = om['test']
-        basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
-        pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
-        omb.scripts.put(pkgsrc, 'callback')
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        omb = om["test"]
+        basepath = os.path.join(
+            os.path.dirname(sys.modules["omegaml"].__file__), "example"
+        )
+        pkgpath = os.path.abspath(os.path.join(basepath, "demo", "callback"))
+        pkgsrc = "pkg://{}".format(pkgpath)
+        omb.scripts.put(pkgsrc, "callback")
+        df = pd.DataFrame({"x": range(1, 10), "y": range(5, 14)})
         lr = LinearRegression()
-        lr.fit(df[['x']], df['y'])
-        omb.datasets.put(df, 'sample')
-        omb.models.put(lr, 'regmodel')
-        result = (omb.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 1)
-        result = (omb.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
-        self.assertEqual(len(omb.datasets.get('callback_results')), 2)
+        lr.fit(df[["x"]], df["y"])
+        omb.datasets.put(df, "sample")
+        omb.models.put(lr, "regmodel")
+        result = (
+            omb.runtime.callback("callback")
+            .model("regmodel")
+            .predict("sample[x]")
+            .get()
+        )
+        self.assertEqual(len(omb.datasets.get("callback_results")), 1)
+        result = (
+            omb.runtime.callback("callback")
+            .model("regmodel")
+            .predict("sample[x]")
+            .get()
+        )
+        self.assertEqual(len(omb.datasets.get("callback_results")), 2)
 
     def test_task_logging(self):
-        """ test task python output can be logged per-request """
+        """test task python output can be logged per-request"""
         om = Omega()
         om.logger.reset()
         # no python logging, only om.logger
-        om.runtime.ping(fox='bar', logging=False)
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 0)
+        om.runtime.ping(fox="bar", logging=False)
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 0)
         # python log capture, we get om.logger, omegaml + stdout log
         om.logger.reset()
-        om.runtime.mode(logging=True).ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 4)
+        om.runtime.mode(logging=True).ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 4)
         # specific python logger, we get om.logger + celery
         om.logger.reset()
-        om.runtime.mode(logging='celery').ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 3)
+        om.runtime.mode(logging="celery").ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 3)
         # request a different level, we get celery + stdout
         om.logger.reset()
-        om.runtime.mode(logging=('celery', 'DEBUG')).ping(fox='bar')
+        om.runtime.mode(logging=("celery", "DEBUG")).ping(fox="bar")
         self.assertEqual(len(om.logger.dataset.get()), 4)
 
     def test_task_logging_bucket(self):
-        """ test task python output can be logged per-request """
-        om = Omega()['test']
+        """test task python output can be logged per-request"""
+        om = Omega()["test"]
         om.logger.reset()
         # no python logging, only om.logger
-        om.runtime.ping(fox='bar', logging=False)
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 0)
+        om.runtime.ping(fox="bar", logging=False)
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 0)
         # python log capture, we get om.logger, omegaml + stdout log
         om.logger.reset()
-        om.runtime.mode(logging=True).ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 4)
+        om.runtime.mode(logging=True).ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 4)
         # specific python logger, we get om.logger, celery + stdout log
         om.logger.reset()
-        om.runtime.mode(logging='celery').ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 3)
+        om.runtime.mode(logging="celery").ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 3)
         # request a different level, we get celery + stdout
         om.logger.reset()
-        om.runtime.mode(logging=('celery', 'DEBUG')).ping(fox='bar')
+        om.runtime.mode(logging=("celery", "DEBUG")).ping(fox="bar")
         self.assertEqual(len(om.logger.dataset.get()), 4)
 
     def test_logging_mode(self):
-        """ test task python output can be logged for all requests """
+        """test task python output can be logged for all requests"""
         om = Omega()
         om.logger.reset()
         # -- request logging
         om.runtime.mode(local=True, logging=True)
-        om.runtime.ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 4)
+        om.runtime.ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 4)
         # -- switch off logging
         om.logger.reset()
         om.runtime.mode(local=True, logging=False)
-        om.runtime.ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='INFO')), 0)
+        om.runtime.ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="INFO")), 0)
         # -- request specific logger
         om.logger.reset()
-        om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
-        om.runtime.ping(fox='bar')
-        self.assertEqual(len(om.logger.dataset.get(level='DEBUG')), 3)
+        om.runtime.mode(local=True, logging=("celery", "DEBUG"))
+        om.runtime.ping(fox="bar")
+        self.assertEqual(len(om.logger.dataset.get(level="DEBUG")), 3)
         # -- request logging exceptions
         om.logger.reset()
         # case 1: error logging, no traceback
-        om.runtime.mode(local=True, logging=('celery', 'INFO'))
+        om.runtime.mode(local=True, logging=("celery", "INFO"))
         with self.assertRaises(RuntimeError):
-            om.runtime.ping(fox='bar', exception=True)
-        messages = om.logger.dataset.get(level='ERROR')
+            om.runtime.ping(fox="bar", exception=True)
+        messages = om.logger.dataset.get(level="ERROR")
         self.assertEqual(len(messages), 1)
-        self.assertNotIn('Traceback', messages.iloc[-1].msg)
+        self.assertNotIn("Traceback", messages.iloc[-1].msg)
         # case 2: debug logging, traceback is included
         om.logger.reset()
-        om.runtime.mode(local=True, logging=('celery', 'DEBUG'))
+        om.runtime.mode(local=True, logging=("celery", "DEBUG"))
         with self.assertRaises(RuntimeError):
-            om.runtime.ping(fox='bar', exception=True)
-        messages = om.logger.dataset.get(level='ERROR')
+            om.runtime.ping(fox="bar", exception=True)
+        messages = om.logger.dataset.get(level="ERROR")
         self.assertEqual(len(messages), 1)
-        self.assertIn('Traceback', messages.iloc[-1].msg)
+        self.assertIn("Traceback", messages.iloc[-1].msg)
 
     def test_list_labels(self):
         om = Omega()
         labels = om.runtime.mode(local=True).labels()
         self.assertIsInstance(labels, dict)
-        self.assertEqual(['local'], list(labels.values())[0])
+        self.assertEqual(["local"], list(labels.values())[0])
 
     def test_job_runtime_context(self):
         om = Omega()
         code = """import os; print(os.environ.get('OMEGA_AUTH_ENV'))"""
-        env_pass = '***CUSTOM_AUTH_ENV***'
+        env_pass = "***CUSTOM_AUTH_ENV***"
         # check no auth env is passed without setting one
-        om.jobs.create(code, 'myjob')
-        om.runtime.job('myjob').run().get()
-        results = om.jobs.get(om.jobs.list('results/*')[-1])
-        self.assertNotIn(env_pass, str(results['cells']))
+        om.jobs.create(code, "myjob")
+        om.runtime.job("myjob").run().get()
+        results = om.jobs.get(om.jobs.list("results/*")[-1])
+        self.assertNotIn(env_pass, str(results["cells"]))
         # check that runtime uses auth env to prepare notebook env
-        with patch.dict(om.defaults, {'OMEGA_AUTH_ENV': env_pass}) as m:
-            om.jobs.create(code, 'myjob')
-            om.runtime.job('myjob').run().get()
-            results = om.jobs.get(om.jobs.list('results/*')[-1])
-            self.assertIn(env_pass, str(results['cells']))
+        with patch.dict(om.defaults, {"OMEGA_AUTH_ENV": env_pass}) as m:
+            om.jobs.create(code, "myjob")
+            om.runtime.job("myjob").run().get()
+            results = om.jobs.get(om.jobs.list("results/*")[-1])
+            self.assertIn(env_pass, str(results["cells"]))
         # check auth env clears notebook env on exit
-        om.jobs.create(code, 'myjob')
-        om.runtime.job('myjob').run().get()
-        results = om.jobs.get(om.jobs.list('results/*')[-1])
-        self.assertNotIn(env_pass, str(results['cells']))
+        om.jobs.create(code, "myjob")
+        om.runtime.job("myjob").run().get()
+        results = om.jobs.get(om.jobs.list("results/*")[-1])
+        self.assertNotIn(env_pass, str(results["cells"]))
 
     def test_parallel_getall(self):
         om = Omega()
         code = """print('hello')"""
-        om.jobs.create(code, 'myjob')
+        om.jobs.create(code, "myjob")
         # --parallel
         with om.runtime.parallel() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job(f"myjob").run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
         # --sequence
         with om.runtime.sequence() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job(f"myjob").run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
@@ -669,11 +656,11 @@ class RuntimeTests(OmegaTestMixin, TestCase):
     def test_mapreduce_getall(self):
         om = Omega()
         code = """print('hello')"""
-        om.jobs.create(code, 'myjob')
+        om.jobs.create(code, "myjob")
         # --mapreduce
         with om.runtime.mapreduce() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job(f"myjob").run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
@@ -681,81 +668,85 @@ class RuntimeTests(OmegaTestMixin, TestCase):
     def test_predict_multiple_samples(self):
         om = Omega()
         reg = LinearRegression()
-        df = pd.DataFrame({'x': range(10)})
-        df['y'] = df['x'] * 2 + 3
-        reg.fit(df[['x']], df['y'])
-        om.models.put(reg, 'regmodel')
-        result = om.runtime.model('regmodel').predict([[5], [6]]).get()
+        df = pd.DataFrame({"x": range(10)})
+        df["y"] = df["x"] * 2 + 3
+        reg.fit(df[["x"]], df["y"])
+        om.models.put(reg, "regmodel")
+        result = om.runtime.model("regmodel").predict([[5], [6]]).get()
 
     def test_require(self):
         om = Omega()
         # -- test ephemeral require (resets on next task)
-        om.runtime.require(label='foo')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertNotIn('label', task.kwargs['routing'])
+        om.runtime.require(label="foo")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertNotIn("label", task.kwargs["routing"])
         # -- test permanent require (runtime keeps label for every task)
-        om.runtime.require(label='foo', always=True)
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        om.runtime.require(label="foo", always=True)
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
 
     def test_require_via_metadata(self):
         om = Omega()
         reg = LinearRegression()
-        om.models.put(reg, 'regmodel')
+        om.models.put(reg, "regmodel")
         # -- specify a permanent task requirement for this mdoel
-        meta = om.runtime.model('regmodel').require(label='foo', always=True)
+        meta = om.runtime.model("regmodel").require(label="foo", always=True)
         self.assertIsInstance(meta, om.models._Metadata)
-        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        task = om.runtime.model("regmodel").task("omegaml.tasks.omega_fit")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
         # -- test the permanent requirement is kept even if runtime is reset
         om = Omega()
-        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        task = om.runtime.model("regmodel").task("omegaml.tasks.omega_fit")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
         # -- test runtime requirement takes precedence
-        om.runtime.require('baz')
-        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
-        self.assertEqual(task.kwargs['routing']['label'], 'baz')
+        om.runtime.require("baz")
+        task = om.runtime.model("regmodel").task("omegaml.tasks.omega_fit")
+        self.assertEqual(task.kwargs["routing"]["label"], "baz")
         # -- test we can reset a previous local require
         om.runtime.require()
-        task = om.runtime.model('regmodel').task('omegaml.tasks.omega_fit')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
+        task = om.runtime.model("regmodel").task("omegaml.tasks.omega_fit")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
 
     def test_require_apply_routing_label(self):
         om = Omega()
         # using require(label=...)
-        om.runtime.require(label='foo')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        om.runtime.require(label='bar')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'bar')
+        om.runtime.require(label="foo")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        om.runtime.require(label="bar")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "bar")
         # using require(routing=dict(label='foo')
-        om.runtime.require(routing=dict(label='foo'))
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        om.runtime.require(routing=dict(label='bar', ))
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'bar')
+        om.runtime.require(routing=dict(label="foo"))
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        om.runtime.require(
+            routing=dict(
+                label="bar",
+            )
+        )
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "bar")
 
     def test_require_apply_routing_update(self):
         # test that routing options are updated, not replaced
         # -- related #416
         om = Omega()
         #  set routing options as permanent
-        om.runtime.require(label='foo', routing=dict(timeout=5), always=True)
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        self.assertEqual(task.kwargs['routing']['timeout'], 5)
+        om.runtime.require(label="foo", routing=dict(timeout=5), always=True)
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        self.assertEqual(task.kwargs["routing"]["timeout"], 5)
         # update routing options temporarily
-        om.runtime.require(label='bar')
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'bar')
-        self.assertEqual(task.kwargs['routing']['timeout'], 5)
+        om.runtime.require(label="bar")
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "bar")
+        self.assertEqual(task.kwargs["routing"]["timeout"], 5)
         # check that permanent routing options are kept
-        task = om.runtime.task('omegaml.tasks.omega_ping')
-        self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        self.assertEqual(task.kwargs['routing']['timeout'], 5)
+        task = om.runtime.task("omegaml.tasks.omega_ping")
+        self.assertEqual(task.kwargs["routing"]["label"], "foo")
+        self.assertEqual(task.kwargs["routing"]["timeout"], 5)

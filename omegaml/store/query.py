@@ -6,7 +6,6 @@ from omegaml.util import restore_index
 
 
 class MongoQ(object):
-
     """
     Query object to filter mongodb collections
 
@@ -44,9 +43,10 @@ class MongoQ(object):
     2. return the dataframe
 
     """
+
     def __init__(self, _trusted=False, **kwargs):
         self.conditions = self._sanitize_filter(kwargs, trusted=_trusted)
-        self.qlist = [('', self)]
+        self.qlist = [("", self)]
         # should we return ~(conditions)
         self._inv = False
         # is sorting implied by some operator
@@ -55,8 +55,8 @@ class MongoQ(object):
     def __repr__(self):
         r = []
         for op, q in self.qlist:
-            r.append('%s %s' % (op, q.conditions))
-        return 'Q %s' % ('\n'.join(r))
+            r.append("%s %s" % (op, q.conditions))
+        return "Q %s" % ("\n".join(r))
 
     def value(self, collection):
         """
@@ -89,7 +89,7 @@ class MongoQ(object):
         :return: the result of collection.find()
         """
         operators = flatten_keys(query)
-        if '$near' in operators:
+        if "$near" in operators:
             self.sorted = True
         return collection.find(query)
 
@@ -107,14 +107,14 @@ class MongoQ(object):
         for i, (op, q) in enumerate(self.qlist):
             if i == 0:
                 query = q.build_conditions()
-            elif op == '&':
+            elif op == "&":
                 fn = q.build_conditions if q == self else q.build_filters
                 if i == 1:
                     query = {"$and": [dict(query)]}
                 else:
                     query.setdefault("$and", [])
                 query["$and"].append(fn())
-            elif op == '|':
+            elif op == "|":
                 fn = q.build_conditions if q == self else q.build_filters
                 if i == 1:
                     query = {"$or": [dict(query)]}
@@ -137,6 +137,7 @@ class MongoQ(object):
         """
         query = {}
         qops = MongoQueryOps()
+
         def addq(k, v):
             if k not in query:
                 query[k] = v
@@ -148,59 +149,59 @@ class MongoQ(object):
                         subq.extend(vv)
                     else:
                         subq.append({k: vv})
+
         for k, v in self.conditions.items():
             # transform query operators as '<foo>__<op>',
             # however preserve dunder '__<foo>' names ss columns
-            if '__' in k and not k.startswith('__'):
-                parts = k.split('__')
-                k = '.'.join(parts[0:-1])
+            if "__" in k and not k.startswith("__"):
+                parts = k.split("__")
+                k = ".".join(parts[0:-1])
                 op = parts[-1]
             else:
-                op = 'eq'
+                op = "eq"
             # standard logical operators
-            if op == 'eq':
+            if op == "eq":
                 addq(k, v)
             elif op.upper() in qops.UNARY:
                 addq(k, getattr(qops, op)(v))
             # type queries
-            elif op == 'between':
-                addq("$and", [{k: qops.GTE(v[0])},
-                              {k: qops.LTE(v[1])}])
-            elif op == 'isstring':
-                addq(k, qops.EQ(qops.TYPE('string')))
-            elif op == 'isarray':
-                addq(k, qops.EQ(qops.TYPE('array')))
-            elif op == 'isdouble':
-                addq(k, qops.TYPE('double'))
-            elif op == 'isobject':
-                addq(k, qops.TYPE('object'))
-            elif op == 'isobject':
-                addq(k, qops.TYPE('object'))
-            elif op == 'isdate':
-                addq(k, qops.TYPE('date'))
-            elif op == 'isbool':
-                addq(k, qops.TYPE('bool'))
-            elif op == 'isnull':
+            elif op == "between":
+                addq("$and", [{k: qops.GTE(v[0])}, {k: qops.LTE(v[1])}])
+            elif op == "isstring":
+                addq(k, qops.EQ(qops.TYPE("string")))
+            elif op == "isarray":
+                addq(k, qops.EQ(qops.TYPE("array")))
+            elif op == "isdouble":
+                addq(k, qops.TYPE("double"))
+            elif op == "isobject":
+                addq(k, qops.TYPE("object"))
+            elif op == "isobject":
+                addq(k, qops.TYPE("object"))
+            elif op == "isdate":
+                addq(k, qops.TYPE("date"))
+            elif op == "isbool":
+                addq(k, qops.TYPE("bool"))
+            elif op == "isnull":
                 # http://stackoverflow.com/a/944733
-                nan = float('nan')
+                nan = float("nan")
                 addq(k, qops.EQ(nan) if v else qops.NE(nan))
-            elif op in ['islong', 'isint']:
-                addq(k, qops.TYPE('long'))
-            elif op == 'regex':
+            elif op in ["islong", "isint"]:
+                addq(k, qops.TYPE("long"))
+            elif op == "regex":
                 addq(k, qops.REGEX(v))
-            elif op == 'contains':
-                addq(k, qops.REGEX('.*%s.*' % v))
-            elif op == 'startswith':
-                addq(k, qops.REGEX('^%s.*' % v))
-            elif op == 'endswith':
-                addq(k, qops.REGEX('.*%s$' % v))
-            elif op == 'near':
+            elif op == "contains":
+                addq(k, qops.REGEX(".*%s.*" % v))
+            elif op == "startswith":
+                addq(k, qops.REGEX("^%s.*" % v))
+            elif op == "endswith":
+                addq(k, qops.REGEX(".*%s$" % v))
+            elif op == "near":
                 addq(k, qops.NEAR(v))
             else:
                 # op from parts[-1] was not an opperator, so assume it is
                 # an attribute name and apply the eq operator
                 # e.g. Q(key__subkey=value)
-                addq('%s.%s' % (k, op), v)
+                addq("%s.%s" % (k, op), v)
         return query
 
     def negate(self):
@@ -215,7 +216,7 @@ class MongoQ(object):
         combine with another MongoQ object using AND
         """
         q = copy.deepcopy(self)
-        q.qlist.append(('&', other))
+        q.qlist.append(("&", other))
         return q
 
     def __or__(self, other):
@@ -223,7 +224,7 @@ class MongoQ(object):
         combine with another MongoQ object using OR
         """
         q = copy.deepcopy(self)
-        q.qlist.append(('|', other))
+        q.qlist.append(("|", other))
         return q
 
     def __invert__(self):
@@ -235,12 +236,11 @@ class MongoQ(object):
 
     def _sanitize_filter(self, filter, trusted=False):
         from omegaml.store.queryops import sanitize_filter
+
         return sanitize_filter(filter, trusted=trusted)
 
 
-
 class Filter(object):
-
     """
     Filter for OmegaStore objects
 
@@ -264,6 +264,7 @@ class Filter(object):
         filter.filter(month=1)
         filter.exclude(day=15)
     """
+
     _debug = False
 
     def __init__(self, coll, __query=None, _trusted=False, **kwargs):
@@ -342,7 +343,8 @@ class Filter(object):
             if self.trace:
                 raise
             raise SyntaxError(
-                'Error in Q object: column %s is unknown (KeyError on dataframe)' % e)
+                "Error in Q object: column %s is unknown (KeyError on dataframe)" % e
+            )
         return value
 
     def filter(self, query=None, **kwargs):
@@ -385,11 +387,11 @@ class Filter(object):
         result = self.q.apply_filter(self.coll)
         try:
             import pandas as pd
+
             result = pd.DataFrame.from_records(result)
-            if '_id' in result.columns:
-                del result['_id']
-            result = restore_index(result, dict(),
-                                   rowid_sort=not self.q.sorted)
+            if "_id" in result.columns:
+                del result["_id"]
+            result = restore_index(result, dict(), rowid_sort=not self.q.sorted)
         except ImportError:
             result = list(result)
         return result
@@ -405,5 +407,4 @@ class Filter(object):
         return self.value == self.value
 
     def __repr__(self):
-        return ' '.join(f'Filter({self.q})'.replace('\n', ' ').split())
-
+        return " ".join(f"Filter({self.q})".replace("\n", " ").split())

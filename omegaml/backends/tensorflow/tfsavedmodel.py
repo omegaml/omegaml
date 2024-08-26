@@ -18,7 +18,7 @@ class TensorflowSavedModelPredictor(object):
 
     def __init__(self, model_dir):
         self.model_dir = model_dir
-        if tf.__version__.startswith('1'):
+        if tf.__version__.startswith("1"):
             self.__init_tf_v1()
         else:
             self.__init__tf_v2()
@@ -36,6 +36,7 @@ class TensorflowSavedModelPredictor(object):
 
     def __init_tf_v1(self):
         from tensorflow.contrib import predictor
+
         self.predict_fn = predictor.from_saved_model(self.model_dir)
         self.input_names = list(self.predict_fn.feed_tensors.keys())
         self.output_names = list(self.predict_fn.fetch_tensors.keys())
@@ -44,17 +45,16 @@ class TensorflowSavedModelPredictor(object):
 
     def _convert_to_model_input_v1(self, X):
         # coerce input into expected feature mapping
-        model_input = {
-            self.input_names[0]: X
-        }
+        model_input = {self.input_names[0]: X}
         return model_input
 
     def _convert_to_model_input_v2(self, X):
         # coerce input into expected feature mapping
         from omegaml.backends.tensorflow import _tffn
-        return _tffn('convert_to_tensor')(X,
-                                          name=self.inputs[0].name,
-                                          dtype=self.inputs[0].dtype)
+
+        return _tffn("convert_to_tensor")(
+            X, name=self.inputs[0].name, dtype=self.inputs[0].dtype
+        )
 
     def _convert_to_model_output_v1(self, yhat):
         # coerce output into dict or array-like response
@@ -72,24 +72,37 @@ class TensorflowSavedModelPredictor(object):
 
 
 class TensorflowSavedModelBackend(BaseModelBackend):
-    KIND = 'tf.savedmodel'
-    _model_ext = 'tfsm'
+    KIND = "tf.savedmodel"
+    _model_ext = "tfsm"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         import tensorflow as tf
-        return isinstance(obj, (tf.estimator.Estimator, tf.compat.v1.estimator.Estimator))
 
-    def _package_model(self, model, key, tmpfn, serving_input_fn=None,
-                       strip_default_attrs=None, **kwargs):
-        export_dir_base = self._make_savedmodel(model, serving_input_receiver_fn=serving_input_fn,
-                                                strip_default_attrs=strip_default_attrs)
+        return isinstance(
+            obj, (tf.estimator.Estimator, tf.compat.v1.estimator.Estimator)
+        )
+
+    def _package_model(
+        self,
+        model,
+        key,
+        tmpfn,
+        serving_input_fn=None,
+        strip_default_attrs=None,
+        **kwargs,
+    ):
+        export_dir_base = self._make_savedmodel(
+            model,
+            serving_input_receiver_fn=serving_input_fn,
+            strip_default_attrs=strip_default_attrs,
+        )
         zipfname = self._package_savedmodel(export_dir_base, key)
         rmtree(export_dir_base)
         return zipfname
 
     def _extract_model(self, infile, key, tmpfn, **kwargs):
-        with open(tmpfn, 'wb') as pkgfn:
+        with open(tmpfn, "wb") as pkgfn:
             pkgfn.write(infile.read())
         model = self._extract_savedmodel(tmpfn)
         return model
@@ -102,11 +115,11 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         # see https://www.tensorflow.org/guide/saved_model#perform_the_export
         # we need this check because not all SavedModel exports create a timestamp
         # directory. e.g. keras.save_keras_model() does not, while Estimator.export_saved_model does
-        files = glob.glob(os.path.join(export_base_dir, '*'))
+        files = glob.glob(os.path.join(export_base_dir, "*"))
         if len(files) == 1:
             export_base_dir = files[0]
-        with ZipFile(zipfname, 'w', compression=ZIP_DEFLATED) as zipf:
-            for part in glob.glob(os.path.join(export_base_dir, '**'), recursive=True):
+        with ZipFile(zipfname, "w", compression=ZIP_DEFLATED) as zipf:
+            for part in glob.glob(os.path.join(export_base_dir, "**"), recursive=True):
                 zipf.write(part, os.path.relpath(part, export_base_dir))
         return zipfname
 
@@ -120,16 +133,19 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         rmtree(lpath)
         return model
 
-    def _make_savedmodel(self, obj, serving_input_receiver_fn=None, strip_default_attrs=None):
+    def _make_savedmodel(
+        self, obj, serving_input_receiver_fn=None, strip_default_attrs=None
+    ):
         # adapted from https://www.tensorflow.org/guide/saved_model#perform_the_export
         export_dir_base = tempfile.mkdtemp()
-        obj.export_savedmodel(export_dir_base,
-                              serving_input_receiver_fn=serving_input_receiver_fn,
-                              strip_default_attrs=strip_default_attrs)
+        obj.export_savedmodel(
+            export_dir_base,
+            serving_input_receiver_fn=serving_input_receiver_fn,
+            strip_default_attrs=strip_default_attrs,
+        )
         return export_dir_base
 
-    def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         Predict from a SavedModel
 
@@ -144,7 +160,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
 
         """
         model = self.get_model(modelname)
-        X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
+        X = self._resolve_input_data("predict", Xname, "X", **kwargs)
         result = model.predict(X)
 
         def ensure_serializable(data):
@@ -159,16 +175,29 @@ class TensorflowSavedModelBackend(BaseModelBackend):
             return data
 
         result = ensure_serializable(result)
-        return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
+        return self._prepare_result(
+            "predict", result, rName=rName, pure_python=pure_python, **kwargs
+        )
 
-    def fit(self, modelname, Xname, Yname=None, pure_python=True, tpu_specs=None, **kwargs):
-        raise ValueError('cannot fit a saved model')
+    def fit(
+        self, modelname, Xname, Yname=None, pure_python=True, tpu_specs=None, **kwargs
+    ):
+        raise ValueError("cannot fit a saved model")
 
 
 class ServingInput(object):
     # FIXME this is not working yet
-    def __init__(self, model=None, features=None, like=None, shape=None, dtype=None,
-                 batchsize=1, from_keras=False, v1_compat=False):
+    def __init__(
+        self,
+        model=None,
+        features=None,
+        like=None,
+        shape=None,
+        dtype=None,
+        batchsize=1,
+        from_keras=False,
+        v1_compat=False,
+    ):
         """
         Helper to create serving_input_fn
 
@@ -199,7 +228,7 @@ class ServingInput(object):
             from_keras:
         """
         self.model = model
-        self.features = features or ['X']
+        self.features = features or ["X"]
         self.like = like
         self.shape = shape
         self.dtype = dtype
@@ -211,7 +240,9 @@ class ServingInput(object):
         if isinstance(self.features, dict):
             input_fn = self.from_features()
         elif isinstance(self.like, np.ndarray):
-            shape = tuple((self.batchsize, *self.like.shape[1:]))  # assume (rows, *cols)
+            shape = tuple(
+                (self.batchsize, *self.like.shape[1:])
+            )  # assume (rows, *cols)
             input_fn = self.from_ndarray(shape, self.like.dtype)
         elif isinstance(self.shape, (list, tuple, np.ndarray)):
             input_fn = self.from_ndarray(self.shape, self.dtype)
@@ -226,6 +257,7 @@ class ServingInput(object):
         if self.v1_compat:
             # https://www.tensorflow.org/guide/migrate
             import tensorflow.compat.v1 as tf
+
             tf.disable_v2_behavior()
         else:
             import tensorflow as tf
@@ -234,40 +266,41 @@ class ServingInput(object):
     def from_features(self):
         tf = self.tf
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
-            self.features,
-            default_batch_size=self.batchsize
+            self.features, default_batch_size=self.batchsize
         )
         return input_fn
 
     def from_ndarray(self, shape, dtype):
         tf = self.tf
         if self.from_keras:
-            input_layer_name = '{}_input'.format(self.features[0])
+            input_layer_name = "{}_input".format(self.features[0])
         else:
             input_layer_name = self.features[0]
         if self.v1_compat:
             features = {
-                input_layer_name: tf.placeholder(dtype=dtype, shape=shape, )
+                input_layer_name: tf.placeholder(
+                    dtype=dtype,
+                    shape=shape,
+                )
             }
         else:
-            features = {
-                input_layer_name: tf.TensorSpec(shape=shape, dtype=dtype)
-            }
+            features = {input_layer_name: tf.TensorSpec(shape=shape, dtype=dtype)}
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn(
-            features,
-            default_batch_size=None
+            features, default_batch_size=None
         )
         return input_fn
 
-    def from_dataframe(self, columns, input_layer_name='X',
-                       batch_size=1, dtype=np.float32):
+    def from_dataframe(
+        self, columns, input_layer_name="X", batch_size=1, dtype=np.float32
+    ):
         def serving_input_fn():
             import tensorflow as tf
+
             ndim = len(columns)
-            X_name = '{}_input'.format(input_layer_name)
-            placeholder = tf.placeholder(dtype=np.float32,
-                                         shape=(batch_size, ndim),
-                                         name=X_name)
+            X_name = "{}_input".format(input_layer_name)
+            placeholder = tf.placeholder(
+                dtype=np.float32, shape=(batch_size, ndim), name=X_name
+            )
             receiver_tensors = {X_name: placeholder}
             features = {X_name: placeholder}
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)

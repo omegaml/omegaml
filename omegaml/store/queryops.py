@@ -34,7 +34,7 @@ class GeoJSON(dict):
         elif isinstance(lon, (list, tuple)):
             coordinates = lon
         elif isinstance(lon, str):
-            coordinates = [float(c) for c in lon.split(',')]
+            coordinates = [float(c) for c in lon.split(",")]
         elif isinstance(coordinates, GeoJSON):
             coordinates = [coordinates.lon, coordinates.lat]
         elif isinstance(coordinates, (list, tuple)):
@@ -42,42 +42,40 @@ class GeoJSON(dict):
         elif isinstance(coordinates, dict):
             coordinates = self.get_coordinates_from_geojson(lon)
         elif isinstance(coordinates, str):
-            coordinates = [float(c) for c in lon.split(',')]
+            coordinates = [float(c) for c in lon.split(",")]
         else:
             coordinates = []
         self.update(self.to_dict(coordinates))
         assert coordinates, "%s is not a valid coordinate" % coordinates
 
     def get_coordinates_from_geojson(self, d):
-        if 'coordinates' in d:
-            coordinates = d.get('coordinates')
-        elif 'geometry' in d \
-                and d.get('geometry').get('type') == 'Point':
-            coordinates = d.get('geometry').get('coordinates')
+        if "coordinates" in d:
+            coordinates = d.get("coordinates")
+        elif "geometry" in d and d.get("geometry").get("type") == "Point":
+            coordinates = d.get("geometry").get("coordinates")
         else:
-            raise ValueError(
-                'expected a valid GeoJSON dict, got %s' % coordinates)
+            raise ValueError("expected a valid GeoJSON dict, got %s" % coordinates)
         return coordinates
 
     @property
     def lat(self):
-        return self.get('coordinates')[1]
+        return self.get("coordinates")[1]
 
     @property
     def lon(self):
-        return self.get('coordinates')[0]
+        return self.get("coordinates")[0]
 
     def to_dict(self, coordinates=None):
         return {
-            'type': 'Point',
-            'coordinates': coordinates or self.get('coordinates'),
+            "type": "Point",
+            "coordinates": coordinates or self.get("coordinates"),
         }
 
     def to_json(self):
         return json.dumps(self.to_dict())
 
     def __unicode__(self):
-        return u"%s" % self.to_json()
+        return "%s" % self.to_json()
 
 
 class MongoQueryOps(object):
@@ -98,13 +96,14 @@ class MongoQueryOps(object):
     result = coll.aggregate([query, groupby])
     """
 
-    UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN'
-             'EXISTS,TYPE,REGEX,EQ').split(',')
+    UNARY = (
+        "IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NIN" "EXISTS,TYPE,REGEX,EQ"
+    ).split(",")
 
     def __getattr__(self, k):
-        if k.upper().replace('_', '') in MongoQueryOps.UNARY:
+        if k.upper().replace("_", "") in MongoQueryOps.UNARY:
             return self.__unary(k.lower())
-        raise AttributeError('operator %s is not supported' % k)
+        raise AttributeError("operator %s is not supported" % k)
 
     def __unary(self, op):
         """
@@ -130,14 +129,14 @@ class MongoQueryOps(object):
 
     def GROUP(self, v=None, columns=None, **kwargs):
         from collections import OrderedDict
+
         if not v:
             v = OrderedDict()
         if not columns:
-            v['_id'] = None
+            v["_id"] = None
         else:
-            v.setdefault('_id', {})
-            v['_id'].update({k: '$%s' % (k.replace('__', '.'))
-                             for k in columns})
+            v.setdefault("_id", {})
+            v["_id"].update({k: "$%s" % (k.replace("__", ".")) for k in columns})
         if kwargs:
             for _k, _v in kwargs.items():
                 v.setdefault(_k, {})
@@ -157,10 +156,11 @@ class MongoQueryOps(object):
         return kwargs
 
     def as_dataframe(self, result, autoflat=True, flatten=None, groupby=None):
-        """ transform a resultset into a dataframe"""
+        """transform a resultset into a dataframe"""
         import pandas as pd
+
         def do_flatten(seq):
-            """ extract composed keys into columns """
+            """extract composed keys into columns"""
             for r in seq:
                 row = {}
                 row.update(r)
@@ -169,11 +169,11 @@ class MongoQueryOps(object):
                 yield row
 
         if autoflat or flatten == True:
-            flatten = '_id'
+            flatten = "_id"
         df = pd.DataFrame(do_flatten(result))
         if groupby and len(df.index) > 0:
             if isinstance(groupby, bool):
-                cols = list(df.iloc[0]['_id'].keys())
+                cols = list(df.iloc[0]["_id"].keys())
             else:
                 cols = groupby
             df.set_index(cols, inplace=True)
@@ -190,7 +190,7 @@ class MongoQueryOps(object):
         return {"$text": {"$search": v}}
 
     def CONTAINS(self, v):
-        return {"$regex": '.*%s.*' % v}
+        return {"$regex": ".*%s.*" % v}
 
     def SORT(self, **columns):
         """
@@ -208,12 +208,9 @@ class MongoQueryOps(object):
 
     def PROJECT(self, fields, include=True):
         fields = make_tuple(fields)
-        return {
-            '$project': {key: 1 if include else 0 for key in fields}
-        }
+        return {"$project": {key: 1 if include else 0 for key in fields}}
 
-    def LOOKUP(self, other, key=None, left_key=None, right_key=None,
-               target=None):
+    def LOOKUP(self, other, key=None, left_key=None, right_key=None, target=None):
         """
         return a $lookup statement.
 
@@ -228,7 +225,7 @@ class MongoQueryOps(object):
                 "from": other,
                 "localField": left_key or key,
                 "foreignField": right_key or key,
-                "as": target or ("%s_%s" % (other, key or right_key))
+                "as": target or ("%s_%s" % (other, key or right_key)),
             }
         }
 
@@ -242,19 +239,15 @@ class MongoQueryOps(object):
            array field is empty.
         :param index: if given the index field is taken from this field
         """
-        op = {
-            "$unwind": {
-                "path": "${}".format(field)
-            }
-        }
+        op = {"$unwind": {"path": "${}".format(field)}}
         if preserve is not None:
-            op['$unwind'].update({
-                "preserveNullAndEmptyArrays": preserve
-            })
+            op["$unwind"].update({"preserveNullAndEmptyArrays": preserve})
         if index is not None:
-            op['$unwind'].update({
-                "includeArrayIndex": "%s_%s" % ('_index_', index),
-            })
+            op["$unwind"].update(
+                {
+                    "includeArrayIndex": "%s_%s" % ("_index_", index),
+                }
+            )
         return op
 
     def OUT(self, name):
@@ -281,9 +274,9 @@ class MongoQueryOps(object):
         elif isinstance(lon, GeoJSON):
             location = lon
         elif isinstance(lon, dict):
-            location = GeoJSON(lon.get('location'))
-            maxd = lon.get('maxd')
-            mind = lon.get('mind')
+            location = GeoJSON(lon.get("location"))
+            maxd = lon.get("maxd")
+            mind = lon.get("mind")
         elif not location:
             assert "invalid arguments. Specify coordinates=GeoJSON(lon, lat)"
         else:
@@ -291,29 +284,25 @@ class MongoQueryOps(object):
         if isinstance(location, (list, tuple)):
             lon, lat = location
         else:
-            lon, lat = location.get('coordinates')
+            lon, lat = location.get("coordinates")
         assert lon, "invalid coordinate lon=%s lat=%s" % (lon, lat)
         assert lat, "invalid coordinate lon=%s lat=%s" % (lon, lat)
         nearq = {
-            '$near': {
-                '$geometry': {
-                    'type': 'Point',
-                    'coordinates': [lon, lat],
+            "$near": {
+                "$geometry": {
+                    "type": "Point",
+                    "coordinates": [lon, lat],
                 },
             }
         }
         if maxd:
-            nearq['$near']['$maxDistance'] = maxd
+            nearq["$near"]["$maxDistance"] = maxd
         if mind:
-            nearq['$near']['$minDistance'] = mind
+            nearq["$near"]["$minDistance"] = mind
         return nearq
 
     def REPLACEROOT(self, field):
-        return {
-            '$replaceRoot': {
-                'newRoot': "${}".format(field)
-            }
-        }
+        return {"$replaceRoot": {"newRoot": "${}".format(field)}}
 
     def make_index(self, columns, **kwargs):
         """
@@ -330,25 +319,25 @@ class MongoQueryOps(object):
         'name' key it will be preserved
         :return: (idx, **kwargs) tuple, pass as create_index(idx, **kwargs)
         """
-        SORTPREFIX = ['-', '+', '@']
+        SORTPREFIX = ["-", "+", "@"]
         DIRECTIONMAP = {
-            '-': pymongo.DESCENDING,
-            '+': pymongo.ASCENDING,
-            '@': pymongo.GEOSPHERE,
-            'default': pymongo.ASCENDING,
+            "-": pymongo.DESCENDING,
+            "+": pymongo.ASCENDING,
+            "@": pymongo.GEOSPHERE,
+            "default": pymongo.ASCENDING,
         }
         columns = make_tuple(columns)
-        direction_default = DIRECTIONMAP.get('default')
-        sort_cols = ['+' + col
-                     if col[0] not in SORTPREFIX else col for col in columns]
+        direction_default = DIRECTIONMAP.get("default")
+        sort_cols = ["+" + col if col[0] not in SORTPREFIX else col for col in columns]
 
         # get sort kwargs
         def direction(col):
             return DIRECTIONMAP.get(col[0], direction_default)
 
-        idx = [(col.replace('+', '').replace('-', '').replace('@', ''),
-                direction(col))
-               for col in sort_cols]
+        idx = [
+            (col.replace("+", "").replace("-", "").replace("@", ""), direction(col))
+            for col in sort_cols
+        ]
         idx, kwargs = ensure_index_limit(idx, **kwargs)
         return idx, kwargs
 
@@ -379,16 +368,16 @@ def flatten_keys(d, keys=None):
 
 def humanize_index(idxs):
     # idxs = collection.index_information()
-    SORT_MAP = {
-        1: 'asc',
-        -1: 'desc'
-    }
-    return '_'.join('{}_{}'.format(SORT_MAP.get(sort), var)
-                    for idx, spec in idxs.items() for var, sort in spec['key'])
+    SORT_MAP = {1: "asc", -1: "desc"}
+    return "_".join(
+        "{}_{}".format(SORT_MAP.get(sort), var)
+        for idx, spec in idxs.items()
+        for var, sort in spec["key"]
+    )
 
 
 def ensure_index_limit(idx, **kwargs):
-    """ ensure the same index gets the same name, but limit name length
+    """ensure the same index gets the same name, but limit name length
 
     solves pymongo.errors.OperationFailure: namespace name generated from index name
     is too long (127 byte max).
@@ -402,31 +391,38 @@ def ensure_index_limit(idx, **kwargs):
            kwargs['name'] is set to the md5 of the index spec
     """
     # avoid generating a name if already given
-    if not 'name' in kwargs:
+    if not "name" in kwargs:
         # SEC: CWE-916
         # - status: wontfix
         # - reason: hashcode is used purely for name resolution, not a security function
-        name = md5(str(idx).encode('utf8')).hexdigest()
-        kwargs.setdefault('name', name)
+        name = md5(str(idx).encode("utf8")).hexdigest()
+        kwargs.setdefault("name", name)
     return idx, kwargs
 
 
 def sanitize_filter(filter, no_ops=False, trusted=False):
-    """ sanitize mongodb filter statements """
+    """sanitize mongodb filter statements"""
     no_ops = no_ops if no_ops is not None else is_interactive()
-    injection_ops = ['$where', '$mapReduce']
-    user_ops = [k for k in filter if k.strip().startswith('$') and k not in injection_ops]
+    injection_ops = ["$where", "$mapReduce"]
+    user_ops = [
+        k for k in filter if k.strip().startswith("$") and k not in injection_ops
+    ]
     ops_to_remove = (user_ops + injection_ops) if no_ops else injection_ops
     # sanitize user and default operators
-    query_trusted = not no_ops and (trusted is not False and trusted == signature(filter))
+    query_trusted = not no_ops and (
+        trusted is not False and trusted == signature(filter)
+    )
     if user_ops and not query_trusted:
-        warnings.warn(f'Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized.')
+        warnings.warn(
+            f"Your MongoDB query contains operators {user_ops} which may be unsafe if not sanitized."
+        )
     for op in ops_to_remove:
         value = filter.pop(op, None)
         if value is not None:
-            repl_op = op.replace('$', '-')
+            repl_op = op.replace("$", "-")
             warnings.warn(
-                f'{op} clauses are not permitted and replaced by {repl_op} for security reasons. Use sanitize_filter(query, trusted=signature(query)) to allow.')
+                f"{op} clauses are not permitted and replaced by {repl_op} for security reasons. Use sanitize_filter(query, trusted=signature(query)) to allow."
+            )
             filter[repl_op] = value
     # sanitize nested operators
     for k, v in filter.items():

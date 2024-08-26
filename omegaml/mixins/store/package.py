@@ -2,6 +2,7 @@ class PythonPackageMixin(object):
     """
     Install and load scripts
     """
+
     def install(self, specs=None, keep=False):
         """
         install and load packages
@@ -20,6 +21,6 @@ class PythonPackageMixin(object):
         """
         specs = specs or self.list()
         if isinstance(specs, str):
-            specs = specs.split(' ')
+            specs = specs.split(" ")
         for pkgname in specs:
             self.get(pkgname, keep=keep)

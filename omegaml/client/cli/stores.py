@@ -2,7 +2,7 @@ from omegaml.client.util import get_omega
 
 
 class StoresCommandMixin:
-    """ Common commands for OmegaStore related commands
+    """Common commands for OmegaStore related commands
 
     Usage:
         class DatasetsCommand(StoresCommandMixin, CommandBase:
@@ -11,7 +11,8 @@ class StoresCommandMixin:
         This will automatically provide list, drop, metadata
         commands for the store given by the command variable
     """
-    command = 'unspecified'
+
+    command = "unspecified"
 
     def put(self):
         raise NotImplementedError()
@@ -21,23 +22,23 @@ class StoresCommandMixin:
 
     def list(self):
         om = get_omega(self.args)
-        pattern = self.args.get('<pattern>')
-        regexp = self.args.get('--regexp') or self.args.get('-E')
-        raw = self.args.get('--raw')
-        hidden = self.args.get('--hidden')
+        pattern = self.args.get("<pattern>")
+        regexp = self.args.get("--regexp") or self.args.get("-E")
+        raw = self.args.get("--raw")
+        hidden = self.args.get("--hidden")
         kwargs = dict(regexp=pattern) if regexp else dict(pattern=pattern)
         store = getattr(om, self.command)
         self.logger.info(store.list(raw=raw, hidden=hidden, **kwargs))
 
     def drop(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
+        name = self.args.get("<name>")
         store = getattr(om, self.command)
         self.logger.info(store.drop(name))
 
     def metadata(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
+        name = self.args.get("<name>")
         store = getattr(om, self.command)
         self.logger.info(store.metadata(name).to_json())
 

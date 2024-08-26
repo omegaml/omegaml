@@ -17,32 +17,34 @@ class OmegaTestMixin(object):
 
     def clean(self, bucket=None):
         om = self.om[bucket] if bucket is not None else self.om
-        for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
+        for element in ("models", "jobs", "datasets", "scripts", "streams"):
             part = getattr(om, element)
             drop = part.drop
-            [drop(m.name, force=True) for m in part.list(hidden=True, include_temp=True, raw=True)]
+            [
+                drop(m.name, force=True)
+                for m in part.list(hidden=True, include_temp=True, raw=True)
+            ]
             self.assertListEqual(part.list(hidden=True, include_temp=True), [])
 
     @property
     def _async_headers(self):
-        return {
-            'async': 'true'
-        }
+        return {"async": "true"}
 
     def _check_async(self, resp):
         # check resp is async, then retrieve actual result as type TaskOutput
         self.assertEqual(resp.status_code, 202)
         data = resp.get_json()
-        location = resp.headers['Location']
-        self.assertRegex(location, r'.*/api/v1/task/.*/result')
+        location = resp.headers["Location"]
+        self.assertRegex(location, r".*/api/v1/task/.*/result")
         # check we can get back the actual result
-        resp = self.client.get(location.replace('http://localhost', ''), json={
-            'resource_uri': data.get('resource_uri')
-        })
+        resp = self.client.get(
+            location.replace("http://localhost", ""),
+            json={"resource_uri": data.get("resource_uri")},
+        )
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
-        self.assertEqual(data['status'], 'SUCCESS')
-        self.assertIn(data['task_id'], location)
+        self.assertEqual(data["status"], "SUCCESS")
+        self.assertIn(data["task_id"], location)
         return resp
 
     def assertHttpOK(self, resp):
@@ -55,6 +57,7 @@ class OmegaTestMixin(object):
 def tf_in_eager_execution():
     # condition for unittest.skipIf decorator
     import tensorflow as tf
+
     return tf.executing_eagerly()
 
 
@@ -66,16 +69,21 @@ def tf_perhaps_eager_execution(*args, **kwargs):
     variable is yet to 1. else the eager state is not
     changed.
     """
-    tf_eager_switch = os.environ.get('TF_EAGER', False)
+    tf_eager_switch = os.environ.get("TF_EAGER", False)
     if int(tf_eager_switch):
         import tensorflow as tf
+
         try:
             tf.enable_eager_execution(*args, **kwargs)
-            warnings.warn('TensorFlow eager execution enabled')
+            warnings.warn("TensorFlow eager execution enabled")
         except ValueError as e:
             warnings.warn(str(e))
     else:
-        warnings.warn('TensorFlow eager execution not enabled TF_EAGER={tf_eager_switch}'.format(**locals()))
+        warnings.warn(
+            "TensorFlow eager execution not enabled TF_EAGER={tf_eager_switch}".format(
+                **locals()
+            )
+        )
 
 
 def clear_om(om):

@@ -25,11 +25,12 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
         * Rscript
         * https://mastering-shiny.org/scaling-packaging.html (CC BY-NC-ND 4.0)
     """
-    KIND = 'package.r'
+
+    KIND = "package.r"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, str) and obj.startswith('R://')
+        return isinstance(obj, str) and obj.startswith("R://")
 
     def put(self, obj, name, attributes=None, **kwargs):
         """
@@ -45,14 +46,14 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
                      as specified in setup.py
         :return: the Metadata object
         """
-        pkgsrc = pkgdist = obj.split('//')[1]
-        pkgsrc = pkgsrc.replace('app.R', '')
-        if not 'tar.gz' in os.path.basename(pkgdist):
-            distdir = os.path.join(pkgsrc, 'dist')
+        pkgsrc = pkgdist = obj.split("//")[1]
+        pkgsrc = pkgsrc.replace("app.R", "")
+        if not "tar.gz" in os.path.basename(pkgdist):
+            distdir = os.path.join(pkgsrc, "dist")
             os.makedirs(distdir, exist_ok=True)
-            base_name = os.path.join(distdir, f'{name}')
-            pkgdist = make_archive(base_name, 'gztar', pkgsrc)
-        filename = self.data_store.object_store_key(name, 'pkg', hashed=True)
+            base_name = os.path.join(distdir, f"{name}")
+            pkgdist = make_archive(base_name, "gztar", pkgsrc)
+        filename = self.data_store.object_store_key(name, "pkg", hashed=True)
         gridfile = self._store_to_file(self.data_store, pkgdist, filename)
         return self.data_store._make_metadata(
             name=name,
@@ -60,7 +61,8 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=RPackageData.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, localpath=None, keep=False, install=True, **kwargs):
         """
@@ -78,11 +80,13 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
         """
         pkgname = basename(name)
         dstdir = localpath or self.data_store.tmppath
-        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.packages_path, pkgname))
+        packagefname = "{}.tar.gz".format(
+            os.path.join(localpath or self.packages_path, pkgname)
+        )
         os.makedirs(dirname(packagefname), exist_ok=True)
         meta = self.data_store.metadata(name)
         outf = meta.gridfile
-        with open(packagefname, 'wb') as pkgf:
+        with open(packagefname, "wb") as pkgf:
             pkgf.write(outf.read())
         if install:
             unpack_archive(packagefname, dstdir)
@@ -93,20 +97,21 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
 
     @property
     def packages_path(self):
-        return os.path.join(self.data_store.tmppath, 'packages')
+        return os.path.join(self.data_store.tmppath, "packages")
 
 
 class RScript:
-    """ a Python proxy to the R process that runs a script
+    """a Python proxy to the R process that runs a script
 
     This provides the ``mod.run()`` interface for scripts so that
     we can use the same semantics for R and python scripts.
     """
+
     def __init__(self, appdir):
         self.appdir = appdir
 
     def run(self, om, **kwargs):
-        """ run the script in R session
+        """run the script in R session
 
         Usage:
             The script must exist as ``{self.appdir}/app.R``. It must implement
@@ -131,11 +136,13 @@ class RScript:
         """
         r = rhelper()
         if r is None:
-            r_kwargs = base64.b64encode(json.dumps(kwargs).encode('utf8')).decode('ascii')
-            rcmd = fr'Rscript -e source("{self.appdir}/app.R") -e omega_run(0,"{r_kwargs}")'
-            output = run(rcmd.split(' '), capture_output=True)
+            r_kwargs = base64.b64encode(json.dumps(kwargs).encode("utf8")).decode(
+                "ascii"
+            )
+            rcmd = rf'Rscript -e source("{self.appdir}/app.R") -e omega_run(0,"{r_kwargs}")'
+            output = run(rcmd.split(" "), capture_output=True)
             output = output.stdout
         else:
-            r.source(f'{self.appdir}/app.R')
+            r.source(f"{self.appdir}/app.R")
             output = r.omega_run(om, kwargs)
         return tryOr(lambda: json.loads(output), output)

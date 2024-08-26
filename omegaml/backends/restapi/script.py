@@ -4,7 +4,7 @@ class GenericScriptResource(object):
         self.is_async = is_async
 
     def is_eager(self):
-        return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
+        return getattr(self.om.runtime.celeryapp.conf, "CELERY_ALWAYS_EAGER", False)
 
     def run(self, script_id, query, payload):
         """
@@ -18,8 +18,12 @@ class GenericScriptResource(object):
         """
         om = self.om
         payload = {} if payload is None else payload
-        promise = om.runtime.script(script_id).run(payload, __format='python', **query)
-        result = promise if self.is_async else self.prepare_result(promise.get(), resource_name=script_id)
+        promise = om.runtime.script(script_id).run(payload, __format="python", **query)
+        result = (
+            promise
+            if self.is_async
+            else self.prepare_result(promise.get(), resource_name=script_id)
+        )
         return result
 
     def prepare_result(self, result, resource_name=None, **kwargs):

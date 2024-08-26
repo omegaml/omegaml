@@ -206,48 +206,48 @@ class RuntimeCommandBase(CommandBase):
         # to see an example of the configuration file
         $ om runtime deploy example
     """
-    command = 'runtime'
+
+    command = "runtime"
 
     def ping(self):
         om = get_omega(self.args)
-        label = self.args.get('--require')
+        label = self.args.get("--require")
         self.logger.info(om.runtime.require(label).ping())
 
     def _ensure_valid_XY(self, value):
         if value is not None:
             if value.isnumeric():
                 return [eval(value)]
-            if value[0] == '[' and value[-1] == ']':
+            if value[0] == "[" and value[-1] == "]":
                 return eval(value)
         return value
 
     def model(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
-        action = self.args.get('<model-action>')
-        is_async = self.args.get('--async')
-        kwargs_lst = self.args.get('--param')
-        output = self.args.get('--result')
-        label = self.args.get('--require')
-        X = self._ensure_valid_XY(self.args.get('<X>'))
-        Y = self._ensure_valid_XY(self.args.get('<Y>'))
+        name = self.args.get("<name>")
+        action = self.args.get("<model-action>")
+        is_async = self.args.get("--async")
+        kwargs_lst = self.args.get("--param")
+        output = self.args.get("--result")
+        label = self.args.get("--require")
+        X = self._ensure_valid_XY(self.args.get("<X>"))
+        Y = self._ensure_valid_XY(self.args.get("<Y>"))
         # parse the list of kw=value values
         # e.g. key1=val1 key2=val2 => kwargs_lst = ['key1=val1', 'key2=val2']
         #   => kw_dct = { 'key1': eval('val1'), 'key2': eval('val2') }
         kv_dct = {}
         for kv in kwargs_lst:
-            k, v = kv.split('=', 1)
+            k, v = kv.split("=", 1)
             kv_dct[k] = eval(v)
         kwargs = {}
-        if action in ('predict', 'predict_proba',
-                      'decision_function', 'transform'):
+        if action in ("predict", "predict_proba", "decision_function", "transform"):
             # actions that take rName, but no Y
-            kwargs['rName'] = output
+            kwargs["rName"] = output
         else:
             # actions that take Y, but no rName
-            kwargs['Yname'] = Y
-        if action == 'gridsearch':
-            kwargs['parameters'] = kv_dct
+            kwargs["Yname"] = Y
+        if action == "gridsearch":
+            kwargs["parameters"] = kv_dct
         rt_model = om.runtime.require(label).model(name)
         meth = getattr(rt_model, action, None)
         if meth is not None:
@@ -257,14 +257,14 @@ class RuntimeCommandBase(CommandBase):
             else:
                 self.logger.info(result)
             return
-        raise ValueError('{action} is not applicable to {name}'.format(**locals()))
+        raise ValueError("{action} is not applicable to {name}".format(**locals()))
 
     def script(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
-        is_async = self.args.get('--async')
-        kwargs = self.parse_kwargs('<kw=value>')
-        label = self.args.get('--require')
+        name = self.args.get("<name>")
+        is_async = self.args.get("--async")
+        kwargs = self.parse_kwargs("<kw=value>")
+        label = self.args.get("--require")
         result = om.runtime.require(label).script(name).run(**kwargs)
         if not is_async:
             self.logger.info(result.get())
@@ -273,9 +273,9 @@ class RuntimeCommandBase(CommandBase):
 
     def job(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
-        is_async = self.args.get('--async')
-        label = self.args.get('--require')
+        name = self.args.get("<name>")
+        is_async = self.args.get("--async")
+        label = self.args.get("--require")
         result = om.runtime.require(label).job(name).run()
         if not is_async:
             self.logger.info(result.get())
@@ -284,63 +284,70 @@ class RuntimeCommandBase(CommandBase):
 
     def result(self):
         om = get_omega(self.args)
-        task_id = self.args.get('<taskid>')
+        task_id = self.args.get("<taskid>")
         result = om.runtime.result(task_id)
         self.logger.info(result)
 
     def log(self):
         import pandas as pd
-        tail = self.args.get('-f')
+
+        tail = self.args.get("-f")
         om = get_omega(self.args)
         if not tail:
             df = om.logger.dataset.get()
-            with pd.option_context('display.max_rows', None,
-                                   'display.max_columns', None,
-                                   'display.max_colwidth', None):
-                print(df[['text']])
+            with pd.option_context(
+                "display.max_rows",
+                None,
+                "display.max_columns",
+                None,
+                "display.max_colwidth",
+                None,
+            ):
+                print(df[["text"]])
         else:
             om.logger.dataset.tail()
 
     def inspect(self):
-        self.celery('inspect')
+        self.celery("inspect")
 
     def control(self):
-        self.celery('control')
+        self.celery("control")
 
     def celery(self, action=None):
         om = get_omega(self.args)
         celery_cmds = []
         if action:
-            celery_cmds += action.split(' ')
+            celery_cmds += action.split(" ")
         # convert omega terms into celery terms
         celery_opts = (
             # omega term, celery term, value|flag
-            ('--worker', '--destination', 'value'),
-            ('--queue', '--queue', 'value'),
-            ('--celery-help', '--help', 'flag'),
+            ("--worker", "--destination", "value"),
+            ("--queue", "--queue", "value"),
+            ("--celery-help", "--help", "flag"),
         )
         for opt, celery_opt, kind in celery_opts:
             if self.args.get(opt):
                 celery_cmds += [celery_opt]
-                if kind == 'value':
+                if kind == "value":
                     celery_cmds += [self.args.get(opt)]
         # prepare celery command args, remove empty parts
-        celery_command = self.args.get('<celery-command>')
+        celery_command = self.args.get("<celery-command>")
         celery_cmds += celery_command
-        celery_cmds += (self.args.get('--flags') or '').split(' ')
+        celery_cmds += (self.args.get("--flags") or "").split(" ")
         celery_cmds = [cmd for cmd in celery_cmds if cmd]
-        if len(celery_command) == 1 and celery_command[0] in ('inspect', 'control'):
-            celery_cmds += ['--help']
+        if len(celery_command) == 1 and celery_command[0] in ("inspect", "control"):
+            celery_cmds += ["--help"]
         # start in-process for speed
         # -- disable command logging to avoid curses problems in celery events
         self.logger.setLevel(logging.CRITICAL + 1)
         # check for R worker
-        is_r_worker = 'rworker' in self.args.get('<celery-command>')
+        is_r_worker = "rworker" in self.args.get("<celery-command>")
         if is_r_worker:
             # start r runtime
             from omegaml.runtimes import rsystem
-            rworker = os.path.join(os.path.dirname(rsystem.__file__), 'omworker.R')
-            rcmd = f'Rscript {rworker}'.split(' ')
+
+            rworker = os.path.join(os.path.dirname(rsystem.__file__), "omworker.R")
+            rcmd = f"Rscript {rworker}".split(" ")
             call(rcmd)
         else:
             # start python runtime
@@ -348,31 +355,36 @@ class RuntimeCommandBase(CommandBase):
 
     def env(self):
         om = get_omega(self.args)
-        action = self.args.get('<action>')
-        package = self.args.get('<package>')
-        reqfile = self.args.get('--file')
-        every = self.args.get('--every')
-        require = self.args.get('--require') or ''
+        action = self.args.get("<action>")
+        package = self.args.get("<package>")
+        reqfile = self.args.get("--file")
+        every = self.args.get("--every")
+        require = self.args.get("--require") or ""
         if reqfile:
-            with open(reqfile, 'rb') as fin:
-                om.scripts.put(fin, '.system/requirements.txt')
-        if not om.scripts.exists('.system/envinstall', hidden=True):
+            with open(reqfile, "rb") as fin:
+                om.scripts.put(fin, ".system/requirements.txt")
+        if not om.scripts.exists(".system/envinstall", hidden=True):
             import omegaml as om_module
-            envinstall_path = os.path.join(os.path.dirname(om_module.__file__), 'runtimes', 'envinstall')
-            om.scripts.put(f'pkg://{envinstall_path}', '.system/envinstall')
+
+            envinstall_path = os.path.join(
+                os.path.dirname(om_module.__file__), "runtimes", "envinstall"
+            )
+            om.scripts.put(f"pkg://{envinstall_path}", ".system/envinstall")
         if every:
             labels = om.runtime.enable_hostqueues()
         else:
-            labels = require.split(',')
+            labels = require.split(",")
         results = []
         for label in labels:
-            result = (om.runtime.require(label)
-                      .script('.system/envinstall')
-                      .run(action=action, package=package, file=reqfile,
-                           __format='python'))
+            result = (
+                om.runtime.require(label)
+                .script(".system/envinstall")
+                .run(action=action, package=package, file=reqfile, __format="python")
+            )
             results.append((label, result))
         all_results = om.runtime.celeryapp.ResultSet([r[1] for r in results])
         from tqdm import tqdm
+
         with tqdm() as progress:
             while all_results.waiting():
                 progress.update(1)
@@ -380,104 +392,144 @@ class RuntimeCommandBase(CommandBase):
             all_results.get()
         for label, result in results:
             if label:
-                print(f'** result of worker require={label}:')
+                print(f"** result of worker require={label}:")
             data = result.get()  # resolve AsyncResult => dict
-            print(str(data.get('result', data)))  # get actual result object, pip stdout
+            print(str(data.get("result", data)))  # get actual result object, pip stdout
 
     def status(self):
         om = get_omega(self.args)
-        labels = self.args.get('labels')
-        stats = self.args.get('stats')
+        labels = self.args.get("labels")
+        stats = self.args.get("stats")
         workers = not (labels or stats)
         if workers:
             pprint(om.runtime.workers())
         elif labels:
             queues = om.runtime.queues()
-            pprint({worker: [q.get('name') for q in details
-                             if not q.get('name').startswith('amq')]
-                    for worker, details in queues.items()})
+            pprint(
+                {
+                    worker: [
+                        q.get("name")
+                        for q in details
+                        if not q.get("name").startswith("amq")
+                    ]
+                    for worker, details in queues.items()
+                }
+            )
         elif stats:
             stats = om.runtime.stats()
-            pprint({worker: {
-                'size': details['pool']['max-concurrency'],
-                'tasks': {
-                    task: count for task, count in details['total'].items()
+            pprint(
+                {
+                    worker: {
+                        "size": details["pool"]["max-concurrency"],
+                        "tasks": {
+                            task: count for task, count in details["total"].items()
+                        },
+                    }
+                    for worker, details in stats.items()
                 }
-            } for worker, details in stats.items()})
+            )
 
     def restart(self):
         from omegaml.client.userconf import ensure_api_url
 
         om = get_omega(self.args)
-        name = self.args.get('<name>')
-        insecure = self.args.get('--insecure', False)
-        apphub_url = self.args.get('--apphub-url')
+        name = self.args.get("<name>")
+        insecure = self.args.get("--insecure", False)
+        apphub_url = self.args.get("--apphub-url")
         user = om.runtime.auth.userid
         qualifier = om.runtime.auth.qualifier
         auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
-        headers = {'Qualifier': qualifier}
+        headers = {"Qualifier": qualifier}
         # SEC: CWE-918
         # -- status: resolved
         # -- explain: url is validated according to OWASP recommendation by ensure_api_url
-        appsurl = ensure_api_url(apphub_url, om.defaults, key='OMEGA_APPHUB_URL')
-        name = name.replace('apps/', '')
-        stop = requests.get(f'{appsurl}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
-                            auth=auth, verify=not insecure, headers=headers)
-        start = requests.get(f'{appsurl}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
-                             auth=auth, verify=not insecure, headers=headers)
-        self.logger.info(f'stop: {stop} start: {start}')
+        appsurl = ensure_api_url(apphub_url, om.defaults, key="OMEGA_APPHUB_URL")
+        name = name.replace("apps/", "")
+        stop = requests.get(
+            f"{appsurl}/apps/api/stop/{user}/{name}".format(om.runtime.auth.userid),
+            auth=auth,
+            verify=not insecure,
+            headers=headers,
+        )
+        start = requests.get(
+            f"{appsurl}/apps/api/start/{user}/{name}".format(om.runtime.auth.userid),
+            auth=auth,
+            verify=not insecure,
+            headers=headers,
+        )
+        self.logger.info(f"stop: {stop} start: {start}")
 
     def serve(self):
         om = get_omega(self.args, require_config=False)
-        specs = self.args.get('<rule>')
-        specfile = self.args.get('--rules')
-        port = self.args.get('--port', 8000)
-        host = self.args.get('--host', 'localhost')
+        specs = self.args.get("<rule>")
+        specfile = self.args.get("--rules")
+        port = self.args.get("--port", 8000)
+        host = self.args.get("--host", "localhost")
         if specfile:
-            with open(specfile, 'r') as fin:
-                specs = [s.replace('\n', '') for s in fin.readlines() if not s.startswith('#')]
-        os.environ['OMEGA_RESTAPI_FILTER'] = ';'.join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
-        subprocess.run(f"gunicorn 'omegaml.restapi.app:serve_objects()' --bind {host}:{port}", shell=True)
+            with open(specfile, "r") as fin:
+                specs = [
+                    s.replace("\n", "")
+                    for s in fin.readlines()
+                    if not s.startswith("#")
+                ]
+        os.environ["OMEGA_RESTAPI_FILTER"] = (
+            ";".join(specs) if specs else om.defaults.OMEGA_RESTAPI_FILTER
+        )
+        subprocess.run(
+            f"gunicorn 'omegaml.restapi.app:serve_objects()' --bind {host}:{port}",
+            shell=True,
+        )
 
     def deploy(self):
         om = get_omega(self.args, require_config=False)
-        deployfile = self.args.get('--steps') or 'deployfile.yaml'
-        action = self.args.get('<deploy-action>') or 'update'
-        dry = self.args.get('--dry')
-        specs = self.args.get('--specs')
-        selection = self.args.get('<filter>')
-        if action == 'example':
+        deployfile = self.args.get("--steps") or "deployfile.yaml"
+        action = self.args.get("<deploy-action>") or "update"
+        dry = self.args.get("--dry")
+        specs = self.args.get("--specs")
+        selection = self.args.get("<filter>")
+        if action == "example":
             help(deploy)
-        assert Path(deployfile).exists(), f'{deployfile} does not exist'
-        deploy.process(deployfile, action=action, dry=dry, specs=specs, select=selection, cli_logger=self.logger)
+        assert Path(deployfile).exists(), f"{deployfile} does not exist"
+        deploy.process(
+            deployfile,
+            action=action,
+            dry=dry,
+            specs=specs,
+            select=selection,
+            cli_logger=self.logger,
+        )
 
     def do_export(self):
         om = get_omega(self.args)
-        names = self.args.get('<prefix/name>')
-        archive = self.args.get('--path') or './mlops-export'
-        compress = self.args.get('--compress', True)
-        dolist = self.args.get('--list')
+        names = self.args.get("<prefix/name>")
+        archive = self.args.get("--path") or "./mlops-export"
+        compress = self.args.get("--compress", True)
+        dolist = self.args.get("--list")
         if dolist:
             arc = OmegaExporter.archive(archive)
             self.print(list(arc.members))
         else:
             exp = OmegaExporter(om)
-            arcfile = exp.to_archive(archive, names, compress=compress, progressfn=print)
+            arcfile = exp.to_archive(
+                archive, names, compress=compress, progressfn=print
+            )
             self.print(arcfile)
 
     def do_import(self):
         om = get_omega(self.args)
-        names = self.args.get('<prefix/name>')
-        archive = Path(self.args.get('--path', './mlops-export'))
-        dolist = self.args.get('--list')
-        promote = self.args.get('--promote')
-        pattern = '|'.join(names)
-        if (not archive.is_file()
-                and not archive.exists()
-                and archive.parent.exists()):
-            archives = list(archive.parent.glob(f'{archive.name}*'))
+        names = self.args.get("<prefix/name>")
+        archive = Path(self.args.get("--path", "./mlops-export"))
+        dolist = self.args.get("--list")
+        promote = self.args.get("--promote")
+        pattern = "|".join(names)
+        if not archive.is_file() and not archive.exists() and archive.parent.exists():
+            archives = list(archive.parent.glob(f"{archive.name}*"))
             if len(archives) > 1:
-                archive = Path(self.ask("Select an archive", options=archives, select=True, default=1))
+                archive = Path(
+                    self.ask(
+                        "Select an archive", options=archives, select=True, default=1
+                    )
+                )
         assert archive.exists(), f"No mlops-export {archive} exists"
         self.print(f"Processing {archive}")
         if dolist:
@@ -485,6 +537,8 @@ class RuntimeCommandBase(CommandBase):
             self.print(list(arc.members))
         else:
             exp = OmegaExporter(om)
-            arcfile = exp.from_archive(archive, pattern=pattern, progressfn=print, promote=promote)
+            arcfile = exp.from_archive(
+                archive, pattern=pattern, progressfn=print, promote=promote
+            )
             self.print("Imported objects:")
             self.print(arcfile)

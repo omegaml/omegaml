@@ -50,8 +50,9 @@ class BaseModelBackend(BackendBaseCommon):
         score() - score fitted classifier vv test dataset
 
     """
-    _backend_version_tag = '_om_backend_version'
-    _backend_version = '1'
+
+    _backend_version_tag = "_om_backend_version"
+    _backend_version = "1"
 
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
@@ -109,7 +110,7 @@ class BaseModelBackend(BackendBaseCommon):
         Returns:
             tmpfn or absolute path of serialized file
         """
-        with open(tmpfn, 'wb') as outf:
+        with open(tmpfn, "wb") as outf:
             joblib.dump(model, outf)
         return tmpfn
 
@@ -152,16 +153,20 @@ class BaseModelBackend(BackendBaseCommon):
         Retrieves a pre-stored model
         """
         meta = self.model_store.metadata(name)
-        storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
-        model = self._extract_model(meta.gridfile, storekey,
-                                    self._tmp_packagefn(self.model_store, storekey), **kwargs)
+        storekey = self.model_store.object_store_key(name, "omm", hashed=True)
+        model = self._extract_model(
+            meta.gridfile,
+            storekey,
+            self._tmp_packagefn(self.model_store, storekey),
+            **kwargs,
+        )
         return model
 
     def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
         """
         Packages a model using joblib and stores in GridFS
         """
-        storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
+        storekey = self.model_store.object_store_key(name, "omm", hashed=True)
         tmpfn = self._tmp_packagefn(self.model_store, storekey)
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
         gridfile = self._store_to_file(self.model_store, packagefname, storekey)
@@ -176,10 +181,10 @@ class BaseModelBackend(BackendBaseCommon):
             kind=self.KIND,
             kind_meta=kind_meta,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
-    def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict using data stored in Xname
 
@@ -192,18 +197,21 @@ class BaseModelBackend(BackendBaseCommon):
         :return: return the predicted outcome
         """
         model = self.model_store.get(modelname)
-        data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
-        if not hasattr(model, 'predict'):
+        data = self._resolve_input_data("predict", Xname, "X", **kwargs)
+        if not hasattr(model, "predict"):
             raise NotImplementedError
         result = model.predict(reshaped(data))
-        return self._prepare_result('predict', result, rName=rName,
-                                    pure_python=pure_python, **kwargs)
+        return self._prepare_result(
+            "predict", result, rName=rName, pure_python=pure_python, **kwargs
+        )
 
     def _resolve_input_data(self, method, Xname, key, **kwargs):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
-        if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data(key, data, dataset=Xname, kind=meta.kind, event=method)
+        if self.tracking and getattr(self.tracking, "autotrack", False):
+            self.tracking.log_data(
+                key, data, dataset=Xname, kind=meta.kind, event=method
+            )
         return data
 
     def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
@@ -212,12 +220,17 @@ class BaseModelBackend(BackendBaseCommon):
         if rName:
             meta = self.data_store.put(result, rName)
             result = meta
-        if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind, event=method)
+        if self.tracking and getattr(self.tracking, "autotrack", False):
+            self.tracking.log_data(
+                "Y",
+                result,
+                dataset=rName,
+                kind=str(type(result)) if rName is None else meta.kind,
+                event=method,
+            )
         return result
 
-    def predict_proba(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict_proba(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict the probability using data stored in Xname
 
@@ -245,8 +258,7 @@ class BaseModelBackend(BackendBaseCommon):
         """
         raise NotImplementedError
 
-    def partial_fit(
-            self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    def partial_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         """
         partially fit the model with data (online)
 
@@ -262,8 +274,8 @@ class BaseModelBackend(BackendBaseCommon):
         raise NotImplementedError
 
     def fit_transform(
-            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-            **kwargs):
+        self, modelname, Xname, Yname=None, rName=None, pure_python=True, **kwargs
+    ):
         """
         fit and transform using data
 
@@ -291,8 +303,8 @@ class BaseModelBackend(BackendBaseCommon):
         raise NotImplementedError
 
     def score(
-            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-            **kwargs):
+        self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs
+    ):
         """
         score using data
 

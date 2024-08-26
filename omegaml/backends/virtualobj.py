@@ -76,21 +76,24 @@ class VirtualObjectBackend(BaseDataBackend):
         context, respectively - virtual objects can be injected by anyone
         who are authorized to write data.
     """
+
     # TODO split VirtualObjectBackend into VirtualModelBackend and VirtualDataBackend
     #      to avoid confusion between the two (currently the same class is used for both)
-    KIND = 'virtualobj.dill'
-    PROMOTE = 'export'
+    KIND = "virtualobj.dill"
+    PROMOTE = "export"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return callable(obj) and getattr(obj, '_omega_virtual', False)
+        return callable(obj) and getattr(obj, "_omega_virtual", False)
 
     @property
     def _call_handler(self):
         # the model store handles _pre and _post methods in self.perform()
         return self.model_store
 
-    def put(self, obj, name, attributes=None, dill_kwargs=None, as_source=False, **kwargs):
+    def put(
+        self, obj, name, attributes=None, dill_kwargs=None, as_source=False, **kwargs
+    ):
         # TODO add obj signing so that only trustworthy sources can put functions
         # since 0.15.6: only __main__ objects are stored as bytecodes,
         #               all module code is stored as source code. This
@@ -100,7 +103,7 @@ class VirtualObjectBackend(BaseDataBackend):
         #               v.s. execution time. Use as_source=False to force
         #               storing bytecodes.
         data = dilldip.dumps(obj, as_source=as_source, **(dill_kwargs or {}))
-        filename = self.model_store.object_store_key(name, '.dill', hashed=True)
+        filename = self.model_store.object_store_key(name, ".dill", hashed=True)
         gridfile = self._store_to_file(self.model_store, data, filename)
         return self.model_store._make_metadata(
             name=name,
@@ -108,7 +111,8 @@ class VirtualObjectBackend(BaseDataBackend):
             bucket=self.model_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         meta = self.model_store.metadata(name)
@@ -120,15 +124,26 @@ class VirtualObjectBackend(BaseDataBackend):
 
     def _ensure_handler_instance(self, obj):
         # ensure VirtualObjectHandler classes are transformed to a virtualobj
-        return obj() if isinstance(obj, type) and issubclass(obj, VirtualObjectHandler) else obj
+        return (
+            obj()
+            if isinstance(obj, type) and issubclass(obj, VirtualObjectHandler)
+            else obj
+        )
 
     def predict(self, modelname, xName, rName=None, **kwargs):
         # make this work as a model backend too
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
-        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+        return handler(
+            method="predict",
+            data=X,
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -136,8 +151,15 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+        return handler(
+            method="fit",
+            data=(X, y),
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def score(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -145,16 +167,30 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+        return handler(
+            method="score",
+            data=(X, y),
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def run(self, scriptname, *args, **kwargs):
         # run as a script
         meta = self.model_store.metadata(scriptname)
         handler = self._ensure_handler_instance(self.get(scriptname))
         data = args[0] if args else None
-        kwargs['args'] = args
-        return handler(method='run', data=data, meta=meta, store=self.data_store, tracking=self.tracking, **kwargs)
+        kwargs["args"] = args
+        return handler(
+            method="run",
+            data=data,
+            meta=meta,
+            store=self.data_store,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def reduce(self, modelname, results, rName=None, **kwargs):
         """
@@ -176,8 +212,15 @@ class VirtualObjectBackend(BaseDataBackend):
         """
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
-        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+        return handler(
+            method="reduce",
+            data=results,
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
 
 def virtualobj(fn):
@@ -202,7 +245,7 @@ def virtualobj(fn):
     Returns:
         fn
     """
-    setattr(fn, '_omega_virtual', True)
+    setattr(fn, "_omega_virtual", True)
     return fn
 
 
@@ -210,6 +253,7 @@ class VirtualObjectHandler(object):
     """
     Object-oriented API for virtual object functions
     """
+
     _omega_virtual = True
 
     def get(self, data=None, meta=None, store=None, **kwargs):
@@ -227,13 +271,15 @@ class VirtualObjectHandler(object):
     def run(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
-    def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+    def __call__(
+        self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs
+    ):
         MAP = {
-            'drop': self.drop,
-            'get': self.get,
-            'put': self.put,
-            'predict': self.predict,
-            'run': self.run,
+            "drop": self.drop,
+            "get": self.get,
+            "put": self.put,
+            "predict": self.predict,
+            "run": self.run,
         }
         methodfn = MAP[method]
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)
@@ -258,9 +304,11 @@ class _DillDip:
         # if isinstance(obj, type):
         #    obj = obj()
         self._check(obj)
-        data = (self._dill_main(obj, **dill_kwargs) or
-                self._dill_types_or_function(obj, as_source=as_source, **dill_kwargs) or
-                self._dill_dill(obj, **dill_kwargs))
+        data = (
+            self._dill_main(obj, **dill_kwargs)
+            or self._dill_types_or_function(obj, as_source=as_source, **dill_kwargs)
+            or self._dill_dill(obj, **dill_kwargs)
+        )
         return data
 
     def loads(self, data):
@@ -268,13 +316,13 @@ class _DillDip:
         # https://github.com/python/cpython/commit/b19f7ecfa3adc6ba1544225317b9473649815b38
         # https://docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-final
         try:
-            obj = self._dynamic_compile(dill.loads(data), module='__main__')
+            obj = self._dynamic_compile(dill.loads(data), module="__main__")
         except ModuleNotFoundError as e:
             # if the functions original module is not known, simulate it
             # this is to deal with functions created outside of __main__
             # see https://stackoverflow.com/q/26193102/890242
             #     https://stackoverflow.com/a/70513630/890242
-            mod = types.ModuleType(e.name, '__dynamic__')
+            mod = types.ModuleType(e.name, "__dynamic__")
             sys.modules[e.name] = mod  # sys.modules['__main__']
             obj = dill.loads(data)
         return obj
@@ -287,7 +335,8 @@ class _DillDip:
         freevars = [n for n in set(freevars) if n not in dir(builtins)]
         if len(freevars):
             warnings.warn(
-                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope')
+                f"The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope"
+            )
 
     def _dill_dill(self, obj, **dill_kwargs):
         # fallback to standard dill
@@ -310,65 +359,83 @@ class _DillDip:
         # include source code along dill
         try:
             source = dill.source.getsource(obj, lstrip=True)
-            source_obj = {'__dipped__': self.__calories,
-                          'source': ''.join(source),
-                          'name': getattr(obj, '__name__'),
-                          '__dict__': getattr(obj, '__dict__', {})}
+            source_obj = {
+                "__dipped__": self.__calories,
+                "source": "".join(source),
+                "name": getattr(obj, "__name__"),
+                "__dict__": getattr(obj, "__dict__", {}),
+            }
         except:
             source_obj = {}
         else:
             # check obvious references in source
-            if '__main__' in source_obj.get('source', []):
-                warnings.warn(f'The {repr(obj)} references __main__, this may lead to unexpected results')
+            if "__main__" in source_obj.get("source", []):
+                warnings.warn(
+                    f"The {repr(obj)} references __main__, this may lead to unexpected results"
+                )
         if as_source and source_obj:
             # if source code was requested, transport as source code
             data = dill.dumps(source_obj, **dill_kwargs)
-        elif source_obj and dill.detect.getmodule(obj) != '__main__':
+        elif source_obj and dill.detect.getmodule(obj) != "__main__":
             # we have a source obj, make sure we can dill it and have source to revert from
             # compile to __main__ module to enable full serialization
-            warnings.warn(f'The {repr(obj)} is defined outside of __main__, recompiling in __main__.')
-            obj = self._dynamic_compile(source_obj, module='__main__')
-            source_obj['dill'] = dill.dumps(obj, **dill_kwargs)
+            warnings.warn(
+                f"The {repr(obj)} is defined outside of __main__, recompiling in __main__."
+            )
+            obj = self._dynamic_compile(source_obj, module="__main__")
+            source_obj["dill"] = dill.dumps(obj, **dill_kwargs)
             data = dill.dumps(source_obj, **dill_kwargs)
         else:
             # we have no source object, revert to standard dill
             if as_source:
-                warnings.warn(f'Cannot save {repr(obj)} as source code, reverting to dill')
+                warnings.warn(
+                    f"Cannot save {repr(obj)} as source code, reverting to dill"
+                )
             # could not get source code, revert to dill
             data = dill.dumps(obj, **dill_kwargs)
         return data
 
-    def _dynamic_compile(self, obj, module='__main__'):
+    def _dynamic_compile(self, obj, module="__main__"):
         # re-compile source obj in __main__
         if self.isdipped(obj):
-            if 'dill' in obj:
+            if "dill" in obj:
                 try:
-                    obj = dill.loads(obj['dill'])
+                    obj = dill.loads(obj["dill"])
                 except:
-                    warnings.warn('could not undill, reverting to dynamic compile source code')
+                    warnings.warn(
+                        "could not undill, reverting to dynamic compile source code"
+                    )
                 else:
                     return obj
-            source, data = obj.get('source'), obj.get('__dict__', {})
+            source, data = obj.get("source"), obj.get("__dict__", {})
             mod = types.ModuleType(module)
-            mod.__dict__.update({'__compiling__': True,
-                                 'virtualobj': virtualobj,
-                                 'VirtualObjectHandler': VirtualObjectHandler})
+            mod.__dict__.update(
+                {
+                    "__compiling__": True,
+                    "virtualobj": virtualobj,
+                    "VirtualObjectHandler": VirtualObjectHandler,
+                }
+            )
             sys.modules[module] = mod
-            code = compile(source, '<string>', 'exec')
+            code = compile(source, "<string>", "exec")
             exec(code, mod.__dict__)
-            obj = getattr(mod, obj['name'])
+            obj = getattr(mod, obj["name"])
             # restore instance data, if any
             try:
-                getattr(obj, '__dict__', {}).update(data)
+                getattr(obj, "__dict__", {}).update(data)
             except AttributeError:
                 # we ignore attribute errors on class types
                 if not isinstance(obj, type):
-                    warnings.warn(f'could not restore instance data for {obj}')
+                    warnings.warn(f"could not restore instance data for {obj}")
         return obj
 
     def isdipped(self, data_or_obj):
-        obj = tryOr(lambda: dill.loads(data_or_obj), None) if not isinstance(data_or_obj, dict) else data_or_obj
-        return isinstance(obj, dict) and obj.get('__dipped__') == self.__calories
+        obj = (
+            tryOr(lambda: dill.loads(data_or_obj), None)
+            if not isinstance(data_or_obj, dict)
+            else data_or_obj
+        )
+        return isinstance(obj, dict) and obj.get("__dipped__") == self.__calories
 
 
 dilldip = _DillDip()

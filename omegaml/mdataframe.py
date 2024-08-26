@@ -13,8 +13,17 @@ from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
-from omegaml.util import make_tuple, make_list, restore_index, \
-    cursor_to_dataframe, restore_index_columns_order, PickableCollection, extend_instance, json_normalize, ensure_index
+from omegaml.util import (
+    make_tuple,
+    make_list,
+    restore_index,
+    cursor_to_dataframe,
+    restore_index_columns_order,
+    PickableCollection,
+    extend_instance,
+    json_normalize,
+    ensure_index,
+)
 
 INSPECT_CACHE = []
 
@@ -23,9 +32,10 @@ class MGrouper(object):
     """
     a Grouper for MDataFrames
     """
+
     STATS_MAP = {
-        'std': 'stdDevSamp',
-        'mean': 'avg',
+        "std": "stdDevSamp",
+        "mean": "avg",
     }
 
     def __init__(self, mdataframe, collection, columns, sort=True):
@@ -65,8 +75,9 @@ class MGrouper(object):
         """
 
         def add_stats(specs, column, stat):
-            specs['%s_%s' % (column, stat)] = {
-                '$%s' % MGrouper.STATS_MAP.get(stat, stat): '$%s' % column}
+            specs["%s_%s" % (column, stat)] = {
+                "$%s" % MGrouper.STATS_MAP.get(stat, stat): "$%s" % column
+            }
 
         # generate $group command
         _specs = {}
@@ -74,8 +85,7 @@ class MGrouper(object):
             stats = make_tuple(stats)
             for stat in stats:
                 add_stats(_specs, column, stat)
-        groupby = qops.GROUP(columns=self.columns,
-                             **_specs)
+        groupby = qops.GROUP(columns=self.columns, **_specs)
         # execute and return a dataframe
         pipeline = self._amend_pipeline([groupby])
         data = self.collection.aggregate(pipeline, allowDiskUse=True)
@@ -84,7 +94,7 @@ class MGrouper(object):
             # we need this to build a pipeline for from_records
             # to process, otherwise the cursor will be exhausted already
             for group in data:
-                _id = group.pop('_id')
+                _id = group.pop("_id")
                 if isinstance(_id, dict):
                     group.update(_id)
                 yield group
@@ -96,53 +106,56 @@ class MGrouper(object):
         return df
 
     def _amend_pipeline(self, pipeline):
-        """ amend pipeline with default ops on coll.aggregate() calls """
+        """amend pipeline with default ops on coll.aggregate() calls"""
         if self.should_sort:
-            sort = qops.SORT(**dict(qops.make_sortkey('_id')))
+            sort = qops.SORT(**dict(qops.make_sortkey("_id")))
             pipeline.append(sort)
         return pipeline
 
     def _non_group_columns(self):
-        """ get all columns in mdataframe that is not in columns """
-        return [col for col in self.mdataframe.columns
-                if col not in self.columns and col != '_id'
-                and not col.startswith('_idx')
-                and not col.startswith('_om#')]
+        """get all columns in mdataframe that is not in columns"""
+        return [
+            col
+            for col in self.mdataframe.columns
+            if col not in self.columns
+            and col != "_id"
+            and not col.startswith("_idx")
+            and not col.startswith("_om#")
+        ]
 
     def _count(self):
         count_columns = self._non_group_columns()
         if len(count_columns) == 0:
-            count_columns.append('_'.join(self.columns) + '_count')
+            count_columns.append("_".join(self.columns) + "_count")
         groupby = {
             "$group": {
                 "_id": {k: "$%s" % k for k in self.columns},
             }
         }
         for k in count_columns:
-            groupby['$group']['%s' % k] = {"$sum": 1}
+            groupby["$group"]["%s" % k] = {"$sum": 1}
         pipeline = self._amend_pipeline([groupby])
         if self.should_sort:
-            sort = qops.SORT(**dict(qops.make_sortkey('_id')))
+            sort = qops.SORT(**dict(qops.make_sortkey("_id")))
             pipeline.append(sort)
         return list(self.collection.aggregate(pipeline, allowDiskUse=True))
 
     def count(self):
-        """ return counts by group columns """
+        """return counts by group columns"""
         counts = self._count()
         # remove mongo object _id
         for group in counts:
-            group.update(group.pop('_id'))
+            group.update(group.pop("_id"))
         # transform results to dataframe, then return as pandas would
-        resultdf = pd.DataFrame(counts).set_index(make_list(self.columns),
-                                                  drop=True)
+        resultdf = pd.DataFrame(counts).set_index(make_list(self.columns), drop=True)
         return resultdf
 
     def __iter__(self):
-        """ for each group returns the key and a Filter object"""
+        """for each group returns the key and a Filter object"""
         # reduce count to only one column
         groups = getattr(self, self.columns[0])._count()
         for group in groups:
-            keys = group.get('_id')
+            keys = group.get("_id")
             data = self.mdataframe._clone(query=keys)
             yield keys, data
 
@@ -181,7 +194,7 @@ class MLocIndexer(object):
             df = df[projection]
         if isinstance(self.mdataframe, MSeries):
             df = df._as_mseries(df.columns[0])
-        if getattr(df, 'immediate_loc', False):
+        if getattr(df, "immediate_loc", False):
             df = df.value
         return df
 
@@ -192,24 +205,31 @@ class MLocIndexer(object):
         filterq = []
         projection = None
         if self.positional:
-            idx_cols = ['_om#rowid']
+            idx_cols = ["_om#rowid"]
         else:
             idx_cols = self.mdataframe._get_frame_index()
         flt_kwargs = {}
         enumerable_types = (list, tuple, np.ndarray)
         if isinstance(specs, np.ndarray):
             specs = specs.tolist()
-        if (isinstance(specs, enumerable_types)
-              and isscalar(specs[0]) and len(idx_cols) == 1
-              and not any(isinstance(s, slice) for s in specs)):
+        if (
+            isinstance(specs, enumerable_types)
+            and isscalar(specs[0])
+            and len(idx_cols) == 1
+            and not any(isinstance(s, slice) for s in specs)
+        ):
             # single column index with list of scalar values
-            if (self.positional and isinstance(specs, tuple) and len(specs) == 2
-                  and all(isscalar(v) for v in specs)):
+            if (
+                self.positional
+                and isinstance(specs, tuple)
+                and len(specs) == 2
+                and all(isscalar(v) for v in specs)
+            ):
                 # iloc[int, int] is a cell access
                 flt_kwargs[idx_cols[0]] = specs[0]
                 projection = self._get_projection(specs[1])
             else:
-                flt_kwargs['{}__in'.format(idx_cols[0])] = specs
+                flt_kwargs["{}__in".format(idx_cols[0])] = specs
                 self._from_range = True
         elif isinstance(specs, (int, str)):
             flt_kwargs[idx_cols[0]] = specs
@@ -223,18 +243,18 @@ class MLocIndexer(object):
                         self._from_range = True
                         start, stop = spec.start, spec.stop
                         if start is not None:
-                            flt_kwargs['{}__gte'.format(col)] = start
+                            flt_kwargs["{}__gte".format(col)] = start
                         if stop is not None:
                             if isinstance(stop, int):
                                 stop -= int(self.positional)
-                            flt_kwargs['{}__lte'.format(col)] = stop
+                            flt_kwargs["{}__lte".format(col)] = stop
                     elif isinstance(spec, enumerable_types) and isscalar(spec[0]):
                         self._from_range = True
                         # single column index with list of scalar values
                         # -- convert to list for PyMongo serialization
                         if isinstance(spec, np.ndarray):
                             spec = spec.tolist()
-                        flt_kwargs['{}__in'.format(col)] = spec
+                        flt_kwargs["{}__in".format(col)] = spec
                     elif isscalar(col):
                         flt_kwargs[col] = spec
                 else:
@@ -316,9 +336,8 @@ class MSeriesGroupby(MGrouper):
         # MGrouper will insert a _count column, see _count(). we remove
         # that column again and return a series named as the group column
         resultdf = super(MSeriesGroupby, self).count()
-        count_column = [col for col in resultdf.columns
-                        if col.endswith('_count')][0]
-        new_column = count_column.replace('_count', '')
+        count_column = [col for col in resultdf.columns if col.endswith("_count")][0]
+        new_column = count_column.replace("_count", "")
         resultdf = resultdf.rename(columns={count_column: new_column})
         return resultdf[new_column]
 
@@ -332,14 +351,27 @@ class MDataFrame(object):
     as pandas DataFrames.
     """
 
-    STATFUNCS = ['mean', 'std', 'min', 'max', 'sum', 'var']
+    STATFUNCS = ["mean", "std", "min", "max", "sum", "var"]
 
-    def __init__(self, collection, columns=None, query=None,
-                 limit=None, skip=None, sort_order=None,
-                 force_columns=None, immediate_loc=False, auto_inspect=False,
-                 normalize=False, raw=False,
-                 parser=None,
-                 preparefn=None, from_loc_range=False, metadata=None, **kwargs):
+    def __init__(
+        self,
+        collection,
+        columns=None,
+        query=None,
+        limit=None,
+        skip=None,
+        sort_order=None,
+        force_columns=None,
+        immediate_loc=False,
+        auto_inspect=False,
+        normalize=False,
+        raw=False,
+        parser=None,
+        preparefn=None,
+        from_loc_range=False,
+        metadata=None,
+        **kwargs,
+    ):
         self.collection = PickableCollection(collection)
         # columns in frame
         self.columns = make_tuple(columns) if columns else self._get_fields(raw=raw)
@@ -355,7 +387,7 @@ class MDataFrame(object):
         # force columns -- on output add columns not present
         self.force_columns = force_columns or []
         # was this created from the loc indexer?
-        self.from_loc_indexer = kwargs.get('from_loc_indexer', False)
+        self.from_loc_indexer = kwargs.get("from_loc_indexer", False)
         # was the loc index used a range? Else a single value
         self.from_loc_range = from_loc_range
         # setup query for filter criteries, if provided
@@ -366,7 +398,11 @@ class MDataFrame(object):
             elif isinstance(self.filter_criteria, Filter):
                 self.query_inplace(self.filter_criteria)
             else:
-                raise ValueError('Invalid query specification of type {}'.format(type(self.filter_criteria)))
+                raise ValueError(
+                    "Invalid query specification of type {}".format(
+                        type(self.filter_criteria)
+                    )
+                )
         # if immediate_loc is True, .loc and .iloc always evaluate
         self.immediate_loc = immediate_loc
         # __array__ will return this value if it is set, set it otherwise
@@ -391,9 +427,10 @@ class MDataFrame(object):
         apply mixins in defaults.OMEGA_MDF_MIXINS
         """
         from omegaml import settings
+
         defaults = settings()
         for mixin, applyto in defaults.OMEGA_MDF_MIXINS:
-            if any(v in self._applyto for v in applyto.split(',')):
+            if any(v in self._applyto for v in applyto.split(",")):
                 extend_instance(self, mixin, *args, **kwargs)
 
     def __getstate__(self):
@@ -410,7 +447,7 @@ class MDataFrame(object):
 
     def __reduce__(self):
         state = self.__getstate__()
-        args = self.collection,
+        args = (self.collection,)
         return _mdf_remake, args, state
 
     def __setstate__(self, state):
@@ -419,18 +456,20 @@ class MDataFrame(object):
             setattr(self, k, v)
 
     def _getcopy_kwargs(self, without=None):
-        """ return all parameters required on a copy of this MDataFrame """
-        kwargs = dict(columns=self.columns,
-                      sort_order=self.sort_order,
-                      limit=self.head_limit,
-                      skip=self.skip_topn,
-                      from_loc_indexer=self.from_loc_indexer,
-                      from_loc_range=self.from_loc_range,
-                      immediate_loc=self.immediate_loc,
-                      metadata=self.metadata,
-                      query=self.filter_criteria,
-                      auto_inspect=self.auto_inspect,
-                      preparefn=self._preparefn)
+        """return all parameters required on a copy of this MDataFrame"""
+        kwargs = dict(
+            columns=self.columns,
+            sort_order=self.sort_order,
+            limit=self.head_limit,
+            skip=self.skip_topn,
+            from_loc_indexer=self.from_loc_indexer,
+            from_loc_range=self.from_loc_range,
+            immediate_loc=self.immediate_loc,
+            metadata=self.metadata,
+            query=self.filter_criteria,
+            auto_inspect=self.auto_inspect,
+            preparefn=self._preparefn,
+        )
         [kwargs.pop(k) for k in make_tuple(without or [])]
         return kwargs
 
@@ -488,21 +527,23 @@ class MDataFrame(object):
             return MDataFrame(self.collection, **kwargs)
         elif isinstance(cols_or_slice, np.ndarray):
             return self.iloc[cols_or_slice]
-        raise ValueError('unknown accessor type %s' % type(cols_or_slice))
+        raise ValueError("unknown accessor type %s" % type(cols_or_slice))
 
     def __setitem__(self, column, value):
         # True for any scalar type, numeric, bool, string
         if np.isscalar(value):
-            result = self.collection.update_many(filter=self.filter_criteria,
-                                                 update=qops.SET(column, value))
+            result = self.collection.update_many(
+                filter=self.filter_criteria, update=qops.SET(column, value)
+            )
             self.columns.append(column)
         return self
 
     def _clone(self, collection=None, **kwargs):
         # convenience method to clone itself with updates
         collection = collection if collection is not None else self.collection
-        return self.__class__(collection, **kwargs,
-                              **self._getcopy_kwargs(without=list(kwargs.keys())))
+        return self.__class__(
+            collection, **kwargs, **self._getcopy_kwargs(without=list(kwargs.keys()))
+        )
 
     def statfunc(self, stat):
         aggr = MGrouper(self, self.collection, [], sort=False)
@@ -525,14 +566,17 @@ class MDataFrame(object):
             if raw:
                 result = list(doc.keys())
             else:
-                result = [str(col) for col in doc.keys()
-                          if col != '_id'
-                          and not col.startswith('_idx')
-                          and not col.startswith('_om#')]
+                result = [
+                    str(col)
+                    for col in doc.keys()
+                    if col != "_id"
+                    and not col.startswith("_idx")
+                    and not col.startswith("_om#")
+                ]
         return result
 
     def _get_frame_index(self):
-        """ return the dataframe's index columns """
+        """return the dataframe's index columns"""
         doc = self.collection.find_one()
         if doc is None:
             result = []
@@ -541,12 +585,12 @@ class MDataFrame(object):
         return result
 
     def _get_frame_om_fields(self):
-        """ return the dataframe's omega special fields columns """
+        """return the dataframe's omega special fields columns"""
         doc = self.collection.find_one()
         if doc is None:
             result = []
         else:
-            result = [k for k in list(doc.keys()) if k.startswith('_om#')]
+            result = [k for k in list(doc.keys()) if k.startswith("_om#")]
         return result
 
     def _as_mseries(self, column):
@@ -564,14 +608,14 @@ class MDataFrame(object):
             if isinstance(self.collection, FilteredCollection):
                 query = self.collection.query
             else:
-                query = '*',
+                query = ("*",)
             if explain:
                 cursor = cursor or self._get_cursor()
                 explain = cursor.explain()
             data = {
-                'projection': self.columns,
-                'query': query,
-                'explain': explain or 'specify explain=True'
+                "projection": self.columns,
+                "query": query,
+                "explain": explain or "specify explain=True",
             }
         else:
             data = self._inspect_cache
@@ -584,9 +628,7 @@ class MDataFrame(object):
         projected number of rows when resolving
         """
         nrows = len(self)
-        counts = pd.Series({
-            col: nrows
-            for col in self.columns}, index=self.columns)
+        counts = pd.Series({col: nrows for col in self.columns}, index=self.columns)
         return counts
 
     def __len__(self):
@@ -618,7 +660,9 @@ class MDataFrame(object):
         cursor = self._get_cursor()
         df = self._get_dataframe_from_cursor(cursor)
         if self.auto_inspect:
-            self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
+            self._inspect_cache.append(
+                self.inspect(explain=True, cursor=cursor, raw=True)
+            )
         # this ensures the equiv. of pandas df.loc[n] is a Series
         if self.from_loc_indexer:
             if len(df) == 1 and not self.from_loc_range:
@@ -654,12 +698,12 @@ class MDataFrame(object):
 
     @property
     def _index_meta(self):
-        return self.metadata.get('idx_meta') or dict()
+        return self.metadata.get("idx_meta") or dict()
 
     def _restore_dataframe_proper(self, df):
         df = restore_index(df, self._index_meta)
-        if '_id' in df.columns and not self._raw:
-            df.drop('_id', axis=1, inplace=True)
+        if "_id" in df.columns and not self._raw:
+            df.drop("_id", axis=1, inplace=True)
         if self.force_columns:
             missing = set(self.force_columns) - set(self.columns)
             for col in missing:
@@ -723,9 +767,19 @@ class MDataFrame(object):
         """
         return self._clone(skip=topn)
 
-    def merge(self, right, on=None, left_on=None, right_on=None,
-              how='inner', target=None, suffixes=('_x', '_y'),
-              sort=False, inspect=False, filter=None):
+    def merge(
+        self,
+        right,
+        on=None,
+        left_on=None,
+        right_on=None,
+        how="inner",
+        target=None,
+        suffixes=("_x", "_y"),
+        sort=False,
+        inspect=False,
+        filter=None,
+    ):
         """
         merge this dataframe with another dataframe. only left outer joins
         are currently supported. the output is saved as a new collection,
@@ -747,27 +801,38 @@ class MDataFrame(object):
         :returns: the MDataFrame to the target MDataFrame
         """
         # validate input
-        supported_how = ["left", 'inner', 'right']
-        assert how in supported_how, "only %s merges are currently supported" % supported_how
+        supported_how = ["left", "inner", "right"]
+        assert how in supported_how, (
+            "only %s merges are currently supported" % supported_how
+        )
         for key in [on, left_on, right_on]:
             if key:
-                assert isinstance(
-                    key, str), "only single column merge keys are supported (%s)" % key
+                assert isinstance(key, str), (
+                    "only single column merge keys are supported (%s)" % key
+                )
         if isinstance(right, (Collection, PickableCollection, FilteredCollection)):
             right = MDataFrame(right)
-        assert isinstance(
-            right, MDataFrame), "both must be MDataFrames, got right=%" % type(right)
-        if how == 'right':
+        assert isinstance(right, MDataFrame), (
+            "both must be MDataFrames, got right=%" % type(right)
+        )
+        if how == "right":
             # A right B == B left A
-            return right.merge(self, on=on, left_on=right_on, right_on=left_on,
-                               how='left', target=target, suffixes=suffixes)
+            return right.merge(
+                self,
+                on=on,
+                left_on=right_on,
+                right_on=left_on,
+                how="left",
+                target=target,
+                suffixes=suffixes,
+            )
         # generate lookup parameters
-        on = on or '_id'
+        on = on or "_id"
         right_name = self._get_collection_name_of(right, right)
         target_name = self._get_collection_name_of(
-            target, '_temp.merge.%s' % uuid4().hex)
-        target_field = (
-              "%s_%s" % (right_name.replace('.', '_'), right_on or on))
+            target, "_temp.merge.%s" % uuid4().hex
+        )
+        target_field = "%s_%s" % (right_name.replace(".", "_"), right_on or on)
         """
         TODO enable filter criteria on right dataframe. requires changing LOOKUP syntax from 
              equitly to arbitray match 
@@ -778,46 +843,50 @@ class MDataFrame(object):
             right_filter = None
         """
         right_filter = None
-        lookup = qops.LOOKUP(right_name,
-                             key=on,
-                             left_key=left_on,
-                             right_key=right_on,
-                             target=target_field)
+        lookup = qops.LOOKUP(
+            right_name,
+            key=on,
+            left_key=left_on,
+            right_key=right_on,
+            target=target_field,
+        )
         # unwind merged documents from arrays to top-level document fields
-        unwind = qops.UNWIND(target_field, preserve=how != 'inner')
+        unwind = qops.UNWIND(target_field, preserve=how != "inner")
         # get all fields from left, right
         project = {}
         for left_col in self.columns:
             source_left_col = left_col
-            if left_col == '_id':
+            if left_col == "_id":
                 project[left_col] = 1
                 continue
-            if left_col.startswith('_idx'):
+            if left_col.startswith("_idx"):
                 continue
-            if left_col.startswith('_om#'):
+            if left_col.startswith("_om#"):
                 continue
             if left_col != (on or left_on) and left_col in right.columns:
-                left_col = '%s%s' % (left_col, suffixes[0])
+                left_col = "%s%s" % (left_col, suffixes[0])
             project[left_col] = "$%s" % source_left_col
         for right_col in right.columns:
-            if right_col == '_id':
+            if right_col == "_id":
                 continue
-            if right_col.startswith('_idx'):
+            if right_col.startswith("_idx"):
                 continue
-            if right_col.startswith('_om#'):
+            if right_col.startswith("_om#"):
                 continue
             if right_col == (on or right_on) and right_col == (on or left_on):
                 # if the merge field is the same in both frames, we already
                 # have it from left
                 continue
             if right_col in self.columns:
-                left_col = '%s%s' % (right_col, suffixes[1])
+                left_col = "%s%s" % (right_col, suffixes[1])
             else:
-                left_col = '%s' % right_col
-            project[left_col] = '$%s.%s' % (target_field, right_col)
+                left_col = "%s" % right_col
+            project[left_col] = "$%s.%s" % (target_field, right_col)
         expected_columns = list(project.keys())
-        if '_id' not in project:
-            project['_id'] = 0  # never copy objectids to avoid duplicate keys, unless requested
+        if "_id" not in project:
+            project["_id"] = (
+                0  # never copy objectids to avoid duplicate keys, unless requested
+            )
         project = {"$project": project}
         # store merged documents and return an MDataFrame to it
         out = qops.OUT(target_name)
@@ -835,21 +904,24 @@ class MDataFrame(object):
             result = pipeline
         else:
             result = self.collection.aggregate(pipeline, allowDiskUse=True)
-            result = MDataFrame(self.collection.database[target_name],
-                                force_columns=expected_columns)
+            result = MDataFrame(
+                self.collection.database[target_name], force_columns=expected_columns
+            )
         return result
 
     def append(self, other):
         if isinstance(other, Collection):
             other = MDataFrame(other)
         assert isinstance(
-            other, MDataFrame), "both must be MDataFrames, got other={}".format(type(other))
+            other, MDataFrame
+        ), "both must be MDataFrames, got other={}".format(type(other))
         outname = self.collection.name
         mrout = {
-            'merge': outname,
-            'nonAtomic': True,
+            "merge": outname,
+            "nonAtomic": True,
         }
-        mapfn = Code("""
+        mapfn = Code(
+            """
         function() {
            this._id = ObjectId();
            if(this['_om#rowid']) {
@@ -857,7 +929,9 @@ class MDataFrame(object):
            }
            emit(this._id, this);
         }
-        """ % len(self))
+        """
+            % len(self)
+        )
         reducefn = Code("""
         function(key, value) {
            return value;
@@ -931,7 +1005,8 @@ class MDataFrame(object):
         self._evaluated = None
         self.filter_criteria = self._get_filter_criteria(*args, **kwargs)
         self.collection = FilteredCollection(
-            self.collection, query=self.filter_criteria)
+            self.collection, query=self.filter_criteria
+        )
         return self
 
     def query(self, *args, **kwargs):
@@ -951,8 +1026,8 @@ class MDataFrame(object):
         """
         effective_filter = dict(self.filter_criteria)
         filter_criteria = self._get_filter_criteria(*args, **kwargs)
-        if '$and' in effective_filter:
-            effective_filter['$and'].extend(filter_criteria.get('$and'))
+        if "$and" in effective_filter:
+            effective_filter["$and"].extend(filter_criteria.get("$and"))
         else:
             effective_filter.update(filter_criteria)
         coll = FilteredCollection(self.collection, query=effective_filter)
@@ -1010,11 +1085,13 @@ class MDataFrame(object):
             else:
                 # Series does not have iterrows
                 for i in range(0, len(chunkdf), chunksize):
-                    yield chunkdf.iloc[i:i+chunksize]
+                    yield chunkdf.iloc[i : i + chunksize]
 
     def iteritems(self):
-        if not hasattr(pd.DataFrame, 'iteritems'):
-            raise NotImplementedError('MDataFrame.iteritems has been removed since Pandas 2.0. Use .items instead.')
+        if not hasattr(pd.DataFrame, "iteritems"):
+            raise NotImplementedError(
+                "MDataFrame.iteritems has been removed since Pandas 2.0. Use .items instead."
+            )
         __doc__ = pd.DataFrame.iteritems.__doc__
         return self.items()
 
@@ -1048,11 +1125,13 @@ class MDataFrame(object):
         start, end, chunksize = (int(v) for v in (start, end, chunksize))
         return self.iloc[slice(start, end)].iterchunks(chunksize)
 
-
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
-        return "MDataFrame(collection={collection.name}, {kwargs})".format(collection=self.collection,
-                                                                           kwargs=kwargs)
+        kwargs = ", ".join(
+            "{}={}".format(k, v) for k, v in self._getcopy_kwargs().items()
+        )
+        return "MDataFrame(collection={collection.name}, {kwargs})".format(
+            collection=self.collection, kwargs=kwargs
+        )
 
 
 class MSeries(MDataFrame):
@@ -1072,8 +1151,9 @@ class MSeries(MDataFrame):
 
     def __getitem__(self, cols_or_slice):
         if isinstance(cols_or_slice, Filter):
-            return MSeries(self.collection, columns=self.columns,
-                           query=cols_or_slice.query)
+            return MSeries(
+                self.collection, columns=self.columns, query=cols_or_slice.query
+            )
         return super(MSeries, self).__getitem__(cols_or_slice)
 
     @property
@@ -1121,19 +1201,24 @@ class MSeries(MDataFrame):
             if len(val) == 1 and self.from_loc_indexer:
                 val = val.iloc[0]
         if self.auto_inspect:
-            self._inspect_cache.append(self.inspect(explain=True, cursor=cursor, raw=True))
+            self._inspect_cache.append(
+                self.inspect(explain=True, cursor=cursor, raw=True)
+            )
         if self._preparefn:
             df = self._preparefn(val)
         return val
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
-        return "MSeries(collection={collection.name}, {kwargs})".format(collection=self.collection,
-                                                                        kwargs=kwargs)
+        kwargs = ", ".join(
+            "{}={}".format(k, v) for k, v in self._getcopy_kwargs().items()
+        )
+        return "MSeries(collection={collection.name}, {kwargs})".format(
+            collection=self.collection, kwargs=kwargs
+        )
 
     @property
     def shape(self):
-        return len(self),
+        return (len(self),)
 
 
 def _mdf_remake(collection):

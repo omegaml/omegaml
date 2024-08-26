@@ -14,7 +14,7 @@ class StrictModel(Model):
     @property
     def _schema(self):
         old = super(StrictModel, self)._schema
-        old['additionalProperties'] = False
+        old["additionalProperties"] = False
         return old
 
 
@@ -40,6 +40,7 @@ class OmegaResourceMixin(object):
     """
     helper mixin to resolve the request to a configured Omega instance
     """
+
     max_url_length = 2048
 
     def __init__(self, *args, **kwargs):
@@ -53,42 +54,55 @@ class OmegaResourceMixin(object):
     @property
     def _omega(self):
         if self._omega_instance is None:
-            bucket = flask.request.headers.get('bucket')
+            bucket = flask.request.headers.get("bucket")
             self._omega_instance = om.setup()[bucket]
         return self._omega_instance
 
     def get_query_payload(self):
         from omegaml.restapi.resources import omega_api
+
         query = flask.request.args.to_dict()
         payload = omega_api.payload or {}
         return query, payload
 
     def check_object_authorization(self, pattern):
         from omegaml.restapi import resource_filter
+
         if resource_filter:
             if len(pattern) > self.max_url_length:
                 # SEC: Avoid ReDoS on admin-provided regular expression
                 # -- https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
                 # -- for practical matters we limit the input length
-                raise ValueError(f'processing of URLs longer than {self.max_url_length} is not supported')
+                raise ValueError(
+                    f"processing of URLs longer than {self.max_url_length} is not supported"
+                )
             if not any(rx.match(pattern) for rx in resource_filter):
                 return False
         return True
 
-    def create_response_from_resource(self, generic_resource, resource_method, resource_name, resource_pk, *args,
-                                      **kwargs):
+    def create_response_from_resource(
+        self,
+        generic_resource,
+        resource_method,
+        resource_name,
+        resource_pk,
+        *args,
+        **kwargs,
+    ):
         query, payload = self.get_query_payload()
         async_body = {
             resource_name: resource_pk,
-            'result': 'pending',
+            "result": "pending",
         }
-        pattern = rf'{resource_name}/{resource_pk}/{resource_method}/'
+        pattern = rf"{resource_name}/{resource_pk}/{resource_method}/"
         if not self.check_object_authorization(pattern):
-            raise BadRequest(f'{pattern} is not available')
+            raise BadRequest(f"{pattern} is not available")
         try:
             meth = self._get_resource_method(generic_resource, resource_method)
             result = meth(resource_pk, query, payload)
-            resp = self.create_maybe_async_response(result, async_body=async_body, **kwargs)
+            resp = self.create_maybe_async_response(
+                result, async_body=async_body, **kwargs
+            )
         except Exception as e:
             raise self._build_http_exception(e)
         return resp
@@ -118,21 +132,25 @@ class OmegaResourceMixin(object):
     @property
     def _generic_model_resource(self):
         from omegaml.backends.restapi.model import GenericModelResource
+
         return GenericModelResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_script_resource(self):
         from omegaml.backends.restapi.script import GenericScriptResource
+
         return GenericScriptResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_service_resource(self):
         from omegaml.backends.restapi.service import GenericServiceResource
+
         return GenericServiceResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_job_resource(self):
         from omegaml.backends.restapi.job import GenericJobResource
+
         return GenericJobResource(self._omega, is_async=self.is_async)
 
     @property

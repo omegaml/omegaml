@@ -46,6 +46,7 @@ __settings = None
 def is_dataframe(obj):
     try:
         import pandas as pd
+
         return isinstance(obj, pd.DataFrame)
     except:
         return False
@@ -54,6 +55,7 @@ def is_dataframe(obj):
 def is_series(obj):
     try:
         import pandas as pd
+
         return isinstance(obj, pd.Series) and not isinstance(obj, pd.DataFrame)
     except:
         return False
@@ -63,6 +65,7 @@ def is_estimator(obj):
     try:
         from sklearn.base import BaseEstimator
         from sklearn.pipeline import Pipeline
+
         return isinstance(obj, (BaseEstimator, Pipeline))
     except:
         False
@@ -71,6 +74,7 @@ def is_estimator(obj):
 def is_ndarray(obj):
     try:
         import numpy as np
+
         return isinstance(obj, np.ndarray)
     except:
         False
@@ -83,12 +87,12 @@ def is_spark_mllib(obj):
     # python class, e.g. obj=pyspark.mllib.clustering.KMeans
     """
     if isinstance(obj, str):
-        return 'pyspark.mllib' in obj
+        return "pyspark.mllib" in obj
     return False
 
 
 def settings(reload=False):
-    """ wrapper to get omega settings from either django or omegaml.defaults
+    """wrapper to get omega settings from either django or omegaml.defaults
 
     This is a settings (defaults) loader. It returns a cached DefaultsContext
     that is initialised from omegaml.defaults. When running in Django, the
@@ -119,6 +123,7 @@ def settings(reload=False):
         to the new.
     """
     from omegaml import _base_config as omdefaults
+
     global __settings
     if not reload and __settings is not None:
         return __settings
@@ -126,13 +131,17 @@ def settings(reload=False):
         # see if we're running as a django app
         from django.contrib.auth.models import User
         from django.conf import settings as djsettings  # @UnresolvedImport
+
         try:
-            getattr(djsettings, 'SECRET_KEY')
+            getattr(djsettings, "SECRET_KEY")
         except Exception as e:
             from warnings import warn
-            warn("Using omegaml.defaults because Django was not initialized."
-                 "Try importing omegaml within a method instead of at the "
-                 "module level")
+
+            warn(
+                "Using omegaml.defaults because Django was not initialized."
+                "Try importing omegaml within a method instead of at the "
+                "module level"
+            )
             raise
         else:
             defaults = djsettings
@@ -142,6 +151,7 @@ def settings(reload=False):
     else:
         # get default omega settings into django settings if not set there
         from omegaml import _base_config as omdefaults
+
         for k in dir(omdefaults):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
@@ -154,20 +164,20 @@ def settings(reload=False):
 
 
 def override_settings(**kwargs):
-    """ test support """
+    """test support"""
     cfgvars = settings()
     for k, v in kwargs.items():
         setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
-    celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {})
-    for k in [k for k in kwargs.keys() if k.startswith('OMEGA_CELERY')]:
-        celery_k = k.replace('OMEGA_', '')
+    celery_config = getattr(cfgvars, "OMEGA_CELERY_CONFIG", {})
+    for k in [k for k in kwargs.keys() if k.startswith("OMEGA_CELERY")]:
+        celery_k = k.replace("OMEGA_", "")
         celery_config[celery_k] = kwargs[k]
-    setattr(cfgvars, 'OMEGA_CELERY_CONFIG', celery_config)
+    setattr(cfgvars, "OMEGA_CELERY_CONFIG", celery_config)
 
 
 def delete_database():
-    """ test support """
+    """test support"""
     from omegaml.mongoshim import MongoClient
 
     mongo_url = settings().OMEGA_MONGO_URL
@@ -175,7 +185,7 @@ def delete_database():
     database_name = parsed_url.path[1:]
     # authenticate via admin db
     # see https://stackoverflow.com/a/20554285
-    c = MongoClient(mongo_url, authSource='admin')
+    c = MongoClient(mongo_url, authSource="admin")
     c.drop_database(database_name)
 
 
@@ -191,14 +201,14 @@ def make_list(arg):
     return arg
 
 
-def flatten_columns(col, sep='_'):
+def flatten_columns(col, sep="_"):
     # source http://stackoverflow.com/a/29437514
     if not type(col) is tuple:
         return col
     else:
-        new_col = ''
+        new_col = ""
         for leveli, level in enumerate(col):
-            if not level == '':
+            if not level == "":
                 if not leveli == 0:
                     new_col += sep
                 new_col += level
@@ -214,6 +224,7 @@ def load_class(requested_class):
     class from module, otherwise return requested_class as is
     """
     import importlib
+
     if isinstance(requested_class, str):
         if requested_class in CLASS_CACHE:
             return CLASS_CACHE.get(requested_class)
@@ -225,8 +236,9 @@ def load_class(requested_class):
             return cls
         except Exception as e:
             logging.debug(
-                'could not load module %s for class %s due to %s. sys.path=%s' % (
-                    module_name, class_name, str(e), str(sys.path)))
+                "could not load module %s for class %s due to %s. sys.path=%s"
+                % (module_name, class_name, str(e), str(sys.path))
+            )
             raise
     return requested_class
 
@@ -237,16 +249,18 @@ def get_rdd_from_df(df):
     """
     from pyspark import SparkContext, SQLContext
     from pyspark.mllib.linalg import Vectors
+
     sc = SparkContext.getOrCreate()
     from warnings import warn
+
     warn(
         "get_rdd_from_df creates a spark context, it is recommended"
         " that you use SparkContext.getOrCreate() to prevent multiple context"
-        " creation")
+        " creation"
+    )
     sqlContext = SQLContext(sc)
     spark_df = sqlContext.createDataFrame(df)
-    rdd = spark_df.rdd.map(lambda data: Vectors.dense(
-        [float(x) for x in data]))
+    rdd = spark_df.rdd.map(lambda data: Vectors.dense([float(x) for x in data]))
     return rdd
 
 
@@ -256,6 +270,7 @@ def get_labeledpoints(Xname, Yname):
     """
     import omegaml as om
     from pyspark.mllib.regression import LabeledPoint
+
     # import from datastore
     X = om.datasets.get(Xname)
     Y = om.datasets.get(Yname)
@@ -271,6 +286,7 @@ def get_labeled_points_from_rdd(rdd):
     returns a labeledpoint from the RDD provided
     """
     from pyspark.mllib.regression import LabeledPoint
+
     return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
 
 
@@ -291,21 +307,22 @@ def unravel_index(df, row_count=0):
     """
     # remember original names
     idx_meta = {
-        'names': df.index.names,
+        "names": df.index.names,
     }
     # convert index names so we can restore them later
-    store_idxnames = ['_idx#{}_{}'.format(i, name or i)
-                      for i, name in enumerate(idx_meta['names'])]
+    store_idxnames = [
+        "_idx#{}_{}".format(i, name or i) for i, name in enumerate(idx_meta["names"])
+    ]
     df.index.names = store_idxnames
     unravelled_df, idx_meta = df.reset_index(), idx_meta
     # store row ids
-    unravelled_df['_om#rowid'] = unravelled_df.index.values + row_count
+    unravelled_df["_om#rowid"] = unravelled_df.index.values + row_count
     # restore index names on original dataframe
-    df.index.names = idx_meta['names']
+    df.index.names = idx_meta["names"]
     # treat particular index types
     if isinstance(df.index, pd.DatetimeIndex):
-        if getattr(df.index, 'freq') is not None:
-            idx_meta['freq'] = getattr(df.index.freq, 'name', None)
+        if getattr(df.index, "freq") is not None:
+            idx_meta["freq"] = getattr(df.index.freq, "name", None)
     return unravelled_df, idx_meta
 
 
@@ -318,13 +335,15 @@ def restore_index_columns_order(columns):
     """
 
     def get_index_order(col):
-        if '_idx#' in col:
-            n = col.split('_')[1].split('#')[1]
+        if "_idx#" in col:
+            n = col.split("_")[1].split("#")[1]
         else:
             n = 0
         return n
 
-    index_cols = (col for col in columns if isinstance(col, str) and col.startswith('_idx'))
+    index_cols = (
+        col for col in columns if isinstance(col, str) and col.startswith("_idx")
+    )
     index_cols = sorted(index_cols, key=get_index_order)
     return index_cols
 
@@ -340,20 +359,20 @@ def restore_index(df, idx_meta, rowid_sort=True):
            specify False to keep the sort order.
     """
     # -- establish row order proper
-    if rowid_sort and '_om#rowid' in df:
-        df.sort_values('_om#rowid', inplace=True)
-        del df['_om#rowid']
+    if rowid_sort and "_om#rowid" in df:
+        df.sort_values("_om#rowid", inplace=True)
+        del df["_om#rowid"]
     # -- get index columns
     index_cols = restore_index_columns_order(df.columns)
     # -- set index columns
     result = df.set_index(index_cols) if index_cols else df
     if index_cols:
-        result.index.names = idx_meta.get('names', [None] * len(index_cols))
+        result.index.names = idx_meta.get("names", [None] * len(index_cols))
     if isinstance(result.index, pd.DatetimeIndex):
         # restore datetime frequency, if possible
-        if 'freq' in idx_meta:
+        if "freq" in idx_meta:
             try:
-                freq = idx_meta.get('freq')
+                freq = idx_meta.get("freq")
                 freq = freq or pd.infer_freq(result.index)
                 result = result.asfreq(freq)
             except:
@@ -362,12 +381,13 @@ def restore_index(df, idx_meta, rowid_sort=True):
 
 
 def jsonescape(s):
-    return str(s).replace('.', '_')
+    return str(s).replace(".", "_")
 
 
 def grouper(n, iterable):
     # https://stackoverflow.com/a/8998040
     import itertools
+
     it = iter(iterable)
     while True:
         chunk_it = itertools.islice(it, n)
@@ -383,16 +403,21 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     # works by building a set of smaller dataframes to reduce memory
     # consumption. Note chunks are of size max. chunk_size.
     import pandas as pd
+
     frames = []
-    if hasattr(cursor, 'count_documents'):
+    if hasattr(cursor, "count_documents"):
         count = cursor.count_documents()
-        chunk_size = max(chunk_size, int(count * .1))
+        chunk_size = max(chunk_size, int(count * 0.1))
     else:
         # CommandCursors don't have .count_documents, go as long as we can
         count = None
     if count is None or count > 0:
         for chunk in grouper(chunk_size, cursor):
-            df = pd.DataFrame.from_records(chunk) if not parser else parser(r for r in chunk)
+            df = (
+                pd.DataFrame.from_records(chunk)
+                if not parser
+                else parser(r for r in chunk)
+            )
             frames.append(df)
         if frames:
             df = pd.concat(frames)
@@ -419,8 +444,10 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
     """
     from omegaml.store.queryops import ensure_index_limit
 
-    idx_keys = list(dict(dict(v)['key']).keys() for v in coll.list_indexes())
-    index_exists = any(all(k in keys for k in dict(idx_specs).keys()) for keys in idx_keys)
+    idx_keys = list(dict(dict(v)["key"]).keys() for v in coll.list_indexes())
+    index_exists = any(
+        all(k in keys for k in dict(idx_specs).keys()) for keys in idx_keys
+    )
     idx_specs_SON = list(dict(idx_specs).items())
     # finally create or replace index
     created = False
@@ -443,6 +470,7 @@ def reshaped(data):
     """
     import pandas as pd
     import numpy as np
+
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 1:
             data = data.values.reshape(-1, 1)
@@ -467,6 +495,7 @@ def gsreshaped(data):
     """
     import pandas as pd
     import numpy as np
+
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 2 and data.shape[1] == 1:
             data = data.values.reshape(-1)
@@ -484,16 +513,16 @@ def convert_dtypes(df, dtypes):
     :param dtypes: the dict mapping column to dtype (use kind_meta['dtypes'])
     """
     # tz pattern used in convert_dtypes
-    tzinfo_pattern = re.compile(r'datetime64\[ns, (.*)\]')
+    tzinfo_pattern = re.compile(r"datetime64\[ns, (.*)\]")
     for col, dtype in dtypes.items():
-        if dtype.startswith('datetime'):
-            if not hasattr(df, 'dtypes'):
+        if dtype.startswith("datetime"):
+            if not hasattr(df, "dtypes"):
                 continue
             try:
                 match = tzinfo_pattern.match(dtype)
                 if match:
                     tzname = match.groups()[0]
-                    df[col] = df[col].dt.tz_localize('UTC').dt.tz_convert(tzname)
+                    df[col] = df[col].dt.tz_localize("UTC").dt.tz_convert(tzname)
             except:
                 # TODO ignore errors, issue warning
                 pass
@@ -522,7 +551,7 @@ class PickableCollection(object):
     """
 
     def __init__(self, collection):
-        super(PickableCollection, self).__setattr__('collection', collection)
+        super(PickableCollection, self).__setattr__("collection", collection)
         self._pkl_cloned = False
 
     def __getattr__(self, k):
@@ -543,58 +572,66 @@ class PickableCollection(object):
         # options contains ssl settings
         options = self.database.client._MongoClient__options._options
         # extract credentials in pickable format
-        if hasattr(self.database.client, '_MongoClient__all_credentials'):
+        if hasattr(self.database.client, "_MongoClient__all_credentials"):
             # pymongo < 4.1
             all_creds = self.database.client._MongoClient__all_credentials
             # -- if authSource was used for connection, credentials are in 'admin'
             # -- otherwise credentials are keyed by username
-            cred_key = 'admin' if 'admin' in all_creds else options['username']
+            cred_key = "admin" if "admin" in all_creds else options["username"]
             creds = all_creds[cred_key]
         else:
             # pymongo >= 4.1
             creds = self.database.client.options.pool_options._credentials
         creds_state = dict(creds._asdict())
-        creds_state.pop('cache')
-        creds_state['source'] = str(creds.source)
+        creds_state.pop("cache")
+        creds_state["source"] = str(creds.source)
         # https://github.com/mongodb/mongo-python-driver/blob/087950d869096cf44a797f6c402985a73ffec16e/pymongo/common.py#L161
         UUID_REPS = {
-            UuidRepresentation.STANDARD: 'standard',
-            UuidRepresentation.PYTHON_LEGACY: 'pythonLegacy',
+            UuidRepresentation.STANDARD: "standard",
+            UuidRepresentation.PYTHON_LEGACY: "pythonLegacy",
         }
-        options['uuidRepresentation'] = UUID_REPS.get(options.get('uuidRepresentation'), 'standard')
+        options["uuidRepresentation"] = UUID_REPS.get(
+            options.get("uuidRepresentation"), "standard"
+        )
         return {
-            'name': self.name,
-            'database': self.database.name,
-            'host': host,
-            'port': port,
-            'credentials': creds_state,
-            'options': options,
+            "name": self.name,
+            "database": self.database.name,
+            "host": host,
+            "port": port,
+            "credentials": creds_state,
+            "options": options,
         }
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
-        url = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(**state, **state['credentials'])
+
+        url = "mongodb://{username}:{password}@{host}:{port}/{database}".format(
+            **state, **state["credentials"]
+        )
         # ClientOptions calls it serverselectiontimeoutms, but stores seconds
         # MongoClient however, on recreating in unpickling, requires milliseconds
         # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html?highlight=serverSelectionTimeoutMS#pymongo.mongo_client.MongoClient
         # https://github.com/mongodb/mongo-python-driver/blob/7a539f227a9524b27ef469826ef9ee5bd4533773/pymongo/common.py
         # https://github.com/mongodb/mongo-python-driver/blob/master/pymongo/client_options.py#L157
-        options = state['options']
-        options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
-        client = MongoClient(url, authSource=state['credentials']['source'], **options)
+        options = state["options"]
+        options["serverSelectionTimeoutMS"] = (
+            options.pop("serverselectiontimeoutms", 30) * 1000
+        )
+        client = MongoClient(url, authSource=state["credentials"]["source"], **options)
         db = client.get_database()
-        collection = db[state['name']]
-        super(PickableCollection, self).__setattr__('collection', collection)
+        collection = db[state["name"]]
+        super(PickableCollection, self).__setattr__("collection", collection)
         self._pkl_cloned = True
 
     def __repr__(self):
-        return 'PickableCollection({})'.format(repr(self.collection))
+        return "PickableCollection({})".format(repr(self.collection))
 
 
 def extend_instance(obj, cls, *args, conditional=None, **kwargs):
     """Apply mixins to a class instance after creation"""
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
+
     cls = load_class(cls)
     base_mro = obj.__class__.mro()
     should_apply = True if not callable(conditional) else conditional(cls, obj)
@@ -602,28 +639,31 @@ def extend_instance(obj, cls, *args, conditional=None, **kwargs):
         base_cls = obj.__class__
         base_cls_name = base_mro[-2].__name__
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
-    if hasattr(obj, '_init_mixin'):
+    if hasattr(obj, "_init_mixin"):
         obj._init_mixin(*args, **kwargs)
 
 
-def temp_filename(dir=None, ext='tmp'):
-    """ generate a temporary file name """
+def temp_filename(dir=None, ext="tmp"):
+    """generate a temporary file name"""
     dir = dir or tempfile.mkdtemp()
-    return os.path.join(dir, uuid.uuid4().hex + f'.{ext}')
+    return os.path.join(dir, uuid.uuid4().hex + f".{ext}")
 
 
 def remove_temp_filename(fn, dir=True):
     dirname = os.path.dirname(fn)
     os.remove(fn)
     if dir:
-        if dirname.startswith('/tmp/') and len(dirname.split('/')) > 1:
+        if dirname.startswith("/tmp/") and len(dirname.split("/")) > 1:
             rmtree(dirname)
         else:
-            warnings.warn('will not remove directory {} as it is outside of /tmp'.format(fn))
+            warnings.warn(
+                "will not remove directory {} as it is outside of /tmp".format(fn)
+            )
 
 
 def ensure_python_array(arr, dtype):
     import numpy as np
+
     return np.array(arr).astype(dtype)
 
 
@@ -646,13 +686,13 @@ def module_available(modname):
 
 def tensorflow_available():
     # https://stackoverflow.com/a/38645250
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
-    logging.getLogger('tensorflow').setLevel(logging.ERROR)
-    return module_available('tensorflow')
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = os.environ.get("TF_CPP_MIN_LOG_LEVEL") or "3"
+    logging.getLogger("tensorflow").setLevel(logging.ERROR)
+    return module_available("tensorflow")
 
 
 def keras_available():
-    return module_available('keras')
+    return module_available("keras")
 
 
 def calltrace(obj):
@@ -691,10 +731,10 @@ def calltrace(obj):
         return methodcall
 
     for item in dir(obj):
-        if item.startswith('__'):
+        if item.startswith("__"):
             continue
         el = getattr(obj, item)
-        if type(el).__name__ == 'method':
+        if type(el).__name__ == "method":
             setattr(obj, item, tracefn(el))
     return obj
 
@@ -728,7 +768,7 @@ class DefaultsContext(object):
 
     def __iter__(self):
         for k in dir(self):
-            if k.startswith('OMEGA') and k.isupper():
+            if k.startswith("OMEGA") and k.isupper():
                 yield k
 
     def __getitem__(self, k):
@@ -750,12 +790,13 @@ class DefaultsContext(object):
 
     def __repr__(self):
         d = {k: self[k] for k in self.keys()}
-        return 'DefaultsContext({})'.format(repr(d))
+        return "DefaultsContext({})".format(repr(d))
 
 
 def ensure_json_serializable(v):
     import numpy as np
     import pandas as pd
+
     if isinstance(v, np.ndarray):
         return v.flatten().tolist()
     if isinstance(v, pd.Series):
@@ -763,17 +804,13 @@ def ensure_json_serializable(v):
     elif isinstance(v, range):
         v = list(v)
     elif isinstance(v, dict):
-        vv = {
-            k: ensure_json_serializable(v)
-            for k, v in v.items()
-        }
+        vv = {k: ensure_json_serializable(v) for k, v in v.items()}
         v = vv
     return v
 
 
 def mkdirs(path):
-    """ safe os.makedirs for python 2 & 3
-    """
+    """safe os.makedirs for python 2 & 3"""
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -787,36 +824,40 @@ def base_loader(_base_config):
     def load_customized():
         # SEC: CWE-94 avoid code injection by ensuring we only load modules that have a valid spec
         # - status: fixed
-        modname = os.environ.get('OMEGA_CUSTOM_LOADER', '')
-        assert find_spec(modname) is not None, f"{modname} is not a valid module (OMEGA_CUSTOM_LOADER)"
+        modname = os.environ.get("OMEGA_CUSTOM_LOADER", "")
+        assert (
+            find_spec(modname) is not None
+        ), f"{modname} is not a valid module (OMEGA_CUSTOM_LOADER)"
         mod = import_module(modname)
         _omega = mod.omega
         _base_config_client = mod.defaults
         _base_config.update_from_obj(_base_config_client, attrs=_base_config)
-        return _omega, 'custom'
+        return _omega, "custom"
 
     def load_commercial():
         from omegaee import omega as _omega
         from omegaee import eedefaults as _base_config_ee
+
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
         # ensure django settings are reloaded
         settings(reload=True)
-        return _omega, 'commercial'
+        return _omega, "commercial"
 
     def load_base():
         from omegaml import omega as _omega
-        return _omega, 'base configuration'
+
+        return _omega, "base configuration"
 
     loaders = load_customized, load_commercial, load_base
     for loader in loaders:
         try:
-            logger.debug(f'attempting to load omegaml from {loader}')
+            logger.debug(f"attempting to load omegaml from {loader}")
             _omega, source = loader()
         except Exception as e:
-            logger.debug(f'failed to load omegaml from {loader}, {e}')
+            logger.debug(f"failed to load omegaml from {loader}, {e}")
         else:
-            logger.debug(f'succeeded to load omegaml from {loader}')
-            logger.info(f'loaded omegaml from {source}')
+            logger.debug(f"succeeded to load omegaml from {loader}")
+            logger.info(f"loaded omegaml from {source}")
             break
 
     return _omega
@@ -828,8 +869,15 @@ from contextlib import contextmanager
 import re
 
 
-def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None, msg='could not read {}',
-           **kwargs):
+def markup(
+    file_or_str,
+    parsers=None,
+    direct=True,
+    on_error="warn",
+    default=None,
+    msg="could not read {}",
+    **kwargs,
+):
     """
     a safe markup file reader, accepts json and yaml, returns a dict or a default
     Usage:
@@ -873,7 +921,7 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
                 yield f
         elif isinstance(filein, str):  # some other string, make a file-like
             yield StringIO(filein)
-        elif hasattr(filein, 'read'):
+        elif hasattr(filein, "read"):
             # file-like object
             yield filein
 
@@ -886,7 +934,7 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
         for fn in parsers:
             try:
                 with fopen(file_or_str) as fin:
-                    if hasattr(fin, 'seek'):
+                    if hasattr(fin, "seek"):
                         fin.seek(0)
                     data = fn(fin, **kwargs.get(fn.__module__, {}))
             except Exception as e:
@@ -895,9 +943,13 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
                 return data
         # nothing worked so far
         actions = {
-            'fail': lambda: throw(ValueError("Reading {} caused exceptions {}".format(file_or_str, exceptions))),
-            'warn': lambda: logging.warning(msg.format(file_or_str)) or default,
-            'silent': lambda: default,
+            "fail": lambda: throw(
+                ValueError(
+                    "Reading {} caused exceptions {}".format(file_or_str, exceptions)
+                )
+            ),
+            "warn": lambda: logging.warning(msg.format(file_or_str)) or default,
+            "silent": lambda: default,
         }
         return actions[on_error]()
 
@@ -910,13 +962,15 @@ def raises(fn, wanted_ex):
     try:
         fn()
     except Exception as e:
-        assert isinstance(e, wanted_ex), "expected {}, raised {} instead".format(wanted_ex, e)
+        assert isinstance(e, wanted_ex), "expected {}, raised {} instead".format(
+            wanted_ex, e
+        )
     else:
         raise ValueError("did not raise {}".format(wanted_ex))
     return True
 
 
-def dict_merge(destination, source, delete_on='__delete__', subset=None):
+def dict_merge(destination, source, delete_on="__delete__", subset=None):
     """
     Merge two dictionaries, including sub dicts
 
@@ -952,8 +1006,9 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
 
 
 def ensure_base_collection(collection):
-    """ get base from pymongo.Collection subclass instance """
+    """get base from pymongo.Collection subclass instance"""
     from pymongo.collection import Collection
+
     is_real_collection = isinstance(collection, Collection)
     while not is_real_collection:
         collection = collection.collection
@@ -962,14 +1017,14 @@ def ensure_base_collection(collection):
 
 
 def reorder(df, specs):
-    """ build reordered column selector given specs
+    """build reordered column selector given specs
 
     Takes a dataframe and returns a column selector accordingly.
     This is convenient to reorder a large number of
     """
     selector = []
-    for c in specs.split(','):
-        if c == '*':
+    for c in specs.split(","):
+        if c == "*":
             selector.extend(sorted(set(df.columns) - set(selector)))
         else:
             if c in selector:
@@ -979,7 +1034,7 @@ def reorder(df, specs):
 
 
 def migrate_unhashed_datasets(store):
-    """ Migrate the names of previously unhashed datasets (collections)
+    """Migrate the names of previously unhashed datasets (collections)
 
     Args:
         store: the OmegaStore instance, e.g. om.datasets
@@ -988,11 +1043,13 @@ def migrate_unhashed_datasets(store):
         list of migrated dataset tuples(name, unhashed_collection_name,
         hashed_collection_name)
     """
-    assert store.defaults.OMEGA_STORE_HASHEDNAMES, "OMEGA_STORE_HASEHDNAMES must be set to True for this to work"
+    assert (
+        store.defaults.OMEGA_STORE_HASHEDNAMES
+    ), "OMEGA_STORE_HASEHDNAMES must be set to True for this to work"
     migrated = []
     for dsmeta in store.list(hidden=True, raw=True):
         dsname = dsmeta.name
-        ext = dsname.split('.')[-1]
+        ext = dsname.split(".")[-1]
         hashed_name = store.object_store_key(dsname, ext)
         if dsmeta.collection is not None:
             unhashed_coll_name = dsmeta.collection
@@ -1007,7 +1064,7 @@ def migrate_unhashed_datasets(store):
 
 
 class MongoEncoder(json.JSONEncoder):
-    """ A safe encoder for mongodb
+    """A safe encoder for mongodb
 
     Encoder for python object to its corresponding JSON/BSON-compatible type,
     defaulting to a value's string representation if no other conversion is possible.
@@ -1024,6 +1081,7 @@ class MongoEncoder(json.JSONEncoder):
     def default(self, obj):
         # TODO improve for speed
         import numpy as np
+
         try:
             from pandas.api.types import is_integer_dtype, is_float_dtype, is_array_like
         except:
@@ -1040,13 +1098,13 @@ class MongoEncoder(json.JSONEncoder):
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, pd.DataFrame):
-            return obj.to_dict(orient='records')
+            return obj.to_dict(orient="records")
         elif isinstance(obj, pd.Series):
             return obj.tolist()
         elif is_array_like(obj) and is_integer_dtype(obj):
-            return pd.to_numeric(obj, downcast='float')
+            return pd.to_numeric(obj, downcast="float")
         elif is_array_like(obj) and is_float_dtype(obj):
-            return pd.to_numeric(obj, downcast='float')
+            return pd.to_numeric(obj, downcast="float")
         elif isinstance(obj, datetime):
             return obj.isoformat()
         elif isinstance(obj, date):
@@ -1054,7 +1112,7 @@ class MongoEncoder(json.JSONEncoder):
         elif isinstance(obj, pd.Timedelta):
             return obj.value
         elif isinstance(obj, bytes):
-            return b64encode(obj).decode('utf8')
+            return b64encode(obj).decode("utf8")
         elif isinstance(obj, range):
             return list(obj)
         try:
@@ -1062,13 +1120,15 @@ class MongoEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
         except Exception as e:
             # ignore exception in favor of string repr
-            msg = f'Could not encode value of {type(obj)} natively due to {e}, resolved to str(obj)'
+            msg = f"Could not encode value of {type(obj)} natively due to {e}, resolved to str(obj)"
             warnings.warn(msg)
             pass
         return str(obj)
 
 
-json_dumps_np = lambda *args, cls=None, fail=False, **kwargs: json.dumps(*args, **kwargs, cls=cls or MongoEncoder)
+json_dumps_np = lambda *args, cls=None, fail=False, **kwargs: json.dumps(
+    *args, **kwargs, cls=cls or MongoEncoder
+)
 mongo_compatible = lambda *args: json.loads(json_dumps_np(*args))
 
 
@@ -1085,7 +1145,7 @@ _raise = lambda ex: (_ for _ in ()).throw(ex)
 
 
 class IterableJsonDump(list):
-    """ dump iterable of json data """
+    """dump iterable of json data"""
 
     # adapted from https://stackoverflow.com/a/45143995/890242
     def __init__(self, generator, transform=None):
@@ -1115,11 +1175,15 @@ class IterableJsonDump(list):
         return buffer.getvalue()
 
 
-isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])
+isTrue = (
+    lambda v: v
+    if isinstance(v, bool)
+    else (v.lower() in ["yes", "y", "t", "true", "1"])
+)
 
 
 class SystemPosixPath(type(Path()), Path):
-    """ a pathlib.Path shim that renders with Posix path.sep on all systems
+    """a pathlib.Path shim that renders with Posix path.sep on all systems
 
     Usage:
         path = SystemPosixPath('./foo/bar')
@@ -1135,7 +1199,7 @@ class SystemPosixPath(type(Path()), Path):
         # on windows, return a posix path
         # on posix systems, this is a noop
         path = super().__str__()
-        return path if os.name != 'nt' else path.replace('\\', '/')
+        return path if os.name != "nt" else path.replace("\\", "/")
 
 
 class ProcessLocal(dict):
@@ -1175,18 +1239,18 @@ class KeepMissing(dict):
     # in order to avoid raising KeyError
     # see str.format_map
     def __missing__(self, key):
-        return '{' + key + '}'
+        return "{" + key + "}"
 
 
 def sec_validate_url(url):
-    assert validators.url(url,
-                          skip_ipv4_addr=True,
-                          skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
-    assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
+    assert validators.url(
+        url, skip_ipv4_addr=True, skip_ipv6_addr=True
+    ), f"expected a http:// or https:// url, got {url}"
+    assert url.startswith("http"), f"expected http:// or https:// url, got {url}"
     return True
 
 
-def tarfile_safe_extractall(tar, dest_path, filter='data'):
+def tarfile_safe_extractall(tar, dest_path, filter="data"):
     # backport of tarfile.extractall(..., filter=) kwarg
     # -- this ensures safe tarfile extract in all Python versions
     # -- can be removed once support for Python < 3.12 is dropped
@@ -1204,8 +1268,8 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
         pass
     for member in tar.getmembers():
         name = member.name
-        if name.startswith(('/', os.sep)):
-            name = member.path.lstrip('/' + os.sep)
+        if name.startswith(("/", os.sep)):
+            name = member.path.lstrip("/" + os.sep)
         if os.path.isabs(name):
             # Path is absolute even after stripping.
             # For example, 'C:/foo' on Windows.
@@ -1213,14 +1277,17 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
         # Ensure we stay in the destination
         target_path = (Path(dest_path) / name).resolve()
         if not target_path.is_relative_to(dest_path):
-            raise ValueError(f"tarfile: {member}, {target_path} is outside of destination")
+            raise ValueError(
+                f"tarfile: {member}, {target_path} is outside of destination"
+            )
     # Python before 3.12, before backports to 3.11, 3.10, 3.9
     return tar.extractall(dest_path)
 
 
 def batched(iterable, batch_size):
-    """ split an iterable into batches of batch_size """
+    """split an iterable into batches of batch_size"""
     from itertools import islice
+
     it = iter(iterable)
     while True:
         batch = list(islice(it, batch_size))
@@ -1229,7 +1296,13 @@ def batched(iterable, batch_size):
         yield batch
 
 
-ensure_list = lambda v: v if isinstance(v, (list, tuple)) else list(v) if isinstance(v, range) else [v]
+ensure_list = (
+    lambda v: v
+    if isinstance(v, (list, tuple))
+    else list(v)
+    if isinstance(v, range)
+    else [v]
+)
 
 
 def tqdm_if_interactive():
@@ -1273,13 +1346,14 @@ def is_interactive():
     # adopted from https://stackoverflow.com/a/47428575/890242
     try:
         from IPython import get_ipython
+
         ipy_str = str(type(get_ipython())).lower()
     except:
         # we're not in IPython
         pass
     else:
         # 'zmqshell' is IPython, 'jupyter' is Jupyter
-        if any(t in ipy_str for t in ('zmqshell', 'jupyter')):
+        if any(t in ipy_str for t in ("zmqshell", "jupyter")):
             return True
     return sys.flags.interactive
 
@@ -1288,7 +1362,8 @@ def inprogress(text="running {fn}", **__kwargs):
     # print a message when entering a function
     # -- useful for debugging
     # -- use as a decorator
-    if not module_available('yaspin'):
+    if not module_available("yaspin"):
+
         @contextmanager
         def yaspin(*args, text=None, **kwargs):
             logger.debug(text)
@@ -1312,4 +1387,6 @@ def signature(filter):
     # sign a set of values
     # SEC: CWE-345 ensure user-provided values are not tampered with
     # -- this is used to ensure the values are not tampered with when passed to a query
-    return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
+    return sha256(
+        (str(threading.get_ident()) + str(filter)).encode("utf-8")
+    ).hexdigest()

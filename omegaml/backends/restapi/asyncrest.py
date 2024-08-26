@@ -4,6 +4,7 @@ implements REST API resource helpers to process async results (promises)
 AsyncResponseMixin - a mixin to enable a given Resource to return actual and async results, from the same code
 AsyncTaskResourceMixin - a mixin to enable the TaskResource to return status information and resolve results given a task id
 """
+
 from http import HTTPStatus
 
 import celery
@@ -14,8 +15,11 @@ from werkzeug.exceptions import NotFound
 
 EAGER_RESULTS = {}
 
-truefalse = lambda v: (v if isinstance(v, bool) else
-                       any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
+truefalse = lambda v: (
+    v
+    if isinstance(v, bool)
+    else any(str(v).lower().startswith(c) for c in ("y", "t", "1"))
+)
 
 
 class AsyncResponseMixin:
@@ -88,34 +92,38 @@ class AsyncResponseMixin:
             result_uri = '/api/task/{id}/result'
 
     """
+
     # Flask Restplus Resource adapter
-    result_uri = '/task/{id}/result'
+    result_uri = "/task/{id}/result"
 
     def dispatch_request(self, *args, **kwargs):
         # inline with we do not use x-async https://tools.ietf.org/html/rfc6648
         # note in Flask request headers are always as-is and lower-case
         # see https://stackoverflow.com/a/57562733/890242
-        self.is_async = (truefalse(request.args.get('async', False)) or
-                         truefalse(request.headers.get('async', False)))
+        self.is_async = truefalse(request.args.get("async", False)) or truefalse(
+            request.headers.get("async", False)
+        )
         return super().dispatch_request(*args, **kwargs)
 
     @property
     def resource_uri(self):
         return flask.request.path
 
-    def prep_response(self, result, status=None, headers=None, async_body=None, **kwargs):
+    def prep_response(
+        self, result, status=None, headers=None, async_body=None, **kwargs
+    ):
         if isinstance(result, AsyncResult):
             if isinstance(result, EagerResult):
                 EAGER_RESULTS[result.id] = result
             headers = headers or {}
-            headers.update({
-                'Location': self.result_uri.format(id=result.id)
-            })
+            headers.update({"Location": self.result_uri.format(id=result.id)})
             body = async_body or {}
-            body.update({
-                'resource_uri': self.resource_uri,
-                'task_id': result.id,
-            })
+            body.update(
+                {
+                    "resource_uri": self.resource_uri,
+                    "task_id": result.id,
+                }
+            )
             status = status or HTTPStatus.ACCEPTED
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
@@ -156,14 +164,19 @@ class AsyncResponseMixinTastypie(AsyncResponseMixin):
         # inline with we do not use x-async https://tools.ietf.org/html/rfc6648
         # note in Django request headers are always prefixed with HTTP, uppercase
         # see https://docs.djangoproject.com/en/3.0/ref/request-response/#django.http.QueryDict
-        self.is_async = (truefalse(request.GET.get('async', False)) or
-                         truefalse(request.META.get('HTTP_ASYNC', False)))
+        self.is_async = truefalse(request.GET.get("async", False)) or truefalse(
+            request.META.get("HTTP_ASYNC", False)
+        )
         self._resource_uri = request.path
         return super().dispatch(request_type, request, **kwargs)
 
-    def create_maybe_async_response(self, request, result, status=None, async_body=None):
+    def create_maybe_async_response(
+        self, request, result, status=None, async_body=None
+    ):
         # tastypie.create_response drop-in to match AsyncResponseMixin.maybe_async compatibility
-        body, status, headers = self.maybe_async(result, status=status, async_body=async_body)
+        body, status, headers = self.maybe_async(
+            result, status=status, async_body=async_body
+        )
         resp = self.create_response(request, body, status=int(status))
         for k, v in headers.items():
             resp[k] = v
@@ -234,6 +247,7 @@ class AsyncTaskResourceMixin:
           Here the 'resource_uri' is provided in the request payload, referencing the original resource route used to generate
           the async result (i.e. by your SomeResource). The provided resource method will be called as method(value, **kwargs).
     """
+
     celeryapp = celery.current_app
     is_async = False  # AsyncTaskResource does not support async processing by itself
 
@@ -254,9 +268,9 @@ class AsyncTaskResourceMixin:
 
         """
         promise = self.get_async_result(taskid, context)
-        action_meth = getattr(self, 'get_task_{}'.format(action), None)
+        action_meth = getattr(self, "get_task_{}".format(action), None)
         if action_meth is None:
-            raise ValueError('unknown action {} on task {}'.format(action, taskid))
+            raise ValueError("unknown action {} on task {}".format(action, taskid))
         try:
             value = action_meth(promise, taskid, context)
             status = HTTPStatus.OK
@@ -267,9 +281,9 @@ class AsyncTaskResourceMixin:
 
     def get_task_status(self, promise, taskid, context, message=None):
         result = {
-            'task_id': taskid,
-            'status': promise.status,
-            'message': message,
+            "task_id": taskid,
+            "status": promise.status,
+            "message": message,
         }
         return result
 
@@ -279,17 +293,13 @@ class AsyncTaskResourceMixin:
         value = self.resolve_promise(promise, context)
         result_method, kwargs = self.resolve_resource_method(taskid, context)
         data = result_method(value, **kwargs)
-        result = {
-            'task_id': taskid,
-            'status': status,
-            'response': data
-        }
+        result = {"task_id": taskid, "status": status, "response": data}
         return result
 
     def get_async_result(self, task_id, context):
         # from a given task id return a AsyncResource as promise
         # hack to allow local testing
-        if not getattr(self.celeryapp.conf, 'CELERY_ALWAYS_EAGER'):
+        if not getattr(self.celeryapp.conf, "CELERY_ALWAYS_EAGER"):
             promise = self.celeryapp.AsyncResult(task_id)
         else:
             promise = EAGER_RESULTS[task_id]
@@ -309,18 +319,18 @@ class AsyncTaskResourceMixin:
     def resolve_resource_method(self, taskid, context):
         # resolve the GenericResoure method to prepare the final result
         # return (callable, kwargs)
-        return self.default_prepare_result, {'context': context}
+        return self.default_prepare_result, {"context": context}
 
     def default_prepare_result(self, value, **kwargs):
         return value
 
 
-def resolve(uri, method='GET,PUT,POST,DELETE,PATCH'):
+def resolve(uri, method="GET,PUT,POST,DELETE,PATCH"):
     # Flask equivalent of django.urls.resolve
-    for m in method.split(','):
+    for m in method.split(","):
         try:
             # see https://werkzeug.palletsprojects.com/en/1.0.x/routing/#werkzeug.routing.MapAdapter.match
-            result = flask.current_app.url_map.bind('localhost').match(uri, method=m)
+            result = flask.current_app.url_map.bind("localhost").match(uri, method=m)
         except:
             pass
         else:

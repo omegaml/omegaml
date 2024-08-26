@@ -19,9 +19,17 @@ class ParallelApplyMixin:
         om.datasets.getl('verylarge').transform(myfunc).persist('transformed')
     """
 
-    def transform(self, fn=None, n_jobs=-2, maxobs=None,
-                  chunksize=50000, chunkfn=None, outname=None,
-                  resolve='worker', backend='omegaml'):
+    def transform(
+        self,
+        fn=None,
+        n_jobs=-2,
+        maxobs=None,
+        chunksize=50000,
+        chunkfn=None,
+        outname=None,
+        resolve="worker",
+        backend="omegaml",
+    ):
         """
 
         Args:
@@ -48,54 +56,57 @@ class ParallelApplyMixin:
         """
         mdf = self.__class__(self.collection, **self._getcopy_kwargs())
         options = mdf._transform_options()
-        options.update({
-            'maxobs': maxobs or len(mdf),
-            'n_jobs': n_jobs,
-            'chunksize': chunksize,
-            'applyfn': fn or pyappply_nop_transform,
-            'chunkfn': chunkfn,
-            'mdf': mdf,
-            'append': False,
-            'outname': outname or '_tmp{}_'.format(mdf.collection.name),
-            'resolve': resolve,  # worker or function
-            'backend': backend,
-        })
+        options.update(
+            {
+                "maxobs": maxobs or len(mdf),
+                "n_jobs": n_jobs,
+                "chunksize": chunksize,
+                "applyfn": fn or pyappply_nop_transform,
+                "chunkfn": chunkfn,
+                "mdf": mdf,
+                "append": False,
+                "outname": outname or "_tmp{}_".format(mdf.collection.name),
+                "resolve": resolve,  # worker or function
+                "backend": backend,
+            }
+        )
         return mdf
 
     def _chunker(self, mdf, chunksize, maxobs):
-        if getattr(mdf.collection, 'query', None):
+        if getattr(mdf.collection, "query", None):
             for i in range(0, maxobs, chunksize):
                 yield mdf.skip(i).head(i + chunksize)
         else:
             for i in range(0, maxobs, chunksize):
-                yield mdf.iloc[i:i + chunksize]
+                yield mdf.iloc[i : i + chunksize]
 
     def _do_transform(self, verbose=0):
         # setup mdf and parameters
         opts = self._transform_options()
-        n_jobs = opts['n_jobs']
-        chunksize = opts['chunksize']
-        applyfn = opts['applyfn']
-        chunkfn = opts['chunkfn'] or self._chunker
-        maxobs = opts['maxobs']
-        mdf = opts['mdf']
-        outname = opts['outname']
-        append = opts['append']
-        resolve = opts['resolve']
-        backend = opts['backend']
+        n_jobs = opts["n_jobs"]
+        chunksize = opts["chunksize"]
+        applyfn = opts["applyfn"]
+        chunkfn = opts["chunkfn"] or self._chunker
+        maxobs = opts["maxobs"]
+        mdf = opts["mdf"]
+        outname = opts["outname"]
+        append = opts["append"]
+        resolve = opts["resolve"]
+        backend = opts["backend"]
         outcoll = PickableCollection(mdf.collection.database[outname])
         if not append:
             outcoll.drop()
         non_transforming = lambda mdf: mdf._clone()
-        with Parallel(n_jobs=n_jobs, backend=backend,
-                      verbose=verbose) as p:
+        with Parallel(n_jobs=n_jobs, backend=backend, verbose=verbose) as p:
             # prepare for serialization to remote worker
             chunks = chunkfn(non_transforming(mdf), chunksize, maxobs)
             runner = delayed(pyapply_process_chunk)
-            worker_resolves_mdf = resolve in ('worker', 'w')
+            worker_resolves_mdf = resolve in ("worker", "w")
             # run in parallel
-            jobs = [runner(mdf, i, chunksize, applyfn, outcoll, worker_resolves_mdf)
-                    for i, mdf in enumerate(chunks)]
+            jobs = [
+                runner(mdf, i, chunksize, applyfn, outcoll, worker_resolves_mdf)
+                for i, mdf in enumerate(chunks)
+            ]
             p._backend._job_count = len(jobs)
             if verbose:
                 print("Submitting {} tasks".format(len(jobs)))
@@ -115,7 +126,7 @@ class ParallelApplyMixin:
         return bool(self._transform_options())
 
     def _transform_options(self):
-        self._pyapply_opts = getattr(self, '_pyapply_opts', {})
+        self._pyapply_opts = getattr(self, "_pyapply_opts", {})
         return self._pyapply_opts
 
     def persist(self, name=None, store=None, append=False, local=False):
@@ -141,13 +152,17 @@ class ParallelApplyMixin:
             if name and store:
                 coll = store.collection(name)
                 if coll.name == self.collection.name:
-                    raise ValueError('persist() must be to a different collection than already existing')
+                    raise ValueError(
+                        "persist() must be to a different collection than already existing"
+                    )
                 try:
                     if not append:
                         store.drop(name, force=True)
                     meta = store.put(coll, name)
                 except:
-                    print("WARNING please upgrade omegaml to support accessing collections")
+                    print(
+                        "WARNING please upgrade omegaml to support accessing collections"
+                    )
                 else:
                     # _do_transform expects the collection name, not the store's name
                     name = coll.name
@@ -156,12 +171,12 @@ class ParallelApplyMixin:
             if meta is None:
                 # create a new MDataFrame, force reread of columns
                 mdf_kwargs = self._getcopy_kwargs()
-                mdf_kwargs.pop('columns', None)
+                mdf_kwargs.pop("columns", None)
                 result = self.__class__(coll, **mdf_kwargs)
             else:
                 result = meta
         # -- run with noop in parallel
-        elif not local and getattr(self, 'apply_fn', None) is None and name:
+        elif not local and getattr(self, "apply_fn", None) is None and name:
             # convenience, instead of .value call mdf.persist('name', store=om.datasets)
             result = self.transform().persist(name=name, store=store, append=append)
         # -- some other action is active, e.g. groupby, apply
@@ -183,9 +198,10 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
     # chunk processor
     import pandas as pd
     from inspect import signature
+
     # fix pickling issues
-    mdf._parser = getattr(mdf, '_parser', None)
-    mdf._raw = getattr(mdf, '_raw', None)
+    mdf._parser = getattr(mdf, "_parser", None)
+    mdf._raw = getattr(mdf, "_raw", None)
     # check apply fn so we can pass the right number of args
     sig = signature(applyfn)
     params = sig.parameters
@@ -200,7 +216,7 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
         raise e
         raise RuntimeError(f".value on {mdf} cause exception {e})")
     else:
-        applyfn_args = [chunkdf, i][0:len(params)]
+        applyfn_args = [chunkdf, i][0 : len(params)]
     # call applyfn
     if len(chunkdf):
         try:
@@ -212,11 +228,11 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
             if isinstance(chunkdf, dict):
                 chunkdf = pd.DataFrame(chunkdf)
             if isinstance(chunkdf, pd.Series):
-                chunkdf = pd.DataFrame(chunkdf,
-                                       index=chunkdf.index,
-                                       columns=[str(chunkdf.name)])
+                chunkdf = pd.DataFrame(
+                    chunkdf, index=chunkdf.index, columns=[str(chunkdf.name)]
+                )
         start = i * chunksize
         if chunkdf is not None and len(chunkdf):
             end = start + len(chunkdf)
-            chunkdf['_om#rowid'] = pd.RangeIndex(start, end)
-            outcoll.insert_many(chunkdf.to_dict(orient='records'))
+            chunkdf["_om#rowid"] = pd.RangeIndex(start, end)
+            outcoll.insert_many(chunkdf.to_dict(orient="records"))

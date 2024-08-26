@@ -16,42 +16,35 @@ class IOToolsMixinTests(OmegaTestMixin, unittest.TestCase):
 
     def test_writecsv(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(10)
-        })
-        om.datasets.put(df, 'testdf')
-        fn = '/tmp/testdf.csv'
+        df = pd.DataFrame({"x": range(10)})
+        om.datasets.put(df, "testdf")
+        fn = "/tmp/testdf.csv"
         os.remove(fn) if os.path.exists(fn) else None
-        om.datasets.to_csv('testdf', fn, index=False)
+        om.datasets.to_csv("testdf", fn, index=False)
         self.assertTrue(os.path.exists(fn))
         dfx = pd.read_csv(fn)
         assert_frame_equal(dfx, df)
 
     def test_writecsv_with_apply(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame({"x": range(10)})
+
         def myfunc(df):
-            df['y'] = df['x'] * 2
-        om.datasets.put(df, 'testdf')
-        fn = '/tmp/testdf.csv'
+            df["y"] = df["x"] * 2
+
+        om.datasets.put(df, "testdf")
+        fn = "/tmp/testdf.csv"
         os.remove(fn) if os.path.exists(fn) else None
-        om.datasets.to_csv('testdf', fn, apply=myfunc)
+        om.datasets.to_csv("testdf", fn, apply=myfunc)
         self.assertTrue(os.path.exists(fn))
         dfx = pd.read_csv(fn)
-        self.assertIn('y', dfx.columns)
+        self.assertIn("y", dfx.columns)
 
     def test_readcsv(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(10)
-        })
-        om.datasets.put(df, 'testdf')
-        fn = '/tmp/testdf.csv'
+        df = pd.DataFrame({"x": range(10)})
+        om.datasets.put(df, "testdf")
+        fn = "/tmp/testdf.csv"
         os.remove(fn) if os.path.exists(fn) else None
-        om.datasets.to_csv('testdf', fn)
+        om.datasets.to_csv("testdf", fn)
         self.assertTrue(os.path.exists(fn))
-
-
-

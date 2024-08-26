@@ -11,8 +11,7 @@ logger = logging.getLogger(__file__)
 
 
 class ModelMixin(object):
-    """ mixin methods to OmegaModelProxy
-    """
+    """mixin methods to OmegaModelProxy"""
 
     def fit(self, Xname, Yname=None, **kwargs):
         """
@@ -30,10 +29,10 @@ class ModelMixin(object):
         :param Yname: name of Y dataset or data
         :return: the model (self) or the string representation (python clients)
         """
-        omega_fit = self.task('omegaml.tasks.omega_fit')
-        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
+        omega_fit = self.task("omegaml.tasks.omega_fit")
+        Xname = self._ensure_data_is_stored(Xname, prefix="_fitX")
         if Yname is not None:
-            Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
+            Yname = self._ensure_data_is_stored(Yname, prefix="_fitY")
         return omega_fit.delay(self.modelname, Xname, Yname=Yname, **kwargs)
 
     def partial_fit(self, Xname, Yname=None, **kwargs):
@@ -52,10 +51,10 @@ class ModelMixin(object):
         :param Yname: name of Y dataset or data
         :return: the model (self) or the string representation (python clients)
         """
-        omega_fit = self.task('omegaml.tasks.omega_partial_fit')
-        Xname = self._ensure_data_is_stored(Xname, prefix='_fitX')
+        omega_fit = self.task("omegaml.tasks.omega_partial_fit")
+        Xname = self._ensure_data_is_stored(Xname, prefix="_fitX")
         if Yname is not None:
-            Yname = self._ensure_data_is_stored(Yname, prefix='_fitY')
+            Yname = self._ensure_data_is_stored(Yname, prefix="_fitY")
         return omega_fit.delay(self.modelname, Xname, Yname=Yname, **kwargs)
 
     def transform(self, Xname, rName=None, **kwargs):
@@ -70,10 +69,9 @@ class ModelMixin(object):
         :return: the data returned by .transform, or the metadata of the rName
             dataset if rName was given
         """
-        omega_transform = self.task('omegaml.tasks.omega_transform')
+        omega_transform = self.task("omegaml.tasks.omega_transform")
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_transform.delay(self.modelname, Xname,
-                                     rName=rName, **kwargs)
+        return omega_transform.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
         """
@@ -89,12 +87,13 @@ class ModelMixin(object):
            dataset if rName was given
         """
 
-        omega_fit_transform = self.task(
-            'omegaml.tasks.omega_fit_transform')
+        omega_fit_transform = self.task("omegaml.tasks.omega_fit_transform")
         Xname = self._ensure_data_is_stored(Xname)
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname)
-        return omega_fit_transform.delay(self.modelname, Xname, Yname=Yname, rName=rName, **kwargs)
+        return omega_fit_transform.delay(
+            self.modelname, Xname, Yname=Yname, rName=rName, **kwargs
+        )
 
     def predict(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -108,10 +107,9 @@ class ModelMixin(object):
         :return: the data returned by .predict, or the metadata of the rName
             dataset if rName was given
         """
-        omega_predict = self.task('omegaml.tasks.omega_predict')
+        omega_predict = self.task("omegaml.tasks.omega_predict")
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName, **kwargs)
-
 
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
         """
@@ -125,8 +123,7 @@ class ModelMixin(object):
         :return: the data returned by .predict_proba, or the metadata of the rName
            dataset if rName was given
         """
-        omega_predict_proba = self.task(
-            'omegaml.tasks.omega_predict_proba')
+        omega_predict_proba = self.task("omegaml.tasks.omega_predict_proba")
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName, **kwargs)
 
@@ -143,10 +140,12 @@ class ModelMixin(object):
         :return: the data returned by .score, or the metadata of the rName
            dataset if rName was given
         """
-        omega_score = self.task('omegaml.tasks.omega_score')
+        omega_score = self.task("omegaml.tasks.omega_score")
         Xname = self._ensure_data_is_stored(Xname)
         YName = self._ensure_data_is_stored(Yname)
-        return omega_score.delay(self.modelname, Xname, Yname=YName, rName=rName, **kwargs)
+        return omega_score.delay(
+            self.modelname, Xname, Yname=YName, rName=rName, **kwargs
+        )
 
     def decision_function(self, Xname, rName=None, **kwargs):
         """
@@ -160,15 +159,17 @@ class ModelMixin(object):
         :return: the data returned by .score, or the metadata of the rName
            dataset if rName was given
         """
-        omega_decision_function = self.task('omegaml.tasks.omega_decision_function')
+        omega_decision_function = self.task("omegaml.tasks.omega_decision_function")
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_decision_function.delay(self.modelname, Xname, rName=rName, **kwargs)
+        return omega_decision_function.delay(
+            self.modelname, Xname, rName=rName, **kwargs
+        )
 
     def reduce(self, rName=None, **kwargs):
-        omega_reduce = self.task('omegaml.tasks.omega_reduce')
+        omega_reduce = self.task("omegaml.tasks.omega_reduce")
         return omega_reduce.delay(modelName=self.modelname, rName=rName, **kwargs)
 
-    def _ensure_data_is_stored(self, name_or_data, prefix='_temp', as_payload=False):
+    def _ensure_data_is_stored(self, name_or_data, prefix="_temp", as_payload=False):
         from omegaml.mixins.store.passthrough import PassthroughDataset
 
         if as_payload:
@@ -181,17 +182,17 @@ class ModelMixin(object):
             if sys.getsizeof(name_or_data) <= PassthroughDataset.MAX_SIZE:
                 return PassthroughDataset(name_or_data)
             else:
-                warnings.warn(f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets')
-                name = '%s_%s' % (prefix, uuid4().hex)
+                warnings.warn(
+                    f"size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets"
+                )
+                name = "%s_%s" % (prefix, uuid4().hex)
                 self.runtime.omega.datasets.put(name_or_data, name)
         elif is_dataframe(name_or_data) or is_series(name_or_data):
-            name = '%s_%s' % (prefix, uuid4().hex)
+            name = "%s_%s" % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         elif is_ndarray(name_or_data):
-            name = '%s_%s' % (prefix, uuid4().hex)
+            name = "%s_%s" % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         else:
-            raise TypeError(
-                'invalid type for Xpath_or_data', type(name_or_data))
+            raise TypeError("invalid type for Xpath_or_data", type(name_or_data))
         return name
-

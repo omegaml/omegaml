@@ -3,11 +3,11 @@ from uuid import uuid4
 
 #: maximum size in bytes where PassthroughDataset is used on om.runtime.model() calls
 #: refers to object size determined by os.getsizeof(). Set to "0" to disable.
-_max_size = os.environ.get('OMEGA_PASSTHROUGH_MAX_SIZE', 1024 * 1024 * 10)
+_max_size = os.environ.get("OMEGA_PASSTHROUGH_MAX_SIZE", 1024 * 1024 * 10)
 
 
 class PassthroughMixin:
-    """ Resolve a PasstroughDataset to its actual value
+    """Resolve a PasstroughDataset to its actual value
 
     Behaves as a normal dataset, however retrieves the value from the in-memory
     representation, i.e. PasshroughDataset.data. This should only be used
@@ -32,13 +32,15 @@ class PassthroughMixin:
 
     def metadata(self, name, **kwargs):
         if isinstance(name, PassthroughDataset):
-            kind_meta = {'data': repr(name)}
-            return self.make_metadata(name=str(name), kind='passthrough', kind_meta=kind_meta)
+            kind_meta = {"data": repr(name)}
+            return self.make_metadata(
+                name=str(name), kind="passthrough", kind_meta=kind_meta
+            )
         return super().metadata(name, **kwargs)
 
 
 class PassthroughDataset(str):
-    """ A dataset that exists in-memory when passed through om.runtime.model()
+    """A dataset that exists in-memory when passed through om.runtime.model()
 
     Rationale:
 
@@ -61,6 +63,7 @@ class PassthroughDataset(str):
         - SimpleTracker._common_log_data resolves the actual value of any
           positional argument passed as a PassthroughDataset
     """
+
     # cut off to passthrough
     # -- checked by ModelMixin.__ensure_data_is_stored
     # -- rabbitmq max size with reasonable performance is considered 128MB
@@ -68,7 +71,7 @@ class PassthroughDataset(str):
     MAX_SIZE = int(_max_size)
 
     def __new__(cls, content):
-        return super().__new__(cls, f'./system/passthrough/{uuid4().hex}')
+        return super().__new__(cls, f"./system/passthrough/{uuid4().hex}")
 
     def __init__(self, data):
         # simulate OmegaStore.put_pyobj_as_document
@@ -87,4 +90,4 @@ class PassthroughDataset(str):
         return self._passthrough_data
 
     def __repr__(self):
-        return f'PassthroughDataset({self.data})'
+        return f"PassthroughDataset({self.data})"

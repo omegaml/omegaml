@@ -35,7 +35,8 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
     See Also:
         * https://packaging.python.org/tutorials/packaging-projects/
     """
-    KIND = 'pipsrc.package'
+
+    KIND = "pipsrc.package"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
@@ -44,8 +45,8 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
         # all others are pip supported formats
         # the pattern supports <source>:// and <source>+<protocol>:// formats
         # for pypi, .get() will remove the pypi:// part
-        pip_protocols = '|'.join(('git', 'hg', 'svn', 'bzr', 'pypi'))
-        pattern = r'^{}(\+.+)?://.*'
+        pip_protocols = "|".join(("git", "hg", "svn", "bzr", "pypi"))
+        pattern = r"^{}(\+.+)?://.*"
         is_pip_protocol = lambda v: re.match(pattern.format(pip_protocols), v)
         return isinstance(obj, str) and is_pip_protocol(obj)
 
@@ -65,7 +66,7 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
         :return: the Metadata object
         """
         kind_meta = {
-            'pip_source': obj,
+            "pip_source": obj,
         }
         return self.data_store._make_metadata(
             name=name,
@@ -73,7 +74,8 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=PythonPipSourcedPackageData.KIND,
             kind_meta=kind_meta,
-            attributes=attributes).save()
+            attributes=attributes,
+        ).save()
 
     def get(self, name, keep=False, **kwargs):
         """
@@ -90,13 +92,12 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
         pkgname = basename(name)
         meta = self.data_store.metadata(name)
         dstdir = self.packages_path
-        pip_source = meta.kind_meta['pip_source']
+        pip_source = meta.kind_meta["pip_source"]
         # pip does not know about pypi
-        pip_name = pip_source.replace('pypi://', '')
+        pip_name = pip_source.replace("pypi://", "")
         mod = install_and_import(pip_name, pkgname, dstdir, keep=keep)
         return mod
 
-
     @property
     def packages_path(self):
-        return os.path.join(self.data_store.tmppath, 'packages')
+        return os.path.join(self.data_store.tmppath, "packages")

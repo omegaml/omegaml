@@ -27,10 +27,14 @@ class CanvasTask:
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
         task = self.sigs[-1]
         if self.canvasfn is chord:
-            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=False)
+            sig = task.signature(
+                args=args, kwargs=kwargs, **celery_kwargs, immutable=False
+            )
         else:
             # immutable means results are not passed on from task to task
-            sig = task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=True)
+            sig = task.signature(
+                args=args, kwargs=kwargs, **celery_kwargs, immutable=True
+            )
         self.sigs[-1] = sig
         return sig
 
@@ -50,7 +54,6 @@ class CanvasTask:
         flatten = lambda l: l[0] if isinstance(l[0], list) else l
         result.collect = lambda: collect(result)
         result.getall = lambda: flatten([r.get() for r in collect(result)])
-
 
 
 def make_canvased(canvasfn):

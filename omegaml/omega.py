@@ -22,8 +22,9 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     """
 
-    def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None,
-                 **kwargs):
+    def __init__(
+        self, defaults=None, mongo_url=None, celeryconf=None, bucket=None, **kwargs
+    ):
         """
         Initialize the client API
 
@@ -38,51 +39,74 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         :param celeryconf: the celery configuration dictionary
         """
         from omegaml.util import settings
+
         # avoid circular imports
         from omegaml.notebook.jobs import OmegaJobs
+
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
         self.bucket = bucket
         # setup storage locations
         self._dbalias = self._make_dbalias()
-        self.models = self._make_store(prefix='models/')
-        self.datasets = self._make_store(prefix='data/')
-        self._jobdata = self._make_store(prefix='jobs/')
-        self.scripts = self._make_store(prefix='scripts/')
+        self.models = self._make_store(prefix="models/")
+        self.datasets = self._make_store(prefix="data/")
+        self._jobdata = self._make_store(prefix="jobs/")
+        self.scripts = self._make_store(prefix="scripts/")
         # minibatch integration
-        self.streams = self._make_streams(prefix='streams/')
+        self.streams = self._make_streams(prefix="streams/")
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
         self.jobs = OmegaJobs(store=self._jobdata, defaults=self.defaults)
         # logger
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
         # stores
-        self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
+        self._stores = [
+            self.models,
+            self.datasets,
+            self.scripts,
+            self.jobs,
+            self.streams,
+        ]
 
     def __repr__(self):
-        return 'Omega()'.format()
+        return "Omega()".format()
 
     def _clone(self, **kwargs):
-        return self.__class__(defaults=self.defaults,
-                              mongo_url=self.mongo_url,
-                              **kwargs)
+        return self.__class__(
+            defaults=self.defaults, mongo_url=self.mongo_url, **kwargs
+        )
 
     def _make_runtime(self, celeryconf):
         from omegaml.runtimes import OmegaRuntime
-        return OmegaRuntime(self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf)
+
+        return OmegaRuntime(
+            self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf
+        )
 
     def _make_store(self, prefix):
         from omegaml.store import OmegaStore
-        return OmegaStore(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults,
-                          dbalias=self._dbalias)
+
+        return OmegaStore(
+            mongo_url=self.mongo_url,
+            bucket=self.bucket,
+            prefix=prefix,
+            defaults=self.defaults,
+            dbalias=self._dbalias,
+        )
 
     def _make_dbalias(self):
-        return 'omega-{}'.format(uuid4().hex)
+        return "omega-{}".format(uuid4().hex)
 
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
-        return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
+
+        return StreamsProxy(
+            mongo_url=self.mongo_url,
+            bucket=self.bucket,
+            prefix=prefix,
+            defaults=self.defaults,
+        )
 
     def __getitem__(self, bucket):
         """
@@ -108,11 +132,14 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     @property
     def buckets(self):
         from itertools import chain
-        return list(set(chain(*[getattr(store, 'buckets', []) for store in self._stores])))
+
+        return list(
+            set(chain(*[getattr(store, "buckets", []) for store in self._stores]))
+        )
 
     def _get_bucket(self, bucket):
         # enable patching in testing
-        bucket = None if bucket == 'default' else bucket
+        bucket = None if bucket == "default" else bucket
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)
@@ -127,12 +154,12 @@ class OmegaDeferredInstance(object):
     """
 
     def __init__(self, base=None, attribute=None):
-        self.omega = 'not initialized -- call .setup() or access an attribute'
+        self.omega = "not initialized -- call .setup() or access an attribute"
         self.initialized = False
         self.base = base
         self.attribute = attribute
 
-    @inprogress(text='connecting ...')
+    @inprogress(text="connecting ...")
     def setup(self, *args, **kwargs):
         """loads omegaml
 
@@ -148,29 +175,44 @@ class OmegaDeferredInstance(object):
 
         def setup_base():
             from omegaml import _base_config
+
             _base_config.load_framework_support()
             _base_config.load_user_extensions()
             return Omega(*args, **kwargs)
 
         def setup_cloud():
             from omegaml.client.cloud import setup
+
             return setup(*args, **kwargs)
 
         def setup_env():
             from omegaml.client.cloud import setup
-            return setup(userid=os.environ['OMEGA_USERID'], apikey=os.environ['OMEGA_APIKEY'],
-                         qualifier=os.environ.get('OMEGA_QUALIFIER'))
+
+            return setup(
+                userid=os.environ["OMEGA_USERID"],
+                apikey=os.environ["OMEGA_APIKEY"],
+                qualifier=os.environ.get("OMEGA_QUALIFIER"),
+            )
 
         def setup_cloud_config():
             from omegaml.client.cloud import setup_from_config
+
             return setup_from_config(fallback=setup_base)
 
         omega = None
-        from_args = len(args) > 0 or any(kw in kwargs for kw in ('userid', 'apikey', 'api_url', 'qualifier'))
-        from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
-        from_config = _base_config.OMEGA_CONFIG_FILE and os.path.exists(_base_config.OMEGA_CONFIG_FILE)
-        loaders = ((from_args, setup_cloud), (from_env, setup_env),
-                   (from_config, setup_cloud_config), (True, setup_base))
+        from_args = len(args) > 0 or any(
+            kw in kwargs for kw in ("userid", "apikey", "api_url", "qualifier")
+        )
+        from_env = {"OMEGA_USERID", "OMEGA_APIKEY"} < set(os.environ)
+        from_config = _base_config.OMEGA_CONFIG_FILE and os.path.exists(
+            _base_config.OMEGA_CONFIG_FILE
+        )
+        loaders = (
+            (from_args, setup_cloud),
+            (from_env, setup_env),
+            (from_config, setup_cloud_config),
+            (True, setup_base),
+        )
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
         for condition, loader in loaders:
@@ -180,7 +222,10 @@ class OmegaDeferredInstance(object):
                 omega = loader()
             except Exception as e:
                 errors.append((loader, e))
-                if any(condition and loader is expected for condition, expected in must_load):
+                if any(
+                    condition and loader is expected
+                    for condition, expected in must_load
+                ):
                     raise
             else:
                 break

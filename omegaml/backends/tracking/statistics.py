@@ -5,11 +5,11 @@ import pandas as pd
 
 class ExperimentStatistics:
     class options:
-        time_events = ['start', 'stop']
+        time_events = ["start", "stop"]
         tp_unit = 60
-        groupby = 'run'
-        time_key = 'latency'
-        percentiles = [.25, .5, .75]  # same default as pandas.DataFrame.describe()
+        groupby = "run"
+        time_key = "latency"
+        percentiles = [0.25, 0.5, 0.75]  # same default as pandas.DataFrame.describe()
 
     def __init__(self, tracker):
         self.tracker = tracker
@@ -21,15 +21,23 @@ class ExperimentStatistics:
         return self.tracker.data(**kwargs)
 
     def align_index(self, df, key=None):
-        """ align the index of statistics DataFrames to event/key """
-        df['event'] = 'metric'
-        df['key'] = key
-        idx_cols = ['event', 'key']
+        """align the index of statistics DataFrames to event/key"""
+        df["event"] = "metric"
+        df["key"] = key
+        idx_cols = ["event", "key"]
         df.set_index(idx_cols, inplace=True)
 
-    def summary(self, time_key=None, time_events=None, percentiles=None,
-                groupby=None, tp_unit=None, perf_stats=False, **kwargs):
-        """ build a summary of the experiment
+    def summary(
+        self,
+        time_key=None,
+        time_events=None,
+        percentiles=None,
+        groupby=None,
+        tp_unit=None,
+        perf_stats=False,
+        **kwargs,
+    ):
+        """build a summary of the experiment
 
         Args:
             time_key (str): the key to use for duration, defaults to 'latency'
@@ -61,20 +69,29 @@ class ExperimentStatistics:
         """
 
         time_events = time_events or self.options.time_events
-        tp_unit = tp_unit or self.options.tp_unit  # throughput units in seconds (3600 = 1 hour)
+        tp_unit = (
+            tp_unit or self.options.tp_unit
+        )  # throughput units in seconds (3600 = 1 hour)
         percentiles = percentiles or self.options.percentiles
-        kwargs.setdefault('run', 'all')
+        kwargs.setdefault("run", "all")
         metrics = self.metrics(percentiles=percentiles, **kwargs)
-        duration = self.latency(time_key=time_key, time_events=time_events, groupby=groupby,
-                                percentiles=percentiles, **kwargs)
+        duration = self.latency(
+            time_key=time_key,
+            time_events=time_events,
+            groupby=groupby,
+            percentiles=percentiles,
+            **kwargs,
+        )
         if not perf_stats:
             return pd.concat([metrics, duration])
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
-        utilization = self.utilization(tp_unit=tp_unit, time_events=time_events, **kwargs)
+        utilization = self.utilization(
+            tp_unit=tp_unit, time_events=time_events, **kwargs
+        )
         return pd.concat([metrics, duration, throughput, utilization])
 
     def metrics(self, percentiles=None, **kwargs):
-        """ calculate percentiles for all metric events
+        """calculate percentiles for all metric events
 
         This queries exp.data(event='metric', **kwargs) and calculates the percentiles for each
         metric, resulting from exp.log_metric() calls. The percentiles are calculated across all
@@ -88,19 +105,18 @@ class ExperimentStatistics:
             DataFrame with percentiles for each metric
         """
         # metrics - percentiles for each metric
-        data = self.data(event='metric', **kwargs)
+        data = self.data(event="metric", **kwargs)
         if data.empty:
             return pd.DataFrame()
-        metrics = (data
-                   .groupby(['event', 'key'])
-                   .apply(lambda v: (v['value']
-                                     .describe(percentiles=percentiles)))
-                   )
+        metrics = data.groupby(["event", "key"]).apply(
+            lambda v: (v["value"].describe(percentiles=percentiles))
+        )
         return metrics
 
-    def latency(self, time_key=None, time_events=None, percentiles=None,
-                groupby=None, **kwargs):
-        """ calculate latency for each group of events
+    def latency(
+        self, time_key=None, time_events=None, percentiles=None, groupby=None, **kwargs
+    ):
+        """calculate latency for each group of events
 
         This queries exp.data(event=time_events, **kwargs) and calculates the duration for each
         group of events. time_events defaults to ['start', 'stop'] and time_key defaults to 'latency'.
@@ -128,32 +144,41 @@ class ExperimentStatistics:
         time_key = time_key or self.options.time_key
         time_events = time_events or self.options.time_events
         time_data = self.data(event=time_events, **kwargs)
-        percentiles = None if not percentiles else (percentiles or self.options.percentiles)
-        duration = (time_data
-                    .groupby(groupby)
-                    .apply(lambda v: ((v['dt'].max() - v['dt'].min())
-                                      .total_seconds())
-                           )
-                    )
+        percentiles = (
+            None if not percentiles else (percentiles or self.options.percentiles)
+        )
+        duration = time_data.groupby(groupby).apply(
+            lambda v: ((v["dt"].max() - v["dt"].min()).total_seconds())
+        )
         if percentiles:
-            duration = (duration
-                        .describe(percentiles=None if percentiles is True else percentiles)
-                        .to_frame()
-                        .T)
+            duration = (
+                duration.describe(
+                    percentiles=None if percentiles is True else percentiles
+                )
+                .to_frame()
+                .T
+            )
             self.align_index(duration, time_key)
         else:
-            duration = (self.data(**kwargs)
-                        .groupby(groupby)
-                        .first()
-                        .reset_index()
-                        .merge((duration
-                                .reset_index(name='latency')),
-                               on=groupby)
-                        )
+            duration = (
+                self.data(**kwargs)
+                .groupby(groupby)
+                .first()
+                .reset_index()
+                .merge((duration.reset_index(name="latency")), on=groupby)
+            )
         return duration
 
-    def throughput(self, time_key=None, tp_unit=None, groupby=None, time_events=None, percentiles=None, **kwargs):
-        """ calculate throughput for each group of events
+    def throughput(
+        self,
+        time_key=None,
+        tp_unit=None,
+        groupby=None,
+        time_events=None,
+        percentiles=None,
+        **kwargs,
+    ):
+        """calculate throughput for each group of events
 
         This queries exp.data(event=time_events, **kwargs) and calculates throughput for each
         group of events. time_events defaults to ['start', 'stop'] and time_key defaults to 'latency'.
@@ -177,20 +202,24 @@ class ExperimentStatistics:
         time_data = self.data(event=time_events, **kwargs)
         time_key = time_key or self.options.time_key
         groupby = groupby or self.options.groupby
-        throughput = (time_data
-                      .groupby(groupby)
-                      .apply(lambda v: (tp_unit / max((v['dt'].max() - v['dt'].min())
-                                                      .total_seconds(), 1))
-                             )
-                      .describe(percentiles=percentiles)
-                      .to_frame()
-                      .T
-                      )
-        self.align_index(throughput, f'group_{time_key}')
+        throughput = (
+            time_data.groupby(groupby)
+            .apply(
+                lambda v: (
+                    tp_unit / max((v["dt"].max() - v["dt"].min()).total_seconds(), 1)
+                )
+            )
+            .describe(percentiles=percentiles)
+            .to_frame()
+            .T
+        )
+        self.align_index(throughput, f"group_{time_key}")
         return throughput
 
-    def group_latency(self, time_events=None, percentiles=None, time_slots=None, **kwargs):
-        """ calculate latency for each group of events
+    def group_latency(
+        self, time_events=None, percentiles=None, time_slots=None, **kwargs
+    ):
+        """calculate latency for each group of events
 
         This queries exp.data(event=time_events, **kwargs) and calculates the duration for equal-
         length groups of events), specified by the number of time_slots (default 10% of the total
@@ -216,21 +245,20 @@ class ExperimentStatistics:
         """
         time_events = time_events or self.options.time_events
         time_data = self.data(event=time_events, **kwargs)
-        time_slots = time_slots or math.ceil(len(time_data) * .1)
-        bins = pd.cut(time_data['dt'], bins=time_slots)
-        latency = (time_data
-                   .groupby(bins)
-                   .apply(lambda v: (max((v['dt'].max() - v['dt'].min())
-                                         .total_seconds(), 1))
-                          )
-                   .describe(percentiles=percentiles)
-                   .to_frame()
-                   .T)
-        self.align_index(latency, 'latency')
+        time_slots = time_slots or math.ceil(len(time_data) * 0.1)
+        bins = pd.cut(time_data["dt"], bins=time_slots)
+        latency = (
+            time_data.groupby(bins)
+            .apply(lambda v: (max((v["dt"].max() - v["dt"].min()).total_seconds(), 1)))
+            .describe(percentiles=percentiles)
+            .to_frame()
+            .T
+        )
+        self.align_index(latency, "latency")
         return latency
 
     def utilization(self, tp_unit=None, time_events=None, percentiles=None, **kwargs):
-        """ calculate utilization for each group of events
+        """calculate utilization for each group of events
 
         Calculate utilization as the effective throughput (throughput_eff) divided by the
         actual throughput. The effective throughput is the number of events per time unit,
@@ -257,19 +285,24 @@ class ExperimentStatistics:
         tp_unit = tp_unit or self.options.tp_unit
         time_events = time_events or self.options.time_events
         time_data = self.data(event=time_events, **kwargs)
-        time_slots = math.ceil(len(time_data) * .1)
-        bins = pd.cut(time_data['dt'], bins=time_slots)
+        time_slots = math.ceil(len(time_data) * 0.1)
+        bins = pd.cut(time_data["dt"], bins=time_slots)
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
-        throughput_eff = (time_data
-                          .groupby(bins)
-                          .apply(lambda v: ((len(v) // 2) / max((v['dt'].max() - v['dt'].min())
-                                                                .total_seconds() * tp_unit, 1))
-                                 )
-                          .describe(percentiles=percentiles)
-                          .to_frame()
-                          .T)
-        self.align_index(throughput_eff, 'troughput_eff')
-        utilization = (throughput_eff.reset_index(drop=True) /
-                       throughput.reset_index(drop=True))
-        self.align_index(utilization, 'utilization')
+        throughput_eff = (
+            time_data.groupby(bins)
+            .apply(
+                lambda v: (
+                    (len(v) // 2)
+                    / max((v["dt"].max() - v["dt"].min()).total_seconds() * tp_unit, 1)
+                )
+            )
+            .describe(percentiles=percentiles)
+            .to_frame()
+            .T
+        )
+        self.align_index(throughput_eff, "troughput_eff")
+        utilization = throughput_eff.reset_index(drop=True) / throughput.reset_index(
+            drop=True
+        )
+        self.align_index(utilization, "utilization")
         return utilization

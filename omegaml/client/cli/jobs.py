@@ -41,22 +41,23 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
 
 
     """
-    command = 'jobs'
+
+    command = "jobs"
 
     def put(self):
         from nbformat import read as nbread
 
         om = get_omega(self.args)
-        local = self.args['<path>']
-        name = self.args['<name>']
-        with open(local, 'rb') as fin:
+        local = self.args["<path>"]
+        name = self.args["<name>"]
+        with open(local, "rb") as fin:
             nb = nbread(fin, as_version=4)
         self.logger.info(om.jobs.put(nb, name))
 
     def get(self):
         om = get_omega(self.args)
-        local = self.args['<path>']
-        name = self.args['<name>']
+        local = self.args["<path>"]
+        name = self.args["<name>"]
         notebook = om.jobs.get(name)
         nbformat.write(notebook, local)
         self.logger.debug(local)
@@ -64,31 +65,39 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
     def schedule(self):
         # FIXME this is a mess
         om = get_omega(self.args)
-        name = self.args.get('<name>')
-        at = self.args.get('--at')
+        name = self.args.get("<name>")
+        at = self.args.get("--at")
         # get interval specs
         if at:
-            hour, minute = at.split(':')
+            hour, minute = at.split(":")
         else:
-            hour = self.args.get('--hour')
-            minute = self.args.get('--minute')
-        weekday = self.args.get('--weekday')
-        monthday = self.args.get('--monthday')
-        month = self.args.get('--month')
-        delete = self.args.get('delete')
-        show = self.args.get('show')
-        spec = self.args.get('--cron')
-        next_n = self.args.get('--next')
-        interval = self.args.get('<interval>')
+            hour = self.args.get("--hour")
+            minute = self.args.get("--minute")
+        weekday = self.args.get("--weekday")
+        monthday = self.args.get("--monthday")
+        month = self.args.get("--month")
+        delete = self.args.get("delete")
+        show = self.args.get("show")
+        spec = self.args.get("--cron")
+        next_n = self.args.get("--next")
+        interval = self.args.get("<interval>")
         # by default we show if no interval is specified
-        show = show or not any(s for s in (weekday, monthday, month, hour, minute, interval, spec))
+        show = show or not any(
+            s for s in (weekday, monthday, month, hour, minute, interval, spec)
+        )
         # print current schedule and triggers
         run_at, triggers = om.jobs.get_schedule(name, only_pending=True)
         if run_at:
             human_sched = get_description(run_at)
-            self.logger.info("Currently {name} is scheduled at {human_sched}".format(**locals()))
+            self.logger.info(
+                "Currently {name} is scheduled at {human_sched}".format(**locals())
+            )
             if next_n:
-                self.logger.info("Given this existing interval, next {next_n} times would be:".format(**locals()))
+                self.logger.info(
+                    "Given this existing interval, next {next_n} times would be:".format(
+                        **locals()
+                    )
+                )
                 for time in om.jobs.Schedule.from_cron(run_at).next_times(int(next_n)):
                     self.logger.info("  {}".format(time))
         else:
@@ -96,14 +105,18 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
         # show current triggers
         if triggers:
             trigger = triggers[-1]
-            if trigger['status'] == 'PENDING':
-                event = trigger['event']
-                self.logger.info("{name} is scheduled to run next at {event}".format(**locals()))
+            if trigger["status"] == "PENDING":
+                event = trigger["event"]
+                self.logger.info(
+                    "{name} is scheduled to run next at {event}".format(**locals())
+                )
         # delete if currently scheduled
         if delete:
             if run_at or triggers:
-                answer = self.ask("Do you want to delete this schedule?", options='Y/n', default='y')
-                should_drop = answer.lower().startswith('y')
+                answer = self.ask(
+                    "Do you want to delete this schedule?", options="Y/n", default="y"
+                )
+                should_drop = answer.lower().startswith("y")
                 return om.jobs.drop_schedule(name) if should_drop else None
         # create new schedule
         if not (show or delete):
@@ -115,40 +128,54 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
                     self.logger.info(f"Cannot parse {interval}, error was {e}")
                     raise
             if not spec:
-                cron_repr = ('{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
-                             '{0._orig_month_of_year} {0._orig_day_of_week}')
-                sched = om.jobs.Schedule(minute=minute or '*',
-                                         hour=hour or '*',
-                                         monthday=monthday or '*',
-                                         weekday=weekday or '*',
-                                         month=month or '*')
+                cron_repr = (
+                    "{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} "
+                    "{0._orig_month_of_year} {0._orig_day_of_week}"
+                )
+                sched = om.jobs.Schedule(
+                    minute=minute or "*",
+                    hour=hour or "*",
+                    monthday=monthday or "*",
+                    weekday=weekday or "*",
+                    month=month or "*",
+                )
                 cron_sched = sched.cron
             else:
                 cron_sched = spec
             human_sched = get_description(cron_sched)
             if next_n:
-                self.logger.info("Given this new interval, next {next_n} times would be:".format(**locals()))
-                for time in om.jobs.Schedule.from_cron(cron_sched).next_times(int(next_n)):
+                self.logger.info(
+                    "Given this new interval, next {next_n} times would be:".format(
+                        **locals()
+                    )
+                )
+                for time in om.jobs.Schedule.from_cron(cron_sched).next_times(
+                    int(next_n)
+                ):
                     self.logger.info("  {}".format(time))
             text = "Do you want to schedule {name} at {human_sched}?".format(**locals())
-            answer = self.ask(text, options="Y/n", default='y')
-            if answer.lower().startswith('n'):
-                self.logger.info('Ok, not scheduled. Try again.')
+            answer = self.ask(text, options="Y/n", default="y")
+            if answer.lower().startswith("n"):
+                self.logger.info("Ok, not scheduled. Try again.")
                 return
-            self.logger.info('{name} will be scheduled to run {human_sched}'.format(**locals()))
-            om.jobs.schedule(name, run_at=cron_sched, last_run=datetime.datetime.utcnow())
+            self.logger.info(
+                "{name} will be scheduled to run {human_sched}".format(**locals())
+            )
+            om.jobs.schedule(
+                name, run_at=cron_sched, last_run=datetime.datetime.utcnow()
+            )
 
     def status(self):
         om = get_omega(self.args)
-        name = self.args.get('<name>')
+        name = self.args.get("<name>")
         meta = om.jobs.metadata(name)
         attrs = meta.attributes
-        runs = attrs.get('job_runs', [])
+        runs = attrs.get("job_runs", [])
         run_at, triggers = om.jobs.get_schedule(name, only_pending=True)
         self.logger.info("Runs:")
         for run in runs:
             self.logger.info("  {ts} {status} ".format(**run))
         self.logger.info("Next scheduled runs:")
         for trigger in triggers:
-            trigger['ts'] = trigger.get('ts', '')
+            trigger["ts"] = trigger.get("ts", "")
             self.logger.info("  {ts} {status} {event-kind} {event}".format(**trigger))

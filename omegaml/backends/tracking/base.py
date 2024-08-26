@@ -4,7 +4,7 @@ from omegaml import settings, load_class
 
 
 class TrackingProvider:
-    """ TrackingProvider implements an abstract interface to experiment tracking
+    """TrackingProvider implements an abstract interface to experiment tracking
 
     Concrete implementations like MLFlow, Sacred or Neptune.ai can be implemented
     based on TrackingProvider. In combination with the runtime's OmegaTrackingProxy
@@ -44,8 +44,8 @@ class TrackingProvider:
 
     @property
     def userid(self):
-        defaults = getattr(self._store, 'defaults', None) or settings()
-        return getattr(defaults, 'OMEGA_USERID', getpass.getuser())
+        defaults = getattr(self._store, "defaults", None) or settings()
+        return getattr(defaults, "OMEGA_USERID", getpass.getuser())
 
     @property
     def autotrack(self):
@@ -59,8 +59,10 @@ class TrackingProvider:
         self._experiment = name or self._experiment
         return self
 
-    def track(self, obj, store=None, label=None, monitor=False, monitor_kwargs=None, **kwargs):
-        """ attach this experiment to the named object
+    def track(
+        self, obj, store=None, label=None, monitor=False, monitor_kwargs=None, **kwargs
+    ):
+        """attach this experiment to the named object
 
         Usage:
 
@@ -94,18 +96,22 @@ class TrackingProvider:
                     { 'tracking': { 'monitors': [ { 'experiment': self._experiment,
                                        'provider': monitor } ] } }
         """
-        label = label or 'default'
+        label = label or "default"
         store = store or self._model_store
         meta = store.metadata(obj)
         store.link_experiment(obj, self._experiment, label=label)
         if monitor:
             monitor_kwargs = monitor_kwargs or kwargs
             monitor_provider = monitor if isinstance(monitor, str) else None
-            self.as_monitor(obj, store=store, provider=monitor_provider, **monitor_kwargs)
+            self.as_monitor(
+                obj, store=store, provider=monitor_provider, **monitor_kwargs
+            )
         meta.save()
         return meta
 
-    def as_monitor(self, obj, alerts=None, schedule=None, store=None, provider=None, **kwargs):
+    def as_monitor(
+        self, obj, alerts=None, schedule=None, store=None, provider=None, **kwargs
+    ):
         """
         Return and attach a drift monitor to this experiment
 
@@ -125,13 +131,17 @@ class TrackingProvider:
         """
         store = store or self._model_store
         mon = self._has_monitor(obj, store=store)
-        is_autotracked = getattr(self, 'autotrack', False)
+        is_autotracked = getattr(self, "autotrack", False)
         assert is_autotracked, "experiments must be auto-tracking for monitoring, ensure .experiment(autotrack=True)"
-        provider = provider or mon.get('provider') if mon else None
-        provider = provider or store.prefix.replace('/', '')
-        store.link_monitor(obj, self._experiment, provider=provider, alerts=alerts, schedule=schedule)
+        provider = provider or mon.get("provider") if mon else None
+        provider = provider or store.prefix.replace("/", "")
+        store.link_monitor(
+            obj, self._experiment, provider=provider, alerts=alerts, schedule=schedule
+        )
         self._create_monitor_job(obj, model_store=store)
-        ProviderClass = load_class(store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider))
+        ProviderClass = load_class(
+            store.defaults.OMEGA_MONITORING_PROVIDERS.get(provider)
+        )
         return ProviderClass(obj, tracking=self, store=store, **kwargs)
 
     def _create_monitor_job(self, obj, model_store=None, jobs_store=None):
@@ -162,26 +172,27 @@ class TrackingProvider:
         # -- if the job exists, do nothing
         # Returns: list of jobs created as [Metadata, ...]
         import omegaml as om
+
         store = model_store or self._model_store
         jobs = jobs_store or om.jobs
         code_block = self._monitor_job_template()
         meta = store.metadata(obj)
-        tracking = meta.attributes.setdefault('tracking', {})
-        monitors = tracking.setdefault('monitors', [])
+        tracking = meta.attributes.setdefault("tracking", {})
+        monitors = tracking.setdefault("monitors", [])
         jobs_created = []
         for mon in monitors:
-            experiment = mon['experiment']
-            provider = mon['provider']
-            jobname = mon.get('job') or f'monitors/{experiment}/{meta.name}'
-            schedule = mon.get('schedule', 'daily')
-            alerts = mon.get('alerts', [])
+            experiment = mon["experiment"]
+            provider = mon["provider"]
+            jobname = mon.get("job") or f"monitors/{experiment}/{meta.name}"
+            schedule = mon.get("schedule", "daily")
+            alerts = mon.get("alerts", [])
             if not jobs.list(jobname):
                 # if job does not exist yet create it
                 code = code_block.format(**locals())
                 job_meta = jobs.create(code, jobname)
                 jobs.schedule(jobname, schedule)
-                mon['job'] = jobname
-                mon['schedule'] = schedule
+                mon["job"] = jobname
+                mon["schedule"] = schedule
                 meta.save()
                 jobs_created.append(job_meta)
         return jobs_created
@@ -209,9 +220,9 @@ class TrackingProvider:
     def _has_monitor(self, obj, store=None):
         store = store or self._model_store
         meta = store.metadata(obj)
-        monitors = meta.attributes.setdefault('tracking', {}).setdefault('monitors', [])
+        monitors = meta.attributes.setdefault("tracking", {}).setdefault("monitors", [])
         for mon in monitors:
-            if mon.get('experiment') == self._experiment:
+            if mon.get("experiment") == self._experiment:
                 return mon
         return None
 
@@ -220,7 +231,7 @@ class TrackingProvider:
         return self._run
 
     def status(self, run=None):
-        return 'STOPPED'
+        return "STOPPED"
 
     def start(self, run=None):
         raise NotImplementedError
@@ -261,9 +272,19 @@ class TrackingProvider:
 
     def tensorflow_callback(self):
         from omegaml.backends.tracking import TensorflowCallback
+
         return TensorflowCallback(self)
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):
+    def data(
+        self,
+        experiment=None,
+        run=None,
+        event=None,
+        step=None,
+        key=None,
+        raw=False,
+        **query,
+    ):
         raise NotImplementedError
 
     def clear(self, force=False):
@@ -274,4 +295,4 @@ class TrackingProvider:
 
     @property
     def _data_name(self):
-        return f'.experiments/{self._experiment}'
+        return f".experiments/{self._experiment}"

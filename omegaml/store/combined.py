@@ -12,14 +12,15 @@ class CombinedOmegaStoreMixin:
 
     def list(self, pattern=None, regexp=None, raw=False, **kwargs):
         index = []
-        pattern = pattern or ''
+        pattern = pattern or ""
         for store in self._stores:
             regexp = regexp.replace(store.prefix) if regexp else None
             # list by name|pattern, return list of Metadata or list of names
-            members = store.list(pattern.replace(store.prefix, '', 1),
-                                 regexp=regexp, raw=raw, **kwargs)
+            members = store.list(
+                pattern.replace(store.prefix, "", 1), regexp=regexp, raw=raw, **kwargs
+            )
             # either add obj:Metadata as is, or obj:str as 'prefix/name'
-            add = lambda obj: f'{store.prefix}{obj}' if not raw else obj
+            add = lambda obj: f"{store.prefix}{obj}" if not raw else obj
             index.extend(add(obj) for obj in members)
         return index
 
@@ -34,7 +35,11 @@ class CombinedOmegaStoreMixin:
                 pass
             else:
                 return store.help(store_name)
-        return help(name_or_obj) if sys.flags.interactive else pydoc.render_doc(name_or_obj, renderer=pydoc.plaintext)
+        return (
+            help(name_or_obj)
+            if sys.flags.interactive
+            else pydoc.render_doc(name_or_obj, renderer=pydoc.plaintext)
+        )
 
     def metadata(self, name, **kwargs):
         store, store_name = self.store_by_name(name)
@@ -44,11 +49,11 @@ class CombinedOmegaStoreMixin:
         return [s.prefix for s in self._stores]
 
     def store_by_prefix(self, prefix):
-        prefix = prefix.replace('datasets/', 'data/')
+        prefix = prefix.replace("datasets/", "data/")
         for store in self._stores:
             if store.prefix == prefix:
                 return store
-        raise ValueError(f'there is no store for {prefix}')
+        raise ValueError(f"there is no store for {prefix}")
 
     def store_by_meta(self, meta):
         return self.store_by_prefix(meta.prefix)
@@ -56,6 +61,8 @@ class CombinedOmegaStoreMixin:
     def store_by_name(self, name):
         for store in self._stores:
             if name.startswith(store.prefix):
-                return store, name.replace(store.prefix, '')
+                return store, name.replace(store.prefix, "")
         prefixes = [s.prefix for s in self._stores]
-        raise ValueError(f'there is no store for {name}, try prefixing with any of {prefixes}')
+        raise ValueError(
+            f"there is no store for {name}, try prefixing with any of {prefixes}"
+        )

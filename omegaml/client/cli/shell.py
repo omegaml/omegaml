@@ -27,11 +27,12 @@ class ShellCommandBase(CommandBase):
         By specifying the jupyter command, will launch a Jupyter Lab session
         connected to your omegaml instance
     """
-    command = 'shell'
+
+    command = "shell"
 
     def shell(self):
         use_ipython = False
-        command = self.args.get('<command>') or ''
+        command = self.args.get("<command>") or ""
         try:
             import IPython
         except:
@@ -42,17 +43,17 @@ class ShellCommandBase(CommandBase):
         if use_ipython:
             c = Config()
             c.InteractiveShellApp.exec_lines = [
-                'from omegaml.client.util import get_omega',
-                'om = get_omega(shell_args)',
+                "from omegaml.client.util import get_omega",
+                "om = get_omega(shell_args)",
                 'print("omegaml is available as the om variable")',
             ]
             c.TerminalIPythonApp.display_banner = False
-            argv = f'-c {command}'.split(' ') if command else []
-            IPython.start_ipython(argv,
-                                  config=c, user_ns=dict(shell_args=self.args))
+            argv = f"-c {command}".split(" ") if command else []
+            IPython.start_ipython(argv, config=c, user_ns=dict(shell_args=self.args))
             return
         # default console
         import code
+
         om = get_omega(self.args)
         try:
             import gnureadline
@@ -65,7 +66,8 @@ class ShellCommandBase(CommandBase):
 
     def jupyter(self):
         from omegaml.notebook import jupyter
+
         omega_root = Path(jupyter.__file__).parent
-        cfg = omega_root / 'jupyter_server_config.py'
-        cmd = f'jupyter lab --config {cfg}'
+        cfg = omega_root / "jupyter_server_config.py"
+        cmd = f"jupyter lab --config {cfg}"
         os.system(cmd)

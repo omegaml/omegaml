@@ -1,4 +1,2 @@
 class RuntimeModelPreloader:
-    """ preload models into the runtime """
-
-
+    """preload models into the runtime"""

@@ -2,7 +2,7 @@ from omegaml.util import extend_instance
 
 
 class RuntimeProxyBase:
-    """ Base class for runtime proxies
+    """Base class for runtime proxies
 
     Runtime proxies are used to provide a runtime context for a specific type
     of object, such as a model, script or job. This base class provides
@@ -19,7 +19,7 @@ class RuntimeProxyBase:
         self._apply_require()
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f"{self.__class__.__name__}({self.name})"
 
     def _apply_mixins(self):
         """
@@ -34,17 +34,21 @@ class RuntimeProxyBase:
 
     def _apply_require(self):
         self.meta = meta = self.store.metadata(self.name)
-        assert meta is not None, f"{self.store.prefix}{self.name} does not exist".format(**locals())
+        assert (
+            meta is not None
+        ), f"{self.store.prefix}{self.name} does not exist".format(**locals())
         # get common require kwargs
-        require_kwargs = meta.attributes.get('require', {})
+        require_kwargs = meta.attributes.get("require", {})
         # enable default tracking, unless explicitly tracked
-        should_track = 'default' in meta.attributes.get('tracking', {})
-        already_tracked = self.runtime._common_kwargs['task'].get('__experiment')
+        should_track = "default" in meta.attributes.get("tracking", {})
+        already_tracked = self.runtime._common_kwargs["task"].get("__experiment")
         if not already_tracked and should_track:
-            require_kwargs.update({
-                'task': dict(__experiment=meta.attributes['tracking'].get('default'))
-            })
-        self.runtime.require(**require_kwargs, override=False) if require_kwargs else None
+            require_kwargs.update(
+                {"task": dict(__experiment=meta.attributes["tracking"].get("default"))}
+            )
+        self.runtime.require(
+            **require_kwargs, override=False
+        ) if require_kwargs else None
 
     def require(self, label=None, always=False, drop=False, **kwargs):
         """
@@ -76,7 +80,7 @@ class RuntimeProxyBase:
             kwargs.update(label=label)
         if always:
             meta = self.store.metadata(self.name)
-            meta.attributes['require'] = kwargs if not drop else {}
+            meta.attributes["require"] = kwargs if not drop else {}
             result = meta.save()
         else:
             self.runtime.require(**kwargs)

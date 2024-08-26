@@ -26,9 +26,9 @@ class DaskTask(object):
 
     def delay(self, *args, **kwargs):
         """
-        submit the function and execute on cluster.  
+        submit the function and execute on cluster.
         """
-        kwargs['pure'] = kwargs.get('pure', self.pure)
+        kwargs["pure"] = kwargs.get("pure", self.pure)
         if self.kwargs:
             kwargs.update(self.kwargs)
         return DaskAsyncResult(self.client.submit(self.fn, *args, **kwargs))
@@ -45,7 +45,7 @@ class DaskAsyncResult(object):
     def get(self):
         import dask
 
-        if os.environ.get('DASK_DEBUG'):
+        if os.environ.get("DASK_DEBUG"):
             with dask.set_options(get=dask.threaded.get):
                 return self.future.result()
         return self.future.result()
@@ -71,8 +71,9 @@ class OmegaRuntimeDask(object):
     @property
     def client(self):
         from distributed import Client, LocalCluster
+
         if self._client is None:
-            if os.environ.get('DASK_DEBUG'):
+            if os.environ.get("DASK_DEBUG"):
                 # http://dask.pydata.org/en/latest/setup/single-distributed.html?highlight=single-threaded#localcluster
                 single_threaded = LocalCluster(processes=False)
                 self._client = Client(single_threaded)
@@ -85,6 +86,7 @@ class OmegaRuntimeDask(object):
         return a model for remote execution
         """
         from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
+
         return OmegaModelProxy(modelname, runtime=self)
 
     def job(self, jobname):
@@ -97,15 +99,15 @@ class OmegaRuntimeDask(object):
         """
         retrieve the task function from the task module
 
-        This retrieves the task function and wraps it into a 
-        DaskTask. DaskTask mimicks a celery task and is 
+        This retrieves the task function and wraps it into a
+        DaskTask. DaskTask mimicks a celery task and is
         called on the cluster using .delay(), the same way we
         call a celery task. .delay() will return a DaskAsyncResult,
         supporting the celery .get() semantics. This way we can use
         the same proxy objects, as all they do is call .delay() and
-        return an AsyncResult. 
+        return an AsyncResult.
         """
-        modname, funcname = name.rsplit('.', 1)
+        modname, funcname = name.rsplit(".", 1)
         mod = import_module(modname)
         func = getattr(mod, funcname)
         # we pass pure=False to force dask to reevaluate the task
@@ -116,7 +118,7 @@ class OmegaRuntimeDask(object):
         """
         return the runtimes's cluster settings
         """
-        return self.task('omegaml.tasks.omega_settings').delay().get()
+        return self.task("omegaml.tasks.omega_settings").delay().get()
 
     def ping(self):
         return DaskTask(daskhello, self.client, pure=False)

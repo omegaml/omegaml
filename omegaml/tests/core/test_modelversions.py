@@ -19,11 +19,11 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store = self.om.models
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
-        meta = store.put(clf, 'regmodel')
-        self.assertIn('versions', meta.attributes)
+        meta = store.put(clf, "regmodel")
+        self.assertIn("versions", meta.attributes)
         models = store.list(include_temp=True)
-        latest = meta.attributes['versions']['tags']['latest']
-        store_key = store._model_version_store_key('regmodel', latest)
+        latest = meta.attributes["versions"]["tags"]["latest"]
+        store_key = store._model_version_store_key("regmodel", latest)
         self.assertIn(store_key, models)
 
     def test_get_version_by_index(self):
@@ -31,14 +31,14 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         clf.version_ = 1
-        meta = store.put(clf, 'regmodel')
+        meta = store.put(clf, "regmodel")
         clf.version_ = 2
-        meta = store.put(clf, 'regmodel')
-        clf_ = store.get('regmodel', version=-1)
+        meta = store.put(clf, "regmodel")
+        clf_ = store.get("regmodel", version=-1)
         self.assertEqual(clf_.version_, 2)
-        clf_ = store.get('regmodel', version=-2)
+        clf_ = store.get("regmodel", version=-2)
         self.assertEqual(clf_.version_, 1)
-        clf_ = store.get('regmodel')
+        clf_ = store.get("regmodel")
         self.assertEqual(clf_.version_, 2)
 
     def test_get_version_by_tag(self):
@@ -46,14 +46,14 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         clf.version_ = 1
-        meta = store.put(clf, 'regmodel', tag='version1')
+        meta = store.put(clf, "regmodel", tag="version1")
         clf.version_ = 2
-        meta = store.put(clf, 'regmodel', tag='version2')
-        clf_ = store.get('regmodel', tag='version2')
+        meta = store.put(clf, "regmodel", tag="version2")
+        clf_ = store.get("regmodel", tag="version2")
         self.assertEqual(clf_.version_, 2)
-        clf_ = store.get('regmodel', tag='version1')
+        clf_ = store.get("regmodel", tag="version1")
         self.assertEqual(clf_.version_, 1)
-        clf_ = store.get('regmodel')
+        clf_ = store.get("regmodel")
         self.assertEqual(clf_.version_, 2)
 
     def test_get_version_by_attag(self):
@@ -61,14 +61,14 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         clf.version_ = 1
-        meta = store.put(clf, 'regmodel', tag='version1')
+        meta = store.put(clf, "regmodel", tag="version1")
         clf.version_ = 2
-        meta = store.put(clf, 'regmodel', tag='version2')
-        clf_ = store.get('regmodel@version2')
+        meta = store.put(clf, "regmodel", tag="version2")
+        clf_ = store.get("regmodel@version2")
         self.assertEqual(clf_.version_, 2)
-        clf_ = store.get('regmodel@version1')
+        clf_ = store.get("regmodel@version1")
         self.assertEqual(clf_.version_, 1)
-        clf_ = store.get('regmodel')
+        clf_ = store.get("regmodel")
         self.assertEqual(clf_.version_, 2)
 
     def test_get_version_by_commit(self):
@@ -76,17 +76,17 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         clf.version_ = 1
-        meta = store.put(clf, 'regmodel')
+        meta = store.put(clf, "regmodel")
         clf.version_ = 2
-        meta = store.put(clf, 'regmodel')
-        meta = store.metadata('regmodel')
-        commit1 = meta.attributes['versions']['commits'][-2]['ref']
-        commit2 = meta.attributes['versions']['commits'][-1]['ref']
-        clf_ = store.get('regmodel', commit=commit2)
+        meta = store.put(clf, "regmodel")
+        meta = store.metadata("regmodel")
+        commit1 = meta.attributes["versions"]["commits"][-2]["ref"]
+        commit2 = meta.attributes["versions"]["commits"][-1]["ref"]
+        clf_ = store.get("regmodel", commit=commit2)
         self.assertEqual(clf_.version_, 2)
-        clf_ = store.get('regmodel', commit=commit1)
+        clf_ = store.get("regmodel", commit=commit1)
         self.assertEqual(clf_.version_, 1)
-        clf_ = store.get('regmodel')
+        clf_ = store.get("regmodel")
         self.assertEqual(clf_.version_, 2)
 
     def test_get_metadata_by_version(self):
@@ -94,14 +94,18 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         clf.version_ = 1
-        meta1 = store.put(clf, 'regmodel', tag='commit1')
+        meta1 = store.put(clf, "regmodel", tag="commit1")
         clf.version_ = 2
-        meta2 = store.put(clf, 'regmodel', tag='commit2')
+        meta2 = store.put(clf, "regmodel", tag="commit2")
         self.assertEqual(meta1.id, meta2.id)
-        meta_commit1_byname = store.metadata(meta2.attributes['versions']['commits'][-2]['name'])
-        meta_commit2_byname = store.metadata(meta2.attributes['versions']['commits'][-1]['name'])
-        meta_commit1_bymeta = store.metadata('regmodel@commit1', raw=True)
-        meta_commit2_bymeta = store.metadata('regmodel@commit2', raw=True)
+        meta_commit1_byname = store.metadata(
+            meta2.attributes["versions"]["commits"][-2]["name"]
+        )
+        meta_commit2_byname = store.metadata(
+            meta2.attributes["versions"]["commits"][-1]["name"]
+        )
+        meta_commit1_bymeta = store.metadata("regmodel@commit1", raw=True)
+        meta_commit2_bymeta = store.metadata("regmodel@commit2", raw=True)
         self.assertEqual(meta_commit1_bymeta.id, meta_commit1_byname.id)
         self.assertEqual(meta_commit2_bymeta.id, meta_commit2_byname.id)
 
@@ -111,26 +115,26 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         reg = LinearRegression()
         reg.coef_ = np.array([2])
         reg.intercept_ = 10
-        store.put(reg, 'regmodel', tag='commit1')
+        store.put(reg, "regmodel", tag="commit1")
         reg.coef_ = np.array([5])
         reg.intercept_ = 0
-        store.put(reg, 'regmodel', tag='commit2')
+        store.put(reg, "regmodel", tag="commit2")
         # via past version pointer
-        r1 = self.om.runtime.model('regmodel^').predict([10]).get()
-        r2 = self.om.runtime.model('regmodel').predict([10]).get()
+        r1 = self.om.runtime.model("regmodel^").predict([10]).get()
+        r2 = self.om.runtime.model("regmodel").predict([10]).get()
         self.assertEqual(r1[0], 10 * 2 + 10)
         self.assertEqual(r2[0], 10 * 5 + 0)
         # via version tag
-        r1 = self.om.runtime.model('regmodel@commit1').predict([10]).get()
-        r2 = self.om.runtime.model('regmodel@commit2').predict([10]).get()
+        r1 = self.om.runtime.model("regmodel@commit1").predict([10]).get()
+        r2 = self.om.runtime.model("regmodel@commit2").predict([10]).get()
         self.assertEqual(r1[0], 10 * 2 + 10)
         self.assertEqual(r2[0], 10 * 5 + 0)
 
     def test_nonexistent(self):
         store = self.om.models
         store.register_mixin(ModelVersionMixin)
-        store.metadata('nonexistent')
-        store.get('nonexistent')
+        store.metadata("nonexistent")
+        store.get("nonexistent")
 
     def test_dropversion(self):
         store = self.om.models
@@ -138,10 +142,10 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         reg = LinearRegression()
         reg.coef_ = np.array([2])
         reg.intercept_ = 10
-        store.put(reg, 'regmodel', tag='commit1')
+        store.put(reg, "regmodel", tag="commit1")
         reg.coef_ = np.array([5])
         reg.intercept_ = 0
-        store.put(reg, 'regmodel', tag='commit2')
+        store.put(reg, "regmodel", tag="commit2")
 
     def test_virtualobj_versioning(self):
         store = self.om.models
@@ -150,24 +154,27 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
 
         @virtualobj
-        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+        def mymodel(
+            data=None, method=None, meta=None, store=None, tracking=None, **kwargs
+        ):
             if not data:
-                raise ValueError(f'expected data, got {data}')
-            return {'data': data, 'method': method}
+                raise ValueError(f"expected data, got {data}")
+            return {"data": data, "method": method}
+
         # store virtual obj as a versioned model (the default for models)
         mymodel.version_ = 1
-        meta1 = store.put(mymodel, 'mymodel')
+        meta1 = store.put(mymodel, "mymodel")
         mymodel.version_ = 2
-        meta2 = store.put(mymodel, 'mymodel')
+        meta2 = store.put(mymodel, "mymodel")
         # since this is a versioned model, the virtualobj get, put, drop should not be called
-        mdl_ = store.get('mymodel', version=-1)
+        mdl_ = store.get("mymodel", version=-1)
         self.assertEqual(mdl_.version_, 2)
-        mdl_ = store.get('mymodel', version=-2)
+        mdl_ = store.get("mymodel", version=-2)
         self.assertEqual(mdl_.version_, 1)
-        mdl_ = store.get('mymodel')
+        mdl_ = store.get("mymodel")
         self.assertEqual(mdl_.version_, 2)
-        store.drop('mymodel')
-        self.assertNotIn('mymodel', store.list())
+        store.drop("mymodel")
+        self.assertNotIn("mymodel", store.list())
 
     def test_empty_versions(self):
         # don't fail .get() in case we have a model with empty versions
@@ -178,35 +185,37 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         store.register_backend(VirtualObjectBackend.KIND, VirtualObjectBackend)
 
         @virtualobj
-        def mymodel(data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
+        def mymodel(
+            data=None, method=None, meta=None, store=None, tracking=None, **kwargs
+        ):
             if not data:
-                raise ValueError(f'expected data, got {data}')
-            return {'data': data, 'method': method}
+                raise ValueError(f"expected data, got {data}")
+            return {"data": data, "method": method}
 
-        meta = store.put(mymodel, 'mymodel')
+        meta = store.put(mymodel, "mymodel")
         # simulate _ensure_versioned
         # -- this should never happen (it may on manual versions update)
-        meta.attributes['versions'] = {}
-        meta.attributes['versions']['tags'] = {}
-        meta.attributes['versions']['commits'] = []
-        meta.attributes['versions']['tree'] = {}
+        meta.attributes["versions"] = {}
+        meta.attributes["versions"]["tags"] = {}
+        meta.attributes["versions"]["commits"] = []
+        meta.attributes["versions"]["tree"] = {}
         meta.save()
         # without
-        store.get('mymodel')
+        store.get("mymodel")
 
     def test_revisions(self):
         store = self.om.models
         store.register_mixin(ModelVersionMixin)
         clf = LinearRegression()
         # no model, no revisions
-        revisions = store.revisions('regmodel')
+        revisions = store.revisions("regmodel")
         self.assertIsNone(revisions)
         # store model and check revisions
-        store.put(clf, 'regmodel', tag='version1')
-        store.put(clf, 'regmodel', tag='version2')
-        revisions = store.revisions('regmodel')
-        self.assertEqual(revisions, ['regmodel@latest', 'regmodel@version1', 'regmodel@version2'])
-        revisions = store.revisions('regmodel', raw=True)
+        store.put(clf, "regmodel", tag="version1")
+        store.put(clf, "regmodel", tag="version2")
+        revisions = store.revisions("regmodel")
+        self.assertEqual(
+            revisions, ["regmodel@latest", "regmodel@version1", "regmodel@version2"]
+        )
+        revisions = store.revisions("regmodel", raw=True)
         self.assertIsInstance(revisions[-1], store._Metadata)
-
-

@@ -15,6 +15,7 @@ om.runtime.job(_jobdata['task_name'])._mark_status('finished')
 
 logger = logging.getLogger(__name__)
 
+
 class JobTasks:
     """
     example notebook task runner using omegaml runtime
@@ -105,8 +106,8 @@ class JobTasks:
         om = self.runtime.omega
         task_group = task_group or self.task_group
         nbname = self.jobname
-        nbname += f'/{task_group}' if task_group else ''
-        return om.jobs.list(f'tasks/{nbname}*', **kwargs)
+        nbname += f"/{task_group}" if task_group else ""
+        return om.jobs.list(f"tasks/{nbname}*", **kwargs)
 
     def restart(self, task_group=None, reset=False, require=None):
         """
@@ -133,24 +134,24 @@ class JobTasks:
         """
         om = self.runtime.omega
         nbname = self.jobname
-        nbname += f'/{task_group}' if task_group else ''
-        tasks_nb = om.jobs.list(f'tasks/{nbname}*')
+        nbname += f"/{task_group}" if task_group else ""
+        tasks_nb = om.jobs.list(f"tasks/{nbname}*")
         tasks = []
         for nb in tasks_nb:
-            results = om.jobs.list(f'results/{nb}*')
+            results = om.jobs.list(f"results/{nb}*")
             if not results or reset:
                 # generate meta data before running
                 meta = om.jobs.metadata(nb)
-                job = meta.attributes['job']
-                job['status'] = 'pending'
+                job = meta.attributes["job"]
+                job["status"] = "pending"
                 meta.save()
                 # run
                 task_rt = om.runtime.require(require).job(nb).run()
-                logger.info(f'started {nb} => {task_rt}')
+                logger.info(f"started {nb} => {task_rt}")
                 # update metadata to keep track
                 meta = om.jobs.metadata(nb)
-                job = meta.attributes['job']
-                job['task_id'] = task_rt.id
+                job = meta.attributes["job"]
+                job["task_id"] = task_rt.id
                 meta.save()
                 tasks.append(meta)
             else:
@@ -176,22 +177,22 @@ class JobTasks:
         AsyncResult = self.runtime.celeryapp.AsyncResult
         task_group = task_group or self.task_group
         nbname = self.jobname
-        nbname += f'/{task_group}' if task_group else ''
-        tasks_nb = om.jobs.list(f'tasks/{nbname}*')
+        nbname += f"/{task_group}" if task_group else ""
+        tasks_nb = om.jobs.list(f"tasks/{nbname}*")
         stats = []
         for nb in tasks_nb:
             meta = om.jobs.metadata(nb)
-            task_id = meta.attributes['job'].get('task_id')
-            status = AsyncResult(task_id).status if task_id else 'invalid'
-            job_runs = meta.attributes.get('job_runs')
+            task_id = meta.attributes["job"].get("task_id")
+            status = AsyncResult(task_id).status if task_id else "invalid"
+            job_runs = meta.attributes.get("job_runs")
             if job_runs:
-                run_status = job_runs[-1]['status'] if job_runs else '(waiting)'
+                run_status = job_runs[-1]["status"] if job_runs else "(waiting)"
             else:
-                run_status = 'unknown'
+                run_status = "unknown"
             stats.append((nb, task_id, status, run_status))
         if not tasks_nb:
             logger.info("there are no tasks")
-        return pd.DataFrame(stats, columns=['name', 'task_id', 'status', 'run_status'])
+        return pd.DataFrame(stats, columns=["name", "task_id", "status", "run_status"])
 
     def _generate_jobs(self, nb, jobs, job_ids=None, task_group=None):
         """
@@ -228,31 +229,30 @@ class JobTasks:
         job_ids = list(job_ids) if job_ids is not None else None
         self.task_group = task_group = task_group or self._make_task_group()
         tasks = []
-        om.jobs.create('#do not delete', 'results/.placeholder')
-        om.jobs.create('#do not delete', 'tasks/.placeholder')
-        om.jobs.create('#do not delete', 'results/tasks/.placeholder')
+        om.jobs.create("#do not delete", "results/.placeholder")
+        om.jobs.create("#do not delete", "tasks/.placeholder")
+        om.jobs.create("#do not delete", "results/tasks/.placeholder")
         for i, job in enumerate(jobs):
             main_nb = om.jobs.get(nb)
             job_id = i if job_ids is None else job_ids[i]
-            task_name = f'tasks/{nb}/{task_group}-{job_id}'
-            logger.info(f'generating task {task_name}')
+            task_name = f"tasks/{nb}/{task_group}-{job_id}"
+            logger.info(f"generating task {task_name}")
             if om.jobs.metadata(task_name):
                 om.jobs.drop(task_name, force=True)
             # store setup of omegaml in main.nb
-            job = dict(param=job,
-                       job_id=job_id,
-                       task_group=task_group,
-                       task_name=task_name)
+            job = dict(
+                param=job, job_id=job_id, task_group=task_group, task_name=task_name
+            )
             valid_auth = om.runtime.auth and om.runtime.auth.userid
-            auth = (om.runtime.auth.__dict__
-                    if valid_auth else dict(userid='', apikey=''))
-            code = init_cell_code.format(job=job,
-                                         **auth)
+            auth = (
+                om.runtime.auth.__dict__ if valid_auth else dict(userid="", apikey="")
+            )
+            code = init_cell_code.format(job=job, **auth)
             init_cell = nbv4.new_code_cell(source=code)
             done_cell = nbv4.new_code_cell(source=done_cell_code)
-            main_nb['cells'].insert(0, init_cell)
-            main_nb['cells'].append(done_cell)
-            task_meta = om.jobs.put(main_nb, task_name, attributes={'job': job})
+            main_nb["cells"].insert(0, init_cell)
+            main_nb["cells"].append(done_cell)
+            task_meta = om.jobs.put(main_nb, task_name, attributes={"job": job})
             tasks.append(task_meta)
 
     def _make_task_group(self, max_idlen=8):
@@ -265,7 +265,7 @@ class JobTasks:
         # - status: wontfix
         # - reason: hashcode is used purely for name resolution, not a security function
         value = md5(uuid4().bytes).hexdigest()
-        existing = ','.join(om.jobs.list(f'tasks/{nbname}*'))
+        existing = ",".join(om.jobs.list(f"tasks/{nbname}*"))
         while True:
             candidate = value[0:max_idlen]
             if candidate not in existing:
@@ -274,13 +274,13 @@ class JobTasks:
 
     def _mark_status(self, status):
         om = self.runtime.omega
-        task_name = self.jobname or '__testing__'
-        if task_name == '__testing__':
+        task_name = self.jobname or "__testing__"
+        if task_name == "__testing__":
             logger.info("warning: test run, not recording status")
             return
         meta = om.jobs.metadata(task_name)
-        job_meta = meta.attributes['job']
-        job_meta['status'] = status
+        job_meta = meta.attributes["job"]
+        job_meta["status"] = status
         meta.save()
 
 

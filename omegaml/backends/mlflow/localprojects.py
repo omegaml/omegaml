@@ -21,13 +21,14 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
     See Also:
         https://www.mlflow.org/docs/latest/projects.html#project-directories
     """
-    KIND = 'mlflow.project'
-    MLFLOW_PREFIX = 'mlflow://'
+
+    KIND = "mlflow.project"
+    MLFLOW_PREFIX = "mlflow://"
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_mlflow_prefix = isinstance(obj, str) and obj.startswith(self.MLFLOW_PREFIX)
-        is_mlflow_kind = kwargs.get('kind') == self.KIND
+        is_mlflow_kind = kwargs.get("kind") == self.KIND
         return is_mlflow_kind or is_mlflow_prefix
 
     def put(self, obj, name, attributes=None, **kwargs):
@@ -41,13 +42,13 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
         """
         pkgsrc = obj.split(self.MLFLOW_PREFIX)[-1]
         if os.path.exists(pkgsrc):
-            distdir = os.path.join(pkgsrc, 'dist')
+            distdir = os.path.join(pkgsrc, "dist")
             os.makedirs(distdir, exist_ok=True)
-            tarfn = os.path.join(distdir, f'{name}')
-            pkgdist = make_archive(tarfn, 'gztar', root_dir=pkgsrc, base_dir='.')
+            tarfn = os.path.join(distdir, f"{name}")
+            pkgdist = make_archive(tarfn, "gztar", root_dir=pkgsrc, base_dir=".")
         else:
             raise FileNotFoundError(pkgsrc)
-        filename = self.data_store.object_store_key(name, 'pkg', hashed=True)
+        filename = self.data_store.object_store_key(name, "pkg", hashed=True)
         gridfile = self._store_to_file(self.data_store, pkgdist, filename)
         return self.data_store._make_metadata(
             name=name,
@@ -55,7 +56,8 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, localpath=None, **kwargs):
         """
@@ -73,11 +75,13 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
         """
         pkgname = basename(name)
         dstdir = localpath or self.data_store.tmppath
-        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.packages_path, pkgname))
+        packagefname = "{}.tar.gz".format(
+            os.path.join(localpath or self.packages_path, pkgname)
+        )
         os.makedirs(dirname(packagefname), exist_ok=True)
         meta = self.data_store.metadata(name)
         outf = meta.gridfile
-        with open(packagefname, 'wb') as pkgf:
+        with open(packagefname, "wb") as pkgf:
             pkgf.write(outf.read())
         unpack_archive(packagefname, dstdir)
         if localpath:
@@ -88,11 +92,11 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
 
     @property
     def packages_path(self):
-        return os.path.join(self.data_store.tmppath, 'packages')
+        return os.path.join(self.data_store.tmppath, "packages")
 
 
 class MLFlowProject:
-    """ a proxy to the MLFlow project that runs a script
+    """a proxy to the MLFlow project that runs a script
 
     This provides the mod.run() interface for scripts so that
     we can use the same semantics for mlflow projects and pypi
@@ -103,24 +107,24 @@ class MLFlowProject:
         self.uri = uri
 
     def run(self, om, pure_python=False, **kwargs):
-        kwargs.setdefault('env-manager', 'local')
-        options = ' '.join(f'--{k.replace("_", "-")} {v}' for k, v in kwargs.items())
+        kwargs.setdefault("env-manager", "local")
+        options = " ".join(f'--{k.replace("_", "-")} {v}' for k, v in kwargs.items())
         tmpdir = tempfile.mkdtemp()
         # fix issue
-        with open(os.path.join(tmpdir, 'pyenv'), 'w') as fout:
-            fout.write('#/bin/bash')
-            fout.write('conda activate $1')
-        cmd = fr'PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./pyenv; mlflow run {options} {self.uri}'
+        with open(os.path.join(tmpdir, "pyenv"), "w") as fout:
+            fout.write("#/bin/bash")
+            fout.write("conda activate $1")
+        cmd = rf"PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./pyenv; mlflow run {options} {self.uri}"
         print(cmd)
         output = run(cmd, capture_output=True, shell=True)
         print(output)
         if output.stderr:
             output = {
-                'stdout': output.stdout.decode('utf8'),
-                'stderr': output.stderr.decode('utf8'),
+                "stdout": output.stdout.decode("utf8"),
+                "stderr": output.stderr.decode("utf8"),
             }
         else:
-            output = output.stdout.decode('utf8')
+            output = output.stdout.decode("utf8")
         return {
-            'output': output,
+            "output": output,
         }
