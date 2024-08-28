@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>core models &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="om.datasets" href="datasets.html" />
+    <link rel="prev" title="Reference" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">core models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#omegaml-store">omegaml.store</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.store.base.OmegaStore"><code class="docutils literal notranslate"><span class="pre">OmegaStore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.documents.Metadata"><code class="docutils literal notranslate"><span class="pre">Metadata</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">om.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jobs.html">om.jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html">om.scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">om.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html">omegaml.mdataframe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../0.16.3/reference/core.html">release/0.16.3</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">core models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="core-models">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">core models</a><a class="headerlink" href="#core-models" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#core-models" id="id1">core models</a></p>
+<ul>
+<li><p><a class="reference internal" href="#omegaml-store" id="id2">omegaml.store</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="omegaml-store">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">omegaml.store</a><a class="headerlink" href="#omegaml-store" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.store.base.</span></span><span class="sig-name descname"><span class="pre">OmegaStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbalias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore" title="Link to this definition">¶</a></dt>
+<dd><p>The storage backend for models and data</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.collection">
+<span class="sig-name descname"><span class="pre">collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.collection" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a mongo db collection as a datastore</p>
+<p>If there is an existing object of name, will return the .collection
+of the object. Otherwise returns the collection according to naming
+convention {bucket}.{prefix}.{name}.datastore</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – the collection to use. if none defaults to the
+collection name given on instantiation. the actual collection name
+used is always prefix + name + ‘.data’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.drop" title="Link to this definition">¶</a></dt>
+<dd><p>Drop the object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the object</p></li>
+<li><p><strong>force</strong> – If True ignores DoesNotExist exception, defaults to False
+meaning this raises a DoesNotExist exception of the name does not
+exist</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if object was deleted, False if not.
+If force is True and
+the object does not exist it will still return True</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DoesNotExist if the object does not exist and <code class="docutils literal notranslate"><span class="pre">`force=False`</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.exists">
+<span class="sig-name descname"><span class="pre">exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.exists" title="Link to this definition">¶</a></dt>
+<dd><p>check if object exists</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – name of object</p></li>
+<li><p><strong>hidden</strong> (<em>bool</em>) – if True, include hidden files</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if object exists</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.fs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fs</span></span><a class="headerlink" href="#omegaml.store.base.OmegaStore.fs" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve a gridfs instance using url and collection provided</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a gridfs instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve an object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the object</p></li>
+<li><p><strong>version</strong> – Version of the stored object (not supported)</p></li>
+<li><p><strong>force_python</strong> – Return as a python object</p></li>
+<li><p><strong>kwargs</strong> – kwargs depending on object kind</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an object, estimator, pipelines, data array or pandas dataframe
+previously stored with put()</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_backend">
+<span class="sig-name descname"><span class="pre">get_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_backend" title="Link to this definition">¶</a></dt>
+<dd><p>return the backend by a given object name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> – The object kind</p></li>
+<li><p><strong>model_store</strong> – the OmegaStore instance used to store models</p></li>
+<li><p><strong>data_store</strong> – the OmegaStore instance used to store data</p></li>
+<li><p><strong>kwargs</strong> – the kwargs passed to the backend initialization</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the backend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_backend_bykind">
+<span class="sig-name descname"><span class="pre">get_backend_bykind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_backend_bykind" title="Link to this definition">¶</a></dt>
+<dd><p>return the backend by a given object kind</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> – The object kind</p></li>
+<li><p><strong>model_store</strong> – the OmegaStore instance used to store models</p></li>
+<li><p><strong>data_store</strong> – the OmegaStore instance used to store data</p></li>
+<li><p><strong>kwargs</strong> – the kwargs passed to the backend initialization</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the backend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_backend_byobj">
+<span class="sig-name descname"><span class="pre">get_backend_byobj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_backend_byobj" title="Link to this definition">¶</a></dt>
+<dd><p>return the matching backend for the given obj</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the first backend that supports the given parameters or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_dataframe_dfgroup">
+<span class="sig-name descname"><span class="pre">get_dataframe_dfgroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sanitize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_dataframe_dfgroup" title="Link to this definition">¶</a></dt>
+<dd><p>Return a grouped dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the object</p></li>
+<li><p><strong>version</strong> – not supported</p></li>
+<li><p><strong>kwargs</strong> – mongo db query arguments to be passed to
+collection.find() as a filter.</p></li>
+<li><p><strong>sanitize</strong> – remove any $op operators in kwargs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_dataframe_documents">
+<span class="sig-name descname"><span class="pre">get_dataframe_documents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sanitize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trusted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_dataframe_documents" title="Link to this definition">¶</a></dt>
+<dd><p>Internal method to return DataFrame from documents</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the object (str)</p></li>
+<li><p><strong>columns</strong> – the column projection as a list of column names</p></li>
+<li><p><strong>lazy</strong> – if True returns a lazy representation as an MDataFrame.
+If False retrieves all data and returns a DataFrame (default)</p></li>
+<li><p><strong>filter</strong> – the filter to be applied as a column__op=value dict</p></li>
+<li><p><strong>sanitize</strong> – sanitize filter by removing all $op filter keys,
+defaults to True. Specify False to allow $op filter keys. $where
+is always removed as it is considered unsafe.</p></li>
+<li><p><strong>version</strong> – the version to retrieve (not supported)</p></li>
+<li><p><strong>is_series</strong> – if True retruns a Series instead of a DataFrame</p></li>
+<li><p><strong>kwargs</strong> – remaining kwargs are used a filter. The filter kwarg
+overrides other kwargs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the retrieved object (DataFrame, Series or MDataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_dataframe_hdf">
+<span class="sig-name descname"><span class="pre">get_dataframe_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_dataframe_hdf" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve dataframe from hdf</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of object</p></li>
+<li><p><strong>version</strong> – The version of object (not supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns a python pandas dataframe</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>gridfs.errors.NoFile</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_object_as_python">
+<span class="sig-name descname"><span class="pre">get_object_as_python</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_object_as_python" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve object as python object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta</strong> – The metadata object</p></li>
+<li><p><strong>version</strong> – The version of the object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns data as python object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.get_python_data">
+<span class="sig-name descname"><span class="pre">get_python_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trusted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.get_python_data" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve objects as python data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of object</p></li>
+<li><p><strong>version</strong> – The version of object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the object as python list object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.getl">
+<span class="sig-name descname"><span class="pre">getl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.getl" title="Link to this definition">¶</a></dt>
+<dd><p>return a lazy MDataFrame for a given object</p>
+<p>Same as .get, but returns a MDataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.help">
+<span class="sig-name descname"><span class="pre">help</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_or_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.help" title="Link to this definition">¶</a></dt>
+<dd><p>get help for an object by looking up its backend and calling help() on it</p>
+<p>Retrieves the object’s metadata and looks up its corresponding backend. If the
+metadata.attributes[‘docs’] is a string it will display this as the help() contents.
+If the string starts with ‘<a class="reference external" href="http://">http://</a>’ or ‘<a class="reference external" href="https://">https://</a>’ it will open the web page.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name_or_obj</strong> (<em>str</em><em>|</em><em>obj</em>) – the name or actual object to get help for</p></li>
+<li><p><strong>kind</strong> (<em>str</em>) – optional, if specified forces retrieval of backend for the given kind</p></li>
+<li><p><strong>raw</strong> (<em>bool</em>) – optional, if True forces help to be the backend type of the object.
+If False returns the attributes[docs] on the object’s metadata, if available.
+Defaults to False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>help(obj) if python is in interactive mode</p></li>
+<li><p>text(str) if python is in not interactive mode</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.list">
+<span class="sig-name descname"><span class="pre">list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regexp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.list" title="Link to this definition">¶</a></dt>
+<dd><p>List all files in store</p>
+<p>specify pattern as a unix pattern (e.g. <code class="code docutils literal notranslate"><span class="pre">models/*</span></code>,
+or specify regexp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> – the unix file pattern or None for all</p></li>
+<li><p><strong>regexp</strong> – the regexp. takes precedence over pattern</p></li>
+<li><p><strong>raw</strong> – if True return the meta data objects</p></li>
+<li><p><strong>filter</strong> – specify additional filter criteria, optional</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of files in store</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.make_metadata">
+<span class="sig-name descname"><span class="pre">make_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.make_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>create or update a metadata object</p>
+<p>this retrieves a Metadata object if it exists given the kwargs. Only
+the name, prefix and bucket arguments are considered</p>
+<p>for existing Metadata objects, the attributes kw is treated as follows:</p>
+<ul class="simple">
+<li><p>attributes=None, the existing attributes are left as is</p></li>
+<li><p>attributes={}, the attributes value on an existing metadata object
+is reset to the empty dict</p></li>
+<li><p>attributes={ some : value }, the existing attributes are updated</p></li>
+</ul>
+<p>For new metadata objects, attributes defaults to {} if not specified,
+else is set as provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the object name</p></li>
+<li><p><strong>bucket</strong> – the bucket, optional, defaults to self.bucket</p></li>
+<li><p><strong>prefix</strong> – the prefix, optional, defaults to self.prefix</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a metadata document for the given entry name</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.mongodb">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mongodb</span></span><a class="headerlink" href="#omegaml.store.base.OmegaStore.mongodb" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a mongo database object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.object_store_key">
+<span class="sig-name descname"><span class="pre">object_store_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.object_store_key" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the store key</p>
+<p>Unless you write a mixin or a backend you should not use this method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of object</p></li>
+<li><p><strong>ext</strong> – The extension of the filename</p></li>
+<li><p><strong>hashed</strong> – hash the key to support arbitrary name length, defaults
+to defaults.OMEGA_STORE_HASHEDNAMES, True by default since 0.13.7</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A filename with relative bucket, prefix and name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put" title="Link to this definition">¶</a></dt>
+<dd><p>Stores an object, store estimators, pipelines, numpy arrays or
+pandas dataframes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put_dataframe_as_dfgroup">
+<span class="sig-name descname"><span class="pre">put_dataframe_as_dfgroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupby</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put_dataframe_as_dfgroup" title="Link to this definition">¶</a></dt>
+<dd><p>store a dataframe grouped by columns in a mongo document</p>
+<dl class="field-list simple">
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p>&gt; # each group
+&gt;  {
+&gt;     #group keys
+&gt;     key: val,
+&gt;     _data: [
+&gt;      # only data keys
+&gt;        { key: val, … }
+&gt;     ]}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put_dataframe_as_documents">
+<span class="sig-name descname"><span class="pre">put_dataframe_as_documents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunksize=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_compat=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_fast_insert=&lt;function</span> <span class="pre">fast_insert&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put_dataframe_as_documents" title="Link to this definition">¶</a></dt>
+<dd><p>store a dataframe as a row-wise collection of documents</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – the dataframe to store</p></li>
+<li><p><strong>name</strong> – the name of the item in the store</p></li>
+<li><p><strong>append</strong> – if False collection will be dropped before inserting,
+if True existing documents will persist. Defaults to True. If not
+specified and rows have been previously inserted, will issue a
+warning.</p></li>
+<li><p><strong>index</strong> – list of columns, using +, -, &#64; as a column prefix to
+specify ASCENDING, DESCENDING, GEOSPHERE respectively. For &#64; the
+column has to represent a valid GeoJSON object.</p></li>
+<li><p><strong>timestamp</strong> – if True or a field name adds a timestamp. If the
+value is a boolean or datetime, uses _created as the field name.
+The timestamp is always datetime.datetime.utcnow(). May be overriden
+by specifying the tuple (col, datetime).</p></li>
+<li><p><strong>ensure_compat</strong> – if True attempt to convert obj to mongodb compatibility,
+set to False only if you are sure to have only compatible values in dataframe.
+defaults to True. False may reduce memory and increase speed on large dataframes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object created</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put_ndarray_as_hdf">
+<span class="sig-name descname"><span class="pre">put_ndarray_as_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put_ndarray_as_hdf" title="Link to this definition">¶</a></dt>
+<dd><p>store numpy array as hdf</p>
+<p>this is hack, converting the array to a dataframe then storing
+it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put_pyobj_as_document">
+<span class="sig-name descname"><span class="pre">put_pyobj_as_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put_pyobj_as_document" title="Link to this definition">¶</a></dt>
+<dd><p>store a dict as a document</p>
+<p>similar to put_dataframe_as_documents no data will be replaced by
+default. that is, obj is appended as new documents into the objects’
+mongo collection. to replace the data, specify append=False.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.put_pyobj_as_hdf">
+<span class="sig-name descname"><span class="pre">put_pyobj_as_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.put_pyobj_as_hdf" title="Link to this definition">¶</a></dt>
+<dd><p>store list, tuple, dict as hdf</p>
+<p>this requires the list, tuple or dict to be convertible into
+a dataframe</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.rebuild_params">
+<span class="sig-name descname"><span class="pre">rebuild_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.rebuild_params" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a modified set of parameters for querying mongodb
+based on how the mongo document is structured and the
+fields the document is grouped by.</p>
+<p><strong>Note: Explicitly to be used with get_grouped_data only</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kwargs</strong> – Mongo filter arguments</p></li>
+<li><p><strong>collection</strong> – The name of mongodb collection</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns a set of parameters as dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.register_backend">
+<span class="sig-name descname"><span class="pre">register_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.register_backend" title="Link to this definition">¶</a></dt>
+<dd><p>register a backend class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> – (str) the backend kind</p></li>
+<li><p><strong>backend</strong> – (class) the backend class</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.register_backends">
+<span class="sig-name descname"><span class="pre">register_backends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.register_backends" title="Link to this definition">¶</a></dt>
+<dd><p>register backends in defaults.OMEGA_STORE_BACKENDS</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.register_mixin">
+<span class="sig-name descname"><span class="pre">register_mixin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixincls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.store.base.OmegaStore.register_mixin" title="Link to this definition">¶</a></dt>
+<dd><p>register a mixin class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mixincls</strong> – (class) the mixin class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="omegaml.store.base.OmegaStore.tmppath">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tmppath</span></span><a class="headerlink" href="#omegaml.store.base.OmegaStore.tmppath" title="Link to this definition">¶</a></dt>
+<dd><p>return an instance-specific temporary path</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.documents.</span></span><span class="sig-name descname"><span class="pre">Metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.documents.Metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Metadata stores information about objects in OmegaStore</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.attributes">
+<span class="sig-name descname"><span class="pre">attributes</span></span><a class="headerlink" href="#omegaml.documents.Metadata.attributes" title="Link to this definition">¶</a></dt>
+<dd><p>customer-defined other meta attributes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.bucket">
+<span class="sig-name descname"><span class="pre">bucket</span></span><a class="headerlink" href="#omegaml.documents.Metadata.bucket" title="Link to this definition">¶</a></dt>
+<dd><p>bucket</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.collection">
+<span class="sig-name descname"><span class="pre">collection</span></span><a class="headerlink" href="#omegaml.documents.Metadata.collection" title="Link to this definition">¶</a></dt>
+<dd><p>for PANDAS_DFROWS this is the collection</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.created">
+<span class="sig-name descname"><span class="pre">created</span></span><a class="headerlink" href="#omegaml.documents.Metadata.created" title="Link to this definition">¶</a></dt>
+<dd><p>created datetime</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.gridfile">
+<span class="sig-name descname"><span class="pre">gridfile</span></span><a class="headerlink" href="#omegaml.documents.Metadata.gridfile" title="Link to this definition">¶</a></dt>
+<dd><p>for PANDAS_HDF and SKLEARN_JOBLIB this is the gridfile</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#omegaml.documents.Metadata.kind" title="Link to this definition">¶</a></dt>
+<dd><p>kind of data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.kind_meta">
+<span class="sig-name descname"><span class="pre">kind_meta</span></span><a class="headerlink" href="#omegaml.documents.Metadata.kind_meta" title="Link to this definition">¶</a></dt>
+<dd><p>omegaml technical attributes, e.g. column indicies</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.modified">
+<span class="sig-name descname"><span class="pre">modified</span></span><a class="headerlink" href="#omegaml.documents.Metadata.modified" title="Link to this definition">¶</a></dt>
+<dd><p>created datetime</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#omegaml.documents.Metadata.name" title="Link to this definition">¶</a></dt>
+<dd><p>this is the name of the data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.objid">
+<span class="sig-name descname"><span class="pre">objid</span></span><a class="headerlink" href="#omegaml.documents.Metadata.objid" title="Link to this definition">¶</a></dt>
+<dd><p>for PYTHON_DATA this is the actual document</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.prefix">
+<span class="sig-name descname"><span class="pre">prefix</span></span><a class="headerlink" href="#omegaml.documents.Metadata.prefix" title="Link to this definition">¶</a></dt>
+<dd><p>prefix</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.s3file">
+<span class="sig-name descname"><span class="pre">s3file</span></span><a class="headerlink" href="#omegaml.documents.Metadata.s3file" title="Link to this definition">¶</a></dt>
+<dd><p>s3file attributes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.documents.Metadata.uri">
+<span class="sig-name descname"><span class="pre">uri</span></span><a class="headerlink" href="#omegaml.documents.Metadata.uri" title="Link to this definition">¶</a></dt>
+<dd><p>location URI</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datasets.html" class="btn btn-neutral float-right" title="om.datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.15.3
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/reference/core.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/reference/core.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="core.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../0.15.5/reference/core.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../0.16.0/reference/core.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../0.16.1/reference/core.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../0.16.2/reference/core.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../0.16.3/reference/core.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/reference/core.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

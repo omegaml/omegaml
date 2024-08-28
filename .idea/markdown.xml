@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MarkdownSettings">
+    <option name="customStylesheetPath" value="$USER_HOME$/.config/JetBrains/intellij-markdown.css" />
+    <option name="customStylesheetText" value="body {&#10;    /*font-size: 80% !important;*/&#10;    font-family: Helvetica, Arial, freesans, sans-serif !important;&#10;}" />
+    <enabledExtensions>
+      <entry key="MermaidLanguageExtension" value="false" />
+      <entry key="PlantUMLLanguageExtension" value="false" />
+    </enabledExtensions>
+  </component>
+</project>

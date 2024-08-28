@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omega|ml - DataOps &amp; MLOps for humans &mdash; omega-ml 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=bf4bd5a2" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User Guide" href="guide/index.html" />
+    <link rel="prev" title="omega|ml" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            omega-ml
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">omega|ml - DataOps &amp; MLOps for humans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#get-started-in-5-minutes">Get started in &lt; 5 minutes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#use-cases">Use Cases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#machine-learning-deployment">Machine Learning Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-science-collaboration">Data Science Collaboration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#centralized-data-compute-cluster">Centralized Data &amp; Compute cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scalability-and-extensibility">Scalability and Extensibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../release/0.16.3/index.html">release/0.16.3</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">omega|ml - DataOps &amp; MLOps for humans</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="omega-ml-dataops-mlops-for-humans">
+<h1>omega|ml - DataOps &amp; MLOps for humans<a class="headerlink" href="#omega-ml-dataops-mlops-for-humans" title="Link to this heading">¶</a></h1>
+<p>with just a single line of code you can</p>
+<ul class="simple">
+<li><p>deploy machine learning models straight from Jupyter Notebook (or any other code)</p></li>
+<li><p>implement data pipelines quickly, without memory limitation, all from a Pandas-like API</p></li>
+<li><p>serve models and data from an easy to use REST API</p></li>
+</ul>
+<p>Further, omega|ml is the fastest way to</p>
+<ul class="simple">
+<li><p>scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud</p></li>
+<li><p>collaborate on data science projects easily, sharing Jupyter Notebooks</p></li>
+<li><p>deploy beautiful dashboards right from your Jupyter Notebook, using dashserve</p></li>
+</ul>
+</section>
+<section id="get-started-in-5-minutes">
+<h1>Get started in &lt; 5 minutes<a class="headerlink" href="#get-started-in-5-minutes" title="Link to this heading">¶</a></h1>
+<p>Start the omega|ml server right from your laptop or virtual machine</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ wget https://raw.githubusercontent.com/omegaml/omegaml/master/docker-compose.yml
+$ docker-compose up -d
+</pre></div>
+</div>
+<p>Jupyter Notebook is immediately available at <a class="reference external" href="http://localhost:8899">http://localhost:8899</a> (<cite>omegamlisfun</cite> to login).
+Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+The REST API is available at <a class="reference external" href="http://localhost:5000">http://localhost:5000</a>.</p>
+<p>Already have a Python environment (e.g. Jupyter Notebook)?
+Leverage the power of omega|ml by installing as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># assuming you have started the server as per above
+$ pip install omegaml
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h1>
+<p>Get more information at <a class="reference external" href="https://omegaml.github.io/omegaml/">https://omegaml.github.io/omegaml/</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># transparently store Pandas Series and DataFrames or any Python object</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="n">sales__gte</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># transparently store and get models</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="s1">&#39;forecast&#39;</span><span class="p">)</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;forecast&#39;</span><span class="p">)</span>
+
+<span class="c1"># run and scale models directly on the integrated Python or Spark compute cluster</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;forecast&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;stats[^sales]&#39;</span><span class="p">,</span> <span class="s1">&#39;stats[sales]&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;forecast&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;stats&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;forecast&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">gridsearch</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+<span class="c1"># use the REST API to store and retrieve data, run predictions</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;/v1/dataset/stats&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;/v1/dataset/stats?sales__gte=100&#39;</span><span class="p">)</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;/v1/model/forecast&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="use-cases">
+<h1>Use Cases<a class="headerlink" href="#use-cases" title="Link to this heading">¶</a></h1>
+<p>omega|ml currently supports scikit-learn, Keras and Tensorflow out of the box.
+Need to deploy a model from another framework? Open an issue at
+<a class="reference external" href="https://github.com/omegaml/omegaml/issues">https://github.com/omegaml/omegaml/issues</a> or drop us a line at <a class="reference external" href="mailto:support&#37;&#52;&#48;omegaml&#46;io">support<span>&#64;</span>omegaml<span>&#46;</span>io</a></p>
+<section id="machine-learning-deployment">
+<h2>Machine Learning Deployment<a class="headerlink" href="#machine-learning-deployment" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>deploy models to production with a single line of code</p></li>
+<li><p>serve and use models or datasets from a REST API</p></li>
+</ul>
+</section>
+<section id="data-science-collaboration">
+<h2>Data Science Collaboration<a class="headerlink" href="#data-science-collaboration" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>get a fully integrated data science workplace within minutes</p></li>
+<li><p>easily share models, data, jupyter notebooks and reports with your collaborators</p></li>
+</ul>
+</section>
+<section id="centralized-data-compute-cluster">
+<h2>Centralized Data &amp; Compute cluster<a class="headerlink" href="#centralized-data-compute-cluster" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>perform out-of-core computations on a pure-python or Apache Spark compute cluster</p></li>
+<li><p>have a shared NoSQL database (MongoDB), out of the box, working like a Pandas dataframe</p></li>
+<li><p>use a compute cluster to train your models with no additional setup</p></li>
+</ul>
+</section>
+<section id="scalability-and-extensibility">
+<h2>Scalability and Extensibility<a class="headerlink" href="#scalability-and-extensibility" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>scale your data science work from your laptop to team to production with no code changes</p></li>
+<li><p>integrate any machine learning framework or third party data science platform with a common API</p></li>
+</ul>
+<p>Towards Data Science recently published an article on omega|ml:
+<a class="reference external" href="https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666">https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666</a></p>
+<p>In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
+compute cluster, database and data source.</p>
+<p><em>Enterprise Edition</em></p>
+<p><a class="reference external" href="https://omegaml.io">https://omegaml.io</a></p>
+<p>omega|ml Enterprise Edition provides security on every level and is ready made for Kubernetes
+deployment. It is licensed separately for on-premise, private or hybrid cloud.
+Sign up at <a class="reference external" href="https://omegaml.io">https://omegaml.io</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="omega|ml" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="guide/index.html" class="btn btn-neutral float-right" title="User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: 0.12.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../0.11.3/quickstart.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../0.11.4/quickstart.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="quickstart.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../0.13.0/quickstart.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../0.13.2/quickstart.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../0.13.4/quickstart.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../0.13.5/quickstart.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../0.13.6/quickstart.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../master/quickstart.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

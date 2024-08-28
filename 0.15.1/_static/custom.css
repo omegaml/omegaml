@@ -1,0 +1,18 @@
+img.om-box {
+  border-color: gray;
+  border-width: 1px;
+  border-style: solid;	
+}
+
+.version-warning-banner {
+    width: 100%;
+    background-color: #f8e3d0;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.version-ref-stable {
+    font-weight: bold;
+}
+
