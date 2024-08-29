@@ -6,6 +6,12 @@ from omegaml.client.util import AttrDict
 from omegaml.tests.util import OmegaTestMixin
 
 
+class MyModel(GenAIModelHandler):
+    def complete(self, prompt, messages=None, conversation_id=None,
+                 data=None, **kwargs):
+        return prompt
+
+
 class GenAIModelTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml import Omega
@@ -15,12 +21,6 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.om.models.register_backend(OpenAIModelBackend.KIND, OpenAIModelBackend)
 
     def test_put_get_model_handler(self):
-        # create a model
-        class MyModel(GenAIModelHandler):
-            def complete(self, prompt, messages=None, conversation_id=None,
-                         data=None, **kwargs):
-                return prompt
-
         # test save and restore
         meta = self.om.models.put(MyModel, 'mymodel')
         del MyModel  # ensure we can restore from scratch
@@ -112,7 +112,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                 'message': AttrDict({
                     'role': 'assistant',
                     'content': 'hello how are you',
-            })})]
+                })})]
         })
         model.client.chat.completions.create.return_value = openai_response
         # check call to openai would be ok
