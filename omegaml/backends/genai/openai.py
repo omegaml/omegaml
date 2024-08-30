@@ -260,15 +260,15 @@ class OpenAIModel(GenAIModel):
         responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data, **kwargs)
         for response in responses:
             response, prompt_message, response_message = response
-            yield conversation_id, response, prompt_message, response_message
-        else:
             to_store = [
                 prompt_message,
                 response_message
             ]
+            yield conversation_id, response, prompt_message, response_message
+        else:
             self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
 
-    def conversation(self, conversation_id, raw=False):
+    def conversation(self, conversation_id=None, raw=False):
         if conversation_id is None:
             filter = {}
         else:
