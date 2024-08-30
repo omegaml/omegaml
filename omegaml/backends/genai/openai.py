@@ -1,9 +1,9 @@
 from collections import namedtuple
-from uuid import uuid4
 
 import re
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
+from uuid import uuid4
 
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.store import OmegaStore
@@ -105,7 +105,8 @@ class OpenAIModelBackend(GenAIBaseBackend):
         params.update(kwargs)
         template = template or meta.attributes.get('template')
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
-        pipeline = pipeline if callable(pipeline) else (self.model_store.get(pipeline) if isinstance(pipeline, str) else None)
+        pipeline = pipeline if callable(pipeline) else (
+            self.model_store.get(pipeline) if isinstance(pipeline, str) else None)
         return OpenAIModel(base_url, model, api_key=creds, template=template,
                            data_store=data_store, pipeline=pipeline,
                            dataset=self._messages_dataset(name, meta=meta),
@@ -120,7 +121,8 @@ class OpenAIModelBackend(GenAIBaseBackend):
 
     def _messages_dataset(self, name, meta=None, user=None):
         user = user or self.model_store.defaults.get('OMEGA_USERID', 'default')
-        return f'./openai/messages/{name}' if meta is None else meta.attributes.get('dataset').format(name=name, user=user)
+        return f'./openai/messages/{name}' if meta is None else meta.attributes.get('dataset').format(name=name,
+                                                                                                      user=user)
 
 
 class OpenAIModel(GenAIModel):
@@ -187,6 +189,7 @@ class OpenAIModel(GenAIModel):
             model = om.models.get('mymodel')
             messages = model.conversation(conversation_id)
     """
+
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
                  dataset=None, pipeline=None, **kwargs):
         super().__init__(**kwargs)
@@ -206,21 +209,43 @@ class OpenAIModel(GenAIModel):
         pass
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
-                 chat=False, **kwargs):
+                 chat=False, stream=False, **kwargs):
+
+        def parse_completion_response(r):
+            response, _, response_message = r
+            return response if raw else response_message
+
+        def parse_chat_response(r):
+            conversation_id, response, _, response_message = r
+            return response if raw else response_message
+
         if not chat and conversation_id is None:
-            response, _, response_message = self._do_complete(prompt, messages=messages, data=data, **kwargs)
+            responses = self._do_complete(prompt, messages=messages, data=data,
+                                          stream=stream, **kwargs)
+            response_parser = parse_completion_response
         else:
             # chat or conversation id provided
-            conversation_id, response, _, response_message = self._do_chat(prompt, conversation_id=conversation_id,
-                                                                           data=data,
-                                                                           **kwargs)
-        return response if raw else response_message
+            responses = self._do_chat(prompt, conversation_id=conversation_id,
+                                      data=data,
+                                      stream=stream,
+                                      **kwargs)
+            response_parser = parse_chat_response
+        # return response(s)
+        response_gen = (response_parser(response) for response in responses)
+        return response_gen if stream else [response for response in response_gen][-1]
 
-    def chat(self, prompt, conversation_id=None, raw=False, **kwargs):
-        conversation_id, response, *_ = self._do_chat(prompt,
-                                                      conversation_id=conversation_id,
-                                                      **kwargs)
-        return conversation_id, (response if raw else self._parsed_completion(response))
+    def chat(self, prompt, conversation_id=None, raw=False, stream=False, **kwargs):
+        responses = self._do_chat(prompt,
+                                  conversation_id=conversation_id,
+                                  stream=stream,
+                                  **kwargs)
+
+        def response_parser(r):
+            conversation_id, response, prompt_response, response_message = r
+            return conversation_id, (response if raw else response_message)
+
+        response_gen = (response_parser(response) for response in responses)
+        return response_gen if stream else [response for response in response_gen][-1]
 
     def _do_chat(self, prompt, conversation_id=None, data=None, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
@@ -232,14 +257,16 @@ class OpenAIModel(GenAIModel):
         if messages is None:
             messages = [self._system_message()]
             self.data_store.put(messages, self.dataset, kind='pandas.rawdict')
-        resp = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data, **kwargs)
-        response, prompt_message, response_message = resp
-        to_store = [
-            prompt_message,
-            response_message
-        ]
-        self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
-        return conversation_id, response, prompt_message, response_message
+        responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data, **kwargs)
+        for response in responses:
+            response, prompt_message, response_message = response
+            yield conversation_id, response, prompt_message, response_message
+        else:
+            to_store = [
+                prompt_message,
+                response_message
+            ]
+            self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
 
     def conversation(self, conversation_id, raw=False):
         if conversation_id is None:
@@ -256,7 +283,7 @@ class OpenAIModel(GenAIModel):
             "conversation_id": conversation_id or uuid4().hex,
         }
 
-    def _do_complete(self, prompt, messages=None, conversation_id=None, data=None, **kwargs):
+    def _do_complete(self, prompt, messages=None, conversation_id=None, data=None, stream=False, **kwargs):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or [self._system_message(conversation_id=conversation_id)]
         prompt_message = {
@@ -265,7 +292,7 @@ class OpenAIModel(GenAIModel):
             "conversation_id": conversation_id,
         }
         _template = self._prepare_template(self.template,
-                                          data=data)
+                                           data=data)
         template = self.pipeline(method='template',
                                  prompt_message=prompt_message,
                                  messages=messages,
@@ -280,20 +307,47 @@ class OpenAIModel(GenAIModel):
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages + [prompt_message],
+            stream=stream,
             **kwargs
         )
-        response_message = {
-            "role": response.choices[0].message.role,
-            "content": response.choices[0].message.content,
-            "conversation_id": conversation_id,
-        }
-        response_message = self.pipeline(method='process', response_message=response_message,
-                                         prompt_message=prompt_message,
-                                         messages=messages,
-                                         template=template,
-                                         conversation_id=conversation_id,
-                                         **kwargs) or response_message
-        return response, prompt_message, response_message
+
+        def resolve_response(response):
+            response_message = {
+                "role": response.choices[0].message.role,
+                "content": response.choices[0].message.content,
+                "conversation_id": conversation_id,
+            }
+            response_message = self.pipeline(method='process', response_message=response_message,
+                                             prompt_message=prompt_message,
+                                             messages=messages,
+                                             template=template,
+                                             conversation_id=conversation_id,
+                                             **kwargs) or response_message
+            return response, prompt_message, response_message
+
+        def resolve_chunk(chunk, chunks):
+            response_message = {
+                "role": chunk.choices[0].delta.role,
+                "delta.content": chunk.choices[0].delta.content,
+                "content": ''.join(c['delta.content'] for c in chunks),
+                "conversation_id": conversation_id,
+            }
+            chunks.append(response_message)
+            response_message = self.pipeline(method='process', response_message=response_message,
+                                             prompt_message=prompt_message,
+                                             messages=messages,
+                                             template=template,
+                                             conversation_id=conversation_id,
+                                             **kwargs) or response_message
+            return response, prompt_message, response_message
+
+        if stream:
+            # https://cookbook.openai.com/examples/how_to_stream_completions
+            chunks = []
+            for chunk in response:
+                yield resolve_chunk(chunk, chunks)
+        else:
+            yield resolve_response(response)
 
     def _parsed_completion(self, response):
         return response.choices[0].message.content

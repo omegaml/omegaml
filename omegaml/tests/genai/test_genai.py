@@ -6,12 +6,6 @@ from omegaml.client.util import AttrDict
 from omegaml.tests.util import OmegaTestMixin
 
 
-class MyModel(GenAIModelHandler):
-    def complete(self, prompt, messages=None, conversation_id=None,
-                 data=None, **kwargs):
-        return prompt
-
-
 class GenAIModelTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml import Omega
@@ -22,6 +16,11 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
 
     def test_put_get_model_handler(self):
         # test save and restore
+        class MyModel(GenAIModelHandler):
+            def complete(self, prompt, messages=None, conversation_id=None,
+                         data=None, **kwargs):
+                return prompt
+
         meta = self.om.models.put(MyModel, 'mymodel')
         del MyModel  # ensure we can restore from scratch
         model = self.om.models.get('mymodel')

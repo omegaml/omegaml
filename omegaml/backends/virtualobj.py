@@ -342,7 +342,7 @@ class _DillDip:
         return data
 
     def _dynamic_compile(self, obj, module='__main__'):
-        from omegaml.backends.genai.models import GenAIModelHandler
+        from omegaml.backends.genai.models import GenAIModelHandler, virtual_genai
         # re-compile source obj in __main__
         if self.isdipped(obj):
             if 'dill' in obj:
@@ -356,6 +356,7 @@ class _DillDip:
             mod = types.ModuleType(module)
             mod.__dict__.update({'__compiling__': True,
                                  'virtualobj': virtualobj,
+                                 'virtual_genai': virtual_genai,
                                  'VirtualObjectHandler': VirtualObjectHandler,
                                  'GenAIModelHandler': GenAIModelHandler})
             sys.modules[module] = mod
