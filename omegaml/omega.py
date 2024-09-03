@@ -1,11 +1,16 @@
+import logging
 import os
-from omegaml.util import inprogress
+import weakref
 from uuid import uuid4
 
+from omegaml.util import inprogress
 from ._version import version
+from .client.lunamon import LunaMonitor, OmegaMonitors
 from .mixins.store.requests import CombinedStoreRequestCache
 from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
+
+logger = logging.getLogger(__name__)
 
 
 class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
@@ -59,6 +64,10 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
         # stores
         self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
+        # monitoring
+        self._monitor = None  # will be created by .status() on first access
+        # finalize for garbage collection
+        weakref.finalize(self, self._cleanup, self._monitor)
 
     def __repr__(self):
         return 'Omega()'.format()
@@ -67,6 +76,16 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return self.__class__(defaults=self.defaults,
                               mongo_url=self.mongo_url,
                               **kwargs)
+
+    @staticmethod
+    def _cleanup(_monitor):
+        # close all explicit resources no longer required when the instance is garbage collected
+        # -- note that runtime and all stores are automatically gc'd
+        #    (1) runtime only holds a weakref to the Omega instance
+        #    (2) stores are gc'd when the Omega instance is gc'd
+        # -- by closing the monitor we ensure that all monitoring threads are stopped immediately
+        logger.debug(r'closing omegaml {self}')
+        _monitor.stop()
 
     def _make_runtime(self, celeryconf):
         from omegaml.runtimes import OmegaRuntime
@@ -83,6 +102,21 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
+
+    def _make_monitor(self):
+        return LunaMonitor(checks=OmegaMonitors.checks_for(self))
+
+    def status(self, data=False):
+        if self._monitor is None:
+            # we defer the creation of the monitor to the first access
+            # -- this is to avoid creating a monitor for every instance
+            # -- e.g. in runtime where the instance is created for short-lived tasks,
+            #    the monitor would be created and immediately gc'd
+            self._monitor = self._make_monitor()
+        return self._monitor.status(data=data)
+
+    def _check_connections(self):
+        return self._monitor.wait_ok()
 
     def __getitem__(self, bucket):
         """
@@ -112,7 +146,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     def _get_bucket(self, bucket):
         # enable patching in testing
-        bucket = None if bucket == 'default' else bucket
+        bucket = None if (not bucket or bucket == 'default') else bucket
         if bucket is None or self.bucket == bucket:
             return self
         return self._clone(bucket=bucket)
@@ -213,6 +247,18 @@ class OmegaDeferredInstance(object):
             return repr(getattr(self.base, self.attribute))
         self.setup()
         return repr(self.omega)
+
+    def __call__(self, *args, **kwargs):
+        if self.base:
+            base = getattr(self.base, self.attribute)
+            return base(*args, **kwargs)
+        if not self.initialized:
+            self.setup()
+        return self(*args, **kwargs)
+
+    @property
+    def instance(self):
+        return self.base
 
 
 def setup(*args, **kwargs):

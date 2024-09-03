@@ -1278,10 +1278,17 @@ def is_interactive():
         # we're not in IPython
         pass
     else:
-        # 'zmqshell' is IPython, 'jupyter' is Jupyter
-        if any(t in ipy_str for t in ('zmqshell', 'jupyter')):
+        # 'zmqshell' is IPython, 'jupyter' is Jupyter, 'shell' is omegaml
+        if any(t in ipy_str for t in ('zmqshell', 'jupyter', 'shell')):
             return True
     return sys.flags.interactive
+
+
+def signature(filter):
+    # sign a set of values
+    # SEC: CWE-345 ensure user-provided values are not tampered with
+    # -- this is used to ensure the values are not tampered with when passed to a query
+    return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
 
 
 def inprogress(text="running {fn}", **__kwargs):
@@ -1306,10 +1313,3 @@ def inprogress(text="running {fn}", **__kwargs):
         return wrapper
 
     return decorator
-
-
-def signature(filter):
-    # sign a set of values
-    # SEC: CWE-345 ensure user-provided values are not tampered with
-    # -- this is used to ensure the values are not tampered with when passed to a query
-    return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
