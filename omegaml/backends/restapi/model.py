@@ -59,7 +59,7 @@ class GenericModelResource(object):
         return result
 
     def prepare_result(self, result, resource_name=None, **kwargs):
-        return {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name }
+        return {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name}
 
     def fit(self, model_id, query, payload):
         datax = query.get('datax')
@@ -101,4 +101,16 @@ class GenericModelResource(object):
         result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
         return result
 
+    def complete(self, model_id, query, payload):
+        xx
+        datax = query.get('datax')
+        stream = True if query.get('stream') in ['true', '1'] else False
+        promise = self.om.runtime.model(model_id).complete(datax)
+        if stream:
+            def stream_result(promise):
+                for result in range(1, 10):
+                    yield result
 
+            return stream_result(), 200, {'Content-Type': 'application/octet-stream'}
+        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        return result
