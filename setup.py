@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
-version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).read()
+version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).readlines()[0]
 
 # extras
 tables = ['tables>=3.7']

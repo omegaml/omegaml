@@ -20,6 +20,8 @@ om.models
 
         - :py:class:`omegaml.mixins.store.virtualobj.VirtualObjectMixin`
         - :py:class:`omegaml.mixins.store.promotion.PromotionMixin`
+        - :py:class:`omegaml.mixins.store.extdmeta.ExtendedMetadataMixin`
+        - :py:class:`omegaml.mixins.store.extdmeta.ModelSignatureMixin`
 
     Backends:
 
@@ -92,6 +94,12 @@ Mixins
    :members:
 
 .. autoclass:: omegaml.mixins.store.promotion.PromotionMixin
+   :members:
+
+.. autoclass:: omegaml.mixins.store.extdmeta.ExtendedMetadataMixin
+   :members:
+
+.. autoclass:: omegaml.mixins.store.extdmeta.ModelSignatureMixin
    :members:
 
 Helpers
