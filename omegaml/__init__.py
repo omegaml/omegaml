@@ -51,3 +51,5 @@ streams = _omega.OmegaDeferredInstance(_omega._om, 'streams')
 logger = _omega.OmegaDeferredInstance(_omega._om, 'logger')
 #: the settings object
 defaults = _omega.OmegaDeferredInstance(_omega._om, 'defaults')
+#: status()
+status = _omega.OmegaDeferredInstance(_omega._om, 'status')
