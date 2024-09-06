@@ -1307,7 +1307,6 @@ def inprogress(text="running {fn}", **__kwargs):
         def wrapper(*args, **kwargs):
             text.format(fn=fn.__name__)
             with yaspin(text=text, **__kwargs) as sp:
-                fn.__yaspin = sp
                 return fn(*args, **kwargs)
 
         return wrapper

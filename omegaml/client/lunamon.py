@@ -23,7 +23,7 @@ class LunaMonitor:
         from omegaml.client.lunamon import LunaMonitor
         from omegaml import Omega
         om = Omega()
-        monitor = LunaMonitor(om)
+        monitor = LunaMonitor(checks=OmegaMonitors.on(om))
         monitor.assert_ok('health')
         monitor.stop()
 
@@ -50,10 +50,7 @@ class LunaMonitor:
     DEFAULT_CHECK_TIMEOUT = 5  # the timeout in seconds for each check
 
     def __init__(self, interval=None, timeout=None, checks=None, on_error=None, on_status=None):
-        self.checks = {
-            'health': self.healthy,
-            'monitor': self._check_monitor,
-        }
+        self.checks = LunaMonitorChecks.on(self)
         self.checks.update(checks or {})
         self.interval = interval if interval is not None else self.DEFAULT_INTERVAL
         self.timeout = timeout if timeout is not None else self.DEFAULT_CHECK_TIMEOUT
@@ -136,6 +133,10 @@ class LunaMonitor:
             cls._ALL_MONITORS.clear()
 
         _do_stop()
+
+    @property
+    def active(self):
+        return self._monitor_thread.is_alive() and not self._stop.is_set()
 
     def assert_ok(self, check=None, timeout=0):
         from time import sleep
@@ -246,6 +247,8 @@ class LunaMonitor:
         i = 0
         status = {}
         while i == 0 or not self._stop.wait(timeout=self.interval):
+            if self._stop.is_set():
+                break
             self._logger.debug(f'monitor iteration {i}')
             try:
                 self._run_checks()
@@ -382,32 +385,72 @@ class LunaMonitor:
 
         return _w
 
-    def _check_monitor(self):
-        pass  # we get called only if monitor runs, so we're ok without doing anything
 
+class LunaMonitorChecks:
+    """ checks to run for LunaMonitor itself
 
-class OmegaMonitors:
-    """ Luna monitors to run for omegaml instances """
+    This is a base class for checks to run for LunaMonitor. It provides
+    a simple interface to run checks on a resource. The checks are simple
+    methods that return True if the check is ok, False otherwise. Checks
+    may also throw exceptions, in which case the check is considered failed.
 
-    def __init__(self, om):
-        # using a weakref to allow for garbage collection of the om instance
-        self.om = weakref.proxy(om)
+    Usage:
+        from omegaml.client.lunamon import LunaMonitorChecks
+
+        class MyResourceMonitor(LunaMonitorChecks):
+            def check_database(self, monitor=None, **kwargs):
+                # ... some check
+                return self.resource.database.ping()
+
+        resource = ... # some object
+        checks = MyResourceMonitor.on(resource)
+        monitor = LunaMonitor(checks=checks)
+        monitor.assert_ok('database')
+
+    Notes:
+        * the check methods must be named check_<name> where <name> is the check's name
+          (e.g. check_database). You can override the cls.method_prefix attribute to change the
+          prefix, defaults to 'check_'
+        * the check methods may take a monitor= argument to access the monitor instance
+        * the monitor will add the check as '<name>' to the monitor instance, i.e.
+          monitor.status() will return the status of the check as 'name' => 'status'
+        * the check methods can access the resource passed to LunaMonitorChecks.on(<resource>)
+          via self.<resource_var>. You can override the cls.resource_var attribute to change
+          the variable name, defaults to 'resource'
+    """
+    resource_var = 'resource'  # the self.<resource_var> to use for the resource
+    method_prefix = 'check_'  # the method prefix to use for check methods
+
+    def __init__(self, resource=None, prefix=None):
+        # the rationale to use weakref is to avoid circular references (monitor -> resource -> monitor)
+        self.resource = weakref.proxy(resource)
+        self.method_prefix = prefix or self.method_prefix
+        setattr(self, self.resource_var, self.resource) if self.resource_var != 'resource' else None
 
     @classmethod
-    def checks_for(cls, om):
-        self = OmegaMonitors(om)
+    def on(cls, obj=None, prefix=None):
+        self = cls(obj, prefix=prefix)
         return {
-            'database': self._check_database,
-            'broker': self._check_broker,
-            'runtime': self._check_runtime,
-            'stores': self._check_stores,
+            k.replace(self.method_prefix, ''): getattr(self, k) for k in dir(self)
+            if k.startswith(self.method_prefix)
         }
 
-    def _check_stores(self):
+    def check_monitor(self, monitor=None, **kwargs):
+        return monitor.active
+
+    def check_health(self, monitor=None, **kwargs):
+        return monitor.healthy()
+
+
+class OmegaMonitors(LunaMonitorChecks):
+    """ Luna monitors to run for omegaml instances """
+    resource_var = 'om'
+
+    def check_stores(self):
         with pymongo.timeout(1):
             self.om.datasets.list()
 
-    def _check_runtime(self):
+    def check_runtime(self):
         with pymongo.timeout(1):
             if self.om.runtime.celeryapp.conf.get('CELERY_ALWAYS_EAGER'):
                 # local runtime in principle always works
@@ -418,11 +461,11 @@ class OmegaMonitors:
                 # -- for a remote runtime we submit a ping
                 self.om.runtime.ping(timeout=.1, source='monitor')
 
-    def _check_database(self, monitor=None, **kwargs):
+    def check_database(self, monitor=None, **kwargs):
         with pymongo.timeout(monitor.timeout):
             self.om.datasets.mongodb.command('ping')
 
-    def _check_broker(self):
+    def check_broker(self):
         with pymongo.timeout(1):
             self.om.runtime.celeryapp.control.ping()
 
