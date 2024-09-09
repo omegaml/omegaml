@@ -19,7 +19,7 @@ class LunaMonitorTestClass(TestCase):
         pass
 
     def test_connection_checks(self):
-        checks = OmegaMonitors.checks_for(self.om)
+        checks = OmegaMonitors.on(self.om)
         monitor = LunaMonitor(interval=.1, checks=checks)
         reports = []
         monitor.notify(on_status=lambda status: reports.append(status))

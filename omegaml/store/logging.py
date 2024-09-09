@@ -1,8 +1,5 @@
-import warnings
-
 import atexit
 import getpass
-
 import logging
 import os
 import platform
@@ -12,7 +9,7 @@ from contextlib import contextmanager
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-from omegaml.util import ensure_index, load_class, mongo_compatible
+from omegaml.util import ensure_index, load_class
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
 python_logger = logging.getLogger(__name__)
@@ -254,7 +251,7 @@ class OmegaSimpleLogger:
         # -- we use extra to pass along the same information that we log in omega dataset
         #    see https://docs.python.org/3/library/logging.html#logging.debug
         # -- we mark this record to avoid double logging in case of an active OmegaLoggingHandler
-        if getattr(self.defaults, 'OMEGA_LOG_PYTHON', False) :
+        if getattr(self.defaults, 'OMEGA_LOG_PYTHON', False):
             pylogmeth = getattr(python_logger, level.lower())
             pylogmeth(message, extra=dict(userid=self.userid,
                                           hostname=LOGGER_HOSTNAME,
@@ -455,4 +452,4 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
 
 def _attach_sysexcept_hook(logger):
     import traceback, sys
-    sys.excepthook = lambda t, v, tb: logger.errro('{t} {v} {tb}'.format(t=t, v=v, tb=traceback.format_tb(tb)))
+    sys.excepthook = lambda t, v, tb: logger.error('{t} {v} {tb}'.format(t=t, v=v, tb=traceback.format_tb(tb)))

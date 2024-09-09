@@ -66,8 +66,6 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self._stores = [self.models, self.datasets, self.scripts, self.jobs, self.streams]
         # monitoring
         self._monitor = None  # will be created by .status() on first access
-        # finalize for garbage collection
-        weakref.finalize(self, self._cleanup, self._monitor)
 
     def __repr__(self):
         return 'Omega()'.format()
@@ -76,16 +74,6 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return self.__class__(defaults=self.defaults,
                               mongo_url=self.mongo_url,
                               **kwargs)
-
-    @staticmethod
-    def _cleanup(_monitor):
-        # close all explicit resources no longer required when the instance is garbage collected
-        # -- note that runtime and all stores are automatically gc'd
-        #    (1) runtime only holds a weakref to the Omega instance
-        #    (2) stores are gc'd when the Omega instance is gc'd
-        # -- by closing the monitor we ensure that all monitoring threads are stopped immediately
-        logger.debug(r'closing omegaml {self}')
-        _monitor.stop()
 
     def _make_runtime(self, celeryconf):
         from omegaml.runtimes import OmegaRuntime
@@ -104,7 +92,9 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def _make_monitor(self):
-        return LunaMonitor(checks=OmegaMonitors.checks_for(self))
+        monitor = LunaMonitor(checks=OmegaMonitors.on(self))
+        weakref.finalize(self, monitor.stop)
+        return monitor
 
     def status(self, data=False):
         if self._monitor is None:
@@ -166,7 +156,7 @@ class OmegaDeferredInstance(object):
         self.base = base
         self.attribute = attribute
 
-    @inprogress(text='connecting ...')
+    @inprogress(text='loading ...')
     def setup(self, *args, **kwargs):
         """loads omegaml
 
@@ -180,21 +170,25 @@ class OmegaDeferredInstance(object):
         """
         from omegaml import _base_config
 
+        @inprogress(text='loading base ...')
         def setup_base():
             from omegaml import _base_config
             _base_config.load_framework_support()
             _base_config.load_user_extensions()
             return Omega(*args, **kwargs)
 
+        @inprogress(text='loading cloud ...')
         def setup_cloud():
             from omegaml.client.cloud import setup
             return setup(*args, **kwargs)
 
+        @inprogress(text='loading cloud from env ...')
         def setup_env():
             from omegaml.client.cloud import setup
             return setup(userid=os.environ['OMEGA_USERID'], apikey=os.environ['OMEGA_APIKEY'],
                          qualifier=os.environ.get('OMEGA_QUALIFIER'))
 
+        @inprogress(text='loading cloud from config ...')
         def setup_cloud_config():
             from omegaml.client.cloud import setup_from_config
             return setup_from_config(fallback=setup_base)
