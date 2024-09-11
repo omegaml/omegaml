@@ -1,0 +1,30 @@
+Release notes release/0.8
+=========================
+
+Released 2018-05-11
+
+Changes
+~~~~~~~
+
+-  Merge pull request #66 from miraculixx/patrick/fix-masked-filter
+   `6570bd3 <https://github.com/omegaml/omegaml/commit/6570bd3>`__
+-  variuos performance improvements add job slides viewer fix large
+   scale insertion timeout make masked-alike dataframe filtering work
+   masked filters dataframe-style now work
+   `982b736 <https://github.com/omegaml/omegaml/commit/982b736>`__
+-  variuos performance improvements add job slides viewer fix large
+   scale insertion timeout
+   `34ee3e2 <https://github.com/omegaml/omegaml/commit/34ee3e2>`__
+-  Merge pull request #64 from
+   miraculixx/patrick/various-performance-updates
+   `614c3bd <https://github.com/omegaml/omegaml/commit/614c3bd>`__
+-  variuos performance improvements
+   `25c3c02 <https://github.com/omegaml/omegaml/commit/25c3c02>`__
+-  Merge pull request #63 from miraculixx/patrick/add-streaming-tutorial
+   `774507e <https://github.com/omegaml/omegaml/commit/774507e>`__
+-  Merge pull request #62 from miraculixx/patrick/improve-numpy-support
+   `6e6b4bd <https://github.com/omegaml/omegaml/commit/6e6b4bd>`__
+-  add minibatch/streaming tutorial
+   `20d18d2 <https://github.com/omegaml/omegaml/commit/20d18d2>`__
+-  improved sklearn, pandas and numpy support for position indexables
+   `4bf0cf2 <https://github.com/omegaml/omegaml/commit/4bf0cf2>`__
