@@ -328,8 +328,8 @@ class OpenAIModel(GenAIModel):
         def resolve_chunk(chunk, chunks):
             response_message = {
                 "role": chunk.choices[0].delta.role,
-                "delta.content": chunk.choices[0].delta.content,
-                "content": ''.join(c['delta.content'] for c in chunks),
+                "delta": chunk.choices[0].delta.content,
+                "content": ''.join(c['delta'] for c in chunks) + chunk.choices[0].delta.content,
                 "conversation_id": conversation_id,
             }
             chunks.append(response_message)

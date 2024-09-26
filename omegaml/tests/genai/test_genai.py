@@ -1,5 +1,7 @@
 from unittest import TestCase, mock
 
+import inspect
+
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.openai import OpenAIModelBackend, OpenAIModel
 from omegaml.client.util import AttrDict
@@ -135,3 +137,35 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(result['role'], 'assistant')
         self.assertEqual(result['content'], 'hello how are you')
         self.assertEqual(result['conversation_id'], conversation_id)
+
+    @mock.patch('omegaml.backends.genai.openai.OpenAI')
+    def test_openai_stream(self, OpenAI):
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = self.om.models.get('mymodel')
+        # mock openai call
+        # -- simulate tokenized responses, one character at a time
+        openai_responses = [AttrDict({
+            'choices': [AttrDict({
+                'delta': AttrDict({
+                    'role': 'assistant',
+                    'content': c,
+                })})]
+        }) for c in 'hello how are you']
+        model.client.chat.completions.create.return_value = openai_responses
+        # check call to openai returns a generator to stream
+        result = model.complete('hello', stream=True)
+        self.assertTrue(inspect.isgenerator(result))
+        for chunk in result:
+            self.assertIn('role', chunk)
+            self.assertIn('delta', chunk)
+            self.assertIn('content', chunk)
+        # check final conversation is returned as expected
+        self.assertEqual(chunk['content'], 'hello how are you')
+        # check completions endpoint was called ok
+        # -- note it's a (mocked) streaming call, so only called once
+        self.assertEqual(model.client.chat.completions.create.call_count, 1)
+        kwargs = model.client.chat.completions.create.call_args.kwargs
+        self.assertIn('model', kwargs)
+        self.assertIn('messages', kwargs)
+        model = kwargs['model']
+        self.assertEqual(model, 'mymodel')
