@@ -38,7 +38,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
             })
         return data
 
-    def complete(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
         # Xname is the input given by the user
         model: GenAIModel
         model = self.get(modelname)
@@ -62,7 +62,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
         else:
             raise ValueError(f'Invalid input data, expected dict or str, got {type(data)}')
         return model.complete(prompt, messages=messages, conversation_id=conversation_id,
-                              data=user_data, chat=chat, **kwargs)
+                              data=user_data, chat=chat, stream=stream, **kwargs)
 
     def generate(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)
@@ -86,7 +86,7 @@ class GenAIModel:
         pass
 
     def complete(self, prompt, messages=None, conversation_id=None,
-                 data=None, **kwargs):
+                 data=None, stream=False, **kwargs):
         raise NotImplementedError
 
     def generate(self, *args, **kwargs):

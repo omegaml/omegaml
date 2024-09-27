@@ -1,11 +1,13 @@
 import builtins
 import datetime
 import flask
+import inspect
 import numpy as np
 import pandas as pd
 import re
 from flask import Blueprint
-from flask_restx import Resource, Namespace, fields, Api
+from flask_restx import Resource, fields, Api, marshal_with
+from functools import wraps
 from mongoengine import DoesNotExist
 from urllib.parse import unquote
 from werkzeug.exceptions import NotFound
@@ -16,6 +18,61 @@ from omegaml.util import isTrue
 
 omega_bp = Blueprint('omega-api', __name__)
 omega_api = api = Api(omega_bp)
+
+
+class marshal_with_streaming:
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = f(*args, **kwargs)
+            if isinstance(resp, tuple) and len(resp) == 3:
+                data, status, headers = resp
+            elif isinstance(resp, tuple) and len(resp) == 2:
+                data, status = resp
+                headers = {}
+            else:
+                data = resp
+                status = 200
+                headers = {}
+            if inspect.isgenerator(data):
+                streamed_resp = (marshal_one(chunk) for chunk in data)
+                return flask.Response(streamed_resp, content_type='text/event-stream', status=status, headers=headers)
+            return marshal_one(resp)
+
+        def marshal_one(resp):
+            from flask import has_app_context
+            from flask import current_app
+            from flask import request
+            from flask_restx.utils import unpack
+            from flask_restx import marshal
+
+            mask = self.mask
+            if has_app_context():
+                mask_header = current_app.config["RESTX_MASK_HEADER"]
+                mask = request.headers.get(mask_header) or mask
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return (
+                    marshal(
+                        data,
+                        self.fields,
+                        self.envelope,
+                        self.skip_none,
+                        mask,
+                        self.ordered,
+                    ),
+                    code,
+                    headers,
+                )
+            else:
+                return marshal(
+                    resp, self.fields, self.envelope, self.skip_none, mask, self.ordered
+                )
+
+        return wrapper
+
+
+marshal_with.__call__ = marshal_with_streaming.__call__
 
 PredictInput = strict(api).model('ModelInputSchema', {
     'columns': fields.List(fields.String),

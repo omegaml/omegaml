@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+from celery.states import UNREADY_STATES
+from time import sleep
 
+from minibatch.tests.util import LocalExecutor
 from omegaml.util import ensure_json_serializable
 
 
@@ -58,7 +61,8 @@ class GenericModelResource(object):
         result = self.prepare_result(promise.get(), resource_name=model_id) if not self.is_async else promise
         return result
 
-    def prepare_result(self, result, resource_name=None, **kwargs):
+    def prepare_result(self, result, resource_name=None, model_id=None, **kwargs):
+        resource_name = resource_name or model_id
         return {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name}
 
     def fit(self, model_id, query, payload):
@@ -102,15 +106,29 @@ class GenericModelResource(object):
         return result
 
     def complete(self, model_id, query, payload):
-        xx
-        datax = query.get('datax')
-        stream = True if query.get('stream') in ['true', '1'] else False
-        promise = self.om.runtime.model(model_id).complete(datax)
+        datax = query.get('datax') or query.get('prompt') or payload
+        stream = True if query.get('stream') in ['true', '1'] else payload.get('stream', False)
+        promise = self.om.runtime.model(model_id).complete(datax, stream=stream)
         if stream:
             def stream_result(promise):
-                for result in range(1, 10):
-                    yield result
+                class Sink(list):
+                    def put(self, chunks):
+                        self.extend(chunks)
 
-            return stream_result(), 200, {'Content-Type': 'application/octet-stream'}
+                buffer = Sink()
+                streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
+                                                 executor=LocalExecutor(),
+                                                 interval=0.01,
+                                                 sink=buffer)
+                emitter = streaming.make(lambda window: window.data)
+                has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
+                while promise.state in UNREADY_STATES or has_chunks():
+                    emitter.run(blocking=False)
+                    for chunk in buffer:
+                        yield self.prepare_result(chunk, model_id=model_id)
+                    # buffer.clear()
+                    sleep(0.01)
+
+            return stream_result(promise)
         result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
         return result
