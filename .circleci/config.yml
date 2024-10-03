@@ -60,7 +60,7 @@ jobs:
             echo "Waiting..."
             sleep 10
             # run tests
-            docker exec -i $(docker ps -qf name=mongo) mongo < scripts/mongoinit.js
+            docker exec -i $(docker ps -qf name=mongo) mongosh < scripts/mongoinit.js
             function dotest() {
               export VER=$1
               export EXTRAS=all,dev,mlflow,tensorflow
