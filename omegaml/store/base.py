@@ -1216,8 +1216,11 @@ class OmegaStore(object):
     def _ensure_fs_index(self, fs):
         # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not
         # see https://docs.mongodb.com/manual/core/gridfs/#gridfs-indexes
-        ensure_index(fs._GridFS__chunks, {'files_id': 1, 'n': 1}, unique=True)
-        ensure_index(fs._GridFS__files, {'filename': 1, 'uploadDate': 1})
+        # pymongo since 4.1 no longer has fs._GridFS
+        chunks_collection = fs._GridFS__chunks if hasattr(fs, '_GridFS__chunks') else fs._chunks
+        files_collection = fs._GridFS__files if hasattr(fs, '_GridFS__files') else fs._files
+        ensure_index(chunks_collection, {'files_id': 1, 'n': 1}, unique=True)
+        ensure_index(files_collection, {'filename': 1, 'uploadDate': 1})
 
     def sign(self, filter):
         return signature(filter)

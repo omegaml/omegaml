@@ -1,16 +1,17 @@
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
 
 import numpy as np
+import pickle
 from numpy.testing import assert_almost_equal
+from omegaml import Omega
+from omegaml.tests.core.cli.scenarios import CliTestScenarios
+from omegaml.tests.util import OmegaTestMixin
+from omegaml.util import PickableCollection
 from pathlib import Path
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
-
-from omegaml import Omega
-from omegaml.tests.core.cli.scenarios import CliTestScenarios
-from omegaml.tests.util import OmegaTestMixin
+from unittest.mock import patch, MagicMock
 
 
 class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
@@ -53,6 +54,18 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         gsmodel_name = model_meta.attributes['gridsearch'][0]['gsModel']
         gsmodel = self.om.models.get(gsmodel_name)
         self.assertIsInstance(gsmodel, GridSearchCV)
+
+    def test_pickable_connection(self):
+        db = self.om.datasets.mongodb
+        db.drop_collection('test')
+        collection = PickableCollection(db['test'])
+        collection.insert_one({'foo': 'bar'})
+        s = pickle.dumps(collection)
+        collection2 = pickle.loads(s)
+        documents = list(collection2.find())
+        self.assertEqual(len(documents), 1)
+        self.assertEqual(documents, [{'foo': 'bar', '_id': documents[0]['_id']}])
+        collection2.database.client.close()
 
     def test_cli_runtime_script_run(self):
         pkgpath = self.get_package_path()
