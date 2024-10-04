@@ -1,25 +1,18 @@
 from __future__ import absolute_import
 
-import warnings
-
-from io import BytesIO
 from unittest import skip
 
 import gridfs
 import joblib
 import pandas as pd
+import pymongo
 import unittest
 import uuid
+import warnings
 from datetime import timedelta, datetime
-
-import pymongo
+from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
-from pandas.testing import assert_frame_equal, assert_series_equal
-from pymongo.errors import OperationFailure
-from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
-
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
@@ -30,6 +23,10 @@ from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
+from pandas.testing import assert_frame_equal, assert_series_equal
+from pymongo.errors import OperationFailure
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression, LinearRegression
 
 
 class StoreTests(unittest.TestCase):
@@ -392,7 +389,6 @@ class StoreTests(unittest.TestCase):
         data = list(doc.get('data') for doc in cursor)
         self.assertEqual(data, data2)
 
-
     def test_put_python_dict_with_index(self):
         # create some data
         data = {
@@ -657,6 +653,13 @@ class StoreTests(unittest.TestCase):
         meta = store.metadata('foo')
         self.assertEqual(meta.attributes, {'foo': 'bax',
                                            'foobar': 'barbar'})
+
+    def test_replace(self):
+        store = OmegaStore()
+        store.put({'foo': 'bar'}, 'foobar')
+        store.put({'fox': 'bax'}, 'foobar', replace=True)
+        data = store.get('foobar')
+        self.assertEqual(data, [{'fox': 'bax'}])
 
     def test_drop(self):
         data = {
@@ -1090,6 +1093,7 @@ class StoreTests(unittest.TestCase):
         store.defaults.OMEGA_STORE_HASHEDNAMES = False
         store.put(df, long_name, as_hdf=True)
         meta_unhashed = store.metadata(long_name)
+        name_unhashed = meta_unhashed.gridfile.name
         # retrieve should still work
         store.defaults.OMEGA_STORE_HASHEDNAMES = True
         dfx = store.get(long_name)
@@ -1097,7 +1101,8 @@ class StoreTests(unittest.TestCase):
         # stored hashed
         store.put(df, long_name, replace=True, as_hdf=True)
         meta_hashed = store.metadata(long_name)
+        name_hashed = meta_hashed.gridfile.name
         dfx = store.get(long_name)
         assert_frame_equal(df, dfx)
         # check hashing actually worked
-        self.assertNotEqual(meta_unhashed.gridfile.name, meta_hashed.gridfile.name)
+        self.assertNotEqual(name_unhashed, name_hashed)
