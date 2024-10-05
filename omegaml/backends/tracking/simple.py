@@ -364,7 +364,7 @@ class OmegaSimpleTracker(TrackingProvider):
             self._extra_log = {}
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
-             lazy=False, since=None, batchsize=None, **extra):
+             lazy=False, since=None, end=None, batchsize=None, **extra):
         """ build a dataframe of all stored data
 
         Args:
@@ -379,6 +379,7 @@ class OmegaSimpleTracker(TrackingProvider):
             lazy (bool): if True returns the Cursor instead of data, ignores raw
             since (datetime): only return data since this date. If both since and run are specified,
                run is ignored and all runs since the date are returned
+            end (datetime): only return data until this date
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
                note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
                yields a list of dicts
@@ -404,6 +405,9 @@ class OmegaSimpleTracker(TrackingProvider):
 
         .. versionchanged:: 0.17
             enabled the use of run='*' to retrieve all runs, equivalent of run='all'
+
+        .. versionchanged:: 0.17
+            enabled since, end datetime range queries
         """
         from functools import cache
         experiment = experiment or self._experiment
@@ -428,7 +432,7 @@ class OmegaSimpleTracker(TrackingProvider):
                 run = relative_run(run)
         else:
             run = None
-        filter = self._build_data_filter(experiment, run, event, step, key, since, extra)
+        filter = self._build_data_filter(experiment, run, event, step, key, since, end, extra)
 
         def read_data(cursor):
             data = pd.DataFrame.from_records(cursor)
@@ -450,7 +454,7 @@ class OmegaSimpleTracker(TrackingProvider):
             data = read_data(data) if data is not None and not lazy and not raw else data
         return data
 
-    def _build_data_filter(self, experiment, run, event, step, key, since, extra):
+    def _build_data_filter(self, experiment, run, event, step, key, since, end, extra):
         # build a filter for the data query, suitable for OmegaStore.get()
         filter = {}
         valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
@@ -472,6 +476,11 @@ class OmegaSimpleTracker(TrackingProvider):
             if isinstance(since, datetime):
                 since = since.isoformat()
             filter['data.dt'] = {'$gte': str(since)}
+        if valid(end):
+            if isinstance(end, datetime):
+                end = end.isoformat()
+            filter['data.dt'] = filter.setdefault('data.dt', {})
+            filter['data.dt']['$lte'] = str(end)
         for k, v in extra.items():
             if valid(v):
                 fk = f'data.{k}'
@@ -495,8 +504,12 @@ class OmegaSimpleTracker(TrackingProvider):
         if not force and self._store.exists(self._data_name):
             return
         coll = self._store.collection(self._data_name)
-        ensure_index(coll, {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING})
-        ensure_index(coll, {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING})
+        idxs = [
+            {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING},
+            {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING},
+        ]
+        for specs in idxs:
+            ensure_index(coll, specs)
 
     def restore_artifact(self, *args, **kwargs):
         """ restore a specific logged artifact

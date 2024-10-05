@@ -176,6 +176,7 @@ def delete_database():
     # see https://stackoverflow.com/a/20554285
     c = MongoClient(mongo_url, authSource='admin')
     c.drop_database(database_name)
+    c.close()
 
 
 def make_tuple(arg):

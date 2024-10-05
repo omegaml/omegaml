@@ -30,7 +30,8 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # SON(..., 'keys': { key: order, ...}) => ['key', ...]
         idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
         idxs_keys = [list(sorted(d.keys())) for d in idxs]
-        self.assertTrue(any(keys == ['data.event', 'data.run'] for keys in idxs_keys))
+        self.assertTrue(any(set(keys) & {'data.event', 'data.key', 'data.run'} for keys in idxs_keys))
+        self.assertTrue(any(set(keys) & {'data.event', 'data.key', 'data.dt'} for keys in idxs_keys))
 
     def test_clear(self):
         om = self.om
@@ -530,6 +531,24 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(len(data), 1)
         data = exp.data(run=1, event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
         self.assertEqual(len(data), 5)
+
+    def test_daterange_filter(self):
+        om = self.om
+        dt_start = dt = datetime.datetime.utcnow()
+        for i in range(0, 10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('acc', 0, dt=dt)
+                dt = dt + datetime.timedelta(hours=1)
+        # try datetime range since start
+        for i in range(0, 10):
+            data = exp.data(event='metric', key='acc', since=dt_start, end=dt_start + datetime.timedelta(hours=i))
+            self.assertEqual(len(data), i + 1)
+        # try datetime for arbitrary ranges
+        for delta_start, delta_end in [(1, 4), (2, 6)]:
+            data = exp.data(event='metric', key='acc',
+                            since=dt_start + datetime.timedelta(hours=delta_start),
+                            end=dt_start + datetime.timedelta(hours=delta_end))
+            self.assertEqual(len(data), delta_end - delta_start + 1, f'{delta_start} {delta_end}')
 
     def test_restore_xy_data(self):
         om = self.om
