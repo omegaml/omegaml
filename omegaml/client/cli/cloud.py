@@ -1,7 +1,6 @@
-import shlex
-
 import pandas as pd
 import requests
+import shlex
 import subprocess
 from datetime import datetime, timedelta
 from tabulate import tabulate
@@ -92,7 +91,7 @@ class CloudCommandBase(CommandBase):
     @property
     def om(self):
         if not hasattr(self, '_om'):
-            without_config = ('config', 'login')
+            without_config = ('config', 'login', 'database')
             require_config = not any(self.args.get(k) for k in without_config)
             self._om = get_omega(self.args, require_config=require_config)
         return self._om
@@ -408,7 +407,7 @@ class CloudCommandBase(CommandBase):
                 return
         print(f"Running {cmd}")
         if not dry:
-            result = subprocess.run(cmd.strip().split(' '))
+            result = subprocess.run(cmd, shell=True)
             print(result)
 
     def _restapi_auth(self):
