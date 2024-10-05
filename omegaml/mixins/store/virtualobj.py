@@ -1,7 +1,6 @@
 import re
 
-
-from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
+from omegaml.backends.virtualobj import VirtualObjectBackend
 
 
 class VirtualObjectMixin(object):
@@ -68,7 +67,7 @@ class VirtualObjectMixin(object):
             result = self._getvirtualobjfn(name)(data=obj, method='put',
                                                  meta=self._vobj_meta, store=self, **kwargs)
         else:
-            result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, **kwargs)
+            result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, replace=replace, **kwargs)
         return result
 
     def drop(self, name, force=False, **kwargs):
@@ -85,4 +84,3 @@ class VirtualObjectMixin(object):
                 if not force:
                     return bool(result)
         return super(VirtualObjectMixin, self).drop(name, force=force, **kwargs)
-
