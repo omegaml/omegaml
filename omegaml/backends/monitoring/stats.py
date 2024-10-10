@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from omegaml.util import ensure_list
 from scipy.stats import ks_2samp, chisquare, wasserstein_distance
+
+from omegaml.util import ensure_list
 
 
 class DriftStatsCalc:
@@ -409,8 +410,9 @@ class DriftStats:
                 counts, edges = period['hist']
                 if sample:
                     # perform re-sampling of data if requested
-                    h = stats_calc.sample_from_hist(counts, edges, n=sample)
-                    counts, edges = np.histogram(h, bins=len(edges), density=True)
+                    N = int(100 if sample is True else sample)
+                    h = stats_calc.sample_from_hist(counts, edges, n=N)
+                    counts, edges = np.histogram(h, bins=len(edges))
                 ax = plt.stairs(counts, edges, **style)
             if 'groups' in period:
                 counts, groups = list(period['groups'].values()), list(period['groups'].keys())

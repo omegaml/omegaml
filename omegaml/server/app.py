@@ -1,15 +1,15 @@
 import os
+import warnings
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.exceptions import abort
-from werkzeug.utils import redirect
-
 from omegaml.server.config import config_dict
 from omegaml.server.restapi.util import JSONEncoder
 from omegaml.server.util import configure_database, debug_only
 from omegaml.store import OmegaStore
 from omegaml.util import json_dumps_np
+from werkzeug.exceptions import abort
+from werkzeug.utils import redirect
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -63,6 +63,10 @@ def create_app(*args, **kwargs):
         if not app.debug:
             abort(401)
         return render_template(f'dashboard/{template}')
+
+    # avoid reloading the app due to queryops warnings
+    # TODO: queryops should have a better way to handle this
+    warnings.filterwarnings("ignore", module='omegaml.store.queryops')
 
     return app
 

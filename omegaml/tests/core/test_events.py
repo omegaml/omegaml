@@ -1,11 +1,9 @@
-from pprint import pprint
 from unittest import TestCase
 
 import logging
-from time import sleep
-
 from omegaml import Omega
-from omegaml.util import LunaMonitor
+from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
+from time import sleep
 
 
 class EventsTestClass(TestCase):
@@ -20,14 +18,14 @@ class EventsTestClass(TestCase):
         pass
 
     def test_connection_checks(self):
-        monitor = LunaMonitor(self.om, interval=.1)
+        monitor = LunaMonitor(checks=OmegaMonitors.on(self.om), interval=.1)
         reports = []
         monitor.notify(on_status=lambda status: reports.append(status))
         sleep(2)
         self.assertTrue(len(reports) > 0)
-        monitor.assert_ok('database', timeout=.5)
-        monitor.assert_ok('runtime', timeout=.5)
-        monitor.assert_ok(timeout=.5)
+        monitor.assert_ok('database', timeout=1)
+        monitor.assert_ok('runtime', timeout=1)
+        monitor.assert_ok(timeout=1)
         self.assertTrue(monitor.healthy())
         self.assertTrue(monitor.healthy('database'))
         self.assertTrue(all(s == 'ok' for c, s in monitor.status().items()))

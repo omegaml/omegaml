@@ -53,7 +53,6 @@ from omegaml.client.cli.runtime import RuntimeCommandBase
 from omegaml.client.cli.scripts import ScriptsCommandBase
 from omegaml.client.cli.shell import ShellCommandBase
 from omegaml.client.docoptparser import CommandParser
-from omegaml.util import LunaMonitor, omega_exit
 
 
 def main(argv=None, logger=None, **kwargs):
@@ -79,14 +78,13 @@ def main(argv=None, logger=None, **kwargs):
         print(f"*** ERROR {e}")
         if parser.should_debug:
             raise
-        omega_exit()
         exit(1)
     return parser
+
 
 def climain():
     # entry point for console_script
     main()
-    omega_exit()
 
 
 if __name__ == '__main__':

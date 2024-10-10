@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
@@ -9,11 +10,13 @@ from omegaml.tests.util import clear_om
 def create_testdata(om):
     reg = LinearRegression()
     df = pd.DataFrame({
-        'a': range(1, 3)
+        'x': range(1, 100),
     })
+    df['y'] = df['x'] * 2 + 1
     code = '''
     print("hello world")
     '''
+
     @virtualobj
     def myservice(*args, **kwargs):
         "hello world"
@@ -30,15 +33,20 @@ def create_testdata(om):
             if i < 3:
                 omx.runtime.job('hello').run().get()
             for j in range(10):
-                with omx.runtime.experiment(f'{bx}-reg-{i}') as exp:
+                df = df * 0.1 * np.random.randn(*df.shape)
+                with omx.runtime.experiment(f'{bx}-reg-{i}', autotrack=True) as exp:
                     exp.track(f'{bx}-reg-{i}')
                     exp.log_metric('acc', .1 + (j * 10 / 100))
                     exp.log_metric('loss', .97 - (j * 10 / 100))
+                    mon = exp.as_monitor(f'{bx}-reg-{i}')
+                    mon.snapshot(X=df[['x']], Y=df[['y']])
+
         [omx.logger.info(f'{bx}-test {i}') for i in range(100)]
 
 
 if __name__ == '__main__':
     import omegaml as om
+
     om._base_config.OMEGA_LOCAL_RUNTIME = True
     settings(reload=True)
     om = om.setup()
