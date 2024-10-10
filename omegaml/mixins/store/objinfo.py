@@ -35,18 +35,33 @@ class ObjectInformationMixin:
         return data
 
     def stats(self, pattern=None, scale=1.0, as_dict=False, **kwargs):
+        """ get statistics for all objects in the store
+
+        Args:
+            pattern (str): pattern to match object names
+            scale (float): scale size statistics by this factor, defaults to 1.0 (bytes), set to 1e3 for KB, 1e6 for MB,
+              1e9 for GB, etc.
+            as_dict (bool): if True, return statistics as dict, else as DataFrame, defaults to False
+            **kwargs:
+
+        Returns:
+            dict or DataFrame
+        """
         self: OmegaStore | ObjectInformationMixin
         _stats = {}
         for meta in self.list(pattern=pattern, raw=True):
             _stats[meta.name] = self._get_collection_stats(meta.collection, scale=scale)
             _stats[meta.name].setdefault('count', 1)  # count is always at least 1 (the object itself)
             _stats[meta.name].setdefault('totalSize', 0)  # if we don't know the size, assume 0
-        _stats['gridfs'] = self._get_collection_stats(f'{self._fs_collection}.chunks', scale=scale)
+            # TODO add gridfs file size for only this member, not gridfs overall
+            # self._get_collection_stats(f'{self._fs_collection}.chunks', scale=scale)
         return _stats if as_dict else self._get_stats_dataframe(_stats)
 
     def dbstats(self, scale=1.0, as_dict=False, **kwargs):
         self: OmegaStore | ObjectInformationMixin
         _stats = self._get_database_stats(scale=scale)
+        _stats.setdefault('fsUsedSize%', _stats.get('fsUsedSize', 0) / _stats.get('fsTotalSize', 1))
+        _stats.setdefault('fsAvailableSize%', _stats.get('fsAvailableSize', 0) / _stats.get('fsTotalSize', 1))
         return _stats if as_dict else self._get_stats_dataframe(_stats, scale=scale,
                                                                 index=['db'], totals='fsTotalSize')
 

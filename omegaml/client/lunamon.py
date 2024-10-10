@@ -7,13 +7,11 @@ import atexit
 import logging
 import os
 import pymongo
-import sys
 import weakref
 from datetime import datetime
+from omegaml.util import inprogress
 from time import sleep
 from yaspin import yaspin
-
-from omegaml.util import inprogress
 
 
 class LunaMonitor:
@@ -138,17 +136,18 @@ class LunaMonitor:
     def active(self):
         return self._monitor_thread.is_alive() and not self._stop.is_set()
 
-    def assert_ok(self, check=None, timeout=0):
+    def assert_ok(self, check=None, timeout=None):
         from time import sleep
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
-        timeout = timeout or sys.float_info.min
-        while timeout:
-            check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
-            if all(check_ok(c) for c in checks):
-                return True
-            sleep(timeout) if timeout > sys.float_info.min else None
-            timeout = None
-        raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        timeout = timeout if timeout is not None else 0
+        check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
+        all_checks_ok = lambda: all(check_ok(c) for c in checks)
+        while not all_checks_ok() and timeout > 0:
+            sleep(.1)
+            timeout -= .1
+        if not all_checks_ok():
+            raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        return True
 
     def healthy(self, check=None, timeout=0):
         """ check if all checks are ok

@@ -1,11 +1,10 @@
-from pprint import pprint
 from unittest import TestCase
 
 import pandas as pd
-
 from omegaml import Omega
 from omegaml.mixins.store.objinfo import ObjectInformationMixin
 from omegaml.tests.util import OmegaTestMixin
+from pprint import pprint
 
 
 class ObjectInformationMixinTests(OmegaTestMixin, TestCase):
@@ -78,6 +77,11 @@ class ObjectInformationMixinTests(OmegaTestMixin, TestCase):
         self.assertEqual(bytes_stats.loc['models']['count'], 1)
 
     def test_dbstats(self):
-        om = self.om()
-        stats = om.stats('db', as_dict=True)
-
+        om = self.om
+        dbstats = om.datasets.dbstats(as_dict=True)
+        self.assertIsInstance(dbstats, dict)
+        self.assertIn('fsAvailableSize', dbstats)
+        self.assertIn('fsUsedSize', dbstats)
+        self.assertIn('fsTotalSize', dbstats)
+        self.assertIn('fsUsedSize%', dbstats)
+        self.assertIn('fsAvailableSize%', dbstats)

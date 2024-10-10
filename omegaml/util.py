@@ -12,7 +12,7 @@ import uuid
 import validators
 import warnings
 from base64 import b64encode
-from bson import UuidRepresentation, ObjectId
+from bson import ObjectId
 from copy import deepcopy
 from datetime import datetime, date
 from hashlib import sha256
@@ -549,36 +549,29 @@ class PickableCollection(object):
     def __getstate__(self):
         client = self.database.client
         host, port = list(client.nodes)[0]
-        # options contains ssl settings
-        options = self.database.client._MongoClient__options._options
         # extract credentials in pickable format
         if hasattr(self.database.client, '_MongoClient__all_credentials'):
-            # pymongo < 4.1
+            # -- before pymongo 4.10.1, options are in client['_MongoClient__options']
+            options = self.database.client._MongoClient__options._options
             all_creds = self.database.client._MongoClient__all_credentials
             # -- if authSource was used for connection, credentials are in 'admin'
             # -- otherwise credentials are keyed by username
             cred_key = 'admin' if 'admin' in all_creds else options['username']
             creds = all_creds[cred_key]
         else:
-            # pymongo >= 4.1
+            # pymongo >= 4.10.1
             creds = self.database.client.options.pool_options._credentials
         creds_state = dict(creds._asdict())
         creds_state.pop('cache')
         creds_state['source'] = str(creds.source)
-        # https://github.com/mongodb/mongo-python-driver/blob/087950d869096cf44a797f6c402985a73ffec16e/pymongo/common.py#L161
-        UUID_REPS = {
-            UuidRepresentation.STANDARD: 'standard',
-            UuidRepresentation.PYTHON_LEGACY: 'pythonLegacy',
-        }
-        options['uuidRepresentation'] = UUID_REPS.get(options.get('uuidRepresentation'), 'standard')
-        return {
+        state = {
             'name': self.name,
             'database': self.database.name,
             'host': host,
             'port': port,
             'credentials': creds_state,
-            'options': options,
         }
+        return state
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
@@ -588,9 +581,10 @@ class PickableCollection(object):
         # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html?highlight=serverSelectionTimeoutMS#pymongo.mongo_client.MongoClient
         # https://github.com/mongodb/mongo-python-driver/blob/7a539f227a9524b27ef469826ef9ee5bd4533773/pymongo/common.py
         # https://github.com/mongodb/mongo-python-driver/blob/master/pymongo/client_options.py#L157
-        options = state['options']
+        options = state.get('options', {})
         options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
-        client = MongoClient(url, authSource=state['credentials']['source'], **options)
+        client = MongoClient(url, authSource=state['credentials']['source'],
+                             uuidRepresentation='standard', **options)
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -763,6 +757,23 @@ class DefaultsContext(object):
 
 
 def ensure_json_serializable(v):
+    # called by REST API serializer
+    # -- kept for backwards compatibility to ensure v.flatten().tolist() is used for np.ndarrays
+    #    (json_dumps_np handles np.ndarrays differently)
+    import numpy as np
+    import pandas as pd
+    if isinstance(v, np.ndarray):
+        return v.flatten().tolist()
+    if isinstance(v, pd.Series):
+        return ensure_json_serializable(v.to_dict())
+    elif isinstance(v, range):
+        v = list(v)
+    elif isinstance(v, dict):
+        vv = {
+            k: ensure_json_serializable(v)
+            for k, v in v.items()
+        }
+        v = vv
     return mongo_compatible(v)
 
 

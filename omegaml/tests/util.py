@@ -1,7 +1,7 @@
-import os
-import warnings
 from http import HTTPStatus
 
+import os
+import warnings
 from omegaml import Omega
 
 
@@ -20,9 +20,12 @@ class OmegaTestMixin(object):
         for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
             part = getattr(om, element)
             drop = part.drop
+            drop_kwargs = {}
+            if element == 'streams':
+                drop_kwargs = {'keep_data': False}
             [drop(m.name,
                   force=True,
-                  keep_data=False) for m in part.list(hidden=True, include_temp=True, raw=True)]
+                  **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
             self.assertListEqual(part.list(hidden=True, include_temp=True), [])
 
     @property

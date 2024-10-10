@@ -1,4 +1,4 @@
-import signal
+import warnings
 
 from hashlib import md5
 
@@ -202,11 +202,13 @@ class StreamsProxy(OmegaStore):
             from mongoengine import DoesNotExist
             raise DoesNotExist()
         if keep_data is False:
-            stream = self.get(name, autoattach=False)
-            stream.clear()
-            stream.stop()
-            stream.delete()
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            try:
+                stream = self.get(name, autoattach=False)
+                stream.clear()
+                stream.stop()
+                stream.delete()
+            except Exception as e:
+                warnings.warn(f'could not delete stream data {name} due to {e}')
         meta.delete() if meta is not None else None
         return True
 

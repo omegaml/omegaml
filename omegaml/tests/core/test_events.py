@@ -25,7 +25,7 @@ class EventsTestClass(TestCase):
         self.assertTrue(len(reports) > 0)
         monitor.assert_ok('database', timeout=1)
         monitor.assert_ok('runtime', timeout=1)
-        monitor.assert_ok(timeout=1)
+        monitor.assert_ok(timeout=5)
         self.assertTrue(monitor.healthy())
         self.assertTrue(monitor.healthy('database'))
         self.assertTrue(all(s == 'ok' for c, s in monitor.status().items()))
