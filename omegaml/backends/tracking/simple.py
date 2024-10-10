@@ -1,8 +1,8 @@
 import dill
+import importlib
 import numpy as np
 import os
 import pandas as pd
-import pkg_resources
 import platform
 import pymongo
 import warnings
@@ -348,8 +348,8 @@ class OmegaSimpleTracker(TrackingProvider):
             'platform': platform.uname()._asdict(),
             'python': '-'.join((platform.python_implementation(),
                                 platform.python_version())),
-            'packages': ['=='.join((d.project_name, d.version))
-                         for d in pkg_resources.working_set]
+            'packages': ['=='.join((d.metadata['Name'], d.version))
+                         for d in importlib.metadata.distributions()]
         }
         data = self._common_log_data('system', key, value, step=step, dt=dt, **extra)
         self._write_log(data)
