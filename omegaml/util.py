@@ -12,6 +12,7 @@ import uuid
 import validators
 import warnings
 from base64 import b64encode
+from bson import ObjectId
 from copy import deepcopy
 from datetime import datetime, date
 from hashlib import sha256
@@ -437,6 +438,14 @@ def ensure_index(coll, idx_specs, replace=False, **kwargs):
     return created
 
 
+def ensure_index_relaxed(*args, **kwargs):
+    # a relaxed version of ensure_index(), use where read-access is possible
+    try:
+        return ensure_index(*args, **kwargs)
+    except Exception as e:
+        warnings.warn(f'could not create index due to {e}')
+
+
 def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
@@ -748,6 +757,9 @@ class DefaultsContext(object):
 
 
 def ensure_json_serializable(v):
+    # called by REST API serializer
+    # -- kept for backwards compatibility to ensure v.flatten().tolist() is used for np.ndarrays
+    #    (json_dumps_np handles np.ndarrays differently)
     import numpy as np
     import pandas as pd
     if isinstance(v, np.ndarray):
@@ -762,7 +774,7 @@ def ensure_json_serializable(v):
             for k, v in v.items()
         }
         v = vv
-    return v
+    return mongo_compatible(v)
 
 
 def mkdirs(path):
@@ -1051,6 +1063,8 @@ class MongoEncoder(json.JSONEncoder):
             return b64encode(obj).decode('utf8')
         elif isinstance(obj, range):
             return list(obj)
+        elif isinstance(obj, ObjectId):
+            return str(obj)
         try:
             # PERF consider doing this first, only check for special types on exception
             return json.JSONEncoder.default(self, obj)
@@ -1306,3 +1320,10 @@ def inprogress(text="running {fn}", **__kwargs):
         return wrapper
 
     return decorator
+
+
+def signature(filter):
+    # sign a set of values
+    # SEC: CWE-345 ensure user-provided values are not tampered with
+    # -- this is used to ensure the values are not tampered with when passed to a query
+    return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
