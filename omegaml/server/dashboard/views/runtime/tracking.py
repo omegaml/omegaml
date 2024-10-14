@@ -1,6 +1,11 @@
+import base64
+from flask import jsonify
+from io import BytesIO
+from matplotlib import pyplot as plt
+from plotly.tools import mpl_to_plotly
+
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
-
 from omegaml.server.util import datatables_ajax
 
 
@@ -24,6 +29,7 @@ class TrackingView(RepositoryBaseView):
         run = run or 'all'
         om = self.om
         exp = om.runtime.experiment(name)
+        # TODO: query lazy for large datasets (use batchsize=)
         data = exp.data(event=event,
                         run=run)
         start = start or 0
@@ -42,6 +48,18 @@ class TrackingView(RepositoryBaseView):
 
     @fv.route('/{self.segment}/experiment/data/<name>')
     def api_experiment_data(self, name):
+        """ return the experiment data for a given experiment
+
+        Args:
+            name (str): the experiment name
+
+        Query Args:
+            start (int): the start index for the data
+            length (int): the maximum number of rows to return
+
+        Returns:
+            dict: a dict with keys 'data' and 'totalRows' containing the data and total rows
+        """
         start = int(self.request.args.get('start', 0))
         nrows = int(self.request.args.get('length', 10))
         data, totalRows = self._experiment_data(name, start=start, nrows=nrows,
@@ -64,6 +82,28 @@ class TrackingView(RepositoryBaseView):
                       markers='*')  # explicitley mark each data point
         graphJSON = json.to_json(fig)
         return graphJSON
+
+    @fv.route('/{self.segment}/monitor/plot/<experiment>')
+    def api_plot_monitor(self, experiment):
+        om = self.om
+        exp = om.runtime.experiment(experiment)
+        model = self.request.args.get('model', experiment)
+        if exp._has_monitor(model):
+            mon = exp.as_monitor(model)
+            stats = mon.compare(seq='series')
+            mpl_fig = plt.figure()
+            stats.plot('X_x')
+            img = BytesIO()
+            plt.savefig(img)
+            img.seek(0)
+            # https://stackoverflow.com/a/63923399/890242
+            return jsonify(image=base64.b64encode(img.getvalue()).decode())
+            # this does not work properly (plotly does not show the plot data, just empty plot)
+            ply_fig = mpl_to_plotly(mpl_fig)
+            from plotly.io import json
+            graphJSON = json.to_json(ply_fig)
+            return graphJSON
+        return {}
 
 
 def create_view(bp):

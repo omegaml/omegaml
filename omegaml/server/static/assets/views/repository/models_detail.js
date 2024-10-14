@@ -1,7 +1,7 @@
 $(document).ready(function () {
   // build experiment data viewer
   var expViewer = $("#expviewer").DataTable({
-    ajax: `/tracking/experiment/data/_empty_`,
+    ajax: `/tracking/experiment/data/.empty`,
     dom:
       "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'fp>>" +
       "<'row'<'col-sm-12'tr>>" +
@@ -57,5 +57,19 @@ $(document).ready(function () {
   $("#multicharts").on("click", function () {
     var exp = $("#dropdownMenuButton").text();
     plotchart(exp, true);
+  });
+  // plot monitor charts
+  function plotmonitor(exp, model) {
+    $.ajax({
+      dataType: "json",
+      url: `/tracking/monitor/plot/${exp}?model=${model}`,
+      success: function (data) {
+        $("#monplot").attr("src", "data:image/png;base64," + data["image"]);
+      },
+    });
+  }
+  $("#plotmonitor").on("click", function () {
+    var exp = $("#dropdownMenuButton").text();
+    plotmonitor(exp, exp);
   });
 });

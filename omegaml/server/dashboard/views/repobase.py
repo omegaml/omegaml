@@ -1,7 +1,5 @@
-from flask import render_template
-
-from omegaml.server.dashboard.views.base import BaseView
 from omegaml.server import flaskview as fv
+from omegaml.server.dashboard.views.base import BaseView
 from omegaml.server.dashboard.views.listdetail import ListDetailMixin
 
 

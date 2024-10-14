@@ -1,9 +1,10 @@
 from flask import render_template
 
 from omegaml.server import flaskview as fv
+from omegaml.server.dashboard.views.base import BaseView, mixin_for
 
 
-class ListDetailMixin:
+class ListDetailMixin(mixin_for(BaseView)):
     list_template = '{self.segment}.html'
     detail_template = '{self.segment}_detail.html'
 

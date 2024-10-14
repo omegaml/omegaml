@@ -3,13 +3,15 @@ import warnings
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from matplotlib import pyplot as plt
+from werkzeug.exceptions import abort
+from werkzeug.utils import redirect
+
 from omegaml.server.config import config_dict
 from omegaml.server.restapi.util import JSONEncoder
 from omegaml.server.util import configure_database, debug_only
 from omegaml.store import OmegaStore
 from omegaml.util import json_dumps_np
-from werkzeug.exceptions import abort
-from werkzeug.utils import redirect
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -48,6 +50,8 @@ def create_app(*args, **kwargs):
     # use our custom json_dumps function
     # -- see https://stackoverflow.com/a/65129122/890242
     app.jinja_env.policies['json.dumps_function'] = json_dumps_np
+    # -- set matplotlib backend to non-interactive
+    plt.switch_backend('Agg')
 
     @app.route('/')
     def index():

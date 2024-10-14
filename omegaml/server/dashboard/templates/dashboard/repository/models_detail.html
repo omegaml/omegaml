@@ -1,68 +1,146 @@
-{% extends "dashboard/layouts/detail.html" %}
-{% block content %}
-  {{ super() }}
-  {% block tabitems %}
-    <li class="nav-item">
-      <a class="nav-link text-uppercase"
-         id="experiments-tab"
-         data-toggle="tab"
-         href="#experiments"
-         role="tab"
-         aria-controls="experiments"
-         aria-selected="false">Experiments</a>
-    </li>
-  {% endblock tabitems %}
-  {% block tabcontents %}
-    <div class="tab-pane fade"
-         id="experiments"
-         role="tabpanel"
-         aria-labelledby="experiments-tab">
-      <div class="nav">
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle"
-                  type="button"
-                  id="dropdownMenuButton"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false">Experiment</button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            {% for exp in meta.attributes.tracking.experiments %}<a class="dropdown-item exp" href="#">{{ exp }}</a>{% endfor %}
-          </div>
-        </div>
-        <button type="button" id="showtable" class="btn btn-icon btn-info">
-          <i class="fa-solid fa-table"></i>
-        </button>
-        <button type="button" id="plotchart" class="btn btn-icon btn-info">
-          <i class="fa-solid fa-chart-line"></i>
-        </button>
-        <button type="button" id="multicharts" class="btn btn-icon btn-info">
-          <i class="fa-solid fa-table-columns"></i>
-        </button>
+{% extends "dashboard/layouts/detail.html" %} 
+{% block content %} 
+{{ super() }}
+{% block tabitems %}
+<li class="nav-item">
+  <a
+    class="nav-link text-uppercase"
+    id="experiments-tab"
+    data-toggle="tab"
+    href="#experiments"
+    role="tab"
+    aria-controls="experiments"
+    aria-selected="false"
+    >Experiments</a
+  >
+</li>
+<li class="nav-item">
+  <a
+    class="nav-link text-uppercase"
+    id="monitoring-tab"
+    data-toggle="tab"
+    href="#monitoring"
+    role="tab"
+    aria-controls="experiments"
+    aria-selected="false"
+    >Monitoring</a
+  >
+</li>
+{% endblock tabitems %} {% block tabcontents %}
+<!-- experiments -->
+<div
+  class="tab-pane fade"
+  id="experiments"
+  role="tabpanel"
+  aria-labelledby="experiments-tab"
+>
+  <div class="nav">
+    <div class="dropdown">
+      <button
+        class="btn btn-secondary dropdown-toggle"
+        type="button"
+        id="dropdownMenuButton"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        Experiment
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        {% for exp in meta.attributes.tracking.experiments %}<a
+          class="dropdown-item exp"
+          href="#"
+          >{{ exp }}</a
+        >{% endfor %}
       </div>
-      <div id="exptable" class="table-responsive">
-        <table id="expviewer"
-               class="table nowrap table-hover display compact"
-               style="width: 100%">
-          <thead>
-            <tr>
-              <th>run</th>
-              <th>event</th>
-              <th>step</th>
-              <th>key</th>
-              <th>value</th>
-              <th>dt</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-      <div id="expchart"></div>
     </div>
-  {% endblock tabcontents %}
-{% endblock content %}
-{% block javascripts %}
-  {{ super() }}
-  <script type="text/javascript"
-          src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
-  <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+    <button type="button" id="showtable" class="btn btn-icon btn-info">
+      <i class="fa-solid fa-table"></i>
+    </button>
+    <button type="button" id="plotchart" class="btn btn-icon btn-info">
+      <i class="fa-solid fa-chart-line"></i>
+    </button>
+    <button type="button" id="multicharts" class="btn btn-icon btn-info">
+      <i class="fa-solid fa-table-columns"></i>
+    </button>
+  </div>
+  <div id="exptable" class="table-responsive">
+    <table
+      id="expviewer"
+      class="table nowrap table-hover display compact"
+      style="width: 100%"
+    >
+      <thead>
+        <tr>
+          <th>run</th>
+          <th>event</th>
+          <th>step</th>
+          <th>key</th>
+          <th>value</th>
+          <th>dt</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <div id="expchart"></div>
+</div>
+<!-- drift -->
+<div
+  class="tab-pane fade"
+  id="monitoring"
+  role="tabpanel"
+  aria-labelledby="monitoring-tab"
+>
+  <div class="nav">
+    <div class="dropdown">
+      <button
+        class="btn btn-secondary dropdown-toggle"
+        type="button"
+        id="dropdownMenuButton"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        Monitoring
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        {% for exp in meta.attributes.tracking.experiments %}<a
+          class="dropdown-item exp"
+          href="#"
+          >{{ exp }}</a
+        >{% endfor %}
+      </div>
+    </div>
+    <button type="button" id="plotmonitor" class="btn btn-icon btn-info">
+      <i class="fa-solid fa-chart-line"></i>
+    </button>    
+  </div>
+  <div id="exptable" class="table-responsive">
+    <table
+      id="expviewer"
+      class="table nowrap table-hover display compact"
+      style="width: 100%"
+    >
+      <thead>
+        <tr>
+          <th>run</th>
+          <th>event</th>
+          <th>step</th>
+          <th>key</th>
+          <th>value</th>
+          <th>dt</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <div id="monchart"><img id="monplot"/></div>
+</div>
+{% endblock tabcontents %} {% endblock content %} {% block javascripts %} {{
+super() }}
+<script
+  type="text/javascript"
+  src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"
+></script>
+<script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
 {% endblock javascripts %}
