@@ -14,7 +14,7 @@ import warnings
 from base64 import b64encode
 from bson import ObjectId
 from copy import deepcopy
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from hashlib import sha256
 from importlib.util import find_spec
 from pathlib import Path
@@ -1039,7 +1039,7 @@ class MongoEncoder(json.JSONEncoder):
         # PERF cosider rewrite using a MAP type => lambda v: cast(v)
         #      e.g. return MAP[type(obj)](obj)
         #      where MAP.__missing__ returns lambda v: str(v)
-        if isinstance(obj, (np.integer)):
+        if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
             return float(obj) if not np.isnan(obj) else None
@@ -1327,3 +1327,8 @@ def signature(filter):
     # SEC: CWE-345 ensure user-provided values are not tampered with
     # -- this is used to ensure the values are not tampered with when passed to a query
     return sha256((str(threading.get_ident()) + str(filter)).encode('utf-8')).hexdigest()
+
+
+def utcnow():
+    # replacing datetime.utcnow() with datetime.now(timezone.utc)
+    return datetime.now(timezone.utc)
