@@ -7,13 +7,11 @@ import atexit
 import logging
 import os
 import pymongo
-import sys
 import weakref
 from datetime import datetime
-from time import sleep
-from tqdm import tqdm
-
 from omegaml.util import inprogress
+from time import sleep
+from yaspin import yaspin
 
 
 class LunaMonitor:
@@ -138,17 +136,18 @@ class LunaMonitor:
     def active(self):
         return self._monitor_thread.is_alive() and not self._stop.is_set()
 
-    def assert_ok(self, check=None, timeout=0):
+    def assert_ok(self, check=None, timeout=None):
         from time import sleep
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
-        timeout = timeout or sys.float_info.min
-        while timeout:
-            check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
-            if all(check_ok(c) for c in checks):
-                return True
-            sleep(timeout) if timeout > sys.float_info.min else None
-            timeout = None
-        raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        timeout = timeout if timeout is not None else 0
+        check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
+        all_checks_ok = lambda: all(check_ok(c) for c in checks)
+        while not all_checks_ok() and timeout > 0:
+            sleep(.1)
+            timeout -= .1
+        if not all_checks_ok():
+            raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        return True
 
     def healthy(self, check=None, timeout=0):
         """ check if all checks are ok
@@ -174,12 +173,11 @@ class LunaMonitor:
         Returns:
             None
         """
-        t = tqdm(desc='waiting for checks to be ok', unit='checks', total=len(self.checks))
-        while not self.healthy():
-            active = len(self.checks) - len(self.failed())
-            t.update(active - t.n)
-            t.set_postfix_str(','.join(self.failed()))
-            sleep(1)
+        with yaspin(text='waiting for checks to be ok', color='yellow') as t:
+            while not self.healthy():
+                services = ','.join(self.failed())
+                t.text = f"waiting for dependencies {services}"
+                sleep(1)
 
     def notify(self, on_error=None, on_status=None):
         """ add a callback to be notified on error or status

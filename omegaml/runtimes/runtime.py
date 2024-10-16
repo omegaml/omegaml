@@ -358,7 +358,7 @@ class OmegaRuntime(object):
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
-    def ping(self, *args, require=None, wait=True, **kwargs):
+    def ping(self, *args, require=None, wait=True, timeout=10, **kwargs):
         """
         ping the runtime
 
@@ -367,7 +367,8 @@ class OmegaRuntime(object):
             require (dict): routing requirements for this job
             wait (bool): if True, wait for the task to return, else return
                 AsyncResult
-            kwargs (dict): task kwargs
+            timeout (int): if wait is True, the timeout in seconds, defaults to 10
+            kwargs (dict): task kwargs, as accepted by CeleryTask.apply_async
 
         Returns:
             * response (dict) for wait=True
@@ -375,7 +376,7 @@ class OmegaRuntime(object):
         """
         self.require(**require) if require else None
         promise = self.task('omegaml.tasks.omega_ping').delay(*args, **kwargs)
-        return promise.get() if wait else promise
+        return promise.get(timeout=timeout) if wait else promise
 
     def enable_hostqueues(self):
         """ enable a worker-specific queue on every worker host

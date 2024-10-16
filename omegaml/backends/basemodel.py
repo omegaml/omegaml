@@ -236,7 +236,7 @@ class BaseModelBackend(BackendBaseCommon):
         fit the model with data
 
         :param modelname: the name of the model object
-        ci:param Xname: the name of the X data set
+        :param Xname: the name of the X data set
         :param Yname: the name of the Y data set
         :param pure_python: if True return a python object. If False return
            a dataframe. Defaults to True to support any client.
