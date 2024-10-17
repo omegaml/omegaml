@@ -2,11 +2,13 @@ import base64
 from flask import jsonify
 from io import BytesIO
 from matplotlib import pyplot as plt
-from plotly.tools import mpl_to_plotly
 
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 from omegaml.server.util import datatables_ajax
+from omegaml.util import ensure_json_serializable
+
+validOrNone = lambda v: v if v and v != 'undefined' else None
 
 
 class TrackingView(RepositoryBaseView):
@@ -68,6 +70,15 @@ class TrackingView(RepositoryBaseView):
 
     @fv.route('/{self.segment}/experiment/plot/<name>')
     def api_plot_metrics(self, name):
+        """ plot the metrics for a given experiment
+
+        Args:
+            name (str): the experiment name
+
+        Query Args:
+            multicharts (int): whether to plot multiple charts, one for each metric
+              (defaults to 0)
+        """
         import plotly.express as px
         from plotly.io import json
         multicharts = int(self.request.args.get('multicharts', 0))
@@ -83,26 +94,46 @@ class TrackingView(RepositoryBaseView):
         graphJSON = json.to_json(fig)
         return graphJSON
 
-    @fv.route('/{self.segment}/monitor/plot/<experiment>')
-    def api_plot_monitor(self, experiment):
+    @fv.route('/{self.segment}/monitor/plot/<model>')
+    def api_plot_monitor(self, model):
+        """ plot the monitor data for a given model
+
+        Args:
+            model (str): the model name
+
+        Query Args:
+            column (str): the column to plot (defaults to None)
+            experiment (str): the experiment to plot (defaults to None)
+
+        Returns:
+            dict: a dict with the plot image, base64 encoded
+                { image: 'base64 encoded image' }
+        """
         om = self.om
-        exp = om.runtime.experiment(experiment)
-        model = self.request.args.get('model', experiment)
+        column = validOrNone(self.request.args.get('column'))
+        experiment = validOrNone(self.request.args.get('experiment'))
+        exp = om.runtime.model(model).experiment(experiment=experiment)
         if exp._has_monitor(model):
             mon = exp.as_monitor(model)
             stats = mon.compare(seq='series')
-            mpl_fig = plt.figure()
-            stats.plot('X_x')
+            fig = plt.figure()
+            stats.plot(column=column)
             img = BytesIO()
             plt.savefig(img)
             img.seek(0)
             # https://stackoverflow.com/a/63923399/890242
             return jsonify(image=base64.b64encode(img.getvalue()).decode())
-            # this does not work properly (plotly does not show the plot data, just empty plot)
-            ply_fig = mpl_to_plotly(mpl_fig)
-            from plotly.io import json
-            graphJSON = json.to_json(ply_fig)
-            return graphJSON
+        return {}
+
+    @fv.route('/{self.segment}/monitor/compare/<model>')
+    def api_compare_monitor(self, model):
+        om = self.om
+        experiment = validOrNone(self.request.args.get('experiment'))
+        exp = om.runtime.model(model).experiment(experiment=experiment)
+        if exp._has_monitor(model):
+            mon = exp.as_monitor(model)
+            stats = mon.compare(seq='series')
+            return ensure_json_serializable(stats.summary(raw=True))
         return {}
 
 

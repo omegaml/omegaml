@@ -1,57 +1,27 @@
-{% extends "dashboard/layouts/detail.html" %} 
-{% block content %} 
+{% extends "dashboard/layouts/detail.html" %}
+{% block content %}
 {{ super() }}
 {% block tabitems %}
 <li class="nav-item">
-  <a
-    class="nav-link text-uppercase"
-    id="experiments-tab"
-    data-toggle="tab"
-    href="#experiments"
-    role="tab"
-    aria-controls="experiments"
-    aria-selected="false"
-    >Experiments</a
-  >
+  <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
+    aria-controls="experiments" aria-selected="false">Experiments</a>
 </li>
 <li class="nav-item">
-  <a
-    class="nav-link text-uppercase"
-    id="monitoring-tab"
-    data-toggle="tab"
-    href="#monitoring"
-    role="tab"
-    aria-controls="experiments"
-    aria-selected="false"
-    >Monitoring</a
-  >
+  <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
+    aria-controls="experiments" aria-selected="false">Monitoring</a>
 </li>
 {% endblock tabitems %} {% block tabcontents %}
 <!-- experiments -->
-<div
-  class="tab-pane fade"
-  id="experiments"
-  role="tabpanel"
-  aria-labelledby="experiments-tab"
->
+<div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
   <div class="nav">
     <div class="dropdown">
-      <button
-        class="btn btn-secondary dropdown-toggle"
-        type="button"
-        id="dropdownMenuButton"
-        data-toggle="dropdown"
-        aria-haspopup="true"
-        aria-expanded="false"
-      >
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownExperiments" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
         Experiment
       </button>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        {% for exp in meta.attributes.tracking.experiments %}<a
-          class="dropdown-item exp"
-          href="#"
-          >{{ exp }}</a
-        >{% endfor %}
+      <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
+        {% for exp in meta.attributes.tracking.experiments %}<a class="dropdown-item exp" href="#">{{ exp }}</a>{%
+        endfor %}
       </div>
     </div>
     <button type="button" id="showtable" class="btn btn-icon btn-info">
@@ -65,11 +35,7 @@
     </button>
   </div>
   <div id="exptable" class="table-responsive">
-    <table
-      id="expviewer"
-      class="table nowrap table-hover display compact"
-      style="width: 100%"
-    >
+    <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%">
       <thead>
         <tr>
           <th>run</th>
@@ -85,62 +51,44 @@
   <div id="expchart"></div>
 </div>
 <!-- drift -->
-<div
-  class="tab-pane fade"
-  id="monitoring"
-  role="tabpanel"
-  aria-labelledby="monitoring-tab"
->
+<div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
   <div class="nav">
-    <div class="dropdown">
-      <button
-        class="btn btn-secondary dropdown-toggle"
-        type="button"
-        id="dropdownMenuButton"
-        data-toggle="dropdown"
-        aria-haspopup="true"
-        aria-expanded="false"
-      >
-        Monitoring
-      </button>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        {% for exp in meta.attributes.tracking.experiments %}<a
-          class="dropdown-item exp"
-          href="#"
-          >{{ exp }}</a
-        >{% endfor %}
-      </div>
-    </div>
     <button type="button" id="plotmonitor" class="btn btn-icon btn-info">
       <i class="fa-solid fa-chart-line"></i>
-    </button>    
+    </button>
+    <div class="dropdown">
+      <button class="btn btn-secondary mon dropdown-toggle" type="button" id="dropdownDriftColumns"
+        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Columns
+      </button>
+      <div class="dropdown-menu mon column items" aria-labelledby="dropdownDriftColumns">
+        <a class="dropdown-item mon column refresh" href="#">Refresh</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-secondary mon dropdown-toggle" type="button" id="dropdownDriftSince" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        Since
+      </button>
+      <div class="dropdown-menu mon since items" aria-labelledby="dropdownDriftSince">
+        <a class="dropdown-item mon since" data-since="1d" href="#">1 day</a>
+        <a class="dropdown-item mon since" data-since="5d" href="#">5 days</a>
+        <a class="dropdown-item mon since" data-since="1w" href="#">1 week</a>
+        <a class="dropdown-item mon since" data-since="1M" href="#">last month</a>
+        <a class="dropdown-item mon since" data-since="1q" href="#">last quarter</a>
+        <a class="dropdown-item mon since" data-since="0y" href="#">this year</a>
+        <a class="dropdown-item mon since" data-since="1y" href="#">1 year ago</a>
+      </div>
+    </div>
+    <div id="sinceRangePicker"></div>
   </div>
-  <div id="exptable" class="table-responsive">
-    <table
-      id="expviewer"
-      class="table nowrap table-hover display compact"
-      style="width: 100%"
-    >
-      <thead>
-        <tr>
-          <th>run</th>
-          <th>event</th>
-          <th>step</th>
-          <th>key</th>
-          <th>value</th>
-          <th>dt</th>
-        </tr>
-      </thead>
-    </table>
-  </div>
-  <div id="monchart"><img id="monplot"/></div>
+  <div id="monchart"><img id="monplot" /></div>
 </div>
-{% endblock tabcontents %} {% endblock content %} {% block javascripts %} {{
+{% endblock tabcontents %}
+{% endblock content %}
+{% block javascripts %} {{
 super() }}
-<script
-  type="text/javascript"
-  src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"
-></script>
+<script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
 <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
 {% endblock javascripts %}

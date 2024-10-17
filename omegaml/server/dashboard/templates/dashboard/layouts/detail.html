@@ -135,6 +135,7 @@
           referrerpolicy="no-referrer"></script>
   <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
   <script>
+    var metadata = {{ meta | tojson }};
     $(function () {
       // initialize metadata editor
       var jsonEditor = new JSONEditor($('#jsoneditor')[0], {

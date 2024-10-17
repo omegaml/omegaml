@@ -679,7 +679,6 @@ def dtrelative(delta, now=None, as_delta=False):
             raise ValueError(error_msg)
     elif isinstance(delta, timedelta):
         dtdelta = delta
-        past = False
     else:
         raise ValueError(error_msg)
     return now + dtdelta if not as_delta else dtdelta

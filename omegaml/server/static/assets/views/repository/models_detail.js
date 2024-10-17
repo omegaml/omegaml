@@ -1,4 +1,6 @@
-$(document).ready(function () {
+import DateRangeView from "../../widgets/sincepick.js";
+
+$(function () {
   // build experiment data viewer
   var expViewer = $("#expviewer").DataTable({
     ajax: `/tracking/experiment/data/.empty`,
@@ -27,14 +29,14 @@ $(document).ready(function () {
     $("#expchart").hide();
     $("#exptable").show();
     expViewer.ajax.url(`/tracking/experiment/data/${exp}`).load();
-    $("#dropdownMenuButton").text(exp);
+    $("#dropdownExperiments").text(exp);
   }
   $(".dropdown-item.exp").on("click", function () {
     var exp = $(this).text();
     showTable(exp);
   });
   $("#showtable").on("click", function () {
-    var exp = $("#dropdownMenuButton").text();
+    var exp = $("#dropdownExperiments").text();
     showTable(exp);
   });
   // plot experiment data
@@ -51,25 +53,55 @@ $(document).ready(function () {
     });
   }
   $("#plotchart").on("click", function () {
-    var exp = $("#dropdownMenuButton").text();
+    var exp = $("#dropdownExperiments").text();
     plotchart(exp, false);
   });
   $("#multicharts").on("click", function () {
-    var exp = $("#dropdownMenuButton").text();
+    var exp = $("#dropdownExperiments").text();
     plotchart(exp, true);
   });
   // plot monitor charts
-  function plotmonitor(exp, model) {
+  function plotmonitor(model, column) {
     $.ajax({
       dataType: "json",
-      url: `/tracking/monitor/plot/${exp}?model=${model}`,
+      url: `/tracking/monitor/plot/${model}?column=${column}`,
       success: function (data) {
         $("#monplot").attr("src", "data:image/png;base64," + data["image"]);
       },
     });
   }
+  $(".mon.refresh").on("click", function () {
+    var model = metadata.name;
+    $.ajax({
+      dataType: "json",
+      url: `/tracking/monitor/compare/${model}`,
+      success: function (data) {
+        var columns = data.columns;
+        var dropdown = $(".dropdown-menu.mon.column.items");
+        dropdown.empty();
+        Object.keys(columns).forEach((col) => {
+          dropdown.append(
+            `<a class="dropdown-item mon column" href="#">${col}</a>`
+          );
+        });
+        $(".dropdown-item.mon.column").on("click", function () {
+          var column = $(this).text();
+          var model = metadata.name;
+          plotmonitor(model, column);
+        });
+      },
+    });
+  });
   $("#plotmonitor").on("click", function () {
-    var exp = $("#dropdownMenuButton").text();
-    plotmonitor(exp, exp);
+    var column = $("#dropdownDriftColumns").text();
+    var model = metadata.name;
+    plotmonitor(model);
+  });
+  $("#monitoring-tab").on("shown.bs.tab", function (e) {
+    // Instantiate the view, rendering it into a container
+    const dateRangeView = new DateRangeView({
+      el: "#sinceRangePicker",
+    });
+    dateRangeView.render();
   });
 });

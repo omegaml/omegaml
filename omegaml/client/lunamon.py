@@ -9,9 +9,10 @@ import os
 import pymongo
 import weakref
 from datetime import datetime
-from omegaml.util import inprogress
 from time import sleep
 from yaspin import yaspin
+
+from omegaml.util import inprogress
 
 
 class LunaMonitor:
@@ -177,7 +178,7 @@ class LunaMonitor:
             while not self.healthy():
                 services = ','.join(self.failed())
                 t.text = f"waiting for dependencies {services}"
-                sleep(1)
+                sleep(.5)
 
     def notify(self, on_error=None, on_status=None):
         """ add a callback to be notified on error or status
