@@ -1,11 +1,11 @@
 /* make tabs resizable */
 .tab-content {
   resize: vertical;
-  overflow: auto
+  overflow: auto;
 }
 
 /* move navbar closer to top */
-body>header>div.collapse.navbar-collapse {
+body > header > div.collapse.navbar-collapse {
   height: 50px;
 }
 
@@ -16,7 +16,7 @@ body>header>div.collapse.navbar-collapse {
 }
 
 /* h-align top controls with content */
-.pcoded-header .navbar-nav>li:first-child {
+.pcoded-header .navbar-nav > li:first-child {
   padding-left: 11px;
 }
 
@@ -49,7 +49,7 @@ body>header>div.collapse.navbar-collapse {
 }
 
 /* reset input field font size */
-    .form-control {
+.form-control {
   font-size: 1rem;
 }
 
@@ -82,14 +82,42 @@ body>header>div.collapse.navbar-collapse {
 
 /* slide-in modal panels  */
 /* https://bootsnipp.com/snippets/D0aq4 */
-.modal-dialog-slideout {min-height: 100%; margin: 0 0 0 auto;background: #fff;}
-.modal.fade .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(100%,0)scale(1);transform: translate(100%,0)scale(1);}
-.modal.fade.show .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(0,0);transform: translate(0,0);display: flex;align-items: stretch;-webkit-box-align: stretch;height: 100%;}
-.modal.fade.show .modal-dialog.modal-dialog-slideout .modal-body{overflow-y: auto;overflow-x: hidden;}
-.modal-dialog-slideout .modal-content{border: 0;}
-.modal-dialog-slideout .modal-header, .modal-dialog-slideout .modal-footer {height: 69px; display: block;} 
-.modal-dialog-slideout .modal-header h5 {float:left;}
-.modal-xxl { max-width: 90%; width: 90%; }
+.modal-dialog-slideout {
+  min-height: 100%;
+  margin: 0 0 0 auto;
+  background: #fff;
+}
+.modal.fade .modal-dialog.modal-dialog-slideout {
+  -webkit-transform: translate(100%, 0) scale(1);
+  transform: translate(100%, 0) scale(1);
+}
+.modal.fade.show .modal-dialog.modal-dialog-slideout {
+  -webkit-transform: translate(0, 0);
+  transform: translate(0, 0);
+  display: flex;
+  align-items: stretch;
+  -webkit-box-align: stretch;
+  height: 100%;
+}
+.modal.fade.show .modal-dialog.modal-dialog-slideout .modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.modal-dialog-slideout .modal-content {
+  border: 0;
+}
+.modal-dialog-slideout .modal-header,
+.modal-dialog-slideout .modal-footer {
+  height: 69px;
+  display: block;
+}
+.modal-dialog-slideout .modal-header h5 {
+  float: left;
+}
+.modal-xxl {
+  max-width: 90%;
+  width: 90%;
+}
 
 /* card header buttons */
 .card-header .card-tools {
@@ -104,7 +132,17 @@ body>header>div.collapse.navbar-collapse {
   padding-bottom: 0px;
 }
 
-.card-tools .btn, i {
+.card-tools .btn,
+i {
   /* margin-left: 10px; */
   margin-right: 10px;
+}
+
+/* tab pane */
+.tab-pane {
+  min-height: 500px;
+}
+
+.btn.btn-icon {
+  height: 46px;
 }

@@ -1,5 +1,4 @@
 import BaseView from "./baseview.js";
-
 // Model to manage the state of the selected dates
 class DateRangeModel extends Backbone.Model {
   defaults() {
@@ -9,19 +8,25 @@ class DateRangeModel extends Backbone.Model {
     };
   }
 }
-
 // View to handle rendering and interactions with the date range picker
 class DateRangeView extends BaseView {
   constructor(options) {
     _.defaults(options, {
-      events: {
-        "click #toggle-datetime": "toggleRangePicker",
-        "click .save-changes": "saveChanges",
-        "show.bs.modal": "initializeDates",
-      },
+      events: {},
       templateUrl: "/static/assets/widgets/sincepick.html",
       title: "Select Date Range",
       description: "Please select a start and end date.",
+    });
+    // DOM events
+    _.extend(options.events, {
+      "click #toggle-datetime": "toggleRangePicker",
+      "click .save-changes": "saveChanges",
+      "show.bs.modal": "initializeDates",
+    });
+    // user events
+    _.default(options.events, {
+      "since:selected": "eventHandler",
+      "range:selected": "eventHandler",
     });
     super(options);
     this.model = new DateRangeModel();
@@ -41,8 +46,7 @@ class DateRangeView extends BaseView {
   initializeDates() {
     const now = new Date();
     const startDate = new Date(now);
-    startDate.setMonth(now.getMonth() - 1); // One month ago
-
+    startDate.setMonth(now.getMonth() - 1);
     this.$("#start-datetime").val(startDate.toISOString().slice(0, 16));
     this.$("#end-datetime").val(now.toISOString().slice(0, 16));
   }
@@ -68,13 +72,16 @@ class DateRangeView extends BaseView {
     }
     // Generate dropdown items dynamically
     options.forEach((option) => {
+      var self = this;
       const button = $("<a>")
         .addClass("dropdown-item")
         .text(option.label)
         .data("days", option.days)
         .on("click", function () {
           const calculatedDate = calculateDate(option.days);
-          console.log("calculatedDate", calculatedDate);
+          const endEndDate = new Date().toISOString();
+          self.model.set({ startDate: calculatedDate, endDate: endEndDate });
+          self.trigger("since:selected", self.model.toJSON());
         });
 
       const li = $("<li>").append(button);
@@ -82,35 +89,22 @@ class DateRangeView extends BaseView {
     });
   }
   toggleRangePicker() {
+    var self = this;
     // Toggle visibility of the datetime picker
     $("#datetime-picker").toggleClass("d-none"); // Toggle the hidden class
     $("#datetimePickerModal").modal("show");
     // Handle the save changes button click event
     $("#dtrangeSave").on("click", function () {
-      const startDate = $("#start-datetime").val();
-      const endDate = $("#end-datetime").val();
+      const startDate = self.$("#start-datetime").val();
+      const endDate = self.$("#end-datetime").val();
       if (startDate && endDate) {
-        // Display the selected dates or perform another action
-        alert(`Selected range: ${startDate} to ${endDate}`);
-
-        // Optionally, close the modal
-        $("#datetimePickerModal").modal("hide");
+        self.model.set({ startDate: startDate, endDate: endDate });
+        self.trigger("range:selected", self.model.toJSON());
+        self.$modal.modal("hide"); // Close the modal
       } else {
         alert("Please select both start and end dates.");
       }
     });
-  }
-  // Save changes when the user clicks the save button
-  saveChanges() {
-    const startDate = this.$("#start-datetime").val();
-    const endDate = this.$("#end-datetime").val();
-    if (startDate && endDate) {
-      this.model.set({ startDate, endDate });
-      alert(`Selected range: ${startDate} to ${endDate}`);
-      this.$modal.modal("hide"); // Close the modal
-    } else {
-      alert("Please select both start and end dates.");
-    }
   }
 }
 export default DateRangeView;

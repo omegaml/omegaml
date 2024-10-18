@@ -101,6 +101,14 @@ $(function () {
     // Instantiate the view, rendering it into a container
     const dateRangeView = new DateRangeView({
       el: "#sinceRangePicker",
+      events: {
+        "since:selected": function (event, data) {
+          console.log("since:selected", data);
+        },
+        "range:selected": function (event, data) {
+          console.log("range:selected", data);
+        },
+      },
     });
     dateRangeView.render();
   });
