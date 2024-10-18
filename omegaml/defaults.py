@@ -6,8 +6,9 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr
 from pathlib import Path
+
+from omegaml.util import dict_merge, markup, inprogress, tryOr
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
@@ -156,6 +157,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.passthrough.PassthroughMixin',
     'omegaml.mixins.store.tracking.TrackableMetadataMixin',
     'omegaml.mixins.store.tracking.UntrackableMetadataMixin',
+    'omegaml.mixins.store.objinfo.ObjectInformationMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -205,6 +207,7 @@ OMEGA_TRACKING_PROVIDERS = {
     'profiling': 'omegaml.backends.tracking.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.tracking.NoTrackTracker',
 }
+#: monitoring providers
 OMEGA_MONITORING_PROVIDERS = {
     'models': 'omegaml.backends.monitoring.ModelDriftMonitor',
     'data': 'omegaml.backends.monitoring.DataDriftMonitor',

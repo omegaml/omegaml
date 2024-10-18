@@ -1,0 +1,56 @@
+{% extends "dashboard/layouts/base-fullscreen.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+  <div class="container d-flex h-100">
+    <div class="row justify-content-center align-self-center">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{ segment | title }}login</h5>
+          <div style="float: right; font-size: 80%; position: relative;">
+            <a href="/accounts/password/reset/">Forgot password?</a>
+          </div>
+          {% block segmentheader %}
+          {% endblock segmentheader %}
+        </div>
+        <div class="card-body">
+          <form id="login_form"
+                class="form-horizontal"
+                method="post"
+                role="form"
+                action="">
+            <div style="margin-bottom: 25px" class="input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+              <input id="id_login"
+                     type="text"
+                     class="form-control"
+                     name="login"
+                     value=""
+                     placeholder="email">
+            </div>
+            <div style="margin-bottom: 25px" class="input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+              <input id="id_password"
+                     type="password"
+                     class="form-control"
+                     name="password"
+                     placeholder="password">
+            </div>
+            <div style="margin-top: 10px" class="form-group">
+              <!-- Button -->
+              <div class="col-sm-12 controls">
+                <a id="btn-login" href="#" class="btn btn-success">Login</a>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-md-12 control">
+                <div style="border-top: 1px solid #888; padding-top: 15px; font-size: 85%">
+                  Don't have an account yet? <a href="/accounts/signup/">Sign up here</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

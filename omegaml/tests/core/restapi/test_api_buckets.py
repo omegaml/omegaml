@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from omegaml import Omega, restapi
+from omegaml import Omega
+from omegaml.server import restapi
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.tests.core.restapi.test_model_api import OmegaRestApiTests
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
