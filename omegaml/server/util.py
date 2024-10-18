@@ -1,7 +1,6 @@
-from flask import current_app
-from functools import wraps
-
+from flask import current_app, jsonify
 from flask_migrate import Migrate
+from functools import wraps
 from pathlib import Path
 from werkzeug.exceptions import abort
 
@@ -28,6 +27,7 @@ def datatables_ajax(data, n_total=None, n_filtered=None):
 
 
 def debug_only(f):
+    # route decorator to only allow access in debug mode
     # https://stackoverflow.com/a/55729767/890242
     @wraps(f)
     def wrapped(**kwargs):
@@ -36,3 +36,11 @@ def debug_only(f):
         return f(**kwargs)
 
     return wrapped
+
+
+def json_abort(status_code, message=None, data=None):
+    # abort with a json response
+    message = message or 'unknown error occurred'
+    response = jsonify(data or {'error': message})
+    response.status_code = status_code
+    abort(response)

@@ -47,6 +47,10 @@ class DateRangeView extends BaseView {
     const now = new Date();
     const startDate = new Date(now);
     startDate.setMonth(now.getMonth() - 1);
+    this.model.set({
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+    });
     this.$("#start-datetime").val(startDate.toISOString().slice(0, 16));
     this.$("#end-datetime").val(now.toISOString().slice(0, 16));
   }

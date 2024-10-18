@@ -5,10 +5,10 @@ from matplotlib import pyplot as plt
 
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
-from omegaml.server.util import datatables_ajax
+from omegaml.server.util import datatables_ajax, json_abort
 from omegaml.util import ensure_json_serializable
 
-validOrNone = lambda v: v if v and v != 'undefined' else None
+validOrNone = lambda v: v if v and v not in ('undefined', 'null', None) else None
 
 
 class TrackingView(RepositoryBaseView):
@@ -104,6 +104,7 @@ class TrackingView(RepositoryBaseView):
         Query Args:
             column (str): the column to plot (defaults to None)
             experiment (str): the experiment to plot (defaults to None)
+            since (str): the date to plot since (defaults to None)
 
         Returns:
             dict: a dict with the plot image, base64 encoded
@@ -112,15 +113,19 @@ class TrackingView(RepositoryBaseView):
         om = self.om
         column = validOrNone(self.request.args.get('column'))
         experiment = validOrNone(self.request.args.get('experiment'))
+        since = validOrNone(self.request.args.get('since'))
         exp = om.runtime.model(model).experiment(experiment=experiment)
         if exp._has_monitor(model):
             mon = exp.as_monitor(model)
-            stats = mon.compare(seq='series')
-            fig = plt.figure()
-            stats.plot(column=column)
-            img = BytesIO()
-            plt.savefig(img)
-            img.seek(0)
+            try:
+                stats = mon.compare(seq='series', since=since)
+                plt.figure()
+                stats.plot(column=column)
+                img = BytesIO()
+                plt.savefig(img)
+                img.seek(0)
+            except Exception as e:
+                json_abort(400, f'error plotting statistics due to {e}')
             # https://stackoverflow.com/a/63923399/890242
             return jsonify(image=base64.b64encode(img.getvalue()).decode())
         return {}
