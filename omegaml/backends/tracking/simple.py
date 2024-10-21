@@ -14,7 +14,7 @@ from uuid import uuid4
 
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
-from omegaml.util import _raise, ensure_index, batched, signature
+from omegaml.util import _raise, ensure_index, batched, signature, tryOr
 
 
 class NoTrackTracker(TrackingProvider):
@@ -486,7 +486,7 @@ class OmegaSimpleTracker(TrackingProvider):
         if valid(since):
             dtnow = getattr(self, '_since_dtnow', datetime.utcnow())
             if isinstance(since, str):
-                since = dtrelative('-' + since, now=dtnow)
+                since = tryOr(lambda: pd.to_datetime(since), lambda: dtrelative('-' + since, now=dtnow))
             elif isinstance(since, timedelta):
                 since = dtnow - since
             elif isinstance(since, datetime):
@@ -496,10 +496,11 @@ class OmegaSimpleTracker(TrackingProvider):
                     f'invalid since value: {since}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
             filter['data.dt'] = {'$gte': str(since.isoformat())}
         if valid(end):
+            dtnow = getattr(self, '_since_dtnow', datetime.utcnow())
             if isinstance(end, str):
-                end = dtrelative('+' + end) if end[0] in ('+', '-') else end
+                end = tryOr(lambda: pd.to_datetime(end), lambda: dtrelative('+' + end, now=dtnow))
             elif isinstance(end, timedelta):
-                end = getattr(self, '_since_dtnow', datetime.utcnow()) + end
+                end = dtnow + end
             elif isinstance(end, datetime):
                 end = end
             else:
@@ -658,7 +659,7 @@ def dtrelative(delta, now=None, as_delta=False):
                 'q': 90 * 24 * 60 * 60,  # 1 quarter
                 'y': 365 * 24 * 60 * 60}  # 1 year
     now = now or datetime.utcnow()
-    error_msg = "Invalid delta. Use a string of format '<n><unit:[hdwmqy]>' or timedelta object."
+    error_msg = f"Invalid delta {delta}. Use a string of format '<n><unit:[hdwmqy]>' or timedelta object."
     if isinstance(delta, str):
         try:
             past = delta.startswith('-')

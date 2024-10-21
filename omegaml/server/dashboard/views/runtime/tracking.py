@@ -100,12 +100,15 @@ class TrackingView(RepositoryBaseView):
         Query Args:
             multicharts (int): whether to plot multiple charts, one for each metric
               (defaults to 0)
+            since (str): the date to plot since (defaults to None)
+            end (str): the date to plot until (defaults to None)
         """
         import plotly.express as px
         from plotly.io import json
         multicharts = int(self.request.args.get('multicharts', 0))
-        metrics, totalRows = self._experiment_data(name,
-                                                   run='all', event='metric')
+        since = validOrNone(self.request.args.get('since', None))
+        end = validOrNone(self.request.args.get('end', None))
+        metrics, totalRows = self._experiment_data(name, run='all', event='metric', since=since, end=end)
         cols = 'key' if multicharts else None
         fig = px.line(data_frame=metrics,
                       x='run',
