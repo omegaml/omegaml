@@ -14,6 +14,7 @@
 <!-- experiments -->
 <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
   <div class="nav">
+    <!-- choose experiment -->
     <div class="dropdown">
       <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownExperiments" data-toggle="dropdown"
         aria-haspopup="true" aria-expanded="false">
@@ -24,6 +25,7 @@
         endfor %}
       </div>
     </div>
+    <!-- choose display style -->
     <button type="button" id="showtable" class="btn btn-icon btn-info">
       <i class="fa-solid fa-table"></i>
     </button>
@@ -33,20 +35,18 @@
     <button type="button" id="multicharts" class="btn btn-icon btn-info">
       <i class="fa-solid fa-table-columns"></i>
     </button>
+    <!-- choose x axis -->
+    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+      <label class="btn btn-outline-primary active">
+        <input type="radio" name="options" id="option1" autocomplete="off" checked>Run
+      </label>
+      <label class="btn btn-outline-primary">
+        <input type="radio" name="options" id="option2" autocomplete="off">Step
+      </label>
+    </div>
   </div>
   <div id="exptable" class="table-responsive">
-    <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%">
-      <thead>
-        <tr>
-          <th>run</th>
-          <th>event</th>
-          <th>step</th>
-          <th>key</th>
-          <th>value</th>
-          <th>dt</th>
-        </tr>
-      </thead>
-    </table>
+    <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%"></table>
   </div>
   <div id="expchart"></div>
 </div>

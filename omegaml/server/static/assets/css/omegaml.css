@@ -143,6 +143,11 @@ i {
   min-height: 500px;
 }
 
+/* btn formatting */
+.btn {
+  height: 46px;
+}
+
 .btn.btn-icon {
   height: 46px;
 }

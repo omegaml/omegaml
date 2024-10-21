@@ -1,6 +1,75 @@
 import DateRangeView from "../../widgets/sincepick.js";
 
 $(function () {
+  // query experiment data and show as a table
+  function initializeTable(headers) {
+    // https://datatables.net/forums/discussion/79217
+    var columns = headers.map(function (header) {
+      return { data: header, title: header };
+    });
+    $("#expviewer").DataTable({
+      destroy: true, // remove previuos table, recreate it
+      processing: true,
+      serverSide: true,
+      responsive: true,
+      paging: true,
+      ajax: {
+        url: "/tracking/experiment/data/d-reg-0",
+        type: "GET",
+      },
+      columns: columns,
+    });
+  }
+
+  function showTable(exp) {
+    $("#expchart").hide();
+    $("#exptable").show();
+    $("#dropdownExperiments").text(exp);
+    $.ajax({
+      url: "/tracking/experiment/data/d-reg-0?initialize=1",
+      type: "GET",
+      success: function (json) {
+        var headers = json.columns || Object.keys(json.data[0]);
+        var thead = "<thead><tr>";
+        headers.forEach(function (header) {
+          thead += "<th>" + header + "</th>";
+        });
+        thead += "</tr></thead>";
+        $("#expviewer").html(thead);
+        initializeTable(headers);
+      },
+    });
+  }
+
+  $(".dropdown-item.exp").on("click", function () {
+    var exp = $(this).text();
+    showTable(exp);
+  });
+  $("#showtable").on("click", function () {
+    var exp = $("#dropdownExperiments").text();
+    showTable(exp);
+  });
+  // plot experiment data
+  function plotchart(exp, multi = false) {
+    var multi = multi ? 1 : 0;
+    $.ajax({
+      dataType: "json",
+      url: `/tracking/experiment/plot/${exp}?multicharts=${multi}`,
+      success: function (data) {
+        $("#exptable").hide();
+        $("#expchart").show();
+        Plotly.newPlot("expchart", data, {});
+      },
+    });
+  }
+  $("#plotchart").on("click", function () {
+    var exp = $("#dropdownExperiments").text();
+    plotchart(exp, false);
+  });
+  $("#multicharts").on("click", function () {
+    var exp = $("#dropdownExperiments").text();
+    plotchart(exp, true);
+  });
   // since/date range picker
   const dateRangeView = new DateRangeView({
     el: "#sinceRangePicker",

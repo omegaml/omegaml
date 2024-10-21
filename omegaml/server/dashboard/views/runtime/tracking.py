@@ -8,7 +8,9 @@ from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 from omegaml.server.util import datatables_ajax, json_abort
 from omegaml.util import ensure_json_serializable
 
-validOrNone = lambda v: v if v and v not in ('undefined', 'null', None) else None
+validOrNone = lambda v, astype=None: ((astype(v) if astype else v)
+                                      if v and v not in ('undefined', 'null', None)
+                                      else None)
 
 
 class TrackingView(RepositoryBaseView):
@@ -26,14 +28,27 @@ class TrackingView(RepositoryBaseView):
         )
         return super().members(excludes=excludes)
 
-    def _experiment_data(self, name, start=None, nrows=None, event=None, run=None):
+    def _experiment_data(self, name, start=None, nrows=None, event=None, run=None, summary=False, **kwargs):
         # TODO figure out how to select the event to display
         run = run or 'all'
         om = self.om
         exp = om.runtime.experiment(name)
         # TODO: query lazy for large datasets (use batchsize=)
         data = exp.data(event=event,
-                        run=run)
+                        run=run, **kwargs)
+        if summary:
+            def byrun(df):
+                metrics = (df.where(df['event'] == 'metric')
+                           .groupby(["run", "key"])["value"]
+                           .mean()
+                           .unstack())
+                df = (df.where(df['event'] == 'start')
+                      .set_index("run")
+                      .merge(metrics, on="run")
+                      .reset_index())
+                return df[['run', 'dt'] + list(metrics.columns) + ['node', 'userid']]
+
+            data = byrun(data)
         start = start or 0
         subset = slice(start, start + nrows) if nrows else slice(start, None)
         if data is not None and len(data) > 0:
@@ -62,11 +77,18 @@ class TrackingView(RepositoryBaseView):
         Returns:
             dict: a dict with keys 'data' and 'totalRows' containing the data and total rows
         """
+        summary = int(self.request.args.get('summary', 0))
+        initialize = int(self.request.args.get('initialize', 0))
+        draw = int(self.request.args.get('draw', 0))
         start = int(self.request.args.get('start', 0))
-        nrows = int(self.request.args.get('length', 10))
-        data, totalRows = self._experiment_data(name, start=start, nrows=nrows,
-                                                run='all')
-        return datatables_ajax(data, n_total=totalRows)
+        nrows = int(self.request.args.get('length', 10)) if not initialize else 1
+        run = int(self.request.args.get('run', 0)) or 'all'
+        since = validOrNone(self.request.args.get('since', None))
+        end = validOrNone(self.request.args.get('end', None))
+        data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=False,
+                                                run=run, since=since, end=end, event=['start', 'metric'])
+
+        return datatables_ajax(data, n_total=totalRows, n_filtered=totalRows, draw=draw)
 
     @fv.route('/{self.segment}/experiment/plot/<name>')
     def api_plot_metrics(self, name):
@@ -89,6 +111,7 @@ class TrackingView(RepositoryBaseView):
                       x='run',
                       y='value',
                       facet_col=cols,
+                      facet_col_wrap=4,
                       color='key',  # one line for each metric
                       markers='*')  # explicitley mark each data point
         graphJSON = json.to_json(fig)
@@ -114,6 +137,7 @@ class TrackingView(RepositoryBaseView):
         column = validOrNone(self.request.args.get('column'))
         experiment = validOrNone(self.request.args.get('experiment'))
         since = validOrNone(self.request.args.get('since'))
+        end = validOrNone(self.request.args.get('since'))
         exp = om.runtime.model(model).experiment(experiment=experiment)
         if exp._has_monitor(model):
             mon = exp.as_monitor(model)
