@@ -12,6 +12,8 @@ validOrNone = lambda v, astype=None: ((astype(v) if astype else v)
                                       if v and v not in ('undefined', 'null', None)
                                       else None)
 
+truefalse = lambda v: str(v) in ('true', 'True', '1')
+
 
 class TrackingView(RepositoryBaseView):
     list_template = 'runtime/{self.segment}.html'
@@ -77,7 +79,7 @@ class TrackingView(RepositoryBaseView):
         Returns:
             dict: a dict with keys 'data' and 'totalRows' containing the data and total rows
         """
-        summary = int(self.request.args.get('summary', 0))
+        summary = truefalse(self.request.args.get('summary', 0))
         initialize = int(self.request.args.get('initialize', 0))
         draw = int(self.request.args.get('draw', 0))
         start = int(self.request.args.get('start', 0))
@@ -85,7 +87,7 @@ class TrackingView(RepositoryBaseView):
         run = int(self.request.args.get('run', 0)) or 'all'
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
-        data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=False,
+        data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=summary,
                                                 run=run, since=since, end=end, event=['start', 'metric'])
 
         return datatables_ajax(data, n_total=totalRows, n_filtered=totalRows, draw=draw)

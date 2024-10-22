@@ -8,11 +8,8 @@ $(function () {
       events: {
         "since:selected": function (event, data) {
           console.log("since:selected", data);
-          plotmonitor({
-            model: metadata.name,
-            column: null,
-            since: data.startDate,
-          });
+          var exp = $("#dropdownExperiments").text();
+          showTable(exp);
         },
         "range:selected": function (event, data) {
           console.log("range:selected", data);
@@ -33,7 +30,7 @@ $(function () {
         responsive: true,
         paging: true,
         ajax: {
-          url: `/tracking/experiment/data/${exp}?&since=${since}&end=${end}`,
+          url: `/tracking/experiment/data/${exp}?&since=${since}&end=${end}&summary=1`,
           type: "GET",
         },
         columns: columns,
@@ -47,7 +44,7 @@ $(function () {
       const since = dateRangeView.model.get("startDate");
       const end = dateRangeView.model.get("endDate");
       $.ajax({
-        url: `/tracking/experiment/data/d-reg-0?initialize=1`,
+        url: `/tracking/experiment/data/d-reg-0?initialize=1&summary=1`,
         type: "GET",
         success: function (json) {
           var headers = json.columns || Object.keys(json.data[0]);
