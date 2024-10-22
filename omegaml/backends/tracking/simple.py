@@ -387,8 +387,7 @@ class OmegaSimpleTracker(TrackingProvider):
             key (str|list): the key(s) to include
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
-            since (datetime|timedelta|str): only return data since this date. If both since and run are specified,
-               run is ignored and all runs since the date are returned. If since is a string it must
+            since (datetime|timedelta|str): only return data since this date. If since is a string it must
                be in the format '<n><unit:[smhdwMqy]>' or a timedelta object.
             end (datetime): only return data until this date
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
@@ -441,8 +440,6 @@ class OmegaSimpleTracker(TrackingProvider):
                 run = [(r if r >= 0 else relative_run(r)) for r in run]
             elif isinstance(run, int) and run < 0:
                 run = relative_run(run)
-        else:
-            run = None
         filter = self._build_data_filter(experiment, run, event, step, key, since, end, extra)
 
         def read_data(cursor):

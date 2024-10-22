@@ -1,3 +1,10 @@
+// Run Model
+const Run = Backbone.Model.extend({
+  defaults: {
+    selected: false,
+  },
+});
+
 // Paginated Run Collection
 const PaginatedRunCollection = Backbone.Collection.extend({
   model: Run,
@@ -40,50 +47,141 @@ const PaginatedRunCollection = Backbone.Collection.extend({
   },
 });
 
+// Single Run Card View
+const RunCardView = Backbone.View.extend({
+  className: "col-md-6 col-lg-4 mb-3",
+
+  template: _.template(` 
+        <div class="card run-card <%= selected ? 'selected' : '' %>">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center">
+                <div class="form-check">
+                <input class="form-check-input run-checkbox" type="checkbox" id="check_<%= run %>" <%=selected ? 'checked'
+                    : '' %>>
+                </div>
+                <h5 class="card-title mb-0 ml-2">
+                Run #<%= run %>
+                </h5>
+            </div>
+            <span class="badge badge-<%= statusColor %>">
+                <%= status %>
+            </span>
+            </div>
+            <div class="ml-4">
+            <p class="card-text text-muted small">
+                <%= new Date(dt).toLocaleDateString() %>
+            </p>
+            <div class="mb-2">
+                <% tags.forEach(function(tag) { %>
+                <span class="badge badge-secondary mr-1">
+                    <%= tag %>
+                </span>
+                <% }); %>
+            </div>
+            <div>
+                <% Object.entries(metrics).forEach(function([key, value]) { %>
+                <span class="badge badge-light text-dark metric-badge">
+                    <%= key %>: <%= value %>
+                </span>
+                <% }); %>
+            </div>
+            </div>
+        </div>
+        </div>
+
+    `),
+
+  events: {
+    "click .run-checkbox": "toggleSelect",
+    "click .card": "handleCardClick",
+  },
+
+  initialize: function () {
+    this.listenTo(this.model, "change", this.render);
+  },
+
+  render: function () {
+    const data = {
+      ...this.model.toJSON(),
+      statusColor: this.getStatusColor(this.model.get("status")),
+    };
+    _.defaults(data, {
+      tags: [],
+      metrics: [],
+    });
+    this.$el.html(this.template(data));
+    return this;
+  },
+
+  getStatusColor: function (status) {
+    const colors = {
+      completed: "success",
+      running: "primary",
+      failed: "danger",
+      pending: "warning",
+    };
+    return colors[status] || "secondary";
+  },
+
+  toggleSelect: function (e) {
+    e.stopPropagation();
+    this.model.set("selected", !this.model.get("selected"));
+    this.trigger("selectionChanged", this.model);
+  },
+
+  handleCardClick: function (e) {
+    if (!$(e.target).closest(".run-checkbox").length) {
+      this.$(".run-checkbox").click();
+    }
+  },
+});
+
 // Updated Grid View with Pagination
 const PaginatedRunGridView = Backbone.View.extend({
   className: "container-fluid",
 
   template: _.template(`
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="d-flex align-items-center">
-                    <button class="btn btn-outline-primary btn-sm me-2 select-all-page">
-                        Select Page
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm clear-selection">
-                        Clear Selection
-                    </button>
-                    <span class="ms-3">
-                        Selected: <span class="badge bg-primary selection-count">0</span>
-                    </span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control search-input" 
-                           placeholder="Search runs...">
-                    <select class="form-select status-filter" style="max-width: 150px;">
-                        <option value="">All Status</option>
-                        <option value="completed">Completed</option>
-                        <option value="running">Running</option>
-                        <option value="failed">Failed</option>
-                    </select>
-                </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+            <button class="btn btn-outline-primary btn-sm mr-2 select-all-page">
+                Select Page
+            </button>
+            <button class="btn btn-outline-secondary btn-sm clear-selection">
+                Clear Selection
+            </button>
+            <span class="ml-3">
+                Selected: <span class="badge badge-primary selection-count">0</span>
+            </span>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="input-group">
+            <input type="text" class="form-control search-input" placeholder="Search runs...">
+            <select class="custom-select status-filter" style="max-width: 150px;">
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="running">Running</option>
+                <option value="failed">Failed</option>
+            </select>
+            </div>
+        </div>
+        </div>
+
         <div class="row runs-container"></div>
+
         <div class="row mt-3">
-            <div class="col-md-6">
-                <div class="showing-info">
-                    Showing <%= startRecord %>-<%= endRecord %> of <%= totalRecords %> runs
-                </div>
+        <div class="col-md-6">
+            <div class="showing-info">
+            Showing <%= startRecord %>-<%= endRecord %> of <%= totalRecords %> runs
             </div>
-            <div class="col-md-6">
-                <nav aria-label="Run navigation" class="float-end">
-                    <ul class="pagination pagination-sm"></ul>
-                </nav>
-            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="Run navigation" class="float-right">
+            <ul class="pagination pagination-sm"></ul>
+            </nav>
+        </div>
         </div>
     `),
 
@@ -96,15 +194,16 @@ const PaginatedRunGridView = Backbone.View.extend({
   },
 
   initialize: function (options) {
-    this.collection = options.collection;
+    this.collection = new PaginatedRunCollection();
     this.cardViews = [];
 
     this.debounceSearch = _.debounce(this.search, 300);
 
     this.listenTo(this.collection, "sync", this.render);
     this.listenTo(this.collection, "error", this.handleError);
+  },
 
-    // Initial fetch
+  update: function () {
     this.collection.fetch({ reset: true });
   },
 

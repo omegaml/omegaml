@@ -1,4 +1,5 @@
 import DateRangeView from "../../widgets/sincepick.js";
+import PaginatedRunGridView from "../../widgets/pagedcards.js";
 
 $(function () {
   $("#experiments-tab").on("shown.bs.tab", function (e) {
@@ -17,6 +18,10 @@ $(function () {
       },
     });
     dateRangeView.render();
+    // cards view
+    const gridView = new PaginatedRunGridView({
+      el: "#expcards",
+    });
     // query experiment data and show as a table
     function initializeTable(headers, exp, since, end) {
       // https://datatables.net/forums/discussion/79217
@@ -29,12 +34,25 @@ $(function () {
         serverSide: true,
         responsive: true,
         paging: true,
+        select: true,
+        pageLength: 5,
+        layout: {
+          topEnd: "paging",
+        },
         ajax: {
           url: `/tracking/experiment/data/${exp}?&since=${since}&end=${end}&summary=1`,
           type: "GET",
         },
         columns: columns,
       });
+    }
+
+    function showRunCards(exp) {
+      const since = dateRangeView.model.get("startDate");
+      const end = dateRangeView.model.get("endDate");
+      gridView.collection.url = `/tracking/experiment/data/${exp}?&since=${since}&end=${end}&summary=1`;
+      gridView.collection.fetch({ reset: true });
+      gridView.render();
     }
 
     function showTable(exp) {
@@ -44,7 +62,7 @@ $(function () {
       const since = dateRangeView.model.get("startDate");
       const end = dateRangeView.model.get("endDate");
       $.ajax({
-        url: `/tracking/experiment/data/d-reg-0?initialize=1&summary=1`,
+        url: `/tracking/experiment/data/${exp}?initialize=1&summary=1&since=${since}&end=${end}`,
         type: "GET",
         success: function (json) {
           var headers = json.columns || Object.keys(json.data[0]);
@@ -69,9 +87,15 @@ $(function () {
     // plot experiment data
     function plotchart(exp, since, end, multi = false) {
       var multi = multi ? 1 : 0;
+      var selected = $("#expviewer")
+        .DataTable({ retrieve: true })
+        .rows({ selected: true })
+        .data()
+        .toArray();
+      selected = selected.map((row) => row.run);
       $.ajax({
         dataType: "json",
-        url: `/tracking/experiment/plot/${exp}?multicharts=${multi}&since=${since}&end=${end}`,
+        url: `/tracking/experiment/plot/${exp}?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
         success: function (data) {
           $("#exptable").hide();
           $("#expchart").show();

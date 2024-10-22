@@ -30,7 +30,25 @@ class TrackingView(RepositoryBaseView):
         )
         return super().members(excludes=excludes)
 
-    def _experiment_data(self, name, start=None, nrows=None, event=None, run=None, summary=False, **kwargs):
+    def _experiment_data(self, name, start=None, nrows=None, event=None, run=None, summary=False, as_dataframe=False,
+                         **kwargs):
+        """ return the experiment data for a given experiment
+
+        Args:
+            name:
+            start:
+            nrows:
+            event:
+            run:
+            summary:
+            as_dataframe (bool): if True, return as pandas DataFrame, else as list of dicts
+            **kwargs:
+
+        Returns:
+            (data, totalRows), where data is the data and totalRows is the total number of rows
+                * data (list|pd.DataFrame): the data
+                * totalRows (int): the total number of rows
+        """
         # TODO figure out how to select the event to display
         run = run or 'all'
         om = self.om
@@ -58,8 +76,9 @@ class TrackingView(RepositoryBaseView):
             data = (data
                     .iloc[subset]
                     .reset_index()
-                    .fillna('')
-                    .to_dict(orient='records'))
+                    .fillna(''))
+            if not as_dataframe:
+                data = data.to_dict(orient='records')
         else:
             data = []
             totalRows = 0
@@ -110,15 +129,48 @@ class TrackingView(RepositoryBaseView):
         multicharts = int(self.request.args.get('multicharts', 0))
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
-        metrics, totalRows = self._experiment_data(name, run='all', event='metric', since=since, end=end)
+        runs = self.request.args.get('runs', 'all')
+        runs = [validOrNone(v, astype=int) for v in runs.split(',')] if runs else 'all'
+        metrics, totalRows = self._experiment_data(name, run=runs, event='metric', since=since, end=end,
+                                                   as_dataframe=True)
         cols = 'key' if multicharts else None
-        fig = px.line(data_frame=metrics,
-                      x='run',
-                      y='value',
-                      facet_col=cols,
-                      facet_col_wrap=4,
-                      color='key',  # one line for each metric
-                      markers='*')  # explicitley mark each data point
+        pltkwargs = dict(facet_col=cols,
+                         facet_col_wrap=4,
+                         color='key')
+        single_run = len(metrics['run'].unique()) == 1
+        multi_steps = len(metrics['step'].unique()) > 1
+        if single_run and not multi_steps:
+            # one bar for reach metric
+            pltfn = px.bar
+            pltkwargs.update(x='key',
+                             y='value')
+        elif single_run and multi_steps:
+            # one line for each metric
+            pltfn = px.line
+            pltkwargs.update(
+                x='step',
+                y='value',
+                markers='*',  # explicitley mark each data point
+            )
+        elif multi_steps:
+            # one plot for each metric
+            pltfn = px.line
+            pltkwargs.update(
+                x='step',
+                y='value',
+                color='run',
+                facet_col='key',
+                markers='*',  # explicitley mark each data point
+            )
+        else:
+            pltfn = px.line
+            pltkwargs.update(
+                x='run',
+                y='value',
+                markers='*',  # explicitley mark each data point
+            )
+        fig = pltfn(data_frame=metrics, **pltkwargs)
+        fig.update_xaxes(type='category')
         graphJSON = json.to_json(fig)
         return graphJSON
 

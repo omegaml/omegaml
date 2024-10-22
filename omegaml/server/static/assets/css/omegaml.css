@@ -151,3 +151,17 @@ i {
 .btn.btn-icon {
   height: 46px;
 }
+
+/* run cards exp view */
+.run-card:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+.run-card.selected {
+  border: 2px solid #0d6efd;
+  background-color: #e9ecef;
+}
+.metric-badge {
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+}
