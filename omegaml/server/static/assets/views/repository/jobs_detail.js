@@ -1,7 +1,7 @@
 import CronView from "../../widgets/cronpick.js";
 
 // server rendered variables
-$(document).ready(function () {
+$(function () {
   var resultsViewer = null;
   var scheduleViewer = null;
   const context = window.context;
@@ -64,7 +64,21 @@ $(document).ready(function () {
       cronExpression: context.schedule.cron,
       events: {
         "cron:selected": function (event, data) {
-          $("#cron-expression").val(data.cron);
+          $.ajax({
+            url: `/jobs/schedule/${context.name}`,
+            type: "POST",
+            data: JSON.stringify({
+              cron: data.cron,
+            }),
+            contentType: "application/json",
+            dataType: "json",
+          })
+            .done(function (data) {
+              scheduleViewer.ajax.reload();
+            })
+            .error(function (data) {
+              console.error("error", data);
+            });
         },
       },
     });
@@ -75,7 +89,7 @@ $(document).ready(function () {
       ajax: {
         url: `/jobs/schedule/${context.name}`,
         dataSrc: function (data) {
-          console.log("schedule data", data);
+          console.debug("schedule data", data);
           return data.data.triggers;
         },
       },

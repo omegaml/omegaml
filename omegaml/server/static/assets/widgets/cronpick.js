@@ -15,6 +15,10 @@ export default class CronView extends BaseView {
       "change #cronExpression": "manualInput",
       "show.bs.modal #cronModal": "openModal",
     });
+    // user events
+    _.defaults(options.events, {
+      "cron:selected": "eventHandler",
+    });
     super(options);
     this.cronExpression = options.cronExpression || "* * * * *";
     this.render();
@@ -139,6 +143,7 @@ export default class CronView extends BaseView {
     const cronExp = this.generateCronExpression();
     $("#cronExpression").val(cronExp);
     $("#cronModal").modal("hide");
+    this.trigger("cron:selected", { cron: cronExp });
   }
 
   // Event handler for manual input of the cron expression

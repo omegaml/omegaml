@@ -18,7 +18,7 @@ class JobsRepositoryView(RepositoryBaseView):
         runs = [r for r in runs if query in r['results']] if query else runs
         return datatables_ajax(runs, draw=draw)
 
-    @fv.route('/{self.segment}/schedule/<path:name>')
+    @fv.route('/{self.segment}/schedule/<path:name>', methods=['GET'])
     def api_get_schedule(self, name):
         run_at, triggers = self.store.get_schedule(name, only_pending=True)
         draw = int(self.request.args.get('draw', 0))
@@ -29,6 +29,13 @@ class JobsRepositoryView(RepositoryBaseView):
                 'cron': run_at,
             }}
         return datatables_ajax(schedule, draw=draw)
+
+    @fv.route('/{self.segment}/schedule/<path:name>', methods=['POST'])
+    def api_set_schedule(self, name):
+        data = self.request.json
+        run_at = data.get('cron')
+        self.store.schedule(name, run_at)
+        return self.api_get_schedule(name)
 
     @fv.route('/{self.segment}/results/<path:name>')
     def api_get_results(self, name):
