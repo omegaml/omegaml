@@ -6,7 +6,6 @@ import re
 import yaml
 from croniter import croniter
 from io import StringIO, BytesIO
-
 from jupyter_client import AsyncKernelManager
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.preprocessors.execute import ExecutePreprocessor
@@ -100,14 +99,11 @@ class OmegaJobs(BackendBaseCommon):
         return len(self.store.list(name)) + len(self.store.list(name + '.ipynb')) > 0
 
     def put(self, obj, name, attributes=None):
-        """
-        Store a NotebookNode
-
-        :param obj: the NotebookNode to store
-        :param name: the name of the notebook
-        """
+        """ """
         if not name.endswith('.ipynb'):
             name += '.ipynb'
+        if isinstance(obj, str):
+            return self.create(obj, name)
         sbuf = StringIO()
         bbuf = BytesIO()
         # nbwrite expects string, fs.put expects bytes
@@ -438,10 +434,11 @@ class OmegaJobs(BackendBaseCommon):
         # -- a dictionary of JobSchedule
         if isinstance(run_at, dict):
             run_at = self.Schedule(**run_at).cron
-        if isinstance(run_at, str):
+        # -- a cron string
+        elif isinstance(run_at, str):
             run_at = self.Schedule(run_at).cron
         # -- a JobSchedule
-        if isinstance(run_at, self.Schedule):
+        elif isinstance(run_at, self.Schedule):
             run_at = run_at.cron
         # -- nothing, may we have it on the job's config already
         if not run_at:
@@ -452,7 +449,7 @@ class OmegaJobs(BackendBaseCommon):
             interval = run_at
         if not interval:
             # if we don't have a run-spec, return without scheduling
-            raise ValueError('no run-at specification provided, cannot schedule')
+            raise ValueError('no run-at specification found, cannot schedule')
         # get last time the job was run
         if last_run is None:
             job_runs = attrs.get('job_runs')
@@ -472,14 +469,11 @@ class OmegaJobs(BackendBaseCommon):
             'run-at': run_at,
             'status': 'PENDING'
         }
-        # search for existing trigger, only add if not existing yet
-        for cur in triggers:
-            if cur.get('status') != 'PENDING':
-                continue
-            if scheduled_run['run-at'] == cur.get('run-at'):
-                break
-        else:
-            triggers.append(scheduled_run)
+        # remove all pending triggers, add new triggers
+        past_triggers = [cur for cur in triggers if cur.get('status') != 'PENDING']
+        triggers.clear()
+        triggers.extend(past_triggers)
+        triggers.append(scheduled_run)
         attrs['config'] = config
         return meta.save()
 
@@ -616,5 +610,3 @@ class OmegaJobs(BackendBaseCommon):
 
     def summary(self, *args, **kwargs):
         return self.store.summary(*args, **kwargs)
-
-

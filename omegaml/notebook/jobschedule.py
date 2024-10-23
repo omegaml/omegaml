@@ -55,7 +55,11 @@ class JobSchedule(object):
                  monthday='*', month='*', at=None):
         # if we get text, attempt to convert
         if text:
-            self.sched = self._convert_text(text).sched
+            try:
+                self.sched = self.from_cron(text).sched
+            except Exception as e:
+                # assume natural language
+                self.sched = self._convert_text(text).sched
             return
         # no text, but time periods
         # get times

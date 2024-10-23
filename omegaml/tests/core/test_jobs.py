@@ -93,7 +93,6 @@ class JobTests(TestCase):
         omb.jobs.put(notebook, 'testjob')
         self.assertIn(expected, omb.jobs.list())
 
-
     def test_run_job_valid(self):
         """
         test running a valid job
@@ -225,7 +224,6 @@ class JobTests(TestCase):
         self.assertTrue(om.jobs.exists(resultnb))
         self.assertEqual(runs[0]['results'], resultnb)
 
-
     def test_run_job_invalid(self):
         """
         test running an invalid job
@@ -296,6 +294,18 @@ class JobTests(TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         self._check_scheduled_job()
 
+    def test_schedule_job(self):
+        om = self.om
+        cells = []
+        cells.append("print('hello')")
+        meta = om.jobs.create(cells, 'testjob')
+        meta = om.jobs.schedule('testjob', run_at='daily, at 06:00')
+        self._check_scheduled_job()
+        self.assertEqual(meta.attributes['config']['run-at'], '00 06 * * *')
+        meta = om.jobs.schedule('testjob', run_at='00 08 * * 1,2,3')
+        self._check_scheduled_job()
+        self.assertEqual(meta.attributes['config']['run-at'], '00 08 * * 1,2,3')
+
     def test_scheduled_job_with_nlp_schedule(self):
         om = self.om
         cells = []
@@ -347,7 +357,8 @@ class JobTests(TestCase):
         om = self.om
         meta = om.jobs.metadata('testjob')
         config = om.jobs.get_notebook_config('testjob')
-        self.assertIn('run-at', config)
+        if config:
+            self.assertIn('run-at', config)
         self.assertIn('config', meta.attributes)
         self.assertIn('run-at', meta.attributes['config'])
         # check the job was scheduled
@@ -496,17 +507,22 @@ class JobTests(TestCase):
             ('every 2 months, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, every 2 months'),
             ('every 2nd month, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, only in February'),
             ('every 5 minutes, every day, hour 6', 'Every 5 minutes, between 06:00 AM and 06:59 AM'),
-            ('every 5 minutes, every working day, hour 6', 'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday'),
-            ('every 5 minutes, on workdays, hours 6/7', 'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday'),
+            ('every 5 minutes, every working day, hour 6',
+             'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday'),
+            ('every 5 minutes, on workdays, hours 6/7',
+             'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday'),
             ('every 5 minutes, on workdays, in april', 'Every 5 minutes, Monday through Friday, only in April'),
             ('every 5 minutes, on weekends, in april', 'Every 5 minutes, Saturday through Sunday, only in April'),
-            ('every 5 minutes, from monday to friday, in april', 'Every 5 minutes, Monday through Friday, only in April'),
-            ('at 5 minutes, every hour, monday to friday, april', 'At 5 minutes past the hour, Monday through Friday, only in April'),
+            ('every 5 minutes, from monday to friday, in april',
+             'Every 5 minutes, Monday through Friday, only in April'),
+            ('at 5 minutes, every hour, monday to friday, april',
+             'At 5 minutes past the hour, Monday through Friday, only in April'),
             ('1st day of month, at 06:00', 'At 06:00 AM, on day 1 of the month'),
             ('mon-fri, 06:00', 'At 06:00 AM, Monday through Friday'),
             ('every 2 hours, 5 minute, weekdays', 'At 5 minutes past the hour, every 2 hours, Monday through Friday'),
             ('every 2nd hour, 5 minute, weekdays', 'At 02:05 AM, Monday through Friday'),
-            ('every 5 minutes, from monday to friday, in april', 'Every 5 minutes, Monday through Friday, only in April'),
+            ('every 5 minutes, from monday to friday, in april',
+             'Every 5 minutes, Monday through Friday, only in April'),
             ('every 4 hours, at 0 minutes, Monday through Friday', 'Every 4 hours, Monday through Friday'),
         ]
         for text, expected in texts:
@@ -590,5 +606,3 @@ class JobTests(TestCase):
         outpath = '/tmp/test.pdf'
         om.jobs.export(resultnb_name, outpath, 'pdf')
         self.assertTrue(os.path.exists(outpath))
-
-

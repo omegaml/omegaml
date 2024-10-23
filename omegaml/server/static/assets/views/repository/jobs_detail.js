@@ -1,7 +1,10 @@
+import CronView from "../../widgets/cronpick.js";
+
 // server rendered variables
 $(document).ready(function () {
   var resultsViewer = null;
   var scheduleViewer = null;
+  const context = window.context;
   // build experiment data viewer on showing tab
   $("#results-tab").on("shown.bs.tab", function (e) {
     resultsViewer ? resultsViewer.ajax.reload() : null;
@@ -15,6 +18,9 @@ $(document).ready(function () {
       processing: true,
       responsive: true,
       //scrollX: true,
+      language: {
+        emptyTable: "no data",
+      },
       columns: [
         {
           data: "results",
@@ -53,6 +59,16 @@ $(document).ready(function () {
     $("#jobview-modal .modal-title").text("");
   });
   $("#schedule-tab").on("shown.bs.tab", function (e) {
+    const cronView = new CronView({
+      el: "#cronContainer",
+      cronExpression: context.schedule.cron,
+      events: {
+        "cron:selected": function (event, data) {
+          $("#cron-expression").val(data.cron);
+        },
+      },
+    });
+    cronView.render();
     scheduleViewer ? scheduleViewer.ajax.reload() : null;
     scheduleViewer = $("#schedule-viewer").DataTable({
       retrieve: true, // if already initialized, return the instance

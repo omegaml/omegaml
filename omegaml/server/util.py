@@ -19,13 +19,20 @@ def datatables_ajax(data, n_total=None, n_filtered=None, draw=0):
     # https://datatables.net/manual/server-side#Returned-data
     n_total = n_total or len(data)
     n_filtered = n_filtered or len(data)
-    return {
+    if isinstance(data, dict):
+        columns = list(data.keys())
+    elif isinstance(data, list) and data:
+        columns = list(data[0].keys())
+    else:
+        columns = []
+    resp = {
         'data': data,
-        'columns': list(data[0].keys()) if data else [],
+        'columns': columns,
         'recordsTotal': n_total,
         'recordsFiltered': n_filtered,
-        'draw': draw,
     }
+    resp.update(draw=draw) if draw is not None else None
+    return resp
 
 
 def debug_only(f):
