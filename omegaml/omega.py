@@ -93,7 +93,18 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         weakref.finalize(self, monitor.stop)
         return monitor
 
-    def status(self, data=False, wait=False):
+    def status(self, check=None, data=False, by_status=False, wait=False):
+        """ get the status of the omegaml cluster
+
+        Args:
+            check (str): the check to run, e.g. 'storage', 'runtime'
+            data (bool): return the monitoring data for the check
+            by_status (bool): return data by status
+            wait (bool): wait for the check to complete
+
+        Returns:
+            dict 
+        """
         if self._monitor is None:
             # we defer the creation of the monitor to the first access
             # -- this is to avoid creating a monitor for every instance
@@ -102,7 +113,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
             self._monitor = self._make_monitor()
         if wait:
             self._check_connections()
-        return self._monitor.status(data=data)
+        return self._monitor.status(check=check, data=data, by_status=by_status)
 
     def _check_connections(self):
         return self._monitor.wait_ok()

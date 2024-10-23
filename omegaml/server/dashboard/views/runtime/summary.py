@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime
 from flask import render_template, request
 
 from omegaml.server import flaskview as fv
@@ -25,15 +26,6 @@ class RuntimeView(BaseView):
 
     @fv.route('/runtime/log')
     def api_get_log(self):
-        logdata = [
-            {'datetime': '2020-01-01 00:00:00',
-             'level': 'info',
-             'name': 'worker-1',
-             'hostname': 'worker-1',
-             'userid': 'user-1',
-             'text': 'this is a log message',
-             }
-        ]
         mdf = self.om.logger.dataset.get(lazy=True)
         # parse datatable serverside params
         start = int(request.args.get('start', 0))
@@ -61,6 +53,13 @@ class RuntimeView(BaseView):
             'recordsFiltered': len(logdata) if query else len(mdf),
         }
 
+    @fv.route('/runtime/status')
+    def status(self):
+        om = self.om
+        status = om.status(data=True)
+        return render_template('dashboard/runtime/status.html',
+                               data=status)
+
     @fv.route('/runtime/status/plot/health')
     def api_status_plot_health(self):
         import plotly.express as px
@@ -78,18 +77,41 @@ class RuntimeView(BaseView):
     @fv.route('/runtime/status/plot/uptime')
     def api_status_plot_uptime(self):
         import plotly.express as px
-        from plotly.io import json
         import pandas as pd
         from random import sample
-
         long_df = pd.DataFrame({
             'date': pd.date_range('1.1.2024', '31.1.2024'),
             'status': [sample(['failed', 'healthy'], 1, counts=(2, 29))[0] for i in range(0, 31)],
             'count': [1] * 31,
         })
-        fig = px.bar(long_df, x="date", y="count", color="status",
-                     color_discrete_map={'failed': 'red', 'healthy': 'green'})
-        return json.to_json(fig)
+        om = self.om
+        sysexp = om.runtime.experiment('.system')
+        logdf = sysexp.data(event='monitor')
+        if logdf is None:
+            logdf = long_df
+        # group by day and determine health status
+        grouped = logdf.groupby(logdf['dt'].dt.date).agg(
+            status=('value', lambda x: 'healthy' if all(d['status'] == 'ok' for d in x) else 'failed'),
+            count=('value', 'size')  # count of events
+        ).reset_index()
+        # rename columns for plotting
+        dailydf = grouped.rename(columns={'dt': 'date'})
+        # create full range
+        end_date = datetime.utcnow()
+        date_range = pd.date_range(end=end_date,
+                                   periods=90,
+                                   freq='D',
+                                   normalize=True)
+        full_df = pd.DataFrame({'date': date_range})
+        full_df['date'] = full_df['date'].dt.date
+        dailydf = dailydf.merge(full_df, on='date', how='right')
+        dailydf['count'] = 1
+        dailydf['status'] = dailydf['status'].fillna('unknown')
+        fig = px.bar(dailydf, x="date", y="count", color="status",
+                     color_discrete_map={'failed': 'red', 'healthy': 'green', 'unknown': 'gray'})
+        fig.update_layout(showlegend=False, margin={'l': 0, 'r': 0, 't': 0, 'b': 0, 'autoexpand': True})
+        fig.update_yaxes(visible=False)
+        return fig.to_json()
 
     @fv.route('/runtime/worker/plot/load')
     def api_worker_plot_load(self):
@@ -121,7 +143,7 @@ class RuntimeView(BaseView):
         from plotly.io import json
         om = self.om
         stats = om.stats()
-        fig = px.pie(stats, names=stats.index, values=stats['totalSize%'])
+        fig = px.pie(stats, names=stats.index, values=stats['count'])
         return json.to_json(fig)
 
 
