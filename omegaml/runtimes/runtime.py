@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import logging
 import weakref
 from celery import Celery
+from celery.events import EventReceiver
 from copy import deepcopy
 from socket import gethostname
 
@@ -404,7 +405,9 @@ class OmegaRuntime(object):
         See Also:
             celery Inspect.active()
         """
-        return self._inspect.active()
+        local_worker = {gethostname(): [{'name': 'local', 'is_local': True}]}
+        celery_workers = self._inspect.active() or {}
+        return dict_merge(local_worker, celery_workers)
 
     def queues(self):
         """ list queues
@@ -438,6 +441,43 @@ class OmegaRuntime(object):
             celery Inspect.stats()
         """
         return self._inspect.stats()
+
+    def status(self):
+        """ current cluster status
+
+        This collects key information from .labels(), .stats() and the latest
+        worker heartbeat. Note that loadavg is only available if the worker has
+        recently sent a heartbeat and may not be accurate across the cluster.
+
+        Returns:
+             snapshot (dict): a snapshot of the cluster status
+                '<worker>': {
+                    'loadavg': [0.0, 0.0, 0.0],  # load average in % seen by the worker (1, 5, 15 min)
+                    'processes': 1, # number of active worker processes
+                    'concurrency': 1, # max concurrency
+                    'uptime': 0, # uptime in seconds
+                    'processed': Counter(task=n), # number of tasks processed
+                    'queues': ['default'], # list of queues (labels) the worker is listening on
+                }
+        """
+        labels = self.labels()
+        stats = self.stats()
+        heartbeat = self.events.latest()
+        snapshot = {
+            worker: {
+                'loadavg': heartbeat.get('loadavg', []),
+                'processes': stats[worker]['pool']['processes'],
+                'concurrency': stats[worker]['pool']['max-concurrency'],
+                'uptime': stats[worker]['uptime'],
+                'processed': stats[worker]['total'],
+                'queues': labels[worker],
+            } for worker in labels if worker in stats
+        }
+        return snapshot
+
+    @property
+    def events(self):
+        return CeleryEventStream(self.celeryapp)
 
     def callback(self, script_name, always=False, **kwargs):
         """ Add a callback to a registered script
@@ -476,6 +516,36 @@ class OmegaRuntime(object):
             self._require_kwargs['routing']['link'] = success_sig
             self._require_kwargs['routing']['link_error'] = error_sig
         return self
+
+
+class CeleryEventStream:
+    def __init__(self, app, limit=None, timeout=5, wakeup=False):
+        self.app = app
+        self.limit = limit
+        self.timeout = timeout
+        self.wakeup = wakeup
+        self.max_size = 100
+        self.buffer = []
+
+    def handle(self, event):
+        self.buffer.append(event)
+        if len(self.buffer) > self.max_size:
+            self.buffer = self.buffer[-1 * self.max_size:]
+
+    def listen(self, handlers=None, limit=None, timeout=None):
+        # Connect to the broker using Kombu (Celery's underlying messaging system)
+        handlers = handlers or {'worker-heartbeat': self.handle}
+        limit = limit or self.limit
+        timeout = timeout or self.timeout
+        with self.app.connection() as conn:
+            # Create the EventReceiver to listen to all events
+            recv = EventReceiver(conn, handlers=handlers, app=self.app)
+            recv.capture(limit=limit, timeout=timeout, wakeup=self.wakeup)
+
+    def latest(self, timeout=None):
+        while len(self.buffer) == 0:
+            self.listen(limit=1, timeout=timeout)
+        return self.buffer[-1]
 
 
 # apply mixins

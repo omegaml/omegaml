@@ -1,5 +1,4 @@
 import warnings
-
 from hashlib import md5
 
 from omegaml.store import OmegaStore
@@ -68,7 +67,7 @@ class StreamsProxy(OmegaStore):
     def _qualified_stream(self, name, *args, **kwargs):
         return f'{self.bucket}.{self.prefix}.{name}.stream'
 
-    def get(self, name, lazy=False, source=None, autoattach=True,
+    def get(self, name, lazy=False, source=None, source_kwargs=None, autoattach=True,
             streaming=None, **kwargs):
         """
         get or create a new minibatch stream
@@ -107,7 +106,7 @@ class StreamsProxy(OmegaStore):
         """
         # ensure we have an existing stream
         streaming = streaming or {}
-        source_kwargs = {}
+        source_kwargs = source_kwargs or {}
         if isinstance(source, (tuple, list)):
             om, source, source_kwargs, *_ = list(source) + [{}]
         meta = self.metadata(name)

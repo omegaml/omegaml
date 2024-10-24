@@ -459,6 +459,7 @@ class OmegaMonitors(LunaMonitorChecks):
             else:
                 # -- for a remote runtime we submit a ping
                 self.om.runtime.ping(timeout=.1, source='monitor')
+            return self.om.runtime.labels()
 
     def check_database(self, monitor=None, **kwargs):
         with pymongo.timeout(monitor.timeout):

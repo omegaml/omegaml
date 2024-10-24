@@ -10,5 +10,5 @@ $(document).ready(function () {
       },
     });
   }
-  plotchart("#worker-status-chart", "/runtime/worker/plot/load");
+  //plotchart("#worker-status-chart", "/runtime/worker/plot/load");
 });

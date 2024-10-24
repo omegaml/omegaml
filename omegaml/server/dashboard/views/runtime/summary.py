@@ -1,3 +1,4 @@
+import cachetools
 import numpy as np
 from datetime import datetime
 from flask import render_template, request
@@ -9,10 +10,7 @@ from omegaml.server.dashboard.views.base import BaseView
 class RuntimeView(BaseView):
     @fv.route('/runtime')
     def summary(self):
-        workers = [
-            {'name': 'worker-1', 'status': 'running', 'activity': '10% / 10'},
-            {'name': 'worker-2', 'status': 'running', 'activity': '10% / 10'},
-        ]
+        workers = self._worker_status()
         return render_template('dashboard/runtime/summary.html',
                                segment='runtime',
                                items=workers,
@@ -21,29 +19,42 @@ class RuntimeView(BaseView):
 
     @fv.route('/runtime/worker/<name>')
     def worker(self, name):
+        status = self._worker_status(name, detail=True)
         return render_template('dashboard/runtime/worker_detail.html',
+                               status=status,
                                attributes={})
+
+    @cachetools.cached(cache=cachetools.TTLCache(maxsize=10, ttl=5))
+    def _worker_status(self, name=None, detail=False):
+        status = self.om.runtime.status()
+        workers = [{
+            'name': worker,
+            'status': 'running' if len(info['processes']) > 0 else 'idle',
+            'activity': f'{info["loadavg"][0]}% / {len(info["processes"])}',
+        } for worker, info in status.items() if (name is None or worker == name)]
+        return workers if not detail else status.get(name)
 
     @fv.route('/runtime/log')
     def api_get_log(self):
-        mdf = self.om.logger.dataset.get(lazy=True)
         # parse datatable serverside params
         start = int(request.args.get('start', 0))
         nrows = int(request.args.get('length', 10))
-        query = request.args.get('search[value]', None)
+        query = request.args.get('search[value]', '').strip()
         sortby_idx = request.args.get('order[0][column]', 0)
         sortby = request.args.get(f'columns[{sortby_idx}][data]', 'created')
         sortascending = 'desc' != request.args.get('order[0][dir]', 'desc')
         # filter and prepare log data
+        mdf = self.om.logger.dataset.get(lazy=True)
+        sortprefix = '-' if sortascending else ''
         logdata = (mdf
                    .skip(start)
                    .head(nrows)
+                   .sort(f'{sortprefix}{sortby}')
                    .query(text__contains=query)
                    .value)
         if len(logdata) > 0:
             logdata = (logdata
                        .reset_index()
-                       .sort_values(sortby, ascending=sortascending)
                        .to_dict(orient='records'))
         else:
             logdata = []
