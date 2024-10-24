@@ -26,13 +26,19 @@ class RuntimeView(BaseView):
 
     @cachetools.cached(cache=cachetools.TTLCache(maxsize=10, ttl=5))
     def _worker_status(self, name=None, detail=False):
-        status = self.om.runtime.status()
-        workers = [{
-            'name': worker,
-            'status': 'running' if len(info['processes']) > 0 else 'idle',
-            'activity': f'{info["loadavg"][0]}% / {len(info["processes"])}',
-        } for worker, info in status.items() if (name is None or worker == name)]
-        return workers if not detail else status.get(name)
+        om = self.om
+        status = om.status(data=True)
+        if not detail:
+            # using monitoring data -- this should always return fast
+            data = status['runtime']['data']
+            data = data if isinstance(data, list) else []
+        elif status['broker']['status'] == 'ok':
+            # getting live data -- this may take a while or fail
+            data = om.runtime.status()
+            data = data.get(name, {}) if name else data
+        else:
+            data = {}
+        return data
 
     @fv.route('/runtime/log')
     def api_get_log(self):
@@ -102,7 +108,7 @@ class RuntimeView(BaseView):
             logdf = long_df
         # group by day and determine health status
         grouped = logdf.groupby(logdf['dt'].dt.date).agg(
-            status=('value', lambda x: 'healthy' if all(d['status'] == 'ok' for d in x) else 'failed'),
+            status=('value', lambda x: 'healthy' if sum(d['status'] == 'ok' for d in x) / len(x) > 0.01 else 'failed'),
             count=('value', 'size')  # count of events
         ).reset_index()
         # rename columns for plotting

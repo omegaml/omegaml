@@ -9,6 +9,7 @@ if __name__ == '__main__':
     port = os.environ.get('PORT') or 8000
     host = os.environ.get('HOST') or 'localhost'
     print(f"[INFO] starting omega-ml server at http://{host}:{port}/")
+    print(f"[INFO] status check is {'enabled' if SHOULD_STATUS_CHECK else 'disabled'}")
     om.status(wait=True) if SHOULD_STATUS_CHECK else None
     app = create_app()
     app.run(host=host, port=port, debug=True)

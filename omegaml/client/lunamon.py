@@ -303,16 +303,19 @@ class LunaMonitor:
             exc = None
             status = 'ok'
             msg = f'check {check} was successful'
+            rc = 0
         elif bool(rc) is False or exc:
             # bool(rc) is False or an exception was raised, i.e. failed
             status = 'failed'
             msg = f'check {check} failed with {exc}'
             data = rc
+            rc = 1
         else:
             # we should never get here
             status = 'failed'
             msg = f'check {check} failed with {exc} and rc={rc} [weird]'
             data = rc
+            rc = 9
         self._record_status(check, status, msg=msg, exc=exc, rc=rc, data=data, elapsed=elapsed)
 
     def _record_status(self, check, status, msg=None, exc=None, rc=None, data=None, elapsed=None):
@@ -332,16 +335,17 @@ class LunaMonitor:
         # forward a copy of the status so our buffer cannot be modified
         status = dict(status)
         status['check'] = check
+        # TODO add a timeout so we don't block on forwarding failures
         self._forward_status(status)
         return status
 
     def _forward_status(self, status):
         try:
             state = status['status']
-            if state == 'ok':
+            if state in ('ok', 'failed'):
                 for cb in self._callbacks['status']:
                     cb(status)
-            elif state == 'failed':
+            if state == 'failed':
                 for cb in self._callbacks['error']:
                     cb(status)
         except Exception as e:
@@ -456,10 +460,22 @@ class OmegaMonitors(LunaMonitorChecks):
                 # -- however broker may still fail
                 # -- hence we check the broker instead
                 self.om.runtime.celeryapp.control.ping()
+                loadavg = os.getloadavg()
+                workers = [{
+                    'name': 'local',
+                    'status': 'running',
+                    'activity': f'{loadavg[0]}% / 1',
+                }]
             else:
                 # -- for a remote runtime we submit a ping
                 self.om.runtime.ping(timeout=.1, source='monitor')
-            return self.om.runtime.labels()
+                status = self.om.runtime.status()
+                workers = [{
+                    'name': worker,
+                    'status': 'running' if len(info['processes']) > 0 else 'idle',
+                    'activity': f'{info["loadavg"][0]}% / {len(info["processes"])}',
+                } for worker, info in status.items()]
+            return workers
 
     def check_database(self, monitor=None, **kwargs):
         with pymongo.timeout(monitor.timeout):

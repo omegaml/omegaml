@@ -89,7 +89,14 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     def _make_monitor(self):
         import weakref
         from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
-        monitor = LunaMonitor(checks=OmegaMonitors.on(self))
+        status_logger = lambda: self.runtime.experiment('.system')
+        for_keys = lambda event, keys: {k: event[k] for k in keys if k in event}
+        on_status = lambda event: (status_logger().use().log_event('monitor', event['check'],
+                                                                   for_keys(event,
+                                                                            ('status', 'message', 'error',
+                                                                             'elapsed')))
+                                   if event['check'] == 'health' else None)
+        monitor = LunaMonitor(checks=OmegaMonitors.on(self), on_status=on_status, interval=15)
         weakref.finalize(self, monitor.stop)
         return monitor
 
