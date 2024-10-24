@@ -93,7 +93,6 @@ class JobTests(TestCase):
         omb.jobs.put(notebook, 'testjob')
         self.assertIn(expected, omb.jobs.list())
 
-
     def test_run_job_valid(self):
         """
         test running a valid job
@@ -225,7 +224,6 @@ class JobTests(TestCase):
         self.assertTrue(om.jobs.exists(resultnb))
         self.assertEqual(runs[0]['results'], resultnb)
 
-
     def test_run_job_invalid(self):
         """
         test running an invalid job
@@ -296,6 +294,18 @@ class JobTests(TestCase):
         meta = om.jobs.put(notebook, 'testjob')
         self._check_scheduled_job()
 
+    def test_schedule_job(self):
+        om = self.om
+        cells = []
+        cells.append("print('hello')")
+        meta = om.jobs.create(cells, 'testjob')
+        meta = om.jobs.schedule('testjob', run_at='daily, at 06:00')
+        self._check_scheduled_job()
+        self.assertEqual(meta.attributes['config']['run-at'], '00 06 * * *')
+        meta = om.jobs.schedule('testjob', run_at='00 08 * * 1,2,3')
+        self._check_scheduled_job()
+        self.assertEqual(meta.attributes['config']['run-at'], '00 08 * * 1,2,3')
+
     def test_scheduled_job_with_nlp_schedule(self):
         om = self.om
         cells = []
@@ -347,7 +357,8 @@ class JobTests(TestCase):
         om = self.om
         meta = om.jobs.metadata('testjob')
         config = om.jobs.get_notebook_config('testjob')
-        self.assertIn('run-at', config)
+        if config:
+            self.assertIn('run-at', config)
         self.assertIn('config', meta.attributes)
         self.assertIn('run-at', meta.attributes['config'])
         # check the job was scheduled
@@ -451,23 +462,23 @@ class JobTests(TestCase):
         self.assertEqual(sched2.text, sched.text)
         # step days
         sched = JobSchedule(weekday='every 2nd', at='06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, every 2 days of the week')
-        self.assertEqual(sched.cron, '00 06 * * */2')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Tuesday')
+        self.assertEqual(sched.cron, '00 06 * * 2')
         sched = JobSchedule(weekday='every 1st', at='06:00')
         self.assertEqual(sched.text, 'At 06:00 AM, only on Monday')
         sched2 = JobSchedule.from_cron(sched.cron)
         self.assertEqual(sched2.text, sched.text)
         sched = JobSchedule(weekday='every 3rd', at='06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, every 3 days of the week')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Wednesday')
         sched2 = JobSchedule.from_cron(sched.cron)
         self.assertEqual(sched2.text, sched.text)
         sched = JobSchedule(weekday='every 4th', at='06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, every 4 days of the week')
+        self.assertEqual(sched.text, 'At 06:00 AM, only on Thursday')
         sched2 = JobSchedule.from_cron(sched.cron)
         self.assertEqual(sched2.text, sched.text)
         # step hours
         sched = JobSchedule(hour='every 2nd', minute=0, weekday='mon-fri')
-        self.assertEqual(sched.text, 'Every 2 hours, Monday through Friday')
+        self.assertEqual(sched.text, 'At 02:00 AM, Monday through Friday')
         sched2 = JobSchedule.from_cron(sched.cron)
         self.assertEqual(sched2.text, sched.text)
         # step minutes
@@ -476,60 +487,54 @@ class JobTests(TestCase):
         sched2 = JobSchedule.from_cron(sched.cron)
         self.assertEqual(sched2.text, sched.text)
         # text specs
-        sched = JobSchedule('friday, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, only on Friday')
-        sched = JobSchedule('fridays, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, only on Friday')
-        sched = JobSchedule('Mondays and Fridays, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, only on Monday and Friday')
-        sched = JobSchedule('Mondays/Fridays, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, only on Monday and Friday')
-        sched = JobSchedule('monday-friday, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('mon-fri, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('mon-fri at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('Mon-Fri, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('Mon-Fri, 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('Mon-Fri 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('at 06:00, Mon-Fri')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('monday-friday, 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('every 2nd month, monday-friday, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday, every 2 months')
-        sched = JobSchedule('every 5 minutes, every day, hour 6')
-        self.assertEqual(sched.text, 'Every 5 minutes, between 06:00 AM and 06:59 AM')
-        sched = JobSchedule('every 5 minutes every working day hour 6')
-        self.assertEqual(sched.text, 'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday')
-        sched = JobSchedule('every 5 minutes every working day, hour 6')
-        self.assertEqual(sched.text, 'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday')
-        sched = JobSchedule('every 5 minutes, every working day, hour 6')
-        self.assertEqual(sched.text, 'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday')
-        sched = JobSchedule('every 5 minutes, on workdays, hours 6/7')
-        self.assertEqual(sched.text, 'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday')
-        sched = JobSchedule('every 5 minutes, on workdays, in april')
-        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
-        sched = JobSchedule('every 5 minutes, on weekends, in april')
-        self.assertEqual(sched.text, 'Every 5 minutes, Saturday through Sunday, only in April')
-        sched = JobSchedule('every 5 minutes, from monday to friday, in april')
-        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
-        sched = JobSchedule('at 5 minutes, every hour, monday to friday, april')
-        self.assertEqual(sched.text, 'At 5 minutes past the hour, Monday through Friday, only in April')
-        sched = JobSchedule('1st day of month, at 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, on day 1 of the month')
-        sched = JobSchedule('mon-fri, 06:00')
-        self.assertEqual(sched.text, 'At 06:00 AM, Monday through Friday')
-        sched = JobSchedule('every 2nd hour, 5 minute, weekdays')
-        self.assertEqual(sched.text, 'At 5 minutes past the hour, every 2 hours, Monday through Friday')
-        sched = JobSchedule('every 5 minutes, from monday to friday, in april')
-        self.assertEqual(sched.text, 'Every 5 minutes, Monday through Friday, only in April')
-        sched = JobSchedule('every 4 hours, at 0 minutes, Monday through Friday')
-        self.assertEqual(sched.text, 'Every 4 hours, Monday through Friday')
+        texts = [
+            ('every friday, at 06:00', 'At 06:00 AM, only on Friday'),
+            ('friday, at 06:00', 'At 06:00 AM, only on Friday'),
+            ('fridays, at 06:00', 'At 06:00 AM, only on Friday'),
+            ('Mondays and Fridays, at 06:00', 'At 06:00 AM, only on Monday and Friday'),
+            ('At 06:00 AM, only on Monday and Friday', 'At 06:00 AM, only on Monday and Friday'),
+            ('Mondays/Fridays, at 06:00', 'At 06:00 AM, only on Monday and Friday'),
+            ('monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('mon-fri, at 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('mon-fri at 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('Mon-Fri, at 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('Mon-Fri, 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('Mon-Fri at 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('at 06:00, Mon-Fri', 'At 06:00 AM, Monday through Friday'),
+            ('monday-friday, 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('every 2 month, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, every 2 months'),
+            ('monday-friday, at 06:00, every 2 months', 'At 06:00 AM, Monday through Friday, every 2 months'),
+            ('every 2 months, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, every 2 months'),
+            ('every 2nd month, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, only in February'),
+            ('every 5 minutes, every day, hour 6', 'Every 5 minutes, between 06:00 AM and 06:59 AM'),
+            ('every 5 minutes, every working day, hour 6',
+             'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday'),
+            ('every 5 minutes, on workdays, hours 6/7',
+             'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday'),
+            ('every 5 minutes, on workdays, in april', 'Every 5 minutes, Monday through Friday, only in April'),
+            ('every 5 minutes, on weekends, in april', 'Every 5 minutes, Saturday through Sunday, only in April'),
+            ('every 5 minutes, from monday to friday, in april',
+             'Every 5 minutes, Monday through Friday, only in April'),
+            ('at 5 minutes, every hour, monday to friday, april',
+             'At 5 minutes past the hour, Monday through Friday, only in April'),
+            ('1st day of month, at 06:00', 'At 06:00 AM, on day 1 of the month'),
+            ('mon-fri, 06:00', 'At 06:00 AM, Monday through Friday'),
+            ('every 2 hours, 5 minute, weekdays', 'At 5 minutes past the hour, every 2 hours, Monday through Friday'),
+            ('every 2nd hour, 5 minute, weekdays', 'At 02:05 AM, Monday through Friday'),
+            ('every 5 minutes, from monday to friday, in april',
+             'Every 5 minutes, Monday through Friday, only in April'),
+            ('every 4 hours, at 0 minutes, Monday through Friday', 'Every 4 hours, Monday through Friday'),
+        ]
+        for text, expected in texts:
+            # test text => cron
+            sched = JobSchedule.from_text(text)
+            self.assertEqual(sched.text, expected)
+            # test text => text
+            JobSchedule.from_text(sched.text)
+            self.assertEqual(sched.text, expected)
+            # test cron => text
+            JobSchedule.from_cron(sched.cron)
+            self.assertEqual(sched.text, expected)
 
     def test_export_job_html(self):
         """

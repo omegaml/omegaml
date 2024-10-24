@@ -3,6 +3,7 @@ import pandas as pd
 import warnings
 from datetime import datetime
 from itertools import pairwise, product
+
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
 from omegaml.util import dict_merge, tryOr
@@ -326,7 +327,7 @@ class DriftMonitorBase:
         # -- summary statistics
         for col in numeric_columns:
             s_col = pre_or_post_fixed(col)
-            values = df1[col].values
+            values = df1[col].dropna().values
             bins = 10 if len(values) < 1000 else 100
             probs = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, .95]
             stats[s_col] = {

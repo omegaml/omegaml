@@ -1,6 +1,7 @@
 import unittest
 
 from omegaml.defaults import update_from_obj
+from omegaml.util import ensure_json_serializable
 
 
 class MiscTests(unittest.TestCase):
@@ -66,6 +67,16 @@ class MiscTests(unittest.TestCase):
         update_from_obj(source, target)
         self.assertEqual(target.FOO, dict(othersub='bar'))
 
+    def test_ensure_json_serializable(self):
+        d = {
+            'string': 'bar',
+            'int': 1,
+            'float': 1.0,
+            'yes': True,
+            'no': False,
+        }
+        parsed = ensure_json_serializable(d)
+        self.assertEqual(parsed, d)
 
 
 if __name__ == '__main__':
