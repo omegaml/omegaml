@@ -60,6 +60,7 @@ install_deps = [
     'docopt>=0.6.2',
     'requests>=2.20.0',
     'tqdm>=4.32.2',
+    'yaspin',
     'honcho>=1.0.1',  # not strictly required, but used in docker compose
     'tabulate>=0.8.2',  # required in cli
     'smart_open',  # required in cli
