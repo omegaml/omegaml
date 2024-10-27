@@ -6,8 +6,9 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr
 from pathlib import Path
+
+from omegaml.util import dict_merge, markup, inprogress, tryOr
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
@@ -35,12 +36,19 @@ OMEGA_MONGO_COLLECTION = 'omegaml'
 OMEGA_BUCKET_FS_LEGACY = False
 #: determine if we should use SSL for mongodb and rabbitmq
 OMEGA_USESSL = truefalse(os.environ.get('OMEGA_USESSL', False))
+#: MongoClient ServerSelectionTimeoutMS
+OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
 #: additional kwargs for mongodb SSL connections
 OMEGA_MONGO_SSL_KWARGS = {
     'tls': OMEGA_USESSL,
     'tlsCAFile': os.environ.get('CA_CERTS_PATH') or None,
     'uuidRepresentation': 'standard',
     'authSource': 'admin',
+    # https://pymongo.readthedocs.io/en/4.8.0/migrate-to-pymongo4.html#directconnection-defaults-to-false
+    'directConnection': True,
+    'socketTimeoutMS': OMEGA_MONGO_TIMEOUT,  # since 4.10
+    'connectTimeoutMS': OMEGA_MONGO_TIMEOUT,  # since 4.10
+    'serverSelectionTimeoutMS': OMEGA_MONGO_TIMEOUT,
 }
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
@@ -196,8 +204,6 @@ OMEGA_LOG_PYTHON = False
 OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-#: MongoClient ServerSelectionTimeoutMS
-OMEGA_MONGO_TIMEOUT = int(os.environ.get('OMEGA_MONGO_TIMEOUT') or 2500)
 #: tracking providers
 OMEGA_TRACKING_PROVIDERS = {
     'simple': 'omegaml.backends.tracking.OmegaSimpleTracker',
@@ -205,6 +211,7 @@ OMEGA_TRACKING_PROVIDERS = {
     'profiling': 'omegaml.backends.tracking.OmegaProfilingTracker',
     'notrack': 'omegaml.backends.tracking.NoTrackTracker',
 }
+#: monitoring providers
 OMEGA_MONITORING_PROVIDERS = {
     'models': 'omegaml.backends.monitoring.ModelDriftMonitor',
     'data': 'omegaml.backends.monitoring.DataDriftMonitor',
