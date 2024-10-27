@@ -22,6 +22,11 @@
   <!-- Specific CSS goes HERE -->
   {% block stylesheets %}
   {% endblock stylesheets %}
+  <script>
+    (function () {
+      window._flr = JSON.parse(atob("{{encoded_routes }}"));
+    })();
+  </script>
 </head>
 
 <body>

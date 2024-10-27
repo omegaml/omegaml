@@ -1,8 +1,14 @@
-from flask import current_app, jsonify
+import base64
+import json
+import logging
+from flask import current_app, jsonify, url_for
 from flask_migrate import Migrate
-from functools import wraps
+from functools import wraps, cache
 from pathlib import Path
+from urllib.parse import unquote
 from werkzeug.exceptions import abort
+
+logger = logging.getLogger(__name__)
 
 
 def configure_database(db, app):
@@ -53,3 +59,38 @@ def json_abort(status_code, message=None, data=None):
     response = jsonify(data or {'error': message})
     response.status_code = status_code
     abort(response)
+
+
+def js_routes(app):
+    """ return a base64 encoded dict of routes for js use
+
+    Usage:
+        1. Call this in your flask.create_app function:
+            js_routes(app)
+        2. Add this snippet to your template:
+            var routes = JSON.parse(atob('{{ view.js_routes }}'));
+            window.url_for = function(name) { return routes[name]; }
+        3. Use the url_for function in your js code:
+            var myUrl = url_for('my_view');
+    """
+
+    @cache
+    def encode_routes():
+        routes = {}
+        for rule in app.url_map.iter_rules():
+            try:
+                # Check if the rule has arguments
+                if rule.arguments:
+                    # You can create a placeholder for required parameters
+                    routes[rule.endpoint] = url_for(rule.endpoint, **{arg: f"{{{arg}}}" for arg in rule.arguments})
+                else:
+                    routes[rule.endpoint] = url_for(rule.endpoint)
+                routes[rule.endpoint] = unquote(routes[rule.endpoint])
+            except:
+                logger.warn(f'cannot encode route {rule}')
+        return base64.b64encode(json.dumps(routes).encode()).decode()
+
+    @app.context_processor
+    def inject_routes():
+        # This function will be called for every request and will inject the encoded routes into the template context
+        return dict(encoded_routes=encode_routes())

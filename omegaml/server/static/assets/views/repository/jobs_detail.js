@@ -9,7 +9,9 @@ $(function () {
   $("#results-tab").on("shown.bs.tab", function (e) {
     resultsViewer ? resultsViewer.ajax.reload() : null;
     resultsViewer = $("#results-viewer").DataTable({
-      ajax: `/jobs/runs/${context.name}`,
+      ajax: url_for("omega-server.jobs_api_list_runs", {
+        name: context.name,
+      }),
       retrieve: true, // if already initialized, return the instance
       serverSide: true,
       search: {
@@ -25,7 +27,10 @@ $(function () {
         {
           data: "results",
           render: function (data, type, row, meta) {
-            return `<a class="job-result" result-url="/jobs/${data}" href="/jobs/${data}">${data}</a>`;
+            const result_url = url_for("omega-server.jobs_api_get_results", {
+              name: data.replace("results/", ""),
+            });
+            return `<a class="job-result" result-url="${result_url}" href="${result_url}">${data}</a>`;
           },
         },
         { data: "ts" },
@@ -65,7 +70,9 @@ $(function () {
       events: {
         "cron:selected": function (event, data) {
           $.ajax({
-            url: `/jobs/schedule/${context.name}`,
+            url: url_for("omega-server.jobs_api_set_schedule", {
+              name: context.name,
+            }),
             type: "POST",
             data: JSON.stringify({
               cron: data.cron,
@@ -87,7 +94,9 @@ $(function () {
     scheduleViewer = $("#schedule-viewer").DataTable({
       retrieve: true, // if already initialized, return the instance
       ajax: {
-        url: `/jobs/schedule/${context.name}`,
+        url: url_for("omega-server.jobs_api_get_schedule", {
+          name: context.name,
+        }),
         dataSrc: function (data) {
           console.debug("schedule data", data);
           return data.data.triggers;

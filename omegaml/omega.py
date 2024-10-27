@@ -63,7 +63,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self._monitor = None  # will be created by .status() on first access
 
     def __repr__(self):
-        return 'Omega()'.format()
+        return f'Omega(bucket={self.bucket})'
 
     def _clone(self, **kwargs):
         return self.__class__(defaults=self.defaults,
@@ -89,12 +89,12 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     def _make_monitor(self):
         import weakref
         from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
-        status_logger = lambda: self.runtime.experiment('.system')
+        status_logger = self.runtime.experiment('.system')
         for_keys = lambda event, keys: {k: event[k] for k in keys if k in event}
-        on_status = lambda event: (status_logger().use().log_event('monitor', event['check'],
-                                                                   for_keys(event,
-                                                                            ('status', 'message', 'error',
-                                                                             'elapsed')))
+        on_status = lambda event: (status_logger.use().log_event('monitor', event['check'],
+                                                                 for_keys(event,
+                                                                          ('status', 'message', 'error',
+                                                                           'elapsed')))
                                    if event['check'] == 'health' else None)
         monitor = LunaMonitor(checks=OmegaMonitors.on(self), on_status=on_status, interval=15)
         weakref.finalize(self, monitor.stop)

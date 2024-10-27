@@ -17,8 +17,9 @@
                 <div class="page-header-title"></div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
-                    <a href="/"><i class="feather icon-home"></i></a>
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
                   </li>
+
                   <li class="breadcrumb-item">
                     <a href="javascript:">{{ segment | title }}</a>
                   </li>
@@ -120,7 +121,8 @@
                   </div>
                   <div class="tab-pane fade" id="restapi-content" role="tabpanel" aria-labelledby="restapi-tab">
                     <div class="embed-responsive embed-responsive-16by9">
-                      <iframe class="embed-responsive-item" src="/api/docs" allowfullscreen></iframe>
+                      <iframe class="embed-responsive-item" src="{{ url_for('omega-api.api_docs') }}"
+                        allowfullscreen></iframe>
                     </div>
                   </div>
                   <div class="tab-pane fade" id="database-content" role="tabpanel" aria-labelledby="database-tab">

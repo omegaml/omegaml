@@ -10,8 +10,8 @@ from omegaml.server.flaskview import route, FlaskView
 class OmegaViewMixin:
     @property
     def om(self):
-        om = flask.current_app.current_om;
-        return om[self.bucket]
+        om = flask.current_app.current_om = flask.current_app.current_om[self.bucket];
+        return om
 
     @property
     def bucket(self):

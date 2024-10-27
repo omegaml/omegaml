@@ -3,7 +3,7 @@ $(document).ready(function () {
   let refreshInterval = null;
   $("#list-table").DataTable();
   $("#logviewer").DataTable({
-    ajax: "/runtime/log",
+    ajax: url_for("omega-server.runtime_api_get_log"),
     serverSide: true,
     search: {
       return: true,
@@ -24,7 +24,7 @@ $(document).ready(function () {
   $("#worker-modal").on("shown.bs.modal", function (e) {
     function refresh() {
       $.ajax({
-        url: "/runtime/worker/" + workerId,
+        url: url_for("omega-server.runtime_worker", { name: workerId }),
         success: function (data) {
           $("#worker-modal .modal-title").text(data.id);
           $("#worker-modal .modal-body").html(data);

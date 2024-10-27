@@ -1,4 +1,5 @@
 import os
+from flask import Flask
 
 import omegaml as om
 from omegaml.server.app import create_app
@@ -11,5 +12,6 @@ if __name__ == '__main__':
     print(f"[INFO] starting omega-ml server at http://{host}:{port}/")
     print(f"[INFO] status check is {'enabled' if SHOULD_STATUS_CHECK else 'disabled'}")
     om.status(wait=True) if SHOULD_STATUS_CHECK else None
-    app = create_app()
+    app = Flask(__name__)
+    app = create_app(server=app, url_prefix='/apps/dashboard')
     app.run(host=host, port=port, debug=True)

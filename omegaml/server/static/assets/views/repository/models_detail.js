@@ -40,7 +40,10 @@ $(function () {
           topEnd: "paging",
         },
         ajax: {
-          url: `/tracking/experiment/data/${exp}?&since=${since}&end=${end}&summary=1`,
+          url:
+            url_for("omega-server.tracking_api_experiment_data", {
+              name: exp,
+            }) + `?&since=${since}&end=${end}&summary=1`,
           type: "GET",
         },
         columns: columns,
@@ -50,7 +53,10 @@ $(function () {
     function showRunCards(exp) {
       const since = dateRangeView.model.get("startDate");
       const end = dateRangeView.model.get("endDate");
-      gridView.collection.url = `/tracking/experiment/data/${exp}?&since=${since}&end=${end}&summary=1`;
+      gridView.collection.url =
+        url_for("omega-server.tracking_api_experiment_data", {
+          name: exp,
+        }) + `?&since=${since}&end=${end}&summary=1`;
       gridView.collection.fetch({ reset: true });
       gridView.render();
     }
@@ -62,7 +68,10 @@ $(function () {
       const since = dateRangeView.model.get("startDate");
       const end = dateRangeView.model.get("endDate");
       $.ajax({
-        url: `/tracking/experiment/data/${exp}?initialize=1&summary=1&since=${since}&end=${end}`,
+        url:
+          url_for("omega-server.tracking_api_experiment_data", {
+            name: exp,
+          }) + `?initialize=1&summary=1&since=${since}&end=${end}`,
         type: "GET",
         success: function (json) {
           var headers = json.columns || Object.keys(json.data[0]);
@@ -95,7 +104,9 @@ $(function () {
       selected = selected.map((row) => row.run);
       $.ajax({
         dataType: "json",
-        url: `/tracking/experiment/plot/${exp}?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
+        url:
+          url_for("omega-server.tracking_api_plot_metrics", { name: exp }) +
+          `?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
         success: function (data) {
           $("#exptable").hide();
           $("#expchart").show();
@@ -138,7 +149,9 @@ $(function () {
     function plotmonitor({ model, column, since }) {
       $.ajax({
         dataType: "json",
-        url: `/tracking/monitor/plot/${model}?column=${column}&since=${since}`,
+        url:
+          url_for("omega-server.tracking_api_plot_monitor", { model: model }) +
+          `?column=${column}&since=${since}`,
         success: function (data) {
           $("#monplot").attr("src", "data:image/png;base64," + data["image"]);
         },
@@ -153,7 +166,9 @@ $(function () {
       const model = metadata.name;
       $.ajax({
         dataType: "json",
-        url: `/tracking/monitor/compare/${model}`,
+        url: url_for("omega-server.tracking_api_compare_monitor", {
+          model: model,
+        }),
         success: function (data) {
           var columns = data.columns;
           var dropdown = $(".dropdown-menu.mon.column.items");

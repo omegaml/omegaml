@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-import weakref
 from celery import Celery
 from celery.events import EventReceiver
 from copy import deepcopy
@@ -88,7 +87,7 @@ class OmegaRuntime(object):
     def __init__(self, omega, bucket=None, defaults=None, celeryconf=None):
         from omegaml.util import settings
 
-        self.omega = weakref.proxy(omega)
+        self.omega = omega
         defaults = defaults or settings()
         self.bucket = bucket
         self.pure_python = getattr(defaults, 'OMEGA_FORCE_PYTHON_CLIENT', False)

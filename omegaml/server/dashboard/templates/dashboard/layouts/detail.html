@@ -20,10 +20,10 @@
                 <div class="page-header-title"></div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
-                    <a href="/"><i class="feather icon-home"></i></a>
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="/{{ segment }}">{{ segment | title }}</a>
+                    <a href="{{ url_for('omega-server.index') }}/{{ segment }}">{{ segment | title }}</a>
                   </li>
                   <li class="breadcrumb-item">
                     <a href="javascript:">{{ name }}</a>
@@ -148,7 +148,7 @@
       }
     };
     $.ajax({
-      url: '/{{segment}}/{{meta.name}}/update',
+      url: url_for('omega-server.index') + '/{{segment}}/{{meta.name}}/update',
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',

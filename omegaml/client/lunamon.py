@@ -93,8 +93,7 @@ class LunaMonitor:
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
         report = {c: (self._status[c]['status']
                       if not data else dict(self._status[c]))
-                  for c in checks}
-        report[('health')] = 'ok' if self.healthy() else 'pending'
+                  for c in checks if c != 'healthy'}
         if by_status:
             data, report = report, defaultdict(list)
             for check, status in data.items():
@@ -150,7 +149,7 @@ class LunaMonitor:
             raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
         return True
 
-    def healthy(self, check=None, timeout=0):
+    def healthy(self, check=None, timeout=0, ignore=None):
         """ check if all checks are ok
 
         Args:
@@ -161,7 +160,8 @@ class LunaMonitor:
         Returns:
             bool: True if all checks are ok, False otherwise
         """
-        checks = check or [k for k in self.checks.keys() if k != 'health']
+        ignore = [ignore] if isinstance(ignore, str) else (ignore or [])
+        checks = check or [k for k in self.checks.keys() if k not in ignore]
         try:
             self.assert_ok(checks, timeout=timeout)
         except AssertionError:
@@ -271,7 +271,7 @@ class LunaMonitor:
     def _run_checks(self, checks=None):
         self._logger.debug('running checks')
         for check, fn in (checks or self.checks.items()):
-            self._logger.debug(f'submitting check {check} using {fn}')
+            self._logger.debug(f'submitting check {check} on {fn.__self__.resource} using {fn}')
             if self._stop.wait(timeout=0):
                 break
             # add decorators to fn
@@ -349,7 +349,9 @@ class LunaMonitor:
                 for cb in self._callbacks['error']:
                     cb(status)
         except Exception as e:
-            self._logger.exception(f'failed to forward status due to {e}')
+            self._logger.exception(f'failed to forward status {status} due to {e}')
+        else:
+            self._logger.debug(f'forwarded status {status} ok')
 
     def _jitter(self, fn):
         # add jitter to avoid thundering herd problem
@@ -442,7 +444,7 @@ class LunaMonitorChecks:
         return monitor.active
 
     def check_health(self, monitor=None, **kwargs):
-        return monitor.healthy()
+        return monitor.healthy(ignore='health')
 
 
 class OmegaMonitors(LunaMonitorChecks):

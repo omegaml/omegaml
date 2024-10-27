@@ -17,7 +17,7 @@ class FlaskView:
         """ add routes to an app or blueprint"""
         for route, view, options in self.routes:
             kwargs = dict(options)
-            kwargs.pop('order', None) # drop order, it's not a valid kwarg to bp.add_url_rule()
+            kwargs.pop('order', None)  # drop order, it's not a valid kwarg to bp.add_url_rule()
             kwargs.update(
                 endpoint=kwargs.get('endpoint') or f'{self.segment}_{view}',
                 strict_slashes=kwargs.get('strict_slashes', False),
@@ -34,5 +34,5 @@ class FlaskView:
     def routes(self):
         """ return the list of route tuples (route, view, kwargs) """
         return (getattr(self.__class__, m)._fv_route
-                       for m in dir(self.__class__)
-                       if hasattr(getattr(self.__class__, m), '_fv_route'))
+                for m in dir(self.__class__)
+                if hasattr(getattr(self.__class__, m), '_fv_route'))

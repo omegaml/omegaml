@@ -15,7 +15,7 @@ class RuntimeView(BaseView):
                                segment='runtime',
                                items=workers,
                                attributes={},
-                               buckets=['default'])
+                               buckets=self.buckets)
 
     @fv.route('/runtime/worker/<name>')
     def worker(self, name):
@@ -79,6 +79,7 @@ class RuntimeView(BaseView):
 
     @fv.route('/runtime/status/plot/health')
     def api_status_plot_health(self):
+        # FIXME replace dummy data with monitoring data (.system experiment)
         import plotly.express as px
         from plotly.io import json
         import pandas as pd
@@ -95,24 +96,20 @@ class RuntimeView(BaseView):
     def api_status_plot_uptime(self):
         import plotly.express as px
         import pandas as pd
-        from random import sample
-        long_df = pd.DataFrame({
-            'date': pd.date_range('1.1.2024', '31.1.2024'),
-            'status': [sample(['failed', 'healthy'], 1, counts=(2, 29))[0] for i in range(0, 31)],
-            'count': [1] * 31,
-        })
         om = self.om
         sysexp = om.runtime.experiment('.system')
         logdf = sysexp.data(event='monitor')
-        if logdf is None:
-            logdf = long_df
         # group by day and determine health status
-        grouped = logdf.groupby(logdf['dt'].dt.date).agg(
-            status=('value', lambda x: 'healthy' if sum(d['status'] == 'ok' for d in x) / len(x) > 0.01 else 'failed'),
-            count=('value', 'size')  # count of events
-        ).reset_index()
-        # rename columns for plotting
-        dailydf = grouped.rename(columns={'dt': 'date'})
+        if len(logdf) > 0:
+            grouped = logdf.groupby(logdf['dt'].dt.date).agg(
+                status=(
+                    'value', lambda x: 'healthy' if sum(d['status'] == 'ok' for d in x) / len(x) > 0.01 else 'failed'),
+                count=('value', 'size')  # count of events
+            ).reset_index()
+            # rename columns for plotting
+            dailydf = grouped.rename(columns={'dt': 'date'})
+        else:
+            dailydf = pd.DataFrame(columns=['date', 'status', 'count'])
         # create full range
         end_date = datetime.utcnow()
         date_range = pd.date_range(end=end_date,

@@ -2,11 +2,9 @@
 <header class="navbar pcoded-header navbar-expand-lg navbar-light">
   <div class="m-header">
     <a class="mobile-menu" id="mobile-collapse1" href="javascript:"><span></span></a>
-    <a href="/" class="b-brand">
+    <a href="{{ url_for('omega-server.index_index') }}" class="b-brand">
       <div class="b-bg">
-        <img class="img-fluid"
-             src="/static/assets/images/logo-thumb.png"
-             alt="Datta Able Logo">
+        <img class="img-fluid" src="/static/assets/images/logo-thumb.png" alt="Datta Able Logo">
       </div>
       <span class="b-title">omega-ml</span>
     </a>
@@ -17,27 +15,25 @@
   <div class="collapse navbar-collapse">
     <ul class="navbar-nav mr-auto">
       <li>
-        <a href="javascript:"
-           class="full-screen"
-           onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize"></i></a>
+        <a href="javascript:" class="full-screen" onclick="javascript:toggleFullScreen()"><i
+            class="feather icon-maximize"></i></a>
       </li>
       <li class="nav-item dropdown">
-        <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown">{{ session['bucket'] | default("default", true) }}</a>
+        <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown">{{ session['bucket'] | default("default",
+          true) }}</a>
         <ul class="dropdown-menu">
           {% for bucket in buckets %}
-            <li>
-              <a class="dropdown-item" href="/index?bucket={{ bucket }}">{{ bucket }}</a>
-            </li>
+          <li>
+            <a class="dropdown-item" href="{{ url_for('omega-server.index_index') }}?bucket={{ bucket }}">{{ bucket
+              }}</a>
+          </li>
           {% endfor %}
         </ul>
       </li>
       <li class="nav-item">
         <div class="main-search">
           <div class="input-group">
-            <input type="text"
-                   id="m-search"
-                   class="form-control"
-                   placeholder="Search . . .">
+            <input type="text" id="m-search" class="form-control" placeholder="Search . . .">
             <a href="javascript:" class="input-group-append search-close">
               <i class="feather icon-x input-group-text"></i>
             </a>
@@ -57,7 +53,8 @@
       </li>
       <li>
         <div class="dropdown">
-          <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown"><i class="icon feather icon-bell"></i></a>
+          <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown"><i
+              class="icon feather icon-bell"></i></a>
           <div class="dropdown-menu dropdown-menu-right notification">
             <div class="noti-head">
               <h6 class="d-inline-block m-b-0">Notifications</h6>
@@ -72,12 +69,12 @@
               </li>
               <li class="notification">
                 <div class="media">
-                  <img class="img-radius"
-                       src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
-                       alt="Generic placeholder image">
+                  <img class="img-radius" src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
+                    alt="Generic placeholder image">
                   <div class="media-body">
                     <p>
-                      <strong>John Doe</strong><span class="n-time text-muted"><i class="icon feather icon-clock m-r-10"></i>30 min</span>
+                      <strong>John Doe</strong><span class="n-time text-muted"><i
+                          class="icon feather icon-clock m-r-10"></i>30 min</span>
                     </p>
                     <p>New ticket Added</p>
                   </div>
@@ -88,12 +85,12 @@
               </li>
               <li class="notification">
                 <div class="media">
-                  <img class="img-radius"
-                       src="{{ config.ASSETS_ROOT }}/images/user/avatar-2.jpg"
-                       alt="Generic placeholder image">
+                  <img class="img-radius" src="{{ config.ASSETS_ROOT }}/images/user/avatar-2.jpg"
+                    alt="Generic placeholder image">
                   <div class="media-body">
                     <p>
-                      <strong>Joseph William</strong><span class="n-time text-muted"><i class="icon feather icon-clock m-r-10"></i>30 min</span>
+                      <strong>Joseph William</strong><span class="n-time text-muted"><i
+                          class="icon feather icon-clock m-r-10"></i>30 min</span>
                     </p>
                     <p>Prchace New Theme and make payment</p>
                   </div>
@@ -101,12 +98,12 @@
               </li>
               <li class="notification">
                 <div class="media">
-                  <img class="img-radius"
-                       src="{{ config.ASSETS_ROOT }}/images/user/avatar-3.jpg"
-                       alt="Generic placeholder image">
+                  <img class="img-radius" src="{{ config.ASSETS_ROOT }}/images/user/avatar-3.jpg"
+                    alt="Generic placeholder image">
                   <div class="media-body">
                     <p>
-                      <strong>Sara Soudein</strong><span class="n-time text-muted"><i class="icon feather icon-clock m-r-10"></i>30 min</span>
+                      <strong>Sara Soudein</strong><span class="n-time text-muted"><i
+                          class="icon feather icon-clock m-r-10"></i>30 min</span>
                     </p>
                     <p>currently login</p>
                   </div>
@@ -126,9 +123,7 @@
           </a>
           <div class="dropdown-menu dropdown-menu-right profile-notification">
             <div class="pro-head">
-              <img src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg"
-                   class="img-radius"
-                   alt="User-Profile-Image">
+              <img src="{{ config.ASSETS_ROOT }}/images/user/avatar-1.jpg" class="img-radius" alt="User-Profile-Image">
               <span>{{ current_user.username }}</span>
               <a href="/auth-signin" class="dud-logout" title="Logout">
                 <i class="feather icon-log-out"></i>
@@ -136,19 +131,18 @@
             </div>
             <ul class="pro-body">
               <li>
-              <a href="/profile" class="dropdown-item"><i class="feather icon-user"></i>
-            Profile</a>
-          </li>
-          <li>
-            <a href="{{ url_for("authentication_blueprint.logout") }}"
-               class="dropdown-item">
-              <i class="feather icon-lock"></i> Logout</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </li>
-</ul>
-</div>
+                <a href="/profile" class="dropdown-item"><i class="feather icon-user"></i>
+                  Profile</a>
+              </li>
+              <li>
+                <a href="{{ url_for('authentication_blueprint.logout') }}" class="dropdown-item">
+                  <i class="feather icon-lock"></i> Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
 </header>
 <!-- [ Header ] end -->

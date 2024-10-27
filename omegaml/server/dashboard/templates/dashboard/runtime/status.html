@@ -40,9 +40,9 @@
         <!-- Health overall -->
         <div class="col-12 mb-4">
           <div
-            class="alert alert-{{ 'success' if data.health == 'ok' else 'danger' }} d-flex justify-content-between align-items-center mb-0">
-            <strong>Overall System Health: {{ data.health.upper() }}</strong>
-            <span class="badge badge-light">{{ '✓' if data.health == 'ok' else '✗' }}</span>
+            class="alert alert-{{ 'success' if data.health.status == 'ok' else 'danger' }} d-flex justify-content-between align-items-center mb-0">
+            <strong>Overall System Health: {{ data.health.status.upper() }}</strong>
+            <span class="badge badge-light">{{ '✓' if data.health.status == 'ok' else '✗' }}</span>
           </div>
         </div>
         <!-- Service cards row -->
@@ -75,7 +75,8 @@
                       {{ "%.3f" % details.elapsed | float }}
                     </p>
                     <p class="card-text mb-0 text-muted">
-                      <small>Last updated: <span data-timestamp="{{ details.timestamp }}"></span></small>
+                      <small>Last updated: <span data-timestamp="{{ details.timestamp }}">{{ details.timestamp
+                          }}</span></small>
                     </p>
                   </div>
                 </div>

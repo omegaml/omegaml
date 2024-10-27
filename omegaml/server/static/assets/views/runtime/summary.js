@@ -17,24 +17,36 @@ $(document).ready(function () {
   // show service status
   function refresh() {
     showservicestatus();
-    plotchart("#uptime-chart", "/runtime/status/plot/uptime");
+    plotchart(
+      "#uptime-chart",
+      url_for("omega-server.runtime_api_status_plot_uptime")
+    );
   }
   function showservicestatus() {
-    $("#status-chart").load("/runtime/status?title=false", function () {
-      $("#status-chart .collapse").collapse({
-        toggle: false, // Ensures collapse is properly initialized but doesn't auto-toggle
-      });
-      $("#status-chart .card-header").on("click", function () {
-        $(this).next(".collapse").collapse("toggle");
-      });
-    });
+    $("#status-chart").load(
+      url_for("omega-server.runtime_status") + "?title=false",
+      function () {
+        $("#status-chart .collapse").collapse({
+          toggle: false, // Ensures collapse is properly initialized but doesn't auto-toggle
+        });
+        $("#status-chart .card-header").on("click", function () {
+          $(this).next(".collapse").collapse("toggle");
+        });
+      }
+    );
   }
   $("#summary-tab").on("shown.bs.tab", function (e) {
     refresh();
   });
   $("#database-tab").on("shown.bs.tab", function (e) {
-    plotchart("#dbstats-chart", "/runtime/database/dbstats/plot");
-    plotchart("#repostats-chart", "/runtime/database/repostats/plot");
+    plotchart(
+      "#dbstats-chart",
+      url_for("omega-server.runtime_api_runtime_dbstats_plot")
+    );
+    plotchart(
+      "#repostats-chart",
+      url_for("omega-server.runtime_api_runtime_repostats_plot")
+    );
   });
   // initial and autorefresh
   setInterval(function () {
