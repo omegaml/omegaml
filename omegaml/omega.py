@@ -153,9 +153,12 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     def _get_bucket(self, bucket):
         # enable patching in testing
-        bucket = None if (not bucket or bucket == 'default') else bucket
-        if bucket is None or self.bucket == bucket:
+        if bucket is None or bucket == self.bucket or (bucket == 'default' and self.bucket is None):
             return self
+        if bucket == 'default':
+            # actual bucket selection is a responsibility of the store, thus we pass None
+            # (it is for good reason: OmegaStore should be instantiatable without giving a specific bucket)
+            bucket = None
         return self._clone(bucket=bucket)
 
 
