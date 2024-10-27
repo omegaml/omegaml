@@ -1,0 +1,25 @@
+<!-- page is injected inside summary.html modal, we don't need to load base.html, just content -->
+{% block content %}
+<div class="row">
+  <div class="col-md-12 col-xl-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Load</h5>
+      </div>
+      <div class="card-block">
+        <div id="x-worker-status-chart"></div>
+        <ul>
+          {% for key, value in status.items() %}
+          <h5>{{ key | title }}</h5>
+          <p>{{ value }}</p>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/views/runtime/worker_detail.js') }}"></script>
+{% endblock javascripts %}

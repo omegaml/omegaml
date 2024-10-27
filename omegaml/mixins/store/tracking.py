@@ -93,8 +93,9 @@ class UntrackableMetadataMixin:
         return not store.prefix in ('models/')
 
     def link_experiment(self, name, experiment, **kwargs):
+        warnings.warn('link_experiment is not supported for {self.prefix} store')
         return self.metadata(name)
 
     def link_monitor(self, name, experiment, **kwargs):
-        warnings.warn('link_monitor not supported for {self.prefix} store')
+        warnings.warn('link_monitor is not supported for {self.prefix} store')
         return self.metadata(name)

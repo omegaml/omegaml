@@ -1,4 +1,5 @@
 import logging
+import warnings
 from pymongo import MongoClient as RealMongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 from time import sleep
@@ -57,12 +58,14 @@ def mongo_url(om, drop_kwargs=None):
 
 def waitForConnection(client):
     _exc = None
-    command = client.admin.command
-    for i in range(100):
+    # adopted from https://pymongo.readthedocs.io/en/4.10.1/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient.server_info
+    for i in range(10):
         try:
             # The ping command is cheap and does not require auth.
-            command('ping')
-        except (ConnectionFailure, AutoReconnect) as e:
+            import pymongo
+            client.admin.command('ping')
+        except (ConnectionFailure, AutoReconnect, AssertionError) as e:
+            warnings.warn('Connection to MongoDB failed. Retrying in 0.01s')
             sleep(0.01)
             _exc = e
         else:

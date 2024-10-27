@@ -1,0 +1,68 @@
+# a standard logging configuration for commercial environments
+# -- logs as json
+# -- see https://docs.python.org/3/library/logging.config.html
+logging:
+  version: 1
+  # incremental
+  # -- if True, existing loggers are not disabled
+  # -- if False, existing loggers are disabled (default)
+  # notes:
+  # -- False may silence loggers that you would normally see
+  #    Effectively, interactive=False means "enable only the loggers I've configured"
+  #incremental: false
+  # disable_existing_loggers
+  # -- if True, existing loggers are not disabled
+  # -- if False, existing loggers are disabled (default)
+  #disable_existing_loggers: false
+  formatters:
+    text:
+      # https://docs.python.org/3/library/logging.html#logrecord-attributes
+      format: "{asctime} {levelname} {server} {app} {hostname} {message}"
+      style: "{"
+    json:
+      class: pythonjsonlogger.jsonlogger.JsonFormatter
+      format: "{asctime} {levelname} {app} {hostname} {message} {server} {msg}"
+      style: "{"
+  filters:
+    requestContext:
+      (): omegaml.server.logutil.requestContextFilter
+      mapping:
+        # variable: source (capital = env var)
+        server: hostname
+        home: HOME
+      extra:
+        app: APP
+  handlers:
+    console:
+      class: logging.StreamHandler
+      stream: ext://sys.stdout
+      formatter: text
+      level: DEBUG
+      filters:
+        - requestContext
+  loggers:
+    # specify all loggers you want configured
+    root:
+      handlers:
+        - console
+      level: ERROR
+    gunicorn:
+      handlers:
+        - console
+      level: INFO
+    werkzeug:
+      handlers:
+        - console
+      level: INFO
+    flask:
+      handlers:
+        - console
+      level: INFO
+    apphub:
+      handlers:
+        - console
+      level: DEBUG
+    omegaml.client.lunamon:
+      handlers:
+        - console
+      level: ERROR

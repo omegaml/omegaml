@@ -683,6 +683,36 @@ class StoreTests(unittest.TestCase):
             raised = True
         self.assertFalse(raised)
 
+    def test_drop_many(self):
+        data = {
+            'a': list(range(1, 10)),
+            'b': list(range(1, 10))
+        }
+        df = pd.DataFrame(data)
+        store = OmegaStore()
+        store.put(df, 'foo', as_hdf=True)
+        store.put(df, 'fox')
+        # drop multiple objects
+        # -- get a report
+        results = store.drop('fo*', report=True)
+        self.assertEqual(results, {'foo': True, 'fox': True})
+        self.assertEqual(store.list('foo'), [])
+        self.assertEqual(store.list('fox'), [])
+        # -- just drop, as usually expect true or false
+        store.put(df, 'foo', as_hdf=True)
+        store.put(df, 'fox')
+        self.assertTrue(store.drop('fo*', report=True))
+        self.assertEqual(store.list('foo'), [])
+        self.assertEqual(store.list('fox'), [])
+        with self.assertRaises(DoesNotExist):
+            store.drop('bo*')
+        try:
+            store.drop('bo*', force=True)
+            raised = False
+        except:
+            raised = True
+        self.assertFalse(raised)
+
     def test_list_raw(self):
         data = {
             'a': list(range(1, 10)),

@@ -7,11 +7,10 @@ import atexit
 import logging
 import os
 import pymongo
-import sys
 import weakref
 from datetime import datetime
 from time import sleep
-from tqdm import tqdm
+from yaspin import yaspin
 
 from omegaml.util import inprogress
 
@@ -94,8 +93,7 @@ class LunaMonitor:
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
         report = {c: (self._status[c]['status']
                       if not data else dict(self._status[c]))
-                  for c in checks}
-        report[('health')] = 'ok' if self.healthy() else 'pending'
+                  for c in checks if c != 'healthy'}
         if by_status:
             data, report = report, defaultdict(list)
             for check, status in data.items():
@@ -138,19 +136,20 @@ class LunaMonitor:
     def active(self):
         return self._monitor_thread.is_alive() and not self._stop.is_set()
 
-    def assert_ok(self, check=None, timeout=0):
+    def assert_ok(self, check=None, timeout=None):
         from time import sleep
         checks = [check] if isinstance(check, str) else (check or self.checks.keys())
-        timeout = timeout or sys.float_info.min
-        while timeout:
-            check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
-            if all(check_ok(c) for c in checks):
-                return True
-            sleep(timeout) if timeout > sys.float_info.min else None
-            timeout = None
-        raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        timeout = timeout if timeout is not None else 0
+        check_ok = lambda c: self._status.get(c, {}).get('status') == 'ok'
+        all_checks_ok = lambda: all(check_ok(c) for c in checks)
+        while not all_checks_ok() and timeout > 0:
+            sleep(.1)
+            timeout -= .1
+        if not all_checks_ok():
+            raise AssertionError(f'checking {checks} failed due to {self.failed()} failing')
+        return True
 
-    def healthy(self, check=None, timeout=0):
+    def healthy(self, check=None, timeout=0, ignore=None):
         """ check if all checks are ok
 
         Args:
@@ -161,7 +160,8 @@ class LunaMonitor:
         Returns:
             bool: True if all checks are ok, False otherwise
         """
-        checks = check or [k for k in self.checks.keys() if k != 'health']
+        ignore = [ignore] if isinstance(ignore, str) else (ignore or [])
+        checks = check or [k for k in self.checks.keys() if k not in ignore]
         try:
             self.assert_ok(checks, timeout=timeout)
         except AssertionError:
@@ -174,12 +174,11 @@ class LunaMonitor:
         Returns:
             None
         """
-        t = tqdm(desc='waiting for checks to be ok', unit='checks', total=len(self.checks))
-        while not self.healthy():
-            active = len(self.checks) - len(self.failed())
-            t.update(active - t.n)
-            t.set_postfix_str(','.join(self.failed()))
-            sleep(1)
+        with yaspin(text='waiting for checks to be ok', color='yellow') as t:
+            while not self.healthy():
+                services = ','.join(self.failed())
+                t.text = f"waiting for dependencies {services}"
+                sleep(.5)
 
     def notify(self, on_error=None, on_status=None):
         """ add a callback to be notified on error or status
@@ -272,7 +271,7 @@ class LunaMonitor:
     def _run_checks(self, checks=None):
         self._logger.debug('running checks')
         for check, fn in (checks or self.checks.items()):
-            self._logger.debug(f'submitting check {check} using {fn}')
+            self._logger.debug(f'submitting check {check} on {fn.__self__.resource} using {fn}')
             if self._stop.wait(timeout=0):
                 break
             # add decorators to fn
@@ -304,16 +303,19 @@ class LunaMonitor:
             exc = None
             status = 'ok'
             msg = f'check {check} was successful'
+            rc = 0
         elif bool(rc) is False or exc:
             # bool(rc) is False or an exception was raised, i.e. failed
             status = 'failed'
             msg = f'check {check} failed with {exc}'
             data = rc
+            rc = 1
         else:
             # we should never get here
             status = 'failed'
             msg = f'check {check} failed with {exc} and rc={rc} [weird]'
             data = rc
+            rc = 9
         self._record_status(check, status, msg=msg, exc=exc, rc=rc, data=data, elapsed=elapsed)
 
     def _record_status(self, check, status, msg=None, exc=None, rc=None, data=None, elapsed=None):
@@ -333,20 +335,23 @@ class LunaMonitor:
         # forward a copy of the status so our buffer cannot be modified
         status = dict(status)
         status['check'] = check
+        # TODO add a timeout so we don't block on forwarding failures
         self._forward_status(status)
         return status
 
     def _forward_status(self, status):
         try:
             state = status['status']
-            if state == 'ok':
+            if state in ('ok', 'failed'):
                 for cb in self._callbacks['status']:
                     cb(status)
-            elif state == 'failed':
+            if state == 'failed':
                 for cb in self._callbacks['error']:
                     cb(status)
         except Exception as e:
-            self._logger.exception(f'failed to forward status due to {e}')
+            self._logger.exception(f'failed to forward status {status} due to {e}')
+        else:
+            self._logger.debug(f'forwarded status {status} ok')
 
     def _jitter(self, fn):
         # add jitter to avoid thundering herd problem
@@ -439,7 +444,7 @@ class LunaMonitorChecks:
         return monitor.active
 
     def check_health(self, monitor=None, **kwargs):
-        return monitor.healthy()
+        return monitor.healthy(ignore='health')
 
 
 class OmegaMonitors(LunaMonitorChecks):
@@ -457,9 +462,22 @@ class OmegaMonitors(LunaMonitorChecks):
                 # -- however broker may still fail
                 # -- hence we check the broker instead
                 self.om.runtime.celeryapp.control.ping()
+                loadavg = os.getloadavg()
+                workers = [{
+                    'name': 'local',
+                    'status': 'running',
+                    'activity': f'{loadavg[0]}% / 1',
+                }]
             else:
                 # -- for a remote runtime we submit a ping
                 self.om.runtime.ping(timeout=.1, source='monitor')
+                status = self.om.runtime.status()
+                workers = [{
+                    'name': worker,
+                    'status': 'running' if len(info['processes']) > 0 else 'idle',
+                    'activity': f'{info["loadavg"][0]}% / {len(info["processes"])}',
+                } for worker, info in status.items()]
+            return workers
 
     def check_database(self, monitor=None, **kwargs):
         with pymongo.timeout(monitor.timeout):

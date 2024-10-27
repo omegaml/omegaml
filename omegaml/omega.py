@@ -1,16 +1,11 @@
-import logging
 import os
-import weakref
 from uuid import uuid4
 
 from omegaml.util import inprogress
 from ._version import version
-from .client.lunamon import LunaMonitor, OmegaMonitors
 from .mixins.store.requests import CombinedStoreRequestCache
 from .store.combined import CombinedOmegaStoreMixin
 from .store.logging import OmegaSimpleLogger
-
-logger = logging.getLogger(__name__)
 
 
 class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
@@ -68,7 +63,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self._monitor = None  # will be created by .status() on first access
 
     def __repr__(self):
-        return 'Omega()'.format()
+        return f'Omega(bucket={self.bucket})'
 
     def _clone(self, **kwargs):
         return self.__class__(defaults=self.defaults,
@@ -92,18 +87,40 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def _make_monitor(self):
-        monitor = LunaMonitor(checks=OmegaMonitors.on(self))
+        import weakref
+        from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
+        status_logger = self.runtime.experiment('.system')
+        for_keys = lambda event, keys: {k: event[k] for k in keys if k in event}
+        on_status = lambda event: (status_logger.use().log_event('monitor', event['check'],
+                                                                 for_keys(event,
+                                                                          ('status', 'message', 'error',
+                                                                           'elapsed')))
+                                   if event['check'] == 'health' else None)
+        monitor = LunaMonitor(checks=OmegaMonitors.on(self), on_status=on_status, interval=15)
         weakref.finalize(self, monitor.stop)
         return monitor
 
-    def status(self, data=False):
+    def status(self, check=None, data=False, by_status=False, wait=False):
+        """ get the status of the omegaml cluster
+
+        Args:
+            check (str): the check to run, e.g. 'storage', 'runtime'
+            data (bool): return the monitoring data for the check
+            by_status (bool): return data by status
+            wait (bool): wait for the check to complete
+
+        Returns:
+            dict 
+        """
         if self._monitor is None:
             # we defer the creation of the monitor to the first access
             # -- this is to avoid creating a monitor for every instance
             # -- e.g. in runtime where the instance is created for short-lived tasks,
             #    the monitor would be created and immediately gc'd
             self._monitor = self._make_monitor()
-        return self._monitor.status(data=data)
+        if wait:
+            self._check_connections()
+        return self._monitor.status(check=check, data=data, by_status=by_status)
 
     def _check_connections(self):
         return self._monitor.wait_ok()
@@ -136,9 +153,12 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     def _get_bucket(self, bucket):
         # enable patching in testing
-        bucket = None if (not bucket or bucket == 'default') else bucket
-        if bucket is None or self.bucket == bucket:
+        if bucket is None or bucket == self.bucket or (bucket == 'default' and self.bucket is None):
             return self
+        if bucket == 'default':
+            # actual bucket selection is a responsibility of the store, thus we pass None
+            # (it is for good reason: OmegaStore should be instantiatable without giving a specific bucket)
+            bucket = None
         return self._clone(bucket=bucket)
 
 
