@@ -17,5 +17,6 @@ MONGO_HTTP_URL=${MONGO_HTTP_URL:-http://$MONGO_SERVICE_HOST}
 pushd $script_dir/..
 python manage.py collectstatic --noinput
 waiton "waiting for mongodb" $MONGO_HTTP_URL
-python manage.py migrate
+# migrate should alwas be run by admin/init job
+# python manage.py migrate
 honcho start web

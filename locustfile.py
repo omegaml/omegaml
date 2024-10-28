@@ -33,7 +33,7 @@ class OmegaRestAPIUser(HttpUser):
             exp.track('myservice')
 
         env = AuthenticationEnv.active()
-        self.rest_auth = env.get_restapi_auth(om=om, qualifier='employee:live')
+        self.rest_auth = env.get_restapi_auth(om=om, qualifier='default')
 
 
 class measure:

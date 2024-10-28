@@ -1,7 +1,7 @@
 import logging
 from django.http import JsonResponse
-from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.http import HttpBadRequest
+from tastypie.exceptions import ImmediateHttpResponse, Unauthorized
+from tastypie.http import HttpBadRequest, HttpUnauthorized
 from uuid import uuid4
 
 from omegaml.backends.restapi.asyncrest import truefalse
@@ -32,6 +32,7 @@ class OmegaResourceMixin(object):
         a subclass to avoid conflicting dependencies (open source: Flask,
         commercial edition: Django).
     """
+
     # TODO this should be a subclass of omegaml.backends.restapi.OmegaResourceMixin
 
     def get_omega(self, bundle_or_request, reset=False):
@@ -64,8 +65,38 @@ class OmegaResourceMixin(object):
         return creds_resolver(request)
 
     def dispatch(self, request_type, request, **kwargs):
+        # this is called by either Resource.dispatch_list or Resource.dispatch_detail
         self._omega_instance = None
-        return super().dispatch(request_type, request, **kwargs)
+        try:
+            result = super().dispatch(request_type, request, **kwargs)
+        except Exception as e:
+            raise e
+        finally:
+            bundle = self.build_bundle(request=request)
+            self.is_authorized(request_type, [], bundle, **kwargs)
+        return result
+
+    def is_authorized(self, request_type, object_list, bundle, **kwargs):
+        # TODO: this is called by tastypiex.cqrsmixin.CQRSApiMixin
+        #       for all resources that derive from OmegaResourceMixin and have a @cqrsapi decorator
+        authorization = self._meta.authorization
+        object_list = object_list or [bundle.request.path]
+        if hasattr(authorization, 'is_authorized'):
+            # is_authorized is specific to permission authorization
+            # -- use the cqrsname as the action
+            auth_meth = getattr(authorization, 'is_authorized')
+            auth_args = request_type, object_list, bundle
+        else:
+            # fall back to standard authorization, using read_list or create_list
+            action = METHOD_ACTION_MAP.get(bundle.request.method)
+            action = f'{action}_list' if action else request_type
+            auth_meth = getattr(authorization, action)
+            auth_args = object_list, bundle
+        try:
+            result = auth_meth(*auth_args)
+        except Unauthorized as e:
+            raise ImmediateHttpResponse(HttpUnauthorized())
+        return result
 
     def pre_cqrs_dispatch(self, request, *args, **kwargs):
         # cqrsapi hook instead of Tastypie Resource.dispatch()
@@ -146,3 +177,14 @@ class OmegaResourceMixin(object):
     @property
     def _generic_service_resource(self):
         return GenericServiceResource(self._omega_instance, is_async=getattr(self, 'is_async', False))
+
+
+METHOD_ACTION_MAP = {
+    'GET': 'read',
+    'POST': 'create',
+    'PUT': 'update',
+    'PATCH': 'update',
+    'DELETE': 'delete',
+    'OPTIONS': 'read',
+    'HEAD': 'read',
+}

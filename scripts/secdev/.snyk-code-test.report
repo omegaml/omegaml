@@ -1,0 +1,104 @@
+
+Testing /home/patrick/projects/omegaml ...
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaee/tests/test_runtime.py, line 35 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 98 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 99 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 111 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 112 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 156 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 157 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 161 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 162 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Password Hash With Insufficient Computational Effort 
+   Path: omegaops/tests/test_omegaops.py, line 429 
+   Info: hashlib.md5 is insecure. Consider changing it to a secure hashing algorithm.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaops/tests/test_omegaops.py, line 55 
+   Info: Do not hardcode passwords in code. Found hardcoded password used in password.
+
+ ✗ [Low] Open Redirect 
+   Path: omegaweb/static/omegaweb/js/libs/backgrid-select-all/test/vendor/js/backbone.js, line 1407 
+   Info: Unsanitized input from the document location flows into replace, where it is used as an URL to redirect the user. This may result in an Open Redirect vulnerability.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaops/tests/test_omegaops.py, line 31 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in here.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaweb/tests/test_api_config.py, line 19 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in here.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaweb/tests/test_api_config.py, line 43 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in here.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaops/tests/test_omegaops.py, line 31 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in username.
+
+ ✗ [Low] Use of Hardcoded Credentials 
+   Path: omegaweb/tests/test_api_config.py, line 19 
+   Info: Do not hardcode credentials in code. Found hardcoded credential used in username.
+
+ ✗ [Low] Hardcoded Secret 
+   Path: omegaops/tests/test_events_logging.py, line 22 
+   Info: Avoid hardcoding values that are meant to be secret. Found a hardcoded string used in here.
+
+ ✗ [Medium] Regular Expression Denial of Service (ReDoS) 
+   Path: omegaweb/middleware.py, line 17 
+   Info: Unsanitized user input from an environment variable flows into re.compile, where it is used to build a regular expression. This may result in a Regular expression Denial of Service attack (reDOS).
+
+ ✗ [Medium] Use of Hardcoded Credentials 
+   Path: scripts/mongoinit.js, line 4 
+   Info: Do not hardcode passwords in code. Found hardcoded password used in pwd.
+
+ ✗ [Medium] Path Traversal 
+   Path: scripts/consolidate-requirements.py, line 50 
+   Info: Unsanitized input from a command line argument flows into open, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [High] Hardcoded Secret 
+   Path: config/env_global.py, line 21 
+   Info: Avoid hardcoding values that are meant to be secret. Found a hardcoded string used in here.
+
+
+✔ Test completed
+
+Organization:      omegaml-v5v
+Test type:         Static code analysis
+Project path:      /home/patrick/projects/omegaml
+
+Summary:
+
+  22 Code issues found
+  1 [High]   3 [Medium]   18 [Low] 
+
+

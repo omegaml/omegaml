@@ -1,26 +1,25 @@
 from unittest import mock
-from unittest.mock import MagicMock
 
 import datetime
 import hashlib
-import ssl
-from urllib.parse import urlparse
-from uuid import uuid4
-
 import pymongo
+import ssl
 from constance import config as constance_config
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.test.testcases import TestCase
 from kombu import Connection
 from pymongo.errors import PyMongoError, OperationFailure
+from unittest.mock import MagicMock
+from urllib.parse import urlparse
+from uuid import uuid4
 
 from landingpage.models import ServicePlan
 from omegaml.client.auth import AuthenticationEnv
 from omegaml.mongoshim import MongoClient
 from omegaml.util import settings as omsettings
 from omegaops import add_service_deployment, add_userdb, authorize_userdb, add_user, authorize_user_vhost, \
-    get_client_config
+    get_client_config, get_user_config
 from omegaops.tasks import run_user_scheduler
 
 
@@ -234,7 +233,7 @@ class OmegaOpsTests(TestCase):
         config = get_client_config(self.user, qualifier='default', view=True)
         self.assertIn('OMEGA_CELERY_CONFIG', config)
         self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL,)
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL, )
         self.assertIn('OMEGA_MONGO_URL', config)
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuser:dbpass@{parsed.hostname}:{parsed.port}/dbname'.format(**locals())
@@ -281,7 +280,7 @@ class OmegaOpsTests(TestCase):
         config = get_client_config(self.user, qualifier='foobar', view=True)
         self.assertIn('OMEGA_CELERY_CONFIG', config)
         self.assertIn('BROKER_URL', config['OMEGA_CELERY_CONFIG'])
-        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL,)
+        self.assertEqual(config['OMEGA_CELERY_CONFIG']['BROKER_URL'], site_config.BROKER_URL, )
         self.assertIn('OMEGA_MONGO_URL', config)
         parsed = urlparse(defaults.OMEGA_MONGO_URL)
         mongo_url = 'mongodb://dbuserX:dbpassX@{parsed.hostname}:{parsed.port}/dbnameX'.format(**locals())
@@ -427,7 +426,7 @@ class OmegaOpsTests(TestCase):
         # create first user
         user = self.user
         password = hashlib.md5(self.password.encode('utf-8')).hexdigest()
-        sched_group =  Group.objects.create(name='scheduler')
+        sched_group = Group.objects.create(name='scheduler')
         config = add_user(self.user.username, password)
         add_service_deployment(user, config)
         # no users are schedulers => no scheduling expected
@@ -456,10 +455,24 @@ class OmegaOpsTests(TestCase):
             run_user_scheduler()
         return mock_om
 
-
-
-
-
-
-
-
+    def test_get_user_config_no_qualifier(self):
+        # our new user should not have a plan deployment yet
+        ServicePlan.objects.create(name='omegaml')
+        self.assertIsNone(self.user.services.first())
+        # create a new plan and plan deployment
+        config = {
+            'services': {
+            },
+            'qualifiers': {
+                'default': {
+                    'mongodbname': 'dbname',
+                }
+            }}
+        add_service_deployment(self.user, config)
+        client_config = get_client_config(self.user, qualifier=None)
+        self.assertIsInstance(client_config, dict)
+        user_config = get_user_config(self.user, qualifier=None, view=False)
+        self.assertIsInstance(user_config, dict)
+        with self.assertRaises(AssertionError) as ex:
+            user_config = get_user_config(self.user, qualifier='None', view=False)
+        self.assertIn('no service available', str(ex.exception))

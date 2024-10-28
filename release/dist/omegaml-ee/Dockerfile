@@ -1,4 +1,4 @@
-FROM jupyter/base-notebook:ubuntu-22.04
+FROM quay.io/jupyter/base-notebook:ubuntu-22.04
 # based on https://jupyter-docker-stacks.readthedocs.io/en/latest/using/common.html
 # Ubuntu-20.04 is LTS version, see https://endoflife.date/ubuntu
 ENV GRANT_SUDO=yes

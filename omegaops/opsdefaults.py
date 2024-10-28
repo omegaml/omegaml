@@ -2,6 +2,7 @@ from os.path import basename
 
 import os
 import sys
+
 from omegaml import _base_config as omdefaults
 
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
@@ -20,6 +21,9 @@ USER_SCHEDULER_RATE = int(os.environ.get('OMEGA_USER_SCHEDULER_RATE', 15 * 60))
 RMQ_SCHEDULER_RATE = int(os.environ.get('OMEGA_RMQ_SCHEDULER_RATE', 15 * 60))
 #: task time limit
 TASK_TIME_LIMIT = int(os.environ.get('OMEGA_TASK_TIMELIMIT', 30 * 60))
+#: worker concurrency, defaults to 4
+WORKER_CONCURRENCY = int(os.environ.get('OMEGA_WORKER_CONCURRENCY', 4))
+WORKER_CONCURRENCY = WORKER_CONCURRENCY if WORKER_CONCURRENCY > 0 else os.cpu_count()
 
 OMEGA_CELERY_CONFIG = {
     'CELERYBEAT_SCHEDULE': {
@@ -54,6 +58,8 @@ OMEGA_CELERY_CONFIG = {
         "interval_step": 1,
         "interval_max": 5,
     },
+    # limit concurrency
+    'CELERYD_CONCURRENCY': WORKER_CONCURRENCY,
     # limit worker prefetch to one, increasing resilience in case of worker
     # issues
     'CELERYD_PREFETCH_MULTIPLIER': 1,
@@ -84,5 +90,5 @@ if any(m in [basename(arg) for arg in sys.argv[:3]]
 
 # allow overloading settings from EnvSettings
 from stackable import StackableSettings
-StackableSettings.load(globals())
 
+StackableSettings.load(globals())
