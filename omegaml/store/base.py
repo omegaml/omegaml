@@ -660,23 +660,41 @@ class OmegaStore(object):
                                    attributes=attributes,
                                    objid=objid).save()
 
-    def drop(self, name, force=False, version=-1, **kwargs):
+    def drop(self, name, force=False, version=-1, report=False, **kwargs):
         """
         Drop the object
 
-        :param name: The name of the object
+        :param name: The name of the object. If the name is a pattern it will
+           be expanded using .list(), and call .drop() on every obj found.
         :param force: If True ignores DoesNotExist exception, defaults to False
-            meaning this raises a DoesNotExist exception of the name does not
+            meaning this raises a DoesNotExist exception if the name does not
             exist
+        :param report: if True returns a dict name=>status, where status is True
+            if deleted, False if not deleted
         :return:    True if object was deleted, False if not.
-                    If force is True and
-                    the object does not exist it will still return True
+                    If force is True and the object does not exist it will still return True
         :raises: DoesNotExist if the object does not exist and ```force=False```
         """
-        backend = self.get_backend(name)
-        if backend is not None:
-            return backend.drop(name, force=force, version=version, **kwargs)
-        return self._drop(name, force=force, version=version)
+        is_pattern = '*' in name
+        objs = [name] if not is_pattern else self.list(name)
+        results = []
+        for name in objs:
+            try:
+                backend = self.get_backend(name)
+                if backend is not None:
+                    result = backend.drop(name, force=force, version=version, **kwargs)
+                else:
+                    result = self._drop(name, force=force, version=version)
+            except Exception as e:
+                results.append((name, False))
+                if not is_pattern:
+                    raise
+            else:
+                results.append((name, result))
+        if not objs:
+            result = self._drop(name, force=force, version=version)
+            results.append((name, result))
+        return dict(results) if report else len(results) > 0
 
     def _drop(self, name, force=False, version=-1, **kwargs):
         meta = self.metadata(name, version=version)
@@ -733,7 +751,7 @@ class OmegaStore(object):
                                            **kwargs)
         return None
 
-    def help(self, name_or_obj=None, kind=None, raw=False):
+    def help(self, name_or_obj=None, kind=None, raw=False, display=None, renderer=None):
         """ get help for an object by looking up its backend and calling help() on it
 
         Retrieves the object's metadata and looks up its corresponding backend. If the
@@ -746,6 +764,10 @@ class OmegaStore(object):
             raw (bool): optional, if True forces help to be the backend type of the object.
                 If False returns the attributes[docs] on the object's metadata, if available.
                 Defaults to False
+            display (fn): optional, callable for interactive display, defaults to help in
+                if sys.flags.interactive is True, else uses pydoc.render_doc with plaintext
+            renderer (fn): optional, the renderer= argument for pydoc.render_doc to use if
+                sys.flags.interactive is False and display is not provided
 
         Returns:
             * help(obj) if python is in interactive mode
@@ -753,12 +775,16 @@ class OmegaStore(object):
         """
         import sys
         import pydoc
-
+        interactive = bool(display) if display is not None else sys.flags.interactive
+        display = display or help
+        renderer = renderer or pydoc.plaintext
         obj = self._resolve_help_backend(name_or_obj=name_or_obj, kind=kind, raw=raw)
         if any(str(obj.__doc__).startswith(v) for v in ('https://', 'http://')):
-            import webbrowser
-            return webbrowser.open(obj.__doc__) if sys.flags.interactive else print(obj.__doc__)
-        return help(obj) if sys.flags.interactive else pydoc.render_doc(obj, renderer=pydoc.plaintext)
+            obj = obj.__doc__
+            if interactive and display is help:
+                import webbrowser
+                display = webbrowser.open
+        return display(obj) if interactive else pydoc.render_doc(obj, renderer=renderer)
 
     def _resolve_help_backend(self, name_or_obj=None, kind=None, raw=False):
         # helper so we can test help

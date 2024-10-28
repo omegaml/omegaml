@@ -1,7 +1,7 @@
-import os
-import warnings
 from http import HTTPStatus
 
+import os
+import warnings
 from omegaml import Omega
 
 
@@ -20,7 +20,12 @@ class OmegaTestMixin(object):
         for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
             part = getattr(om, element)
             drop = part.drop
-            [drop(m.name, force=True) for m in part.list(hidden=True, include_temp=True, raw=True)]
+            drop_kwargs = {}
+            if element == 'streams':
+                drop_kwargs = {'keep_data': False}
+            [drop(m.name,
+                  force=True,
+                  **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
             self.assertListEqual(part.list(hidden=True, include_temp=True), [])
 
     @property
@@ -79,5 +84,7 @@ def tf_perhaps_eager_execution(*args, **kwargs):
 
 
 def clear_om(om):
-    for omstore in (om.datasets, om.jobs, om.models):
-        [omstore.drop(name, force=True) for name in omstore.list()]
+    for bucket in om.buckets:
+        omx = om[bucket]
+        for omstore in (omx.datasets, omx.jobs, omx.models, omx.scripts, omx.streams):
+            [omstore.drop(name, force=True) for name in omstore.list(include_temp=True, hidden=True)]
