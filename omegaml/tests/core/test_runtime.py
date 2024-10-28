@@ -6,10 +6,6 @@ import pandas as pd
 import sys
 import unittest
 from numpy.testing import assert_array_almost_equal
-from omegaml import Omega
-from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import reshaped
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
@@ -20,6 +16,11 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
 from unittest.mock import patch
+
+from omegaml import Omega
+from omegaml.backends.virtualobj import virtualobj
+from omegaml.tests.util import OmegaTestMixin
+from omegaml.util import reshaped
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
@@ -516,6 +517,21 @@ class RuntimeTests(OmegaTestMixin, TestCase):
                   .predict('sample[x]')
                   .get())
         self.assertEqual(len(om.datasets.get('callback_results')), 2)
+
+    def test_bucket_switch(self):
+        om = Omega()
+        self.assertEqual(om.bucket, None, 'expected default bucket to be None')
+        omx = om['test']
+        self.assertEqual(om.bucket, None, 'expected original instanced to be unchanged')
+        self.assertEqual(omx.bucket, 'test', 'expected new instance to have bucket set')
+        omx = omx['default']
+        self.assertEqual(omx.bucket, None, 'expected new instance to have bucket reset')
+        omx = om[None]
+        self.assertEqual(omx.bucket, None)
+        omx = omx['test'][None]
+        self.assertEqual(omx.bucket, 'test')
+        omx = omx['test']['default']
+        self.assertEqual(omx.bucket, None, 'expected new instance to have bucket reset')
 
     def test_task_callback_bucket(self):
         om = Omega()
