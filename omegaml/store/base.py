@@ -84,12 +84,12 @@ from mongoengine.connection import disconnect, \
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
+from uuid import uuid4
+
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, \
     mongo_compatible, signature
-from uuid import uuid4
-
 from .queryops import sanitize_filter
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
@@ -193,7 +193,6 @@ class OmegaStore(object):
                                  password=password,
                                  connect=False,
                                  authentication_source='admin',
-                                 serverSelectionTimeoutMS=self.defaults.OMEGA_MONGO_TIMEOUT,
                                  **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
                                  )
             # since PyMongo 4, connect() no longer waits for connection
