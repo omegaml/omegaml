@@ -241,6 +241,9 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
             fields['result'] = AuthenticationEnv().active().resultauth(fields['result'])
         super().send_event(type, **fields)
 
+    # processing task outcome and flushing the tracking buffer improves task latency
+    # because celery only calls the on_* methods once the task results have been stored
+    # downside is we risk losing the tracking buffer contents in case of an exception
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:
             with self.tracking as exp:
