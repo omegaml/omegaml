@@ -1,84 +1,84 @@
 services:
-   omegaml:
-       image: omegaml/omegaml:latest
-       hostname: omegaml
-       ports:
-          - "5000:5000"
-          - "8899:8899"
-       links:
-          - rabbitmq
-          - mongodb
-       working_dir: /app
-       command: honcho start restapi notebook
-       environment:
-         - APP=omegaml
-         - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
-         - OMEGA_BROKER=amqp://rabbitmq:5672//
-         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
-         - OMEGA_CONFIG_FILE=/app/config.yml
-         - PYTHONPATH=/app/pylib
-         - PYTHONUNBUFFERED=1
-         - RESTARTABLE=yes
-         - JUPYTER_ENABLE_LAB=yes
-         - JUPYTER_PORT=8899
-         - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
-       volumes:
-         - pythonlib:/app/pylib
-   jyhub:
-       image: omegaml/omegaml:latest
-       user: root
-       hostname: jyhub
-       ports:
-          - "8000:8000"
-          - "8050-8060:8050-8060"
-       links:
-          - omegaml
-          - rabbitmq
-          - mongodb
-       working_dir: /app
-       command: honcho start jupyterhub
-       environment:
-         - APP=omegaml
-         - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
-         - OMEGA_BROKER=amqp://rabbitmq:5672//
-         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
-         - OMEGA_CONFIG_FILE=/app/config.yml
-         - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
-         - PYTHONPATH=/app/pylib
-         - PYTHONUNBUFFERED=1
-       volumes:
-         - pythonlib:/app/pylib
-   worker:
-       image: omegaml/omegaml:latest
-       hostname: worker
-       links:
-          - rabbitmq
-          - mongodb
-       working_dir: /app
-       command: honcho start worker scheduler
-       environment:
-         - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
-         - OMEGA_BROKER=amqp://rabbitmq:5672//
-         - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
-         - C_FORCE_ROOT=yes
-         - OMEGA_CONFIG_FILE=/app/config.yml
-         - PYTHONPATH=/app/pylib
-         - PYTHONUNBUFFERED=1
-       volumes:
-       - pythonlib:/app/pylib
-   rabbitmq:
-       image: rabbitmq:3.11.15
-       hostname: rabbitmq
-       ports:
-          - 5672:5672
-   mongodb:
-       image: mongo:5.0.9-focal
-       hostname: mongodb
-       ports:
-          - 27017:27017
-       environment:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: foobar
+  omegaml:
+    image: omegaml/omegaml:latest
+    hostname: omegaml
+    ports:
+      - "5000:5000"
+      - "8899:8899"
+    links:
+      - rabbitmq
+      - mongodb
+    working_dir: /app
+    command: honcho start restapi notebook
+    environment:
+      - APP=omegaml
+      - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
+      - OMEGA_BROKER=amqp://rabbitmq:5672//
+      - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
+      - OMEGA_CONFIG_FILE=/app/config.yml
+      - PYTHONPATH=/app/pylib
+      - PYTHONUNBUFFERED=1
+      - RESTARTABLE=yes
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_PORT=8899
+      - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
+    volumes:
+      - pythonlib:/app/pylib
+  jyhub:
+    image: omegaml/omegaml:latest
+    user: root
+    hostname: jyhub
+    ports:
+      - "8000:8000"
+      - "8050-8060:8050-8060"
+    links:
+      - omegaml
+      - rabbitmq
+      - mongodb
+    working_dir: /app
+    command: honcho start jupyterhub
+    environment:
+      - APP=omegaml
+      - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
+      - OMEGA_BROKER=amqp://rabbitmq:5672//
+      - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
+      - OMEGA_CONFIG_FILE=/app/config.yml
+      - JUPYTER_PASSWORD=sha1:24fa20fec60f:c7cd7e46afa507d484c59abeadbefa05022583b8
+      - PYTHONPATH=/app/pylib
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - pythonlib:/app/pylib
+  worker:
+    image: omegaml/omegaml:latest
+    hostname: worker
+    links:
+      - rabbitmq
+      - mongodb
+    working_dir: /app
+    command: honcho start worker scheduler
+    environment:
+      - OMEGA_MONGO_URL=mongodb://admin:foobar@mongodb/omega
+      - OMEGA_BROKER=amqp://rabbitmq:5672//
+      - OMEGA_FRAMEWORKS=scikit-learn,keras,tensorflow
+      - C_FORCE_ROOT=yes
+      - OMEGA_CONFIG_FILE=/app/config.yml
+      - PYTHONPATH=/app/pylib
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - pythonlib:/app/pylib
+  rabbitmq:
+    image: rabbitmq:3.11.15
+    hostname: rabbitmq
+    ports:
+      - 5672:5672
+  mongodb:
+    image: mongo:7.0
+    hostname: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: foobar
 
 volumes:
-   pythonlib:
+  pythonlib:
