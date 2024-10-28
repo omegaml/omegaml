@@ -7,13 +7,14 @@ import platform
 import pymongo
 import warnings
 from base64 import b64encode, b64decode
-from datetime import datetime, date
+from datetime import date
 from itertools import chain
-from omegaml.backends.tracking.base import TrackingProvider
-from omegaml.documents import Metadata
-from omegaml.util import _raise, ensure_index, batched, signature
 from typing import Iterable
 from uuid import uuid4
+
+from omegaml.backends.tracking.base import TrackingProvider
+from omegaml.documents import Metadata
+from omegaml.util import _raise, ensure_index, batched, signature, tryOr
 
 
 class NoTrackTracker(TrackingProvider):
@@ -377,8 +378,9 @@ class OmegaSimpleTracker(TrackingProvider):
             key (str|list): the key(s) to include
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
-            since (datetime): only return data since this date. If both since and run are specified,
-               run is ignored and all runs since the date are returned
+            since (datetime|timedelta|str): only return data since this date. If both since and run are specified,
+               run is ignored and all runs since the date are returned. If since is a string it must be parseable
+               by pd.to_datime, or be given in the format '<n><unit:[smhdwMqy]>', or a timedelta object.
             end (datetime): only return data until this date
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
                note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
@@ -473,14 +475,29 @@ class OmegaSimpleTracker(TrackingProvider):
         if valid(key):
             filter['data.key'] = op(key)
         if valid(since):
-            if isinstance(since, datetime):
-                since = since.isoformat()
-            filter['data.dt'] = {'$gte': str(since)}
+            dtnow = getattr(self, '_since_dtnow', datetime.utcnow())
+            if isinstance(since, str):
+                since = tryOr(lambda: pd.to_datetime(since), lambda: dtrelative('-' + since, now=dtnow))
+            elif isinstance(since, timedelta):
+                since = dtnow - since
+            elif isinstance(since, datetime):
+                since = since
+            else:
+                raise ValueError(
+                    f'invalid since value: {since}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
+            filter['data.dt'] = {'$gte': str(since.isoformat())}
         if valid(end):
-            if isinstance(end, datetime):
-                end = end.isoformat()
+            if isinstance(end, str):
+                end = dtrelative('+' + end) if end[0] in ('+', '-') else end
+            elif isinstance(end, timedelta):
+                end = getattr(self, '_since_dtnow', datetime.utcnow()) + end
+            elif isinstance(end, datetime):
+                end = end
+            else:
+                raise ValueError(
+                    f'invalid end value: {end}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
             filter['data.dt'] = filter.setdefault('data.dt', {})
-            filter['data.dt']['$lte'] = str(end)
+            filter['data.dt']['$lte'] = str(end.isoformat())
         for k, v in extra.items():
             if valid(v):
                 fk = f'data.{k}'
@@ -604,3 +621,56 @@ class OmegaSimpleTracker(TrackingProvider):
 
         restored = self.restore_artifacts(run=run, key=key, event=event, since=since, **extra)
         return restored if not concat else _concat(restored)
+
+
+from datetime import datetime, timedelta
+
+
+def dtrelative(delta, now=None, as_delta=False):
+    """ return a datetime relative to now
+
+    Args:
+        delta (str|timedelta): the relative delta, if a string, specify as '[+-]<n><unit:[smhdwMqy]>',
+          e.g. '1d' for one day, '-1d' for one day ago, '+1d' for one day from now. Special cases:
+          '-0y' means the beginning of the current year, '+0y' means the end of the current year.
+        now (datetime): the reference datetime, defaults to datetime.utcnow()
+        as_delta (bool): if True, returns a timedelta object, otherwise a datetime object
+
+    Returns:
+        datetime|timedelta: the relative datetime or timedelta
+    """
+    # Parse the numeric part and the unit from the specifier
+    UNIT_MAP = {'s': 1,  # 1 second
+                'm': 60,  # 1 minute
+                'h': 60 * 60,  # 1 hour
+                'd': 24 * 60 * 60,  # 1 day
+                'w': 7 * 24 * 60 * 60,  # 1 week
+                'n': 30 * 24 * 60 * 60,  # 1 month
+                'q': 90 * 24 * 60 * 60,  # 1 quarter
+                'y': 365 * 24 * 60 * 60}  # 1 year
+    now = now or datetime.utcnow()
+    error_msg = f"Invalid delta {delta}. Use a string of format '<n><unit:[hdwmqy]>' or timedelta object."
+    if isinstance(delta, str):
+        try:
+            past = delta.startswith('-')
+            delta = (delta
+                     .replace('-', '')
+                     .replace('+', '')  # Remove the sign
+                     .replace(' ', '')  # Remove spaces
+                     .replace('M', 'n')  # m is ambiguous, so we use n for month
+                     .lower())
+            num = int(delta[:-1])  # The numeric part
+            units = UNIT_MAP.get(delta[-1])  # The last character
+            if delta[-1] == 'y' and num == 0:
+                # special case -0y means beginning of the year, +0y means end of the year
+                dtdelta = (datetime(now.year, 1, 1) - now) if past else (datetime(now.year, 12, 31) - now)
+            else:
+                dtdelta = timedelta(seconds=num * units * (-1 if past else 1))
+        except:
+            raise ValueError(error_msg)
+    elif isinstance(delta, timedelta):
+        dtdelta = delta
+        past = False
+    else:
+        raise ValueError(error_msg)
+    return now + dtdelta if not as_delta else dtdelta

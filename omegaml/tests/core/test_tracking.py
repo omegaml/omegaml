@@ -1,20 +1,20 @@
 import datetime
-
 import pandas as pd
 import platform
 import pymongo
 import unittest
 from numpy.testing import assert_almost_equal
-from omegaml import Omega
-from omegaml.backends.tracking.experiment import ExperimentBackend
-from omegaml.backends.tracking.profiling import OmegaProfilingTracker
-from omegaml.backends.tracking.simple import OmegaSimpleTracker
-from omegaml.documents import Metadata
-from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
-from omegaml.tests.util import OmegaTestMixin
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from time import sleep
+
+from omegaml import Omega
+from omegaml.backends.tracking.experiment import ExperimentBackend
+from omegaml.backends.tracking.profiling import OmegaProfilingTracker
+from omegaml.backends.tracking.simple import OmegaSimpleTracker, dtrelative
+from omegaml.documents import Metadata
+from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
+from omegaml.tests.util import OmegaTestMixin
 
 
 class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
@@ -531,6 +531,63 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(len(data), 1)
         data = exp.data(run=1, event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
         self.assertEqual(len(data), 5)
+
+    def test_since_delta_filter(self):
+        om = self.om
+        dt_start = dt = datetime.datetime.utcnow()
+        for i in range(0, 10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('acc', 0, dt=dt)
+                dt = dt + datetime.timedelta(hours=1)
+        exp.experiment._since_dtnow = dt
+        # all data since start
+        data = exp.data(event='metric', key='acc', since='10h')
+        self.assertEqual(len(data), 10)
+        # only last 5 hours
+        data = exp.data(event='metric', key='acc', since='5h')
+        self.assertEqual(len(data), 5)
+        # only last hour
+        data = exp.data(event='metric', key='acc', since='1h')
+        self.assertEqual(len(data), 1)
+        # all data since start - 1 hour
+        data = exp.data(event='metric', key='acc', since='-11h')
+        self.assertEqual(len(data), 10)
+        # make sure run=1 is ignored when since is set
+        data = exp.data(run=1, event='metric', key='acc')
+        self.assertEqual(len(data), 1)
+        data = exp.data(run=1, event='metric', key='acc', since='5h')
+        self.assertEqual(len(data), 5)
+
+    def test_dtrelative(self):
+        from datetime import datetime, timedelta
+        # Define a fixed 'now' for testing purposes
+        now = datetime(2024, 10, 16, 12, 0, 0)  # Oct 16, 2024, 12:00:00
+        # Test cases for each unit with positive and negative deltas
+        assert dtrelative("0h", now) == now
+        assert dtrelative("10s", now) == now + timedelta(seconds=10)  # Seconds
+        assert dtrelative("-10s", now) == now - timedelta(seconds=10)
+        assert dtrelative("5m", now) == now + timedelta(minutes=5)  # Minutes
+        assert dtrelative("-5m", now) == now - timedelta(minutes=5)
+        assert dtrelative("2h", now) == now + timedelta(hours=2)  # Hours
+        assert dtrelative("-2h", now) == now - timedelta(hours=2)
+        assert dtrelative("1d", now) == now + timedelta(days=1)  # Days
+        assert dtrelative("-1d", now) == now - timedelta(days=1)
+        assert dtrelative("1w", now) == now + timedelta(weeks=1)  # Weeks
+        assert dtrelative("-1w", now) == now - timedelta(weeks=1)
+        assert dtrelative("1n", now) == now + timedelta(days=30)  # Months (~30 days)
+        assert dtrelative("-1n", now) == now - timedelta(days=30)
+        assert dtrelative("1q", now) == now + timedelta(days=90)  # Quarters (~90 days)
+        assert dtrelative("-1q", now) == now - timedelta(days=90)
+        assert dtrelative("1y", now) == now + timedelta(days=365)  # Years (~365 days)
+        assert dtrelative("-1y", now) == now - timedelta(days=365)
+        assert dtrelative("0y", now) == datetime(now.year, 12, 31)  # Year end
+        assert dtrelative("-0y", now) == datetime(now.year, 1, 1)  # Year start
+        # Test case for timedelta input
+        assert dtrelative(timedelta(days=2), now) == now + timedelta(days=2)
+        with self.assertRaises(ValueError):
+            dtrelative("invalid", now)
+        with self.assertRaises(ValueError):
+            dtrelative("10x", now)
 
     def test_daterange_filter(self):
         om = self.om
