@@ -603,7 +603,7 @@ def extend_instance(obj, cls, *args, conditional=None, **kwargs):
     should_apply = True if not callable(conditional) else conditional(cls, obj)
     if should_apply and cls not in base_mro:
         base_cls = obj.__class__
-        base_cls_name = base_mro[-2].__name__
+        base_cls_name = base_cls.__name__
         obj.__class__ = type(base_cls_name, (cls, base_cls), {})
     if hasattr(obj, '_init_mixin'):
         obj._init_mixin(*args, **kwargs)
