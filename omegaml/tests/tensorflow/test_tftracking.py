@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 
 from omegaml import Omega
-from omegaml.backends.experiment import ExperimentBackend
+from omegaml.backends.tracking.experiment import ExperimentBackend
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
 
@@ -32,7 +32,7 @@ class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(exp.data(), pd.DataFrame)
         self.assertGreaterEqual(len(exp.data(key='loss')), 9)
         self.assertGreaterEqual(len(exp.data(key=['acc', 'accuracy'])), 9)
-        model_ = exp.restore_artifact('model')
+        model_ = exp.restore_artifacts('model')[-1]
         self.assertIsInstance(model, type(model_))
         # fit via runtime
         om.models.put(model, 'mymodel')

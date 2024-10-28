@@ -65,6 +65,7 @@ class OmegaSimpleTracker(TrackingProvider):
     _experiment = None
     _startdt = None
     _stopdt = None
+    _autotrack = False
 
     _ensure_active = lambda self, r: r if r is not None else _raise(
         ValueError('no active run, call .start() or .use() '))
@@ -105,6 +106,14 @@ class OmegaSimpleTracker(TrackingProvider):
         """
         self.active_run(run=run)
         return self
+
+    @property
+    def autotrack(self):
+        return self._autotrack
+
+    @autotrack.setter
+    def autotrack(self, value):
+        self._autotrack = value
 
     @property
     def _latest_run(self):
@@ -150,7 +159,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self.flush()
 
     def flush(self):
-        # passing list of list forces insert_many
+        # passing list of list, as_many=True => collection.insert_many() for speed
         if self.log_buffer:
             self._store.put(self.log_buffer, self._data_name,
                             noversion=True, as_many=True)
@@ -379,7 +388,7 @@ class OmegaSimpleTracker(TrackingProvider):
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
             since (datetime|timedelta|str): only return data since this date. If both since and run are specified,
-               run is ignored and all runs since the date are returned. If since is a string it must be parseable
+               run only matching runs since the date are returned. If since is a string it must be parseable
                by pd.to_datime, or be given in the format '<n><unit:[smhdwMqy]>', or a timedelta object.
             end (datetime): only return data until this date
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
@@ -432,8 +441,6 @@ class OmegaSimpleTracker(TrackingProvider):
                 run = [(r if r >= 0 else relative_run(r)) for r in run]
             elif isinstance(run, int) and run < 0:
                 run = relative_run(run)
-        else:
-            run = None
         filter = self._build_data_filter(experiment, run, event, step, key, since, end, extra)
 
         def read_data(cursor):
@@ -487,10 +494,11 @@ class OmegaSimpleTracker(TrackingProvider):
                     f'invalid since value: {since}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
             filter['data.dt'] = {'$gte': str(since.isoformat())}
         if valid(end):
+            dtnow = getattr(self, '_since_dtnow', datetime.utcnow())
             if isinstance(end, str):
-                end = dtrelative('+' + end) if end[0] in ('+', '-') else end
+                end = tryOr(lambda: pd.to_datetime(end), lambda: dtrelative('+' + end, now=dtnow))
             elif isinstance(end, timedelta):
-                end = getattr(self, '_since_dtnow', datetime.utcnow()) + end
+                end = dtnow + end
             elif isinstance(end, datetime):
                 end = end
             else:
@@ -670,7 +678,6 @@ def dtrelative(delta, now=None, as_delta=False):
             raise ValueError(error_msg)
     elif isinstance(delta, timedelta):
         dtdelta = delta
-        past = False
     else:
         raise ValueError(error_msg)
     return now + dtdelta if not as_delta else dtdelta

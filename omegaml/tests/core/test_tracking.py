@@ -526,10 +526,12 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # all data since start - 1 hour
         data = exp.data(event='metric', key='acc', since=dt_start - datetime.timedelta(hours=1))
         self.assertEqual(len(data), 10)
-        # make sure run=1 is ignored when since is set
+        # make sure run=1 is not ignored when since is set
         data = exp.data(run=1, event='metric', key='acc')
         self.assertEqual(len(data), 1)
         data = exp.data(run=1, event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
+        self.assertEqual(len(data), 0)
+        data = exp.data(run=None, event='metric', key='acc', since=dt_start + datetime.timedelta(hours=5))
         self.assertEqual(len(data), 5)
 
     def test_since_delta_filter(self):
@@ -552,11 +554,13 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # all data since start - 1 hour
         data = exp.data(event='metric', key='acc', since='-11h')
         self.assertEqual(len(data), 10)
-        # make sure run=1 is ignored when since is set
+        # make sure run=1 is not ignored when since is set
         data = exp.data(run=1, event='metric', key='acc')
         self.assertEqual(len(data), 1)
+        data = exp.data(run=1, event='metric', key='acc', since='11h')
+        self.assertEqual(len(data), 1)
         data = exp.data(run=1, event='metric', key='acc', since='5h')
-        self.assertEqual(len(data), 5)
+        self.assertEqual(len(data), 0)
 
     def test_dtrelative(self):
         from datetime import datetime, timedelta

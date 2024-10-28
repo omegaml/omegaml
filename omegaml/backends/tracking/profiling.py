@@ -147,6 +147,7 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
                     yield item
 
         if self.profile_logs:
+            # passing list of list, as_many=True => collection.insert_many() for speed
             self._store.put([item for item in log_items()], self._data_name,
                             index=['event'], as_many=True, noversion=True)
             self.profile_logs = []
