@@ -3,10 +3,73 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import ks_2samp, chisquare, wasserstein_distance
 
-from omegaml.util import ensure_list
+from omegaml.util import ensure_list, extend_instance
 
 
 class DriftStatsCalc:
+    """ Drift statistics calculator
+
+    The DriftStatsCalc class calculates drift statistics for two distributions.
+    The distributions can be either numeric or categorical. The calculator is
+    extensible by mixins, which can be added to the DriftStatsCalc instance.
+
+    The DriftStatsCalc class provides the following metrics:
+    * ks: two-sample Kolmogorov-Smirnov test for goodness of fit
+    * wasserstein: Wasserstein distance between two distributions
+    * chisquare: one-way chi-square test
+
+    The available metrics and their associated function can be queried
+    by calling DriftStatsCalc.metrics(). The metrics are grouped by kind,
+    either 'numeric' or 'categorical'. The metrics can be called by name
+    using DriftStatsCalc.metrics(kind)[metric_name], e.g. DriftStatsCalc.metrics('numeric')['ks'].
+
+    Args:
+        seed (int): the seed to use for reproducibility of drift statistics. This
+          sets the seed for the random number generator used for sampling histograms (default: 42),
+          using np.random.default_rng(seed=seed).
+
+    Usage:
+        # calculate drift statistics for two distributions
+        stats_calc = DriftStatsCalc()
+        stats_calc.metrics() -- get all metrics
+        stats_calc.metrics('numeric') -- get all numeric metrics
+        stats_calc.metrics('categorical') -- get all categorical metrics
+        ks = stats_calc.metrics('numeric')['ks']
+        result = ks(d1, d2) -- calculate the Kolmogorov-Smirnov statistic for d1, d2
+
+        # the result of any drift metric method is a dict with the following keys
+        result = {
+            'metric': 0.1, # the metric value
+            'score': 0.5, # the score of the metric (0.5 means no drift, 0 - 0.5 negative drift,
+                0.5 - 1 positive drift)
+            'drift': True, # a boolean indicating drift
+            'pvalue': 0.05, # the pvalue of the test
+            'location': 3, # location of the statistic
+        }
+
+        # add a mixin to the DriftStatsCalc instance
+        class MyCalcMixin:
+            def _initmixin(self):
+                # this method is called by the DriftStatsCalc constructor
+                self._metrics['numeric']['my_metric'] = self.my_metric
+
+            def my_metric(self, d1, d2):
+                return {
+                    'metric': ..., # the metric value
+                    'score': ..., # the score of the metric
+                    'drift': ..., # a boolean indicating drift
+                    'pvalue': ..., # the pvalue of the test
+                    'location': ..., # the location of the statistic
+                }
+
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+            mon.statscalc._apply_mixins([MyCalcMixin])
+
+        Alternatively, the DriftStatsCalc instance can be extended with mixins
+        specified in defaults.OMEGA_MONITOR_MIXINS['DriftStatsCalc'].
+    """
+
     def __init__(self, seed=42):
         # we use a fixed seed for reproducibility of drift statistics
         # -- self.rng is used to sample histograms
@@ -14,8 +77,30 @@ class DriftStatsCalc:
         # -- using a fixed seed allows for reproducibility
         # -- this does not
         self.rng = np.random.default_rng(seed=seed)
+        self._metrics = {
+            'numeric': {
+                'ks': self.ks_2samp,
+                'wasserstein': self.wasserstein_distance,
+            },
+            'categorical': {
+                'chisquare': self.chisquare,
+            },
+        }
+        self._apply_mixins()
 
-    def ks_2samp(self, d1, d2, ci=.95):
+    def _apply_mixins(self, mixins=None):
+        """
+        apply mixins in defaults.OMEGA_MONITOR_MIXINS
+        """
+        import omegaml as om
+        mixins = mixins or om.defaults.OMEGA_MONITORING_MIXINS.get('DriftStatsCalc', [])
+        for mixin in mixins:
+            extend_instance(self, mixin)
+
+    def metrics(self, kind=None):
+        return self._metrics.get(kind) if kind else self._metrics
+
+    def ks_2samp(self, d1, d2, ci=.95, **kwargs):
         # two-sample Kolmogorov-Smirnov test for goodness of fit
         # -- H0: d1, d2 are from the same distribution (=> no drift)
         # -- H1: alternative (=> drift)
@@ -32,7 +117,7 @@ class DriftStatsCalc:
             'location': result.statistic_location,
         }
 
-    def chisquare(self, d1, d2, ci=.99, sd=None):
+    def chisquare(self, d1, d2, ci=.99, sd=None, **kwargs):
         # one-way chi-square test
         # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
         # -- H1: alterantive (=> drift)
@@ -49,7 +134,7 @@ class DriftStatsCalc:
             'location': None,
         }
 
-    def wasserstein_distance(self, d1, d2, ci=.95, sd=None):
+    def wasserstein_distance(self, d1, d2, ci=.95, sd=None, **kwargs):
         # Wasserstein distance between two distributions
         # calculates a normalized distance between two distributions
         # -- normalized by the standard deviation of d1

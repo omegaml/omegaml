@@ -5,17 +5,18 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from numpy import random
-from omegaml.backends.monitoring.alerting import AlertRule
-from omegaml.backends.monitoring.datadrift import DataDriftMonitor
-from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
-from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries
-from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import OmegaTestMixin
 from pandas._testing import assert_frame_equal
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+from omegaml.backends.monitoring.alerting import AlertRule
+from omegaml.backends.monitoring.datadrift import DataDriftMonitor
+from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
+from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries, DriftStatsCalc
+from omegaml.backends.virtualobj import virtualobj
+from omegaml.tests.util import OmegaTestMixin
 
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
@@ -58,6 +59,35 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIn('stats', drift)
         self.assertEqual(drift['info']['seq'], [0, 0])
         self.assertEqual(drift['result']['drift'], False)
+
+    def test_driftstats_mixin(self):
+        om = self.om
+
+        class MyDriftStatsCalc(DriftStatsCalc):
+            def _init_mixin(self):
+                self._metrics['numeric'].update({
+                    'len': self.calc_len
+                })
+
+            def calc_len(self, d1, d2, **kwargs):
+                metric = (len(d1) - len(d2)) / sum([len(d1), len(d2)])
+                return {
+                    'metric': metric,
+                    'score': metric,
+                    'drift': metric > 0.1,
+                    'location': 0,
+                    'pvalue': 0,
+                }
+
+        with om.runtime.experiment('test') as exp:
+            mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
+            mon.statscalc._apply_mixins([MyDriftStatsCalc])
+
+        df = pd.DataFrame({
+            'x': np.random.uniform(0, 1, 100),
+        })
+        stats = mon.compare(d1=df, d2=df)
+        self.assertIn('len', stats.data[0]['stats']['x'])
 
     def test_dataframe_drift_groupby(self):
         om = self.om

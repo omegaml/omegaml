@@ -10,12 +10,14 @@ from omegaml.util import dict_merge, tryOr
 
 
 class DriftMonitorBase:
-    def __init__(self, resource=None, store=None, query=None, tracking=None, kind=None, **kwargs):
+    def __init__(self, resource=None, store=None, query=None, tracking=None, kind=None,
+                 statscalc=None, **kwargs):
         self.store = store
         self._resource = resource
         self._query = query or kwargs
         self._kind = kind
         self._data = None
+        self._statscalc = statscalc or DriftStatsCalc()
         self.tracking = tracking
         self.samples = [100, 1000]  # small and large sample sizes
         self.max_corr_columns = 50  # maximum number of columns for correlation calculation = 50
@@ -169,6 +171,18 @@ class DriftMonitorBase:
     @property
     def _drift_alert_key(self):
         return f'drift:{self._resource}'
+
+    @property
+    def statscalc(self):
+        if not hasattr(self, '_statscalc'):
+            self._statscalc = DriftStatsCalc()
+        return self._statscalc
+
+    @statscalc.setter
+    def statscalc(self, value):
+        self._statscalc = value
+        if hasattr(self._statscalc, '_init_mixin'):
+            self._statscalc._init_mixin()
 
     @property
     def data(self):
@@ -412,7 +426,7 @@ class DriftMonitorBase:
                     - 'metric' (float): the drift metric, 0 = no drift, > 0 = drift
                     - 'columns' (list): the columns that drifted
         """
-        calc = DriftStatsCalc()
+        calc = self.statscalc
         numeric_columns = s1['info']['num_columns']
         cat_columns = s1['info']['cat_columns']
         drift = {}
@@ -441,12 +455,9 @@ class DriftMonitorBase:
             d2 = calc.sample_from_hist(h2, e2, n=samples)
             cdf1 = calc.cdf_from_hist(h1, e1)
             cdf2 = calc.cdf_from_hist(h2, e2)
-            metrics[col] = {
-                # KS statistic, p_value
-                # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
-                'ks': calc.ks_2samp(d1, d2, ci=ci),
-                'wasserstein': calc.wasserstein_distance(d1, d2, ci=ci, sd=sd),
-            }
+            metrics.setdefault(col, {})
+            for metric, metric_fn in calc.metrics('numeric').items():
+                metrics[col][metric] = metric_fn(d1, d2, ci=ci, sd=sd)
             sample[col] = {
                 'd1': d1,
                 'd2': d2,
@@ -459,10 +470,9 @@ class DriftMonitorBase:
             g2v = np.array(list(g2.get(g, 0) for g in g1))
             d1 = (np.array(g1v) / np.sum(g1v)).round(decimals=99)
             d2 = (np.array(g2v) / np.sum(g2v)).round(decimals=99)
-            metrics[col] = {
-                # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html
-                'chisq': calc.chisquare(d1, d2, ci=ci),
-            }
+            metrics.setdefault(col, {})
+            for metric, metric_fn in calc.metrics('categorical').items():
+                metrics[col][metric] = metric_fn(d1, d2, ci=ci, sd=sd)
             sample[col] = {
                 'd1': d1,
                 'd2': d2,

@@ -219,6 +219,9 @@ OMEGA_MONITORING_PROVIDERS = {
     'default': 'omegaml.backends.monitoring.DataDriftMonitor',
 }
 OMEGA_MONITORING_DRIFT_INTERVAL = 24 * 60 * 60  # 24 hours
+OMEGA_MONITORING_MIXINS = {
+    # 'DriftStatsCalc': ['omegaml.backends.monitoring.base.DriftStatsCalcMixin'],
+}
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {
     'maxsize': 1,  # cache at most one session
