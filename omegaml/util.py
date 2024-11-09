@@ -1303,7 +1303,20 @@ def inprogress(text="running {fn}", **__kwargs):
     # print a message when entering a function
     # -- useful for debugging
     # -- use as a decorator
-    if not module_available('yaspin'):
+    def is_piped():
+        return not sys.stdout.isatty()
+
+    def is_running_in_jupyter():
+        try:
+            from IPython import get_ipython
+            return get_ipython() is not None
+        except ImportError:
+            return False
+
+    no_spinning = is_piped() or not module_available('yaspin')
+    should_spin = is_running_in_jupyter() or not is_piped() and module_available('yaspin')
+
+    if no_spinning and not should_spin:
         @contextmanager
         def yaspin(*args, text=None, **kwargs):
             logger.debug(text)

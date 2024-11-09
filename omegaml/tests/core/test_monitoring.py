@@ -129,7 +129,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot(run=1)
         mon.snapshot(run=range(1, 5))
         summary = mon.compare(seq='baseline').describe().reset_index()
-        self.assertEqual(set(summary['statistic'].values), {'ks', 'mean', 'wasserstein'})
+        self.assertEqual(set(summary['statistic'].values), {'ks', 'mean', 'wasserstein', 'jsd', 'kld'})
 
     def test_dataset_drift(self):
         om = self.om
@@ -552,7 +552,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         exp_drift_summary = {'columns': {'acc': True},
                              'info': {'metrics': ['acc'], 'seq': [[0, 1]]},
                              'summary': {'metrics': True},
-                             'score': {'metrics': 1.0}}
+                             'score': {'metrics': .895}}
         self.assertDictEqual({'event': 'drift',
                               'experiment': 'test',
                               'key': 'test',

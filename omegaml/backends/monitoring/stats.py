@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy.stats import ks_2samp, chisquare, wasserstein_distance
-
 from omegaml.util import ensure_list, extend_instance
+from scipy.stats import ks_2samp, wasserstein_distance, entropy, chisquare, chi2
 
 
 class DriftStatsCalc:
@@ -75,15 +74,20 @@ class DriftStatsCalc:
         # -- self.rng is used to sample histograms
         # -- sampling causes drift statistics to be different each time
         # -- using a fixed seed allows for reproducibility
-        # -- this does not
         self.rng = np.random.default_rng(seed=seed)
+        # metrics used to calculate the mean drift score
+        self.mean_metrics = ['ks', 'wasserstein', 'chisq']
+        # drift metrics
         self._metrics = {
             'numeric': {
                 'ks': self.ks_2samp,
                 'wasserstein': self.wasserstein_distance,
+                'kld': self.kl_divergence,
+                'jsd': self.js_divergence,
             },
             'categorical': {
-                'chisquare': self.chisquare,
+                'chisquare': self.chisquared_test,
+                'psi': self.psi,
             },
         }
         self._apply_mixins()
@@ -117,21 +121,68 @@ class DriftStatsCalc:
             'location': result.statistic_location,
         }
 
-    def chisquare(self, d1, d2, ci=.99, sd=None, **kwargs):
-        # one-way chi-square test
-        # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
-        # -- H1: alterantive (=> drift)
-        # -- H0 is rejected if pvalue < 1
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html#scipy.stats.chisquare
-        result = chisquare(f_obs=d2, f_exp=d1)
-        is_drift = result.pvalue < 1
-        score = abs(result.statistic)
+    def psi(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Population Stability Index (PSI)"""
+
+        def calculate_psi(expected, actual, bins=10):
+            hist_expected, _ = np.histogram(expected, bins=bins, density=True)
+            hist_actual, _ = np.histogram(actual, bins=bins, density=True)
+
+            hist_expected += 1e-10  # Avoid division by zero
+            hist_actual += 1e-10
+
+            psi_value = np.sum(
+                (hist_expected - hist_actual) * np.log(hist_expected / hist_actual)
+            )
+            return psi_value
+
+        psi_value = calculate_psi(baseline, target)
+        drift_detected = psi_value > 0.25  # typical threadhold
+        score = min(1, psi_value / 0.5)  # normalizing score to 0-1
         return {
-            'metric': result.statistic,
-            'score': score,
-            'drift': is_drift,
-            'pvalue': result.pvalue,
-            'location': None,
+            "drift": drift_detected,
+            "metric": psi_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
+        }
+
+    def kl_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Kullback-Leibler Divergence (KL)"""
+        hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
+        hist_target, _ = np.histogram(target, bins=100, density=True)
+
+        hist_baseline += 1e-10  # Avoid division by zero
+        hist_target += 1e-10
+
+        kl_value = entropy(hist_baseline, hist_target)
+        drift_detected = kl_value > 0.1  # Threshold for drift
+        score = min(1.0, kl_value / 1.0)  # Normalize score to 0-1
+
+        return {
+            "drift": drift_detected,
+            "metric": kl_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
+        }
+
+    def js_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Jensen-Shannon Divergence (JS)"""
+        hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
+        hist_target, _ = np.histogram(target, bins=100, density=True)
+        hist_baseline += 1e-10  # Avoid division by zero
+        hist_target += 1e-10
+        m = 0.5 * (hist_baseline + hist_target)
+        js_value = 0.5 * (entropy(hist_baseline, m) + entropy(hist_target, m))
+        drift_detected = js_value > 0.05  # Threshold for drift
+        score = min(1.0, js_value / 0.2)  # Normalize score to 0-1
+        return {
+            "drift": drift_detected,
+            "metric": js_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
         }
 
     def wasserstein_distance(self, d1, d2, ci=.95, sd=None, **kwargs):
@@ -145,12 +196,31 @@ class DriftStatsCalc:
         sd = sd or np.std(d1, ddof=1)
         wd = wasserstein_distance(d1, d2)
         score = min(wd / sd, 1)
-        is_drift = (score > ci)
+        is_drift = (score > (1 - ci))
         return {
             'metric': wd,
             'score': score,
             'drift': is_drift,
             'pvalue': None,
+            'location': None,
+        }
+
+    def chisquared_test(self, d1, d2, ci=.99, sd=None, **kwargs):
+        # one-way chi-square test
+        # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
+        # -- H1: alterantive (=> drift)
+        # -- H0 is rejected if pvalue < (1 - ci)
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html#scipy.stats.chisquare
+        result = chisquare(f_obs=d2, f_exp=d1)
+        is_drift = result.pvalue < (1 - ci)
+        # min-max normalize score to 0-1
+        # -- min is 0, .999 percentile is chi2.ppf(0.999, ddof)
+        score = min(result.statistic / chi2.ppf(0.999, len(d2) - 1), 1)
+        return {
+            'metric': result.statistic,
+            'score': score,
+            'drift': is_drift,
+            'pvalue': result.pvalue,
             'location': None,
         }
 
@@ -267,7 +337,7 @@ class DriftStats:
 
         Args:
             column (str): the column to filter by
-            statistic (str): the statistic to filter by
+            statistic (str): the statistic to filter by, defaults to 'mean'
             summary (bool): return a summary of drifted features
             raw (bool): return the raw drift statistics as a dict
             **query: additional query parameters
@@ -299,6 +369,7 @@ class DriftStats:
             * DriftMonitorBase.compare() for details on drift events, which are effectively logs
               of DriftStats.summary() results
         """
+        statistic = statistic or 'mean'
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
         if df.empty:
             result = {
@@ -308,8 +379,9 @@ class DriftStats:
             }
         else:
             # prepare summary
-            drifted = df['drift'] == True
-            drifted_seqs = (df[drifted][['seq_from', 'seq_to']]
+            drifted = df['drift']
+            dfx = df[drifted]
+            drifted_seqs = (dfx[['seq_from', 'seq_to']]
                             .drop_duplicates()
                             .apply(lambda v: [v['seq_from'], v['seq_to']], axis=1)
                             .tolist())
