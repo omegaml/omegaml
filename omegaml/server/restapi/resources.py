@@ -9,12 +9,11 @@ from flask import Blueprint, render_template, url_for
 from flask_restx import Resource, fields, Api
 from flask_restx.apidoc import apidoc
 from mongoengine import DoesNotExist
-from urllib.parse import unquote
-from werkzeug.exceptions import NotFound
-
 from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin, AsyncResponseMixin, resolve
 from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
 from omegaml.util import isTrue
+from urllib.parse import unquote, urljoin
+from werkzeug.exceptions import NotFound
 
 # required to get payload from request
 # -- see OmegaResourceMixin.get_query_payload
@@ -45,8 +44,12 @@ def create_app(url_prefix=None):
     omega_api = api = RemoteableSwaggerApi(omega_bp, doc='/api/doc', version='1.0',
                                            default='omegaml-restapi',
                                            default_label='omega-ml REST API')
-    omega_api.remote_specs_url = os.environ.get('OMEGA_RESTAPI_URL')
     apidoc.url_prefix = url_prefix
+    # set up swagger ui, if not local
+    # -- swagger.json is provided by the hub
+    hub_url = os.environ.get('OMEGA_RESTAPI_URL')
+    hub_api_uri = os.environ.get('OMEGA_RESTAPI_SPECS_URI', '/api/doc/v1/swagger/specs/swagger.json')
+    omega_api.remote_specs_url = urljoin(hub_url, hub_api_uri) if hub_url else None
 
     @omega_bp.route('/api/docs')
     def api_docs():

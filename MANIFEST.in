@@ -3,7 +3,7 @@ recursive-include docs/source *.rst *.css *.py *.png *.gif *.svg *.jpg
 recursive-include omegaml/tests/features *.feature
 recursive-include omegaml/notebook/jupyterhub *.jpg
 recursive-include omegaml/runtimes/rsystem *.R
-recursive-include omegaml/server/static *
+recursive-include omegaml/server/dashboard/static *
 recursive-include omegaml/server/dashboard/templates *
 include scripts
 include LICENSE

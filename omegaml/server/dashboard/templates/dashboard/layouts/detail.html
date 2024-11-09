@@ -64,6 +64,10 @@
                     <a class="nav-link text-uppercase" id="metadata-tab" data-toggle="tab" href="#metadata" role="tab"
                       aria-controls="metadata" aria-selected="false">Metadata</a>
                   </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="explain-tab" data-toggle="tab" href="#explain" role="tab"
+                      aria-controls="explain" aria-selected="false">explain</a>
+                  </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
                   <div class="tab-pane fade show active" id="docs" role="tabpanel" aria-labelledby="docs-tab">
@@ -90,7 +94,8 @@
                     </p>
                     <div id="jsoneditor" class="form-group" style="width: 100pct;
                                   height: 500px"></div>
-
+                  </div>
+                  <div class="tab-pane fade" id="explain" role="tabpanel" aria-labelledby="explain-tab">
                   </div>
                 </div>
               </div>
@@ -110,6 +115,7 @@
 <!-- toastui editor + plugins -->
 <script src="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor-all.min.js"></script>
 <script src="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor-plugin-code-syntax-highlight-all.min.js"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/detail.js') }}"></script>
 <script>
   // metadata editor
   var metadata = {{ meta | tojson }};

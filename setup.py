@@ -78,6 +78,7 @@ setup(
     name='omegaml',
     version=version,
     packages=find_packages(),
+    find_namespace_packages=False,
     include_package_data=True,
     data_files=[
         ('omegaml/docs', glob.glob('./docs/source/nb/*.ipynb')),
