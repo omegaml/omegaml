@@ -23,7 +23,9 @@ String.prototype.uri = function (path) {
 // -- see omegaml.server.util:js_routes()
 window.url_for = (endpoint, params = {}) => {
   try {
-    return (window._flr[endpoint] || "#").format(params).replace(/\/\//g, "/");
+    return (window._flr[endpoint] || "/404")
+      .format(params)
+      .replace(/\/\//g, "/");
   } catch (error) {
     console.error(`Failed to retrieve URL for endpoint: ${endpoint}`, error);
   }

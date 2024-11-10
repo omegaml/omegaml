@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from contextlib import contextmanager
 from flask import current_app, jsonify, url_for
 from functools import wraps, cache
 from pathlib import Path
@@ -96,3 +97,18 @@ def js_routes(app):
     def inject_routes():
         # This function will be called for every request and will inject the encoded routes into the template context
         return dict(encoded_routes=encode_routes())
+
+
+@contextmanager
+def stripblocks(trim_blocks=True, lstrip_blocks=True):
+    import flask
+    app = flask.current_app
+    original_trim = app.jinja_env.trim_blocks
+    original_lstrip = app.jinja_env.lstrip_blocks
+    app.jinja_env.trim_blocks = trim_blocks
+    app.jinja_env.lstrip_blocks = lstrip_blocks
+    try:
+        yield
+    finally:
+        app.jinja_env.trim_blocks = original_trim
+        app.jinja_env.lstrip_blocks = original_lstrip

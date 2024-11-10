@@ -119,6 +119,7 @@
 <script>
   // metadata editor
   var metadata = {{ meta | tojson }};
+  var segment = "{{ segment }}";
   $(function () {
     // initialize metadata editor
     var jsonEditor = new JSONEditor($('#jsoneditor')[0], {

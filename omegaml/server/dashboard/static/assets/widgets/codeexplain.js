@@ -24,7 +24,19 @@ class CodeExplain extends BaseView {
     let codeBlock = [];
     let isCode = false;
 
+    // Helper function to remove the minimum indentation from all lines in the code block
+    function normalizeIndentation(code) {
+      const lines = code.split("\n");
+      const indentLength = Math.min(
+        ...lines
+          .filter((line) => line.trim())
+          .map((line) => line.match(/^ */)[0].length)
+      );
+      return lines.map((line) => line.slice(indentLength)).join("\n");
+    }
+
     rstContent.split("\n").forEach((line) => {
+      line = line.sformat({ segment: segment, metadata: metadata });
       if (line.startsWith(".. code-block::")) {
         isCode = true;
         currentSection = line.split("::")[1].trim();
@@ -35,7 +47,9 @@ class CodeExplain extends BaseView {
         description = [];
         codeBlock = [];
       } else if (isCode && line.trim() === "" && codeBlock.length > 0) {
-        sections[currentSection].code = codeBlock.join("\n").trim();
+        sections[currentSection].code = normalizeIndentation(
+          codeBlock.join("\n")
+        );
         currentSection = null;
         codeBlock = [];
         isCode = false;
@@ -48,7 +62,9 @@ class CodeExplain extends BaseView {
       }
       // Store any remaining code block
       if (currentSection && codeBlock.length > 0) {
-        sections[currentSection].code = codeBlock.join("\n").trim();
+        sections[currentSection].code = normalizeIndentation(
+          codeBlock.join("\n")
+        );
       }
     });
 
@@ -56,68 +72,133 @@ class CodeExplain extends BaseView {
   }
 
   createDynamicSections(examples) {
-    const pillsContainer = this.$("#apiExamples");
-    const contentContainer = this.$("#apiExamplesContent");
+    const descriptionContainer = document.querySelector("#descriptionContent");
+    const pillsContainer = document.querySelector("#apiExamples");
+    const contentContainer = document.querySelector("#apiExamplesContent");
 
-    pillsContainer.html("");
-    contentContainer.html("");
+    // Clear existing content
+    descriptionContainer.innerHTML = "";
+    pillsContainer.innerHTML = "";
+    contentContainer.innerHTML = "";
 
+    // Language display names
     const languageNames = {
       python: "Python",
       bash: "cURL",
       yaml: "Swagger",
     };
 
-    Object.entries(examples).forEach(
-      ([language, { description, code }], index) => {
-        const displayName = languageNames[language] || language;
-        const id = language === "bash" ? "curl" : language;
+    // Loop through examples, adding descriptions on the left and code tabs on the right
+    Object.entries(examples).forEach(([language, content], index) => {
+      const displayName = languageNames[language] || language;
+      const id = language === "bash" ? "curl" : language;
 
-        const pill = $('<li class="nav-item">').append(
-          `<a class="nav-link ${
-            index === 0 ? "active" : ""
-          }" id="${id}-tab" data-toggle="pill" href="#${id}" role="tab">${displayName}</a>`
-        );
-        pillsContainer.append(pill);
+      // Description Section (Left Column)
+      const descriptionSection = document.createElement("div");
+      const description =
+        content.description ||
+        `Explains how to use ${displayName} to work with ${metadata.name}`;
+      descriptionSection.className = "mb-4";
+      descriptionSection.innerHTML = `
+            <h6>${displayName}</h6>
+            <p>${description}</p>
+        `;
+      descriptionContainer.appendChild(descriptionSection);
 
-        const content = $(`
-            <div class="tab-pane fade ${
-              index === 0 ? "show active" : ""
-            }" id="${id}" role="tabpanel">
-            <div class="row">
-               <div class="col-6">
-                 <p class="description">${description}</p>                    
-               </div>
-               <div class="col-6">
-                <div class="code-example position-relative">
-                    <button class="copy-btn">Copy</button>
-                    <pre><code class="language-${language}">${code}</code></pre>                   
-                </div>
-              </div>
+      // Nav Pill (Right Column)
+      const pill = document.createElement("li");
+      pill.className = "nav-item";
+      pill.innerHTML = `
+            <a class="nav-link ${index === 0 ? "active" : ""}" 
+               id="${id}-tab" 
+               data-toggle="pill" 
+               href="#${id}" 
+               role="tab">
+                ${displayName}
+            </a>
+        `;
+      pillsContainer.appendChild(pill);
+
+      // Code Content Tab
+      const codeContent = document.createElement("div");
+      codeContent.className = `tab-pane fade ${
+        index === 0 ? "show active" : ""
+      }`;
+      codeContent.id = id;
+      codeContent.setAttribute("role", "tabpanel");
+      codeContent.innerHTML = `
+            <div class="code-example position-relative">
+                <button class="copy-btn">Copy</button>
+                <pre><code class="language-${language}">${content.code}</code></pre>
             </div>
-        `);
-        contentContainer.append(content);
+        `;
+      contentContainer.appendChild(codeContent);
 
-        Prism.highlightElement(content.find("code")[0]);
-      }
-    );
+      // Highlight code
+      Prism.highlightElement(codeContent.querySelector("code"));
+    });
 
-    this.$(".copy-btn").on("click", function () {
+    // Add copy button functionality for each code block
+    $(".copy-btn").on("click", function () {
       const $btn = $(this);
-      const codeText = $btn.siblings("pre").find("code").text();
+      const $code = $btn.siblings("pre").find("code");
+
+      // Get original unformatted code by removing Prism's formatting
+      const $temp = $("<div>").html($code.html());
+      const codeText = $code.text();
+
+      // Create temporary textarea for copying
       const $textarea = $("<textarea>")
         .val(codeText)
-        .css({ position: "fixed", opacity: 0 })
+        .css({
+          position: "fixed",
+          opacity: 0,
+          top: 0,
+          left: 0,
+        })
         .appendTo("body");
-      $textarea.select();
-      document.execCommand("copy");
-      $btn.text("Copied!");
-      $textarea.remove();
-      setTimeout(() => $btn.text("Copy"), 2000);
+
+      try {
+        // Get the text from the textarea
+        const textToCopy = $textarea.val(); // Assuming $textarea is a jQuery object
+
+        // Use the Clipboard API to copy the text
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => {
+            $btn.text("Copied!");
+          })
+          .catch((err) => {
+            console.error("Failed to copy:", err);
+            $btn.text("Failed!");
+          });
+      } catch (err) {
+        console.error("Failed to copy:", err);
+        $btn.text("Failed!");
+      } finally {
+        // Clean up
+        $textarea.remove();
+        setTimeout(() => {
+          $btn.text("Copy");
+        }, 2000);
+      }
     });
   }
 
   loadExamples() {
+    $.ajax({
+      url:
+        url_for("omega-server.explain", {
+          segment: segment,
+        }) +
+        "?name=" +
+        metadata.name,
+      type: "GET",
+    }).done((data) => {
+      const examples = this.parseRSTExamples(data);
+      this.createDynamicSections(examples);
+    });
+    return;
     const rstContent = `
 
 Foo

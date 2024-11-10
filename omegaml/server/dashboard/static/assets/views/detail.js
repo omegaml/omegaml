@@ -1,6 +1,6 @@
 import CodeExplain from "../widgets/codeexplain.js";
 
-$(function () {
+$("#explain-tab").on("shown.bs.tab", function (e) {
   new CodeExplain({
     el: "#explain",
   });

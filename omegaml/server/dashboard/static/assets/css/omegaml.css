@@ -288,11 +288,12 @@ strong {
 .code-explain .tab-content {
   background-color: #fff !important;
   padding: 0px;
+  box-shadow: none;
 }
 .code-explain .copy-btn {
   position: absolute;
   right: 30px;
-  margin-top: 5px;
+  margin-top: 20px;
   background: transparent;
   border: 1px solid #4099ff;
   color: #4099ff;

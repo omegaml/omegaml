@@ -1,11 +1,12 @@
 from os import abort
 
-from flask import Blueprint, app, render_template, url_for
-from werkzeug.utils import redirect
-
+import flask
+from flask import Blueprint, app, render_template, url_for, render_template_string
+from jinja2 import TemplateNotFound
 from omegaml.server.dashboard.views.admin import users
 from omegaml.server.dashboard.views.cards import plotcards
-from omegaml.server.util import debug_only
+from omegaml.server.util import debug_only, stripblocks
+from werkzeug.utils import redirect
 
 omega_bp = Blueprint('omega-server', __name__,
                      static_folder='static',
@@ -31,6 +32,31 @@ def modal_test(template):
     if not app.debug:
         abort(401)
     return render_template(f'dashboard/{template}')
+
+
+@omega_bp.route('/explain/<string:segment>')
+def explain(segment):
+    from omegaml.store import OmegaStore
+    name = flask.request.args.get('name')
+    om = getattr(flask.current_app, 'current_om')
+    template_fqdn = f'.system/explain/{segment}'
+    # get object metadata for explained object
+    if name and om is not None and isinstance(getattr(om, segment), OmegaStore):
+        store = getattr(om, segment)
+        obj_meta = store.metadata(name)
+    else:
+        obj_meta = None
+    if om is not None and om.datasets.exists(template_fqdn):
+        explain_meta = om.datasets.metadata(template_fqdn)
+        template = explain_meta.attributes.get('docs', '').strip()
+        return render_template_string(template, segment=segment, metadata=obj_meta)
+    with stripblocks():
+        # always strip blocks from explain tempaltes (no blank lines due to jinja blocks)
+        try:
+            result = render_template(f'dashboard/explain/{segment}.rst', segment=segment, metadata=obj_meta)
+        except TemplateNotFound:
+            result = render_template(f'dashboard/explain/default.rst', segment=segment)
+    return result
 
 
 # add all sub views

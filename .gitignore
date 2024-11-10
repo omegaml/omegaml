@@ -428,3 +428,4 @@ mlruns/**
 .dccache
 omegaml/tests/**/*.db
 scripts/mongoinit.js
+flask_session
