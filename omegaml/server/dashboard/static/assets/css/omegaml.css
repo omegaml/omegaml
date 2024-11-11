@@ -305,6 +305,9 @@ strong {
   background: #4099ff;
   color: white;
 }
+.code-explain .copy-btn:focus {
+  outline: none;
+}
 .code-explain pre[class*="language-"] {
   background: transparent;
 }

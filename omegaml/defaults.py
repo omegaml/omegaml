@@ -6,9 +6,8 @@ import logging
 import os
 import shutil
 import sys
-from pathlib import Path
-
 from omegaml.util import dict_merge, markup, inprogress, tryOr
+from pathlib import Path
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
@@ -228,6 +227,8 @@ OMEGA_SESSION_CACHE = {
 }
 #: allow overrides from local env upon retrieving config from hub (disable in workers)
 OMEGA_ALLOW_ENV_CONFIG = truefalse(os.environ.get('OMEGA_ALLOW_ENV_CONFIG', '1'))
+#: dashboard cards
+OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', True))
 
 
 # =========================================

@@ -37,7 +37,7 @@ class PlotcardsView(BaseView):
 
     @property
     def enabled(self):
-        return self.app.config.get('CARDS_ENABLED', False)
+        return getattr(self.om.defaults, 'OMEGA_CARDS_ENABLED') or self.app.config.get('CARDS_ENABLED', False)
 
 
 @virtualobj

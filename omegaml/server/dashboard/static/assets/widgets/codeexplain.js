@@ -84,14 +84,22 @@ class CodeExplain extends BaseView {
     // Language display names
     const languageNames = {
       python: "Python",
-      bash: "cURL",
+      bash: "Bash",
+      curl: "cURL",
       yaml: "Swagger",
+    };
+    const PrismLanguages = {
+      python: "python",
+      curl: "bash",
+      yaml: "yaml",
+      bash: "bash",
     };
 
     // Loop through examples, adding descriptions on the left and code tabs on the right
     Object.entries(examples).forEach(([language, content], index) => {
       const displayName = languageNames[language] || language;
-      const id = language === "bash" ? "curl" : language;
+      const prismLanguage = PrismLanguages[language] || language;
+      const id = `${prismLanguage}-${index}`;
 
       // Description Section (Left Column)
       const descriptionSection = document.createElement("div");
@@ -129,7 +137,7 @@ class CodeExplain extends BaseView {
       codeContent.innerHTML = `
             <div class="code-example position-relative">
                 <button class="copy-btn">Copy</button>
-                <pre><code class="language-${language}">${content.code}</code></pre>
+                <pre><code class="language-${prismLanguage}">${content.code}</code></pre>
             </div>
         `;
       contentContainer.appendChild(codeContent);
@@ -166,7 +174,7 @@ class CodeExplain extends BaseView {
         navigator.clipboard
           .writeText(textToCopy)
           .then(() => {
-            $btn.text("Copied!");
+            $btn.text("Copied");
           })
           .catch((err) => {
             console.error("Failed to copy:", err);
