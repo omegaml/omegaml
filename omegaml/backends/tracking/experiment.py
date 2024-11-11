@@ -87,10 +87,13 @@ class ExperimentBackend(BaseModelBackend):
             name = based_name
         elif not based_dataset and actual_dataset:
             name = actual_name
-        else:
-            msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_dataset}, "
-                   "now using {data_store.prefix}{actual_dataset}")
+        elif based_dataset and actual_dataset:
+            msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_name}, "
+                   f"now using {data_store.prefix}{actual_name}")
             logger.warning(msg)
+            name = actual_name
+        else:
+            # neither data exists, use the actual name
             name = actual_name
         # --end fix for #452
         return tracker.experiment(name) if not raw else tracker

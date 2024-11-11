@@ -121,11 +121,14 @@ class TrackingView(RepositoryBaseView):
         start = int(self.request.args.get('start', 0))
         length = int(self.request.args.get('length', 0))
         nrows = length or int(self.request.args.get('nrows', 10)) if not initialize else 1
-        run = int(self.request.args.get('run', 0)) or 'all'
+        run = [int(v) for v in self.request.args.get('run', '').split(',') if v and v.isnumeric()] or 'all'
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
+        events = self.request.args.get('event', 'start,metric').split(',')
+        if events and not summary:
+            events.append('stop')
         data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=summary,
-                                                run=run, since=since, end=end, event=['start', 'metric'])
+                                                run=run, since=since, end=end, event=events)
 
         return datatables_ajax(data, n_total=totalRows, n_filtered=totalRows, draw=draw, ignore='index')
 

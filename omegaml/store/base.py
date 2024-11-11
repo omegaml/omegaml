@@ -76,8 +76,10 @@ from __future__ import absolute_import
 import bson
 import gridfs
 import os
+import shutil
 import tempfile
 import warnings
+import weakref
 from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
@@ -127,6 +129,8 @@ class OmegaStore(object):
         self._apply_mixins()
         # register backends
         self.register_backends()
+        # clean up
+        weakref.finalize(self, self._cleanup)
 
     def __repr__(self):
         return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
@@ -1250,3 +1254,10 @@ class OmegaStore(object):
 
     def sign(self, filter):
         return signature(filter)
+
+    def _cleanup(self):
+        # cleanup any temporary files on exit
+        try:
+            shutil.rmtree(self.tmppath, ignore_errors=True)
+        except:
+            pass

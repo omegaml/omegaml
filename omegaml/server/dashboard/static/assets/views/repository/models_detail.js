@@ -23,12 +23,13 @@ $(function () {
       el: "#expcards",
     });
     // query experiment data and show as a table
-    function initializeTable(headers, exp, since, end) {
+    function initializeTable(headers, exp, since, end, runs) {
       // https://datatables.net/forums/discussion/79217
       var columns = headers.map(function (header) {
         return { data: header, title: header };
       });
-      $("#expviewer").DataTable({
+      var summary = runs ? 0 : 1;
+      var datatable = $("#expviewer").DataTable({
         destroy: true, // remove previuos table, recreate it
         processing: true,
         serverSide: true,
@@ -43,7 +44,7 @@ $(function () {
           url:
             url_for("omega-server.tracking_api_experiment_data", {
               name: exp,
-            }) + `?&since=${since}&end=${end}&summary=1`,
+            }) + `?&since=${since}&end=${end}&summary=${summary}&run=${runs}`,
           type: "GET",
         },
         columns: columns,
@@ -59,20 +60,21 @@ $(function () {
       gridView.collection.fetch({ reset: true });
       gridView.render();
     }
-    function showTable(exp, recreate = false) {
+    function showTable(exp, recreate = false, runs) {
       $("#expchart").hide();
       $("#exptable").show();
       $("#dropdownExperiments").text(exp) || "Experiment";
       const since = dateRangeView.model.get("startDate");
       const end = dateRangeView.model.get("endDate");
-      recreate && $("#expviewer").DataTable().destroy();
+      const summary = runs ? 0 : 1;
       $.ajax({
         url:
           url_for("omega-server.tracking_api_experiment_data", {
             name: exp,
-          }) + `?initialize=1&summary=1&since=${since}&end=${end}`,
+          }) + `?initialize=1&summary=${summary}&since=${since}&end=${end}`,
         type: "GET",
         success: function (json) {
+          $("#expviewer").DataTable().destroy();
           var headers = json.columns || Object.keys(json.data[0]);
           var thead = "<thead><tr>";
           headers.forEach(function (header) {
@@ -80,7 +82,7 @@ $(function () {
           });
           thead += "</tr></thead>";
           $("#expviewer").html(thead);
-          initializeTable(headers, exp, since, end);
+          initializeTable(headers, exp, since, end, runs);
         },
       });
     }
@@ -91,6 +93,15 @@ $(function () {
     $("#showtable").on("click", function () {
       var exp = $("#dropdownExperiments").text();
       showTable(exp);
+    });
+    $("#details").on("click", function () {
+      var datatable = $("#expviewer").DataTable({
+        retrieve: true,
+      });
+      var exp = $("#dropdownExperiments").text();
+      var selected = datatable.rows({ selected: true }).data().toArray();
+      selected = selected.map((row) => row.run);
+      showTable(exp, true, selected);
     });
     // plot experiment data
     function plotchart(exp, since, end, multi = false) {
@@ -105,7 +116,7 @@ $(function () {
         dataType: "json",
         url:
           url_for("omega-server.tracking_api_plot_metrics", { name: exp }) +
-          `?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
+          `?multicharts=${multi}&since=${since}&end=${end}&run=${selected}`,
         success: function (data) {
           $("#exptable").hide();
           $("#expchart").show();

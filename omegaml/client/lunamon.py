@@ -472,7 +472,7 @@ class OmegaMonitors(LunaMonitorChecks):
                 }]
             else:
                 # -- for a remote runtime we submit a ping
-                self.om.runtime.ping(timeout=.1, source='monitor')
+                self.om.runtime.ping(timeout=5, source='monitor')
                 status = self.om.runtime.status()
                 workers = [{
                     'name': worker,
