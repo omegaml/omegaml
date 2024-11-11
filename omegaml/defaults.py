@@ -228,7 +228,7 @@ OMEGA_SESSION_CACHE = {
 #: allow overrides from local env upon retrieving config from hub (disable in workers)
 OMEGA_ALLOW_ENV_CONFIG = truefalse(os.environ.get('OMEGA_ALLOW_ENV_CONFIG', '1'))
 #: dashboard cards
-OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', True))
+OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 
 
 # =========================================

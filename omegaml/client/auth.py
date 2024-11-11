@@ -1,8 +1,7 @@
 import os
-from requests.auth import AuthBase
-
 from omegaml import session_cache
 from omegaml.util import load_class, settings, DefaultsContext
+from requests.auth import AuthBase
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -92,7 +91,8 @@ class AuthenticationEnv(object):
     is_secure = False
     # subprocess env keys to keep, see .prepare_env()
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_MONGO_URL', 'OMEGA_BROKER', 'OMEGA_CARDS_ENABLED',
-                'OMEGA_STATUS_CHECK', 'OMEGA_TEST_MODE', 'OMEGA_RUNTIME_LOCAL', 'OMEGA_RESTAPI_URL']
+                'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_STATUS_CHECK', 'OMEGA_TEST_MODE', 'OMEGA_RUNTIME_LOCAL',
+                'OMEGA_RESTAPI_URL']
 
     @classmethod
     @session_cache  # PERFTUNED
@@ -180,7 +180,7 @@ class AuthenticationEnv(object):
 class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
-                'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER', 'OMEGA_CARDS_ENABLED',
+                'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER', 'OMEGA_CARDS_ENABLED',
                 'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER']
 
     @classmethod

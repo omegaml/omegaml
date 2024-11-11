@@ -38,6 +38,15 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
         configure_logging(settings=app.config)
         logutil_flask(app)
         Session(app)
+
+        # simulate user
+        # TODO use login manager
+        @app.context_processor
+        def simulate_user():
+            class user:
+                username = 'admin'
+
+            return dict(current_user=user())
     else:
         app = server
     # ensure slashes in URIs are matched as specified
@@ -78,14 +87,11 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
         logger.warning((f"could not add {url_prefix}/static endpoint=static due to {e} "
                         f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"))
 
-    # simulate user
-    # TODO use login manager
     @app.context_processor
-    def simulate_user():
-        class user:
-            username = 'admin'
-
-        return dict(current_user=user(), cards_enabled=app.config.get('CARDS_ENABLED', False))
+    def setconfig():
+        cards_enabled = (getattr(app.current_om.defaults, 'OMEGA_CARDS_ENABLED', False)
+                         or app.config.get('CARDS_ENABLED', False))
+        return dict(cards_enabled=cards_enabled)
 
     return app
 
