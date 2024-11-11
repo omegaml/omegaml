@@ -95,7 +95,7 @@ class TrackingView(RepositoryBaseView):
             totalRows = 0
         return data, totalRows
 
-    @fv.route('/{self.segment}/experiment/data/<name>')
+    @fv.route('/{self.segment}/experiment/data/<path:name>')
     def api_experiment_data(self, name):
         """ return the experiment data for a given experiment (datatables.js)
 
@@ -129,7 +129,7 @@ class TrackingView(RepositoryBaseView):
 
         return datatables_ajax(data, n_total=totalRows, n_filtered=totalRows, draw=draw, ignore='index')
 
-    @fv.route('/{self.segment}/experiment/plot/<name>')
+    @fv.route('/{self.segment}/experiment/plot/<path:name>')
     def api_plot_metrics(self, name):
         """ plot the metrics for a given experiment
 
@@ -194,7 +194,7 @@ class TrackingView(RepositoryBaseView):
         graphJSON = json.to_json(fig)
         return graphJSON
 
-    @fv.route('/{self.segment}/monitor/plot/<model>')
+    @fv.route('/{self.segment}/monitor/plot/<path:model>')
     def api_plot_monitor(self, model):
         """ plot the monitor data for a given model
 
@@ -237,7 +237,7 @@ class TrackingView(RepositoryBaseView):
             return jsonify(image=base64.b64encode(img.getvalue()).decode())
         json_abort(400, "no monitor defined")
 
-    @fv.route('/{self.segment}/monitor/compare/<model>')
+    @fv.route('/{self.segment}/monitor/compare/<path:model>')
     def api_compare_monitor(self, model):
         om = self.om
         experiment = validOrNone(self.request.args.get('experiment'))
@@ -248,7 +248,7 @@ class TrackingView(RepositoryBaseView):
             'warning': (.25, .55),
             'stable': (0.0, 0.25),
         }
-        
+
         def categorize(value, categories):
             for status, (min_val, max_val) in categories.items():
                 if min_val <= value <= max_val:
@@ -301,7 +301,7 @@ class TrackingView(RepositoryBaseView):
         return jsonify(result)
 
     @cached(cache=TTLCache(maxsize=10, ttl=60))
-    @fv.route('/{self.segment}/monitor/alerts/<model>')
+    @fv.route('/{self.segment}/monitor/alerts/<path:model>')
     def api_get_model_alerts(self, model):
         om = self.om
         experiment = validOrNone(self.request.args.get('experiment'))

@@ -5,17 +5,18 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from numpy import random
+from pandas._testing import assert_frame_equal
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries, DriftStatsCalc
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin, dict_almost_equal
-from pandas._testing import assert_frame_equal
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
@@ -827,3 +828,65 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             corr_expected = df[sorted(df.columns)].corr(method=method).sort_index()
             corr_stored = stats.baseline().corr(method=method)
             assert_frame_equal(corr_stored, corr_expected)
+
+    def test_multilevel_naming(self):
+        # test fix issue #452
+        om = self.om
+        reg = LinearRegression()
+        om.models.put(reg, 'myapp/regmodel')
+        # create a new experiment
+        with om.runtime.experiment('myapp/regmodel') as exp:
+            exp.track('myapp/regmodel', monitor=True)
+            exp.log_data('test', 42)
+        self.assertTrue(exp._has_monitor('myapp/regmodel'))
+        # try again (retrieving the experiment)
+        with om.runtime.experiment('myapp/regmodel') as exp:
+            # self.assertTrue(exp._has_monitor('myapp/regmodel'))
+            exp.track('myapp/regmodel', monitor=True)
+            exp.log_data('test2', 42)
+        meta = om.models.metadata('myapp/regmodel')
+        monitors = meta.attributes['tracking']['monitors']
+        self.assertEqual(len(monitors), 1)
+        # get the experiment without starting it
+        exp = om.runtime.experiment('myapp/regmodel')
+        self.assertTrue(exp._has_monitor('myapp/regmodel'))
+        # get data recorded in second run
+        data = exp.data(run='*', event='data', key='test2')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data.iloc[0]['value']['data'], 42)
+        # get data recorded in first run
+        data = exp.data(run='*', event='data', key='test')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data.iloc[0]['value']['data'], 42)
+        self.assertEqual(exp.dataset, '.experiments/myapp/regmodel')
+        # test backwards compatibility
+        # -- create a dataset using the basename (regmodel)
+        om.models.put(reg, 'myapp/regmodel2')
+        exp = om.runtime.experiment('myapp/regmodel2')
+        exp.experiment._experiment = 'regmodel2'  # simuate pre-fix behavior
+        exp.start()
+        exp.track('myapp/regmodel2', monitor=True)
+        exp.log_data('test', 48)
+        exp.stop()
+        self.assertEqual(exp.dataset, '.experiments/regmodel2')
+        # -- get back the experiment using the basename (backwards compatibility)
+        exp = om.runtime.experiment('myapp/regmodel2')
+        self.assertEqual(exp.dataset, '.experiments/regmodel2')
+        data = exp.data(run='*', event='data', key='test')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data.iloc[0]['value']['data'], 48)
+        # check we migrate to the name behavior if in conflict
+        # -- force new behavior
+        exp = om.runtime.experiment('myapp/regmodel2')
+        exp.experiment._experiment = 'myapp/regmodel2'
+        self.assertEqual(exp.dataset, '.experiments/myapp/regmodel2')
+        exp.start()
+        exp.track('myapp/regmodel2', monitor=True)
+        exp.log_data('test', 52)
+        exp.stop()
+        # -- test conflict resolution is to new name
+        exp = om.runtime.experiment('myapp/regmodel2')
+        self.assertEqual(exp.dataset, '.experiments/myapp/regmodel2')
+        data = exp.data(run='*', event='data', key='test')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data.iloc[0]['value']['data'], 52)

@@ -1313,16 +1313,8 @@ def inprogress(text="running {fn}", **__kwargs):
         except ImportError:
             return False
 
-    no_spinning = is_piped() or not module_available('yaspin')
-    should_spin = is_running_in_jupyter() or not is_piped() and module_available('yaspin')
-
-    if no_spinning and not should_spin:
-        @contextmanager
-        def yaspin(*args, text=None, **kwargs):
-            logger.debug(text)
-            yield
-    else:
-        from yaspin import yaspin
+    should_spin = (is_running_in_jupyter() or not is_piped())
+    yaspin = failsafe_yaspin(mock=not should_spin)
 
     def decorator(fn):
         def wrapper(*args, **kwargs):
@@ -1351,3 +1343,18 @@ def ensurelist(l):
     # ensure we have a python list() from a numpy array
     import numpy as np
     return l.tolist() if isinstance(l, np.ndarray) else list(l)
+
+
+def failsafe_yaspin(mock=False):
+    try:
+        if not mock:
+            from yaspin import yaspin
+        else:
+            raise ImportError('not loading yaspin due to mock=True')
+    except Exception as e:
+        @contextmanager
+        def yaspin(*args, text=None, **kwargs):
+            setattr(yaspin, 'text', text)
+            logger.debug(getattr(yaspin, 'text', '...'))
+            yield
+    return yaspin

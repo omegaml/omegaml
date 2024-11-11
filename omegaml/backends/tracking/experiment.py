@@ -1,7 +1,10 @@
+import logging
 import os
 
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.backends.tracking.base import TrackingProvider
+
+logger = logging.getLogger(__name__)
 
 
 class ExperimentBackend(BaseModelBackend):
@@ -73,9 +76,23 @@ class ExperimentBackend(BaseModelBackend):
     def get(self, name, raw=False, data_store=None, **kwargs):
         assert data_store is not None, "experiments require a datastore, specify data_store=om.datasets"
         tracker = super().get(name, **kwargs)
-        name = os.path.basename(name)
         tracker._store = data_store
         tracker._model_store = self.model_store
+        # fix for #452, maintain backwards compatibility
+        based_name = os.path.basename(name)
+        based_dataset = data_store.exists(f'.{self.exp_prefix}{based_name}')
+        actual_name = name.replace(self.exp_prefix, '', 1)
+        actual_dataset = data_store.exists(f'.{self.exp_prefix}{actual_name}')
+        if based_dataset and not actual_dataset:
+            name = based_name
+        elif not based_dataset and actual_dataset:
+            name = actual_name
+        else:
+            msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_dataset}, "
+                   "now using {data_store.prefix}{actual_dataset}")
+            logger.warning(msg)
+            name = actual_name
+        # --end fix for #452
         return tracker.experiment(name) if not raw else tracker
 
     def drop(self, name, force=False, version=-1, data_store=None, **kwargs):
