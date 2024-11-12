@@ -124,9 +124,7 @@ class TrackingView(RepositoryBaseView):
         run = [int(v) for v in self.request.args.get('run', '').split(',') if v and v.isnumeric()] or 'all'
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
-        events = self.request.args.get('event', 'start,metric').split(',')
-        if events and not summary:
-            events.append('stop')
+        events = ['start', 'metric', 'stop'] if summary else None
         data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=summary,
                                                 run=run, since=since, end=end, event=events)
 
@@ -258,9 +256,7 @@ class TrackingView(RepositoryBaseView):
                     return status
             return 'check'  # Default case
 
-        if exp._has_monitor(model):
-            mon = exp.as_monitor(model)
-            stats = mon.compare(seq='series')
+        def compare_stats(stats):
             snapshots = stats.df.groupby(['seq_from', 'seq_to']).agg(
                 {'drift': 'max', 'score': 'max', 'dt_from': 'min', 'dt_to': 'min'}).reset_index()
             mask = stats.df.groupby(['seq_from', 'seq_to'])['score'].idxmax()
@@ -272,6 +268,19 @@ class TrackingView(RepositoryBaseView):
                 'stats': stats.df['statistic'].unique(),
                 'snapshots': snapshots.to_dict('records'),
             }
+            return result
+
+        if exp._has_monitor(model):
+            try:
+                mon = exp.as_monitor(model)
+                stats = mon.compare(seq='series')
+                result = compare_stats(stats)
+            except:
+                result = {
+                    'summary': None,
+                    'stats': None,
+                    'snapshots': None,
+                }
             return ensure_json_serializable(result)
         json_abort(400, "no monitor defined")
 

@@ -1,12 +1,13 @@
-Get back the model as you have stored it.
+Store and access models
 
 .. code-block:: python
 
     import omegaml as om
+    # store a model
+    reg = LinearRegression() # example
+    om.models.put(reg, '{{ metadata.name}}')
+    # retrieve a model
     model = om.models.get('{{ metadata.name }}')
-    if this:
-        then()
-
 
 .. code-block:: bash
 
