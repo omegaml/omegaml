@@ -28,7 +28,7 @@ $(function () {
           data: "results",
           render: function (data, type, row, meta) {
             const result_url = url_for("omega-server.jobs_api_get_results", {
-              name: data.replace("results/", ""),
+              name: data ? data.replace("results/", "") : "<no results>",
             });
             return `<a class="job-result" result-url="${result_url}" href="${result_url}">${data}</a>`;
           },

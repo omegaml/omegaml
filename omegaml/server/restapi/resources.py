@@ -47,7 +47,7 @@ def create_app(url_prefix=None):
     apidoc.url_prefix = url_prefix
     # set up swagger ui, if not local
     # -- swagger.json is provided by the hub
-    hub_url = os.environ.get('OMEGA_RESTAPI_URL')
+    hub_url = [os.environ.get(k) for k in ['OMEGA_HUB_URL', 'OMEGA_RESTAPI_URL']][-1]
     hub_api_uri = os.environ.get('OMEGA_RESTAPI_SPECS_URI', '/api/doc/v1/swagger/specs/swagger.json')
     omega_api.remote_specs_url = urljoin(hub_url, hub_api_uri) if hub_url else None
 
