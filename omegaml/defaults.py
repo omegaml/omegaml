@@ -104,6 +104,10 @@ OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.backends.monitoring']
 #: REST API available objects
 OMEGA_RESTAPI_FILTER = os.environ.get('OMEGA_RESTAPI_FILTER', '.*/.*/.*')
+#: rest API URL, this is used by the client to connect to the server
+OMEGA_RESTAPI_URL = os.environ.get('OMEGA_RESTAPI_URL', 'http://localhost:5000')
+# hub url, this is used by the dashboard to display the hub's API endpoints in swagger (defaults to OMEGA_RESTAPI_URL)
+OMEGA_HUB_URL = os.environ.get('OMEGA_HUB_URL', 'http://localhost:5000')
 #: storage backends
 OMEGA_STORE_BACKENDS = {
     'experiment.tracker': 'omegaml.backends.tracking.ExperimentBackend',
