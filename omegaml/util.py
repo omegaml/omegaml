@@ -1313,7 +1313,10 @@ def inprogress(text="running {fn}", **__kwargs):
         except ImportError:
             return False
 
-    should_spin = (is_running_in_jupyter() or not is_piped())
+    def config_interactive():
+        return os.environ.get('INPROGRESS', 'auto') in ('auto', 'yes', 'true', '1')
+
+    should_spin = config_interactive() and (is_running_in_jupyter() or not is_piped())
     yaspin = failsafe_yaspin(mock=not should_spin)
 
     def decorator(fn):

@@ -64,6 +64,18 @@ class SwaggerGenerator:
 
     @staticmethod
     def build_swagger(self, include='*', format='yaml', file=None, as_service=False):
+        """ build swagger spec from omegaml objects
+
+        Args:
+            include (str, list): the path to the object to include
+            format (str): the format of the spec (any of 'yaml', 'dict', 'json'),
+              defaults to 'yaml'
+            file (stream): optional, if given will dump yaml to this file
+            as_service (bool): if True, treat the model as a service
+
+        Returns:
+            spec in the requested format
+        """
         gen = SwaggerGenerator(self.omega)
         includes = include.split(',') if isinstance(include, str) else include
         for path in includes:
@@ -76,13 +88,14 @@ class SwaggerGenerator:
         return formatter.get(format)(stream=file)
 
     @staticmethod
-    def combine_swagger(self, name, patches=[], sources=[], file=None):
+    def combine_swagger(self, name, patches=[], sources=[], file=None, as_service=False):
         """ combine swagger definition of a model with schemas of other specs
 
         Args:
             name (str): the name of the model
             patches (list): list of strings in format 'schema#property'
             sources (list): list of strings in format 'model#schema'
+            as_service (bool): if True, treat the model as a service
             file (stream): optional, if given will dump yaml to this file
 
         Returns:
@@ -93,10 +106,12 @@ class SwaggerGenerator:
             class PersonSchema(Schema):
                 name = fields.String()
             class ResultSchema(Schema):
-                data = fields.List(fields.Dict()) # equiv. fields.List(fields.Nested(PersonSchema))
+                result = fields.List(fields.Dict()) # equiv. fields.List(fields.Nested(PersonSchema))
+            om.models.put(mymodel, 'mymodel') # actual model or virtualobj
+            om.models.put({}, 'mymodel/schema/data', replace=True) # dummy model for schema spec
             om.models.link_datatype('mymodel', Y=ResultSchema)
             om.models.link_datatype('mymodel/schema/data', X=PersonSchema)
-            # build combined swagger spec
+            # build combined swagger spec for mymodels
             combine_swagger('mymodel',
                             patches=['mymodel_Y#result'],
                             sources=['mymodel/schema/data#mymodel_schema_data_X'])
@@ -107,11 +122,10 @@ class SwaggerGenerator:
         for patch, source in zip(patches, sources):
             ttype, tprop = patch.split('#')
             sname, stype = source.split('#')
-            sspec = om.runtime.swagger(sname, format='dict')
+            sspec = om.runtime.swagger(sname, format='dict', as_service=as_service)
             spec['definitions'][stype] = sspec['definitions'][stype]
         if spec['definitions'][ttype]['properties'][tprop].get('type') == 'array':
             spec['definitions'][ttype]['properties'][tprop]['items'] = {'$ref': f'#/definitions/{stype}'}
         else:
             spec['definitions'][ttype]['properties'][tprop]['$ref'] = f'#/definitions/{stype}'
         return yaml.dump(spec, stream=file)
-
