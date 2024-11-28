@@ -76,6 +76,24 @@ class ExperimentBackend(BaseModelBackend):
         name = os.path.basename(name)
         tracker._store = data_store
         tracker._model_store = self.model_store
+        # fix for #452, maintain backwards compatibility
+        based_name = os.path.basename(name)
+        based_dataset = data_store.exists(f'.{self.exp_prefix}{based_name}')
+        actual_name = name.replace(self.exp_prefix, '', 1)
+        actual_dataset = data_store.exists(f'.{self.exp_prefix}{actual_name}')
+        if based_dataset and not actual_dataset:
+            name = based_name
+        elif not based_dataset and actual_dataset:
+            name = actual_name
+        elif based_dataset and actual_dataset:
+            msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_name}, "
+                   f"now using {data_store.prefix}{actual_name}")
+            logger.warning(msg)
+            name = actual_name
+        else:
+            # neither data exists, use the actual name
+            name = actual_name
+        # --end fix for #452
         return tracker.experiment(name) if not raw else tracker
 
     def drop(self, name, force=False, version=-1, data_store=None, **kwargs):
