@@ -1,0 +1,236 @@
+{% extends "dashboard/layouts/base.html" %}
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor.min.css" />
+<link rel="stylesheet" href="{{ config.ASSETS_ROOT }}/plugins/toastui/prism.min.css" />
+<link rel="stylesheet"
+  href="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor-plugin-code-syntax-highlight.min.css" />
+<link rel="stylesheet" href="{{ config.ASSETS_ROOT }}/plugins/jsoneditor/jsoneditor.min.css" />
+{% endblock stylesheets %}
+{% block content %}
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index') }}/{{ segment }}">{{ segment | title
+                      }}</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ name }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <!-- [ tabs ] start -->
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>{{ meta.name }}</h5>
+                  </div>
+                </div>
+                <hr>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active text-uppercase" id="docs-tab" data-toggle="tab" href="#docs" role="tab"
+                      aria-controls="docs" aria-selected="false">Documentation</a>
+                  </li>
+                  {% block tabitems %}
+                  {% endblock tabitems %}
+                  {% if summary.revisions %}
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="revisions-tab" data-toggle="tab" href="#revisions" role="tab"
+                      aria-controls="revisions" aria-selected="false">Revisions</a>
+                  </li>
+                  {% endif %}
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="explain-tab" data-toggle="tab" href="#explain" role="tab"
+                      aria-controls="explain" aria-selected="false">explain</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-uppercase" id="metadata-tab" data-toggle="tab" href="#metadata" role="tab"
+                      aria-controls="metadata" aria-selected="false">Metadata</a>
+                  </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                  <div class="tab-pane fade show active" id="docs" role="tabpanel" aria-labelledby="docs-tab">
+                    <button type="submit" id="save-docs" class="btn btn-icon mb-2"><i
+                        class="fa-regular fa-floppy-disk"></i></button>
+                    <button type="reset" id="edit-docs" class="btn btn-icon mb-2"><i
+                        class="fa-regular fa-pen-to-square"></i></button>
+                    <div id="docseditor" class="form-group" style="width: 100pct;
+                                  min-height: 500px"></div>
+                    <div id="docsviewer" class="form-group" style="width: 100pct;
+                                  min-height: 500px"></div>
+                  </div>
+                  <div class="tab-pane fade" id="revisions" role="tabpanel" aria-labelledby="revisions-tab">
+                    <p>{{ summary.revisions }}</p>
+                  </div>
+                  {% block tabcontents %}
+                  {% endblock tabcontents %}
+                  <div class="tab-pane fade" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+                    <button type="submit" id="save-meta" class="btn btn-icon mb-2"><i
+                        class="fa-regular fa-floppy-disk"></i></button>
+                    <p>
+                      <b>Kind</b>&nbsp;{{ meta.kind }}&nbsp;<b>Created</b>&nbsp;{{ summary.created
+                      }}&nbsp;<b>Modified</b>&nbsp;{{ summary.modified }}&nbsp;
+                    </p>
+                    <div id="jsoneditor" class="form-group" style="width: 100pct;
+                                  height: 500px"></div>
+                  </div>
+                  <div class="tab-pane fade" id="explain" role="tabpanel" aria-labelledby="explain-tab">
+                  </div>
+                </div>
+              </div>
+              <!-- [ tabs ] end -->
+            </div>
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="{{ config.ASSETS_ROOT }}/plugins/jsoneditor/jsoneditor.min.js"></script>
+<!-- toastui editor + plugins -->
+<script src="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor-all.min.js"></script>
+<script src="{{ config.ASSETS_ROOT }}/plugins/toastui/toastui-editor-plugin-code-syntax-highlight-all.min.js"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/detail.js') }}"></script>
+<script>
+  // metadata editor
+  var metadata = {{ meta | tojson }};
+  var segment = "{{ segment }}";
+  $(function () {
+    // initialize metadata editor
+    var jsonEditor = new JSONEditor($('#jsoneditor')[0], {
+      mode: 'tree',
+    });
+    var attributes = {{ meta.attributes | tojson
+  }};
+  $("#save-meta").on('click', function (e) {
+    e.preventDefault();
+    var json = jsonEditor.get();
+    var payload = {
+      attributes: json,
+    };
+    $.ajax({
+      url: url_for('omega-server.index') + '/{{segment}}/{{meta.name}}/update',
+      type: 'POST',
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify(payload),
+      success: function (data) {
+        attributes = json;
+      }
+    });
+  });
+  jsonEditor.set(attributes);
+  // docs editor
+  // initialize docs editor
+  $('#docseditor').hide();
+  $('#save-docs').hide();
+  //const { codeSyntaxHighlight, colorSyntax, tableMergedCell, uml } = toastui.Editor.plugin;
+  const { codeSyntaxHighlight } = toastui.Editor.plugin;
+  var docsEditor = new toastui.Editor({
+    el: $('#docseditor')[0],
+    initialValue: attributes.docs || '',
+    //plugins: [[chart, chartOptions], [codeSyntaxHighlight, { highlighter: Prism }], colorSyntax, tableMergedCell, uml],
+    plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
+    usageStatistics: false,
+  });
+  // Function to fetch the content of the included file
+  async function fetchIncludedContent(path) {
+    const response = await fetch(path);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return await response.text();
+  }
+  var docsViewer = new toastui.Editor.factory({
+    el: $('#docsviewer')[0],
+    initialValue: attributes.docs || '',
+    viewer: true,
+    //plugins: [[chart, chartOptions], [codeSyntaxHighlight, { highlighter: Prism }], colorSyntax, tableMergedCell, uml]
+    plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
+    usageStatistics: false,
+    customHTMLRenderer: {
+      text: function (node, context) {
+        var variables = {
+          metadata: metadata,
+          meta: metadata,
+          attributes: metadata.attributes,
+        }
+        const includeRegex = /{!include (.+?)}/g;
+        const matches = node.literal.match(includeRegex);
+        if (matches) {
+          const filePath = matches[0].replace(/{!include\s+(.+?)}/, '$1').trim();
+          $.get(filePath, function (data) {
+            $('#sourced').html(data)
+          });
+          return {
+            type: 'html',
+            content: "<div id='sourced'></div>",
+          }
+        } else {
+          return {
+            type: 'text',
+            content: node.literal.sformat(variables),
+          }
+        }
+        return node.content; // Return the modified content
+      },
+    }
+  });
+  $('#edit-docs').on('click', function (e) {
+    e.preventDefault();
+    $('#docsviewer').hide();
+    $('#edit-docs').hide();
+    $('#docseditor').show();
+    $('#save-docs').show();
+  });
+  $('#save-docs').on('click', function (e) {
+    e.preventDefault();
+    var markdown = docsEditor.getMarkdown();
+    var payload = {
+      attributes: {
+        docs: markdown || '',
+      }
+    };
+    $.ajax({
+      url: url_for('omega-server.index') + '/{{segment}}/{{meta.name}}/update',
+      type: 'POST',
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify(payload),
+      success: function (data) {
+        docsViewer.setMarkdown(markdown);
+        $('#edit-docs').show();
+        $('#save-docs').hide();
+        $('#docseditor').hide();
+        $('#docsviewer').show();
+      }
+    });
+  });
+        });
+</script>
+{% endblock javascripts %}

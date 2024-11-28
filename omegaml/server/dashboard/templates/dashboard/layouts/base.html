@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>
+    {% block title %}MLOps by omega-ml{% endblock %}
+  </title>
+  <!-- Meta -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="description" content="omegaml dashboard" />
+  <meta name="keywords" content="mlops omegaml dashboard" />
+  <meta name="author" content="CodedThemes" />
+  {% include 'dashboard/includes/styles.html' %}
+  <!-- Specific CSS goes HERE -->
+  {% block stylesheets %}
+  {% endblock stylesheets %}
+  <script>
+    (function () {
+      window._flr = JSON.parse(atob("{{encoded_routes }}"));
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- [ Pre-loader ] start -->
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+  <!-- [ Pre-loader ] End -->
+  <!-- Loading Bar -->
+  <div id="loading-bar"></div>
+  <div id="loading-indicator" class="alert alert-info">
+    <i class="fas fa-spinner fa-spin"></i>
+  </div>
+  {% block nav %}
+  {% include 'dashboard/includes/sidebar.html' %}
+  {% include 'dashboard/includes/navigation.html' %}
+  {% endblock nav %}
+  {% block content %}
+  {% endblock content %}
+  <!-- dattaable js -->
+  <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/jquery/js/jquery.min.js"></script>
+  <script src="{{ config.ASSETS_ROOT }}/js/vendor-all.min.js"></script>
+  <script src="{{ config.ASSETS_ROOT }}/plugins/bootstrap/js/bootstrap.min.js"></script>
+  <script src="{{ config.ASSETS_ROOT }}/js/pcoded.min.js"></script>
+  <script src="{{ config.ASSETS_ROOT }}/js/dark-mode.js"></script>
+  {% include 'dashboard/includes/scripts.html' %}
+  <!-- omegaml js -->
+  <script src="{{ url_for('static', filename='assets/views/common.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/widgets/loading.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/backbone/underscore.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/backbone/backbone.min.js') }}"></script>
+  <!-- Specific Page JS goes HERE  -->
+  {% block javascripts %}
+  {% endblock javascripts %}
+  <!-- load notifications -->
+  <script>
+    $(function () {
+      $.ajax({
+        url: "{{ url_for('omega-server.tracking_api_list_alerts') }}",
+        type: 'GET',
+        success: function (data) {
+          var alerts = data.alerts || [];
+          alerts.forEach(function (alert) {
+            var url = url_for('omega-server.index') + '/' + alert.resource;
+            var dt = new Date(alert.dt).toLocaleDateString();
+            var notification = `
+            <li class="notification">
+                <a href="${url}">
+                <div class="media">
+                    <img class="img-radius" src="{{ config.ASSETS_ROOT }}/images/logo-thumb.png"
+                          alt="Generic placeholder image">
+                    <div class="media-body">
+                        
+                            <p><strong>System</strong><span class="n-time text-muted"><i
+                                class="icon feather icon-clock m-r-10"></i>${dt}</span>
+                        </p>
+                        <p>${alert.message}</p>
+                    </div>
+                </div></a>
+            </li>`;
+            $('.noti-body').append(notification);
+          });
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -10,6 +10,7 @@ class ExperimentStatistics:
         groupby = 'run'
         time_key = 'latency'
         percentiles = [.25, .5, .75]  # same default as pandas.DataFrame.describe()
+        batchsize = 10000
 
     def __init__(self, tracker):
         self.tracker = tracker
@@ -64,16 +65,16 @@ class ExperimentStatistics:
         tp_unit = tp_unit or self.options.tp_unit  # throughput units in seconds (3600 = 1 hour)
         percentiles = percentiles or self.options.percentiles
         kwargs.setdefault('run', 'all')
-        metrics = self.metrics(percentiles=percentiles, **kwargs)
+        metrics = self.metrics(percentiles=percentiles, groupby='', **kwargs)
         duration = self.latency(time_key=time_key, time_events=time_events, groupby=groupby,
                                 percentiles=percentiles, **kwargs)
         if not perf_stats:
             return pd.concat([metrics, duration])
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
         utilization = self.utilization(tp_unit=tp_unit, time_events=time_events, **kwargs)
-        return pd.concat([metrics, duration, throughput, utilization])
+        return pd.concat([metrics, duration, throughput, utilization], copy=False)
 
-    def metrics(self, percentiles=None, **kwargs):
+    def metrics(self, event=None, percentiles=None, groupby=None, **kwargs):
         """ calculate percentiles for all metric events
 
         This queries exp.data(event='metric', **kwargs) and calculates the percentiles for each
@@ -82,21 +83,33 @@ class ExperimentStatistics:
 
         Args:
              percentiles (list): the percentiles to pass to pandas.DataFrame.describe()
+             groupby (str): the column to group by for duration calculation, defaults to 'run',
+                to summarize metrics across all runs set groupby=''
              **kwargs: any filter arguments to pass to exp.data(), by default sets run='all'
 
         Returns:
             DataFrame with percentiles for each metric
+
+        .. versionchanged:: 0.16.4
+            Metrics are calculated by run (new default). To get back the previous behavior,
+            calculated across all runs, set groupby=''.
         """
         # metrics - percentiles for each metric
-        data = self.data(event='metric', **kwargs)
-        if data.empty:
-            return pd.DataFrame()
-        metrics = (data
-                   .groupby(['event', 'key'])
-                   .apply(lambda v: (v['value']
-                                     .describe(percentiles=percentiles)))
-                   )
-        return metrics
+        event = event or 'metric'
+        groupby = [groupby or self.options.groupby] if groupby not in (0, '', -1) else []
+        groups = dict.fromkeys(groupby + ['event', 'key'])
+
+        def stats(data):
+            metrics = (data
+                       .groupby(list(groups))
+                       .apply(lambda v: (v['value']
+                                         .describe(percentiles=percentiles)))
+                       )
+            return metrics
+
+        batches = self.data(event=event, batchsize=self.options.batchsize, **kwargs)
+        aggstats = (v for v in map(stats, batches) if v is not None)
+        return pd.concat(aggstats, copy=False)
 
     def latency(self, time_key=None, time_events=None, percentiles=None,
                 groupby=None, **kwargs):
@@ -127,30 +140,35 @@ class ExperimentStatistics:
         groupby = groupby or self.options.groupby
         time_key = time_key or self.options.time_key
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
         percentiles = None if not percentiles else (percentiles or self.options.percentiles)
-        duration = (time_data
-                    .groupby(groupby)
-                    .apply(lambda v: ((v['dt'].max() - v['dt'].min())
-                                      .total_seconds())
-                           )
-                    )
-        if percentiles:
-            duration = (duration
-                        .describe(percentiles=None if percentiles is True else percentiles)
-                        .to_frame()
-                        .T)
-            self.align_index(duration, time_key)
-        else:
-            duration = (self.data(**kwargs)
+
+        def stats(time_data):
+            duration = (time_data
                         .groupby(groupby)
-                        .first()
-                        .reset_index()
-                        .merge((duration
-                                .reset_index(name='latency')),
-                               on=groupby)
+                        .apply(lambda v: ((v['dt'].max() - v['dt'].min())
+                                          .total_seconds())
+                               )
                         )
-        return duration
+            if percentiles:
+                duration = (duration
+                            .describe(percentiles=None if percentiles is True else percentiles)
+                            .to_frame()
+                            .T)
+                self.align_index(duration, time_key)
+            else:
+                duration = (self.data(**kwargs)
+                            .groupby(groupby)
+                            .first()
+                            .reset_index()
+                            .merge((duration
+                                    .reset_index(name='latency')),
+                                   on=groupby)
+                            )
+            return duration
+
+        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        aggstats = (v for v in map(stats, batches) if v is not None)
+        return pd.concat(aggstats, copy=False)
 
     def throughput(self, time_key=None, tp_unit=None, groupby=None, time_events=None, percentiles=None, **kwargs):
         """ calculate throughput for each group of events
@@ -174,20 +192,26 @@ class ExperimentStatistics:
             1. calculate throughput as the number of events / duration
         """
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
         time_key = time_key or self.options.time_key
         groupby = groupby or self.options.groupby
-        throughput = (time_data
-                      .groupby(groupby)
-                      .apply(lambda v: (tp_unit / max((v['dt'].max() - v['dt'].min())
-                                                      .total_seconds(), 1))
-                             )
-                      .describe(percentiles=percentiles)
-                      .to_frame()
-                      .T
-                      )
-        self.align_index(throughput, f'group_{time_key}')
-        return throughput
+        tp_unit = tp_unit or self.options.tp_unit
+
+        def stats(time_data):
+            throughput = (time_data
+                          .groupby(groupby)
+                          .apply(lambda v: (tp_unit / max((v['dt'].max() - v['dt'].min())
+                                                          .total_seconds(), 1))
+                                 )
+                          .describe(percentiles=percentiles)
+                          .to_frame()
+                          .T
+                          )
+            self.align_index(throughput, f'group_{time_key}')
+            return throughput
+
+        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        aggstats = (v for v in map(stats, batches) if v is not None)
+        return pd.concat(list(aggstats))
 
     def group_latency(self, time_events=None, percentiles=None, time_slots=None, **kwargs):
         """ calculate latency for each group of events

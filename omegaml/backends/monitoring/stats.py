@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy.stats import ks_2samp, chisquare, wasserstein_distance
-
 from omegaml.util import ensure_list, extend_instance
+from scipy.stats import ks_2samp, wasserstein_distance, entropy, chisquare, chi2
 
 
 class DriftStatsCalc:
@@ -75,15 +74,20 @@ class DriftStatsCalc:
         # -- self.rng is used to sample histograms
         # -- sampling causes drift statistics to be different each time
         # -- using a fixed seed allows for reproducibility
-        # -- this does not
         self.rng = np.random.default_rng(seed=seed)
+        # metrics used to calculate the mean drift score
+        self.mean_metrics = ['ks', 'wasserstein', 'chisq']
+        # drift metrics
         self._metrics = {
             'numeric': {
                 'ks': self.ks_2samp,
                 'wasserstein': self.wasserstein_distance,
+                'kld': self.kl_divergence,
+                'jsd': self.js_divergence,
             },
             'categorical': {
-                'chisquare': self.chisquare,
+                'chisquare': self.chisquared_test,
+                'psi': self.psi,
             },
         }
         self._apply_mixins()
@@ -107,7 +111,7 @@ class DriftStatsCalc:
         # -- H0 is rejected if pvalue < 1 - ci (default: 0.05)
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
         result = ks_2samp(d1, d2, method='asymp')
-        score = self.calculate_score(result.statistic)
+        score = abs(result.statistic)
         is_drift = result.pvalue < (1 - ci)
         return {
             'metric': result.statistic,
@@ -117,21 +121,68 @@ class DriftStatsCalc:
             'location': result.statistic_location,
         }
 
-    def chisquare(self, d1, d2, ci=.99, sd=None, **kwargs):
-        # one-way chi-square test
-        # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
-        # -- H1: alterantive (=> drift)
-        # -- H0 is rejected if pvalue < 1
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html#scipy.stats.chisquare
-        result = chisquare(f_obs=d2, f_exp=d1)
-        is_drift = result.pvalue < 1
-        score = self.calculate_score(result.statistic)
+    def psi(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Population Stability Index (PSI)"""
+
+        def calculate_psi(expected, actual, bins=10):
+            hist_expected, _ = np.histogram(expected, bins=bins, density=True)
+            hist_actual, _ = np.histogram(actual, bins=bins, density=True)
+
+            hist_expected += 1e-10  # Avoid division by zero
+            hist_actual += 1e-10
+
+            psi_value = np.sum(
+                (hist_expected - hist_actual) * np.log(hist_expected / hist_actual)
+            )
+            return psi_value
+
+        psi_value = calculate_psi(baseline, target)
+        drift_detected = psi_value > 0.25  # typical threadhold
+        score = min(1, psi_value / 0.5)  # normalizing score to 0-1
         return {
-            'metric': result.statistic,
-            'score': score,
-            'drift': is_drift,
-            'pvalue': result.pvalue,
-            'location': None,
+            "drift": drift_detected,
+            "metric": psi_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
+        }
+
+    def kl_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Kullback-Leibler Divergence (KL)"""
+        hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
+        hist_target, _ = np.histogram(target, bins=100, density=True)
+
+        hist_baseline += 1e-10  # Avoid division by zero
+        hist_target += 1e-10
+
+        kl_value = entropy(hist_baseline, hist_target)
+        drift_detected = kl_value > 0.1  # Threshold for drift
+        score = min(1.0, kl_value / 1.0)  # Normalize score to 0-1
+
+        return {
+            "drift": drift_detected,
+            "metric": kl_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
+        }
+
+    def js_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+        """Calculate Jensen-Shannon Divergence (JS)"""
+        hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
+        hist_target, _ = np.histogram(target, bins=100, density=True)
+        hist_baseline += 1e-10  # Avoid division by zero
+        hist_target += 1e-10
+        m = 0.5 * (hist_baseline + hist_target)
+        js_value = 0.5 * (entropy(hist_baseline, m) + entropy(hist_target, m))
+        drift_detected = js_value > 0.05  # Threshold for drift
+        score = min(1.0, js_value / 0.2)  # Normalize score to 0-1
+        return {
+            "drift": drift_detected,
+            "metric": js_value,
+            "score": score,
+            "pvalue": None,
+            "location": None,
         }
 
     def wasserstein_distance(self, d1, d2, ci=.95, sd=None, **kwargs):
@@ -144,13 +195,32 @@ class DriftStatsCalc:
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html
         sd = sd or np.std(d1, ddof=1)
         wd = wasserstein_distance(d1, d2)
-        score = self.calculate_score(wd / sd)
-        is_drift = (score > ci)
+        score = min(wd / sd, 1)
+        is_drift = (score > (1 - ci))
         return {
             'metric': wd,
             'score': score,
             'drift': is_drift,
             'pvalue': None,
+            'location': None,
+        }
+
+    def chisquared_test(self, d1, d2, ci=.99, sd=None, **kwargs):
+        # one-way chi-square test
+        # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
+        # -- H1: alterantive (=> drift)
+        # -- H0 is rejected if pvalue < (1 - ci)
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chisquare.html#scipy.stats.chisquare
+        result = chisquare(f_obs=d2, f_exp=d1)
+        is_drift = result.pvalue < (1 - ci)
+        # min-max normalize score to 0-1
+        # -- min is 0, .999 percentile is chi2.ppf(0.999, ddof)
+        score = min(result.statistic / chi2.ppf(0.999, len(d2) - 1), 1)
+        return {
+            'metric': result.statistic,
+            'score': score,
+            'drift': is_drift,
+            'pvalue': result.pvalue,
             'location': None,
         }
 
@@ -180,10 +250,6 @@ class DriftStatsCalc:
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
-
-    def calculate_score(self, metric, pvalue=None, ci=.95, sd=None):
-        # TODO need a better generic score
-        return self.sigmoid(metric)
 
 
 class DriftStats:
@@ -232,7 +298,7 @@ class DriftStats:
     @property
     def df(self):
         if self._df is None:
-            self._df = self.as_dataframe(self.drifts)
+            self._df = self.as_dataframe(self.drifts).reset_index()
         return self._df
 
     @property
@@ -271,7 +337,7 @@ class DriftStats:
 
         Args:
             column (str): the column to filter by
-            statistic (str): the statistic to filter by
+            statistic (str): the statistic to filter by, defaults to 'mean'
             summary (bool): return a summary of drifted features
             raw (bool): return the raw drift statistics as a dict
             **query: additional query parameters
@@ -303,6 +369,7 @@ class DriftStats:
             * DriftMonitorBase.compare() for details on drift events, which are effectively logs
               of DriftStats.summary() results
         """
+        statistic = statistic or 'mean'
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
         if df.empty:
             result = {
@@ -312,8 +379,9 @@ class DriftStats:
             }
         else:
             # prepare summary
-            drifted = df['drift'] == True
-            drifted_seqs = (df[drifted][['seq_from', 'seq_to']]
+            drifted = df['drift']
+            dfx = df[drifted]
+            drifted_seqs = (dfx[['seq_from', 'seq_to']]
                             .drop_duplicates()
                             .apply(lambda v: [v['seq_from'], v['seq_to']], axis=1)
                             .tolist())
@@ -325,6 +393,9 @@ class DriftStats:
                 'info': (df.groupby('kind')
                          .apply(lambda v: list(v['column'].sort_values().unique()))
                          .to_dict()),
+                'score': (df.groupby('kind')
+                          .apply(lambda v: v['score'].max())
+                          .to_dict()),
             }
             result['info']['seq'] = drifted_seqs
         if not raw:
@@ -338,6 +409,7 @@ class DriftStats:
             })
             df['kind'] = df['column'].apply(lambda v: col_by_kind.get(v))
             df['seq'] = pd.Series(s['info']['seq'] * len(df))
+            df['score'] = pd.Series([s['score'].get(k) for k in df['kind']])
             result = df
         return result
 
@@ -383,7 +455,7 @@ class DriftStats:
         Returns:
             The .df dataframe filtered by the given spec
         """
-        df = self.df
+        df = abortIfEmpty(self.df, "no data available")
         seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (
             None, None)
         flt = df['column'].isin(ensure_list(column)) if column else (df.index == df.index)
@@ -393,7 +465,7 @@ class DriftStats:
         return df[flt]
 
     def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, sample=True, logx=False,
-             logy=False, xlim=None, ylim=None, **kwargs):
+             logy=False, xlim=None, ylim=None, raw=False, **kwargs):
         """ plot drift statistics
 
         Plots drift statistics for a given column, statistic, seq_from, seq_to. If no column is given,
@@ -419,20 +491,23 @@ class DriftStats:
             logy (bool): whether to use a log scale on the y-axis
             xlim (tuple): the x-axis limits
             ylim (tuple): the y-axis limits
+            raw (bool): if True, return the tuple (ax, data, type) else ax
             **kwargs: additional keyword arguments to pass to the plot function
 
         Returns:
-            matplotlib.Axes: the axes the plot was drawn on
+            matplotlib.Axes: the axes the plot was drawn on (raw=False)
+            (matplotlib.Axes, data, type): the plot axes, the data, and the kind of plot (raw=True)
         """
         statistic = statistic or 'mean'
         statistic = None if statistic in ('*', 'all', 'any') else statistic
+        valid_plots = ('dist', 'hist', 'time', 'box')
         seq = self._expand_seq(seq, column=column, statistic=statistic)
-        assert kind in ('dist', 'time'), f'kind must be one of "dist", "time", got {kind}'
+        assert kind in valid_plots, f'kind must be one of {valid_plots}, got {kind}'
         if isinstance(column, str):
-            ax = self._plot_column(column, statistic, seq, kind, ax, sample=sample, **kwargs)
+            ax = self._plot_column(column, statistic, seq, kind, ax, sample=sample, raw=raw, **kwargs)
         else:
             columns = list(column) if isinstance(column, (list, tuple)) else None
-            ax = self._plot_all(statistic, seq, kind, ax, columns=columns, **kwargs)
+            ax = self._plot_all(statistic, seq, kind, ax, columns=columns, raw=raw, **kwargs)
         if logx:
             plt.xscale('log')
         if logy:
@@ -443,7 +518,7 @@ class DriftStats:
             plt.ylim(*ylim)
         return ax
 
-    def _plot_column(self, column, statistic, seq, kind, ax, sample=None, **kwargs):
+    def _plot_column(self, column, statistic, seq, kind, ax, sample=None, raw=False, **kwargs):
         s1, s2 = seq if isinstance(seq, (list, tuple)) else [seq, seq]
         baseline_df = self[column, statistic, (s1, None)]
         target_df = self[column, statistic, (None, s2)]
@@ -451,27 +526,40 @@ class DriftStats:
         target = target_df['target'].iloc[0]
         dt1 = baseline_df['dt_from'].iloc[0]
         dt2 = target_df['dt_to'].iloc[0]
-        if kind == 'dist':
-            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=sample, **kwargs)
+        if kind in ('dist', 'box', 'hist'):
+            kind = 'hist' if kind == 'dist' else kind
+            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=sample,
+                                 raw=raw, kind=kind, **kwargs)
         elif kind == 'time':
-            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs)
+            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax,
+                                     raw=raw, **kwargs)
         return ax
 
-    def _plot_all(self, statistic, seq, kind, ax, columns=None, **kwargs):
+    def _plot_all(self, statistic, seq, kind, ax, columns=None, raw=False, **kwargs):
         df = self.as_dataframe(statistic=statistic)
         dt1 = df['dt_from'].iloc[0]
         dt2 = df['dt_to'].iloc[-1]
         df = df[df['column'].isin(columns)] if columns else df
         # -- convert to column oriented data to plot all features for each seq
-        dfx = pd.pivot_table(df, index='column', columns='seq_to', values='metric')
-        ax = dfx.plot.bar()
-        plt.suptitle('Drift statistics for all features')
+        if kind == 'time':
+            dfx = pd.pivot_table(df, index='seq_to', columns='column', values='metric')
+            dfx.index = dfx.index.astype(str)
+            ax = dfx.plot.line()
+            plottype = 'line'
+        else:
+            dfx = pd.pivot_table(df, index='column', columns='seq_to', values='metric')
+            ax = dfx.plot.bar()
+            plottype = 'bar'
+        features = columns or 'all'
+        plt.suptitle(f'Drift statistics ({features}, {statistic})')
         plt.title(f'Baseline: {dt1} Target: {dt2}', fontsize=8)
         # -- move legend outside of plot
-        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-        return ax
+        plt.legend()
+        plt.ylim((0, dfx.select_dtypes(include='number').max().max()))
+        return (ax, dfx, plottype) if raw else ax
 
-    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=None, **kwargs):
+    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=None,
+                   raw=False, kind=None, normalize=False, **kwargs):
         # prepare drift message
         drift_ind = 'detected' if self[column, statistic]['drift'].sum() > 0 else 'not detected'
         drift_stats = self[column, statistic, (None, s2)].iloc[0]['stats']
@@ -479,41 +567,67 @@ class DriftStats:
         drift_msg = ", ".join((f'S={drift_score:.3f}', f'{drift_stats}'))
         drift_text = f'{drift_ind} ({drift_msg})'
         # plot feature distribution
+        kind = kind or 'hist'
         plot_styles = {
-            'baseline': {'alpha': 1.0, 'linestyle': '--', 'fill': False},
-            'target': {'alpha': 0.3, 'fill': True},
+            'hist': {
+                'baseline': {'alpha': 1.0, 'linestyle': '--', 'fill': False},
+                'target': {'alpha': 0.3, 'fill': True},
+            },
+            'box': {
+                'baseline': {'alpha': 1.0},
+                'target': {'alpha': 0.3},
+            },
         }
         data_style_map = [
             (baseline, 'baseline'),
             (target, 'target')
         ]
         stats_calc = DriftStatsCalc()
+        data = None
+        ax = None
+        plottype = None
         for i, (period, style_id) in enumerate(data_style_map):
-            style = plot_styles[style_id]
+            style = plot_styles[kind][style_id]
             style.update(kwargs.get('style', {}).get('baseline', {}))
             if 'hist' in period:
                 counts, edges = period['hist']
-                if sample:
+                if sample or kind == 'box':
                     # perform re-sampling of data if requested
                     N = int(100 if sample is True else sample)
-                    h = stats_calc.sample_from_hist(counts, edges, n=N)
-                    counts, edges = np.histogram(h, bins=len(edges))
-                ax = plt.stairs(counts, edges, **style)
+                    values = stats_calc.sample_from_hist(counts, edges, n=N)
+                    counts, edges = np.histogram(values, bins=len(edges))
+                if kind == 'hist':
+                    ax = plt.stairs(counts, edges, **style)
+                    data = counts, edges
+                    plottype = 'stairs'
+                elif kind == 'box':
+                    ax = plt.boxplot(values, positions=[i], patch_artist=True, boxprops=style)
+                    plt.xticks([0, 1], ['baseline', 'target'])  # Set x-tick labels
+                    plottype = 'box'
+                    data = values
             if 'groups' in period:
                 counts, groups = list(period['groups'].values()), list(period['groups'].keys())
                 if sample:
                     values = stats_calc.sample_from_groups(counts, groups)
-                    s = pd.Series(values).value_counts(normalize=True)
+                    s = pd.Series(values).value_counts(normalize=normalize)
                     counts, groups = s.values, s.index
-                ax = plt.bar(groups, counts, **style)
+                if kind == 'hist':
+                    ax = plt.bar(groups, counts, **style)
+                    data = counts, groups
+                    plottype = 'bar'
+                elif kind == 'box':
+                    ax = plt.boxplot(counts, positions=[i], patch_artist=True, boxprops=style)
+                    plt.xticks([0, 1], ['baseline', 'target'])  # Set x-tick labels
+                    data = values
+                    plottype = 'box'
         if ax:
             plt.suptitle(f'{column} distribution')
             plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
             plt.xlabel(column)
             plt.legend(['baseline', 'target'])
-        return ax
+        return (ax, data, plottype) if raw else ax
 
-    def _plot_timeline(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, **kwargs):
+    def _plot_timeline(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, raw=False, **kwargs):
         from matplotlib.dates import DateFormatter
         date_form = DateFormatter("%Y-%m-%d")
         print(column, statistic, s1, s2)
@@ -529,17 +643,20 @@ class DriftStats:
                             aggfunc='max',
                             )
                )
+        dfx.index = dfx.index.astype(str)
         ax = dfx.plot.line(style='--', marker='X')
+        # Rotate and format the x-axis labels
+        plottype = 'line'
         if ax:
             drift_ind = 'detected' if dff['drift'].sum() > 0 else 'not detected'
             drift_stats = dff.iloc[0]['stats']
             drift_score = dff.iloc[0]['score']
             drift_msg = ", ".join((f'S={drift_score:.3f}', f'{drift_stats}'))
             drift_text = f'{drift_ind} ({drift_msg})'
-            plt.suptitle(f'{column} distribution')
+            plt.suptitle(f'{column} timeline')
             plt.title(f'Drift {drift_text}\nBaseline: {dt1} Target: {dt2}', fontsize=8)
             # plt.xlabel('seq_from')
-        return ax
+        return (ax, dfx, plottype) if raw else ax
 
     def _expand_seq(self, seq, default=None, column=None, statistic=None):
         if isinstance(seq, (list, tuple)):
@@ -834,3 +951,13 @@ class DriftStatsDataFrame(pd.DataFrame):
             matplotlib.Axes: the axes the plot was drawn on
         """
         return self[column].plot(sample=sample, **kwargs)
+
+
+def abortIfEmpty(df, error):
+    conditions = (
+        None,
+        isinstance(df, pd.DataFrame) and df.empty
+    )
+    if any(conditions):
+        raise ValueError(error)
+    return df

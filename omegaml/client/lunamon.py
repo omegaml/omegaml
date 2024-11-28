@@ -10,9 +10,10 @@ import pymongo
 import weakref
 from datetime import datetime
 from time import sleep
-from yaspin import yaspin
 
 from omegaml.util import inprogress
+
+logger = logging.getLogger(__name__)
 
 
 class LunaMonitor:
@@ -174,6 +175,7 @@ class LunaMonitor:
         Returns:
             None
         """
+
         with yaspin(text='waiting for checks to be ok', color='yellow') as t:
             while not self.healthy():
                 services = ','.join(self.failed())
@@ -470,7 +472,7 @@ class OmegaMonitors(LunaMonitorChecks):
                 }]
             else:
                 # -- for a remote runtime we submit a ping
-                self.om.runtime.ping(timeout=.1, source='monitor')
+                self.om.runtime.ping(timeout=5, source='monitor')
                 status = self.om.runtime.status()
                 workers = [{
                     'name': worker,
