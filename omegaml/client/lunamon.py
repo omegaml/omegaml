@@ -9,10 +9,9 @@ import os
 import pymongo
 import weakref
 from datetime import datetime
+from omegaml.util import inprogress
 from time import sleep
 from yaspin import yaspin
-
-from omegaml.util import inprogress
 
 
 class LunaMonitor:
@@ -230,6 +229,8 @@ class LunaMonitor:
         self._monitor_thread.start()
         # ensure we stop the monitor on exit, gc
         self._ALL_MONITORS.append(weakref.proxy(self))
+        # TODO adopt to common finalizer pattern (see OmegaStore)
+        # -- passing self causes refcount increase on LunaMonitor, thus won't be gc'd until sys exit
         weakref.finalize(self, self._stop_monitor, self, wait=False)
 
     @staticmethod
@@ -470,7 +471,7 @@ class OmegaMonitors(LunaMonitorChecks):
                 }]
             else:
                 # -- for a remote runtime we submit a ping
-                self.om.runtime.ping(timeout=.1, source='monitor')
+                self.om.runtime.ping(timeout=5, source='monitor')
                 status = self.om.runtime.status()
                 workers = [{
                     'name': worker,
