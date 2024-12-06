@@ -445,7 +445,7 @@ class RuntimeCommandBase(CommandBase):
         action = self.args.get('<deploy-action>') or 'update'
         dry = self.args.get('--dry')
         specs = self.args.get('--specs')
-        selection = self.args.get('<filter>')
+        selection = self.args.get('--select')
         if action == 'example':
             help(deploy)
         assert Path(deployfile).exists(), f'{deployfile} does not exist'
