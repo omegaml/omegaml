@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from unittest import skip
 
+import gc
 import gridfs
 import joblib
 import pandas as pd
@@ -24,6 +25,7 @@ from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
 from pandas.testing import assert_frame_equal, assert_series_equal
+from pathlib import Path
 from pymongo.errors import OperationFailure
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
@@ -1136,3 +1138,12 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(df, dfx)
         # check hashing actually worked
         self.assertNotEqual(name_unhashed, name_hashed)
+
+    def test_cleanup_on_gc(self):
+        store = OmegaStore(bucket='foo', prefix='foo/')
+        store.put({}, 'foo')
+        tmppath = Path(store.tmppath)
+        self.assertTrue(tmppath.exists())
+        del store
+        gc.collect()
+        self.assertFalse(tmppath.exists())

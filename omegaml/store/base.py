@@ -75,26 +75,31 @@ from __future__ import absolute_import
 
 import bson
 import gridfs
+import logging
 import os
+import shutil
 import tempfile
 import warnings
+import weakref
 from datetime import datetime
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
-from uuid import uuid4
-
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
     cursor_to_dataframe, convert_dtypes, load_class, extend_instance, ensure_index, PickableCollection, \
     mongo_compatible, signature
+from uuid import uuid4
+
 from .queryops import sanitize_filter
 from ..documents import make_Metadata, MDREGISTRY
 from ..mongoshim import sanitize_mongo_kwargs, waitForConnection
 from ..util import (is_estimator, is_dataframe, is_ndarray, is_spark_mllib,
                     settings as omega_settings, urlparse, is_series)
+
+logger = logging.getLogger(__name__)
 
 
 class OmegaStore(object):
@@ -114,7 +119,7 @@ class OmegaStore(object):
         self.bucket = bucket or self.defaults.OMEGA_MONGO_COLLECTION
         self._fs_collection = self._ensure_fs_collection()
         self._fs = None
-        self._tmppath = None
+        self._tmppath = os.path.join(self.defaults.OMEGA_TMP, uuid4().hex)
         self.prefix = prefix or ''
         self.force_kind = kind
         self._Metadata_cls = None
@@ -127,6 +132,8 @@ class OmegaStore(object):
         self._apply_mixins()
         # register backends
         self.register_backends()
+        # register finalizer for cleanup
+        weakref.finalize(self, self._cleanup, repr(self), tmppath=self._tmppath)
 
     def __repr__(self):
         return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
@@ -147,10 +154,7 @@ class OmegaStore(object):
         """
         return an instance-specific temporary path
         """
-        if self._tmppath is not None:
-            return self._tmppath
-        self._tmppath = os.path.join(self.defaults.OMEGA_TMP, uuid4().hex)
-        os.makedirs(self._tmppath)
+        os.makedirs(self._tmppath, exist_ok=True)
         return self._tmppath
 
     @property
@@ -1249,3 +1253,13 @@ class OmegaStore(object):
 
     def sign(self, filter):
         return signature(filter)
+
+    @staticmethod
+    def _cleanup(objrepr, tmppath=None):
+        # cleanup any temporary files on exit
+        # -- this is called as a finalizer (weakref.finalize)
+        try:
+            logger.debug(f'finalizing {objrepr}: cleaning up temporary files in {tmppath}')
+            shutil.rmtree(tmppath, ignore_errors=True)
+        except Exception as e:
+            logger.error(f'finalizing {objrepr}: error occured as {e}')
