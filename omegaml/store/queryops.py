@@ -5,6 +5,7 @@ import pymongo
 import sys
 import warnings
 from hashlib import md5
+
 from omegaml.util import make_tuple, is_interactive, signature
 
 
@@ -56,7 +57,7 @@ class GeoJSON(dict):
             coordinates = d.get('geometry').get('coordinates')
         else:
             raise ValueError(
-                'expected a valid GeoJSON dict, got %s' % coordinates)
+                'expected a valid GeoJSON dict, got %s' % d)
         return coordinates
 
     @property

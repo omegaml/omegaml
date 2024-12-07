@@ -1,0 +1,204 @@
+{% extends "dashboard/layouts/base.html" %}
+
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index') }}/{{ segment }}">{{ segment | title
+                      }}</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ name }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="container-fluid mt-4">
+              <div class="row" id="plotContainer">
+                {% for plot in plots %}
+                <div class="col-lg-6 mb-4">
+                  <div class="card miniapp">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0 plot-title">{{ plot.title | default(loop.index) }}</h5>
+                      <button class="btn btn-icon expand-btn" data-plot-id="{{ loop.index }}">
+                        <i class="fas fa-expand"></i>
+                      </button>
+                    </div>
+                    <div class="card-body plot-container" id="container{{ loop.index }}">
+                      <div class="plot-div" id="plot{{ loop.index }}">
+                        {{ plot.content | safe }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Full screen modal -->
+            <div class="modal fade" id="fullscreenModal" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Plot View</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body d-flex justify-content-center align-items-center">
+                    <div id="modalPlotContent"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% block extra_css %}
+<style>
+  .modal-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .modal-fullscreen .modal-content {
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .modal-fullscreen .modal-body {
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  #modalPlotContent {
+    height: calc(100vh - 60px);
+  }
+
+  #modalPlotContent {
+    width: 100%;
+    height: calc(100vh - 60px);
+  }
+
+  #modalPlotContent .plot-div,
+  #modalPlotContent .js-plotly-plot {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .miniapp .btn,
+  i {
+    align-items: center;
+    margin-right: 0 !important;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let currentPlotInfo = null;
+    const modal = $('#fullscreenModal');
+
+    // Handle expand buttons
+    document.querySelectorAll('.expand-btn').forEach(button => {
+      button.addEventListener('click', function () {
+        const plotId = this.getAttribute('data-plot-id');
+        const plotDiv = document.getElementById(`plot${plotId}`);
+        const modalContent = document.getElementById('modalPlotContent');
+        const originalContainer = document.getElementById(`container${plotId}`);
+
+        // Store information about current plot
+        currentPlotInfo = {
+          plotId: plotId,
+          plotDiv: plotDiv,
+          originalContainer: originalContainer
+        };
+
+        // Move plot to modal
+        modalContent.appendChild(plotDiv);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('fullscreenModal'));
+        modal.show();
+
+        // Resize after transition
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 300);
+      });
+    });
+
+    // Handle modal shown
+    modal.on('shown.bs.modal', function () {
+      if (currentPlotInfo && currentPlotInfo.plotDiv) {
+        const plotElement = currentPlotInfo.plotDiv.getElementsByClassName('js-plotly-plot')[0];
+        if (plotElement && plotElement.layout) {
+          Plotly.relayout(plotElement, {
+            autosize: true
+          });
+        }
+      }
+    });
+
+    // Handle modal hide
+    modal.on('hide.bs.modal', function () {
+
+    });
+
+    // Handle modal hidden
+    modal.on('hidden.bs.modal', function () {
+      if (currentPlotInfo) {
+        // Move plot back to original container
+        currentPlotInfo.originalContainer.appendChild(currentPlotInfo.plotDiv);
+      }
+      if (currentPlotInfo) {
+        // Trigger resize after plot is moved back
+        setTimeout(() => {
+
+          window.dispatchEvent(new Event('resize'));
+        }, 300);
+        currentPlotInfo = null;
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function () {
+      const modalContent = document.getElementById('modalPlotContent');
+      const plotElement = modalContent.getElementsByClassName('js-plotly-plot')[0];
+      if (plotElement && plotElement.layout) {
+        Plotly.relayout(plotElement, {
+          autosize: true
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,3 +1,4 @@
+from mongoengine import DoesNotExist
 from omegaml.store import OmegaStore
 
 
@@ -18,6 +19,8 @@ class ObjectInformationMixin:
     def summary(self, name):
         self: OmegaStore | ObjectInformationMixin
         meta = self.metadata(name)
+        if meta is None:
+            raise DoesNotExist(name)
         backend = self.get_backend(name)
         contrib = backend.summary(name) if hasattr(backend, 'summary') else {}
         stats = self._get_collection_stats(meta.collection)
@@ -103,6 +106,8 @@ class ObjectInformationMixin:
         try:
             _stats = self.mongodb.command('dbstats', scale=scale)
             _stats['fsAvailableSize'] = _stats['fsTotalSize'] - _stats['fsUsedSize']
+            # prior to 4.4, totalSize was not available
+            _stats.setdefault('totalSize', _stats['dataSize'] + _stats['indexSize'])
         except:
             _stats = {'totalSize': 0, 'fsUsedSize': 0, 'fsTotalSize': 0, 'fsAvailableSize': 0}
         return {

@@ -1084,7 +1084,7 @@ def tryOr(fn, else_fn):
     # try fn(), if exception call else_fn() if callable, return its value otherwise
     try:
         return fn()
-    except:
+    except Exception:
         return else_fn() if callable(else_fn) else else_fn
 
 
@@ -1229,7 +1229,7 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
 def batched(iterable, batch_size):
     """ split an iterable into batches of batch_size """
     from itertools import islice
-    it = iter(iterable)
+    it = iter(iterable) if iterable else []
     while True:
         batch = list(islice(it, batch_size))
         if not batch:
@@ -1303,13 +1303,18 @@ def inprogress(text="running {fn}", **__kwargs):
     # print a message when entering a function
     # -- useful for debugging
     # -- use as a decorator
-    if not module_available('yaspin'):
-        @contextmanager
-        def yaspin(*args, text=None, **kwargs):
-            logger.debug(text)
-            yield
-    else:
-        from yaspin import yaspin
+    def is_piped():
+        return not sys.stdout.isatty()
+
+    def is_running_in_jupyter():
+        try:
+            from IPython import get_ipython
+            return get_ipython() is not None
+        except ImportError:
+            return False
+
+    should_spin = (is_running_in_jupyter() or not is_piped())
+    yaspin = failsafe_yaspin(mock=not should_spin)
 
     def decorator(fn):
         def wrapper(*args, **kwargs):
@@ -1332,3 +1337,24 @@ def signature(filter):
 def utcnow():
     # replacing datetime.utcnow() with datetime.now(timezone.utc)
     return datetime.now(timezone.utc)
+
+
+def ensurelist(l):
+    # ensure we have a python list() from a numpy array
+    import numpy as np
+    return l.tolist() if isinstance(l, np.ndarray) else list(l)
+
+
+def failsafe_yaspin(mock=False):
+    try:
+        if not mock:
+            from yaspin import yaspin
+        else:
+            raise ImportError('not loading yaspin due to mock=True')
+    except Exception as e:
+        @contextmanager
+        def yaspin(*args, text=None, **kwargs):
+            setattr(yaspin, 'text', text)
+            logger.debug(getattr(yaspin, 'text', '...'))
+            yield
+    return yaspin

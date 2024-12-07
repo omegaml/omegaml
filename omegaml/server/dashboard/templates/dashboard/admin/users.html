@@ -1,0 +1,11 @@
+{% extends "dashboard/layouts/list.html" %}
+{% block content %}
+  {{ super() }}
+  {% block segmentheader %}
+    <div class="card-tools">
+      <button class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+  {% endblock segmentheader %}
+{% endblock content %}

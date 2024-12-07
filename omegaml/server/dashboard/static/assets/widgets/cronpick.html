@@ -1,0 +1,203 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="form-group">
+        <div class="input-group">
+          <input type="text" class="form-control" id="cronExpression" value="*/15 * * * *">
+          <div class="">
+            <button class="btn btn-icon" type="button" data-toggle="modal" data-target="#cronModal">
+              <i class="far fa-calendar"></i>
+            </button>
+            <button class="btn btn-icon" type="button" data-toggle="modal" data-target="#confirmDeleteModal">
+              <i class="fas fa-remove"></i>
+            </button>
+          </div>
+        </div>
+        <small id="cronError" class="form-text text-danger"></small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cron Modal -->
+<div class="modal fade" id="cronModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cron Expression Builder</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs" id="cronTabs">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#minutes">Minutes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#hourly">Hourly</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#daily">Daily</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#weekly">Weekly</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#monthly">Monthly</a>
+          </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+          <!-- Minutes Tab -->
+          <div class="tab-pane fade show active" id="minutes">
+            <div class="form-group">
+              <label>Every</label>
+              <select class="form-control" id="minuteSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+              </select>
+              <small class="form-text text-muted">minute(s)</small>
+            </div>
+          </div>
+
+          <!-- Hourly Tab -->
+          <div class="tab-pane fade" id="hourly">
+            <div class="form-group">
+              <label>Every</label>
+              <select class="form-control" id="hourSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="12">12</option>
+              </select>
+              <small class="form-text text-muted">hour(s)</small>
+            </div>
+          </div>
+
+          <!-- Daily Tab -->
+          <div class="tab-pane fade" id="daily">
+            <div class="form-group">
+              <label>Every day at</label>
+              <div class="row">
+                <div class="col-md-4">
+                  <select class="form-control" id="dailyHourSelect">
+                    <!-- Hours 0-23 -->
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control" id="dailyMinuteSelect">
+                    <!-- Minutes 0-59 -->
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Tab -->
+          <div class="tab-pane fade" id="weekly">
+            <div class="form-group">
+              <label>On</label>
+              <div class="btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="0"> Sun
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="1"> Mon
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="2"> Tue
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="3"> Wed
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="4"> Thu
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="5"> Fri
+                </label>
+                <label class="btn btn-outline-primary">
+                  <input type="checkbox" value="6"> Sat
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>At</label>
+              <div class="row">
+                <div class="col-md-4">
+                  <select class="form-control" id="weeklyHourSelect">
+                    <!-- Hours 0-23 -->
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control" id="weeklyMinuteSelect">
+                    <!-- Minutes 0-59 -->
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Tab -->
+          <div class="tab-pane fade" id="monthly">
+            <div class="form-group">
+              <label>On day</label>
+              <select class="form-control" id="monthlyDaySelect">
+                <!-- Days 1-31 -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>At</label>
+              <div class="row">
+                <div class="col-md-4">
+                  <select class="form-control" id="monthlyHourSelect">
+                    <!-- Hours 0-23 -->
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control" id="monthlyMinuteSelect">
+                    <!-- Minutes 0-59 -->
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="applyBtn">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to remove the schedule?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteButton">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
