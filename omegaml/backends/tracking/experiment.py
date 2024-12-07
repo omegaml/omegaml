@@ -1,7 +1,10 @@
+import logging
 import os
 
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.backends.tracking.base import TrackingProvider
+
+logger = logging.getLogger(__name__)
 
 
 class ExperimentBackend(BaseModelBackend):
@@ -73,7 +76,6 @@ class ExperimentBackend(BaseModelBackend):
     def get(self, name, raw=False, data_store=None, **kwargs):
         assert data_store is not None, "experiments require a datastore, specify data_store=om.datasets"
         tracker = super().get(name, **kwargs)
-        name = os.path.basename(name)
         tracker._store = data_store
         tracker._model_store = self.model_store
         # fix for #452, maintain backwards compatibility

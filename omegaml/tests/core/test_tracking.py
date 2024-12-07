@@ -462,6 +462,21 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             total_rows = sum(len(rows) for rows in data if isinstance(rows, result_type))
             self.assertEqual(total_rows, 10 * 3)  # each run has 3 events
 
+    def test_data_slice(self):
+        om = self.om
+        for i in range(10):
+            with om.runtime.experiment('myexp') as exp:
+                exp.log_metric('accuracy', i)
+            exp.flush()
+        # slice on records
+        data = exp.data(run='*', slice=slice(0, 5))
+        self.assertEqual(len(data), 5)
+        data = exp.data(run='*', slice=(3, 3 + 2))
+        self.assertEqual(len(data), 2)
+        # slice on runs
+        data = exp.data(run=slice(0, 5))
+        self.assertEqual(len(data), 5 * 3)  # every run has 3 events (start, metric, stop)
+
     def test_current_vs_all_data(self):
         om = self.om
         for i in range(10):

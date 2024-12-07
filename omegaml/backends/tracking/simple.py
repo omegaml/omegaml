@@ -14,7 +14,7 @@ from uuid import uuid4
 
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
-from omegaml.util import _raise, ensure_index, batched, signature, tryOr
+from omegaml.util import _raise, ensure_index, batched, signature, tryOr, ensurelist
 
 
 class NoTrackTracker(TrackingProvider):
@@ -137,7 +137,7 @@ class OmegaSimpleTracker(TrackingProvider):
         has_stop = sum(1 for row in (data or []) if row.get('event') == 'stop')
         return 'PENDING' if no_runs else 'STOPPED' if has_stop else 'STARTED'
 
-    def start(self, run=None):
+    def start(self, run=None, immediate=True):
         """ start a new run
 
         This starts a new run and logs the start event
@@ -145,10 +145,10 @@ class OmegaSimpleTracker(TrackingProvider):
         self._run = run or (self._latest_run or 0) + 1
         self._startdt = datetime.utcnow()
         data = self._common_log_data('start', key=None, value=None, step=None, dt=self._startdt)
-        self._write_log(data, immediate=True)
+        self._write_log(data, immediate=immediate)
         return self._run
 
-    def stop(self):
+    def stop(self, flush=True):
         """ stop the current run
 
         This stops the current run and records the stop event
@@ -156,7 +156,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._stopdt = datetime.utcnow()
         data = self._common_log_data('stop', key=None, value=None, step=None, dt=self._stopdt)
         self._write_log(data)
-        self.flush()
+        self.flush() if flush else None
 
     def flush(self):
         # passing list of list, as_many=True => collection.insert_many() for speed
@@ -374,26 +374,30 @@ class OmegaSimpleTracker(TrackingProvider):
             self._extra_log = {}
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
-             lazy=False, since=None, end=None, batchsize=None, **extra):
+             lazy=False, since=None, end=None, batchsize=None, slice=None, **extra):
         """ build a dataframe of all stored data
 
         Args:
             experiment (str|list): the name of the experiment, defaults to its current value
-            run (int|list|str): the run(s) to get data back, defaults to current run, use 'all' for all,
+            run (int|list|str|slice): the run(s) to get data back, defaults to current run, use 'all' for all,
                1-indexed since first run, or -1 indexed from latest run, can combine both. If run < 0
-               would go before the first run, run 1 will be returned.
+               would go before the first run, run 1 will be returned. A slice(start, stop) can be used
+               to specify a range of runs.
             event (str|list): the event(s) to include
             step (int|list): the step(s) to include
             key (str|list): the key(s) to include
             raw (bool): if True returns the raw data instead of a DataFrame
             lazy (bool): if True returns the Cursor instead of data, ignores raw
             since (datetime|timedelta|str): only return data since this date. If both since and run are specified,
-               run only matching runs since the date are returned. If since is a string it must be parseable
-               by pd.to_datime, or be given in the format '<n><unit:[smhdwMqy]>', or a timedelta object.
+               only matches since the given date are returned. If since is a string it must be parseable
+               by pd.to_datime, or be given in the format '<n><unit:[smhdwMqy]>' for relative times, or a timedelta object. See
+               dtrelative() for details on relative times.
             end (datetime): only return data until this date
             batchsize (int): if specified, returns a generator yielding data in batches of batchsize,
                note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
                yields a list of dicts
+            slice (tuple): if specified, returns a slice of the data, e.g. slice=(10, 25) returns rows 10-25,
+               the slice is applied after all other filters
 
         Returns:
             For lazy == False:
@@ -418,7 +422,7 @@ class OmegaSimpleTracker(TrackingProvider):
             enabled the use of run='*' to retrieve all runs, equivalent of run='all'
 
         .. versionchanged:: 0.17
-            enabled since, end datetime range queries
+            enabled data(run=, start=, end=, since=), accepting range queries on run, dt and event#
         """
         from functools import cache
         experiment = experiment or self._experiment
@@ -426,8 +430,8 @@ class OmegaSimpleTracker(TrackingProvider):
         self.flush()
         # -- build filter
         if since is None:
-            run = run or self._run
-            run = list(run) if not isinstance(run, str) and isinstance(run, Iterable) else run
+            run = run if run is not None else self._run
+            run = ensurelist(run) if not isinstance(run, str) and isinstance(run, Iterable) else run
             # actual run
             # -- run is 1-indexed, so we need to adjust for -1 indexing
             #    e.g. -1 means the latest run, -2 the run before that
@@ -450,14 +454,26 @@ class OmegaSimpleTracker(TrackingProvider):
                 data.sort_values('dt', inplace=True)
             return data
 
-        def read_data_batched(cursor):
+        def read_data_batched(cursor, batchsize, slice):
+            from builtins import slice as t_slice
+            if cursor is None:
+                yield None
+                return
+            if slice:
+                slice = (slice.start or 0, slice.stop or 0) if isinstance(slice, t_slice) else slice
+                cursor.skip(slice[0])
+                cursor.limit(slice[1] - slice[0])
+                batchsize = batchsize or (slice[1] - slice[0])
             for rows in batched(cursor, batchsize):
                 data = (r.get('data') for r in rows)
                 yield read_data(data) if not raw else list(data)
 
-        if batchsize:
+        if batchsize or slice:
             data = self._store.get(self._data_name, filter=filter, lazy=True, trusted=signature(filter))
-            data = read_data_batched(data)
+            data = read_data_batched(data, batchsize, slice)
+            if slice and not batchsize:
+                # try to resolve just one iteration
+                data, _ = tryOr(lambda: (next(data), data.close()), (None, None))
         else:
             data = self._store.get(self._data_name, filter=filter, lazy=lazy, trusted=signature(filter))
             data = read_data(data) if data is not None and not lazy and not raw else data
@@ -469,12 +485,16 @@ class OmegaSimpleTracker(TrackingProvider):
         valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
         # SEC: ensure all values are basic types, to prevent operator injection
         valid_types = (str, int, float, list, tuple, date, datetime)
-        op = lambda s: {'$in': list(s)} if isinstance(s, (list, tuple)) else ensure_type(s, valid_types)
+        op = lambda s: {'$in': ensurelist(s)} if isinstance(s, (list, tuple, np.ndarray)) else ensure_type(s,
+                                                                                                           valid_types)
         ensure_type = lambda v, t: v if isinstance(v, t) else str(v)
         if valid(experiment):
             filter['data.experiment'] = op(experiment)
         if valid(run):
-            filter['data.run'] = op(run)
+            if isinstance(run, slice):
+                filter['data.run'] = {'$gte': run.start, '$lte': run.stop}
+            else:
+                filter['data.run'] = op(run)
         if valid(event):
             filter['data.event'] = op(event)
         if valid(step):
@@ -530,8 +550,11 @@ class OmegaSimpleTracker(TrackingProvider):
             return
         coll = self._store.collection(self._data_name)
         idxs = [
-            {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING},
-            {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING},
+            {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
+             'data.experiment': pymongo.ASCENDING},
+            {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
+             'data.experiment': pymongo.ASCENDING},
+            {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING},
         ]
         for specs in idxs:
             ensure_index(coll, specs)
@@ -641,6 +664,7 @@ def dtrelative(delta, now=None, as_delta=False):
         delta (str|timedelta): the relative delta, if a string, specify as '[+-]<n><unit:[smhdwMqy]>',
           e.g. '1d' for one day, '-1d' for one day ago, '+1d' for one day from now. Special cases:
           '-0y' means the beginning of the current year, '+0y' means the end of the current year.
+          smhdwMqy = seconds, minutes, hours, days, weeks, months, quarters, years
         now (datetime): the reference datetime, defaults to datetime.utcnow()
         as_delta (bool): if True, returns a timedelta object, otherwise a datetime object
 
