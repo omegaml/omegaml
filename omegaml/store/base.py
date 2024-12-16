@@ -1142,11 +1142,16 @@ class OmegaStore(object):
 
         Args:
             name (str): name of object
-            hidden (bool): if True, include hidden files
+            hidden (bool): if True, include hidden files, defaults to
+              False, unless name starts with '.'
 
         Returns:
             bool, True if object exists
+
+        .. versionchanged:: 0.16.4
+            hidden defaults to True if name starts with '.'
         """
+        hidden = True if name.startswith('.') else hidden
         return name in self.list(name, hidden=hidden)
 
     def object_store_key(self, name, ext, hashed=None):
