@@ -266,7 +266,7 @@ class TrackingProvider:
         raise NotImplementedError
 
     def tensorflow_callback(self):
-        from omegaml.backends.tracking import TensorflowCallback
+        from omegaml.backends.tracking.tflow import TensorflowCallback
         return TensorflowCallback(self)
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):
