@@ -110,3 +110,11 @@ class OmegaModelProxy(RuntimeProxyBase):
         }
         all_exps = dict(**by_label, **unlabeled)
         return {k: v for k, v in all_exps.items() if not label or k == label}
+
+    def monitor(self, label=None, provider=None, **tracker_kwargs):
+        """ return the monitor for this model
+
+        Returns:
+            OmegaMonitorProxy() instance
+        """
+        return self.experiment(label=label, provider=provider, **tracker_kwargs).as_monitor(self.modelname)
