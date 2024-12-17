@@ -9,10 +9,12 @@ import os
 import pymongo
 import weakref
 from datetime import datetime
-from omegaml.util import inprogress
 from time import sleep
 from yaspin import yaspin
 
+from omegaml.util import inprogress
+
+logger = logging.getLogger(__name__)
 
 class LunaMonitor:
     """ a simple effective monitor that runs checks in the background
