@@ -3,7 +3,8 @@ from unittest import TestCase
 from nbformat import v4
 from urllib.parse import quote
 
-from omegaml import Omega, restapi
+from omegaml import Omega
+from omegaml.server import restapi
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin

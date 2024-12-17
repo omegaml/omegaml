@@ -21,7 +21,7 @@ class OmegaStoreContentsManager(ContentsManager):
     Adopted from notebook/services/contents/filemanager.py
 
     This requires a properly configured omegaml instance.
-    see http://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
+    see https://jupyter-server.readthedocs.io/en/latest/developers/contents.html
     """
 
     def __init__(self, **kwargs):

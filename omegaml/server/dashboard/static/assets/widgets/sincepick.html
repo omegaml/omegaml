@@ -1,0 +1,49 @@
+<div class="container">
+    <div class="input-group mb-3">
+        <!-- drop-down with predefined values -->
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+                    data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                Since
+            </button>
+            <div id="dropdown-options" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            </div>
+        </div>
+
+        <!-- Button to toggle datetime picker visibility -->
+        <button class="btn   btn-icon" data-bs-toggle="modal" data-bs-target="#datetimePickerModal"
+                id="toggle-datetime">
+            <i class="fa-regular fa-calendar"></i>
+        </button>
+        <!-- Modal for datetime picker -->
+        <div class="modal fade" id="datetimePickerModal" tabindex="-1" aria-labelledby="datetimePickerModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="datetimePickerModalLabel">
+                            Select Date Range
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="datetime-local" class="form-control" id="start-datetime"
+                               aria-label="Start Date and Time"/>
+                        <span class="input-text">to</span>
+                        <input type="datetime-local" class="form-control" id="end-datetime"
+                               aria-label="End Date and Time"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="dtrangeSave">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,175 @@
+{% extends "dashboard/layouts/base.html" %}
+
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ segment | title }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>{{ segment | title }} Cards</h5>
+                    {% block segmentheader %}
+                    {% endblock segmentheader %}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="row">
+                    {% if cards %}
+                    {% for item in cards %}
+                    <div class="col-md-3 col-sm-6 miniapps">
+                      <div class="card h-60 clickable-card" data-href="{{ item.name }}">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ item.name | replace(segment + '/', '') }}</h5>
+                          <div class="card-icon">
+                            <i class="fas fa-chart-line"></i> {# You can change this icon as needed #}
+                          </div>
+                          <p class="card-text">{{ item.attributes.docs }}</p>
+                        </div>
+                        <div class="card-footer">
+                          <a href="{{ item.name }}" class="btn btn-icon btn-sm view-btn">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="col-12 text-center">
+                      <div class="alert alert-info py-5 shadow-sm">
+                        <h4 class="alert-heading mb-4"><i class="fas fa-info-circle"></i> No Cards Found</h4>
+                        <p class="mb-4">Cards are visual containers that help organize and present information in a
+                          clean, structured way.</p>
+                        <hr>
+                        <p class="mb-0">
+                          To create a new card, simply create a @virtualobj function and store it in scripts/cards.
+                          Your function must return a list of dicts
+                        <pre>[{ "title": "some title", "content": "<html>"}, ...]</pre>
+                        </p>
+                      </div>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block javascripts %}
+<script>
+  $(function () {
+
+    // Ensure all cards in a row have the same height
+    function equalizeCardHeights() {
+      $('.row .miniapps').each(function () {
+        let maxHeight = 0;
+        $(this).find('.card').height('auto');
+        $(this).find('.card').each(function () {
+          maxHeight = Math.max(maxHeight, $(this).height());
+        });
+        $(this).find('.card').height(maxHeight);
+      });
+    }
+
+    // open click anywhre on the card
+    $('.clickable-card').click(function (e) {
+      // Prevent navigation if they clicked the actual button
+      if (!$(e.target).closest('.view-btn').length) {
+        window.location = $(this).data('href');
+      }
+    });
+
+    // Optional: Add hover effect to indicate clickability
+    $('.clickable-card').hover(
+      function () {
+        $(this).addClass('shadow');
+      },
+      function () {
+        $(this).removeClass('shadow');
+      }
+    );
+
+    // Run on load and resize
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+  });
+</script>
+{% endblock %}
+{% block stylesheets %}
+<style>
+  .miniapps .card {
+    margin-left: -15px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+    position: relative;
+    padding-bottom: 50px;
+    /* Space for the button */
+  }
+
+  .miniapps .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .miniapps .card-icon {
+    font-size: 96px;
+    text-align: center;
+    color: #007bff;
+  }
+
+  .miniapps .card-text {
+    height: 4.5em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .miniapps .card-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: transparent;
+    border-top: none;
+    padding: 10px;
+  }
+
+  .miniapps a {
+    float: right;
+  }
+
+  .clickable-card {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}

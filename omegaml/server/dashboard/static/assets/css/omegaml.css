@@ -1,0 +1,317 @@
+/* make tabs resizable */
+.tab-content {
+  resize: vertical;
+  overflow: auto;
+}
+
+/* move navbar closer to top */
+body > header > div.collapse.navbar-collapse {
+  height: 50px;
+}
+
+/* make logo appear in collapsed navbar */
+.pcoded-navbar.navbar-collapsed .header-logo img {
+  -webkit-transform: unset !important;
+  opacity: 1 !important;
+}
+
+/* h-align top controls with content */
+.pcoded-header .navbar-nav > li:first-child {
+  padding-left: 11px;
+}
+
+/* remove top padding in main content */
+.pcoded-main-container .pcoded-content {
+  position: relative;
+  display: block;
+  padding: 0px 30px 30px 30px;
+}
+
+/* https://datatables.net/examples/basic_init/scroll_x.html  */
+#logviewer_wrapper {
+  width: 100pct;
+  margin: 0 auto;
+  display: inline;
+}
+
+/* dark table text color */
+.dark .table {
+  color: #e2e1e1;
+}
+
+.dark .table :hover {
+  color: #e2e1e1;
+}
+
+/* button with icons */
+.btn-icon {
+  padding: 0px 5px;
+}
+
+/* reset input field font size */
+.form-control {
+  font-size: 1rem;
+}
+
+/* input field with icons, source https://bootsnipp.com/snippets/6aGm */
+.input-group-addon.primary {
+  color: rgb(255, 255, 255);
+  background-color: rgb(50, 118, 177);
+  border-color: rgb(40, 94, 142);
+}
+.input-group-addon.success {
+  color: rgb(255, 255, 255);
+  background-color: rgb(92, 184, 92);
+  border-color: rgb(76, 174, 76);
+}
+.input-group-addon.info {
+  color: rgb(255, 255, 255);
+  background-color: rgb(57, 179, 215);
+  border-color: rgb(38, 154, 188);
+}
+.input-group-addon.warning {
+  color: rgb(255, 255, 255);
+  background-color: rgb(240, 173, 78);
+  border-color: rgb(238, 162, 54);
+}
+.input-group-addon.danger {
+  color: rgb(255, 255, 255);
+  background-color: rgb(217, 83, 79);
+  border-color: rgb(212, 63, 58);
+}
+
+/* slide-in modal panels  */
+/* https://bootsnipp.com/snippets/D0aq4 */
+.modal-dialog-slideout {
+  min-height: 100%;
+  margin: 0 0 0 auto;
+  background: #fff;
+}
+.modal.fade .modal-dialog.modal-dialog-slideout {
+  -webkit-transform: translate(100%, 0) scale(1);
+  transform: translate(100%, 0) scale(1);
+}
+.modal.fade.show .modal-dialog.modal-dialog-slideout {
+  -webkit-transform: translate(0, 0);
+  transform: translate(0, 0);
+  display: flex;
+  align-items: stretch;
+  -webkit-box-align: stretch;
+  height: 100%;
+}
+.modal.fade.show .modal-dialog.modal-dialog-slideout .modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.modal-dialog-slideout .modal-content {
+  border: 0;
+}
+.modal-dialog-slideout .modal-header,
+.modal-dialog-slideout .modal-footer {
+  height: 69px;
+  display: block;
+}
+.modal-dialog-slideout .modal-header h5 {
+  float: left;
+}
+.modal-xxl {
+  max-width: 90%;
+  width: 90%;
+}
+
+/* card header buttons */
+.card-header .card-tools {
+  float: right;
+  font-size: 5px;
+  position: relative;
+  top: -8px;
+  right: -10px;
+}
+
+.card-header:has(.card-tools) {
+  padding-bottom: 0px;
+}
+
+.card-tools .btn,
+i {
+  /* margin-left: 10px; */
+  margin-right: 10px;
+}
+
+/* tab pane */
+.tab-pane {
+  min-height: 500px;
+}
+
+/* btn formatting */
+.btn {
+  height: 46px;
+}
+
+.btn.btn-icon {
+  height: 46px;
+}
+
+/* run cards exp view */
+.run-card:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+.run-card.selected {
+  border: 2px solid #0d6efd;
+  background-color: #e9ecef;
+}
+.metric-badge {
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+/* loading indicator */
+#loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background-color: rgba(0, 123, 255, 0.8);
+  z-index: 9999;
+  transition: width 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+#loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  z-index: 9999;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  text-align: center;
+  min-width: 200px;
+}
+
+#loading-indicator i {
+  color: #007bff;
+  font-size: 24px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+#loading-indicator span {
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+/* Optional overlay */
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  display: none;
+  z-index: 9998;
+}
+
+/* monitoring snapshots */
+.snapshot-item {
+  cursor: pointer;
+  padding: 10px;
+  border-left: 4px solid transparent;
+}
+.snapshot-item:hover {
+  background-color: #f8f9fa;
+}
+.snapshot-item.active {
+  border-left-color: #007bff;
+  background-color: #f1f8ff;
+}
+.snapshot-list {
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.chart-container {
+  height: calc(100vh - 100px);
+  position: relative;
+}
+.snapshot-item b,
+strong {
+  font-weight: bolder;
+}
+
+/* data table button placement */
+.btn-container {
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: flex-end; /* Align items to the right */
+}
+
+.btn-container .dt-buttons {
+  margin-right: 1em; /* Space between button and search input */
+}
+
+.btn-container .dt-buttons i {
+  margin-left: 2px; /* Space between icon and text */
+  line-height: 1; /* Ensure icon is centered */
+}
+
+/* code explain */
+.code-explain .code-example {
+  background: #f8faff;
+  border: none;
+  border-radius: 4px;
+}
+.code-explain .nav-pills {
+  box-shadow: none;
+  padding: 0px;
+  padding-bottom: 10px;
+}
+.code-explain .nav-pills .nav-link.active {
+  background-color: #4099ff;
+  color: white;
+  box-shadow: none;
+}
+.code-explain .nav-pills .nav-link {
+  color: #0e5cff;
+  border: 1px solid #e9ecef;
+}
+.code-explain .nav-pills .nav-link:hover {
+  color: #0e5cff;
+}
+.code-explain .tab-content {
+  background-color: #fff !important;
+  padding: 0px;
+  box-shadow: none;
+}
+.code-explain .copy-btn {
+  position: absolute;
+  right: 30px;
+  margin-top: 20px;
+  background: transparent;
+  border: 1px solid #4099ff;
+  color: #4099ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.code-explain .copy-btn:hover {
+  background: #4099ff;
+  color: white;
+}
+.code-explain .copy-btn:focus {
+  outline: none;
+}
+.code-explain pre[class*="language-"] {
+  background: transparent;
+}
+.code-explain code[class*="language-"],
+.code-explain pre[class*="language-"] {
+  color: #0a2942;
+}

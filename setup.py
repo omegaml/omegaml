@@ -49,7 +49,8 @@ install_deps = [
     'scikit-learn>=1.2',
     'PyYAML>=3.12',
     'flask-restx>=1.1.0',
-    'Flask<3.0',  # due to https://github.com/python-restx/flask-restx/issues/566
+    'Flask>3.0',  # due to https://github.com/python-restx/flask-restx/issues/566
+    'Flask-Session',
     'croniter>=0.3.30',
     'nbformat>=4.0.1',
     'nbconvert>=6.4.0',
@@ -77,6 +78,7 @@ setup(
     name='omegaml',
     version=version,
     packages=find_packages(),
+    find_namespace_packages=False,
     include_package_data=True,
     data_files=[
         ('omegaml/docs', glob.glob('./docs/source/nb/*.ipynb')),
