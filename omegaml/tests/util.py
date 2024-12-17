@@ -2,13 +2,20 @@ from http import HTTPStatus
 
 import os
 import warnings
+
 from omegaml import Omega
+from omegaml.client.lunamon import LunaMonitor
 
 
 class OmegaTestMixin(object):
     def setUp(self):
+        super().setUp()
         self.om = Omega()
         self.clean()
+
+    def tearDown(self):
+        super().tearDown()
+        LunaMonitor.stop_all()
 
     def shortDescription(self):
         # always print method name instead of docstring
@@ -16,6 +23,9 @@ class OmegaTestMixin(object):
         return None
 
     def clean(self, bucket=None):
+        # stop monitoring to avoid interference with tests
+        LunaMonitor.stop_all()
+        # clean om stores
         om = self.om[bucket] if bucket is not None else self.om
         for element in ('models', 'jobs', 'datasets', 'scripts', 'streams'):
             part = getattr(om, element)
@@ -23,10 +33,14 @@ class OmegaTestMixin(object):
             drop_kwargs = {}
             if element == 'streams':
                 drop_kwargs = {'keep_data': False}
+            # drop all members
             [drop(m.name,
                   force=True,
                   **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
-            self.assertListEqual(part.list(hidden=True, include_temp=True), [])
+            # ignore system members, as they may get recreated e.g. by LunaMonitor
+            existing = [m.name for m in part.list(hidden=True, include_temp=True)
+                        if not m.name.startswith('.system')]
+            self.assertListEqual(existing, [])
 
     @property
     def _async_headers(self):

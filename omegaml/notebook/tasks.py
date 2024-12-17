@@ -6,7 +6,6 @@ from __future__ import absolute_import
 import datetime
 from celery import shared_task
 from celery.utils.log import get_task_logger
-
 from omegaml.celery_util import OmegamlTask, sanitized
 from omegaml.documents import MDREGISTRY
 
@@ -84,12 +83,15 @@ def schedule_omegaml_job(self, nb_file, **kwargs):
 def execute_scripts(self, **kwargs):
     """
     run scheduled jobs
+
+    .. versionchanged:: 0.16.4
+       hidden jobs are now included in the list of jobs to run
     """
     logger = get_task_logger(self.name)
     om = self.om
     now = kwargs.get('now') or datetime.datetime.now()
     # get pending tasks, execute if time is right
-    for job_meta in om.jobs.list(raw=True):
+    for job_meta in om.jobs.list(raw=True, hidden=True):
         if job_meta.name.startswith('results'):
             # ignore any scheduled results
             continue
