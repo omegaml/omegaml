@@ -179,7 +179,7 @@ class ModelVersionMixin(object):
         return hasher.hexdigest()
 
     def _model_version_store_key(self, name, version_hash):
-        return '_versions/{}/{}'.format(name, version_hash)
+        return '.versions/{}/{}'.format(name, version_hash)
 
     def _model_version_applies(self, name):
         return self.prefix.startswith('models/')
