@@ -4,7 +4,7 @@ services:
     ports:
       - "27017:27017"
       - "28017:28017"
-    command: [ "--auth", "--oplogSize", "100" ]
+    command: [ "--auth", "--oplogSize", "100", "--quiet" ]
   rabbitmq:
     image: rabbitmq:3.13
     ports:

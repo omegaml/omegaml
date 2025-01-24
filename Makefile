@@ -25,14 +25,14 @@ freeze:
 
 sanity:
 	# quick sanity check -- avoid easy mistakes
-	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
+	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli --version
 
 dist: sanity
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
 	# set DISTTAGS to specify eg --python-tag for bdist
-	python setup.py sdist bdist_wheel ${DISTTAGS}
+	python -m build --sdist --wheel --config-setting "--build-option=${DISTTAGS}"
 	twine check dist/*.whl
 
 livetest: dist
