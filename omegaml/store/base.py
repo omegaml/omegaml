@@ -469,6 +469,7 @@ class OmegaStore(object):
            defaults to True. False may reduce memory and increase speed on large dataframes.
         :return: the Metadata object created
         """
+        import pandas as pd
         from .queryops import MongoQueryOps
         collection = self.collection(name)
         if is_series(obj):
@@ -508,6 +509,9 @@ class OmegaStore(object):
         # store dataframe indicies
         # FIXME this may be a performance issue, use size stored on stats or metadata
         row_count = self.collection(name).estimated_document_count()
+        # fixes #466, ensure column names are strings in a multiindex
+        if isinstance(obj.columns, pd.MultiIndex):
+            obj.columns = obj.columns.map('_'.join)
         obj, idx_meta = unravel_index(obj, row_count=row_count)
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
