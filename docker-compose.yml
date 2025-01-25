@@ -74,6 +74,7 @@ services:
   mongodb:
     image: mongo:7.0
     hostname: mongodb
+    command: [ "--quiet" ]
     ports:
       - 27017:27017
     environment:
