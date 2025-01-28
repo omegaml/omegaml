@@ -1,15 +1,14 @@
 # -- FILE: features/environment.py
 # CONTAINS: Browser fixture setup and teardown
-import os
-
 import nbformat
+import os
 from behave import fixture, use_fixture
-from selenium.webdriver import ChromeOptions
-from splinter import Browser
-
+from behave.model_core import Status
 from omegaml import settings
 from omegaml.tests.features.util import istrue
 from omegaml.tests.util import clear_om
+from selenium.webdriver import ChromeOptions
+from splinter import Browser
 
 
 @fixture
@@ -24,7 +23,7 @@ def splinter_browser(context):
         options = ChromeOptions()
         options.add_argument('--no-sandbox')
         # https://stackoverflow.com/a/75939337/890242
-        #options.add_argument('--headless=new')
+        # options.add_argument('--headless=new')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
@@ -68,15 +67,17 @@ def before_all(context):
     context.om = om.setup()
     context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
 
+
 def before_scenario(context, scenario):
     # FIXME we do this because context.feature is set dynamically in EE testing
     context.feature.jynb_url = context.jynb_url
+
 
 def after_step(context, step):
     clean_stepname = step.name.replace('.', '_').replace('/', '_')
     context.screenshotfn = os.path.join(context.screenshot_path, clean_stepname + '.png')
     context.browser.screenshot(context.screenshotfn)
-    if context.debug and step.status == "failed":
+    if context.debug and step.status in (Status.failed, "failed"):
         # -- ENTER DEBUGGER: Zoom in on failure location.
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb
@@ -106,4 +107,3 @@ def after_scenario(context, scenario):
         if context.debug:
             import ipdb
             ipdb.post_mortem()
-

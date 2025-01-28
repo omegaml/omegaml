@@ -1,4 +1,4 @@
-ARG pyver=3.9
+ARG pyver=3.10
 FROM jupyter/datascience-notebook:python-${pyver}
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
@@ -10,5 +10,6 @@ RUN /app/scripts/setup-r.sh
 #ensure PYTHONUSERBASE is created
 USER jovyan
 RUN pip install --ignore-installed --user -U six
+RUN jupyter lab build
 
 

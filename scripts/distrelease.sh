@@ -17,6 +17,8 @@ source $script_dir/easyoptions || exit
 source $script_dir/omutils || exit
 
 builddir=build
+distname=${distname:-omegaml}
+version=${version:-$(head -n1 omegaml/VERSION)}
 distdir=dist/staging/$distname
 srcdir=scripts/docker/$distname
 runtime_scripts=scripts/runtime

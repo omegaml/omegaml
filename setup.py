@@ -1,7 +1,7 @@
 import glob
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).readlines()[0]
@@ -77,8 +77,7 @@ install_deps = [
 setup(
     name='omegaml',
     version=version,
-    packages=find_packages(),
-    find_namespace_packages=False,
+    packages=find_namespace_packages(),
     include_package_data=True,
     data_files=[
         ('omegaml/docs', glob.glob('./docs/source/nb/*.ipynb')),
