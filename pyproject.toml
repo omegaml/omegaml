@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools >= 61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omegaml"
+description = "An open source DataOps, MLOps platform for humans"
+dynamic = ["version", "readme", "dependencies", "scripts", "license", "authors", "classifiers",
+           "urls", "optional-dependencies" ]
+

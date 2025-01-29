@@ -10,6 +10,7 @@ from omegaml.util import load_class, settings, base_loader
 #: session cache
 session_cache = cachetools.cached(cache=cachetools.TTLCache(**_base_config.OMEGA_SESSION_CACHE))
 
+
 # link implementation
 def link(_omega):
     # link a specific implementation lazy loaded at runtime
@@ -31,7 +32,7 @@ def link(_omega):
 # -- deferred instance provides setup to load and link on access
 _omega = base_loader(_base_config)
 setup = _omega.setup
-version = getattr(_omega, 'version', version)
+__version__ = version = getattr(_omega, 'version', version)
 Omega = _omega.Omega
 _omega.OmegaDeferredInstance = getattr(_omega, 'OmegaDeferredInstance', OmegaDeferredInstance)
 # setup API
