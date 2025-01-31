@@ -1,9 +1,10 @@
 import unittest
 
-from omegaml import Omega, restapi
+from omegaml import Omega
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModelHandler
 from omegaml.backends.genai.openai import OpenAIModelBackend
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
