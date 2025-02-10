@@ -6,8 +6,9 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 from pathlib import Path
+
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
