@@ -658,6 +658,19 @@ def keras_available():
     return module_available('keras')
 
 
+def mlflow_available():
+    # -- ignore pydantic warning
+    # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
+    # see https://github.com/mlflow/mlflow/pull/13023
+    try:
+        import warnings
+        from pydantic import PydanticDeprecatedSince20
+        warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20, module='mlflow')
+    except:
+        pass
+    return module_available('mlflow')
+
+
 def calltrace(obj):
     """
     trace calls on an object

@@ -126,7 +126,7 @@ class GenericModelResource(object):
                     emitter.run(blocking=False)
                     for chunk in buffer:
                         yield self.prepare_result(chunk, model_id=model_id)
-                    # buffer.clear()
+                    buffer.clear()
                     sleep(0.01)
 
             return stream_result(promise)

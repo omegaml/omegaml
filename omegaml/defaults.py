@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 from pathlib import Path
 
 # determine how we're run
@@ -115,6 +115,7 @@ OMEGA_STORE_BACKENDS = {
     'python.package': 'omegaml.backends.package.PythonPackageData',
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
+    'genai.llm': 'omegaml.backends.genai.models.GenAIBaseBackend',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
@@ -445,7 +446,7 @@ def load_framework_support(vars=globals()):
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
     #: mlflow backends
-    if module_available('mlflow'):
+    if mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
     #: openapi backend
     if module_available('openai'):

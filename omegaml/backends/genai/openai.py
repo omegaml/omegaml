@@ -255,14 +255,16 @@ class OpenAIModel(GenAIModel):
             # convert pandas dataframe to records
             messages = messages.to_dict('records')
         if messages is None:
-            messages = [self._system_message()]
+            messages = [self._system_message(conversation_id=conversation_id)]
             self.data_store.put(messages, self.dataset, kind='pandas.rawdict')
         responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data, **kwargs)
+        to_store = []
         for response in responses:
             response, prompt_message, response_message = response
+            # wrapping in dict() to avoid modification by the data store (e.g. adding _id)
             to_store = [
-                prompt_message,
-                response_message
+                dict(prompt_message),
+                dict(response_message)
             ]
             yield conversation_id, response, prompt_message, response_message
         else:
@@ -274,6 +276,7 @@ class OpenAIModel(GenAIModel):
         else:
             filter = {'conversation_id': conversation_id}
         messages = self.data_store.get(self.dataset, **filter)
+        messages = messages[[c for c in messages.columns if c != '_id']]
         return messages if not raw else messages.to_dict('records')
 
     def _system_message(self, conversation_id=None):

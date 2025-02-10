@@ -9,7 +9,7 @@ from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
 
-class MyTestCase(OmegaTestMixin, unittest.TestCase):
+class GenAITestCase(OmegaTestMixin, unittest.TestCase):
     def setUp(self):
         app = restapi.create_app()
         self.client = RequestsLikeTestClient(app, is_json=True)
