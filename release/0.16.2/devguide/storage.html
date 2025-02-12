@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,21 +7,17 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Storage backends &mdash; omega-ml 1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -38,9 +36,6 @@
           <a href="../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                1.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -94,7 +89,7 @@
 <div class="version-warning-banner">
     
     You're reading an old version of this documentation.
-    If you want up-to-date information, please have a look at <a href="../../0.16.3/devguide/storage.html">release/0.16.3</a>.
+    If you want up-to-date information, please have a look at <a href="../../0.16.4/devguide/storage.html">release/0.16.4</a>.
     
 </div>
 
@@ -158,7 +153,7 @@ to set the collection name for a given object.</p>
 <p>If the data type of an object is some form of iterable a MongoDB collection
 may be well suited to store the data.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
-<span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># store obj in collection</span>
    <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
    <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">])</span>
@@ -176,7 +171,7 @@ the tutorial on <cite>MongoDB documents</cite> and <a class="reference external"
 </div>
 <p>If the data type is of binary form, a GridFS file may be the better choice.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
-<span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># store obj in gridfs</span>
    <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
    <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
@@ -207,7 +202,7 @@ the necessary pointers. For data stored outside mongodb, <code class="code docut
 an arbitrary URI that a backend can set (on <code class="code docutils literal notranslate"><span class="pre">put</span></code>) and use for retrieval
 (on <code class="code docutils literal notranslate"><span class="pre">get</span></code>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
-<span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># store obj in some external file system</span>
    <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
    <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
@@ -222,7 +217,7 @@ an arbitrary URI that a backend can set (on <code class="code docutils literal n
    <span class="n">meta</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span>
    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
-<span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># get metadata and URI</span>
    <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
    <span class="n">uri</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">uri</span>
@@ -237,7 +232,7 @@ an arbitrary URI that a backend can set (on <code class="code docutils literal n
 <h2>Data backend<a class="headerlink" href="#data-backend" title="Link to this heading">¶</a></h2>
 <p>A data backend minimally provides the <code class="code docutils literal notranslate"><span class="pre">put</span></code> and <code class="code docutils literal notranslate"><span class="pre">get</span></code> methods:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
-<span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># code to store the object</span>
     <span class="o">...</span>
     <span class="c1"># create or update the metadata object</span>
@@ -247,7 +242,7 @@ an arbitrary URI that a backend can set (on <code class="code docutils literal n
     <span class="c1"># always save the Metadata instance before returning</span>
     <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
-<span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># code to retrieve the object</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="o">...</span>
     <span class="k">return</span> <span class="n">obj</span>
@@ -278,18 +273,14 @@ retrieve the model and any data required.</p>
 <dd><p>fit the model with data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>modelname</strong> – the name of the model object</p>
-</dd>
-</dl>
-<p>ci:param Xname: the name of the X data set
-:param Yname: the name of the Y data set
-:param pure_python: if True return a python object. If False return</p>
-<blockquote>
-<div><p>a dataframe. Defaults to True to support any client.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>return the meta data object of the model</p>
@@ -399,6 +390,7 @@ will raise the <code class="code docutils literal notranslate"><span class="pre"
       <dd><a href="../../0.16.1/devguide/storage.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="storage.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../0.16.3/devguide/storage.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/devguide/storage.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../0.9/devguide/storage.html" class="version-ref-release/0.9">0.9</a></dd>

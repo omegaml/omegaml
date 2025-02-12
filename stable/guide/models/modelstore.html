@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction to models &mdash; omega-ml 1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+  <title>Introduction to models &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=56dcb7b8"></script>
-        <script src="../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -38,9 +36,6 @@
           <a href="../../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                1.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -63,10 +58,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="metrics.html">Capturing model metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="businessmodels/index.html">Adding business logic to models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="frameworks/index.html">Working with ML frameworks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracking/index.html">Monitoring model and data drift</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scripts/index.html">Working with scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../streams/index.html">Working with streams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
@@ -79,6 +78,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
 </ul>
 
         </div>
@@ -124,7 +124,7 @@ Any backend can be implemented using the backend API.</p>
 <h2>Storing models<a class="headerlink" href="#storing-models" title="Link to this heading">¶</a></h2>
 <p>Storing models and pipelines is as straight forward as storing Pandas DataFrames and Series.
 Simply create the model, then use <code class="code docutils literal notranslate"><span class="pre">om.models.put()</span></code> to store:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
 
 <span class="c1"># train a linear regression model</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">)))</span>
@@ -301,6 +301,42 @@ attributes on the model’s metadata.</p>
 </pre></div>
 </div>
 </section>
+<section id="model-metadata">
+<h3>Model Metadata<a class="headerlink" href="#model-metadata" title="Link to this heading">¶</a></h3>
+<p>Whenever you fit a model using the runtime, it’s <cite>Metadata.attributes</cite> will
+automatically record the parameters used for fitting.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;sample[x]&#39;</span><span class="p">,</span> <span class="s1">&#39;sample[y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span>
+    <span class="s1">&#39;Xname&#39;</span><span class="p">:</span> <span class="s1">&#39;sample[x]&#39;</span><span class="p">,</span>  <span class="c1"># the X dataset</span>
+    <span class="s1">&#39;Yname&#39;</span><span class="p">:</span> <span class="s1">&#39;sample[y]&#39;</span><span class="p">,</span>  <span class="c1"># the Y dataset</span>
+    <span class="s1">&#39;metaX&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="o">...</span> <span class="p">},</span> <span class="c1"># Metadata for this model (at time of fit)</span>
+    <span class="s1">&#39;metaY&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="o">...</span> <span class="p">},</span> <span class="c1"># Metadata for this model (at time of fit)</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This information is also used in prediction when no dataset is provided as
+input.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+<span class="c1"># is equivalent to using meta.attributes[&#39;dataset&#39;][&#39;Xname&#39;]</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;sample[x]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you want a different dataset for prediction than the one you used for
+training, you may change it at any time:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># set the name of the dataset to a different name</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">link_dataset</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="n">Xname</span><span class="o">=</span><span class="s1">&#39;live[x]&#39;</span><span class="p">)</span>
+
+<span class="c1"># live[x] will now be used as the default dataset for prediction</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+<span class="c1"># is equivalent to</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;live[x]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="other-model-tasks">
 <h3>Other Model tasks<a class="headerlink" href="#other-model-tasks" title="Link to this heading">¶</a></h3>
 <p>The runtime provides more than just model training and prediction. The runtime implements
@@ -372,6 +408,7 @@ runtime supports the following methods on a model:</p>
       <dd><a href="../../../release/0.16.1/guide/models/modelstore.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../../release/0.16.2/guide/models/modelstore.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../../release/0.16.3/guide/models/modelstore.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/models/modelstore.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

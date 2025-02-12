@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying dbt projects &mdash; omega-ml 0.16.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+  <title>Deploying dbt projects &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=4a1014be"></script>
-        <script src="../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,9 +34,6 @@
           <a href="../../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                0.16.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -73,7 +68,7 @@
 <div class="version-warning-banner">
     
     You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../release/0.16.3/index.html">release/0.16.3</a>.
+    For the latest released version, please have a look at <a href="../../../release/0.16.4/guide/integration/dbt_multiple.html">release/0.16.4</a>.
     
 </div>
 
@@ -188,7 +183,7 @@ $ touch dbtdeploy/profiles.yml
 </li>
 <li><p>Update the <cite>setup.py</cite> and <cite>MANIFEST.in</cite> files:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># dbtdeploy/setup.py</span>
-<span class="kn">from</span> <span class="nn">setuptools</span> <span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span>
 
 <span class="n">setup</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dbtdeploy&#39;</span><span class="p">,</span>
@@ -208,7 +203,7 @@ $ touch dbtdeploy/profiles.yml
 </li>
 <li><p>Update the __init__.py file for the dbtdeploy application:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># /path/to/dbt/myproject/__init__.py</span>
-<span class="k">def</span> <span class="nf">update_dbt_profile</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_dbt_profile</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    update dbt profiles.yaml with omegaml defaults</span>
 
@@ -217,7 +212,7 @@ $ touch dbtdeploy/profiles.yml
 <span class="sd">        mod = om.scripts.get(&#39;dbt/foo&#39;, install=True)</span>
 <span class="sd">        update_dbt_profile(mod=mod, om=om)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
     <span class="n">default_fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;__file__&#39;</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">&#39;profiles.yml&#39;</span>
     <span class="n">fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="k">if</span> <span class="n">fn</span> <span class="k">else</span> <span class="n">default_fn</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fn</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -230,9 +225,9 @@ $ touch dbtdeploy/profiles.yml
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">parent</span>
 
-<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-    <span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
     <span class="n">dbt_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">project_dir</span> <span class="o">=</span> <span class="n">dbt_dir</span> <span class="o">/</span> <span class="n">project</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dbt run -d --profiles-dir </span><span class="si">{</span><span class="n">dbt_dir</span><span class="si">}</span><span class="s2"> --project-dir </span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -354,16 +349,16 @@ locally. For this we need to create a Flask application that serves the dbt proj
 <ol class="arabic">
 <li><p>Update the <cite>dbtdeploy/__init__.py</cite> file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># add this to path/to/dbt/myproject/__init__.py</span>
-<span class="k">def</span> <span class="nf">create_app</span><span class="p">(</span><span class="n">server</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uri</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">import</span> <span class="nn">uuid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">(</span><span class="n">server</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uri</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
-    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
-    <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">abort</span>
-    <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Blueprint</span>
-    <span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">abort</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Blueprint</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
 
-    <span class="kn">import</span> <span class="nn">omegaml</span> <span class="k">as</span> <span class="nn">om</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
     <span class="n">server</span> <span class="o">=</span> <span class="n">server</span> <span class="ow">or</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
     <span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span>
@@ -376,7 +371,7 @@ locally. For this we need to create a Flask application that serves the dbt proj
     <span class="n">om</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">():</span>
         <span class="c1"># present a list of project reports stored in om.datasets</span>
         <span class="c1"># -- each project report is stored as dbt/&lt;project&gt;/report.zip</span>
         <span class="n">href</span> <span class="o">=</span> <span class="s2">&quot;&lt;a href=&#39;</span><span class="si">{uri}</span><span class="s2">/</span><span class="si">{project}</span><span class="s2">/index&#39;&gt;</span><span class="si">{project}</span><span class="s2">&lt;/a&gt;&lt;br&gt;&quot;</span>
@@ -386,20 +381,20 @@ locally. For this we need to create a Flask application that serves the dbt proj
         <span class="k">return</span> <span class="n">text</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span> <span class="k">if</span> <span class="n">projects</span> <span class="k">else</span> <span class="s2">&quot;No projects found&quot;</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/index&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
         <span class="c1"># open the project report&#39;s index.html</span>
         <span class="n">_send_report_file</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">)</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/&lt;path:path&gt;&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">static_file</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">static_file</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="c1"># open a static file from the project report</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
@@ -407,7 +402,7 @@ locally. For this we need to create a Flask application that serves the dbt proj
         <span class="p">},</span> <span class="mi">404</span>
 
     <span class="nd">@file_cache</span>
-    <span class="k">def</span> <span class="nf">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="n">report_fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s1">/report.zip&#39;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_fn</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -494,10 +489,11 @@ $ om runtime restart app dbtdeploy
       <dd><a href="../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/integration/dbt_multiple.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
-      <dd><a href="../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+      <dd><a href="../../../stable/guide/integration/dbt_multiple.html" class="version-ref-stable">stable</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

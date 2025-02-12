@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>om.runtime &mdash; omega-ml 0.16.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>om.runtime &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=4a1014be"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=81998473"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -38,9 +36,6 @@
           <a href="../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                0.16.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -79,6 +74,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.sequence"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.sequence()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.settings"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.settings()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.stats"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.status"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.status()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.task"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.task()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.workers"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.workers()</span></code></a></li>
 </ul>
@@ -119,7 +115,7 @@
 <div class="version-warning-banner">
     
     You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../release/0.16.3/reference/runtimes.html">release/0.16.3</a>.
+    For the latest released version, please have a look at <a href="../../release/0.16.4/reference/runtimes.html">release/0.16.4</a>.
     
 </div>
 
@@ -154,7 +150,7 @@
 </nav>
 <dl class="py data">
 <dt class="sig sig-object py" id="omegaml.runtime">
-<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">runtime</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaRuntime(Omega())</span></em><a class="headerlink" href="#omegaml.runtime" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">runtime</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaRuntime(Omega(bucket=None))</span></em><a class="headerlink" href="#omegaml.runtime" title="Link to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="#omegaml.runtimes.OmegaRuntime" title="omegaml.runtimes.runtime.OmegaRuntime"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.runtimes.runtime.OmegaRuntime</span></code></a> runtime</p>
 <p>Methods to run models, scripts, jobs, experiments:</p>
 <blockquote>
@@ -212,7 +208,7 @@
 <p>The callback will be triggered upon successful or failed
 execution of the runtime tasks. The script syntax is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># script.py</span>
-<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># state (str): &#39;SUCCESS&#39;|&#39;ERROR&#39;</span>
     <span class="c1"># result (obj): the task&#39;s serialized result</span>
 </pre></div>
@@ -319,7 +315,7 @@ be kept)</p></li>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
 <span class="nd">@virtualobj</span>
-<span class="k">def</span> <span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># data is the list of results from each map step</span>
     <span class="k">return</span> <span class="n">data</span>
 
@@ -416,7 +412,7 @@ CRITICAL, DEBUG</p></li>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
 <span class="nd">@virtualobj</span>
-<span class="k">def</span> <span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># data is the list of results from each map step</span>
     <span class="k">return</span> <span class="n">data</span>
 
@@ -437,7 +433,7 @@ CRITICAL, DEBUG</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.ping">
-<span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.ping" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.ping" title="Link to this definition">¶</a></dt>
 <dd><p>ping the runtime</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -446,7 +442,8 @@ CRITICAL, DEBUG</p></li>
 <li><p><strong>require</strong> (<em>dict</em>) – routing requirements for this job</p></li>
 <li><p><strong>wait</strong> (<em>bool</em>) – if True, wait for the task to return, else return
 AsyncResult</p></li>
-<li><p><strong>kwargs</strong> (<em>dict</em>) – task kwargs</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – if wait is True, the timeout in seconds, defaults to 10</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – task kwargs, as accepted by CeleryTask.apply_async</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -550,7 +547,7 @@ call has been submitted.</p>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
 <span class="nd">@virtualobj</span>
-<span class="k">def</span> <span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">combined</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="c1"># data is the list of results from each map step</span>
     <span class="k">return</span> <span class="n">data</span>
 
@@ -588,6 +585,36 @@ call has been submitted.</p>
 <p class="admonition-title">See also</p>
 <p>celery Inspect.stats()</p>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.status" title="Link to this definition">¶</a></dt>
+<dd><p>current cluster status</p>
+<p>This collects key information from .labels(), .stats() and the latest
+worker heartbeat. Note that loadavg is only available if the worker has
+recently sent a heartbeat and may not be accurate across the cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl>
+<dt>a snapshot of the cluster status</dt><dd><dl class="simple">
+<dt>’&lt;worker&gt;’: {</dt><dd><p>‘loadavg’: [0.0, 0.0, 0.0],  # load average in % seen by the worker (1, 5, 15 min)
+‘processes’: 1, # number of active worker processes
+‘concurrency’: 1, # max concurrency
+‘uptime’: 0, # uptime in seconds
+‘processed’: Counter(task=n), # number of tasks processed
+‘queues’: [‘default’], # list of queues (labels) the worker is listening on</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>snapshot (dict)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -926,6 +953,7 @@ the data object</p></li>
       <dd><a href="../../release/0.16.1/reference/runtimes.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../release/0.16.2/reference/runtimes.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../release/0.16.3/reference/runtimes.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/reference/runtimes.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,21 +7,17 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>omegaml.runtime.experiment &mdash; omega-ml 1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -38,9 +36,6 @@
           <a href="../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                1.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -73,7 +68,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.OmegaSimpleTracker"><code class="docutils literal notranslate"><span class="pre">OmegaSimpleTracker</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.OmegaProfilingTracker"><code class="docutils literal notranslate"><span class="pre">OmegaProfilingTracker</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.NoTrackTracker"><code class="docutils literal notranslate"><span class="pre">NoTrackTracker</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.TensorflowCallback"><code class="docutils literal notranslate"><span class="pre">TensorflowCallback</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#runtime-integration">Runtime Integration</a></li>
@@ -100,7 +94,7 @@
 <div class="version-warning-banner">
     
     You're reading an old version of this documentation.
-    If you want up-to-date information, please have a look at <a href="../../0.16.3/reference/tracking.html">release/0.16.3</a>.
+    If you want up-to-date information, please have a look at <a href="../../0.16.4/reference/tracking.html">release/0.16.4</a>.
     
 </div>
 
@@ -398,25 +392,31 @@ no active run exists.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.data">
-<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.data" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.data" title="Link to this definition">¶</a></dt>
 <dd><p>build a dataframe of all stored data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>experiment</strong> (<em>str</em><em>|</em><em>list</em>) – the name of the experiment, defaults to its current value</p></li>
-<li><p><strong>run</strong> (<em>int</em><em>|</em><em>list</em><em>|</em><em>str</em>) – the run(s) to get data back, defaults to current run, use ‘all’ for all,
+<li><p><strong>run</strong> (<em>int</em><em>|</em><em>list</em><em>|</em><em>str</em><em>|</em><em>slice</em>) – the run(s) to get data back, defaults to current run, use ‘all’ for all,
 1-indexed since first run, or -1 indexed from latest run, can combine both. If run &lt; 0
-would go before the first run, run 1 will be returned.</p></li>
+would go before the first run, run 1 will be returned. A slice(start, stop) can be used
+to specify a range of runs.</p></li>
 <li><p><strong>event</strong> (<em>str</em><em>|</em><em>list</em>) – the event(s) to include</p></li>
 <li><p><strong>step</strong> (<em>int</em><em>|</em><em>list</em>) – the step(s) to include</p></li>
 <li><p><strong>key</strong> (<em>str</em><em>|</em><em>list</em>) – the key(s) to include</p></li>
 <li><p><strong>raw</strong> (<em>bool</em>) – if True returns the raw data instead of a DataFrame</p></li>
 <li><p><strong>lazy</strong> (<em>bool</em>) – if True returns the Cursor instead of data, ignores raw</p></li>
-<li><p><strong>since</strong> (<em>datetime</em>) – only return data since this date. If both since and run are specified,
-run is ignored and all runs since the date are returned</p></li>
+<li><p><strong>since</strong> (<em>datetime</em><em>|</em><em>timedelta</em><em>|</em><em>str</em>) – only return data since this date. If both since and run are specified,
+only matches since the given date are returned. If since is a string it must be parseable
+by pd.to_datime, or be given in the format ‘&lt;n&gt;&lt;unit:[smhdwMqy]&gt;’ for relative times, or a timedelta object. See
+dtrelative() for details on relative times.</p></li>
+<li><p><strong>end</strong> (<em>datetime</em>) – only return data until this date</p></li>
 <li><p><strong>batchsize</strong> (<em>int</em>) – if specified, returns a generator yielding data in batches of batchsize,
 note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
 yields a list of dicts</p></li>
+<li><p><strong>slice</strong> (<em>tuple</em>) – if specified, returns a slice of the data, e.g. slice=(10, 25) returns rows 10-25,
+the slice is applied after all other filters</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -449,6 +449,9 @@ yields a list of dicts</p></li>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">Changed in version 0.17: </span>enabled the use of run=’*’ to retrieve all runs, equivalent of run=’all’</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17: </span>enabled data(run=, start=, end=, since=), accepting range queries on run, dt and event#</p>
 </div>
 </dd></dl>
 
@@ -648,7 +651,7 @@ in this case all data must be of the same type. Defaults to True.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.start" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">immediate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.start" title="Link to this definition">¶</a></dt>
 <dd><p>start a new run</p>
 <p>This starts a new run and logs the start event</p>
 </dd></dl>
@@ -669,7 +672,7 @@ in this case all data must be of the same type. Defaults to True.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.stop">
-<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.stop" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flush</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.stop" title="Link to this definition">¶</a></dt>
 <dd><p>stop the current run</p>
 <p>This stops the current run and records the stop event</p>
 </dd></dl>
@@ -736,11 +739,6 @@ learning algorithms tend to use CPU and memory over longer periods of time.</p><
 </dd></dl>
 
 <p><em>for tensorflow</em></p>
-<dl class="py class">
-<dt class="sig sig-object py" id="omegaml.backends.experiment.TensorflowCallback">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">TensorflowCallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.TensorflowCallback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </section>
 <section id="runtime-integration">
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Runtime Integration</a><a class="headerlink" href="#runtime-integration" title="Link to this heading">¶</a></h2>
@@ -801,6 +799,7 @@ learning algorithms tend to use CPU and memory over longer periods of time.</p><
       <dd><a href="../../0.16.1/reference/tracking.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="tracking.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../0.16.3/reference/tracking.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/reference/tracking.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

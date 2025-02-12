@@ -1,0 +1,6 @@
+# run check-manifest to check if this matches your expectations
+include *.in
+include *.py
+recursive-include */static *
+recursive-include */templates *
+recursive-include packages *

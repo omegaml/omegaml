@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,21 +7,17 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>om.jobs &mdash; omega-ml 1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -38,9 +36,6 @@
           <a href="../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                1.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -112,7 +107,7 @@
 <div class="version-warning-banner">
     
     You're reading an old version of this documentation.
-    If you want up-to-date information, please have a look at <a href="../../0.16.3/reference/jobs.html">release/0.16.3</a>.
+    If you want up-to-date information, please have a look at <a href="../../0.16.4/reference/jobs.html">release/0.16.4</a>.
     
 </div>
 
@@ -251,7 +246,7 @@ event-kind ‘scheduled’.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs.export">
-<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">localpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'html'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.export" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">localpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'memory'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'html'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.export" title="Link to this definition">¶</a></dt>
 <dd><p>Export a job or result file to HTML</p>
 <p>The job is exported in the given format.</p>
 <dl class="field-list simple">
@@ -395,13 +390,17 @@ The default is all, i.e. <cite>.*</cite></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs.put">
 <span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.put" title="Link to this definition">¶</a></dt>
-<dd><p>Store a NotebookNode</p>
+<dd><p>store a notebook job</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – the NotebookNode to store</p></li>
-<li><p><strong>name</strong> – the name of the notebook</p></li>
+<li><p><strong>obj</strong> (<em>str</em><em>|</em><em>NotebookNode</em>) – the notebook object or the notebook’s code as a string</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – the name of the job</p></li>
+<li><p><strong>attributes</strong> (<em>dict</em>) – the attributes to store with the job</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Metadata</p>
 </dd>
 </dl>
 </dd></dl>
@@ -657,7 +656,7 @@ can also be specified as mon/tue/wed/thu/fri/sat/sun</p></li>
 <span class="c1"># example notebook</span>
 <span class="n">job</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">my_default_value</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">calculation</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculation</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
    <span class="c1"># job is a dict with job[&#39;param&#39;] set to one value taken from .map(&lt;jobs&gt;)</span>
    <span class="c1"># job contains other keys to identify the task:</span>
    <span class="c1">#   job_id: a sequence number</span>
@@ -721,7 +720,7 @@ can also be specified as mon/tue/wed/thu/fri/sat/sun</p></li>
 <span class="c1"># example notebook</span>
 <span class="n">job</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">my_default_value</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">calculation</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculation</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
    <span class="c1"># job is a dict with job[&#39;param&#39;] set to one value taken from .map(&lt;jobs&gt;)</span>
    <span class="c1"># job contains other keys to identify the task:</span>
    <span class="c1">#   job_id: a sequence number</span>
@@ -842,6 +841,7 @@ for the given notebook.</p>
       <dd><a href="jobs.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../0.16.2/reference/jobs.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../0.16.3/reference/jobs.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/reference/jobs.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

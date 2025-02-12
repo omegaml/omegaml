@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<head>
+    <title>Digit Recognition</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      canvas {
+        border: 1px solid #000;
+        margin-bottom: 20px;
+      }
+      input[type="text"] {
+        padding: 5px;
+        font-size: 16px;
+        width: 300px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin: 20px;
+      }
+      #clear-btn {
+        background-color: gray;  
+      }
+      #message {
+          margin-top: 10px;
+          display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Digit Recognition</h1>
+    <canvas id="canvas" width="280" height="280"></canvas>
+    <canvas id="rcanvas" width="8" height="8"></canvas>
+    <div>
+      <button id="convert-btn">Generate</button>
+      <button id="clear-btn">Clear</button>
+  </div>
+    <input type="text" id="array-text" readonly />  
+    <div id="message"></div>
+  <script>
+    // Get the canvas element
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const arrayText = document.getElementById('array-text');
+    
+    // Add event listeners for drawing on the canvas
+    let isDrawing = false;
+    canvas.addEventListener('mousedown', () => (isDrawing = true));
+    canvas.addEventListener('mouseup', () => (isDrawing = false));
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        ctx.fillRect(x, y, 10, 10);
+      }
+    });
+        // Function to convert the canvas to a 64-element array
+    function canvasToArray() {
+      // Create a new temporary canvas with 8x8 dimensions
+      const tempCanvas = document.getElementById('rcanvas');
+      tempCanvas.width = 8;
+      tempCanvas.height = 8;
+      const tempCtx = tempCanvas.getContext('2d');
+      // Draw the main canvas onto the temporary 8x8 canvas, scaling it down while preserving the aspect ratio
+      tempCtx.drawImage(
+        canvas, 0, 0, 8, 8
+      );
+      // Get the pixel data from the temporary canvas
+      const data = tempCtx.getImageData(0, 0, 8, 8).data;
+      const array = [];
+      // Convert the pixel data to a 64-element array (1 for black, 0 for white)
+      for (var i = 0, j = 0; j < data.length; j += 4) {
+      var lightness = (data[j] + data[j + 1] + data[j + 2] + data[j + 3]);
+		  array.push(Math.round(lightness / 255 * 16));
+	  }
+      return array;
+    }
+    // Function to display the array in the text field
+    function displayArray(gridArray) {
+      arrayText.value = JSON.stringify(gridArray);
+      navigator.clipboard.writeText(arrayText.value);
+      // Display a success message for 5 seconds
+      const messageContainer = document.getElementById('message');
+      messageContainer.textContent = 'Copied';
+      messageContainer.style.display = 'block';
+      setTimeout(() => {
+        messageContainer.style.display = 'none';
+      }, 2000);
+    }
+    // Add a click event listener to the convert button
+    const convertButton = document.getElementById('convert-btn');
+    convertButton.addEventListener('click', () => {
+      const gridArray = canvasToArray();
+      console.log(gridArray);
+      displayArray(gridArray);
+    });
+    // Add a click event listener to the "Clear" button
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      arrayText.value = '';  
+    });
+  </script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
@@ -5,21 +7,17 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Introduction &mdash; omega-ml 1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=56dcb7b8"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -38,9 +36,6 @@
           <a href="../../../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                1.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -99,7 +94,7 @@
 <div class="version-warning-banner">
     
     You're reading an old version of this documentation.
-    If you want up-to-date information, please have a look at <a href="../../../../0.16.3/guide/advanced/streams/streams.html">release/0.16.3</a>.
+    If you want up-to-date information, please have a look at <a href="../../../../0.16.4/index.html">release/0.16.4</a>.
     
 </div>
 
@@ -221,17 +216,17 @@ strategy, and forwards each window to a callable provided by the user.</p>
 or at least a consumer that runs as frequently as the emitter strategy needs.</p>
 <p>With omega-ml we can create a streaming application as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># consumer.py</span>
-<span class="kn">import</span> <span class="nn">omegaml</span> <span class="k">as</span> <span class="nn">om</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
 <span class="n">streaming</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mystream&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="nd">@streaming</span>
-<span class="k">def</span> <span class="nf">consumer</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">consumer</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
 
 
 <span class="c1"># producer</span>
-<span class="kn">import</span> <span class="nn">omegaml</span> <span class="k">as</span> <span class="nn">om</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
 <span class="n">stream</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mystream&#39;</span><span class="p">)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
@@ -347,10 +342,11 @@ native runtime. The syntax will be something like this:</p>
       <dd><a href="streams.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../../../0.16.2/guide/advanced/streams/streams.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../../../0.16.3/guide/advanced/streams/streams.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
-      <dd><a href="../../../../../stable/guide/advanced/streams/streams.html" class="version-ref-stable">stable</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

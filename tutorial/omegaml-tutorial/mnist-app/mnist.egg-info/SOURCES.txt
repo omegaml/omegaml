@@ -1,0 +1,11 @@
+MANIFEST.in
+pyproject.toml
+setup.py
+mnist/__init__.py
+mnist/app.py
+mnist.egg-info/PKG-INFO
+mnist.egg-info/SOURCES.txt
+mnist.egg-info/dependency_links.txt
+mnist.egg-info/top_level.txt
+mnist/templates/grid.html
+mnist/templates/.ipynb_checkpoints/grid-checkpoint.html

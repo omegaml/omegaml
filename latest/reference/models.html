@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>om.models &mdash; omega-ml 0.16.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>om.models &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=4a1014be"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=81998473"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -38,9 +36,6 @@
           <a href="../index.html" class="icon icon-home">
             omega-ml
           </a>
-              <div class="version">
-                0.16.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -62,6 +57,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#backends">Backends</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.scikitlearn.ScikitLearnBackend"><code class="docutils literal notranslate"><span class="pre">ScikitLearnBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.ExperimentBackend"><code class="docutils literal notranslate"><span class="pre">ExperimentBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowKerasBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowKerasSavedModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowSavedModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="docutils literal notranslate"><span class="pre">TFEstimatorModelBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelBackend"><code class="docutils literal notranslate"><span class="pre">RModelBackend</span></code></a></li>
 </ul>
 </li>
@@ -104,7 +103,7 @@
 <div class="version-warning-banner">
     
     You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../release/0.16.3/reference/models.html">release/0.16.3</a>.
+    For the latest released version, please have a look at <a href="../../release/0.16.4/reference/models.html">release/0.16.4</a>.
     
 </div>
 
@@ -172,10 +171,10 @@
 </ul>
 <p>Backends for <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code> (loaded only if installed):</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasBackend</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowSavedModelBackend</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TFEstimatorModelBackend</span></code></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasBackend" title="omegaml.backends.tensorflow.TensorflowKerasBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend" title="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend" title="omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowSavedModelBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend" title="omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TFEstimatorModelBackend</span></code></a></p></li>
 </ul>
 <p>Backends for <code class="docutils literal notranslate"><span class="pre">keras</span></code> (loaded only if installed):</p>
 <ul class="simple">
@@ -291,6 +290,214 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.supports">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.h5'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Fit a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model</p></li>
+<li><p><strong>Xname</strong> – the name of the X dataset</p></li>
+<li><p><strong>Yname</strong> – the name of the Y dataset</p></li>
+<li><p><strong>pure_python</strong> – deprecated</p></li>
+<li><p><strong>kwargs</strong> – any additional kwargs are passed on to model.fit()</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasSavedModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.savedmodel'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowSavedModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tf.savedmodel'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>Predict from a SavedModel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong></p></li>
+<li><p><strong>Xname</strong></p></li>
+<li><p><strong>rName</strong></p></li>
+<li><p><strong>pure_python</strong></p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TFEstimatorModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfestimator.model'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>predict using data stored in Xname</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>rName</strong> – the name of the result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the predicted outcome</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.score" title="Link to this definition">¶</a></dt>
+<dd><p>score using data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>rName</strong> – the name of the transforms’s result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the score result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.supports" title="Link to this definition">¶</a></dt>
 <dd><p>test if this backend supports this obj</p>
 </dd></dl>
 
@@ -543,6 +750,7 @@ we can use the same semantics for R and python scripts.</p>
       <dd><a href="../../release/0.16.1/reference/models.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
       <dd><a href="../../release/0.16.2/reference/models.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
       <dd><a href="../../release/0.16.3/reference/models.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/reference/models.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
