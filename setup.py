@@ -38,7 +38,7 @@ sec_deps = [
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
 client_deps = (tables + dashserve_deps)
 install_deps = [
-    'celery>5,<6.0',
+    'celery>5,<5.5',  # due to celery/celery#9208
     'joblib>=0.9.4',
     'jupyter-client>=4.1.1',
     'ipython>=8.0',  # required for cli shell
