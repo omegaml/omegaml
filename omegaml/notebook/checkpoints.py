@@ -1,5 +1,5 @@
-from IPython.utils.tz import utcnow
 from jupyter_server.services.contents.checkpoints import GenericCheckpointsMixin, Checkpoints
+from omegaml.util import utcnow
 
 
 class NoOpCheckpoints(GenericCheckpointsMixin, Checkpoints):
