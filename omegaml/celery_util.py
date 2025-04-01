@@ -169,6 +169,14 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def __call__(self, *args, **kwargs):
         import logging
 
+        # if request args, kwargs has not been set, set using the current args, kwargs
+        # -- fixes regression introduced by celery/celery#9208
+        # -- if we don't do this, the request.args, request.kwargs will be None in tasks called from a task
+        # -- e.g. in a chain, or in a group (cf. RuntimeTests.test_task_callback_bucket)
+        ifElse = lambda a, b: a if a is not None else b
+        self.request.args = ifElse(self.request.args, args)
+        self.request.kwargs = ifElse(self.request.kwargs, kwargs)
+
         @contextmanager
         def task_logging():
             logname, level = self.logging
