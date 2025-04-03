@@ -8,12 +8,7 @@ User Guide
    intro/index
    genai/index
    classicml/index
-   datasets/index
-   models/index
-   jobs/index
-   scripts/index
-   streams/index
-   advanced/
+   pipelines/index
    clusters/index
    cli/index
    advanced/index
