@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is the runtime? &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bf4bd5a2" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Using the runtime for MLOps" href="mlops.html" />
+    <link rel="prev" title="Deploying models and pipelines" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scripts/index.html">Working with scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../streams/index.html">Working with streams</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Deploying models and pipelines</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">What is the runtime?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#concepts">Concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-tasks">Running tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submitting-tasks-to-specific-workers">Submitting tasks to specific workers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#asynchronous-execution">Asynchronous execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parallel-and-pipelined-task-execution">Parallel and pipelined task execution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mlops.html">Using the runtime for MLOps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="restapi.html">The omegam-ml REST API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="logging.html">Logging runtime execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="monitoring.html">Monitoring the runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../release/0.16.4/guide/clusters/intro.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Deploying models and pipelines</a></li>
+      <li class="breadcrumb-item active">What is the runtime?</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/clusters/intro.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="what-is-the-runtime">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">What is the runtime?</a><a class="headerlink" href="#what-is-the-runtime" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#what-is-the-runtime" id="id1">What is the runtime?</a></p>
+<ul>
+<li><p><a class="reference internal" href="#concepts" id="id2">Concepts</a></p></li>
+<li><p><a class="reference internal" href="#running-tasks" id="id3">Running tasks</a></p></li>
+<li><p><a class="reference internal" href="#submitting-tasks-to-specific-workers" id="id4">Submitting tasks to specific workers</a></p></li>
+<li><p><a class="reference internal" href="#asynchronous-execution" id="id5">Asynchronous execution</a></p></li>
+<li><p><a class="reference internal" href="#parallel-and-pipelined-task-execution" id="id6">Parallel and pipelined task execution</a></p>
+<ul>
+<li><p><a class="reference internal" href="#running-many-tasks-in-sequence" id="id7">Running many tasks in sequence</a></p></li>
+<li><p><a class="reference internal" href="#running-many-tasks-in-parallel" id="id8">Running many tasks in parallel</a></p></li>
+<li><p><a class="reference internal" href="#running-many-tasks-to-combine-results-mapreduce" id="id9">Running many tasks to combine results (mapreduce)</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>The omega-ml runtime provides distributed and highly scalable execution of
+all of the omega-ml functionality. It is a distributed programming and
+deployment environment based on the widely used  <a class="reference external" href="https://docs.celeryproject.org/en/stable/">Celery</a> library.</p>
+<p>Key functionality includes</p>
+<ul class="simple">
+<li><p>distributed model training, scoring and prediction</p></li>
+<li><p>tracking of experiment metrics across a distributed set of workers</p></li>
+<li><p>straight-forward logging from any work load, including models, Python scripts
+and notebooks</p></li>
+<li><p>parallel, map-reduce and sequenced execution of data and model pipelines</p></li>
+<li><p>easily switch workers without changing your code (e.g. local, remote cpu,
+remote gpu, any cloud)</p></li>
+</ul>
+<p>For Jupyter notebooks, the runtime provides additional functionality:</p>
+<ul class="simple">
+<li><p>easy scheduling of notebooks</p></li>
+<li><p>transparent results logging and status tracking</p></li>
+<li><p>parallel execution using <code class="code docutils literal notranslate"><span class="pre">Multiprocessing.map()</span></code> semantics,
+including automated restarts of failed partial tasks</p></li>
+</ul>
+<section id="concepts">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Concepts</a><a class="headerlink" href="#concepts" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>workers</strong>  - a worker is a compute server that waits to receive commands,
+every worker responds to one or more <em>labels</em>, where a label specifies a
+worker’s capabilities (e.g. whether it provides cpu or gpu resources)</p></li>
+<li><p><strong>tasks</strong> - tasks describe the specific action to execute, e.g. <em>fit a model</em>,
+<em>predict from a model</em>, <em>run a script</em>, <em>run a notebook</em></p></li>
+<li><p><strong>object references</strong> - references link tasks to models, datasets and other
+objects accessible via omega-ml’s Metadata</p></li>
+</ul>
+<p>For example, to fit a model, we can use the omega-ml runtime as follows. This
+sends the task <em>fit the model mymodel using datasets data-X, data-Y</em> to the
+default runtime worker, waiting for the task to complete.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># mymodel is a fitted model, newdata the name of a dataset</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;data-X&#39;</span><span class="p">,</span> <span class="s1">&#39;data-Y&#39;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="running-tasks">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Running tasks</a><a class="headerlink" href="#running-tasks" title="Link to this heading">¶</a></h2>
+<p>The runtime provides built-in tasks for models, jobs (notebooks) and scripts.
+In general the syntax follows the pattern <em>om.runtime.&lt;kind&gt;(name).&lt;action&gt;</em>.
+Every task returns as <code class="code docutils literal notranslate"><span class="pre">AsyncResult</span></code> result object, which is a reference
+to the result of the task execution on a remote worker described in
+<span class="xref std std-ref">Asynchronous execution</span>. To get the actual result, call <code class="code docutils literal notranslate"><span class="pre">result.get()</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;myscript&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;mynotebook&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="submitting-tasks-to-specific-workers">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Submitting tasks to specific workers</a><a class="headerlink" href="#submitting-tasks-to-specific-workers" title="Link to this heading">¶</a></h2>
+<p>Every worker is assigned one or more <em>labels</em>. A label is just an arbitrary
+name but it should signify the worker’s capabilities, e.g. <em>cpu</em> or <em>gpu</em>. The
+default label is <code class="code docutils literal notranslate"><span class="pre">default</span></code>.</p>
+<p>The list of available workers and their labels can be retrieved by running</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="s1">&#39;celery@eowyn&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>Tasks can be submitted to a specific worker by specifying <code class="code docutils literal notranslate"><span class="pre">.require(label)</span></code>
+just before the actual call:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="s1">&#39;gpu&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="asynchronous-execution">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Asynchronous execution</a><a class="headerlink" href="#asynchronous-execution" title="Link to this heading">¶</a></h2>
+<p>All runtime tasks are run asynchronously. This means that any task submitted
+to a runtime worker is put into a waiting queue until a worker can respond to
+it. The immediate result returned by a call to the runtime is a reference
+to the task, also known as a <em>promise</em> i.e. a reference to a future result.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;new-X&#39;</span><span class="p">)</span>
+<span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="o">=&gt;</span> <span class="o">&lt;</span><span class="n">AsyncResult</span><span class="p">:</span> <span class="n">eda3b2f9</span><span class="o">-</span><span class="n">f675</span><span class="o">-</span><span class="mi">4690</span><span class="o">-</span><span class="mi">8303</span><span class="o">-</span><span class="mi">2</span><span class="n">a944783147c</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>We can check the execution state by looking at the <code class="code docutils literal notranslate"><span class="pre">result.status</span></code>.
+The states are PENDING, STARTED, SUCCESS or FAILURE.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">status</span>
+<span class="o">=&gt;</span>
+<span class="n">PENDING</span>
+</pre></div>
+</div>
+<p>To wait for the task to complete and get back the actual result call <code class="code docutils literal notranslate"><span class="pre">result.get()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="parallel-and-pipelined-task-execution">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Parallel and pipelined task execution</a><a class="headerlink" href="#parallel-and-pipelined-task-execution" title="Link to this heading">¶</a></h2>
+<p>The runtime is built for horizontal scalability, which means it can process
+many tasks in parallel. One easy way to submit tasks in parallel is to call
+the runtime in a loop. One caveat is that we need to keep track of every
+result’s status.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;SUCCESS&#39;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>omega-ml provides easier semantics for the three typical ways in which
+to run many tasks:</p>
+<ul class="simple">
+<li><p>sequence - run tasks in a given sequence</p></li>
+<li><p>parallel - run tasks in parallel, independent of sequence</p></li>
+<li><p>mapreduce - run many tasks in parallel, combine results in a last step</p></li>
+</ul>
+<section id="running-many-tasks-in-sequence">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Running many tasks in sequence</a><a class="headerlink" href="#running-many-tasks-in-sequence" title="Link to this heading">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sequence()</span></code> runs tasks in sequence, forwarding results from the
+previous task to the next.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">sequence</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">result</span><span class="o">.</span><span class="n">getall</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">[</span><span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="running-many-tasks-in-parallel">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Running many tasks in parallel</a><a class="headerlink" href="#running-many-tasks-in-parallel" title="Link to this heading">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">parallel()</span></code> runs many tasks in parallel.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">result</span><span class="o">.</span><span class="n">getall</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">[</span><span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="running-many-tasks-to-combine-results-mapreduce">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Running many tasks to combine results (mapreduce)</a><a class="headerlink" href="#running-many-tasks-to-combine-results-mapreduce" title="Link to this heading">¶</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">mapreduce</span></code> runs tasks in parallel, except for the last one. The last
+task will wait for all parallel jobs to be completed and then runs to combine the
+previous results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mapreduce</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">result</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="o">&lt;</span><span class="n">AsyncResult</span><span class="p">:</span> <span class="mf">33e7</span><span class="n">baf0</span><span class="o">-</span><span class="mi">1905</span><span class="o">-</span><span class="mi">4</span><span class="n">ff4</span><span class="o">-</span><span class="n">aecb</span><span class="o">-</span><span class="mi">8</span><span class="n">d6ee43fd9b1</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">GroupResult</span><span class="p">:</span> <span class="n">a42f9d7b</span><span class="o">-</span><span class="mi">3</span><span class="n">c36</span><span class="o">-</span><span class="mi">456</span><span class="n">c</span><span class="o">-</span><span class="mi">9</span><span class="n">f13</span><span class="o">-</span><span class="mi">23</span><span class="n">acda3c1ae0</span> <span class="p">[</span><span class="n">b6f67c16</span><span class="o">-</span><span class="mi">3</span><span class="n">a98</span><span class="o">-</span><span class="mi">474</span><span class="n">c</span><span class="o">-</span><span class="n">b97a</span><span class="o">-</span><span class="mi">544</span><span class="n">b7bb20291</span><span class="p">,</span>
+  <span class="n">fa95a436</span><span class="o">-</span><span class="n">fc70</span><span class="o">-</span><span class="mi">46</span><span class="n">ad</span><span class="o">-</span><span class="mi">97</span><span class="n">ee</span><span class="o">-</span><span class="n">a31a9a3a5720</span><span class="p">,</span> <span class="mf">78e060</span><span class="n">e8</span><span class="o">-</span><span class="mi">59</span><span class="n">d9</span><span class="o">-</span><span class="mi">4244</span><span class="o">-</span><span class="n">a2db</span><span class="o">-</span><span class="mi">10</span><span class="n">f18a49a0c0</span><span class="p">,</span>
+  <span class="mi">541761</span><span class="n">d9</span><span class="o">-</span><span class="mi">6</span><span class="n">c56</span><span class="o">-</span><span class="mi">4</span><span class="n">a9e</span><span class="o">-</span><span class="n">a815</span><span class="o">-</span><span class="mi">3959</span><span class="n">b01609ae</span><span class="p">]</span><span class="o">&gt;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Deploying models and pipelines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mlops.html" class="btn btn-neutral float-right" title="Using the runtime for MLOps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: latest
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/guide/clusters/intro.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="intro.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/guide/clusters/intro.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/guide/clusters/intro.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/guide/clusters/intro.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/guide/clusters/intro.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/guide/clusters/intro.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/guide/clusters/intro.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/clusters/intro.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/guide/clusters/intro.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/guide/clusters/intro.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
