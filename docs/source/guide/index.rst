@@ -6,6 +6,8 @@ User Guide
 
 
    intro/index
+   genai/index
+   classicml/index
    datasets/index
    models/index
    jobs/index
