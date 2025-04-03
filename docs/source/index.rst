@@ -14,6 +14,5 @@ from laptop to cloud.
    devguide/index
    reference/index
    nb/index
-   screenshots
-   moreinfo
+   support
    changes/index

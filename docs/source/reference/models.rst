@@ -48,6 +48,12 @@ om.models
 
         - :py:class:`omegaml.backends.rsystem.rmodels.RModelBackend`
 
+        Backends for ``openai`` (loaded if installed)
+
+        - :py:class:`omegaml.backends.genai.GenAIBaseBackend`
+        - :py:class:`omegaml.backends.genai.textmodel.TextModelBackend`
+
+
 Backends
 --------
 
@@ -82,6 +88,16 @@ Backends
     .. autoattribute:: KIND
 
 .. autoclass:: omegaml.backends.rsystem.rmodels.RModelBackend
+    :members:
+
+    .. autoattribute:: KIND
+
+.. autoclass:: omegaml.backends.genai.GenAIBaseBackend
+    :members:
+
+    .. autoattribute:: KIND
+
+.. autoclass:: omegaml.backends.genai.textmodel.TextModelBackend
     :members:
 
     .. autoattribute:: KIND

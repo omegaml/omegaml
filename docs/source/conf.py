@@ -31,6 +31,7 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
@@ -46,6 +47,8 @@ extensions = [
 # https://stackoverflow.com/a/40809562
 autodoc_default_flags = ['members']
 autosummary_generate = True
+
+viewcode_line_numbers = True
 
 # https://github.com/snide/sphinx_rtd_theme
 import sphinx_rtd_theme
@@ -70,7 +73,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'omega-ml'
-copyright = u'2022 (c) omegaml.io by one2seven GmbH'
+copyright = u'2025 (c) omegaml.io by one2seven GmbH'
 author = u'omegaml.io'
 
 # The version info for the project you're documenting, acts as replacement for
