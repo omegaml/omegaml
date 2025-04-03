@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 from pathlib import Path
 
 # determine how we're run
@@ -115,6 +115,7 @@ OMEGA_STORE_BACKENDS = {
     'python.package': 'omegaml.backends.package.PythonPackageData',
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
+    'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
@@ -138,7 +139,12 @@ OMEGA_STORE_BACKENDS_R = {
     'model.r': 'omegaml.backends.rsystem.rmodels.RModelBackend',
     'package.r': 'omegaml.backends.rsystem.rscripts.RPackageData',
 }
-#: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
+OMEGA_STORE_BACKENDS_OPENAI = {
+    'genai.llm': 'omegaml.backends.genai.models.GenAIBaseBackend',
+    'genai.text': 'omegaml.backends.genai.textmodel.TextModelBackend',
+    'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
+}
+#: supported frameworks
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
     OMEGA_FRAMEWORKS = ('scikit-learn', 'tensorflow', 'keras')
@@ -432,6 +438,9 @@ def load_framework_support(vars=globals()):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
         logging.getLogger('tensorflow').setLevel(logging.ERROR)
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
+    #: openapi backend
+    if module_available('openai'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
     #: keras backend
     if keras_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_KERAS'])
@@ -442,7 +451,7 @@ def load_framework_support(vars=globals()):
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
     #: mlflow backends
-    if module_available('mlflow'):
+    if False and mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
 
 

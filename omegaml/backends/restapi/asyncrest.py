@@ -117,6 +117,11 @@ class AsyncResponseMixin:
                 'task_id': result.id,
             })
             status = status or HTTPStatus.ACCEPTED
+        elif isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
+            body, status = result
+            headers = headers or {}
+        elif isinstance(result, tuple) and len(result) == 3 and isinstance(result[1], int):
+            body, status, headers = result
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
         return body, int(status), headers

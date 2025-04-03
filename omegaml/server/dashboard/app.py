@@ -2,10 +2,12 @@ from os import abort
 
 import flask
 from flask import Blueprint, app, render_template, url_for, render_template_string
+from werkzeug.utils import redirect
+
+from omegaml.server.dashboard.views import genai
 from omegaml.server.dashboard.views.admin import users
 from omegaml.server.dashboard.views.cards import plotcards
 from omegaml.server.util import debug_only, stripblocks
-from werkzeug.utils import redirect
 
 omega_bp = Blueprint('omega-server', __name__,
                      static_folder='static',
@@ -100,5 +102,6 @@ streams.create_view(omega_bp)
 tracking.create_view(omega_bp)
 # -- admin
 users.create_view(omega_bp)
-# -- cards
+# -- apps
 plotcards.create_view(omega_bp)
+genai.create_view(omega_bp)

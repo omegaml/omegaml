@@ -14,7 +14,8 @@ snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
 tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools']
+dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
+            'pytest-instafail']
 # required to avoid backtracking (falling below some versions)
 backtracking_deps = [
     'json5>0.9',
@@ -35,7 +36,13 @@ sec_deps = [
     'idna>=3.7',  # https://github.com/advisories/GHSA-jjg7-2v4v-x38h
     'pymongo>=4.10',  # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
 ]
-test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
+# dependencies for generative ai support
+ai_deps = [
+    'openai',
+    'markitdown',
+    'pgvector',
+]
+test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
 client_deps = (tables + dashserve_deps)
 install_deps = [
     'celery>5,<6.0',
@@ -114,6 +121,7 @@ setup(
     extras_require={
         'all': test_deps,
         'client': client_deps,
+        'ai': ai_deps,
         'dev': dev_deps,
     },
     entry_points={

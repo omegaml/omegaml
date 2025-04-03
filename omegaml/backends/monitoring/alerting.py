@@ -15,7 +15,7 @@ class AlertRule:
     def check(self, notify=True, run=None):
         tracking = self.monitor.tracking
         run = run or '*'
-        data = tracking.data(run=run, event='drift', since=self.since, raw=True)
+        data = tracking.data(run=run, event=self.event, since=self.since, raw=True)
         if notify and data:
             self.notify(self.recipients, data)
         self.last_check = datetime.utcnow()
@@ -25,4 +25,3 @@ class AlertRule:
         # log and send notification
         self.monitor.tracking.log_event('alert', self.monitor._drift_alert_key, data,
                                         recipients=recipients)
-
