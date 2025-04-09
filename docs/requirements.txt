@@ -9,4 +9,7 @@ sphinx-autobuild
 sphinx-rtd-theme                                                                                                                                                             
 pygments    
 
-sphinxcontrib-jquery==4.1
+sphinxcontrib-jquery
+furo
+sphinxext-opengraph[social-cards]
+sphinx-copybutton
