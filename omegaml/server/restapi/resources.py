@@ -1,19 +1,26 @@
 import builtins
 import datetime
 import flask
+import inspect
+import json
+import logging
 import numpy as np
 import os
 import pandas as pd
 import re
 from flask import Blueprint, render_template, url_for
-from flask_restx import Resource, fields, Api
+from flask_restx import Resource, fields, Api, marshal_with
 from flask_restx.apidoc import apidoc
+from functools import wraps
 from mongoengine import DoesNotExist
+from urllib.parse import unquote, urljoin
+from werkzeug.exceptions import NotFound
+
 from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin, AsyncResponseMixin, resolve
 from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
 from omegaml.util import isTrue
-from urllib.parse import unquote, urljoin
-from werkzeug.exceptions import NotFound
+
+logger = logging.getLogger(__name__)
 
 # required to get payload from request
 # -- see OmegaResourceMixin.get_query_payload
@@ -24,6 +31,62 @@ class RemoteableSwaggerApi(Api):
     def render_doc(self):
         return render_template("swagger-ui.html", title=self.title,
                                specs_url=self.remote_specs_url or self.specs_url)
+
+
+class marshal_with_streaming:
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = f(*args, **kwargs)
+            if isinstance(resp, tuple) and len(resp) == 3:
+                data, status, headers = resp
+            elif isinstance(resp, tuple) and len(resp) == 2:
+                data, status = resp
+                headers = {}
+            else:
+                data = resp
+                status = 200
+                headers = {}
+            if inspect.isgenerator(data):
+                # server sent event
+                streamed_resp = ('data: ' + json.dumps(marshal_one(chunk)) + '\n\n' for chunk in data)
+                return flask.Response(streamed_resp, content_type='text/event-stream', status=status, headers=headers)
+            return marshal_one(resp)
+
+        def marshal_one(resp):
+            from flask import has_app_context
+            from flask import current_app
+            from flask import request
+            from flask_restx.utils import unpack
+            from flask_restx import marshal
+
+            mask = self.mask
+            if has_app_context():
+                mask_header = current_app.config["RESTX_MASK_HEADER"]
+                mask = request.headers.get(mask_header) or mask
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return (
+                    marshal(
+                        data,
+                        self.fields,
+                        self.envelope,
+                        self.skip_none,
+                        mask,
+                        self.ordered,
+                    ),
+                    code,
+                    headers,
+                )
+            else:
+                return marshal(
+                    resp, self.fields, self.envelope, self.skip_none, mask, self.ordered
+                )
+
+        return wrapper
+
+
+marshal_with.__call__ = marshal_with_streaming.__call__
 
 
 def create_app(url_prefix=None):
@@ -348,6 +411,25 @@ def add_api_endpoints(api):
             else:
                 status = 200
             return '', status
+
+    @api.route('/api/v2/ai/<path:model_id>/<string:action>', methods=['POST', 'PUT'])
+    @api.route('/api/v2/ai/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
+    @api.route('/api/v2/openai/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
+               methods=['PUT', 'POST'])
+    class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+        result_uri = '/api/v1/task/{id}/result'
+
+        def get(self, model_id, action=None):
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+
+        def put(self, model_id, action=None):
+            api.payload.update(raw=True)  # force OpenAI-like response
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+
+        @api.marshal_with(ServiceOutput)
+        def post(self, model_id, action=None):
+            api.payload.update(raw=True)  # force OpenAI native response
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
 
 
 omega_bp = create_app()

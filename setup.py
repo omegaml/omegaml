@@ -36,7 +36,13 @@ sec_deps = [
     'idna>=3.7',  # https://github.com/advisories/GHSA-jjg7-2v4v-x38h
     'pymongo>=4.10',  # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
 ]
-test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps)
+# dependencies for generative ai support
+ai_deps = [
+    'openai',
+    'markitdown',
+    'pgvector',
+]
+test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
 client_deps = (tables + dashserve_deps)
 install_deps = [
     'celery>5,<6.0',
@@ -115,6 +121,7 @@ setup(
     extras_require={
         'all': test_deps,
         'client': client_deps,
+        'ai': ai_deps,
         'dev': dev_deps,
     },
     entry_points={

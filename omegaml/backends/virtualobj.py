@@ -83,7 +83,9 @@ class VirtualObjectBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return callable(obj) and getattr(obj, '_omega_virtual', False)
+        is_virtual = callable(obj) and getattr(obj, '_omega_virtual', False)
+        is_tool = isinstance(obj, types.FunctionType) and name.startswith('tools/')
+        return is_virtual or is_tool
 
     @property
     def _call_handler(self):
@@ -116,7 +118,7 @@ class VirtualObjectBackend(BaseDataBackend):
         data = outf.read()
         obj = dilldip.loads(data)
         outf.close()
-        return obj
+        return self._ensure_handler_instance(obj)
 
     def _ensure_handler_instance(self, obj):
         # ensure VirtualObjectHandler classes are transformed to a virtualobj
@@ -212,6 +214,15 @@ class VirtualObjectHandler(object):
     """
     _omega_virtual = True
 
+    def _vobj_call_map(self):
+        return {
+            'drop': self.drop,
+            'get': self.get,
+            'put': self.put,
+            'predict': self.predict,
+            'run': self.run,
+        }
+
     def get(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
@@ -228,30 +239,28 @@ class VirtualObjectHandler(object):
         raise NotImplementedError
 
     def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
-        MAP = {
-            'drop': self.drop,
-            'get': self.get,
-            'put': self.put,
-            'predict': self.predict,
-            'run': self.run,
-        }
+        MAP = self._vobj_call_map()
         methodfn = MAP[method]
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)
 
 
 class _DillDip:
-    # magic id for dipped dill objects
-    # -- why 0x1565? 15g of dill dip have 65 kcal
-    # -- see https://www.nutritionvalue.org/Dill_dip%2C_regular_12350210_nutritional_value.html
-    # -- also 42 is overused
-    __calories = 0x1565
-
     # enhanced dill for functions and classes
     # - warns about bound variables that could cause issues when undilling
     # - checks types and functions are defined in __main__ before dilling (so we will code, not references),
     #   dynamically recompiles in __main__ before dilling if source is available
     # - saves source code for improved python cross-version compatibility
     # - falls back on standard dill for any other object type
+    # Rationale:
+    # - https://stackoverflow.com/questions/26389981/serialize-a-python-function-with-dependencies
+    # - https://github.com/uqfoundation/dill/issues/424#issuecomment-1598887257
+
+    # magic id for dipped dill objects
+    # -- why 0x1565? 15g of dill dip have 65 kcal
+    # -- see https://www.nutritionvalue.org/Dill_dip%2C_regular_12350210_nutritional_value.html
+    # -- also 42 is overused
+    __calories = 0x1565
+
     def dumps(self, obj, as_source=False, **dill_kwargs):
         # enhanced flavor of dill that stores source code for cross-version compatibility
         # ensure we have a dill'able object
@@ -339,6 +348,7 @@ class _DillDip:
         return data
 
     def _dynamic_compile(self, obj, module='__main__'):
+        from omegaml.backends.genai.models import GenAIModelHandler, virtual_genai
         # re-compile source obj in __main__
         if self.isdipped(obj):
             if 'dill' in obj:
@@ -352,7 +362,9 @@ class _DillDip:
             mod = types.ModuleType(module)
             mod.__dict__.update({'__compiling__': True,
                                  'virtualobj': virtualobj,
-                                 'VirtualObjectHandler': VirtualObjectHandler})
+                                 'virtual_genai': virtual_genai,
+                                 'VirtualObjectHandler': VirtualObjectHandler,
+                                 'GenAIModelHandler': GenAIModelHandler})
             sys.modules[module] = mod
             code = compile(source, '<string>', 'exec')
             exec(code, mod.__dict__)
@@ -372,3 +384,8 @@ class _DillDip:
 
 
 dilldip = _DillDip()
+# enable recursive tracing of globals
+# -- fixes https://github.com/uqfoundation/dill/issues/255
+# -- see also https://github.com/uqfoundation/dill/issues/537
+# -- the issue only happens when the openai module is loaded (root cause unknown)
+dill.settings['recurse'] = True
