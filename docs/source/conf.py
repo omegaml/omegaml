@@ -41,16 +41,17 @@ extensions = [
     #'sphinx.ext.githubpages',
     'sphinx_multiversion',
     "sphinxcontrib.jquery",
+    "sphinx_inline_tabs",
+    'sphinxext.opengraph',
+    'sphinx_copybutton',
 ]
 
 # https://stackoverflow.com/a/40809562
 autodoc_default_flags = ['members']
 autosummary_generate = True
 
-# https://github.com/snide/sphinx_rtd_theme
-import sphinx_rtd_theme
-html_theme = 'sphinx_rtd_theme'
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# https://github.com/pradyunsg/furo
+html_theme = 'furo'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -204,17 +205,17 @@ html_css_files = [
 
 # Custom sidebar templates, maps document names to template names.
 #
-# html_sidebars = {}
-# https://holzhaus.github.io/sphinx-multiversion/master/quickstart.htmls
-html_sidebars = {
+html_sidebars = {}
+# https://sphinx-contrib.github.io/multiversion/main/quickstart.html
+xhtml_sidebars = {
     '**': [
         'versioning.html',
     ],
 }
 
 # Whitelist pattern for tags (set to None to ignore all tags)
-# smv_tag_whitelist = r'^(release/0.15.3|release/0.16.3)|latest|stable$' #r'^release/[0-9]*.*$'
-smv_tag_whitelist = r'^latest|stable|(release/[02]\.\d+(.\d+)?$)|([02]\.\d+(.\d+)$)$'
+smv_tag_whitelist = r'^(release/0.15.3|release/0.16.3)|latest|stable$' #r'^release/[0-9]*.*$'
+#smv_tag_whitelist = r'^latest|stable|(release/[02]\.\d+(.\d+)?$)|([02]\.\d+(.\d+)$)$'
 # Whitelist pattern for branches (set to None to ignore all branches)
 smv_branch_whitelist = r'master'
 # Whitelist pattern for remotes (set to None to use local branches only)

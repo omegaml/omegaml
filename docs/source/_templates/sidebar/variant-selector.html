@@ -1,0 +1,38 @@
+<!-- version plugin for rtd template without sidebar -->
+{%- if current_version %}
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book">Versions</span>
+    {{ current_version.name }}
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    {%- if versions.tags %}
+    <dl>
+      <dt>Tags</dt>
+      {%- for item in versions.tags %}
+      <dd><a href="{{ item.url }}" class="version-ref-{{ item.name }}">{{ item.name | replace("release/", "") }}</a></dd>
+      {%- endfor %}
+    </dl>
+    {%- endif %}
+    {%- if versions.branches %}
+    <dl>
+      <dt>Branches</dt>
+      {%- for item in versions.branches %}
+      <dd><a href="{{ item.url }}">{{ item.name }}</a></dd>
+      {%- endfor %}
+    </dl>
+    {%- endif %}
+  </div>
+</div>
+{% endif %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const currentVersion = document.querySelector('.rst-current-version');
+    const otherVersions = document.querySelector('.rst-other-versions');
+
+    currentVersion.addEventListener('click', function() {
+      otherVersions.style.display = otherVersions.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+</script>
