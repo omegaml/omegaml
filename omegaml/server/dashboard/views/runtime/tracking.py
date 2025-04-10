@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
-from omegaml.server.util import datatables_ajax, json_abort
+from omegaml.server.util import datatables_ajax, json_abort, testable
 from omegaml.util import ensure_json_serializable
 
 validOrNone = lambda v, astype=None: ((astype(v) if astype else v)
@@ -190,7 +190,7 @@ class TrackingView(RepositoryBaseView):
                 y='value',
                 markers='*',  # explicitley mark each data point
             )
-        fig = pltfn(data_frame=metrics, **pltkwargs)
+        fig = testable(pltfn, data_frame=metrics, **pltkwargs)
         fig.update_xaxes(type='category')
         graphJSON = json.to_json(fig)
         return graphJSON
@@ -242,6 +242,7 @@ class TrackingView(RepositoryBaseView):
     def api_compare_monitor(self, model):
         om = self.om
         experiment = validOrNone(self.request.args.get('experiment'))
+        since = validOrNone(self.request.args.get('since'))
         exp = om.runtime.model(model).experiment(experiment=experiment)
         # Function to categorize the values based on the specified ranges
         categories = {
@@ -273,7 +274,7 @@ class TrackingView(RepositoryBaseView):
         if exp._has_monitor(model):
             try:
                 mon = exp.as_monitor(model)
-                stats = mon.compare(seq='series')
+                stats = mon.compare(seq='series', since=since)
                 result = compare_stats(stats)
             except:
                 result = {

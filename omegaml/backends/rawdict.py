@@ -1,8 +1,7 @@
-from pymongo.collection import Collection
-
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
 from omegaml.util import json_normalize, PickableCollection
+from pymongo.collection import Collection
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -28,7 +27,7 @@ class PandasRawDictBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, as_raw=None, data_store=None, **kwargs):
-        new_as_raw = (as_raw and isinstance(obj, dict))
+        new_as_raw = (as_raw and isinstance(obj, (dict, list, tuple)))
         new_as_collection = isinstance(obj, (Collection, PickableCollection))
         exists_as_dict = not (new_as_raw or new_as_collection) and (name and data_store.metadata(name) is not None)
         return new_as_raw or new_as_collection or exists_as_dict
@@ -43,13 +42,19 @@ class PandasRawDictBackend(BaseDataBackend):
         return mdf if lazy else mdf.value
 
     def put(self, obj, name, attributes=None, as_raw=None, **kwargs):
-        if isinstance(obj, dict):
-            # actual data, just insert
-            collection = self.data_store.collection(name)
-            collection.insert_one(obj)
-        else:
+        if isinstance(obj, (Collection, PickableCollection)):
             # already a collection, import it to metadata
             collection = obj
+        elif isinstance(obj, dict):
+            # actual data, a single document, just insert
+            collection = self.data_store.collection(name)
+            collection.insert_one(obj)
+        elif isinstance(obj, (list, tuple)) or hasattr(obj, '__iter__'):
+            # actual data, multiple documents, insert many
+            collection = self.data_store.collection(name)
+            collection.insert_many(obj)
+        else:
+            raise ValueError(f'cannot insert object of type {type(obj)}')
         meta = self.data_store._make_metadata(name,
                                               kind=self.KIND,
                                               collection=collection.name,

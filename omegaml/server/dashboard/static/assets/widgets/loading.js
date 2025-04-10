@@ -8,7 +8,7 @@ $(document)
   })
   .ajaxComplete(function (event, xhr, settings) {
     activeRequests--;
-    if (activeRequests === 0) {
+    if (activeRequests <= 0) {
       hideLoading();
     }
     if (xhr.status !== 200) {

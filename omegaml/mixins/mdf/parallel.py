@@ -146,8 +146,8 @@ class ParallelApplyMixin:
                     if not append:
                         store.drop(name, force=True)
                     meta = store.put(coll, name)
-                except:
-                    print("WARNING please upgrade omegaml to support accessing collections")
+                except Exception as ex:
+                    print(f"WARNING please upgrade omegaml to support accessing collections (due to {ex})")
                 else:
                     # _do_transform expects the collection name, not the store's name
                     name = coll.name

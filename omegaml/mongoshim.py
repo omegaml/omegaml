@@ -1,9 +1,27 @@
+import atexit
+
 import logging
 import warnings
+from mongoengine import disconnect_all
+from omegaml.util import find_instances
 from pymongo import MongoClient as RealMongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 from time import sleep
 from urllib.parse import urlencode
+
+# set sensible defaults for pymongo loggers
+# -- the default pymongo logger is set according to the root logger
+# -- sometimes resultins in large amounts of inadverted pymongo log output
+# -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
+pymongo_default_loglevels = {
+    'pymongo': 'ERROR',
+    'pymongo.command': 'WARNING',
+    'pymongo.connection': 'ERROR',
+    'pymongo.serverSelection': 'ERROR'
+}
+for name, level in pymongo_default_loglevels.items():
+    pymongo_logger = logging.getLogger(name)
+    pymongo_logger.setLevel(level)
 
 
 def MongoClient(*args, **kwargs):
@@ -15,7 +33,25 @@ def MongoClient(*args, **kwargs):
     defaults = settings()
     mongo_kwargs = dict(defaults.OMEGA_MONGO_SSL_KWARGS)
     mongo_kwargs.update(kwargs)
-    return RealMongoClient(*args, **sanitize_mongo_kwargs(mongo_kwargs))
+    client = RealMongoClient(*args, **sanitize_mongo_kwargs(mongo_kwargs))
+    return client
+
+
+def close_all_clients():
+    # close mongoengine clients
+    try:
+        disconnect_all()
+    except:
+        # ignore any errors
+        pass
+    # close remaining MongoClients
+    clients = find_instances(RealMongoClient)
+    for client in clients:
+        try:
+            client.close()
+        except Exception:
+            # ignore any errors
+            pass
 
 
 def sanitize_mongo_kwargs(kwargs):
@@ -73,3 +109,9 @@ def waitForConnection(client):
             break
     if _exc is not None:
         raise _exc
+
+
+# -- register closing all mongo clients at exit
+atexit.register(close_all_clients)
+# -- filter pymongo's resourcewarnings, as we close all clients at exit
+warnings.filterwarnings('ignore', category=ResourceWarning, module='omegaml|minibatch')

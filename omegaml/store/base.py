@@ -133,7 +133,7 @@ class OmegaStore(object):
         # register backends
         self.register_backends()
         # register finalizer for cleanup
-        weakref.finalize(self, self._cleanup, repr(self), tmppath=self._tmppath)
+        weakref.finalize(self, self._cleanup, repr(self), tmppath=str(self._tmppath))
 
     def __repr__(self):
         return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
@@ -386,14 +386,17 @@ class OmegaStore(object):
         extend_instance(self, mixincls)
         return self
 
-    def put(self, obj, name, attributes=None, kind=None, replace=False, **kwargs):
+    def put(self, obj, name, attributes=None, kind=None, replace=False, model_store=None,
+            data_store=None, **kwargs):
         """
         Stores an object, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
         if replace:
             self.drop(name, force=True)
-        backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind, **kwargs)
+        backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind,
+                                         model_store=model_store, data_store=data_store,
+                                         **kwargs)
         if backend:
             return backend.put(obj, name, attributes=attributes, **kwargs)
         # TODO move all of the specifics to backend implementations
@@ -499,6 +502,8 @@ class OmegaStore(object):
                 col, dt = '_created', timestamp
             elif isinstance(timestamp, tuple):
                 col, dt = timestamp
+            else:
+                col = '_created'
             obj[col] = dt
         # store dataframe indicies
         # FIXME this may be a performance issue, use size stored on stats or metadata
@@ -586,7 +591,7 @@ class OmegaStore(object):
                                    attributes=attributes,
                                    collection=datastore.name).save()
 
-    def put_dataframe_as_hdf(self, obj, name, attributes=None):
+    def put_dataframe_as_hdf(self, obj, name, attributes=None, **kwargs):
         filename = self.object_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname, 'rb') as fhdf:
@@ -599,7 +604,7 @@ class OmegaStore(object):
                                    gridfile=GridFSProxy(db_alias=self._dbalias,
                                                         grid_id=fileid)).save()
 
-    def put_ndarray_as_hdf(self, obj, name, attributes=None):
+    def put_ndarray_as_hdf(self, obj, name, attributes=None, **kwargs):
         """ store numpy array as hdf
 
         this is hack, converting the array to a dataframe then storing
@@ -609,7 +614,7 @@ class OmegaStore(object):
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
-    def put_pyobj_as_hdf(self, obj, name, attributes=None):
+    def put_pyobj_as_hdf(self, obj, name, attributes=None, **kwargs):
         """
         store list, tuple, dict as hdf
 
@@ -700,17 +705,17 @@ class OmegaStore(object):
             results.append((name, result))
         return dict(results) if report else len(results) > 0
 
-    def _drop(self, name, force=False, version=-1, **kwargs):
+    def _drop(self, name, force=False, version=-1, keep_data=False, **kwargs):
         meta = self.metadata(name, version=version)
         if meta is None and not force:
             raise DoesNotExist(name)
         collection = self.collection(name)
-        if collection:
+        if collection and not keep_data:
             self.mongodb.drop_collection(collection.name)
         if meta:
-            if meta.collection:
+            if meta.collection and not keep_data:
                 self.mongodb.drop_collection(meta.collection)
-            if meta and meta.gridfile is not None:
+            if meta and meta.gridfile is not None and not keep_data:
                 meta.gridfile.delete()
             self._drop_metadata(name)
             return True
@@ -825,7 +830,7 @@ class OmegaStore(object):
         if kind:
             objtype = str(type(obj))
             if kind in self.defaults.OMEGA_STORE_BACKENDS:
-                backend = self.get_backend_bykind(kind)
+                backend = self.get_backend_bykind(kind, data_store=data_store, model_store=model_store)
                 if not backend.supports(obj, name, attributes=attributes,
                                         data_store=data_store,
                                         model_store=model_store,
@@ -837,7 +842,7 @@ class OmegaStore(object):
                 # warnings.warn('Backend {kind} not found {objtype}. Reverting to default'.format(**locals()))
         else:
             for backend_kind, backend_cls in self.defaults.OMEGA_STORE_BACKENDS.items():
-                backend = self.get_backend_bykind(backend_kind)
+                backend = self.get_backend_bykind(backend_kind, data_store=data_store, model_store=model_store)
                 if backend.supports(obj, name, attributes=attributes,
                                     data_store=data_store, model_store=model_store,
                                     **kwargs):
@@ -855,7 +860,7 @@ class OmegaStore(object):
         return self.get(*args, lazy=True, **kwargs)
 
     def get(self, name, version=-1, force_python=False,
-            kind=None, **kwargs):
+            kind=None, model_store=None, data_store=None, **kwargs):
         """
         Retrieve an object
 
@@ -870,9 +875,14 @@ class OmegaStore(object):
         if meta is None:
             return None
         if not force_python:
-            backend = self.get_backend(name) if not kind else self.get_backend_bykind(kind)
+            backend = (self.get_backend(name, model_store=model_store,
+                                        data_store=data_store)
+                       if not kind else self.get_backend_bykind(kind,
+                                                                model_store=model_store,
+                                                                data_store=data_store))
             if backend is not None:
-                return backend.get(name, **kwargs)
+                # FIXME: some backends need to get model_store, data_store, but fails tests
+                return backend.get(name, **kwargs)  # model_store=model_store, data_store=data_store, **kwargs)
             if meta.kind == MDREGISTRY.SKLEARN_JOBLIB:
                 backend = self.get_backend(name)
                 return backend.get_model(name)

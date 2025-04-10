@@ -1,8 +1,5 @@
-import sys
-
-from pathlib import Path
-
 import os
+from pathlib import Path
 from traitlets.config import Config
 
 from omegaml.client.docoptparser import CommandBase

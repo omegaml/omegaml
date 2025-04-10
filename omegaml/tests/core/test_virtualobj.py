@@ -1,7 +1,5 @@
 from unittest import TestCase
 
-import datetime
-
 from omegaml import Omega
 from omegaml.backends.virtualobj import VirtualObjectBackend, virtualobj, VirtualObjectHandler
 from omegaml.mixins.store.virtualobj import VirtualObjectMixin
@@ -135,7 +133,6 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         self.assertEqual(meta.attributes['fox'], other_meta.attributes['fox'])
 
 
-
 @virtualobj
 def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
     import datetime
@@ -180,6 +177,7 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
     def drop(self, data=None, meta=None, store=None, **kwargs):
         store.drop(self.real_data_name(meta), force=True)
         return 'ok, deleted'
+
 
 @virtualobj
 def myvirtualobjfn_with_basename(data=None, meta=None, method=None, base_name=None, store=None, **kwargs):

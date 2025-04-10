@@ -5,15 +5,14 @@ import re
 import tarfile
 from bson.json_util import dumps as bson_dumps, loads as bson_loads
 from datetime import datetime
-from pathlib import Path
-from shutil import rmtree
-
 from omegaml.client.util import AttrDict
 from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
 from omegaml.util import IterableJsonDump, load_class, SystemPosixPath, tarfile_safe_extractall
+from pathlib import Path
+from shutil import rmtree
 
 
 class ObjectImportExportMixin:
@@ -216,7 +215,7 @@ class OmegaExportArchive:
         elif in_manifest:
             local_key = self.manifest['members'][manifest_key]
         else:
-            raise ValueError(f'{name} expected to exist, but is not a member in archive {self.path}')
+            raise ValueError(f'{store.prefix}{name} expected to exist, but is not a member in archive {self.path}')
         local_dir = Path(local) / local_key
         local_meta = Path(local_dir) / 'metadata.json'
         local_gridfile = Path(local_dir) / 'gridfile.bin'

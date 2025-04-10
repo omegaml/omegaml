@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 from pathlib import Path
 
 # determine how we're run
@@ -442,7 +442,7 @@ def load_framework_support(vars=globals()):
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
     #: mlflow backends
-    if module_available('mlflow'):
+    if mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
 
 
