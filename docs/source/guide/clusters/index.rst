@@ -1,5 +1,5 @@
-Deploying models and pipelines
-==============================
+Deployment and Operations
+=========================
 
 .. toctree::
     :maxdepth: 2

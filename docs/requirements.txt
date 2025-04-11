@@ -10,4 +10,4 @@ sphinx-rtd-theme
 pygments    
 sphinxcontrib-jquery
 sphinx-multiversion
-
+sphinx-toolbox

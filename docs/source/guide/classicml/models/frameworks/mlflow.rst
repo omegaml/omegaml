@@ -1,5 +1,5 @@
-Working MLFlow models
-=====================
+MLFlow
+======
 
 .. _mlflow: https://mlflow.org/
 
