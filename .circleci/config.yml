@@ -144,6 +144,23 @@ jobs:
             done
       - store_artifacts:
           path: /tmp/screenshots
+  docs:
+    # https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
+    working_directory: /home/circleci
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:7evFsooU7RE0xL6xYWx1F5pBIl9ISu6V0ga3yuTyLKY"
+      - run:
+          name: generate latest docs
+          command: |
+            source miniforge3/etc/profile.d/conda.sh
+            cd omegaml-ce/docs
+            pip install -r requirements.txt
+            make multihtml
+            make publish
 workflows:
   version: 2
   workflow:
@@ -157,3 +174,7 @@ workflows:
           filters:
             branches:
               only: /.*release-build.*/
+      - docs:
+          filters:
+            branches:
+              only: master
