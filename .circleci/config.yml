@@ -48,7 +48,8 @@ jobs:
           command: |
             curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
             bash Miniforge3-Linux-x86_64.sh -b
-            apt update && apt install -y docker-compose
+            sudo apt update 
+            sudo apt install -y docker-compose
             pip3 install tox tox-run-before tox-conda
       - run:
           name: Run unit tests
@@ -91,7 +92,8 @@ jobs:
           command: |
             curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
             bash Miniforge3-Linux-x86_64.sh -b
-            apt update && apt install -y docker-compose
+            sudo apt update
+            sudo apt install -y docker-compose
             pip3 install tox tox-run-before tox-conda
       - run:
           name: run tests in multiple images
@@ -144,6 +146,47 @@ jobs:
             done
       - store_artifacts:
           path: /tmp/screenshots
+  docs:
+    # https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
+    working_directory: /home/circleci
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:7evFsooU7RE0xL6xYWx1F5pBIl9ISu6V0ga3yuTyLKY"
+      - checkout:
+          path: /home/circleci/omegaml-ce
+      - run:
+          name: setup env
+          command: |
+            curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+            bash Miniforge3-Linux-x86_64.sh -b
+            sudo apt update 
+            sudo apt install -y docker-compose pandoc
+            pip3 install tox tox-run-before tox-conda
+      - run:
+          name: generate latest docs
+          command: |
+            # setup conda env
+            source miniforge3/etc/profile.d/conda.sh
+            conda create -q -y -n docs python=3.10
+            conda activate docs
+            # install sources, start env
+            cd omegaml-ce
+            pip install -e .[all,dev]
+            pip uninstall -y yaspin || echo "yaspin not installed (good)"            
+            cp scripts/mongoinit.js.example scripts/mongoinit.js
+            docker-compose -f docker-compose-dev.yml up -d
+            echo "Waiting..."
+            sleep 10
+            docker exec -i $(docker ps -qf name=mongo) mongosh < scripts/mongoinit.js
+            # make docs
+            cd docs
+            pip install -r requirements.txt
+            make multihtml
+            make publish
+            git push --force origin gh-pages
 workflows:
   version: 2
   workflow:
@@ -157,3 +200,8 @@ workflows:
           filters:
             branches:
               only: /.*release-build.*/
+      - docs:
+          context: omegaml
+          filters:
+            branches:
+              only: /master|.*docs.*/
