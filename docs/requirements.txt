@@ -8,5 +8,6 @@ Sphinx
 sphinx-autobuild                                                                                                                                                             
 sphinx-rtd-theme                                                                                                                                                             
 pygments    
+sphinxcontrib-jquery
+sphinx-multiversion
 
-sphinxcontrib-jquery==4.1

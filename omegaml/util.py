@@ -662,11 +662,14 @@ def mlflow_available():
     # -- ignore pydantic warning
     # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
     # see https://github.com/mlflow/mlflow/pull/13023
-    import warnings
-    from pydantic import PydanticDeprecatedSince20
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
-        available = module_available('mlflow')
+    available = module_available('mlflow')
+    if available:
+        try:
+            from pydantic import PydanticDeprecatedSince20
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+        except ImportError:
+            pass
     return available
 
 
