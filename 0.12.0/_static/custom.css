@@ -16,3 +16,7 @@ img.om-box {
     font-weight: bold;
 }
 
+/* adopted from https://stackoverflow.com/a/62338678/890242 */
+.wy-nav-content {
+    max-width: 60%;
+}

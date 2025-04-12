@@ -1,0 +1,767 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.runtimes.runtime &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../../../0.16.4/index.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.runtimes.runtime</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.runtimes.runtime</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="linenos">  4</span><span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Celery</span>
+<span class="linenos">  5</span><span class="kn">from</span><span class="w"> </span><span class="nn">celery.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventReceiver</span>
+<span class="linenos">  6</span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="linenos">  7</span><span class="kn">from</span><span class="w"> </span><span class="nn">socket</span><span class="w"> </span><span class="kn">import</span> <span class="n">gethostname</span>
+<span class="linenos">  8</span>
+<span class="linenos">  9</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.mongoshim</span><span class="w"> </span><span class="kn">import</span> <span class="n">mongo_url</span>
+<span class="linenos"> 10</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">dict_merge</span>
+<span class="linenos"> 11</span>
+<span class="linenos"> 12</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="linenos"> 13</span>
+<span class="linenos"> 14</span>
+<span class="linenos"> 15</span><span class="k">class</span><span class="w"> </span><span class="nc">CeleryTask</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="linenos"> 16</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 17</span><span class="sd">    A thin wrapper for a Celery.Task object</span>
+<span class="linenos"> 18</span>
+<span class="linenos"> 19</span><span class="sd">    This is so that we can collect common delay arguments on the</span>
+<span class="linenos"> 20</span><span class="sd">    .task() call</span>
+<span class="linenos"> 21</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 22</span>
+<span class="linenos"> 23</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 24</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 25</span>
+<span class="linenos"> 26</span><span class="sd">        Args:</span>
+<span class="linenos"> 27</span><span class="sd">            task (Celery.Task): the celery task object</span>
+<span class="linenos"> 28</span><span class="sd">            kwargs (dict): optional, the kwargs to pass to apply_async</span>
+<span class="linenos"> 29</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 30</span>        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+<span class="linenos"> 31</span>        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 32</span>
+<span class="linenos"> 33</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">):</span>
+<span class="linenos"> 34</span>        <span class="c1"># update task_kwargs from runtime&#39;s passed on kwargs</span>
+<span class="linenos"> 35</span>        <span class="c1"># update celery_kwargs to match celery routing semantics</span>
+<span class="linenos"> 36</span>        <span class="n">task_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+<span class="linenos"> 37</span>        <span class="n">celery_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;routing&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+<span class="linenos"> 38</span>        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">in</span> <span class="n">celery_kwargs</span><span class="p">:</span>
+<span class="linenos"> 39</span>            <span class="n">celery_kwargs</span><span class="p">[</span><span class="s1">&#39;queue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celery_kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+<span class="linenos"> 40</span>            <span class="k">del</span> <span class="n">celery_kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+<span class="linenos"> 41</span>
+<span class="linenos"> 42</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_auth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">):</span>
+<span class="linenos"> 43</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.client.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthenticationEnv</span>
+<span class="linenos"> 44</span>        <span class="n">AuthenticationEnv</span><span class="o">.</span><span class="n">active</span><span class="p">()</span><span class="o">.</span><span class="n">taskauth</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">)</span>
+<span class="linenos"> 45</span>
+<span class="linenos"> 46</span>    <span class="k">def</span><span class="w"> </span><span class="nf">apply_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">):</span>
+<span class="linenos"> 47</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 48</span>
+<span class="linenos"> 49</span><span class="sd">        Args:</span>
+<span class="linenos"> 50</span><span class="sd">            args (tuple): the task args</span>
+<span class="linenos"> 51</span><span class="sd">            kwargs (dict): the task kwargs</span>
+<span class="linenos"> 52</span><span class="sd">            celery_kwargs (dict): apply_async kwargs, e.g. routing</span>
+<span class="linenos"> 53</span>
+<span class="linenos"> 54</span><span class="sd">        Returns:</span>
+<span class="linenos"> 55</span><span class="sd">            AsyncResult</span>
+<span class="linenos"> 56</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 57</span>        <span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">()</span>
+<span class="linenos"> 58</span>        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos"> 59</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">)</span>
+<span class="linenos"> 60</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_auth</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">)</span>
+<span class="linenos"> 61</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">)</span>
+<span class="linenos"> 62</span>
+<span class="linenos"> 63</span>    <span class="k">def</span><span class="w"> </span><span class="nf">delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 64</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 65</span><span class="sd">        submit the task with args and kwargs to pass on</span>
+<span class="linenos"> 66</span>
+<span class="linenos"> 67</span><span class="sd">        This calls task.apply_async and passes on the self.kwargs.</span>
+<span class="linenos"> 68</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 69</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 70</span>
+<span class="linenos"> 71</span>    <span class="k">def</span><span class="w"> </span><span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">immutable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">):</span>
+<span class="linenos"> 72</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; return the task signature with all kwargs and celery_kwargs applied</span>
+<span class="linenos"> 73</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 74</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">celery_kwargs</span><span class="p">)</span>
+<span class="linenos"> 75</span>        <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">,</span> <span class="n">immutable</span><span class="o">=</span><span class="n">immutable</span><span class="p">)</span>
+<span class="linenos"> 76</span>        <span class="k">return</span> <span class="n">sig</span>
+<span class="linenos"> 77</span>
+<span class="linenos"> 78</span>    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 79</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 80</span>
+<span class="linenos"> 81</span>
+<div class="viewcode-block" id="OmegaRuntime">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime">[docs]</a>
+<span class="linenos"> 82</span><span class="k">class</span><span class="w"> </span><span class="nc">OmegaRuntime</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="linenos"> 83</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 84</span><span class="sd">    omegaml compute cluster gateway</span>
+<span class="linenos"> 85</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 86</span>
+<span class="linenos"> 87</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">celeryconf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos"> 88</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+<span class="linenos"> 89</span>
+<span class="linenos"> 90</span>        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+<span class="linenos"> 91</span>        <span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span> <span class="ow">or</span> <span class="n">settings</span><span class="p">()</span>
+<span class="linenos"> 92</span>        <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span> <span class="o">=</span> <span class="n">bucket</span>
+<span class="linenos"> 93</span>        <span class="bp">self</span><span class="o">.</span><span class="n">pure_python</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;OMEGA_FORCE_PYTHON_CLIENT&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="linenos"> 94</span>        <span class="bp">self</span><span class="o">.</span><span class="n">pure_python</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pure_python</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_is_pure_python</span><span class="p">()</span>
+<span class="linenos"> 95</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_create_celery_app</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="n">celeryconf</span><span class="o">=</span><span class="n">celeryconf</span><span class="p">)</span>
+<span class="linenos"> 96</span>        <span class="c1"># temporary requirements, use .require() to set</span>
+<span class="linenos"> 97</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="p">{},</span> <span class="n">routing</span><span class="o">=</span><span class="p">{})</span>
+<span class="linenos"> 98</span>        <span class="c1"># fixed default arguments, use .require(always=True) to set</span>
+<span class="linenos"> 99</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="p">{},</span> <span class="n">routing</span><span class="o">=</span><span class="p">{})</span>
+<span class="linenos">100</span>        <span class="c1"># default routing label</span>
+<span class="linenos">101</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CELERY_DEFAULT_QUEUE&#39;</span><span class="p">)</span>
+<span class="linenos">102</span>
+<span class="linenos">103</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">104</span>        <span class="k">return</span> <span class="s1">&#39;OmegaRuntime(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+<span class="linenos">105</span>
+<span class="linenos">106</span>    <span class="nd">@property</span>
+<span class="linenos">107</span>    <span class="k">def</span><span class="w"> </span><span class="nf">auth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">108</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">109</span>
+<span class="linenos">110</span>    <span class="nd">@property</span>
+<span class="linenos">111</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_common_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">112</span>        <span class="n">common</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">)</span>
+<span class="linenos">113</span>        <span class="n">common</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">pure_python</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pure_python</span><span class="p">,</span> <span class="n">__bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="p">)</span>
+<span class="linenos">114</span>        <span class="n">common</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">])</span>
+<span class="linenos">115</span>        <span class="n">common</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">])</span>
+<span class="linenos">116</span>        <span class="k">return</span> <span class="n">common</span>
+<span class="linenos">117</span>
+<span class="linenos">118</span>    <span class="nd">@property</span>
+<span class="linenos">119</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_inspect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">120</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">inspect</span><span class="p">()</span>
+<span class="linenos">121</span>
+<span class="linenos">122</span>    <span class="nd">@property</span>
+<span class="linenos">123</span>    <span class="k">def</span><span class="w"> </span><span class="nf">is_local</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">124</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;CELERY_ALWAYS_EAGER&#39;</span><span class="p">]</span>
+<span class="linenos">125</span>
+<div class="viewcode-block" id="OmegaRuntime.mode">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.mode">[docs]</a>
+<span class="linenos">126</span>    <span class="k">def</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logging</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">127</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; specify runtime modes</span>
+<span class="linenos">128</span>
+<span class="linenos">129</span><span class="sd">        Args:</span>
+<span class="linenos">130</span><span class="sd">            local (bool): if True, all execution will run locally, else on</span>
+<span class="linenos">131</span><span class="sd">               the configured remote cluster</span>
+<span class="linenos">132</span><span class="sd">            logging (bool|str|tuple): if True, will set the root logger output</span>
+<span class="linenos">133</span><span class="sd">               at INFO level; a single string is the name of the logger,</span>
+<span class="linenos">134</span><span class="sd">               typically a module name; a tuple (logger, level) will select</span>
+<span class="linenos">135</span><span class="sd">               logger and the level. Valid levels are INFO, WARNING, ERROR,</span>
+<span class="linenos">136</span><span class="sd">               CRITICAL, DEBUG</span>
+<span class="linenos">137</span>
+<span class="linenos">138</span><span class="sd">        Usage::</span>
+<span class="linenos">139</span>
+<span class="linenos">140</span><span class="sd">            # run all runtime tasks locally</span>
+<span class="linenos">141</span><span class="sd">            om.runtime.mode(local=True)</span>
+<span class="linenos">142</span>
+<span class="linenos">143</span><span class="sd">            # enable logging both in local and remote mode</span>
+<span class="linenos">144</span><span class="sd">            om.runtime.mode(logging=True)</span>
+<span class="linenos">145</span>
+<span class="linenos">146</span><span class="sd">            # select a specific module and level)</span>
+<span class="linenos">147</span><span class="sd">            om.runtime.mode(logging=(&#39;sklearn&#39;, &#39;DEBUG&#39;))</span>
+<span class="linenos">148</span>
+<span class="linenos">149</span><span class="sd">            # disable logging</span>
+<span class="linenos">150</span><span class="sd">            om.runtime.mode(logging=False)</span>
+<span class="linenos">151</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">152</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">local</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="linenos">153</span>            <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;CELERY_ALWAYS_EAGER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
+<span class="linenos">154</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">][</span><span class="s1">&#39;__logging&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span>
+<span class="linenos">155</span>        <span class="k">return</span> <span class="bp">self</span></div>
+
+<span class="linenos">156</span>
+<span class="linenos">157</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_create_celery_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">celeryconf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">158</span>        <span class="c1"># initialize celery as a runtimes</span>
+<span class="linenos">159</span>        <span class="n">taskpkgs</span> <span class="o">=</span> <span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_CELERY_IMPORTS</span>
+<span class="linenos">160</span>        <span class="n">celeryconf</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">celeryconf</span> <span class="ow">or</span> <span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_CELERY_CONFIG</span><span class="p">)</span>
+<span class="linenos">161</span>        <span class="c1"># ensure we use current value</span>
+<span class="linenos">162</span>        <span class="n">celeryconf</span><span class="p">[</span><span class="s1">&#39;CELERY_ALWAYS_EAGER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_LOCAL_RUNTIME</span><span class="p">)</span>
+<span class="linenos">163</span>        <span class="k">if</span> <span class="n">celeryconf</span><span class="p">[</span><span class="s1">&#39;CELERY_RESULT_BACKEND&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;mongodb://&#39;</span><span class="p">):</span>
+<span class="linenos">164</span>            <span class="n">celeryconf</span><span class="p">[</span><span class="s1">&#39;CELERY_RESULT_BACKEND&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mongo_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">drop_kwargs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;uuidRepresentation&#39;</span><span class="p">])</span>
+<span class="linenos">165</span>        <span class="c1"># initialize ssl configuration</span>
+<span class="linenos">166</span>        <span class="k">if</span> <span class="n">celeryconf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;BROKER_USE_SSL&#39;</span><span class="p">):</span>
+<span class="linenos">167</span>            <span class="c1"># celery &gt; 5 requires ssl options to be specific</span>
+<span class="linenos">168</span>            <span class="c1"># https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-broker_use_ssl</span>
+<span class="linenos">169</span>            <span class="c1"># https://github.com/celery/kombu/issues/1493</span>
+<span class="linenos">170</span>            <span class="c1"># https://docs.python.org/dev/library/ssl.html#ssl.wrap_socket</span>
+<span class="linenos">171</span>            <span class="c1"># https://www.openssl.org/docs/man3.0/man3/SSL_CTX_set_default_verify_paths.html</span>
+<span class="linenos">172</span>            <span class="c1"># env variables:</span>
+<span class="linenos">173</span>            <span class="c1"># SSL_CERT_FILE, CA_CERTS_PATH</span>
+<span class="linenos">174</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_broker_ssl</span><span class="p">(</span><span class="n">celeryconf</span><span class="p">)</span>
+<span class="linenos">175</span>        <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span> <span class="o">=</span> <span class="n">Celery</span><span class="p">(</span><span class="s1">&#39;omegaml&#39;</span><span class="p">)</span>
+<span class="linenos">176</span>        <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">config_from_object</span><span class="p">(</span><span class="n">celeryconf</span><span class="p">)</span>
+<span class="linenos">177</span>        <span class="c1"># needed to get it to actually load the tasks</span>
+<span class="linenos">178</span>        <span class="c1"># https://stackoverflow.com/a/35735471</span>
+<span class="linenos">179</span>        <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">autodiscover_tasks</span><span class="p">(</span><span class="n">taskpkgs</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">180</span>        <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+<span class="linenos">181</span>
+<span class="linenos">182</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_broker_ssl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">celeryconf</span><span class="p">):</span>
+<span class="linenos">183</span>        <span class="c1"># hook to apply broker ssl options</span>
+<span class="linenos">184</span>        <span class="k">pass</span>
+<span class="linenos">185</span>
+<span class="linenos">186</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_client_is_pure_python</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">187</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">188</span>            <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="linenos">189</span>            <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos">190</span>            <span class="kn">import</span><span class="w"> </span><span class="nn">sklearn</span>
+<span class="linenos">191</span>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">192</span>            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="linenos">193</span>            <span class="k">return</span> <span class="kc">True</span>
+<span class="linenos">194</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">195</span>            <span class="k">return</span> <span class="kc">False</span>
+<span class="linenos">196</span>
+<span class="linenos">197</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="linenos">198</span>        <span class="c1"># convert value into dict(label=value)</span>
+<span class="linenos">199</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">200</span>            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+<span class="linenos">201</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+<span class="linenos">202</span>            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="linenos">203</span>        <span class="k">return</span> <span class="n">value</span>
+<span class="linenos">204</span>
+<div class="viewcode-block" id="OmegaRuntime.require">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.require">[docs]</a>
+<span class="linenos">205</span>    <span class="k">def</span><span class="w"> </span><span class="nf">require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">206</span>                <span class="n">logging</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">207</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">208</span><span class="sd">        specify requirements for the task execution</span>
+<span class="linenos">209</span>
+<span class="linenos">210</span><span class="sd">        Use this to specify resource or routing requirements on the next task</span>
+<span class="linenos">211</span><span class="sd">        call sent to the runtime. Any requirements will be reset after the</span>
+<span class="linenos">212</span><span class="sd">        call has been submitted.</span>
+<span class="linenos">213</span>
+<span class="linenos">214</span><span class="sd">        Args:</span>
+<span class="linenos">215</span><span class="sd">            always (bool): if True requirements will persist across task calls. defaults to False</span>
+<span class="linenos">216</span><span class="sd">            label (str): the label required by the worker to have a runtime task dispatched to it.</span>
+<span class="linenos">217</span><span class="sd">               &#39;local&#39; is equivalent to calling self.mode(local=True).</span>
+<span class="linenos">218</span><span class="sd">            task (dict): if specified applied to the task kwargs</span>
+<span class="linenos">219</span><span class="sd">            logging (str|tuple): if specified, same as runtime.mode(logging=...)</span>
+<span class="linenos">220</span><span class="sd">            override (bool): if True overrides previously set .require(), defaults to True</span>
+<span class="linenos">221</span><span class="sd">            kwargs: requirements specification that the runtime understands</span>
+<span class="linenos">222</span>
+<span class="linenos">223</span><span class="sd">        Usage:</span>
+<span class="linenos">224</span><span class="sd">            om.runtime.require(label=&#39;gpu&#39;).model(&#39;foo&#39;).fit(...)</span>
+<span class="linenos">225</span>
+<span class="linenos">226</span><span class="sd">        Returns:</span>
+<span class="linenos">227</span><span class="sd">            self</span>
+<span class="linenos">228</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">229</span>        <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">230</span>            <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;local&#39;</span><span class="p">:</span>
+<span class="linenos">231</span>                <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">local</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">232</span>            <span class="k">elif</span> <span class="n">override</span><span class="p">:</span>
+<span class="linenos">233</span>                <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">local</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="linenos">234</span>            <span class="c1"># update routing, don&#39;t replace (#416)</span>
+<span class="linenos">235</span>            <span class="n">routing</span> <span class="o">=</span> <span class="n">routing</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">236</span>            <span class="n">routing</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span><span class="p">})</span>
+<span class="linenos">237</span>        <span class="n">task</span> <span class="o">=</span> <span class="n">task</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">238</span>        <span class="n">routing</span> <span class="o">=</span> <span class="n">routing</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">239</span>        <span class="k">if</span> <span class="n">task</span> <span class="ow">or</span> <span class="n">routing</span><span class="p">:</span>
+<span class="linenos">240</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">override</span><span class="p">:</span>
+<span class="linenos">241</span>                <span class="c1"># override not allowed, remove previously existing</span>
+<span class="linenos">242</span>                <span class="n">ex_task</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">],</span>
+<span class="linenos">243</span>                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">])</span>
+<span class="linenos">244</span>                <span class="n">ex_routing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">],</span>
+<span class="linenos">245</span>                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">])</span>
+<span class="linenos">246</span>                <span class="n">exists_or_none</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span> <span class="ow">or</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="linenos">247</span>                <span class="n">task</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">exists_or_none</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">ex_task</span><span class="p">)}</span>
+<span class="linenos">248</span>                <span class="n">routing</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">routing</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">exists_or_none</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">ex_routing</span><span class="p">)}</span>
+<span class="linenos">249</span>            <span class="k">if</span> <span class="n">always</span><span class="p">:</span>
+<span class="linenos">250</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">routing</span><span class="p">)</span>
+<span class="linenos">251</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="linenos">252</span>            <span class="k">else</span><span class="p">:</span>
+<span class="linenos">253</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">routing</span><span class="p">)</span>
+<span class="linenos">254</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="linenos">255</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">256</span>            <span class="c1"># FIXME this does not work as expected (will only reset if both task and routing are False)</span>
+<span class="linenos">257</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span><span class="p">:</span>
+<span class="linenos">258</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="linenos">259</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">routing</span><span class="p">:</span>
+<span class="linenos">260</span>                <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="linenos">261</span>        <span class="k">if</span> <span class="n">logging</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">262</span>            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">logging</span><span class="o">=</span><span class="n">logging</span><span class="p">)</span>
+<span class="linenos">263</span>        <span class="k">return</span> <span class="bp">self</span></div>
+
+<span class="linenos">264</span>
+<div class="viewcode-block" id="OmegaRuntime.model">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.model">[docs]</a>
+<span class="linenos">265</span>    <span class="k">def</span><span class="w"> </span><span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">266</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">267</span><span class="sd">        return a model for remote execution</span>
+<span class="linenos">268</span>
+<span class="linenos">269</span><span class="sd">        Args:</span>
+<span class="linenos">270</span><span class="sd">            modelname (str): the name of the object in om.models</span>
+<span class="linenos">271</span><span class="sd">            require (dict): routing requirements for this job</span>
+<span class="linenos">272</span>
+<span class="linenos">273</span><span class="sd">        Returns:</span>
+<span class="linenos">274</span><span class="sd">            OmegaModelProxy</span>
+<span class="linenos">275</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">276</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.proxies.modelproxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaModelProxy</span>
+<span class="linenos">277</span>        <span class="bp">self</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_require</span><span class="p">(</span><span class="n">require</span><span class="p">))</span> <span class="k">if</span> <span class="n">require</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">278</span>        <span class="k">return</span> <span class="n">OmegaModelProxy</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+<span class="linenos">279</span>
+<div class="viewcode-block" id="OmegaRuntime.job">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.job">[docs]</a>
+<span class="linenos">280</span>    <span class="k">def</span><span class="w"> </span><span class="nf">job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jobname</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">281</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">282</span><span class="sd">        return a job for remote execution</span>
+<span class="linenos">283</span>
+<span class="linenos">284</span><span class="sd">        Args:</span>
+<span class="linenos">285</span><span class="sd">            jobname (str): the name of the object in om.jobs</span>
+<span class="linenos">286</span><span class="sd">            require (dict): routing requirements for this job</span>
+<span class="linenos">287</span>
+<span class="linenos">288</span><span class="sd">        Returns:</span>
+<span class="linenos">289</span><span class="sd">            OmegaJobProxy</span>
+<span class="linenos">290</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">291</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.proxies.jobproxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaJobProxy</span>
+<span class="linenos">292</span>
+<span class="linenos">293</span>        <span class="bp">self</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_require</span><span class="p">(</span><span class="n">require</span><span class="p">))</span> <span class="k">if</span> <span class="n">require</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">294</span>        <span class="k">return</span> <span class="n">OmegaJobProxy</span><span class="p">(</span><span class="n">jobname</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+<span class="linenos">295</span>
+<div class="viewcode-block" id="OmegaRuntime.script">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.script">[docs]</a>
+<span class="linenos">296</span>    <span class="k">def</span><span class="w"> </span><span class="nf">script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scriptname</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">297</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">298</span><span class="sd">        return a script for remote execution</span>
+<span class="linenos">299</span>
+<span class="linenos">300</span><span class="sd">        Args:</span>
+<span class="linenos">301</span><span class="sd">            scriptname (str): the name of object in om.scripts</span>
+<span class="linenos">302</span><span class="sd">            require (dict): routing requirements for this job</span>
+<span class="linenos">303</span>
+<span class="linenos">304</span><span class="sd">        Returns:</span>
+<span class="linenos">305</span><span class="sd">            OmegaScriptProxy</span>
+<span class="linenos">306</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">307</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.proxies.scriptproxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaScriptProxy</span>
+<span class="linenos">308</span>
+<span class="linenos">309</span>        <span class="bp">self</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_require</span><span class="p">(</span><span class="n">require</span><span class="p">))</span> <span class="k">if</span> <span class="n">require</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">310</span>        <span class="k">return</span> <span class="n">OmegaScriptProxy</span><span class="p">(</span><span class="n">scriptname</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+<span class="linenos">311</span>
+<div class="viewcode-block" id="OmegaRuntime.experiment">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.experiment">[docs]</a>
+<span class="linenos">312</span>    <span class="k">def</span><span class="w"> </span><span class="nf">experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">implied_run</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">tracker_kwargs</span><span class="p">):</span>
+<span class="linenos">313</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; set the tracking backend and experiment</span>
+<span class="linenos">314</span>
+<span class="linenos">315</span><span class="sd">        Args:</span>
+<span class="linenos">316</span><span class="sd">            experiment (str): the name of the experiment</span>
+<span class="linenos">317</span><span class="sd">            provider (str): the name of the provider</span>
+<span class="linenos">318</span><span class="sd">            tracker_kwargs (dict): additional kwargs for the tracker</span>
+<span class="linenos">319</span><span class="sd">            recreate (bool): if True, recreate the experiment (i.e. drop and recreate,</span>
+<span class="linenos">320</span><span class="sd">              this is useful to change the provider or other settings. All previous data will</span>
+<span class="linenos">321</span><span class="sd">              be kept)</span>
+<span class="linenos">322</span>
+<span class="linenos">323</span><span class="sd">        Returns:</span>
+<span class="linenos">324</span><span class="sd">            OmegaTrackingProxy</span>
+<span class="linenos">325</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">326</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.proxies.trackingproxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaTrackingProxy</span>
+<span class="linenos">327</span>        <span class="c1"># tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()</span>
+<span class="linenos">328</span>        <span class="n">tracker</span> <span class="o">=</span> <span class="n">OmegaTrackingProxy</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">implied_run</span><span class="o">=</span><span class="n">implied_run</span><span class="p">,</span>
+<span class="linenos">329</span>                                     <span class="n">recreate</span><span class="o">=</span><span class="n">recreate</span><span class="p">,</span> <span class="o">**</span><span class="n">tracker_kwargs</span><span class="p">)</span>
+<span class="linenos">330</span>        <span class="k">return</span> <span class="n">tracker</span></div>
+
+<span class="linenos">331</span>
+<div class="viewcode-block" id="OmegaRuntime.task">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.task">[docs]</a>
+<span class="linenos">332</span>    <span class="k">def</span><span class="w"> </span><span class="nf">task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">333</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">334</span><span class="sd">        retrieve the task function from the celery instance</span>
+<span class="linenos">335</span>
+<span class="linenos">336</span><span class="sd">        Args:</span>
+<span class="linenos">337</span><span class="sd">            name (str): a registered celery task as ``module.tasks.task_name``</span>
+<span class="linenos">338</span><span class="sd">            kwargs (dict): routing keywords to CeleryTask.apply_async</span>
+<span class="linenos">339</span>
+<span class="linenos">340</span><span class="sd">        Returns:</span>
+<span class="linenos">341</span><span class="sd">            CeleryTask</span>
+<span class="linenos">342</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">343</span>        <span class="n">taskfn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">344</span>        <span class="k">assert</span> <span class="n">taskfn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;cannot find task </span><span class="si">{name}</span><span class="s2"> in Celery runtime&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
+<span class="linenos">345</span>        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">dict_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_common_kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">routing</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+<span class="linenos">346</span>        <span class="n">task</span> <span class="o">=</span> <span class="n">CeleryTask</span><span class="p">(</span><span class="n">taskfn</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">347</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">routing</span><span class="o">=</span><span class="p">{},</span> <span class="n">task</span><span class="o">=</span><span class="p">{})</span>
+<span class="linenos">348</span>        <span class="k">return</span> <span class="n">task</span></div>
+
+<span class="linenos">349</span>
+<span class="linenos">350</span>    <span class="k">def</span><span class="w"> </span><span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="linenos">351</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">celery.result</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncResult</span>
+<span class="linenos">352</span>        <span class="n">promise</span> <span class="o">=</span> <span class="n">AsyncResult</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="p">)</span>
+<span class="linenos">353</span>        <span class="k">return</span> <span class="n">promise</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">if</span> <span class="n">wait</span> <span class="k">else</span> <span class="n">promise</span>
+<span class="linenos">354</span>
+<div class="viewcode-block" id="OmegaRuntime.settings">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.settings">[docs]</a>
+<span class="linenos">355</span>    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">356</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; return the runtimes&#39;s cluster settings</span>
+<span class="linenos">357</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">358</span>        <span class="bp">self</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="o">**</span><span class="n">require</span><span class="p">)</span> <span class="k">if</span> <span class="n">require</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">359</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;omegaml.tasks.omega_settings&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delay</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+<span class="linenos">360</span>
+<div class="viewcode-block" id="OmegaRuntime.ping">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.ping">[docs]</a>
+<span class="linenos">361</span>    <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">require</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">362</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">363</span><span class="sd">        ping the runtime</span>
+<span class="linenos">364</span>
+<span class="linenos">365</span><span class="sd">        Args:</span>
+<span class="linenos">366</span><span class="sd">            args (tuple): task args</span>
+<span class="linenos">367</span><span class="sd">            require (dict): routing requirements for this job</span>
+<span class="linenos">368</span><span class="sd">            wait (bool): if True, wait for the task to return, else return</span>
+<span class="linenos">369</span><span class="sd">                AsyncResult</span>
+<span class="linenos">370</span><span class="sd">            timeout (int): if wait is True, the timeout in seconds, defaults to 10</span>
+<span class="linenos">371</span><span class="sd">            kwargs (dict): task kwargs, as accepted by CeleryTask.apply_async</span>
+<span class="linenos">372</span>
+<span class="linenos">373</span><span class="sd">        Returns:</span>
+<span class="linenos">374</span><span class="sd">            * response (dict) for wait=True</span>
+<span class="linenos">375</span><span class="sd">            * AsyncResult for wait=False</span>
+<span class="linenos">376</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">377</span>        <span class="bp">self</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="o">**</span><span class="n">require</span><span class="p">)</span> <span class="k">if</span> <span class="n">require</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">378</span>        <span class="n">promise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;omegaml.tasks.omega_ping&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">379</span>        <span class="k">return</span> <span class="n">promise</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span> <span class="k">if</span> <span class="n">wait</span> <span class="k">else</span> <span class="n">promise</span></div>
+
+<span class="linenos">380</span>
+<div class="viewcode-block" id="OmegaRuntime.enable_hostqueues">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.enable_hostqueues">[docs]</a>
+<span class="linenos">381</span>    <span class="k">def</span><span class="w"> </span><span class="nf">enable_hostqueues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">382</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; enable a worker-specific queue on every worker host</span>
+<span class="linenos">383</span>
+<span class="linenos">384</span><span class="sd">        Returns:</span>
+<span class="linenos">385</span><span class="sd">            list of labels (one entry for each hostname)</span>
+<span class="linenos">386</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">387</span>        <span class="n">control</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="o">.</span><span class="n">control</span>
+<span class="linenos">388</span>        <span class="n">inspect</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">inspect</span><span class="p">()</span>
+<span class="linenos">389</span>        <span class="n">active</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">active</span><span class="p">()</span>
+<span class="linenos">390</span>        <span class="n">queues</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos">391</span>        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">active</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+<span class="linenos">392</span>            <span class="n">hostname</span> <span class="o">=</span> <span class="n">worker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">393</span>            <span class="n">control</span><span class="o">.</span><span class="n">cancel_consumer</span><span class="p">(</span><span class="n">hostname</span><span class="p">)</span>
+<span class="linenos">394</span>            <span class="n">control</span><span class="o">.</span><span class="n">add_consumer</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="p">[</span><span class="n">worker</span><span class="p">])</span>
+<span class="linenos">395</span>            <span class="n">queues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hostname</span><span class="p">)</span>
+<span class="linenos">396</span>        <span class="k">return</span> <span class="n">queues</span></div>
+
+<span class="linenos">397</span>
+<div class="viewcode-block" id="OmegaRuntime.workers">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.workers">[docs]</a>
+<span class="linenos">398</span>    <span class="k">def</span><span class="w"> </span><span class="nf">workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">399</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; list of workers</span>
+<span class="linenos">400</span>
+<span class="linenos">401</span><span class="sd">        Returns:</span>
+<span class="linenos">402</span><span class="sd">            dict of workers =&gt; list of active tasks</span>
+<span class="linenos">403</span>
+<span class="linenos">404</span><span class="sd">        See Also:</span>
+<span class="linenos">405</span><span class="sd">            celery Inspect.active()</span>
+<span class="linenos">406</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">407</span>        <span class="n">local_worker</span> <span class="o">=</span> <span class="p">{</span><span class="n">gethostname</span><span class="p">():</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;local&#39;</span><span class="p">,</span> <span class="s1">&#39;is_local&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]}</span>
+<span class="linenos">408</span>        <span class="n">celery_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inspect</span><span class="o">.</span><span class="n">active</span><span class="p">()</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">409</span>        <span class="k">return</span> <span class="n">dict_merge</span><span class="p">(</span><span class="n">local_worker</span><span class="p">,</span> <span class="n">celery_workers</span><span class="p">)</span></div>
+
+<span class="linenos">410</span>
+<div class="viewcode-block" id="OmegaRuntime.queues">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.queues">[docs]</a>
+<span class="linenos">411</span>    <span class="k">def</span><span class="w"> </span><span class="nf">queues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">412</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; list queues</span>
+<span class="linenos">413</span>
+<span class="linenos">414</span><span class="sd">        Returns:</span>
+<span class="linenos">415</span><span class="sd">            dict of workers =&gt; list of queues</span>
+<span class="linenos">416</span>
+<span class="linenos">417</span><span class="sd">        See Also:</span>
+<span class="linenos">418</span><span class="sd">            celery Inspect.active_queues()</span>
+<span class="linenos">419</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">420</span>        <span class="n">local_q</span> <span class="o">=</span> <span class="p">{</span><span class="n">gethostname</span><span class="p">():</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;local&#39;</span><span class="p">,</span> <span class="s1">&#39;is_local&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]}</span>
+<span class="linenos">421</span>        <span class="n">celery_qs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inspect</span><span class="o">.</span><span class="n">active_queues</span><span class="p">()</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">422</span>        <span class="k">return</span> <span class="n">dict_merge</span><span class="p">(</span><span class="n">local_q</span><span class="p">,</span> <span class="n">celery_qs</span><span class="p">)</span></div>
+
+<span class="linenos">423</span>
+<div class="viewcode-block" id="OmegaRuntime.labels">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.labels">[docs]</a>
+<span class="linenos">424</span>    <span class="k">def</span><span class="w"> </span><span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">425</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; list available labels</span>
+<span class="linenos">426</span>
+<span class="linenos">427</span><span class="sd">        Returns:</span>
+<span class="linenos">428</span><span class="sd">            dict of workers =&gt; list of lables</span>
+<span class="linenos">429</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">430</span>        <span class="k">return</span> <span class="p">{</span><span class="n">worker</span><span class="p">:</span> <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">queues</span><span class="p">]</span>
+<span class="linenos">431</span>                <span class="k">for</span> <span class="n">worker</span><span class="p">,</span> <span class="n">queues</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+<span class="linenos">432</span>
+<div class="viewcode-block" id="OmegaRuntime.stats">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.stats">[docs]</a>
+<span class="linenos">433</span>    <span class="k">def</span><span class="w"> </span><span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">434</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; worker statistics</span>
+<span class="linenos">435</span>
+<span class="linenos">436</span><span class="sd">        Returns:</span>
+<span class="linenos">437</span><span class="sd">            dict of workers =&gt; dict of stats</span>
+<span class="linenos">438</span>
+<span class="linenos">439</span><span class="sd">        See Also:</span>
+<span class="linenos">440</span><span class="sd">            celery Inspect.stats()</span>
+<span class="linenos">441</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">442</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inspect</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span></div>
+
+<span class="linenos">443</span>
+<div class="viewcode-block" id="OmegaRuntime.status">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.status">[docs]</a>
+<span class="linenos">444</span>    <span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">445</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; current cluster status</span>
+<span class="linenos">446</span>
+<span class="linenos">447</span><span class="sd">        This collects key information from .labels(), .stats() and the latest</span>
+<span class="linenos">448</span><span class="sd">        worker heartbeat. Note that loadavg is only available if the worker has</span>
+<span class="linenos">449</span><span class="sd">        recently sent a heartbeat and may not be accurate across the cluster.</span>
+<span class="linenos">450</span>
+<span class="linenos">451</span><span class="sd">        Returns:</span>
+<span class="linenos">452</span><span class="sd">             snapshot (dict): a snapshot of the cluster status</span>
+<span class="linenos">453</span><span class="sd">                &#39;&lt;worker&gt;&#39;: {</span>
+<span class="linenos">454</span><span class="sd">                    &#39;loadavg&#39;: [0.0, 0.0, 0.0],  # load average in % seen by the worker (1, 5, 15 min)</span>
+<span class="linenos">455</span><span class="sd">                    &#39;processes&#39;: 1, # number of active worker processes</span>
+<span class="linenos">456</span><span class="sd">                    &#39;concurrency&#39;: 1, # max concurrency</span>
+<span class="linenos">457</span><span class="sd">                    &#39;uptime&#39;: 0, # uptime in seconds</span>
+<span class="linenos">458</span><span class="sd">                    &#39;processed&#39;: Counter(task=n), # number of tasks processed</span>
+<span class="linenos">459</span><span class="sd">                    &#39;queues&#39;: [&#39;default&#39;], # list of queues (labels) the worker is listening on</span>
+<span class="linenos">460</span><span class="sd">                }</span>
+<span class="linenos">461</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">462</span>        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+<span class="linenos">463</span>        <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span>
+<span class="linenos">464</span>        <span class="n">heartbeat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">latest</span><span class="p">()</span>
+<span class="linenos">465</span>        <span class="n">snapshot</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">466</span>            <span class="n">worker</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">467</span>                <span class="s1">&#39;loadavg&#39;</span><span class="p">:</span> <span class="n">heartbeat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;loadavg&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+<span class="linenos">468</span>                <span class="s1">&#39;processes&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="n">worker</span><span class="p">][</span><span class="s1">&#39;pool&#39;</span><span class="p">][</span><span class="s1">&#39;processes&#39;</span><span class="p">],</span>
+<span class="linenos">469</span>                <span class="s1">&#39;concurrency&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="n">worker</span><span class="p">][</span><span class="s1">&#39;pool&#39;</span><span class="p">][</span><span class="s1">&#39;max-concurrency&#39;</span><span class="p">],</span>
+<span class="linenos">470</span>                <span class="s1">&#39;uptime&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="n">worker</span><span class="p">][</span><span class="s1">&#39;uptime&#39;</span><span class="p">],</span>
+<span class="linenos">471</span>                <span class="s1">&#39;processed&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="n">worker</span><span class="p">][</span><span class="s1">&#39;total&#39;</span><span class="p">],</span>
+<span class="linenos">472</span>                <span class="s1">&#39;queues&#39;</span><span class="p">:</span> <span class="n">labels</span><span class="p">[</span><span class="n">worker</span><span class="p">],</span>
+<span class="linenos">473</span>            <span class="p">}</span> <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">if</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">stats</span>
+<span class="linenos">474</span>        <span class="p">}</span>
+<span class="linenos">475</span>        <span class="k">return</span> <span class="n">snapshot</span></div>
+
+<span class="linenos">476</span>
+<span class="linenos">477</span>    <span class="nd">@property</span>
+<span class="linenos">478</span>    <span class="k">def</span><span class="w"> </span><span class="nf">events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">479</span>        <span class="k">return</span> <span class="n">CeleryEventStream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">celeryapp</span><span class="p">)</span>
+<span class="linenos">480</span>
+<div class="viewcode-block" id="OmegaRuntime.callback">
+<a class="viewcode-back" href="../../../reference/runtimes.html#omegaml.runtimes.OmegaRuntime.callback">[docs]</a>
+<span class="linenos">481</span>    <span class="k">def</span><span class="w"> </span><span class="nf">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script_name</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">482</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Add a callback to a registered script</span>
+<span class="linenos">483</span>
+<span class="linenos">484</span><span class="sd">        The callback will be triggered upon successful or failed</span>
+<span class="linenos">485</span><span class="sd">        execution of the runtime tasks. The script syntax is::</span>
+<span class="linenos">486</span>
+<span class="linenos">487</span><span class="sd">            # script.py</span>
+<span class="linenos">488</span><span class="sd">            def run(om, state=None, result=None, **kwargs):</span>
+<span class="linenos">489</span><span class="sd">                # state (str): &#39;SUCCESS&#39;|&#39;ERROR&#39;</span>
+<span class="linenos">490</span><span class="sd">                # result (obj): the task&#39;s serialized result</span>
+<span class="linenos">491</span>
+<span class="linenos">492</span><span class="sd">        Args:</span>
+<span class="linenos">493</span><span class="sd">            script_name (str): the name of the script (in om.scripts)</span>
+<span class="linenos">494</span><span class="sd">            always (bool): if True always apply this callback, defaults to False</span>
+<span class="linenos">495</span><span class="sd">            **kwargs: and other kwargs to pass on to the script</span>
+<span class="linenos">496</span>
+<span class="linenos">497</span><span class="sd">        Returns:</span>
+<span class="linenos">498</span><span class="sd">            self</span>
+<span class="linenos">499</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">500</span>        <span class="n">success_sig</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="n">script_name</span><span class="p">)</span>
+<span class="linenos">501</span>                       <span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">as_callback</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">502</span>                       <span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SUCCESS&#39;</span><span class="p">,</span> <span class="n">script_name</span><span class="p">],</span>
+<span class="linenos">503</span>                                  <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="linenos">504</span>                                  <span class="n">immutable</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="linenos">505</span>        <span class="n">error_sig</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="n">script_name</span><span class="p">)</span>
+<span class="linenos">506</span>                     <span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">as_callback</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">507</span>                     <span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span> <span class="n">script_name</span><span class="p">],</span>
+<span class="linenos">508</span>                                <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="linenos">509</span>                                <span class="n">immutable</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="linenos">510</span>
+<span class="linenos">511</span>        <span class="k">if</span> <span class="n">always</span><span class="p">:</span>
+<span class="linenos">512</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">][</span><span class="s1">&#39;link&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">success_sig</span>
+<span class="linenos">513</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_task_default_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">][</span><span class="s1">&#39;link_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">error_sig</span>
+<span class="linenos">514</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">515</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">][</span><span class="s1">&#39;link&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">success_sig</span>
+<span class="linenos">516</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_require_kwargs</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">][</span><span class="s1">&#39;link_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">error_sig</span>
+<span class="linenos">517</span>        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+<span class="linenos">518</span>
+<span class="linenos">519</span>
+<span class="linenos">520</span><span class="k">class</span><span class="w"> </span><span class="nc">CeleryEventStream</span><span class="p">:</span>
+<span class="linenos">521</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">wakeup</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">522</span>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+<span class="linenos">523</span>        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="n">limit</span>
+<span class="linenos">524</span>        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+<span class="linenos">525</span>        <span class="bp">self</span><span class="o">.</span><span class="n">wakeup</span> <span class="o">=</span> <span class="n">wakeup</span>
+<span class="linenos">526</span>        <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="linenos">527</span>        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos">528</span>
+<span class="linenos">529</span>    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="linenos">530</span>        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+<span class="linenos">531</span>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:</span>
+<span class="linenos">532</span>            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:]</span>
+<span class="linenos">533</span>
+<span class="linenos">534</span>    <span class="k">def</span><span class="w"> </span><span class="nf">listen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handlers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">535</span>        <span class="c1"># Connect to the broker using Kombu (Celery&#39;s underlying messaging system)</span>
+<span class="linenos">536</span>        <span class="n">handlers</span> <span class="o">=</span> <span class="n">handlers</span> <span class="ow">or</span> <span class="p">{</span><span class="s1">&#39;worker-heartbeat&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">}</span>
+<span class="linenos">537</span>        <span class="n">limit</span> <span class="o">=</span> <span class="n">limit</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span>
+<span class="linenos">538</span>        <span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span>
+<span class="linenos">539</span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="linenos">540</span>            <span class="c1"># Create the EventReceiver to listen to all events</span>
+<span class="linenos">541</span>            <span class="n">recv</span> <span class="o">=</span> <span class="n">EventReceiver</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">handlers</span><span class="o">=</span><span class="n">handlers</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
+<span class="linenos">542</span>            <span class="n">recv</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">wakeup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wakeup</span><span class="p">)</span>
+<span class="linenos">543</span>
+<span class="linenos">544</span>    <span class="k">def</span><span class="w"> </span><span class="nf">latest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">545</span>        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="linenos">546</span>            <span class="bp">self</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+<span class="linenos">547</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">548</span>
+<span class="linenos">549</span>
+<span class="linenos">550</span><span class="c1"># apply mixins</span>
+<span class="linenos">551</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.mixins.taskcanvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">canvas_chain</span><span class="p">,</span> <span class="n">canvas_group</span><span class="p">,</span> <span class="n">canvas_chord</span>
+<span class="linenos">552</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.runtimes.mixins.swagger</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwaggerGenerator</span>
+<span class="linenos">553</span>
+<span class="linenos">554</span><span class="n">OmegaRuntime</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="n">canvas_chain</span>
+<span class="linenos">555</span><span class="n">OmegaRuntime</span><span class="o">.</span><span class="n">parallel</span> <span class="o">=</span> <span class="n">canvas_group</span>
+<span class="linenos">556</span><span class="n">OmegaRuntime</span><span class="o">.</span><span class="n">mapreduce</span> <span class="o">=</span> <span class="n">canvas_chord</span>
+<span class="linenos">557</span><span class="n">OmegaRuntime</span><span class="o">.</span><span class="n">swagger</span> <span class="o">=</span> <span class="n">SwaggerGenerator</span><span class="o">.</span><span class="n">build_swagger</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="runtime.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
