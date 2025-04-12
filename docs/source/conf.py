@@ -217,7 +217,7 @@ html_sidebars = {
 }
 
 # Whitelist pattern for tags (set to None to ignore all tags)
-# smv_tag_whitelist = r'^(release/0.15.3|release/0.16.3)|latest|stable$' #r'^release/[0-9]*.*$'
+#smv_tag_whitelist = r'^(release/0.4|release/0.5|release/0.15.3|release/0.16.3)|latest|stable$' #r'^release/[0-9]*.*$'
 smv_tag_whitelist = r'^latest|stable|(release/[02]\.\d+(.\d+)?$)|([02]\.\d+(.\d+)$)$'
 # Whitelist pattern for branches (set to None to ignore all branches)
 smv_branch_whitelist = r'master'

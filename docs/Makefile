@@ -239,7 +239,8 @@ fix:
 	find . -name "*rst" | xargs sed -i "s/from omega.ml import /from omegaml import /"
 
 marknext:
-	./scripts/marknext.sh; git add .; git commit -m "update multiversion"
+	./scripts/marknext.sh
+	git add ..; git commit -m "update multiversion" || echo "no NEXT updates to commit"
 
 latest:
 	git tag -d latest; git tag latest

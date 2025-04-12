@@ -152,14 +152,19 @@ A pipeline is a specific type of virtual function:
 
 .. code-block:: python
 
-    from omegaml.backends.genai.models import virtual_genai
+    from omegaml.backends.virtualobj import virtualobj
 
-    @virtual_genai
+    @virtualobj
     def pipeline(*args, method=None, **kwargs):
         print(f"calling method={method}")
         print(f"   args={args}, kwargs={kwargs}")
 
     om.models.put(pipeline, 'pipeline')
+
+
+.. versionchanged:: 0.18
+   Use @virtualobj instead of @virtual_genai to decorate the pipeline.
+
 
 Add the pipeline to the model
 
