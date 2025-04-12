@@ -681,6 +681,13 @@ def mlflow_available(min=None, max=None, py_min=None, py_max=None):
     # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
     # see https://github.com/mlflow/mlflow/pull/13023
     available = module_available('mlflow', min=min, max=max, py_min=py_min, py_max=py_max)
+    if available:
+        try:
+            from pydantic import PydanticDeprecatedSince20
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+        except ImportError:
+            pass
     return available
 
 
