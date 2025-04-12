@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release notes release/0.16.0 &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=81998473"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Release notes release/0.15.5" href="v0.15.5.html" />
+    <link rel="prev" title="Release notes release/0.16.1" href="v0.16.1.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Changes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="v0.16.3.html">Release notes release/0.16.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.16.2.html">Release notes release/0.16.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.16.1.html">Release notes release/0.16.1</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Release notes release/0.16.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#whats-changed">What’s Changed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#changes">Changes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#refactor">Refactor</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="v0.15.5.html">Release notes release/0.15.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.15.3.html">Release notes release/0.15.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.9.html">Release notes release/0.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.8.5.html">Release notes release/0.8.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.8.html">Release notes release/0.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.7.html">Release notes release/0.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.6.html">Release notes release/0.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.5.html">Release notes release/0.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="v0.4.html">Release notes release/0.4</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Changes</a></li>
+      <li class="breadcrumb-item active">Release notes release/0.16.0</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/changes/v0.16.0.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="release-notes-release-0-16-0">
+<h1>Release notes release/0.16.0<a class="headerlink" href="#release-notes-release-0-16-0" title="Link to this heading">¶</a></h1>
+<p>Released 2023-11-09</p>
+<section id="whats-changed">
+<h2>What’s Changed<a class="headerlink" href="#whats-changed" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>upgrade dependencies to pandas, jupyterhub by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/324">https://github.com/omegaml/omegaml/pull/324</a></p></li>
+<li><p>ensure sql connection string secrets are properly encoded by
+&#64;miraculixx in <a class="reference external" href="https://github.com/omegaml/omegaml/pull/327">https://github.com/omegaml/omegaml/pull/327</a></p></li>
+<li><p>Enhance tracking by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/316">https://github.com/omegaml/omegaml/pull/316</a></p></li>
+<li><p>upgrade rabbitmq to latest release by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/328">https://github.com/omegaml/omegaml/pull/328</a></p></li>
+<li><p>refactor jupyterlab 4.0 dependency to nbclassic by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/330">https://github.com/omegaml/omegaml/pull/330</a></p></li>
+<li><p>more promotion backends by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/285">https://github.com/omegaml/omegaml/pull/285</a></p></li>
+<li><p>combine swagger docs from multiple services by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/331">https://github.com/omegaml/omegaml/pull/331</a></p></li>
+<li><p>Create SECURITY.md by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/333">https://github.com/omegaml/omegaml/pull/333</a></p></li>
+<li><p>[Snyk] Security upgrade tensorflow/tensorflow from
+2.11.0rc1-gpu-jupyter to 2.13.0rc0-gpu-jupyter by &#64;omegaml in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/329">https://github.com/omegaml/omegaml/pull/329</a></p></li>
+<li><p>upgrade dependencies by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/334">https://github.com/omegaml/omegaml/pull/334</a></p></li>
+<li><p>Fix flask dependency by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/338">https://github.com/omegaml/omegaml/pull/338</a></p></li>
+<li><p>update jupyter hub by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/343">https://github.com/omegaml/omegaml/pull/343</a></p></li>
+<li><p>fix IndexError on empty model version by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/345">https://github.com/omegaml/omegaml/pull/345</a></p></li>
+<li><p>Fix 346 empty swagger input by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/347">https://github.com/omegaml/omegaml/pull/347</a></p></li>
+<li><p>[Snyk] Security upgrade tensorflow/tensorflow from
+2.13.0rc0-gpu-jupyter to 2.13.0-gpu-jupyter by &#64;omegaml in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/349">https://github.com/omegaml/omegaml/pull/349</a></p></li>
+<li><p>[Snyk] Security upgrade tensorflow/tensorflow from
+2.13.0rc0-gpu-jupyter to 2.13.0rc2-gpu-jupyter by &#64;omegaml in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/337">https://github.com/omegaml/omegaml/pull/337</a></p></li>
+<li><p>[Snyk] Security upgrade jupyterhub/jupyterhub from latest to 4.0.2 by
+&#64;omegaml in <a class="reference external" href="https://github.com/omegaml/omegaml/pull/342">https://github.com/omegaml/omegaml/pull/342</a></p></li>
+<li><p>Update sql docs by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/323">https://github.com/omegaml/omegaml/pull/323</a></p></li>
+<li><p>cli: om load from config file, if exists outside of current directory
+by &#64;miraculixx in <a class="reference external" href="https://github.com/omegaml/omegaml/pull/348">https://github.com/omegaml/omegaml/pull/348</a></p></li>
+<li><p>update makefile by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/350">https://github.com/omegaml/omegaml/pull/350</a></p></li>
+<li><p>log exceptions in runtime tasks by &#64;miraculixx in
+<a class="reference external" href="https://github.com/omegaml/omegaml/pull/336">https://github.com/omegaml/omegaml/pull/336</a></p></li>
+</ul>
+<p><strong>Full Changelog</strong>:
+<a class="reference external" href="https://github.com/omegaml/omegaml/compare/release/0.15.5">https://github.com/omegaml/omegaml/compare/release/0.15.5</a>…release/0.16.0</p>
+<section id="changes">
+<h3>Changes<a class="headerlink" href="#changes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Bump version: 0.16.0-rc2 → 0.16.0
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/4bde4c9">4bde4c9</a></p></li>
+<li><p>Bump version: 0.16.0-rc1 → 0.16.0-rc2
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/dac6d26">dac6d26</a></p></li>
+<li><p>Bump version: 0.16.0-dev1 → 0.16.0-rc1
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/7debfdd">7debfdd</a></p></li>
+<li><p>Bump version: 0.15.6-rc1 → 0.16.0-dev1
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/65365c5">65365c5</a></p></li>
+<li><p>Bump version: 0.15.6-dev7 → 0.15.6-rc1
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/98238f2">98238f2</a></p></li>
+<li><p>upgrade circleci machine image
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/30fe7c7">30fe7c7</a></p></li>
+<li><p>Bump version: 0.15.6-dev6 → 0.15.6-dev7
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/1aaa961">1aaa961</a></p></li>
+<li><p>Bump version: 0.15.6-dev5 → 0.15.6-dev6
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/6646414">6646414</a></p></li>
+<li><p>jupyter tests ensure file browser is shown
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/d6c6174">d6c6174</a></p></li>
+<li><p>Bump version: 0.15.6-dev4 → 0.15.6-dev5
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/4db250a">4db250a</a></p></li>
+<li><p>Bump version: 0.15.6-dev3 → 0.15.6-dev4
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/d57db2a">d57db2a</a></p></li>
+<li><p>Bump version: 0.15.6-dev2 → 0.15.6-dev3
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/a67e23a">a67e23a</a></p></li>
+<li><p>Bump version: 0.15.6-dev1 → 0.15.6-dev2
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/c62764e">c62764e</a></p></li>
+<li><p>update tensorflow dependencies
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/4b4169a">4b4169a</a></p></li>
+<li><p>release build 0.15.6
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/d5b9bba">d5b9bba</a></p></li>
+<li><p>Merge pull request #336 from omegaml/log-exception-on-debug
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/1983e3f">1983e3f</a></p></li>
+<li><p>log exceptions in runtime tasks
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/b84f55d">b84f55d</a></p></li>
+<li><p>Merge pull request #350 from omegaml/update-devtools
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/a3de3a0">a3de3a0</a></p></li>
+<li><p>update makefile
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/c8d1046">c8d1046</a></p></li>
+<li><p>Merge pull request #348 from omegaml/fix-config-loading-basedir
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/3818ae3">3818ae3</a></p></li>
+<li><p>cli: om load from config file, if exists outside of current directory
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/9b63018">9b63018</a></p></li>
+<li><p>Merge pull request #323 from omegaml/update-sql-docs
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/c9c0cc3">c9c0cc3</a></p></li>
+<li><p>update sql alchemy docs
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/30ed63d">30ed63d</a></p></li>
+<li><p>Merge pull request #342 from
+omegaml/snyk-fix-479d77bb0802d2754e2fdacd6ff5aecd
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/8698538">8698538</a></p></li>
+<li><p>Merge pull request #337 from
+omegaml/snyk-fix-ebd741390d0f8310f7b24ca8d1307dfe
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/205ee54">205ee54</a></p></li>
+<li><p>Merge pull request #349 from
+omegaml/snyk-fix-9b805d15a403d746f4086e41440b466d
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/d6f43bd">d6f43bd</a></p></li>
+<li><p>Merge pull request #347 from omegaml/fix-346-empty-swagger-input
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/a28d7cf">a28d7cf</a></p></li>
+<li><p>swagger specs are valid even if no input schema is specified
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/0a0a295">0a0a295</a></p></li>
+<li><p>Merge pull request #345 from omegaml/fix-344-empty-model-version
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/3129354">3129354</a></p></li>
+<li><p>Update test_modelversions.py
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/53325d9">53325d9</a></p></li>
+<li><p>Merge pull request #343 from omegaml/fix-jupyter-upgrade-issue
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/92ee2b6">92ee2b6</a></p></li>
+<li><p>update jupyter hub
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/f1288b2">f1288b2</a></p></li>
+<li><p>Merge pull request #338 from omegaml/fix-flask-dependency
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/165963d">165963d</a></p></li>
+<li><p>Merge pull request #334 from omegaml/upgrade-dependencies
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/598cc95">598cc95</a></p></li>
+<li><p>upgrade dependencies
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/2f25ed4">2f25ed4</a></p></li>
+<li><p>Merge pull request #329 from
+omegaml/snyk-fix-424c2e7c4a49f71671d6383f35f0b49a
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/40ab916">40ab916</a></p></li>
+<li><p>Merge pull request #333 from omegaml/miraculixx-patch-4
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/48a01f0">48a01f0</a></p></li>
+<li><p>Create SECURITY.md
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/3ebc051">3ebc051</a></p></li>
+<li><p>Merge pull request #331 from omegaml/combine-swagger
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/eb5e8b0">eb5e8b0</a></p></li>
+<li><p>combine swagger docs from multiple services
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/be107d6">be107d6</a></p></li>
+<li><p>Merge pull request #285 from omegaml/promotion-backends
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/f3c81c3">f3c81c3</a></p></li>
+<li><p>formalize promotion methods
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/bd8df75">bd8df75</a></p></li>
+<li><p>Merge pull request #330 from omegaml/fix-nbclassic
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/7669b26">7669b26</a></p></li>
+<li><p>Merge pull request #328 from omegaml/upgrade-rabbitmq
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/0dcce9b">0dcce9b</a></p></li>
+<li><p>upgrade rabbitmq to latest release
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/9bb57ef">9bb57ef</a></p></li>
+<li><p>Merge pull request #316 from omegaml/enhance-tracking
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/fdcd63a">fdcd63a</a></p></li>
+<li><p>update task tracking semantics from inside runtime
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/872fb56">872fb56</a></p></li>
+<li><p>Merge pull request #327 from omegaml/encode-sqlsecrets-url
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/5b51cdc">5b51cdc</a></p></li>
+<li><p>ensure sql connection string secrets are properly encoded
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/19d6cb2">19d6cb2</a></p></li>
+<li><p>Merge pull request #324 from omegaml/upgrade-dependencies
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/9b30d8c">9b30d8c</a></p></li>
+<li><p>upgrade dependencies to pandas, jupyterhub
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/dfc4ab4">dfc4ab4</a></p></li>
+</ul>
+</section>
+<section id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>fix: scripts/docker/jyhub/Dockerfile to reduce vulnerabilities
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/1fc5506">1fc5506</a></p></li>
+<li><p>fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+vulnerabilities
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/ca2c3dc">ca2c3dc</a></p></li>
+<li><p>fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+vulnerabilities
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/d28b3dc">d28b3dc</a></p></li>
+<li><p>fix IndexError on empty model version
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/f5885a5">f5885a5</a></p></li>
+<li><p>fix flask json dependency
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/395e54a">395e54a</a></p></li>
+<li><p>fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+vulnerabilities
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/e7db15c">e7db15c</a></p></li>
+</ul>
+</section>
+<section id="refactor">
+<h3>Refactor<a class="headerlink" href="#refactor" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>refactor jupyterlab 4.0 dependency to nbclassic
+<a class="reference external" href="https://github.com/omegaml/omegaml/commit/1aa9dd9">1aa9dd9</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="v0.16.1.html" class="btn btn-neutral float-left" title="Release notes release/0.16.1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="v0.15.5.html" class="btn btn-neutral float-right" title="Release notes release/0.15.5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: stable
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../latest/changes/v0.16.0.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/changes/v0.16.0.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="v0.16.0.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../master/changes/v0.16.0.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
