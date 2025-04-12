@@ -63,11 +63,11 @@ See Also
 
     https://github.com/rstudio/reticulate
 """
+import os
+
 import shutil
-
-from pathlib import Path
-
 import sys
+from pathlib import Path
 
 # R:reticulate injects the r helper object into the main module
 # there is not much documentation on this, however a few hints
@@ -120,7 +120,11 @@ def start_worker(om, queue=None):
         argv.extend(f'-Q {queue}'.split(' '))
     om.runtime.celeryapp.worker_main(argv=argv)
 
+
 #: determine if R is installed
 r_available = shutil.which('Rscript') is not None
 #: determine if we are running inside R reticulate
 inside_r = rhelper() is not None
+# ensure reticulate will use the same python venv as the one running this code
+# -- https://rstudio.github.io/reticulate/articles/versions.html
+os.environ.setdefault('RETICULATE_PYTHON', sys.executable)

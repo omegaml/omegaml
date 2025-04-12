@@ -3,9 +3,15 @@
 ##
 ##    @script.name [option]
 ##
+##    Options:
+##
+##    --help        show this help message
+##    --tag=VALUE   the specific release tag to generate changelog for
+##
 script_dir=$(realpath "$(dirname "$0")")
 source $script_dir/easyoptions || exit
-RELEASES=$(git tag | grep -E "release/[02].[0-9]+(.[0-9]+)?$" | xargs)
+RELEASE_PATTERNS=${tag:-"release/[02].[0-9]+(.[0-9]+)?$"}
+RELEASES=$(git tag | grep -E "$RELEASE_PATTERNS" | xargs)
 CHANGES_DIR=./source/changes
 
 function generate_changes()

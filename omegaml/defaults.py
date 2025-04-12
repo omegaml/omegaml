@@ -6,8 +6,9 @@ import logging
 import os
 import shutil
 import sys
-from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 from pathlib import Path
+
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
@@ -115,7 +116,6 @@ OMEGA_STORE_BACKENDS = {
     'python.package': 'omegaml.backends.package.PythonPackageData',
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
-    'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
@@ -143,6 +143,7 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'genai.llm': 'omegaml.backends.genai.models.GenAIBaseBackend',
     'genai.text': 'omegaml.backends.genai.textmodel.TextModelBackend',
     'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
+    'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
 }
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')

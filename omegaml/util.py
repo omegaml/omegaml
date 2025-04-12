@@ -1319,21 +1319,7 @@ def signature(filter):
 
 
 def inprogress(text="running {fn}", **__kwargs):
-    # print a message when entering a function
-    # -- useful for debugging
-    # -- use as a decorator
-    def is_piped():
-        return not sys.stdout.isatty()
-
-    def is_running_in_jupyter():
-        try:
-            from IPython import get_ipython
-            return get_ipython() is not None
-        except ImportError:
-            return False
-
-    should_spin = (is_running_in_jupyter() or not is_piped())
-    yaspin = failsafe_yaspin(mock=not should_spin)
+    yaspin = failsafe_yaspin()
 
     def decorator(fn):
         def wrapper(*args, **kwargs):
@@ -1365,12 +1351,47 @@ def ensurelist(l):
 
 
 def failsafe_yaspin(mock=False):
-    try:
-        if not mock:
+    """load yaspin with a failsafe fallback
+
+    This is used to ensure yaspin is available in all environments.
+
+    If yaspin is installed and the terminal is interactive, this returns
+    yaspin as 'import yaspin from yaspin' would.
+
+    If yaspin is not installed, or if the terminal is not interactive, a mock
+    context manager is returned that uses logger.debug() to output a dummy
+    progress indicator
+    """
+
+    def is_piped():
+        return not sys.stdout.isatty()
+
+    def is_running_in_jupyter():
+        try:
+            from IPython import get_ipython
+            return get_ipython() is not None
+        except ImportError:
+            return False
+
+    def terminal_ok():
+        try:
+            return os.get_terminal_size().columns >= 10
+        except OSError:
+            return False
+
+    def yaspin_available():
+        try:
             from yaspin import yaspin
-        else:
-            raise ImportError('not loading yaspin due to mock=True')
-    except Exception as e:
+        except:
+            return False
+        return True
+
+    may_spin = (is_running_in_jupyter() or (not is_piped() and terminal_ok()))
+    mock = True if mock else not may_spin
+
+    if not mock and yaspin_available():
+        from yaspin import yaspin
+    else:
         @contextmanager
         def yaspin(*args, text=None, **kwargs):
             setattr(yaspin, 'text', text)
