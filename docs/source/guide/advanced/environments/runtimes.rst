@@ -60,11 +60,3 @@ Once this is done, om.runtime works as with the default runtime, except that
 now all tasks previously executed on the celery cluster will now be executed
 on the dask cluster.
 
-
-PySpark runtime
----------------
-
-*Experimental*
-
-It is possible to run the omega-ml Celery or Dask runtimes on Spark clusters.
-Please write to support@omegaml.io for details.

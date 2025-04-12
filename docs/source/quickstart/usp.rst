@@ -172,7 +172,7 @@ In fact, most of omega-ml is built from plugins.
     and an advantage over platforms that introduce new, often complex technologies. This means omega-ml is easy
     to integrate and operate because its core components are already known, battle tested -- and
     skills are widly available. In contrast, the same is not true for many other platforms, which typically introduce new, highly specialised
-    technologies (e.g. Spark, Kafka, Flink).
+    technologies (e.g. Databricks ,Apache Spark, Kafka, Flink).
 
     At the same time omega-ml is designed from the ground up as an open framework
     that provides a unified API to any third-party database, data science framework or cloud platform. This means that even otherwise more complex
