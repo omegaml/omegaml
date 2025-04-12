@@ -9,7 +9,7 @@
   <title>Storage backends &mdash; omega-ml 0.16.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=8df25a44" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -263,7 +263,7 @@ retrieve the model and any data required.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.fit">
-<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.fit" title="Link to this definition">¶</a></dt>
 <dd><p>fit the model with data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -284,7 +284,7 @@ a dataframe. Defaults to True to support any client.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.predict">
-<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.predict" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.predict" title="Link to this definition">¶</a></dt>
 <dd><p>predict using data stored in Xname</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -305,7 +305,7 @@ a dataframe. Defaults to True to support any client.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.transform">
-<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.transform" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.transform" title="Link to this definition">¶</a></dt>
 <dd><p>transform using data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -341,7 +341,7 @@ will raise the <code class="code docutils literal notranslate"><span class="pre"
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
