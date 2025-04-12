@@ -9,13 +9,13 @@
   <title>omegaml.mdataframe &mdash; omega-ml 0.16.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=8df25a44" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=81998473"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -165,26 +165,26 @@
 <h1>omegaml.mdataframe<a class="headerlink" href="#omegaml-mdataframe" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MDataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">immediate_loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_inspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preparefn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_loc_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MDataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">immediate_loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_inspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preparefn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_loc_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame" title="Link to this definition">¶</a></dt>
 <dd><p>A DataFrame for mongodb</p>
 <p>Performs out-of-core, lazy computOation on a mongodb cluster.
 Behaves like a pandas DataFrame. Actual results are returned
 as pandas DataFrames.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.__len__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.__len__" title="Link to this definition">¶</a></dt>
 <dd><p>the projected number of rows when resolving</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.create_index">
-<span class="sig-name descname"><span class="pre">create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.create_index" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.create_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.create_index" title="Link to this definition">¶</a></dt>
 <dd><p>create and index the easy way</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.groupby">
-<span class="sig-name descname"><span class="pre">groupby</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.groupby" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">groupby</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.groupby"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.groupby" title="Link to this definition">¶</a></dt>
 <dd><p>Group by a given set of columns</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -201,7 +201,7 @@ as pandas DataFrames.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.head">
-<span class="sig-name descname"><span class="pre">head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.head" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.head" title="Link to this definition">¶</a></dt>
 <dd><p>return up to limit numbers of rows</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -215,7 +215,7 @@ as pandas DataFrames.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.inspect">
-<span class="sig-name descname"><span class="pre">inspect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.inspect" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">inspect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.inspect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.inspect" title="Link to this definition">¶</a></dt>
 <dd><p>inspect this dataframe’s actual mongodb query</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -238,7 +238,7 @@ as pandas DataFrames.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.merge">
-<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffixes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('_x',</span> <span class="pre">'_y')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.merge" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffixes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('_x',</span> <span class="pre">'_y')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.merge" title="Link to this definition">¶</a></dt>
 <dd><p>merge this dataframe with another dataframe. only left outer joins
 are currently supported. the output is saved as a new collection,
 target name (defaults to a generated name if not specified).</p>
@@ -268,7 +268,7 @@ MongoDB natural order is implied.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query" title="Link to this definition">¶</a></dt>
 <dd><p>return a new MDataFrame with a filter criteria</p>
 <p>Any subsequent operation on the new dataframe will have the filter
 applied. To reset the filter call .reset() without arguments.</p>
@@ -290,7 +290,7 @@ on the same collection as the original DataFrame</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.query_inplace">
-<span class="sig-name descname"><span class="pre">query_inplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query_inplace" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">query_inplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.query_inplace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.query_inplace" title="Link to this definition">¶</a></dt>
 <dd><p>filters this MDataFrame and returns it.</p>
 <p>Any subsequent operation on the dataframe will have the filter
 applied. To reset the filter call .reset() without arguments.</p>
@@ -310,7 +310,7 @@ applied. To reset the filter call .reset() without arguments.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.skip">
-<span class="sig-name descname"><span class="pre">skip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.skip" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">skip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.skip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.skip" title="Link to this definition">¶</a></dt>
 <dd><p>skip the topn number of rows</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -324,7 +324,7 @@ applied. To reset the filter call .reset() without arguments.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MDataFrame.sort">
-<span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.sort" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MDataFrame.sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MDataFrame.sort" title="Link to this definition">¶</a></dt>
 <dd><p>sort by specified columns</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -354,7 +354,7 @@ ascending.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MSeries">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MSeries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MSeries" title="Link to this definition">¶</a></dt>
 <dd><p>Series implementation for MDataFrames</p>
 <p>behaves like a DataFrame but limited to one column.</p>
 <dl class="py method">
@@ -574,7 +574,7 @@ ascending.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MSeries.unique">
-<span class="sig-name descname"><span class="pre">unique</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MSeries.unique" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">unique</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MSeries.unique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MSeries.unique" title="Link to this definition">¶</a></dt>
 <dd><p>return the unique set of values for the series</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -601,17 +601,17 @@ the behavior of a Series</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MGrouper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MGrouper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MGrouper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MGrouper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MGrouper" title="Link to this definition">¶</a></dt>
 <dd><p>a Grouper for MDataFrames</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MGrouper.agg">
-<span class="sig-name descname"><span class="pre">agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.agg" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MGrouper.agg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MGrouper.agg" title="Link to this definition">¶</a></dt>
 <dd><p>shortcut for .aggregate</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MGrouper.aggregate">
-<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.aggregate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MGrouper.aggregate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MGrouper.aggregate" title="Link to this definition">¶</a></dt>
 <dd><p>aggregate by given specs</p>
 <p>See the following link for a list of supported operations.
 <a class="reference external" href="https://docs.mongodb.com/manual/reference/operator/aggregation/group/">https://docs.mongodb.com/manual/reference/operator/aggregation/group/</a></p>
@@ -625,7 +625,7 @@ pairs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MGrouper.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MGrouper.count" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MGrouper.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MGrouper.count" title="Link to this definition">¶</a></dt>
 <dd><p>return counts by group columns</p>
 </dd></dl>
 
@@ -633,11 +633,11 @@ pairs.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MLocIndexer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MLocIndexer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MLocIndexer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MLocIndexer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer" title="Link to this definition">¶</a></dt>
 <dd><p>implements the LocIndexer for MDataFrames</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MLocIndexer.__getitem__">
-<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer.__getitem__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MLocIndexer.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MLocIndexer.__getitem__" title="Link to this definition">¶</a></dt>
 <dd><p>access by index</p>
 <p>use as mdf.loc[specs] where specs is any of</p>
 <ul class="simple">
@@ -656,7 +656,7 @@ pairs.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MPosIndexer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MPosIndexer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mdataframe.MPosIndexer" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mdataframe.</span></span><span class="sig-name descname"><span class="pre">MPosIndexer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdataframe</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mdataframe.html#MPosIndexer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mdataframe.MPosIndexer" title="Link to this definition">¶</a></dt>
 <dd><p>implements the position-based indexer for MDataFrames</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.mdataframe.MPosIndexer.__getitem__">
@@ -679,7 +679,7 @@ pairs.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mixins.mdf.ApplyContext">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mixins/mdf/apply.html#ApplyContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.mdf.ApplyContext" title="Link to this definition">¶</a></dt>
 <dd><p>Enable apply functions</p>
 <p>.apply(fn) will call fn(ctx) where ctx is an ApplyContext.
 The context supports methods to apply functions in a Pandas-style apply manner. ApplyContext is extensible
@@ -722,7 +722,7 @@ def customfn(ctx):
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mixins.mdf.ApplyArithmetics">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyArithmetics</span></span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyArithmetics" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyArithmetics</span></span><a class="reference internal" href="../_modules/omegaml/mixins/mdf/apply.html#ApplyArithmetics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.mdf.ApplyArithmetics" title="Link to this definition">¶</a></dt>
 <dd><p>Math operators for ApplyContext</p>
 <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">__mul__</span></code> (*)</p></li>
@@ -754,19 +754,19 @@ def customfn(ctx):
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mixins.mdf.ApplyDateTime">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyDateTime</span></span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyDateTime</span></span><a class="reference internal" href="../_modules/omegaml/mixins/mdf/apply.html#ApplyDateTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.mdf.ApplyDateTime" title="Link to this definition">¶</a></dt>
 <dd><p>Datetime operators for ApplyContext</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mixins.mdf.ApplyString">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyString</span></span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyString</span></span><a class="reference internal" href="../_modules/omegaml/mixins/mdf/apply.html#ApplyString"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.mdf.ApplyString" title="Link to this definition">¶</a></dt>
 <dd><p>String operators</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.mixins.mdf.ApplyAccumulators">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyAccumulators</span></span><a class="headerlink" href="#omegaml.mixins.mdf.ApplyAccumulators" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.mdf.</span></span><span class="sig-name descname"><span class="pre">ApplyAccumulators</span></span><a class="reference internal" href="../_modules/omegaml/mixins/mdf/apply.html#ApplyAccumulators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.mdf.ApplyAccumulators" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -782,7 +782,7 @@ def customfn(ctx):
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

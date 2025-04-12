@@ -9,19 +9,19 @@
   <title>Reference &mdash; omega-ml 0.16.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=8df25a44" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=81998473"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="core models" href="core.html" />
+    <link rel="next" title="Screenshots" href="screenshots.html" />
     <link rel="prev" title="Mixins" href="../devguide/mixins.html" /> 
 </head>
 
@@ -47,9 +47,11 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">om.models</a></li>
@@ -60,9 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
 </ul>
 
@@ -103,6 +103,14 @@
 <h1>Reference<a class="headerlink" href="#reference" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html#dashboard">Dashboard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html#notebook-online-editor-report-publishing">Notebook Online Editor &amp; Report publishing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html#integrated-online-help">Integrated Online Help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html#rest-api-documentation">REST API documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">core models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="core.html#omegaml-store">omegaml.store</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore"><code class="docutils literal notranslate"><span class="pre">OmegaStore</span></code></a></li>
@@ -119,6 +127,8 @@
 <li class="toctree-l3"><a class="reference internal" href="datasets.html#omegaml.backends.virtualobj.VirtualObjectBackend"><code class="docutils literal notranslate"><span class="pre">VirtualObjectBackend</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="datasets.html#omegaml.backends.rawdict.PandasRawDictBackend"><code class="docutils literal notranslate"><span class="pre">PandasRawDictBackend</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="datasets.html#omegaml.backends.rawfiles.PythonRawFileBackend"><code class="docutils literal notranslate"><span class="pre">PythonRawFileBackend</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore"><code class="docutils literal notranslate"><span class="pre">MongoDBVectorStore</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html#omegaml.backends.genai.pgvector.PGVectorBackend"><code class="docutils literal notranslate"><span class="pre">PGVectorBackend</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html#mixins">Mixins</a><ul>
@@ -141,6 +151,7 @@
 <li class="toctree-l3"><a class="reference internal" href="models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowSavedModelBackend</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="docutils literal notranslate"><span class="pre">TFEstimatorModelBackend</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="models.html#omegaml.backends.rsystem.rmodels.RModelBackend"><code class="docutils literal notranslate"><span class="pre">RModelBackend</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="models.html#omegaml.backends.genai.textmodel.TextModelBackend"><code class="docutils literal notranslate"><span class="pre">TextModelBackend</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="models.html#mixins">Mixins</a><ul>
@@ -327,13 +338,13 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../devguide/mixins.html" class="btn btn-neutral float-left" title="Mixins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="core.html" class="btn btn-neutral float-right" title="core models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="screenshots.html" class="btn btn-neutral float-right" title="Screenshots" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -9,13 +9,13 @@
   <title>om.runtime &mdash; omega-ml 0.16.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=bf4bd5a2" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=8df25a44" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=81998473"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -47,9 +47,11 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">om.models</a></li>
@@ -95,9 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
 </ul>
 
@@ -199,11 +199,11 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">celeryconf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">celeryconf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime" title="Link to this definition">¶</a></dt>
 <dd><p>omegaml compute cluster gateway</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.callback">
-<span class="sig-name descname"><span class="pre">callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.callback" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.callback" title="Link to this definition">¶</a></dt>
 <dd><p>Add a callback to a registered script</p>
 <p>The callback will be triggered upon successful or failed
 execution of the runtime tasks. The script syntax is:</p>
@@ -229,7 +229,7 @@ execution of the runtime tasks. The script syntax is:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.enable_hostqueues">
-<span class="sig-name descname"><span class="pre">enable_hostqueues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.enable_hostqueues" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">enable_hostqueues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.enable_hostqueues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.enable_hostqueues" title="Link to this definition">¶</a></dt>
 <dd><p>enable a worker-specific queue on every worker host</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -240,7 +240,7 @@ execution of the runtime tasks. The script syntax is:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.experiment">
-<span class="sig-name descname"><span class="pre">experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implied_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tracker_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.experiment" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implied_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tracker_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.experiment" title="Link to this definition">¶</a></dt>
 <dd><p>set the tracking backend and experiment</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -261,7 +261,7 @@ be kept)</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.job">
-<span class="sig-name descname"><span class="pre">job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.job" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.job" title="Link to this definition">¶</a></dt>
 <dd><p>return a job for remote execution</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -278,7 +278,7 @@ be kept)</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.labels">
-<span class="sig-name descname"><span class="pre">labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.labels" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.labels" title="Link to this definition">¶</a></dt>
 <dd><p>list available labels</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -336,7 +336,7 @@ be kept)</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.mode">
-<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.mode" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.mode" title="Link to this definition">¶</a></dt>
 <dd><p>specify runtime modes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -369,7 +369,7 @@ CRITICAL, DEBUG</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.model" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.model" title="Link to this definition">¶</a></dt>
 <dd><p>return a model for remote execution</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -433,7 +433,7 @@ CRITICAL, DEBUG</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.ping">
-<span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.ping" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.ping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.ping" title="Link to this definition">¶</a></dt>
 <dd><p>ping the runtime</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -458,7 +458,7 @@ AsyncResult</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.queues">
-<span class="sig-name descname"><span class="pre">queues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.queues" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">queues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.queues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.queues" title="Link to this definition">¶</a></dt>
 <dd><p>list queues</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -473,7 +473,7 @@ AsyncResult</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.require">
-<span class="sig-name descname"><span class="pre">require</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.require" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">require</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.require"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.require" title="Link to this definition">¶</a></dt>
 <dd><p>specify requirements for the task execution</p>
 <p>Use this to specify resource or routing requirements on the next task
 call sent to the runtime. Any requirements will be reset after the
@@ -504,7 +504,7 @@ call has been submitted.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.script">
-<span class="sig-name descname"><span class="pre">script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scriptname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.script" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scriptname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.script" title="Link to this definition">¶</a></dt>
 <dd><p>return a script for remote execution</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -568,13 +568,13 @@ call has been submitted.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.settings">
-<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.settings" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">require</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.settings" title="Link to this definition">¶</a></dt>
 <dd><p>return the runtimes’s cluster settings</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.stats">
-<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.stats" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.stats" title="Link to this definition">¶</a></dt>
 <dd><p>worker statistics</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -589,7 +589,7 @@ call has been submitted.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.status">
-<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.status" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.status" title="Link to this definition">¶</a></dt>
 <dd><p>current cluster status</p>
 <p>This collects key information from .labels(), .stats() and the latest
 worker heartbeat. Note that loadavg is only available if the worker has
@@ -619,7 +619,7 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.task">
-<span class="sig-name descname"><span class="pre">task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.task" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.task" title="Link to this definition">¶</a></dt>
 <dd><p>retrieve the task function from the celery instance</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -636,7 +636,7 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.workers">
-<span class="sig-name descname"><span class="pre">workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.workers" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.workers" title="Link to this definition">¶</a></dt>
 <dd><p>list of workers</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -655,24 +655,24 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Backends</a><a class="headerlink" href="#backends" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.loky.OmegaRuntimeBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.loky.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntimeBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.loky.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntimeBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend" title="Link to this definition">¶</a></dt>
 <dd><p>omega custom parallel backend to print progress</p>
 <p>TODO: extend for celery dispatching</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.loky.OmegaRuntimeBackend.start_call">
-<span class="sig-name descname"><span class="pre">start_call</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.start_call" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">start_call</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend.start_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.start_call" title="Link to this definition">¶</a></dt>
 <dd><p>Call-back method called at the beginning of a Parallel call</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.loky.OmegaRuntimeBackend.stop_call">
-<span class="sig-name descname"><span class="pre">stop_call</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.stop_call" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stop_call</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend.stop_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.stop_call" title="Link to this definition">¶</a></dt>
 <dd><p>Call-back method called at the end of a Parallel call</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.loky.OmegaRuntimeBackend.terminate">
-<span class="sig-name descname"><span class="pre">terminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.terminate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">terminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend.terminate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend.terminate" title="Link to this definition">¶</a></dt>
 <dd><p>Shutdown the workers and free the shared memory.</p>
 </dd></dl>
 
@@ -683,11 +683,30 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Mixins</a><a class="headerlink" href="#mixins" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">ModelMixin</span></span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">ModelMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin" title="Link to this definition">¶</a></dt>
 <dd><p>mixin methods to OmegaModelProxy</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.complete">
+<span class="sig-name descname"><span class="pre">complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.complete" title="Link to this definition">¶</a></dt>
+<dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.complete(X)</span></code>. If rName is given the result is
+stored as object rName</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Xname</strong> – name of the X dataset</p></li>
+<li><p><strong>rName</strong> – name of the resulting dataset (optional)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the data returned by .complete, or the metadata of the rName
+dataset if rName was given</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.decision_function">
-<span class="sig-name descname"><span class="pre">decision_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.decision_function" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">decision_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.decision_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.decision_function" title="Link to this definition">¶</a></dt>
 <dd><p>calculate score</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.decision_function(X,</span> <span class="pre">y,</span> <span class="pre">**kwargs)</span></code>. If rName is given the result is
 stored as object rName</p>
@@ -707,7 +726,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.fit" title="Link to this definition">¶</a></dt>
 <dd><p>fit the model</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.fit(X,</span> <span class="pre">Y,</span> <span class="pre">**kwargs)</span></code>. If instead of dataset names actual data
 is given, the data is stored using _fitX/fitY prefixes and a unique
@@ -730,7 +749,7 @@ version used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.fit_transform">
-<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.fit_transform" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.fit_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.fit_transform" title="Link to this definition">¶</a></dt>
 <dd><p>fit &amp; transform X</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.fit_transform(X,</span> <span class="pre">Y,</span> <span class="pre">**kwargs)</span></code>. If rName is given the result is
 stored as object rName</p>
@@ -751,7 +770,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.partial_fit">
-<span class="sig-name descname"><span class="pre">partial_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.partial_fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">partial_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.partial_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.partial_fit" title="Link to this definition">¶</a></dt>
 <dd><p>update the model</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.partial_fit(X,</span> <span class="pre">Y,</span> <span class="pre">**kwargs)</span></code>. If instead of dataset names actual
 data  is given, the data is stored using _fitX/fitY prefixes and
@@ -774,7 +793,7 @@ version used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xpath_or_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xpath_or_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict" title="Link to this definition">¶</a></dt>
 <dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.predict(X)</span></code>. If rName is given the result is
 stored as object rName</p>
 <dl class="field-list simple">
@@ -793,7 +812,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.predict_proba">
-<span class="sig-name descname"><span class="pre">predict_proba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xpath_or_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict_proba" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">predict_proba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xpath_or_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.predict_proba"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict_proba" title="Link to this definition">¶</a></dt>
 <dd><p>predict probabilities</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.predict_proba(X)</span></code>. If rName is given the result is
 stored as object rName</p>
@@ -813,7 +832,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.score">
-<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.score" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.score" title="Link to this definition">¶</a></dt>
 <dd><p>calculate score</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.score(X,</span> <span class="pre">y,</span> <span class="pre">**kwargs)</span></code>. If rName is given the result is
 stored as object rName</p>
@@ -834,7 +853,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.transform" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.transform" title="Link to this definition">¶</a></dt>
 <dd><p>transform X</p>
 <p>Calls <code class="code docutils literal notranslate"><span class="pre">.transform(X,</span> <span class="pre">**kwargs)</span></code>. If rName is given the result is
 stored as object rName</p>
@@ -856,10 +875,10 @@ dataset if rName was given</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.GridSearchMixin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">GridSearchMixin</span></span><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">GridSearchMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/gridsearch.html#GridSearchMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.GridSearchMixin.gridsearch">
-<span class="sig-name descname"><span class="pre">gridsearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin.gridsearch" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">gridsearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/gridsearch.html#GridSearchMixin.gridsearch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin.gridsearch" title="Link to this definition">¶</a></dt>
 <dd><p>run gridsearch on model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -884,7 +903,7 @@ the data object</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.taskcanvas.CanvasTask">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.taskcanvas.</span></span><span class="sig-name descname"><span class="pre">CanvasTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvasfn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.runtimes.mixins.taskcanvas.CanvasTask" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.taskcanvas.</span></span><span class="sig-name descname"><span class="pre">CanvasTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvasfn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/taskcanvas.html#CanvasTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.taskcanvas.CanvasTask" title="Link to this definition">¶</a></dt>
 <dd><p>support for canvas tasks</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -910,7 +929,7 @@ the data object</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.mixins.store.promotion &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8df25a44" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../../../release/0.16.4/index.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.mixins.store.promotion</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.mixins.store.promotion</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="linenos">  4</span>
+<span class="linenos">  5</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDREGISTRY</span>
+<span class="linenos">  6</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">dict_merge</span>
+<span class="linenos">  7</span>
+<span class="linenos">  8</span>
+<div class="viewcode-block" id="PromotionMixin">
+<a class="viewcode-back" href="../../../../reference/models.html#omegaml.mixins.store.promotion.PromotionMixin">[docs]</a>
+<span class="linenos">  9</span><span class="k">class</span><span class="w"> </span><span class="nc">PromotionMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="linenos"> 10</span><span class="w">    </span><span class="sd">&quot;&quot;&quot; Promote objects from one bucket to another</span>
+<span class="linenos"> 11</span>
+<span class="linenos"> 12</span><span class="sd">    Promotion Methods:</span>
+<span class="linenos"> 13</span><span class="sd">        * `getput` - performs target.put(source.get()) and copies metadata</span>
+<span class="linenos"> 14</span><span class="sd">           attributes by merging target.metadata&#39;s .attributes and .kind_meta</span>
+<span class="linenos"> 15</span><span class="sd">        * `metadata` - creates a new metadata data entry in target, copying</span>
+<span class="linenos"> 16</span><span class="sd">            metadata attributes and kind_meta. Does not get/put the object itself</span>
+<span class="linenos"> 17</span><span class="sd">            (i.e. no associated data is promoted).</span>
+<span class="linenos"> 18</span><span class="sd">        * `data` - like `getput`, but does not merge metadata</span>
+<span class="linenos"> 19</span><span class="sd">        * `export` - performs .to_archive() and .from_archive(), effectively</span>
+<span class="linenos"> 20</span><span class="sd">             copying metadata, the associated gridfile (if available) and collection</span>
+<span class="linenos"> 21</span><span class="sd">             data (if available). This is equivalent to `om runtime export`.</span>
+<span class="linenos"> 22</span>
+<span class="linenos"> 23</span><span class="sd">        The default promotion method is getput(), or the object&#39;s backend.PROMOTE</span>
+<span class="linenos"> 24</span><span class="sd">        method, if specified.</span>
+<span class="linenos"> 25</span>
+<span class="linenos"> 26</span><span class="sd">    Some object backends provide a default promotion other than getput:</span>
+<span class="linenos"> 27</span>
+<span class="linenos"> 28</span><span class="sd">    * sqlalchemy.conx - uses the `metadata` promotion, effectively copying only</span>
+<span class="linenos"> 29</span><span class="sd">       metadata. Use promote(..., method=&#39;metadata,data&#39;) to also promote data</span>
+<span class="linenos"> 30</span>
+<span class="linenos"> 31</span><span class="sd">    * virtualobj.dill - uses the `export` promotion, effectively copying all</span>
+<span class="linenos"> 32</span><span class="sd">       metadata and the associated @virtualobj function. If the source object</span>
+<span class="linenos"> 33</span><span class="sd">       is a versioned model, this copies the current version and metadata. To</span>
+<span class="linenos"> 34</span><span class="sd">       copy a specific version, use promote(&#39;model@version&#39;). To create a</span>
+<span class="linenos"> 35</span><span class="sd">       new version in the target bucket use promote(..., method=&#39;getput&#39;).</span>
+<span class="linenos"> 36</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 37</span>    <span class="n">DEFAULT_DROP</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos"> 38</span>        <span class="s1">&#39;models/&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># models are versioned, don&#39;t drop</span>
+<span class="linenos"> 39</span>    <span class="p">}</span>
+<span class="linenos"> 40</span>
+<span class="linenos"> 41</span>    <span class="nd">@classmethod</span>
+<span class="linenos"> 42</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 43</span>        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;data/&#39;</span><span class="p">,</span> <span class="s1">&#39;jobs/&#39;</span><span class="p">,</span> <span class="s1">&#39;models/&#39;</span><span class="p">,</span> <span class="s1">&#39;scripts/&#39;</span><span class="p">,</span> <span class="s1">&#39;streams/&#39;</span><span class="p">)</span>
+<span class="linenos"> 44</span>
+<div class="viewcode-block" id="PromotionMixin.promote">
+<a class="viewcode-back" href="../../../../reference/models.html#omegaml.mixins.store.promotion.PromotionMixin.promote">[docs]</a>
+<span class="linenos"> 45</span>    <span class="k">def</span><span class="w"> </span><span class="nf">promote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos"> 46</span>                <span class="n">put</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 47</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Promote object to another store.</span>
+<span class="linenos"> 48</span>
+<span class="linenos"> 49</span><span class="sd">        This effectively copies the object. If the objects exists in the</span>
+<span class="linenos"> 50</span><span class="sd">        target it will be replaced.</span>
+<span class="linenos"> 51</span>
+<span class="linenos"> 52</span><span class="sd">        Args:</span>
+<span class="linenos"> 53</span><span class="sd">            name: The name of the object</span>
+<span class="linenos"> 54</span><span class="sd">            other: the OmegaStore instance to promote to</span>
+<span class="linenos"> 55</span><span class="sd">            asname: the name to use in other, defaults to .metadata(name).name</span>
+<span class="linenos"> 56</span><span class="sd">            drop (bool): if True calls other.drop(force=True) before promoting, defaults to False</span>
+<span class="linenos"> 57</span><span class="sd">            method (str|list): specify the method or multiple methods in sequence, available methods</span>
+<span class="linenos"> 58</span><span class="sd">               are &#39;default&#39;, &#39;getput&#39;, &#39;metadata&#39;, &#39;data&#39;. For &#39;default&#39;, the object backend&#39;s</span>
+<span class="linenos"> 59</span><span class="sd">               .PROMOTE property is used, defaulting to &#39;getput&#39;</span>
+<span class="linenos"> 60</span><span class="sd">            get (dict): optional, specifies the store.get(**kwargs)</span>
+<span class="linenos"> 61</span><span class="sd">            put (dict): optional, specifies the other.put(**kwargs)</span>
+<span class="linenos"> 62</span><span class="sd">            kwargs: additional kwargs are passed to the initial other.put(), for metadata promotion</span>
+<span class="linenos"> 63</span>
+<span class="linenos"> 64</span><span class="sd">        Returns:</span>
+<span class="linenos"> 65</span><span class="sd">            The Metadata of the new object</span>
+<span class="linenos"> 66</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 67</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaStore</span>
+<span class="linenos"> 68</span>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OmegaStore</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;specify promote(..., other, ...) as om.models, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="linenos"> 69</span>        <span class="n">drop</span> <span class="o">=</span> <span class="n">drop</span> <span class="k">if</span> <span class="n">drop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_DROP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="linenos"> 70</span>        <span class="c1"># sanity checks</span>
+<span class="linenos"> 71</span>        <span class="c1"># -- promotion by same name requires a different store</span>
+<span class="linenos"> 72</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 73</span>        <span class="n">asname</span> <span class="o">=</span> <span class="n">asname</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
+<span class="linenos"> 74</span>        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">asname</span> <span class="ow">and</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+<span class="linenos"> 75</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;must specify asname= different from </span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos"> 76</span>        <span class="c1"># see if the backend supports explicit promotion</span>
+<span class="linenos"> 77</span>        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 78</span>        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s1">&#39;promote&#39;</span><span class="p">):</span>
+<span class="linenos"> 79</span>            <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">promote</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="n">asname</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="n">drop</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="n">put</span><span class="p">,</span>
+<span class="linenos"> 80</span>                                   <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 81</span>        <span class="c1"># run all promotion methods as requested or provided by the backend</span>
+<span class="linenos"> 82</span>        <span class="n">methods</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+<span class="linenos"> 83</span>        <span class="n">promotion_methods</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">promotion_methods</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="n">asname</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="n">drop</span><span class="p">,</span>
+<span class="linenos"> 84</span>                                                   <span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="n">put</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 85</span>        <span class="p">[</span><span class="n">promotion_methods</span><span class="p">[</span><span class="n">m</span><span class="p">]()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">]</span>
+<span class="linenos"> 86</span>        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">asname</span><span class="p">)</span></div>
+
+<span class="linenos"> 87</span>
+<span class="linenos"> 88</span>    <span class="k">def</span><span class="w"> </span><span class="nf">promotion_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos"> 89</span>                          <span class="n">get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 90</span>        <span class="c1"># do default promotion, i.e. get()/put()</span>
+<span class="linenos"> 91</span>        <span class="n">PROMOTION_METHODS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos"> 92</span>            <span class="s1">&#39;getput&#39;</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_put_promotion</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="n">asname</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="n">drop</span><span class="p">),</span>
+<span class="linenos"> 93</span>            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_promotion</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="n">asname</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="n">put</span><span class="p">,</span>
+<span class="linenos"> 94</span>                            <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+<span class="linenos"> 95</span>            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata_promotion</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos"> 96</span>                                <span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="n">put</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+<span class="linenos"> 97</span>            <span class="s1">&#39;export&#39;</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_promotion</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos"> 98</span>                              <span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="n">put</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+<span class="linenos"> 99</span>        <span class="p">}</span>
+<span class="linenos">100</span>        <span class="n">default_method</span> <span class="o">=</span> <span class="n">PROMOTION_METHODS</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s1">&#39;PROMOTE&#39;</span><span class="p">,</span> <span class="s1">&#39;getput&#39;</span><span class="p">)]</span>
+<span class="linenos">101</span>        <span class="n">PROMOTION_METHODS</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">default_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">102</span>        <span class="k">return</span> <span class="n">PROMOTION_METHODS</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_put_promotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">105</span>        <span class="n">get_kwargs</span> <span class="o">=</span> <span class="n">get</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">106</span>        <span class="n">put_kwargs</span> <span class="o">=</span> <span class="n">put</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">107</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">108</span>        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">get_kwargs</span><span class="p">)</span>
+<span class="linenos">109</span>        <span class="n">asname</span> <span class="o">=</span> <span class="n">asname</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
+<span class="linenos">110</span>        <span class="n">other</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">asname</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">drop</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">111</span>        <span class="c1"># TODO refactor to promote of python native data backend</span>
+<span class="linenos">112</span>        <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">MDREGISTRY</span><span class="o">.</span><span class="n">PYTHON_DATA</span><span class="p">:</span>
+<span class="linenos">113</span>            <span class="c1"># in case of native python data we get back a list of</span>
+<span class="linenos">114</span>            <span class="c1"># all previously inserted objects. do the same in other</span>
+<span class="linenos">115</span>            <span class="p">[</span><span class="n">other</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">asname</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+<span class="linenos">116</span>            <span class="n">other_meta</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">asname</span><span class="p">)</span>
+<span class="linenos">117</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">118</span>            <span class="n">other_meta</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">asname</span><span class="p">,</span> <span class="o">**</span><span class="n">put_kwargs</span><span class="p">)</span>
+<span class="linenos">119</span>        <span class="c1"># promote metadata, exception versions</span>
+<span class="linenos">120</span>        <span class="c1"># TODO: move versions to kind_meta, which is not promoted</span>
+<span class="linenos">121</span>        <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;versions&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos">122</span>        <span class="n">dict_merge</span><span class="p">(</span><span class="n">other_meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+<span class="linenos">123</span>        <span class="n">other_meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">124</span>        <span class="k">return</span> <span class="n">other_meta</span>
+<span class="linenos">125</span>
+<span class="linenos">126</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_metadata_promotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">127</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; promote metadata</span>
+<span class="linenos">128</span>
+<span class="linenos">129</span><span class="sd">        This is called by PromotionMixin.promote() to promote metadata</span>
+<span class="linenos">130</span><span class="sd">        to another store, not data.</span>
+<span class="linenos">131</span>
+<span class="linenos">132</span><span class="sd">        Args:</span>
+<span class="linenos">133</span><span class="sd">            name (str): the name of the object</span>
+<span class="linenos">134</span><span class="sd">            other (om.datasets): the other om.datasets</span>
+<span class="linenos">135</span>
+<span class="linenos">136</span><span class="sd">        Returns:</span>
+<span class="linenos">137</span><span class="sd">            Metadata of the promoted dataset as the result of other.put()</span>
+<span class="linenos">138</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">139</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">140</span>        <span class="n">asname</span> <span class="o">=</span> <span class="n">asname</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
+<span class="linenos">141</span>        <span class="n">other</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">asname</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">drop</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">142</span>        <span class="n">other_meta</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">asname</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">bucket</span><span class="p">,</span>
+<span class="linenos">143</span>                                         <span class="n">prefix</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">144</span>        <span class="n">other_meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="p">)</span>
+<span class="linenos">145</span>        <span class="n">other_meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+<span class="linenos">146</span>        <span class="n">other_meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">147</span>        <span class="k">return</span> <span class="n">other_meta</span>
+<span class="linenos">148</span>
+<span class="linenos">149</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_data_promotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">150</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; promote data</span>
+<span class="linenos">151</span>
+<span class="linenos">152</span><span class="sd">        This is called by PromotionMixin.promote() to promote an object&#39;s data</span>
+<span class="linenos">153</span><span class="sd">        to another store. If source.get() returns an interator, target.put() will</span>
+<span class="linenos">154</span><span class="sd">        be called for every iteration.</span>
+<span class="linenos">155</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">156</span>        <span class="n">asname</span> <span class="o">=</span> <span class="n">asname</span> <span class="ow">or</span> <span class="n">name</span>
+<span class="linenos">157</span>        <span class="n">get_kwargs</span> <span class="o">=</span> <span class="n">get</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">158</span>        <span class="n">put_kwargs</span> <span class="o">=</span> <span class="n">put</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">159</span>        <span class="n">to_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">get_kwargs</span><span class="p">)</span>
+<span class="linenos">160</span>        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">to_copy</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+<span class="linenos">161</span>            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">to_copy</span><span class="p">:</span>
+<span class="linenos">162</span>                <span class="n">other</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">asname</span><span class="p">,</span> <span class="o">**</span><span class="n">put_kwargs</span><span class="p">)</span>
+<span class="linenos">163</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">164</span>            <span class="n">other</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">to_copy</span><span class="p">,</span> <span class="n">asname</span><span class="p">,</span> <span class="o">**</span><span class="n">put_kwargs</span><span class="p">)</span>
+<span class="linenos">165</span>        <span class="n">other_meta</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">asname</span><span class="p">)</span>
+<span class="linenos">166</span>        <span class="k">return</span> <span class="n">other_meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">167</span>
+<span class="linenos">168</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_export_promotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">asname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">put</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">169</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; promote as export/import</span>
+<span class="linenos">170</span>
+<span class="linenos">171</span><span class="sd">        This is called by PromotionMixin.promote() to promote an object&#39;s data</span>
+<span class="linenos">172</span><span class="sd">        to another store in the way that the `om runtime export/import` commands do.</span>
+<span class="linenos">173</span><span class="sd">        This includes exporting all data and metadata associated with an object.</span>
+<span class="linenos">174</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">175</span>        <span class="n">asname</span> <span class="o">=</span> <span class="n">asname</span> <span class="ow">or</span> <span class="n">name</span>
+<span class="linenos">176</span>        <span class="n">get_kwargs</span> <span class="o">=</span> <span class="n">get</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">177</span>        <span class="n">put_kwargs</span> <span class="o">=</span> <span class="n">put</span> <span class="ow">or</span> <span class="n">kwargs</span>
+<span class="linenos">178</span>        <span class="n">arc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_archive</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmppath</span><span class="p">)</span> <span class="o">/</span> <span class="n">asname</span><span class="p">,</span> <span class="o">**</span><span class="n">get_kwargs</span><span class="p">)</span>
+<span class="linenos">179</span>        <span class="n">other_meta</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">from_archive</span><span class="p">(</span><span class="n">arc</span><span class="p">,</span> <span class="n">asname</span><span class="p">,</span> <span class="o">**</span><span class="n">put_kwargs</span><span class="p">)</span>
+<span class="linenos">180</span>        <span class="k">return</span> <span class="n">other_meta</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: latest
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="promotion.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

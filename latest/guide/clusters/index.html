@@ -6,23 +6,23 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying models and pipelines &mdash; omega-ml 0.16.4 documentation</title>
+  <title>Deployment and Operations &mdash; omega-ml 0.16.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bf4bd5a2" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=8df25a44" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=81998473"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="What is the runtime?" href="intro.html" />
-    <link rel="prev" title="Introduction" href="../streams/streams.html" /> 
+    <link rel="prev" title="Introduction" href="../pipelines/streams/streams.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,12 +48,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../scripts/index.html">Working with scripts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../streams/index.html">Working with streams</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Deploying models and pipelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../classicml/index.html">Classic ML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Deployment and Operations</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="intro.html">What is the runtime?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mlops.html">Using the runtime for MLOps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="restapi.html">The omegam-ml REST API</a></li>
@@ -63,15 +61,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
 </ul>
 
@@ -99,7 +94,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
-      <li class="breadcrumb-item active">Deploying models and pipelines</li>
+      <li class="breadcrumb-item active">Deployment and Operations</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/guide/clusters/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -109,8 +104,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="deploying-models-and-pipelines">
-<h1>Deploying models and pipelines<a class="headerlink" href="#deploying-models-and-pipelines" title="Link to this heading">¶</a></h1>
+  <section id="deployment-and-operations">
+<h1>Deployment and Operations<a class="headerlink" href="#deployment-and-operations" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">What is the runtime?</a><ul>
@@ -159,14 +154,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../streams/streams.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipelines/streams/streams.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="intro.html" class="btn btn-neutral float-right" title="What is the runtime?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022 (c) omegaml.io by one2seven GmbH.</p>
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

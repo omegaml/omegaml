@@ -1,11 +1,9 @@
-Working with clusters
-=====================
+Integration
+===========
 
 .. toctree::
    :maxdepth: 2
 
-   runtimes
-   buckets
-
-
+   dbt
+   gitlab
 
