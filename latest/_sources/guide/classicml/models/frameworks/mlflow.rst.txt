@@ -104,7 +104,6 @@ model flavors supported by mlflow can be found at `mlflow_flavors`_
 * MLeap
 * PyTorch
 * Scikit-learn
-* Spark MLLib
 * Tensorflow
 * XGBoost
 * LightGBM

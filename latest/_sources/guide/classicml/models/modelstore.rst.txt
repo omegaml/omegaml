@@ -1,15 +1,25 @@
 Introduction to models
 ======================
 
-omega-ml currently implements the following machine learning frameworks out of the box. More backends are planned.
-Any backend can be implemented using the backend API.
+omega-ml deploys any Python machine learning model that is either serializable or pip-packagable.
+The following frameworks are known to work out of the box. Additional frameworks can be easily
+added by writing a plugin.
+
+**Classic ML**
 
 * scikit-learn
+* XGBoost
 * Keras
-* Tensorflow (tf.keras, tf.estimator, tf.data, tf.SavedModel)
-* Apache Spark MLLib
+* Tensorflow
+* PyTorch
+* any MLFlow model (classic ML)
 
-Note that support for Keras, Tensorflow and Apache Spark is experimental at this time.
+**Generative AI**
+
+* OpenAI-compatible model servers like LocalAI, vLLM
+* Spacy
+* Gensim
+* Huggingface
 
 Storing models
 --------------

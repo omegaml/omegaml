@@ -54,7 +54,7 @@ Examples
     om.models.put(clf, 'forecast')
     clf = om.models.get('forecast')
 
-    # run and scale models directly on the integrated Python or Spark compute cluster
+    # run and scale models directly on the integrated compute cluster
     om.runtime.model('forecast').fit('stats[^sales]', 'stats[sales]')
     om.runtime.model('forecast').predict('stats')
     om.runtime.model('forecast').gridsearch(X, Y)

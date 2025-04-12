@@ -116,15 +116,25 @@
              
   <section id="introduction-to-models">
 <h1>Introduction to models<a class="headerlink" href="#introduction-to-models" title="Link to this heading">¶</a></h1>
-<p>omega-ml currently implements the following machine learning frameworks out of the box. More backends are planned.
-Any backend can be implemented using the backend API.</p>
+<p>omega-ml deploys any Python machine learning model that is either serializable or pip-packagable.
+The following frameworks are known to work out of the box. Additional frameworks can be easily
+added by writing a plugin.</p>
+<p><strong>Classic ML</strong></p>
 <ul class="simple">
 <li><p>scikit-learn</p></li>
+<li><p>XGBoost</p></li>
 <li><p>Keras</p></li>
-<li><p>Tensorflow (tf.keras, tf.estimator, tf.data, tf.SavedModel)</p></li>
-<li><p>Apache Spark MLLib</p></li>
+<li><p>Tensorflow</p></li>
+<li><p>PyTorch</p></li>
+<li><p>any MLFlow model (classic ML)</p></li>
 </ul>
-<p>Note that support for Keras, Tensorflow and Apache Spark is experimental at this time.</p>
+<p><strong>Generative AI</strong></p>
+<ul class="simple">
+<li><p>OpenAI-compatible model servers like LocalAI, vLLM</p></li>
+<li><p>Spacy</p></li>
+<li><p>Gensim</p></li>
+<li><p>Huggingface</p></li>
+</ul>
 <section id="storing-models">
 <h2>Storing models<a class="headerlink" href="#storing-models" title="Link to this heading">¶</a></h2>
 <p>Storing models and pipelines is as straight forward as storing Pandas DataFrames and Series.
