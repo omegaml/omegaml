@@ -186,7 +186,7 @@ jobs:
             pip install -r requirements.txt
             make multihtml
             make publish
-            git push --force origin gh-pages
+            git push --force --tags origin gh-pages
 workflows:
   version: 2
   workflow:
@@ -204,4 +204,4 @@ workflows:
           context: omegaml
           filters:
             branches:
-              only: /master|.*docs.*/
+              only: /master|.*docs.*|release-build.*/

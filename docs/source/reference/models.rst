@@ -50,6 +50,8 @@ om.models
 
         Backends for ``openai`` (loaded if installed)
 
+        .. versionadded:: 0.17.0
+
         - :py:class:`omegaml.backends.genai.GenAIBaseBackend`
         - :py:class:`omegaml.backends.genai.textmodel.TextModelBackend`
 

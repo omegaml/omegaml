@@ -14,5 +14,30 @@ So to edit and browse the results:
 5. open localhost:8000
 
 
+How to build release documentation
+----------------------------------
 
+Build the current branch:
+
+    $ make clean html
+
+
+Build a live version of the current branch. This
+re-builds the documentation whenever a file changes:
+
+    $ make livehtml
+
+Build multi-versioned document (see smv_* variables in conf.py for the versions):
+
+    $ make multi-versioned
+
+
+Create change log
+-----------------
+
+1. create a new git branch for the release, release/major.minor.patch[-rcN]
+2. Add a draft release in github to generate release notes automatically
+3. run scipts/mkchanges.ch --tags release/major.minor.patch[-rcN]
+
+This will create a new file in docs/source/changes/release/v<major.minor.patch[-rcN]>.rst
 
