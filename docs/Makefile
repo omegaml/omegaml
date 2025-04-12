@@ -240,6 +240,7 @@ fix:
 
 multihtml:
 	git tag -d latest; git tag latest
+	cat ../omegaml/VERSION | xargs | xargs -I {} bash -c 'git tag release/{} || echo "tag release/{} already exists"'
 	git tag -d stable; cat ../omegaml/VERSION | xargs | xargs -I {} git tag stable release/{}
 	sphinx-multiversion source build/html
 	cp -r source/_templates/fixed/. build/html
@@ -253,7 +254,7 @@ publish: pre-publish
 	git checkout gh-pages
 	cd ../ && find . -name "*pyc" | xargs rm
 	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "docs: updates ghpages"
-	echo "Done. git push and go back to your original branch"
+	echo "Done. git push --tags and go back to your original branch"
 
 changes:
 	scripts/mkchanges.sh
