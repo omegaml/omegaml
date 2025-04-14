@@ -65,7 +65,7 @@ def before_all(context):
     context.debug = os.environ.get('BEHAVE_DEBUG', False)
     defaults = settings()
     context.om = om.setup()
-    context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/nb')
+    context.nbfiles = os.environ.get('BEHAVE_NBFILES', './docs/source/reference/nb')
 
 
 def before_scenario(context, scenario):

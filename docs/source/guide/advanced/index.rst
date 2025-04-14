@@ -7,6 +7,7 @@ production-grade systems.
 .. toctree::
    :maxdepth: 2
 
+   environments/index
    integration/index
    customizing/index
 
