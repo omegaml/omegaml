@@ -71,6 +71,7 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     restapi_bp = create_restapi_app(url_prefix=url_prefix)
     app.register_blueprint(restapi_bp, url_prefix=url_prefix)
     js_routes(app)
+    # TODO support multiple instances with different userid/qualifier combinations
     app.current_om = setup_omega()
     # use our custom json_dumps function
     # -- see https://stackoverflow.com/a/65129122/890242
@@ -101,9 +102,9 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     return app
 
 
-def setup_omega():
+def setup_omega(**kwargs):
     import omegaml as om
-    om = om.setup()
+    om = om.setup(**kwargs)
     om.system: OmegaStore = getattr(om, 'system', om._make_store('.system'))
     admin_user = om.system.metadata('users/admin')
     if not admin_user:

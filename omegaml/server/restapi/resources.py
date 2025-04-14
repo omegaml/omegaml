@@ -5,7 +5,6 @@ import inspect
 import json
 import logging
 import numpy as np
-import os
 import pandas as pd
 import re
 from flask import Blueprint, render_template, url_for
@@ -13,12 +12,12 @@ from flask_restx import Resource, fields, Api, marshal_with
 from flask_restx.apidoc import apidoc
 from functools import wraps
 from mongoengine import DoesNotExist
-from urllib.parse import unquote, urljoin
-from werkzeug.exceptions import NotFound
-
+from omegaml import _base_config
 from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin, AsyncResponseMixin, resolve
 from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
 from omegaml.util import isTrue
+from urllib.parse import unquote, urljoin
+from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +95,11 @@ def create_app(url_prefix=None):
     The blueprint is created with the given url_prefix, or the default '/api'. The
     swagger UI is served at /api/doc, the API is served at /api/v1.
 
-    If the environment variable OMEGA_RESTAPI_URL is set, the API will be served from
-    the given URL. This is useful when the API is served from the omegaml hub
-
+    The API will be served from defaults.OMEGA_HUB_URL/defaults.OMEGA_RESTAPI_SPECS_URI.
+    By default, this is the hub's API URL, defaults.OMEGA_RESTAPI_URL. In some deployments,
+    OMEGA_RESTAPI_URL may be a cluster-internal URL (e.g. hub.services.svc.cluster.local)
+    and not reachable to UI clients, as they run in the user's browser. In this case, set
+    the OMEGA_HUB_URL env variable to the client-reachable URL (e.g. omegaml.mycorp.com).
     """
     global omega_api
     omega_bp = Blueprint('omega-api',
@@ -110,8 +111,8 @@ def create_app(url_prefix=None):
     apidoc.url_prefix = url_prefix
     # set up swagger ui, if not local
     # -- swagger.json is provided by the hub
-    hub_url = os.environ.get('OMEGA_RESTAPI_URL')
-    hub_api_uri = os.environ.get('OMEGA_RESTAPI_SPECS_URI', '/api/doc/v1/swagger/specs/swagger.json')
+    hub_url = _base_config.OMEGA_HUB_URL
+    hub_api_uri = _base_config.OMEGA_RESTAPI_SPECS_URI
     omega_api.remote_specs_url = urljoin(hub_url, hub_api_uri) if hub_url else None
 
     @omega_bp.route('/api/docs')
@@ -125,7 +126,7 @@ def create_app(url_prefix=None):
         return render_template("swagger-ui.html", title=api.title, specs_url=swagger_json_url)
 
     if omega_api.remote_specs_url is None:
-        # only add api endpoints if we are not serving the hub's api
+        # only add api endpoints if we are serving the api
         add_api_endpoints(api)
 
     return omega_bp
