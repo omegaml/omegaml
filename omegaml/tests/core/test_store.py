@@ -375,6 +375,16 @@ class StoreTests(unittest.TestCase):
         idx_names = humanize_index(idxs)
         self.assertIn('asc__id_asc__idx#0_first_asc__idx#1_second_asc__om#rowid', idx_names)
 
+    def test_put_dataframe_multiindex_columns(self):
+        # create some dataframe
+        store = OmegaStore(prefix='')
+        columns = pd.MultiIndex.from_tuples([('A', 'X'), ('A', 'Y'), ('B', 'X'), ('B', 'Y')])
+        # Create a DataFrame with the MultiIndex columns
+        df = pd.DataFrame([[1, 2, 3, 4], [5, 6, 7, 8]], columns=columns)
+        store.put(df, 'mydata')
+        dfx = store.get('mydata')
+        assert_frame_equal(df, dfx)
+
     def test_put_python_dict(self):
         # create some data
         data = {
