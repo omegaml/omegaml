@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parallel Execution &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Scheduling notebooks" href="scheduling.html" />
+    <link rel="prev" title="Working with notebooks" href="working.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Working with notebooks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="working.html">Working with notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="working.html#running-notebooks-on-the-cloud">Running notebooks on the cloud</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Parallel Execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#concepts">Concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#motivating-example">Motivating example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dealing-with-errors">Dealing with errors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-tasks-on-specific-nodes">Running tasks on specific nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#see-all-previous-runs">See all previous runs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scheduling.html">Scheduling notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../release/0.16.4/guide/jobs/parallel.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Working with notebooks</a></li>
+      <li class="breadcrumb-item active">Parallel Execution</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/jobs/parallel.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="parallel-execution">
+<h1>Parallel Execution<a class="headerlink" href="#parallel-execution" title="Link to this heading">¶</a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">runtime.job.map()</span></code> API let’s you run a Jupyter notebook many times with
+a different set of parameters. Essentially this works like Python’s
+multiprocessing Pool.map(), however runs Jupyter Notebooks across a node
+of clusters.</p>
+<p>The following snippet runs the ‘mynb’ notebook 10 times, in parallel. It
+utilizes the omega-ml runtime cluster:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># run the &#39;mynb&#39; notebook 10 times</span>
+<span class="c1"># -- each notebook gets one value of the range</span>
+<span class="n">job</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;mynb&#39;</span><span class="p">)</span>
+<span class="n">job</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Features:</p>
+<ul class="simple">
+<li><p><em>Multitasking</em>: from a single base notebook, submit many tasks: <code class="code docutils literal notranslate"><span class="pre">job.map()</span></code></p></li>
+<li><p><em>Unattended processing</em>: the tasks are executed on the omegaml runtime cluster asynchronously, that
+is you can close Jupyter while the process is running</p></li>
+<li><p><em>Automatic status tracking</em>: check the status of each task easily: <code class="code docutils literal notranslate"><span class="pre">job.status()</span></code></p></li>
+<li><p><em>Traceability</em>: see results of each task: open each tasks’ results notebook in Jupyter or in om.jobs()</p></li>
+<li><p><em>Restartable</em>: failed tasks can easily be restarted using <code class="code docutils literal notranslate"><span class="pre">job.restart()</span></code></p></li>
+<li><p><em>Debug in Jupyter</em>: open each task’s notebook and run it manually</p></li>
+<li><p><em>Keeping track</em>: Each task run is recorded in notebook metadata, including run status and errors</p></li>
+</ul>
+<section id="concepts">
+<h2>Concepts<a class="headerlink" href="#concepts" title="Link to this heading">¶</a></h2>
+<p>The basics are straight forward:</p>
+<ul class="simple">
+<li><p>main notebook: the notebook you want to run many times</p></li>
+<li><p>task notebook: a single copy of the main notebook, running a single part of your job. <code class="code docutils literal notranslate"><span class="pre">job.map()</span></code> creates
+as many task notebooks as specified automatically.</p></li>
+<li><p>results notebooks: the collection of all results. Every task notebook upon completion gets a result
+notebook.</p></li>
+</ul>
+<p>In a nutshell, that’s it. If you only want to use <code class="code docutils literal notranslate"><span class="pre">job.map()</span></code> that’s all you need to know.</p>
+<p>To make it work, we also need a few technical elements:</p>
+<ul class="simple">
+<li><p>job: the thing you call <code class="code docutils literal notranslate"><span class="pre">.map()</span></code> on, referencing a specific notebook on the omegaml runtime</p></li>
+<li><p>runner notebook: the notebook you use to start a job</p></li>
+<li><p>task group: the collection of all tasks from a single .map() call</p></li>
+</ul>
+<p>And some more details to track the status:</p>
+<ul class="simple">
+<li><p>task_id: the id of the celery task (a single run of a task notebook)</p></li>
+<li><p>status: the celery status, PENDING, SUCCESS or ERROR</p></li>
+<li><p>run_status: the result of executing a task notebook, OK, ERROR</p></li>
+</ul>
+</section>
+<section id="motivating-example">
+<h2>Motivating example:<a class="headerlink" href="#motivating-example" title="Link to this heading">¶</a></h2>
+<p>Assume we have a notebook like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># main.ipynb</span>
+<span class="c1"># -- get data for each group, run calculation, save data</span>
+<span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+  <span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mydata&#39;</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+  <span class="n">result</span> <span class="o">=</span> <span class="n">calculate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+  <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;results&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, we would like to run this notebook for many groups. Because calculate()
+is long-running (say a few hours for every group, and there are a 1000 groups),
+it is not a good idea to run a single notebook. If the processes crashes in between,
+we have to start all over again and thus would lose time.</p>
+<p>The better approach is to split the calculation into many groups, and run each
+group in a separate notebook. Here is an example of one group:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># main.ipynb</span>
+<span class="c1"># -- specify the group</span>
+<span class="n">job</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;group_id&#39;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+
+<span class="c1"># -- get data for the group, run calculation, save data</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculation</span><span class="p">(</span><span class="n">group_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mydata&#39;</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+  <span class="n">result</span> <span class="o">=</span> <span class="n">calculate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+  <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;results&#39;</span><span class="p">)</span>
+
+<span class="n">calculation</span><span class="p">(</span><span class="n">group_id</span><span class="o">=</span><span class="n">job</span><span class="p">[</span><span class="s1">&#39;group_id&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note that we did not change the notebook much. Essentially we created
+a helper function, <code class="code docutils literal notranslate"><span class="pre">calculation()</span></code> that wraps our previous code,
+and we added the <code class="code docutils literal notranslate"><span class="pre">job</span></code> variable to specify the <code class="code docutils literal notranslate"><span class="pre">group_id</span></code>.</p>
+<p>With this setup, we could copy the same notebook for as many groups as we have,
+and just run each notebook in turn. In essence, that’s what <code class="code docutils literal notranslate"><span class="pre">job.map()</span></code>
+does.</p>
+<p>Consider the following example run:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># let&#39;s get a runtime reference to the &quot;main&quot; notebook</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">16</span><span class="p">]:</span> <span class="n">job</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">)</span>
+
+<span class="c1"># now submit 10 tasks (=10 generated notebooks)</span>
+<span class="c1"># -- the input to each task notebook is one element of the iterable (here: range)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">17</span><span class="p">]:</span> <span class="n">task_notebooks</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">0</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">1</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">2</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">3</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">4</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">5</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">6</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">7</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">8</span>
+<span class="n">generating</span> <span class="n">task</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mi">9</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">0.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">16</span><span class="n">f2b598</span><span class="o">-</span><span class="n">f990</span><span class="o">-</span><span class="mi">4</span><span class="n">be3</span><span class="o">-</span><span class="n">be16</span><span class="o">-</span><span class="n">ee6d1dbaa89a</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">1.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">8</span><span class="n">b7b158b</span><span class="o">-</span><span class="n">eeb6</span><span class="o">-</span><span class="mi">4</span><span class="n">bdb</span><span class="o">-</span><span class="mi">9722</span><span class="o">-</span><span class="mi">5</span><span class="n">a7c08054952</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">2.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">06812</span><span class="n">d2c</span><span class="o">-</span><span class="n">fc75</span><span class="o">-</span><span class="mi">4</span><span class="n">c59</span><span class="o">-</span><span class="n">a5d7</span><span class="o">-</span><span class="mi">5</span><span class="n">ce5baef21c7</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">3.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="n">a7cec66e</span><span class="o">-</span><span class="mi">44</span><span class="n">de</span><span class="o">-</span><span class="mi">4</span><span class="n">c19</span><span class="o">-</span><span class="mi">9723</span><span class="o">-</span><span class="mi">54</span><span class="n">bc99508185</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">4.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">79</span><span class="n">c27d1f</span><span class="o">-</span><span class="n">efed</span><span class="o">-</span><span class="mi">40</span><span class="n">ca</span><span class="o">-</span><span class="mi">9</span><span class="n">cbe</span><span class="o">-</span><span class="n">e94ab88eed15</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">5.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">73260</span><span class="n">dc9</span><span class="o">-</span><span class="mi">38</span><span class="n">da</span><span class="o">-</span><span class="mf">4e81</span><span class="o">-</span><span class="n">a16b</span><span class="o">-</span><span class="mi">875</span><span class="n">f18f8332f</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">6.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="n">aa1cac23</span><span class="o">-</span><span class="mi">7</span><span class="n">bc1</span><span class="o">-</span><span class="mi">45</span><span class="n">ce</span><span class="o">-</span><span class="mi">973</span><span class="n">c</span><span class="o">-</span><span class="mi">5</span><span class="n">beff897ff01</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">7.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">50</span><span class="n">ca2c14</span><span class="o">-</span><span class="n">e3c7</span><span class="o">-</span><span class="mi">42</span><span class="n">d1</span><span class="o">-</span><span class="mi">98</span><span class="n">ad</span><span class="o">-</span><span class="mi">68</span><span class="n">f1eb9979d9</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">8.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mf">48e95505</span><span class="o">-</span><span class="mi">0</span><span class="n">c7a</span><span class="o">-</span><span class="mi">403</span><span class="n">f</span><span class="o">-</span><span class="mi">8</span><span class="n">b0b</span><span class="o">-</span><span class="n">ed751a3ea345</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">c05ecd89</span><span class="o">-</span><span class="mf">9.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="n">abb2ed3f</span><span class="o">-</span><span class="n">d574</span><span class="o">-</span><span class="mi">4</span><span class="n">c5b</span><span class="o">-</span><span class="mi">8542</span><span class="o">-</span><span class="mi">2858</span><span class="n">f1771dc0</span>
+</pre></div>
+</div>
+<p><code class="code docutils literal notranslate"><span class="pre">.map()</span></code> created 10 new notebooks by copying our main notebook, setting
+up the <code class="code docutils literal notranslate"><span class="pre">job</span></code> variable to contain the group_id for each one.</p>
+<p>To be precise, <code class="code docutils literal notranslate"><span class="pre">.map()</span></code> does not know about group_id, and so we have to modify
+the notebook slightly. Specifically, we need to get the group_id from the
+parameter generated for each task notebook, taking the values from our
+<code class="code docutils literal notranslate"><span class="pre">.map()</span></code> call:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the job, specify default value instead of None for testing</span>
+<span class="c1"># -- the &#39;param&#39; value is taken from the .map() iterable</span>
+<span class="n">job</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;param&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">})</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calculation</span><span class="p">(</span><span class="n">group_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># same code as before</span>
+    <span class="o">...</span>
+
+<span class="n">calculation</span><span class="p">(</span><span class="n">group_id</span><span class="o">=</span><span class="n">job</span><span class="p">[</span><span class="s1">&#39;param&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>With this, we can run <code class="code docutils literal notranslate"><span class="pre">.map()</span></code> again, as above. Let’s check the status:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># let&#39;s check the status</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">21</span><span class="p">]:</span> <span class="n">job</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">21</span><span class="p">]:</span>
+                          <span class="n">name</span>                               <span class="n">task_id</span>   <span class="n">status</span> <span class="n">run_status</span>
+<span class="mi">0</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">0.</span><span class="n">ipynb</span>  <span class="mi">5</span><span class="n">ed266bd</span><span class="o">-</span><span class="n">fb9f</span><span class="o">-</span><span class="mi">42</span><span class="n">ef</span><span class="o">-</span><span class="n">b9c1</span><span class="o">-</span><span class="mi">8729</span><span class="n">baeb4d59</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">1</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">1.</span><span class="n">ipynb</span>  <span class="n">e72af904</span><span class="o">-</span><span class="mi">5</span><span class="n">b84</span><span class="o">-</span><span class="mi">40</span><span class="n">b8</span><span class="o">-</span><span class="n">b8a9</span><span class="o">-</span><span class="mi">8</span><span class="n">caaa7490157</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">2</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">2.</span><span class="n">ipynb</span>  <span class="n">b1d42852</span><span class="o">-</span><span class="n">c1d0</span><span class="o">-</span><span class="mi">444</span><span class="n">d</span><span class="o">-</span><span class="n">b919</span><span class="o">-</span><span class="mi">6</span><span class="n">c6f1ebe3842</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">3</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">3.</span><span class="n">ipynb</span>  <span class="mi">7</span><span class="n">ce3e434</span><span class="o">-</span><span class="mi">4</span><span class="n">f31</span><span class="o">-</span><span class="mf">41e2</span><span class="o">-</span><span class="n">b7b3</span><span class="o">-</span><span class="n">ba1f86dc375c</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">4</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">4.</span><span class="n">ipynb</span>  <span class="n">df31754d</span><span class="o">-</span><span class="mi">631</span><span class="n">b</span><span class="o">-</span><span class="mi">45</span><span class="n">b6</span><span class="o">-</span><span class="n">b6fc</span><span class="o">-</span><span class="mi">458</span><span class="n">ac6a4c520</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">5</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">5.</span><span class="n">ipynb</span>  <span class="mi">9</span><span class="n">f456408</span><span class="o">-</span><span class="n">bc13</span><span class="o">-</span><span class="mi">4</span><span class="n">bfb</span><span class="o">-</span><span class="mi">89</span><span class="n">cf</span><span class="o">-</span><span class="n">e9436bfa4c37</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">6</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">6.</span><span class="n">ipynb</span>  <span class="mi">794</span><span class="n">f2aed</span><span class="o">-</span><span class="mi">6980</span><span class="o">-</span><span class="mi">4</span><span class="n">d6a</span><span class="o">-</span><span class="n">bea6</span><span class="o">-</span><span class="mf">94e0</span><span class="n">d992c7f3</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">7</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">7.</span><span class="n">ipynb</span>  <span class="mi">64321</span><span class="n">f0b</span><span class="o">-</span><span class="mi">0150</span><span class="o">-</span><span class="mi">49</span><span class="n">a0</span><span class="o">-</span><span class="n">bfb1</span><span class="o">-</span><span class="n">cb43dd845e33</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">8</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">8.</span><span class="n">ipynb</span>  <span class="mi">35</span><span class="n">c8fe3d</span><span class="o">-</span><span class="n">bb80</span><span class="o">-</span><span class="mi">4</span><span class="n">c22</span><span class="o">-</span><span class="n">aa8a</span><span class="o">-</span><span class="mi">78</span><span class="n">d44dd80390</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+<span class="mi">9</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">9.</span><span class="n">ipynb</span>  <span class="mi">47</span><span class="n">d576b1</span><span class="o">-</span><span class="mi">9</span><span class="n">bbe</span><span class="o">-</span><span class="mi">4021</span><span class="o">-</span><span class="n">abd0</span><span class="o">-</span><span class="mi">39</span><span class="n">c8defa3290</span>  <span class="n">PENDING</span>    <span class="n">unknown</span>
+
+<span class="c1"># after a while the status is updated</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">22</span><span class="p">]:</span> <span class="n">job</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">22</span><span class="p">]:</span>
+                          <span class="n">name</span>                               <span class="n">task_id</span>   <span class="n">status</span> <span class="n">run_status</span>
+<span class="mi">0</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">0.</span><span class="n">ipynb</span>  <span class="mi">5</span><span class="n">ed266bd</span><span class="o">-</span><span class="n">fb9f</span><span class="o">-</span><span class="mi">42</span><span class="n">ef</span><span class="o">-</span><span class="n">b9c1</span><span class="o">-</span><span class="mi">8729</span><span class="n">baeb4d59</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">1</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">1.</span><span class="n">ipynb</span>  <span class="n">e72af904</span><span class="o">-</span><span class="mi">5</span><span class="n">b84</span><span class="o">-</span><span class="mi">40</span><span class="n">b8</span><span class="o">-</span><span class="n">b8a9</span><span class="o">-</span><span class="mi">8</span><span class="n">caaa7490157</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">2</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">2.</span><span class="n">ipynb</span>  <span class="n">b1d42852</span><span class="o">-</span><span class="n">c1d0</span><span class="o">-</span><span class="mi">444</span><span class="n">d</span><span class="o">-</span><span class="n">b919</span><span class="o">-</span><span class="mi">6</span><span class="n">c6f1ebe3842</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">3</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">3.</span><span class="n">ipynb</span>  <span class="mi">7</span><span class="n">ce3e434</span><span class="o">-</span><span class="mi">4</span><span class="n">f31</span><span class="o">-</span><span class="mf">41e2</span><span class="o">-</span><span class="n">b7b3</span><span class="o">-</span><span class="n">ba1f86dc375c</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">4</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">4.</span><span class="n">ipynb</span>  <span class="n">df31754d</span><span class="o">-</span><span class="mi">631</span><span class="n">b</span><span class="o">-</span><span class="mi">45</span><span class="n">b6</span><span class="o">-</span><span class="n">b6fc</span><span class="o">-</span><span class="mi">458</span><span class="n">ac6a4c520</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">5</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">5.</span><span class="n">ipynb</span>  <span class="mi">9</span><span class="n">f456408</span><span class="o">-</span><span class="n">bc13</span><span class="o">-</span><span class="mi">4</span><span class="n">bfb</span><span class="o">-</span><span class="mi">89</span><span class="n">cf</span><span class="o">-</span><span class="n">e9436bfa4c37</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">6</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">6.</span><span class="n">ipynb</span>  <span class="mi">794</span><span class="n">f2aed</span><span class="o">-</span><span class="mi">6980</span><span class="o">-</span><span class="mi">4</span><span class="n">d6a</span><span class="o">-</span><span class="n">bea6</span><span class="o">-</span><span class="mf">94e0</span><span class="n">d992c7f3</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">7</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">7.</span><span class="n">ipynb</span>  <span class="mi">64321</span><span class="n">f0b</span><span class="o">-</span><span class="mi">0150</span><span class="o">-</span><span class="mi">49</span><span class="n">a0</span><span class="o">-</span><span class="n">bfb1</span><span class="o">-</span><span class="n">cb43dd845e33</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">8</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">8.</span><span class="n">ipynb</span>  <span class="mi">35</span><span class="n">c8fe3d</span><span class="o">-</span><span class="n">bb80</span><span class="o">-</span><span class="mi">4</span><span class="n">c22</span><span class="o">-</span><span class="n">aa8a</span><span class="o">-</span><span class="mi">78</span><span class="n">d44dd80390</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+<span class="mi">9</span>  <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">9.</span><span class="n">ipynb</span>  <span class="mi">47</span><span class="n">d576b1</span><span class="o">-</span><span class="mi">9</span><span class="n">bbe</span><span class="o">-</span><span class="mi">4021</span><span class="o">-</span><span class="n">abd0</span><span class="o">-</span><span class="mi">39</span><span class="n">c8defa3290</span>  <span class="n">SUCCESS</span>         <span class="n">OK</span>
+</pre></div>
+</div>
+<p>Great! All tasks have run to completion. We can see each task’s results by checking
+the results folder in Jupyter, as each task has created a results notebook:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">34</span><span class="p">]:</span> <span class="n">om</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s1">&#39;results/tasks/main/cc1a3388*&#39;</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">34</span><span class="p">]:</span>
+<span class="p">[</span><span class="s1">&#39;results/tasks/main/cc1a3388-0.ipynb_2020-10-22 11:34:30.751235.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-1.ipynb_2020-10-22 11:34:30.857055.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-2.ipynb_2020-10-22 11:34:30.937543.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-3.ipynb_2020-10-22 11:34:30.997867.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-4.ipynb_2020-10-22 11:34:31.087035.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-5.ipynb_2020-10-22 11:48:13.000348.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-6.ipynb_2020-10-22 11:34:31.296300.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-7.ipynb_2020-10-22 11:34:31.349900.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-8.ipynb_2020-10-22 11:34:42.562762.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;results/tasks/main/cc1a3388-9.ipynb_2020-10-22 11:34:42.562477.ipynb&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="dealing-with-errors">
+<h2>Dealing with errors<a class="headerlink" href="#dealing-with-errors" title="Link to this heading">¶</a></h2>
+<p>What if a task has produced an error?</p>
+<p>We can use the tasks metadata to see the result of running the notebook:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># lookup the the metadata from the job.status() that has an error</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;tasks/main/cc1a3388-9&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;job_runs&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="p">{</span><span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;param&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;task_group&#39;</span><span class="p">:</span> <span class="s1">&#39;2e3368ad&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;task_name&#39;</span><span class="p">:</span> <span class="s1">&#39;tasks/main/2e3368ad-0&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;finished&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;task_id&#39;</span><span class="p">:</span> <span class="s1">&#39;bceccd43-099d-4ac4-ae89-3e8d8953ea6e&#39;</span><span class="p">},</span>
+ <span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;results/tasks/main/2e3368ad-0.ipynb_2020-10-21 01:37:52.358832.ipynb&#39;</span><span class="p">],</span>
+ <span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;OK&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;ts&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">52</span><span class="p">,</span> <span class="mi">358000</span><span class="p">),</span>
+   <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="s1">&#39;results/tasks/main/2e3368ad-0.ipynb_2020-10-21 01:37:52.358832.ipynb&#39;</span><span class="p">}],</span>
+ <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="s1">&#39;SUCCESS&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;task_id&#39;</span><span class="p">:</span> <span class="s1">&#39;bceccd43-099d-4ac4-ae89-3e8d8953ea6e&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>What if a task did not produce a result?</p>
+<p>For demo purpose, let’s delete one of  the result notebooks.
+Then we can call <code class="code docutils literal notranslate"><span class="pre">job.restart()</span></code>. This  will look for task notebooks
+that don’t have a result yet, and simply start it again. All the other tasks
+that already have a result are not run again.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># if one of them is missing results, we can simply restart</span>
+<span class="c1"># -- for demo purpose, I just deleted the ...-5 task&#39;s result notebook</span>
+<span class="c1"># -- .restart() will look for a result notebook, if it can&#39;t find, will submit</span>
+<span class="c1"># -- the tasks notebook again</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">23</span><span class="p">]:</span> <span class="n">job</span><span class="o">.</span><span class="n">restart</span><span class="p">()</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">0.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">1.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">2.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">3.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">4.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">started</span> <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">5.</span><span class="n">ipynb</span> <span class="o">=&gt;</span> <span class="mi">302</span><span class="n">a31dd</span><span class="o">-</span><span class="mi">525</span><span class="n">d</span><span class="o">-</span><span class="mf">4e36</span><span class="o">-</span><span class="n">b34d</span><span class="o">-</span><span class="n">bbb00a6ec46a</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">6.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">7.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">8.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+<span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">cc1a3388</span><span class="o">-</span><span class="mf">9.</span><span class="n">ipynb</span> <span class="n">has</span> <span class="n">already</span> <span class="n">got</span> <span class="n">results</span>
+</pre></div>
+</div>
+<p>We can also force a re-run of tasks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># the same as removing all the results notebooks first</span>
+<span class="n">om</span><span class="o">.</span><span class="n">restart</span><span class="p">(</span><span class="n">reset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="running-tasks-on-specific-nodes">
+<h2>Running tasks on specific nodes<a class="headerlink" href="#running-tasks-on-specific-nodes" title="Link to this heading">¶</a></h2>
+<p>How can we choose a specific node to run this on?</p>
+<p>Say we want to run on the GPU node:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">job</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">require</span><span class="o">=</span><span class="s1">&#39;gpu&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can also run the process twice, say:</p>
+<ol class="arabic simple">
+<li><p>on a smaller, inexpensive node for testing</p></li>
+<li><p>on a high performance node for the actual run</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># run testing</span>
+<span class="n">job</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">require</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span>
+
+<span class="c1"># if tests are successful, run the real deal</span>
+<span class="n">job</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">),</span> <span class="n">require</span><span class="o">=</span><span class="s1">&#39;gpu&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="see-all-previous-runs">
+<h2>See all previous runs<a class="headerlink" href="#see-all-previous-runs" title="Link to this heading">¶</a></h2>
+<p>To get a list of all the tasks that were created for a notebook:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">54</span><span class="p">]:</span> <span class="n">job</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">)</span>
+         <span class="n">job</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">54</span><span class="p">]:</span>
+<span class="p">[</span><span class="s1">&#39;tasks/main/0ef102e2-0.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;tasks/main/0ef102e2-1.ipynb&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;tasks/main/0ef102e2-2.ipynb&#39;</span><span class="p">,</span>
+<span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To get the status of all previous runs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># this can take a while if there were many previous .map() calls!</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">55</span><span class="p">]:</span> <span class="n">job</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="n">task_group</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+                            <span class="n">name</span>                               <span class="n">task_id</span>   <span class="n">status</span> <span class="n">run_status</span>
+<span class="mi">0</span>    <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="mi">0</span><span class="n">ef102e2</span><span class="o">-</span><span class="mf">0.</span><span class="n">ipynb</span>  <span class="n">e937b1a2</span><span class="o">-</span><span class="n">a237</span><span class="o">-</span><span class="mi">4208</span><span class="o">-</span><span class="mi">878</span><span class="n">a</span><span class="o">-</span><span class="n">a6cf07d5c973</span>  <span class="n">PENDING</span>         <span class="n">OK</span>
+<span class="mi">1</span>    <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="mi">0</span><span class="n">ef102e2</span><span class="o">-</span><span class="mf">1.</span><span class="n">ipynb</span>  <span class="n">cfd9ee22</span><span class="o">-</span><span class="mi">3637</span><span class="o">-</span><span class="mi">4</span><span class="n">b77</span><span class="o">-</span><span class="mi">8</span><span class="n">d5b</span><span class="o">-</span><span class="mi">630</span><span class="n">de5b368c9</span>  <span class="n">PENDING</span>         <span class="n">OK</span>
+<span class="mi">2</span>    <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="mi">0</span><span class="n">ef102e2</span><span class="o">-</span><span class="mf">2.</span><span class="n">ipynb</span>  <span class="n">d0e961bf</span><span class="o">-</span><span class="mi">2493</span><span class="o">-</span><span class="mi">45</span><span class="n">f2</span><span class="o">-</span><span class="n">baf1</span><span class="o">-</span><span class="n">d1e53520aaae</span>  <span class="n">PENDING</span>         <span class="n">OK</span>
+<span class="mi">3</span>    <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="mi">0</span><span class="n">ef102e2</span><span class="o">-</span><span class="mf">3.</span><span class="n">ipynb</span>  <span class="n">cdf061e5</span><span class="o">-</span><span class="mi">7</span><span class="n">d98</span><span class="o">-</span><span class="mi">4990</span><span class="o">-</span><span class="n">a131</span><span class="o">-</span><span class="n">b6e19387efed</span>  <span class="n">PENDING</span>         <span class="n">OK</span>
+<span class="mi">4</span>    <span class="n">tasks</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="mi">0</span><span class="n">ef102e2</span><span class="o">-</span><span class="mf">4.</span><span class="n">ipynb</span>  <span class="n">a269eed8</span><span class="o">-</span><span class="mi">48</span><span class="n">a6</span><span class="o">-</span><span class="mi">4125</span><span class="o">-</span><span class="mi">9987</span><span class="o">-</span><span class="mi">67</span><span class="n">ba43c83b17</span>  <span class="n">PENDING</span>         <span class="n">OK</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="working.html" class="btn btn-neutral float-left" title="Working with notebooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scheduling.html" class="btn btn-neutral float-right" title="Scheduling notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: 0.15.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/guide/jobs/parallel.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/guide/jobs/parallel.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/guide/jobs/parallel.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="parallel.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/guide/jobs/parallel.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/guide/jobs/parallel.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/guide/jobs/parallel.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/guide/jobs/parallel.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/guide/jobs/parallel.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/guide/jobs/parallel.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/jobs/parallel.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/guide/jobs/parallel.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runtime Architecture &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=81998473"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Extending omega-ml" href="../devguide/index.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Deploying omega-ml</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="kickstart.html">Getting Started with omega-ml</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Runtime Architecture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#security-concerns">Security concerns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../release/0.16.4/admin/design.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Deploying omega-ml</a></li>
+      <li class="breadcrumb-item active">Runtime Architecture</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/admin/design.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="runtime-architecture">
+<h1>Runtime Architecture<a class="headerlink" href="#runtime-architecture" title="Link to this heading">¶</a></h1>
+<p>The runtime implements remote execution of models and jobs. The runtime
+is implemented as follows:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">OmegaRuntime</span></code> - the client API to get access to a remote model</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">OmegaModelProxy</span></code> - the client API to the remote model</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">runtime.tasks</span></code> - the celery tasks implementing the actual execution</p></li>
+</ul>
+<p>A <code class="code docutils literal notranslate"><span class="pre">OmegaRuntime</span></code> instance is available as <code class="code docutils literal notranslate"><span class="pre">om.runtime</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span> <span class="o">=</span> <span class="n">Omega</span><span class="p">()</span>
+<span class="c1"># get the OmegaModelProxy instance</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<span class="c1"># call methods on OmegaModelProxy, effecting remote task execution</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that any method called on the <code class="code docutils literal notranslate"><span class="pre">model</span></code> are translated into calls
+to respective celery tasks. A celery task lives in a celery worker at a remote
+note. On execution a task will re-create the <code class="code docutils literal notranslate"><span class="pre">Omega</span></code> instance to retrieve
+the <em>X,Y</em> data as well as the actual model.</p>
+<section id="security-concerns">
+<h2>Security concerns<a class="headerlink" href="#security-concerns" title="Link to this heading">¶</a></h2>
+<p>Note that the open source <cite>omega-ml Core</cite> does not implement any security by default.
+The omega-ml Commercial Edition however addresses all security concerns:</p>
+<ul class="simple">
+<li><p><strong>user authentication</strong>. Users authenticate to REST endpoints by username +
+Apikey. Communication is protected by HTTPS.</p></li>
+<li><p><strong>the database</strong> is protected by user/passwords. There is an admin database
+which uses the <code class="code docutils literal notranslate"><span class="pre">MONGO_ADMIN_URL</span></code>. This URL is not exposed to
+users. The per-user databases are only exposed on a per-user basis.</p></li>
+<li><p><strong>communication to the database</strong> using mongo TSL support</p></li>
+<li><p><strong>communication to the message broker</strong> access protection to RabbitMQ,
+channel encryption (TLS) and message signing.</p></li>
+<li><p><strong>configuration of client workstations</strong>. via userid and apikey</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../devguide/index.html" class="btn btn-neutral float-right" title="Extending omega-ml" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../0.11.3/admin/design.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../0.11.4/admin/design.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../0.12.0/admin/design.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../0.13.0/admin/design.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../0.13.2/admin/design.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../0.13.4/admin/design.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../0.13.5/admin/design.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../0.13.6/admin/design.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../0.13.7/admin/design.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../0.14.0/admin/design.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../0.15.1/admin/design.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../0.15.2/admin/design.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../latest/admin/design.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../release/0.15.3/admin/design.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../release/0.15.5/admin/design.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../release/0.16.0/admin/design.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../release/0.16.1/admin/design.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../release/0.16.2/admin/design.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../release/0.16.3/admin/design.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/admin/design.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../release/0.9/admin/design.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../stable/admin/design.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="design.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

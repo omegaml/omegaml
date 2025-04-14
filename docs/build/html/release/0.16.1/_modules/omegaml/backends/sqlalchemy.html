@@ -1,0 +1,847 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.backends.sqlalchemy &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../../../0.16.4/index.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.backends.sqlalchemy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.backends.sqlalchemy</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">warning</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="linenos">  4</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos">  5</span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="linenos">  6</span><span class="kn">import</span><span class="w"> </span><span class="nn">sqlalchemy</span>
+<span class="linenos">  7</span><span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+<span class="linenos">  8</span><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="linenos">  9</span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="linenos"> 10</span><span class="kn">from</span><span class="w"> </span><span class="nn">getpass</span><span class="w"> </span><span class="kn">import</span> <span class="n">getuser</span>
+<span class="linenos"> 11</span><span class="kn">from</span><span class="w"> </span><span class="nn">hashlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">sha256</span>
+<span class="linenos"> 12</span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatementError</span>
+<span class="linenos"> 13</span><span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote_plus</span>
+<span class="linenos"> 14</span>
+<span class="linenos"> 15</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.basedata</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDataBackend</span>
+<span class="linenos"> 16</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessLocal</span><span class="p">,</span> <span class="n">KeepMissing</span><span class="p">,</span> <span class="n">tqdm_if_interactive</span><span class="p">,</span> <span class="n">signature</span>
+<span class="linenos"> 17</span>
+<span class="linenos"> 18</span><span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 19</span>    <span class="kn">import</span><span class="w"> </span><span class="nn">snowflake</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span>    <span class="n">sql_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;snowflake&#39;</span><span class="p">)</span>
+<span class="linenos"> 22</span>    <span class="n">sql_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s1">&#39;CRITICAL&#39;</span><span class="p">)</span>
+<span class="linenos"> 23</span><span class="k">except</span><span class="p">:</span>
+<span class="linenos"> 24</span>    <span class="k">pass</span>
+<span class="linenos"> 25</span>
+<span class="linenos"> 26</span><span class="c1">#: override by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE</span>
+<span class="linenos"> 27</span><span class="n">ALWAYS_CACHE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos"> 28</span><span class="c1"># -- enabled by default as this is the least-surprised option</span>
+<span class="linenos"> 29</span><span class="c1"># -- consistent with sqlalchemy connection pooling defaults</span>
+<span class="linenos"> 30</span><span class="c1">#: kwargs for create_engine()</span>
+<span class="linenos"> 31</span><span class="n">ENGINE_KWARGS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">echo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pool_pre_ping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pool_recycle</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="linenos"> 32</span><span class="c1"># -- echo=False - do not log to stdout</span>
+<span class="linenos"> 33</span><span class="c1"># -- pool_pre_ping=True - always check, re-establish connection if no longer working</span>
+<span class="linenos"> 34</span><span class="c1"># -- pool_recylce=N - do not reuse connections older than N seconds</span>
+<span class="linenos"> 35</span>
+<span class="linenos"> 36</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="linenos"> 37</span>
+<span class="linenos"> 38</span>
+<div class="viewcode-block" id="SQLAlchemyBackend">
+<a class="viewcode-back" href="../../../reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend">[docs]</a>
+<span class="linenos"> 39</span><span class="k">class</span><span class="w"> </span><span class="nc">SQLAlchemyBackend</span><span class="p">(</span><span class="n">BaseDataBackend</span><span class="p">):</span>
+<span class="linenos"> 40</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 41</span><span class="sd">    sqlalchemy plugin for omegaml</span>
+<span class="linenos"> 42</span>
+<span class="linenos"> 43</span><span class="sd">    Usage:</span>
+<span class="linenos"> 44</span>
+<span class="linenos"> 45</span><span class="sd">        Define your sqlalchemy connection::</span>
+<span class="linenos"> 46</span>
+<span class="linenos"> 47</span><span class="sd">            sqlalchemy_constr = f&#39;sqlalchemy://{user}:{password}@{account}/&#39;</span>
+<span class="linenos"> 48</span>
+<span class="linenos"> 49</span><span class="sd">        Store the connection in any of three ways::</span>
+<span class="linenos"> 50</span>
+<span class="linenos"> 51</span><span class="sd">            # -- just the connection</span>
+<span class="linenos"> 52</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;)</span>
+<span class="linenos"> 53</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;, raw=True)</span>
+<span class="linenos"> 54</span><span class="sd">            =&gt; the sql connection object</span>
+<span class="linenos"> 55</span>
+<span class="linenos"> 56</span><span class="sd">            # -- store connection with a predefined sql</span>
+<span class="linenos"> 57</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;,</span>
+<span class="linenos"> 58</span><span class="sd">                            sql=&#39;select ....&#39;)</span>
+<span class="linenos"> 59</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;)</span>
+<span class="linenos"> 60</span><span class="sd">            =&gt; will return a pandas dataframe using the specified sql to run.</span>
+<span class="linenos"> 61</span><span class="sd">               specify chunksize= to return an interable of dataframes</span>
+<span class="linenos"> 62</span>
+<span class="linenos"> 63</span><span class="sd">            # -- predefined sqls can contain variables to be resolved at access time</span>
+<span class="linenos"> 64</span><span class="sd">            #    if you miss to specify required variables in sqlvars, a KeyError is raised</span>
+<span class="linenos"> 65</span><span class="sd">            om.datasets.put(sqlaclhemy_constr, &#39;myview&#39;,</span>
+<span class="linenos"> 66</span><span class="sd">                            sql=&#39;select ... from T1 where col=&quot;{var}&quot;&#39;)</span>
+<span class="linenos"> 67</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;, sqlvars=dict(var=&quot;value&quot;))</span>
+<span class="linenos"> 68</span>
+<span class="linenos"> 69</span><span class="sd">            # -- Variables are replaced by binding parameters, which is safe for</span>
+<span class="linenos"> 70</span><span class="sd">            #    untrusted inputs. To replace variables as strings, use double</span>
+<span class="linenos"> 71</span><span class="sd">            #    `{{variable}}` notation. A warning will be issued because this</span>
+<span class="linenos"> 72</span><span class="sd">            #    is considered an unsafe practice for untrusted input (REST API).</span>
+<span class="linenos"> 73</span><span class="sd">            #    It is in your responsibility to sanitize the value of the `cols` variable.</span>
+<span class="linenos"> 74</span><span class="sd">            om.datasets.put(sqlaclhemy_constr, &#39;myview&#39;,</span>
+<span class="linenos"> 75</span><span class="sd">                            sql=&#39;select {{cols}} from T1 where col=&quot;{var}&quot;&#39;)</span>
+<span class="linenos"> 76</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;, sqlvars=dict(cols=&#39;foo, bar&#39;,</span>
+<span class="linenos"> 77</span><span class="sd">                                                         var=&quot;value&quot;))</span>
+<span class="linenos"> 78</span>
+<span class="linenos"> 79</span><span class="sd">        Query data from a connection and store into an omega-ml dataset::</span>
+<span class="linenos"> 80</span>
+<span class="linenos"> 81</span><span class="sd">            # -- copy the result of the sqlalchemy query to omegaml</span>
+<span class="linenos"> 82</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;,</span>
+<span class="linenos"> 83</span><span class="sd">                            sql=&#39;select ...&#39;, copy=True)</span>
+<span class="linenos"> 84</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;)</span>
+<span class="linenos"> 85</span><span class="sd">            =&gt; will return a pandas dataframe (without executing any additional queries)</span>
+<span class="linenos"> 86</span><span class="sd">            =&gt; can also use with om.datasets.getl(&#39;mysqlalchemy&#39;) to return a MDataFrame</span>
+<span class="linenos"> 87</span>
+<span class="linenos"> 88</span><span class="sd">        Controlling the table used in the connection::</span>
+<span class="linenos"> 89</span>
+<span class="linenos"> 90</span><span class="sd">            # -- the default table is {bucket}_{name}, override using table=&#39;myname&#39;</span>
+<span class="linenos"> 91</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;,</span>
+<span class="linenos"> 92</span><span class="sd">                            table=&#39;mytable&#39;,</span>
+<span class="linenos"> 93</span><span class="sd">                            sql=&#39;select ...&#39;,</span>
+<span class="linenos"> 94</span><span class="sd">                            copy=True)</span>
+<span class="linenos"> 95</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;) # read from {bucket}_myname</span>
+<span class="linenos"> 96</span>
+<span class="linenos"> 97</span><span class="sd">            # -- to use a specific table, without bucket information use table=&#39;:myname&#39;</span>
+<span class="linenos"> 98</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;,</span>
+<span class="linenos"> 99</span><span class="sd">                            table=&#39;:mytable&#39;,</span>
+<span class="linenos">100</span><span class="sd">                            sql=&#39;select ...&#39;,</span>
+<span class="linenos">101</span><span class="sd">                            copy=True)</span>
+<span class="linenos">102</span><span class="sd">            om.datasets.get(&#39;mysqlalchemy&#39;) # read from myname</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span><span class="sd">        Inserting data via a previously stored connection::</span>
+<span class="linenos">105</span>
+<span class="linenos">106</span><span class="sd">            # -- store data back through the connection</span>
+<span class="linenos">107</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;mysqlalchemy&#39;)</span>
+<span class="linenos">108</span><span class="sd">            om.datasets.put(df, &#39;mysqlalchemy&#39;,</span>
+<span class="linenos">109</span><span class="sd">                            table=&#39;SOMETABLE&#39;)</span>
+<span class="linenos">110</span>
+<span class="linenos">111</span><span class="sd">        Using variables in connection strings:</span>
+<span class="linenos">112</span>
+<span class="linenos">113</span><span class="sd">        Connection strings may contain variables, e.g. userid and password.</span>
+<span class="linenos">114</span><span class="sd">        By default variables are resolved from the os environment. Can also</span>
+<span class="linenos">115</span><span class="sd">        specify using any dict.::</span>
+<span class="linenos">116</span>
+<span class="linenos">117</span><span class="sd">            # -- use connection string with variables</span>
+<span class="linenos">118</span><span class="sd">            sqlalchemy_constr = &#39;sqlite:///{dbname}.db&#39;</span>
+<span class="linenos">119</span><span class="sd">            om.datasets.put(sqlalchemy_constr, &#39;userdb&#39;)</span>
+<span class="linenos">120</span><span class="sd">            om.datasets.get(&#39;userdb&#39;, secrets=dict(dbname=&#39;chuckdb&#39;))</span>
+<span class="linenos">121</span>
+<span class="linenos">122</span><span class="sd">            # -- alternatively, create a vault dataset:</span>
+<span class="linenos">123</span><span class="sd">            secrets = dict(userid=&#39;chuck&#39;, dbname=&#39;chuckdb&#39;)</span>
+<span class="linenos">124</span><span class="sd">            om.datasets.put(secrets, &#39;.omega/vault&#39;)</span>
+<span class="linenos">125</span><span class="sd">            om.datasets.get(&#39;userdb&#39;)</span>
+<span class="linenos">126</span>
+<span class="linenos">127</span><span class="sd">            the &#39;.omega/vault&#39; dataset will be queried using the current userid as</span>
+<span class="linenos">128</span><span class="sd">            the secret name, and the dbname retrieved from the document. This is</span>
+<span class="linenos">129</span><span class="sd">            experimental and the vault is not encrypted.</span>
+<span class="linenos">130</span>
+<span class="linenos">131</span><span class="sd">    Advanced:</span>
+<span class="linenos">132</span>
+<span class="linenos">133</span><span class="sd">        ``om.datasets.put()`` supports the following additional keyword arguments</span>
+<span class="linenos">134</span>
+<span class="linenos">135</span><span class="sd">        * ``chunksize=int`` - specify the number of rows to read from sqlalchemy in one chunk.</span>
+<span class="linenos">136</span><span class="sd">          defaults to 10000</span>
+<span class="linenos">137</span>
+<span class="linenos">138</span><span class="sd">        * ``parse_dates=[&#39;col&#39;, ...]`` - list of column names to parse for date, time or datetime.</span>
+<span class="linenos">139</span><span class="sd">          see pd.read_sql for details</span>
+<span class="linenos">140</span>
+<span class="linenos">141</span><span class="sd">        * ``transform=callable`` - a callable, is passed the DataFrame of each chunk before it</span>
+<span class="linenos">142</span><span class="sd">          is inserted into the database. use to provide custom transformations.</span>
+<span class="linenos">143</span><span class="sd">          only works on copy=True</span>
+<span class="linenos">144</span>
+<span class="linenos">145</span><span class="sd">        * any other kwargs supported by ``pandas.read_sql``</span>
+<span class="linenos">146</span>
+<span class="linenos">147</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">148</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;sqlalchemy.conx&#39;</span>
+<span class="linenos">149</span>    <span class="n">PROMOTE</span> <span class="o">=</span> <span class="s1">&#39;metadata&#39;</span>
+<span class="linenos">150</span>
+<span class="linenos">151</span>    <span class="c1">#: sqlalchemy.Engine cache to enable pooled connections</span>
+<span class="linenos">152</span>    <span class="n">__CNX_CACHE</span> <span class="o">=</span> <span class="n">ProcessLocal</span><span class="p">()</span>
+<span class="linenos">153</span>
+<span class="linenos">154</span>    <span class="c1"># -- https://docs.sqlalchemy.org/en/14/core/pooling.html#module-sqlalchemy.pool</span>
+<span class="linenos">155</span>    <span class="c1"># -- create_engine() must be called per-process, hence using ProcessLocal</span>
+<span class="linenos">156</span>    <span class="c1"># -- meaning when using a multiprocessing.Pool or other fork()-ed processes,</span>
+<span class="linenos">157</span>    <span class="c1">#    the cache will be cleared in child processes, forcing the engine to be</span>
+<span class="linenos">158</span>    <span class="c1">#    recreated automatically in _get_connection</span>
+<span class="linenos">159</span>
+<div class="viewcode-block" id="SQLAlchemyBackend.supports">
+<a class="viewcode-back" href="../../../reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend.supports">[docs]</a>
+<span class="linenos">160</span>    <span class="nd">@classmethod</span>
+<span class="linenos">161</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">162</span>        <span class="n">valid</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_is_valid_url</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+<span class="linenos">163</span>        <span class="n">support_via</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_supports_via</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data_store</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+<span class="linenos">164</span>        <span class="k">return</span> <span class="n">valid</span> <span class="ow">or</span> <span class="n">support_via</span></div>
+
+<span class="linenos">165</span>
+<span class="linenos">166</span>    <span class="k">def</span><span class="w"> </span><span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">167</span>        <span class="c1"># ensure cache is cleared</span>
+<span class="linenos">168</span>        <span class="n">clear_cache</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">secrets</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
+<span class="linenos">169</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">170</span>            <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="linenos">171</span>        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">172</span>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Connection cache was cleared, however secret </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1"> was missing.&#39;</span><span class="p">)</span>
+<span class="linenos">173</span>            <span class="n">clear_cache</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">174</span>        <span class="k">if</span> <span class="n">clear_cache</span><span class="p">:</span>
+<span class="linenos">175</span>            <span class="bp">self</span><span class="o">.</span><span class="n">__CNX_CACHE</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<span class="linenos">176</span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">177</span>
+<span class="linenos">178</span>    <span class="k">def</span><span class="w"> </span><span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="linenos">179</span>        <span class="k">return</span> <span class="n">signature</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+<span class="linenos">180</span>
+<div class="viewcode-block" id="SQLAlchemyBackend.get">
+<a class="viewcode-back" href="../../../reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend.get">[docs]</a>
+<span class="linenos">181</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sqlvars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">182</span>            <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">183</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; retrieve a stored connection or query data from connection</span>
+<span class="linenos">184</span>
+<span class="linenos">185</span><span class="sd">        Args:</span>
+<span class="linenos">186</span><span class="sd">            name (str): the name of the connection</span>
+<span class="linenos">187</span><span class="sd">            secrets (dict): dict to resolve variables in the connection string</span>
+<span class="linenos">188</span><span class="sd">            keep (bool): if True connection is kept open, defaults to True (change</span>
+<span class="linenos">189</span><span class="sd">              default by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE = False)</span>
+<span class="linenos">190</span><span class="sd">            table (str): the name of the table, will be prefixed with the</span>
+<span class="linenos">191</span><span class="sd">               store&#39;s bucket name unless the table is specified as &#39;:name&#39;</span>
+<span class="linenos">192</span><span class="sd">            trusted (bool|str): if passed must be the value for store.sign(sqlvars or kwargs),</span>
+<span class="linenos">193</span><span class="sd">               otherwise a warning is issued for any remaining variables in the sql statement</span>
+<span class="linenos">194</span>
+<span class="linenos">195</span><span class="sd">        Returns:</span>
+<span class="linenos">196</span><span class="sd">            connection</span>
+<span class="linenos">197</span>
+<span class="linenos">198</span><span class="sd">        To query data and return a DataFrame, specify ``sql=&#39;select ...&#39;``:</span>
+<span class="linenos">199</span>
+<span class="linenos">200</span><span class="sd">        Args:</span>
+<span class="linenos">201</span><span class="sd">                sql (str): the sql query, defaults to the query specific on .put()</span>
+<span class="linenos">202</span><span class="sd">                chunksize (int): the number of records for each chunk, if</span>
+<span class="linenos">203</span><span class="sd">                   specified returns an iterator</span>
+<span class="linenos">204</span><span class="sd">                sqlvars (dict): optional, if specified will be used to format sql</span>
+<span class="linenos">205</span>
+<span class="linenos">206</span><span class="sd">        Returns:</span>
+<span class="linenos">207</span><span class="sd">            pd.DataFrame</span>
+<span class="linenos">208</span>
+<span class="linenos">209</span><span class="sd">        To get the connection for a data query, instead of a DataFrame:</span>
+<span class="linenos">210</span>
+<span class="linenos">211</span><span class="sd">        Args:</span>
+<span class="linenos">212</span>
+<span class="linenos">213</span><span class="sd">                raw (bool): if True, returns the raw sql alchemy connection</span>
+<span class="linenos">214</span><span class="sd">                keep (bool): option, if True keeps the connection open. Lazy=True</span>
+<span class="linenos">215</span><span class="sd">                  implies keep=True. This is potentially unsafe in a multi-user</span>
+<span class="linenos">216</span><span class="sd">                  environment where connection strings contain user-specific</span>
+<span class="linenos">217</span><span class="sd">                  secrets. To always keep connections open, set</span>
+<span class="linenos">218</span><span class="sd">                  ``om.datasets.defaults.SQLALCHEMY_ALWAYS_CACHE=True``</span>
+<span class="linenos">219</span>
+<span class="linenos">220</span><span class="sd">        Returns:</span>
+<span class="linenos">221</span><span class="sd">            connection</span>
+<span class="linenos">222</span>
+<span class="linenos">223</span><span class="sd">        To get a cursor for a data query, instead of a DataFrame. Note this</span>
+<span class="linenos">224</span><span class="sd">        implies keep=True.</span>
+<span class="linenos">225</span>
+<span class="linenos">226</span><span class="sd">        Args:</span>
+<span class="linenos">227</span>
+<span class="linenos">228</span><span class="sd">                lazy (bool): if True, returns a cursor instead of a DataFrame</span>
+<span class="linenos">229</span><span class="sd">                sql (str): the sql query, defaults to the query specific on .put()</span>
+<span class="linenos">230</span>
+<span class="linenos">231</span><span class="sd">        Returns:</span>
+<span class="linenos">232</span><span class="sd">            cursor</span>
+<span class="linenos">233</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">234</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">235</span>        <span class="n">connection_str</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sqlalchemy_connection&#39;</span><span class="p">)</span>
+<span class="linenos">236</span>        <span class="n">valid_sql</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="linenos">237</span>        <span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span> <span class="k">if</span> <span class="n">valid_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span> <span class="k">else</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sql&#39;</span><span class="p">)</span>
+<span class="linenos">238</span>        <span class="n">sqlvars</span> <span class="o">=</span> <span class="n">sqlvars</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">239</span>        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_table</span><span class="p">(</span><span class="n">table</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">240</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valid_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">):</span>
+<span class="linenos">241</span>            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select * from :sqltable&#39;</span>
+<span class="linenos">242</span>        <span class="n">chunksize</span> <span class="o">=</span> <span class="n">chunksize</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;chunksize&#39;</span><span class="p">)</span>
+<span class="linenos">243</span>        <span class="n">_default_keep</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span>
+<span class="linenos">244</span>                                <span class="s1">&#39;SQLALCHEMY_ALWAYS_CACHE&#39;</span><span class="p">,</span>
+<span class="linenos">245</span>                                <span class="n">ALWAYS_CACHE</span><span class="p">)</span>
+<span class="linenos">246</span>        <span class="n">keep</span> <span class="o">=</span> <span class="n">keep</span> <span class="k">if</span> <span class="n">keep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_default_keep</span>
+<span class="linenos">247</span>        <span class="k">if</span> <span class="n">connection_str</span><span class="p">:</span>
+<span class="linenos">248</span>            <span class="n">secrets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_secrets</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">secrets</span><span class="p">)</span>
+<span class="linenos">249</span>            <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_connection</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">connection_str</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="n">keep</span><span class="p">)</span>
+<span class="linenos">250</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">251</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no connection string&#39;</span><span class="p">)</span>
+<span class="linenos">252</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span> <span class="ow">and</span> <span class="n">valid_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">):</span>
+<span class="linenos">253</span>            <span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:sqltable&#39;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+<span class="linenos">254</span>            <span class="n">index_cols</span> <span class="o">=</span> <span class="n">_meta_to_indexcols</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span> <span class="k">if</span> <span class="n">index</span> <span class="k">else</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_col&#39;</span><span class="p">)</span>
+<span class="linenos">255</span>            <span class="n">stmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize_statement</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">sqlvars</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="n">trusted</span><span class="p">)</span>
+<span class="linenos">256</span>            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">257</span>            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">258</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">lazy</span><span class="p">:</span>
+<span class="linenos">259</span>                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;executing sql </span><span class="si">{</span><span class="n">stmt</span><span class="si">}</span><span class="s1"> with parameters </span><span class="si">{</span><span class="n">sqlvars</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos">260</span>                <span class="n">pd_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="n">index_cols</span><span class="p">,</span>
+<span class="linenos">261</span>                                    <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="n">sqlvars</span> <span class="ow">or</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+<span class="linenos">262</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="o">**</span><span class="n">pd_kwargs</span><span class="p">)</span>
+<span class="linenos">263</span>            <span class="k">else</span><span class="p">:</span>
+<span class="linenos">264</span>                <span class="c1"># lazy returns a cursor</span>
+<span class="linenos">265</span>                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;preparing a cursor for sql </span><span class="si">{</span><span class="n">sql</span><span class="si">}</span><span class="s1"> with parameters </span><span class="si">{</span><span class="n">sqlvars</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos">266</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="o">**</span><span class="n">sqlvars</span><span class="p">)</span>
+<span class="linenos">267</span>                <span class="n">keep</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">268</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">keep</span><span class="p">:</span>
+<span class="linenos">269</span>                <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="linenos">270</span>            <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">271</span>        <span class="k">return</span> <span class="n">connection</span></div>
+
+<span class="linenos">272</span>
+<div class="viewcode-block" id="SQLAlchemyBackend.put">
+<a class="viewcode-back" href="../../../reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend.put">[docs]</a>
+<span class="linenos">273</span>    <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">274</span>            <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">275</span>            <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">276</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; store sqlalchemy connection or insert data into an existing connection</span>
+<span class="linenos">277</span>
+<span class="linenos">278</span><span class="sd">        Args:</span>
+<span class="linenos">279</span><span class="sd">            obj (str|pd.DataFrame): the sqlalchemy connection string or a dataframe object</span>
+<span class="linenos">280</span><span class="sd">            name (str): the name of the object</span>
+<span class="linenos">281</span><span class="sd">            table (str): optional, if specified is stored along connection</span>
+<span class="linenos">282</span><span class="sd">            sql (str): optional, if specified is stored along connection</span>
+<span class="linenos">283</span><span class="sd">            copy (bool): optional, if True the connection is queried using sql</span>
+<span class="linenos">284</span><span class="sd">                and the resulting data is stored instead, see below</span>
+<span class="linenos">285</span><span class="sd">            attributes (dict): optional, set or update metadata.attributes</span>
+<span class="linenos">286</span>
+<span class="linenos">287</span><span class="sd">        Returns:</span>
+<span class="linenos">288</span><span class="sd">            metadata of the stored connection</span>
+<span class="linenos">289</span>
+<span class="linenos">290</span><span class="sd">        Instead of inserting the connection specify ``copy=True`` to query data</span>
+<span class="linenos">291</span><span class="sd">        and store it as a DataFrame dataset given by ``name``:</span>
+<span class="linenos">292</span>
+<span class="linenos">293</span><span class="sd">        Args:</span>
+<span class="linenos">294</span><span class="sd">            sql (str): sql to query</span>
+<span class="linenos">295</span><span class="sd">            append (bool): if True the data is appended if exists already</span>
+<span class="linenos">296</span><span class="sd">            chunksize (int): number of records to query in each chunk</span>
+<span class="linenos">297</span><span class="sd">            transform (callable): passed as DataFrame.to_sql(method=)</span>
+<span class="linenos">298</span>
+<span class="linenos">299</span><span class="sd">        Returns:</span>
+<span class="linenos">300</span><span class="sd">            metadata of the inserted dataframe</span>
+<span class="linenos">301</span>
+<span class="linenos">302</span><span class="sd">        To insert data via a previously stored connection, specify ``insert=True``:</span>
+<span class="linenos">303</span>
+<span class="linenos">304</span><span class="sd">        Args:</span>
+<span class="linenos">305</span><span class="sd">            insert (bool): specify True to insert via the connection</span>
+<span class="linenos">306</span><span class="sd">            table (str): the table name to use for inserting data</span>
+<span class="linenos">307</span><span class="sd">            append (bool): if False will replace any existing table, defaults to True</span>
+<span class="linenos">308</span><span class="sd">            index (bool): if False will not attempt to create an index in target, defaults to False</span>
+<span class="linenos">309</span><span class="sd">            chunksize (int): number of records to insert in each chunk</span>
+<span class="linenos">310</span>
+<span class="linenos">311</span><span class="sd">        Returns:</span>
+<span class="linenos">312</span><span class="sd">            metadata of the connection</span>
+<span class="linenos">313</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">314</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">315</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">insert</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_url</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="linenos">316</span>            <span class="c1"># store a connection object</span>
+<span class="linenos">317</span>            <span class="n">url</span> <span class="o">=</span> <span class="n">obj</span>
+<span class="linenos">318</span>            <span class="n">cnx_name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span> <span class="k">else</span> <span class="s1">&#39;_cnx_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">319</span>            <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_table</span><span class="p">(</span><span class="n">table</span> <span class="ow">or</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">320</span>            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_put_as_connection</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">cnx_name</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="n">sql</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span>
+<span class="linenos">321</span>                                               <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">322</span>            <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+<span class="linenos">323</span>                <span class="n">secrets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_secrets</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">secrets</span><span class="p">)</span>
+<span class="linenos">324</span>                <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_put_as_data</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">cnx_name</span><span class="p">,</span>
+<span class="linenos">325</span>                                             <span class="n">sql</span><span class="o">=</span><span class="n">sql</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span>
+<span class="linenos">326</span>                                             <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+<span class="linenos">327</span>                                             <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">,</span>
+<span class="linenos">328</span>                                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">329</span>        <span class="k">elif</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">330</span>            <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_table</span><span class="p">(</span><span class="n">table</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">331</span>            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_put_via</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span>
+<span class="linenos">332</span>                                     <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">333</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">334</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;type </span><span class="si">{}</span><span class="s1"> is not supported by </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">KIND</span><span class="p">))</span>
+<span class="linenos">335</span>        <span class="n">metadata</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span> <span class="k">if</span> <span class="n">attributes</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">336</span>        <span class="k">return</span> <span class="n">metadata</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+
+<span class="linenos">337</span>
+<span class="linenos">338</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_put_via</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">339</span>                 <span class="n">index_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">340</span>        <span class="c1"># write data back through the connection</span>
+<span class="linenos">341</span>        <span class="c1"># -- ensure we have a valid object</span>
+<span class="linenos">342</span>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;to_sql&#39;</span><span class="p">):</span>
+<span class="linenos">343</span>            <span class="n">warning</span><span class="p">(</span><span class="s1">&#39;obj.to_sql() does not exist, trying pd.DataFrame(obj)&#39;</span><span class="p">)</span>
+<span class="linenos">344</span>            <span class="n">obj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="linenos">345</span>        <span class="c1"># -- get the connection</span>
+<span class="linenos">346</span>        <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">347</span>        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">348</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="n">index</span><span class="p">:</span>
+<span class="linenos">349</span>            <span class="n">index_cols</span> <span class="o">=</span> <span class="n">_dataframe_to_indexcols</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">index_columns</span><span class="o">=</span><span class="n">index_columns</span><span class="p">)</span>
+<span class="linenos">350</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">351</span>            <span class="n">index_cols</span> <span class="o">=</span> <span class="n">index_columns</span>
+<span class="linenos">352</span>        <span class="n">metadata</span><span class="o">.</span><span class="n">kind_meta</span><span class="p">[</span><span class="s1">&#39;index_columns&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index_cols</span>
+<span class="linenos">353</span>        <span class="n">exists_action</span> <span class="o">=</span> <span class="s1">&#39;append&#39;</span> <span class="k">if</span> <span class="n">append</span> <span class="k">else</span> <span class="s1">&#39;replace&#39;</span>
+<span class="linenos">354</span>        <span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+<span class="linenos">355</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_chunked_to_sql</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+<span class="linenos">356</span>                             <span class="n">if_exists</span><span class="o">=</span><span class="n">exists_action</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="n">index_cols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">357</span>        <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="linenos">358</span>        <span class="k">return</span> <span class="n">metadata</span>
+<span class="linenos">359</span>
+<span class="linenos">360</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_put_as_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">cnx_name</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="linenos">361</span>                     <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">362</span>        <span class="c1"># use the url to query the connection and store resulting data instead</span>
+<span class="linenos">363</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">sql</span><span class="p">:</span>
+<span class="linenos">364</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a valid SQL statement is required with copy=True&#39;</span><span class="p">)</span>
+<span class="linenos">365</span>        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_from_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span>
+<span class="linenos">366</span>                                      <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+<span class="linenos">367</span>                                      <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">368</span>        <span class="n">metadata</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;created_from&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnx_name</span>
+<span class="linenos">369</span>        <span class="k">return</span> <span class="n">metadata</span>
+<span class="linenos">370</span>
+<span class="linenos">371</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_put_as_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">372</span>                           <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">373</span>        <span class="n">kind_meta</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">374</span>            <span class="s1">&#39;sqlalchemy_connection&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">url</span><span class="p">),</span>
+<span class="linenos">375</span>            <span class="s1">&#39;sql&#39;</span><span class="p">:</span> <span class="n">sql</span><span class="p">,</span>
+<span class="linenos">376</span>            <span class="s1">&#39;chunksize&#39;</span><span class="p">:</span> <span class="n">chunksize</span><span class="p">,</span>
+<span class="linenos">377</span>            <span class="s1">&#39;table&#39;</span><span class="p">:</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="n">table</span><span class="p">,</span>
+<span class="linenos">378</span>            <span class="s1">&#39;index_columns&#39;</span><span class="p">:</span> <span class="n">index_columns</span><span class="p">,</span>
+<span class="linenos">379</span>            <span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">,</span>
+<span class="linenos">380</span>        <span class="p">}</span>
+<span class="linenos">381</span>        <span class="k">if</span> <span class="n">secrets</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="p">(</span><span class="n">secrets</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">url</span> <span class="ow">and</span> <span class="s1">&#39;}&#39;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">):</span>
+<span class="linenos">382</span>            <span class="n">kind_meta</span><span class="p">[</span><span class="s1">&#39;secrets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">383</span>                <span class="s1">&#39;dsname&#39;</span><span class="p">:</span> <span class="s1">&#39;.omega/vault&#39;</span><span class="p">,</span>
+<span class="linenos">384</span>                <span class="s1">&#39;query&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">385</span>                    <span class="s1">&#39;data_userid&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{user}</span><span class="s1">&#39;</span>
+<span class="linenos">386</span>                <span class="p">}</span>
+<span class="linenos">387</span>            <span class="p">}</span>
+<span class="linenos">388</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">389</span>            <span class="n">kind_meta</span><span class="p">[</span><span class="s1">&#39;secrets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secrets</span>
+<span class="linenos">390</span>        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">391</span>        <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">392</span>            <span class="n">metadata</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kind_meta</span><span class="p">)</span>
+<span class="linenos">393</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">394</span>            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">KIND</span><span class="p">,</span>
+<span class="linenos">395</span>                                                     <span class="n">kind_meta</span><span class="o">=</span><span class="n">kind_meta</span><span class="p">,</span>
+<span class="linenos">396</span>                                                     <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">)</span>
+<span class="linenos">397</span>        <span class="k">return</span> <span class="n">metadata</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">398</span>
+<span class="linenos">399</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">connection_str</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">400</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+<span class="linenos">401</span>        <span class="c1"># passwords should be encoded</span>
+<span class="linenos">402</span>        <span class="c1"># https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls</span>
+<span class="linenos">403</span>        <span class="n">encoded</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">404</span>            <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span>
+<span class="linenos">405</span>                <span class="k">else</span> <span class="n">quote_plus</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">))</span>
+<span class="linenos">406</span>        <span class="p">}</span>
+<span class="linenos">407</span>        <span class="n">connection</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">408</span>        <span class="n">cache_key</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">409</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">410</span>            <span class="c1"># SECDEV: the cache key is a secret in order to avoid privilege escalation</span>
+<span class="linenos">411</span>            <span class="c1"># -- if it is not secret, user A could create the connection (=&gt; cache)</span>
+<span class="linenos">412</span>            <span class="c1"># -- user B could reuse the connection by retrieving the dataset without secrets</span>
+<span class="linenos">413</span>            <span class="c1"># -- this way the user needs to have the same secrets in order to reuse the connection</span>
+<span class="linenos">414</span>            <span class="n">enc_secrets</span> <span class="o">=</span> <span class="n">encoded</span><span class="p">(</span><span class="n">secrets</span> <span class="ow">or</span> <span class="p">{})</span>
+<span class="linenos">415</span>            <span class="n">connection_str</span> <span class="o">=</span> <span class="n">connection_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">enc_secrets</span><span class="p">)</span>
+<span class="linenos">416</span>            <span class="n">cache_key</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">connection_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+<span class="linenos">417</span>            <span class="n">engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__CNX_CACHE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cache_key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">connection_str</span><span class="p">,</span> <span class="o">**</span><span class="n">ENGINE_KWARGS</span><span class="p">)</span>
+<span class="linenos">418</span>            <span class="n">connection</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="linenos">419</span>        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">420</span>            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">{e}</span><span class="s1">, ensure secrets are specified for connection &#39;</span>
+<span class="linenos">421</span>                   <span class="s1">&#39;&gt;</span><span class="si">{connection_str}</span><span class="s1">&lt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+<span class="linenos">422</span>            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="linenos">423</span>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">424</span>            <span class="k">if</span> <span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">425</span>                <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="linenos">426</span>                <span class="bp">self</span><span class="o">.</span><span class="n">__CNX_CACHE</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">cache_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos">427</span>            <span class="k">raise</span>
+<span class="linenos">428</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">429</span>            <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
+<span class="linenos">430</span>                <span class="bp">self</span><span class="o">.</span><span class="n">__CNX_CACHE</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">engine</span>
+<span class="linenos">431</span>            <span class="k">else</span><span class="p">:</span>
+<span class="linenos">432</span>                <span class="bp">self</span><span class="o">.</span><span class="n">__CNX_CACHE</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">cache_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos">433</span>        <span class="k">return</span> <span class="n">connection</span>
+<span class="linenos">434</span>
+<span class="linenos">435</span>    <span class="k">def</span><span class="w"> </span><span class="nf">copy_from_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">connstr</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+<span class="linenos">436</span>                      <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">437</span>        <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_connection</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">connstr</span><span class="p">,</span> <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">)</span>
+<span class="linenos">438</span>        <span class="n">chunksize</span> <span class="o">=</span> <span class="n">chunksize</span> <span class="ow">or</span> <span class="mi">10000</span>  <span class="c1"># avoid None</span>
+<span class="linenos">439</span>        <span class="n">pditer</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">440</span>        <span class="k">with</span> <span class="n">tqdm_if_interactive</span><span class="p">()</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;rows&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+<span class="linenos">441</span>            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunked_insert</span><span class="p">(</span><span class="n">pditer</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">,</span>
+<span class="linenos">442</span>                                        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span><span class="p">)</span>
+<span class="linenos">443</span>        <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="linenos">444</span>        <span class="k">return</span> <span class="n">meta</span>
+<span class="linenos">445</span>
+<span class="linenos">446</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_chunked_to_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">447</span>        <span class="c1"># insert large df in chunks and with a progress bar</span>
+<span class="linenos">448</span>        <span class="c1"># from https://stackoverflow.com/a/39495229</span>
+<span class="linenos">449</span>        <span class="n">chunksize</span> <span class="o">=</span> <span class="n">chunksize</span> <span class="k">if</span> <span class="n">chunksize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">10000</span>
+<span class="linenos">450</span>
+<span class="linenos">451</span>        <span class="k">def</span><span class="w"> </span><span class="nf">chunker</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+<span class="linenos">452</span>            <span class="k">return</span> <span class="p">(</span><span class="n">seq</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+<span class="linenos">453</span>
+<span class="linenos">454</span>        <span class="k">def</span><span class="w"> </span><span class="nf">to_sql</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">455</span>            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cdf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunker</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">chunksize</span><span class="p">)):</span>
+<span class="linenos">456</span>                <span class="n">exists_action</span> <span class="o">=</span> <span class="n">if_exists</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;append&quot;</span>
+<span class="linenos">457</span>                <span class="n">cdf</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">con</span><span class="o">=</span><span class="n">connection</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="n">exists_action</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">458</span>                <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+<span class="linenos">459</span>                    <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cdf</span><span class="p">))</span>
+<span class="linenos">460</span>                <span class="k">else</span><span class="p">:</span>
+<span class="linenos">461</span>                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;writing chunk </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="linenos">462</span>
+<span class="linenos">463</span>        <span class="k">with</span> <span class="n">tqdm_if_interactive</span><span class="p">()</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;rows&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+<span class="linenos">464</span>            <span class="n">to_sql</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span><span class="p">)</span>
+<span class="linenos">465</span>
+<span class="linenos">466</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_chunked_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pditer</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">467</span>        <span class="c1"># insert into om dataset</span>
+<span class="linenos">468</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pditer</span><span class="p">):</span>
+<span class="linenos">469</span>            <span class="k">if</span> <span class="n">pbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">470</span>                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+<span class="linenos">471</span>            <span class="n">should_append</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">append</span>
+<span class="linenos">472</span>            <span class="k">if</span> <span class="n">transform</span><span class="p">:</span>
+<span class="linenos">473</span>                <span class="n">df</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="linenos">474</span>            <span class="k">try</span><span class="p">:</span>
+<span class="linenos">475</span>                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">should_append</span><span class="p">)</span>
+<span class="linenos">476</span>            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">477</span>                <span class="n">rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<span class="linenos">478</span>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{e}</span><span class="s2">: </span><span class="si">{rows}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+<span class="linenos">479</span>        <span class="k">return</span> <span class="n">meta</span>
+<span class="linenos">480</span>
+<span class="linenos">481</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_is_valid_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+<span class="linenos">482</span>        <span class="c1"># enable subclass override</span>
+<span class="linenos">483</span>        <span class="k">return</span> <span class="n">_is_valid_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="linenos">484</span>
+<span class="linenos">485</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_supports_via</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_store</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="linenos">486</span>        <span class="n">obj_ok</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">dict</span><span class="p">))</span>
+<span class="linenos">487</span>        <span class="k">if</span> <span class="n">obj_ok</span> <span class="ow">and</span> <span class="n">data_store</span><span class="p">:</span>
+<span class="linenos">488</span>            <span class="n">meta</span> <span class="o">=</span> <span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">489</span>            <span class="n">same_kind</span> <span class="o">=</span> <span class="n">meta</span> <span class="ow">and</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">KIND</span>
+<span class="linenos">490</span>            <span class="k">return</span> <span class="n">obj_ok</span> <span class="ow">and</span> <span class="n">same_kind</span>
+<span class="linenos">491</span>        <span class="k">return</span> <span class="kc">False</span>
+<span class="linenos">492</span>
+<span class="linenos">493</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">secrets</span><span class="p">):</span>
+<span class="linenos">494</span>        <span class="n">secrets_specs</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;secrets&#39;</span><span class="p">)</span>
+<span class="linenos">495</span>        <span class="n">values</span> <span class="o">=</span> <span class="p">({</span><span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">))}</span>
+<span class="linenos">496</span>                  <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_ALLOW_ENV_CONFIG</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">())</span>
+<span class="linenos">497</span>        <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+<span class="linenos">498</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">secrets</span> <span class="ow">and</span> <span class="n">secrets_specs</span><span class="p">:</span>
+<span class="linenos">499</span>            <span class="n">dsname</span> <span class="o">=</span> <span class="n">secrets_specs</span><span class="p">[</span><span class="s1">&#39;dsname&#39;</span><span class="p">]</span>
+<span class="linenos">500</span>            <span class="n">query</span> <span class="o">=</span> <span class="n">secrets_specs</span><span class="p">[</span><span class="s1">&#39;query&#39;</span><span class="p">]</span>
+<span class="linenos">501</span>            <span class="c1"># -- format query values</span>
+<span class="linenos">502</span>            <span class="n">query</span> <span class="o">=</span> <span class="n">_format_dict</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">),</span> <span class="o">**</span><span class="n">values</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_getuser</span><span class="p">())</span>
+<span class="linenos">503</span>            <span class="c1"># -- run query</span>
+<span class="linenos">504</span>            <span class="n">secrets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dsname</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+<span class="linenos">505</span>            <span class="n">secrets</span> <span class="o">=</span> <span class="n">secrets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">secrets</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">secrets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">{}</span>
+<span class="linenos">506</span>            <span class="n">secrets</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+<span class="linenos">507</span>        <span class="c1"># -- format secrets</span>
+<span class="linenos">508</span>        <span class="k">if</span> <span class="n">secrets</span><span class="p">:</span>
+<span class="linenos">509</span>            <span class="n">secrets</span> <span class="o">=</span> <span class="n">_format_dict</span><span class="p">(</span><span class="n">secrets</span><span class="p">,</span> <span class="o">**</span><span class="n">values</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_getuser</span><span class="p">())</span>
+<span class="linenos">510</span>        <span class="k">return</span> <span class="n">secrets</span>
+<span class="linenos">511</span>
+<span class="linenos">512</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_getuser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">513</span>        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;OMEGA_USERNAME&#39;</span><span class="p">,</span> <span class="n">getuser</span><span class="p">())</span>
+<span class="linenos">514</span>
+<span class="linenos">515</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_default_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos">516</span>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">517</span>            <span class="k">return</span> <span class="n">name</span>
+<span class="linenos">518</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">):</span>
+<span class="linenos">519</span>            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">bucket</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">520</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">521</span>            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="linenos">522</span>        <span class="k">return</span> <span class="n">name</span>
+<span class="linenos">523</span>
+<span class="linenos">524</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">sqlvars</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">525</span>        <span class="c1"># sanitize sql:string statement in two steps</span>
+<span class="linenos">526</span>        <span class="c1"># -- step 1: replace all {} variables by :notation</span>
+<span class="linenos">527</span>        <span class="c1"># -- step 2: replace all remaining {} variables from sqlvars</span>
+<span class="linenos">528</span>        <span class="c1">#    and issue a warning. step 2 is considered unsafe if</span>
+<span class="linenos">529</span>        <span class="c1">#    the sqlvars source cannot be trusted</span>
+<span class="linenos">530</span>        <span class="c1"># -- step 3: prepare a SQL statement with bound variables</span>
+<span class="linenos">531</span>        <span class="c1"># see https://realpython.com/prevent-python-sql-injection/#using-query-parameters-in-sql</span>
+<span class="linenos">532</span>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">533</span>            <span class="k">return</span> <span class="n">sql</span>
+<span class="linenos">534</span>        <span class="c1"># replace all {...} variables with bound parameters</span>
+<span class="linenos">535</span>        <span class="c1">#    sql = &quot;select * from foo where user={username}&quot;</span>
+<span class="linenos">536</span>        <span class="c1">#       =&gt; &quot;select * from foo where user=:username&quot;</span>
+<span class="linenos">537</span>        <span class="n">placeholders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+<span class="linenos">538</span>        <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">placeholders</span> <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="linenos">539</span>        <span class="n">safe_replacements</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;:</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">}</span>
+<span class="linenos">540</span>        <span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">safe_replacements</span><span class="p">)</span>
+<span class="linenos">541</span>        <span class="c1"># build parameter list for tuples and lists</span>
+<span class="linenos">542</span>        <span class="c1"># -- sqlalchemy+pyodbc do not support lists of values</span>
+<span class="linenos">543</span>        <span class="c1"># -- list of values must be passed as single parameters</span>
+<span class="linenos">544</span>        <span class="c1"># -- e.g. sql=select * from x in :list</span>
+<span class="linenos">545</span>        <span class="c1">#    =&gt;       select * from x in (:x_1, :x_2, :x_3, ...)</span>
+<span class="linenos">546</span>        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+<span class="linenos">547</span>            <span class="c1"># note we are iterating vars, not sqlvars</span>
+<span class="linenos">548</span>            <span class="c1"># -- sqlvars is not used in constructing sql text</span>
+<span class="linenos">549</span>            <span class="n">v</span> <span class="o">=</span> <span class="n">sqlvars</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+<span class="linenos">550</span>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+<span class="linenos">551</span>                <span class="n">bind_vars</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">lv</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">)}</span>
+<span class="linenos">552</span>                <span class="n">placeholders</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;:</span><span class="si">{</span><span class="n">bk</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">bk</span> <span class="ow">in</span> <span class="n">bind_vars</span><span class="p">)</span>
+<span class="linenos">553</span>                <span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;:</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">placeholders</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="linenos">554</span>                <span class="n">sqlvars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bind_vars</span><span class="p">)</span>
+<span class="linenos">555</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">556</span>            <span class="c1"># format remaining {{}} for selection</span>
+<span class="linenos">557</span>            <span class="c1">#    sql = &quot;select {{cols}} from foo where user=:username</span>
+<span class="linenos">558</span>            <span class="c1">#    =&gt;    &quot;select a, b from foo where user=:username</span>
+<span class="linenos">559</span>            <span class="n">placeholders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">sql</span><span class="p">))</span>
+<span class="linenos">560</span>            <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">placeholders</span> <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="linenos">561</span>            <span class="k">if</span> <span class="nb">vars</span> <span class="ow">and</span> <span class="n">trusted</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">sqlvars</span><span class="p">):</span>
+<span class="linenos">562</span>                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Statement &gt;</span><span class="si">{</span><span class="n">sql</span><span class="si">}</span><span class="s1">&lt; contains unsafe variables </span><span class="si">{</span><span class="nb">vars</span><span class="si">}</span><span class="s1">. Use :notation or sanitize input.&#39;</span><span class="p">)</span>
+<span class="linenos">563</span>            <span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">sqlvars</span><span class="p">,</span> <span class="o">**</span><span class="n">safe_replacements</span><span class="p">})</span>
+<span class="linenos">564</span>        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">565</span>            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{e}</span><span class="s1">, specify sqlvars= to build query &gt;</span><span class="si">{sql}</span><span class="s1">&lt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+<span class="linenos">566</span>        <span class="c1"># prepare sql statement with bound variables</span>
+<span class="linenos">567</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">568</span>            <span class="n">stmt</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+<span class="linenos">569</span>        <span class="k">except</span> <span class="n">StatementError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="linenos">570</span>            <span class="k">raise</span>
+<span class="linenos">571</span>        <span class="k">return</span> <span class="n">stmt</span></div>
+
+<span class="linenos">572</span>
+<span class="linenos">573</span>
+<span class="linenos">574</span><span class="k">def</span><span class="w"> </span><span class="nf">_is_valid_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<span class="linenos">575</span>    <span class="c1"># check if we have a valid url with a registered backend</span>
+<span class="linenos">576</span>    <span class="kn">import</span><span class="w"> </span><span class="nn">sqlalchemy</span>
+<span class="linenos">577</span>
+<span class="linenos">578</span>    <span class="k">try</span><span class="p">:</span>
+<span class="linenos">579</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">make_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="linenos">580</span>        <span class="n">drivername</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">drivername</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># e.g. mssql+pyodbc =&gt; mssql</span>
+<span class="linenos">581</span>        <span class="n">valid</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">drivername</span> <span class="ow">in</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">dialects</span><span class="o">.</span><span class="n">__all__</span>
+<span class="linenos">582</span>        <span class="n">valid</span> <span class="o">|=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">dialects</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">drivername</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="linenos">583</span>    <span class="k">except</span><span class="p">:</span>
+<span class="linenos">584</span>        <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">585</span>    <span class="k">return</span> <span class="n">valid</span>
+<span class="linenos">586</span>
+<span class="linenos">587</span>
+<span class="linenos">588</span><span class="k">def</span><span class="w"> </span><span class="nf">_dataframe_to_indexcols</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">index_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">589</span>    <span class="c1"># from a dataframe get index column names</span>
+<span class="linenos">590</span>    <span class="c1"># works like pd.DataFrame.to_sql except for creating default index_i cols</span>
+<span class="linenos">591</span>    <span class="c1"># for any missing (None) index labels in a MultiIndex.</span>
+<span class="linenos">592</span>    <span class="n">index_cols</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_columns&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">index_columns</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+<span class="linenos">593</span>    <span class="n">multi</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span>
+<span class="linenos">594</span>    <span class="k">if</span> <span class="n">index_cols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">595</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">index_cols</span><span class="p">):</span>
+<span class="linenos">596</span>            <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">597</span>                <span class="n">index_cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">multi</span> <span class="k">else</span> <span class="s1">&#39;index_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="linenos">598</span>    <span class="k">return</span> <span class="n">index_cols</span>
+<span class="linenos">599</span>
+<span class="linenos">600</span>
+<span class="linenos">601</span><span class="k">def</span><span class="w"> </span><span class="nf">_meta_to_indexcols</span><span class="p">(</span><span class="n">meta</span><span class="p">):</span>
+<span class="linenos">602</span>    <span class="n">index_cols</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_columns&#39;</span><span class="p">)</span>
+<span class="linenos">603</span>    <span class="n">multi</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_cols</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_cols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+<span class="linenos">604</span>    <span class="k">if</span> <span class="n">index_cols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">605</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">index_cols</span><span class="p">):</span>
+<span class="linenos">606</span>            <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">607</span>                <span class="n">index_cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">multi</span> <span class="k">else</span> <span class="s1">&#39;index_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="linenos">608</span>    <span class="k">return</span> <span class="n">index_cols</span>
+<span class="linenos">609</span>
+<span class="linenos">610</span>
+<span class="linenos">611</span><span class="k">def</span><span class="w"> </span><span class="nf">_format_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">612</span>    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="linenos">613</span>        <span class="k">if</span> <span class="n">replace</span><span class="p">:</span>
+<span class="linenos">614</span>            <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+<span class="linenos">615</span>            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">*</span><span class="n">replace</span><span class="p">)</span> <span class="k">if</span> <span class="n">replace</span> <span class="k">else</span> <span class="n">k</span>
+<span class="linenos">616</span>        <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="n">KeepMissing</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span>
+<span class="linenos">617</span>    <span class="k">return</span> <span class="n">d</span>
+<span class="linenos">618</span>
+<span class="linenos">619</span>
+<span class="linenos">620</span><span class="k">def</span><span class="w"> </span><span class="nf">load_sql</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">SQLAlchemyBackend</span><span class="o">.</span><span class="n">KIND</span><span class="p">):</span>
+<span class="linenos">621</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">622</span><span class="sd">    load ipython sql magic, loading all sql alchemy connections</span>
+<span class="linenos">623</span>
+<span class="linenos">624</span><span class="sd">    Usage:</span>
+<span class="linenos">625</span><span class="sd">        !pip install ipython-sql</span>
+<span class="linenos">626</span>
+<span class="linenos">627</span><span class="sd">        # prepare some connection, insert some data</span>
+<span class="linenos">628</span><span class="sd">        df = pd.DataFrame(...)</span>
+<span class="linenos">629</span><span class="sd">        om.datasets.put(&#39;sqlite:///test.db&#39;, &#39;testdb&#39;)</span>
+<span class="linenos">630</span><span class="sd">        om.datasets.put(df, &#39;testdb&#39;, table=&#39;foobar&#39;, insert=True)</span>
+<span class="linenos">631</span>
+<span class="linenos">632</span><span class="sd">        from omegaml.backends.sqlalchemy import load_sql</span>
+<span class="linenos">633</span><span class="sd">        load_sql()</span>
+<span class="linenos">634</span>
+<span class="linenos">635</span><span class="sd">        # list registered connections</span>
+<span class="linenos">636</span><span class="sd">        %sql</span>
+<span class="linenos">637</span><span class="sd">            omsql://testdb</span>
+<span class="linenos">638</span>
+<span class="linenos">639</span><span class="sd">        # run queries</span>
+<span class="linenos">640</span><span class="sd">        %sql omsql://testdb select * from foobar</span>
+<span class="linenos">641</span>
+<span class="linenos">642</span><span class="sd">    See Also:</span>
+<span class="linenos">643</span><span class="sd">        https://pypi.org/project/ipython-sql/</span>
+<span class="linenos">644</span>
+<span class="linenos">645</span><span class="sd">    Args:</span>
+<span class="linenos">646</span><span class="sd">        om (Omega): optional, specify omega instance, defaults to om.setup()</span>
+<span class="linenos">647</span><span class="sd">        kind (str): the backend&#39;s kind, used to find connections to register</span>
+<span class="linenos">648</span><span class="sd">           with the sql magic</span>
+<span class="linenos">649</span>
+<span class="linenos">650</span><span class="sd">    Returns:</span>
+<span class="linenos">651</span><span class="sd">        None</span>
+<span class="linenos">652</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">653</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">MagicMock</span>
+<span class="linenos">654</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
+<span class="linenos">655</span>    <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+<span class="linenos">656</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">sql.connection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Connection</span> <span class="c1"># noqa</span>
+<span class="linenos">657</span>
+<span class="linenos">658</span>    <span class="k">class</span><span class="w"> </span><span class="nc">ConnectionShim</span><span class="p">:</span>
+<span class="linenos">659</span>        <span class="c1"># this is required to trick sql magic into accepting existing connection objects</span>
+<span class="linenos">660</span>        <span class="c1"># (by default sql magic expects connection strings, not connection objects)</span>
+<span class="linenos">661</span>        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+<span class="linenos">662</span>            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">conn</span>
+<span class="linenos">663</span>            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+<span class="linenos">664</span>            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bind</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+<span class="linenos">665</span>            <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="s1">&#39;dialect&#39;</span><span class="p">,</span> <span class="s1">&#39;omsql&#39;</span><span class="p">)</span>
+<span class="linenos">666</span>
+<span class="linenos">667</span>    <span class="c1"># load sql magic</span>
+<span class="linenos">668</span>    <span class="n">ipython</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span>
+<span class="linenos">669</span>    <span class="n">ipython</span><span class="o">.</span><span class="n">magic</span><span class="p">(</span><span class="s1">&#39;load_ext sql&#39;</span><span class="p">)</span>
+<span class="linenos">670</span>    <span class="c1"># load registered sqlalchemy datasets</span>
+<span class="linenos">671</span>    <span class="n">om</span> <span class="o">=</span> <span class="n">om</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+<span class="linenos">672</span>    <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="linenos">673</span>        <span class="n">cnxstr</span> <span class="o">=</span> <span class="s1">&#39;omsql://</span><span class="si">{ds.name}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
+<span class="linenos">674</span>        <span class="n">conn</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">675</span>        <span class="n">Connection</span><span class="o">.</span><span class="n">connections</span><span class="p">[</span><span class="n">cnxstr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ConnectionShim</span><span class="p">(</span><span class="n">cnxstr</span><span class="p">,</span> <span class="n">conn</span><span class="p">)</span>
+<span class="linenos">676</span>    <span class="n">ipython</span><span class="o">.</span><span class="n">magic</span><span class="p">(</span><span class="s1">&#39;sql&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.1
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="sqlalchemy.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
