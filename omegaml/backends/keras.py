@@ -29,10 +29,10 @@ class KerasBackend(BaseModelBackend):
 
     def _extract_model(self, infile, key, tmpfn):
         # override to implement model loading
-        from keras.engine.saving import load_model
+        import tensorflow as tf
         with open(tmpfn, 'wb') as pkgf:
             pkgf.write(infile.read())
-        return load_model(tmpfn)
+        return tf.keras.models.load_model(tmpfn)
 
     def fit(self, modelname, Xname, Yname=None, validation_data=None,
             pure_python=True, **kwargs):
@@ -76,8 +76,8 @@ class KerasBackend(BaseModelBackend):
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def score(
-          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
+            **kwargs):
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
