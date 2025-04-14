@@ -1,5 +1,5 @@
-Administration
-==============
+Deploying omega-ml
+==================
 
 .. toctree::
    :maxdepth: 2

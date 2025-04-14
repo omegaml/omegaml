@@ -47,9 +47,11 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">om.datasets</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#omegaml.datasets"><code class="docutils literal notranslate"><span class="pre">datasets</span></code></a></li>
@@ -59,6 +61,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.virtualobj.VirtualObjectBackend"><code class="docutils literal notranslate"><span class="pre">VirtualObjectBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rawdict.PandasRawDictBackend"><code class="docutils literal notranslate"><span class="pre">PandasRawDictBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rawfiles.PythonRawFileBackend"><code class="docutils literal notranslate"><span class="pre">PythonRawFileBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.genai.mongovector.MongoDBVectorStore"><code class="docutils literal notranslate"><span class="pre">MongoDBVectorStore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.genai.pgvector.PGVectorBackend"><code class="docutils literal notranslate"><span class="pre">PGVectorBackend</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#mixins">Mixins</a><ul>
@@ -79,9 +83,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
 </ul>
 
@@ -163,10 +165,12 @@
 <p>Backends:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#omegaml.backends.npndarray.NumpyNDArrayBackend" title="omegaml.backends.npndarray.NumpyNDArrayBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.npndarray.NumpyNDArrayBackend</span></code></a>,</p></li>
-<li><p><a class="reference internal" href="#omegaml.backends.virtualobj.VirtualObjectBackend" title="omegaml.backends.virtualobj.VirtualObjectBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.virtualobj.VirtualObjectBackend</span></code></a>,</p></li>
-<li><p><a class="reference internal" href="#omegaml.backends.rawdict.PandasRawDictBackend" title="omegaml.backends.rawdict.PandasRawDictBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rawdict.PandasRawDictBackend</span></code></a>,</p></li>
-<li><p><a class="reference internal" href="#omegaml.backends.rawfiles.PythonRawFileBackend" title="omegaml.backends.rawfiles.PythonRawFileBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rawfiles.PythonRawFileBackend</span></code></a>,</p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.npndarray.NumpyNDArrayBackend" title="omegaml.backends.npndarray.NumpyNDArrayBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.npndarray.NumpyNDArrayBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.virtualobj.VirtualObjectBackend" title="omegaml.backends.virtualobj.VirtualObjectBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.virtualobj.VirtualObjectBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.rawdict.PandasRawDictBackend" title="omegaml.backends.rawdict.PandasRawDictBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rawdict.PandasRawDictBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.rawfiles.PythonRawFileBackend" title="omegaml.backends.rawfiles.PythonRawFileBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rawfiles.PythonRawFileBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.genai.mongovector.MongoDBVectorStore" title="omegaml.backends.genai.mongovector.MongoDBVectorStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.mongovector.MongoDBVectorStore</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.genai.pgvector.PGVectorBackend" title="omegaml.backends.genai.pgvector.PGVectorBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.pgvector.PGVectorBackend</span></code></a></p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -727,6 +731,29 @@ the path to the local file (local is given)</p>
 <dd><p>test if this backend supports this obj</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.genai.mongovector.MongoDBVectorStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.genai.mongovector.</span></span><span class="sig-name descname"><span class="pre">MongoDBVectorStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/mongovector.html#MongoDBVectorStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.mongovector.MongoDBVectorStore" title="Link to this definition">¶</a></dt>
+<dd><p>MongoDB vector store for storing documents and their embeddings.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.genai.mongovector.MongoDBVectorStore.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'vector.conx'</span></em><a class="headerlink" href="#omegaml.backends.genai.mongovector.MongoDBVectorStore.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.mongovector.MongoDBVectorStore.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">insert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/mongovector.html#MongoDBVectorStore.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.mongovector.MongoDBVectorStore.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.genai.pgvector.PGVectorBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.genai.pgvector.</span></span><span class="sig-name descname"><span class="pre">PGVectorBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/pgvector.html#PGVectorBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.pgvector.PGVectorBackend" title="Link to this definition">¶</a></dt>
+<dd><p>docker run pgvector/pgvector:pg16</p>
 </dd></dl>
 
 </section>

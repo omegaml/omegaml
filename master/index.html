@@ -46,12 +46,10 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changes/index.html">Changes</a></li>
 </ul>
 
@@ -91,8 +89,27 @@
   <section id="mlops-for-humans">
 <h1>MLOps for humans<a class="headerlink" href="#mlops-for-humans" title="Link to this heading">¶</a></h1>
 <p>omega-ml is the innovative Python-native MLOps platform that provides
-a scalable development and runtime environment for your Data Products. Works
-from laptop to cloud.</p>
+a scalable development and runtime environment for your AI systems. Works
+from laptop to cloud or on-premises.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Release 0.16.5 introduces Generative AI as a first-class citizen and a new structure in this
+documentation to reflect this.</p>
+<details class="summary-read-more">
+<summary>Read more</summary><p>While it has always been possible to use generative AI models with omega-ml, this release introduces a
+new set of components and APIs to match new use cases. This includes explicit support for RAG pipelines,
+a completion API that works with 3rd-party chat clients, and the ability to stream responses in the REST API.</p>
+<p>There are now dedicated sections for <a class="reference internal" href="guide/classicml/index.html"><span class="doc">Classic ML</span></a> and <a class="reference internal" href="guide/genai/index.html"><span class="doc">Generative AI</span></a>,
+which cover the respective workflows and capabilities of omega-ml. The common aspects
+are covered in <a class="reference internal" href="guide/pipelines/index.html"><span class="doc">Task Automation</span></a>, <a class="reference internal" href="guide/clusters/index.html"><span class="doc">Deployment and Operations</span></a> and <a class="reference internal" href="guide/cli/index.html"><span class="doc">Command-line interface</span></a>.
+The <a class="reference internal" href="guide/advanced/index.html"><span class="doc">Advanced features</span></a> section covers advanced topics
+that are also relevant to both classic ML and generative AI workflows.</p>
+<p>The top-level sections of the documentation are now better organized into <a class="reference internal" href="guide/index.html"><span class="doc">User Guide</span></a>,
+<a class="reference internal" href="admin/index.html"><span class="doc">Deploying omega-ml</span></a>, <a class="reference internal" href="devguide/index.html"><span class="doc">Extending omega-ml</span></a>, <a class="reference internal" href="reference/index.html"><span class="doc">Reference</span></a>. Overall this structure
+allows for a more focused and organized documentation experience, making it easier
+to find the information you need for your specific use case. The actual content for classic ML
+and the other sections did not change.</p>
+</details></div>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart/index.html">Introduction</a><ul>
@@ -102,24 +119,21 @@ from laptop to cloud.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="guide/index.html">User Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guide/intro/index.html">Getting started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/datasets/index.html">Working with datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/models/index.html">Working with models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/jobs/index.html">Working with notebooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/scripts/index.html">Working with scripts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/streams/index.html">Working with streams</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide/genai/index.html">Generative AI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide/classicml/index.html">Classic ML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide/pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide/clusters/index.html">Deployment and Operations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guide/cli/index.html">Command-line interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guide/advanced/index.html">Advanced features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide/integration/index.html">Integration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="admin/index.html">Administration</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="admin/index.html">Deploying omega-ml</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="admin/kickstart.html">Getting Started with omega-ml</a></li>
 <li class="toctree-l2"><a class="reference internal" href="admin/configuration.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="admin/design.html">Runtime Architecture</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="devguide/index.html">Development Guide</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="devguide/index.html">Extending omega-ml</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="devguide/architecture.html">Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devguide/custom.html">Custom development</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devguide/metadata.html">Metadata</a></li>
@@ -128,6 +142,8 @@ from laptop to cloud.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/core.html">core models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/datasets.html">om.datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/models.html">om.models</a></li>
@@ -138,15 +154,11 @@ from laptop to cloud.</p>
 <li class="toctree-l2"><a class="reference internal" href="reference/tracking.html">omegaml.runtime.experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="screenshots.html#dashboard">Dashboard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="screenshots.html#notebook-online-editor-report-publishing">Notebook Online Editor &amp; Report publishing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="screenshots.html#integrated-online-help">Integrated Online Help</a></li>
-<li class="toctree-l2"><a class="reference internal" href="screenshots.html#rest-api-documentation">REST API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="support.html#community-edition">Community Edition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="support.html#commercial-edition-and-support">Commercial Edition and Support</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="moreinfo.html">More information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changes/index.html">Changes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="changes/v0.16.4.html">Release notes release/0.16.4</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes/v0.16.3.html">Release notes release/0.16.3</a></li>

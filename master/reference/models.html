@@ -47,9 +47,11 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">om.models</a><ul>
@@ -62,6 +64,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowSavedModelBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="docutils literal notranslate"><span class="pre">TFEstimatorModelBackend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelBackend"><code class="docutils literal notranslate"><span class="pre">RModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.genai.textmodel.TextModelBackend"><code class="docutils literal notranslate"><span class="pre">TextModelBackend</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#mixins">Mixins</a><ul>
@@ -83,9 +86,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
 </ul>
 
@@ -188,6 +189,11 @@
 <p>Backends for <code class="docutils literal notranslate"><span class="pre">R</span></code> (loaded if installed)</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelBackend" title="omegaml.backends.rsystem.rmodels.RModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rsystem.rmodels.RModelBackend</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">openai</span></code> (loaded if installed)</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.GenAIBaseBackend</span></code></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.genai.textmodel.TextModelBackend" title="omegaml.backends.genai.textmodel.TextModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.textmodel.TextModelBackend</span></code></a></p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -535,6 +541,76 @@ a dataframe. Defaults to True to support any client.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelBackend.supports">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.genai.textmodel.</span></span><span class="sig-name descname"><span class="pre">TextModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend" title="Link to this definition">¶</a></dt>
+<dd><p>Backend for OpenAI models</p>
+<p>Enables creating an OpenAI model via a connection string, e.g.
+om.models.put(‘openai://&lt;base_url&gt;;model=&lt;model&gt;’, ‘mymodel’). The connection
+string must be in the format openai://&lt;base_url&gt;;model=&lt;model&gt; where &lt;base_url&gt;
+is the base URL of the OpenAI-compatible model server’s REST API, and &lt;model&gt;
+is the model name as known to the model server. The connection string may also
+include an apikey, e.g. ‘openai://&lt;apikey&gt;&#64;&lt;base_url&gt;;model=&lt;model&gt;’.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p># create a model
+om.models.put(‘openai://localhost:8000/mymodel’, ‘mymodel’)
+# get the model
+model = om.models.get(‘mymodel’)
+# use the model
+result = model.complete(‘hello, how are you?’)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>the actual implementation of the model handling logic is in OpenAIModel,
+this only provides the model store interface and acts as any VirtualObjectHandler</p></li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'genai.text'</span></em><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>get an obj</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – the name of the object (str)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object as it was originally stored</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>put an obj</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – the object to store (object)</p></li>
+<li><p><strong>name</strong> – the name of the object (str)</p></li>
+<li><p><strong>attributes</strong> – the attributes dict (dict, optional)</p></li>
+<li><p><strong>kwargs</strong> – other kwargs to be passed to the Metadata object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.supports" title="Link to this definition">¶</a></dt>
 <dd><p>test if this backend supports this obj</p>
 </dd></dl>
 

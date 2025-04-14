@@ -27,10 +27,13 @@ om.datasets
 
     Backends:
 
-        - :py:class:`omegaml.backends.npndarray.NumpyNDArrayBackend`,
-        - :py:class:`omegaml.backends.virtualobj.VirtualObjectBackend`,
-        - :py:class:`omegaml.backends.rawdict.PandasRawDictBackend`,
-        - :py:class:`omegaml.backends.rawfiles.PythonRawFileBackend`,
+        - :py:class:`omegaml.backends.npndarray.NumpyNDArrayBackend`
+        - :py:class:`omegaml.backends.virtualobj.VirtualObjectBackend`
+        - :py:class:`omegaml.backends.rawdict.PandasRawDictBackend`
+        - :py:class:`omegaml.backends.rawfiles.PythonRawFileBackend`
+        - :py:class:`omegaml.backends.genai.mongovector.MongoDBVectorStore`
+        - :py:class:`omegaml.backends.genai.pgvector.PGVectorBackend`
+
 
 
 Backends
@@ -60,6 +63,13 @@ Backends
     :members:
 
     .. autoattribute:: KIND
+
+.. autoclass:: omegaml.backends.genai.mongovector.MongoDBVectorStore
+    :members:
+
+    .. autoattribute:: KIND
+
+.. autoclass:: omegaml.backends.genai.pgvector.PGVectorBackend
 
 Mixins
 ------

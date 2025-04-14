@@ -21,22 +21,16 @@ provides all of this in an integrated, scalable fashion.
 
 omega-ml provides
 
-* the central storage for data and models, using MongoDB as the highly-scalable storage provider
+* a machine learning repository, acting as the central storage for data and models
 * a client API to out-of-core data processing that follows Pandas semantics
-* a client API to models that follows scikit-learn semantics, integrating scikit-learn and Apache Spark models
 * an integrated compute cluster runtime to train and execute models, as well as to execute arbitrary scripts and
   automatically publish reports
-* a sophisticated REST API to data, models, scripts and runtime
-* a user interface to access information on all of the above
+* a sophisticated REST API to data, models, scripts and runtime and custom services with their own Swagger/OpenAPI
+  endpoints
+* a dashboard to access the repository and monitor the runtime and the status of jobs
 
 Extensibility
 -------------
-
-With the exception of the REST API, all of the above are easily extensible using mixins.
-
-In addition, omemgal provides interfaces to existing compute clusters like Anaconda's Distributed and
-Apache Spark. omega-ml also provides an extensible framework to add custom backends and compute clusters
-through a common API.
 
 Thanks to extensibility at the core of the architecture, omega-ml can easily accommodate any third-party storage
 or machine learning backend, or add new types of operations on data and models.
@@ -51,8 +45,9 @@ How omega-ml works
   Other datatypes can be easily added by a custom data backend.
 
 * machine learning models are stored via the :code:`models.put` API.
-  :code:`models.put` supports scikit-learn and Spark mllib models. Other
-  machine learning frameworks can be easily added by a custom model backend.
+  :code:`models.put` supports many frameworks out of the box. Other
+  machine learning frameworks can be easily added by wrapping them in a
+  virtual object, or by writing a custom model backend.
 
 * jobs (custom python scripts in the form of Jupyter notebooks) are stored
   via the :code:`jobs.put` API.
