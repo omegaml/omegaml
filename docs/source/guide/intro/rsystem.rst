@@ -9,6 +9,16 @@ Using omega-ml in R
 omega-ml works with R through the reticulate package, which enables R
 users to have the same API and fidelity to omega-ml as in Python.
 
+.. note::
+
+    Reticulate loads a new instance of the Python interpreter. To ensure it uses
+    the same virtual environment, set the RETICULATE_PYTHON environment variable
+    to the Python interpreter you want to use:
+
+    .. code-block:: bash
+
+        export RETICULATE_PYTHON=$(which python)
+
 .. code:: r
 
     # load omegaml
