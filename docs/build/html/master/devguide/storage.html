@@ -1,0 +1,412 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storage backends &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=81998473"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Mixins" href="mixins.html" />
+    <link rel="prev" title="Metadata" href="metadata.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Development Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom.html">Custom development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata.html">Metadata</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Storage backends</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#accessing-mongodb">Accessing MongoDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generating-unique-names">Generating unique names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-mongodb-gridfs-or-collection">Choosing MongoDB GridFS or collection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#storing-data-outside-mongodb">Storing data outside MongoDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-backend">Data backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-backend">Model backend</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.basemodel.BaseModelBackend.fit"><code class="docutils literal notranslate"><span class="pre">BaseModelBackend.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.basemodel.BaseModelBackend.predict"><code class="docutils literal notranslate"><span class="pre">BaseModelBackend.predict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.basemodel.BaseModelBackend.transform"><code class="docutils literal notranslate"><span class="pre">BaseModelBackend.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mixins.html">Mixins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../release/0.16.4/devguide/storage.html">release/0.16.4</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Development Guide</a></li>
+      <li class="breadcrumb-item active">Storage backends</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/devguide/storage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="storage-backends">
+<h1>Storage backends<a class="headerlink" href="#storage-backends" title="Link to this heading">¶</a></h1>
+<p>A storage backend can support additional data types for the
+<code class="code docutils literal notranslate"><span class="pre">datasets,models,jobs</span></code> stores. All stores share the same backends as
+they use the same implementation throughout. There are two types of backends:
+data backends and model backends.</p>
+<p>All storage backends are initialized to know their respective data and model
+stores as <code class="code docutils literal notranslate"><span class="pre">self.data_store</span></code> and <cite>self.model_store</cite>, respectively.</p>
+<section id="accessing-mongodb">
+<h2>Accessing MongoDB<a class="headerlink" href="#accessing-mongodb" title="Link to this heading">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">OmegaStore</span></code>, accessible from a backend implementation as
+<code class="code docutils literal notranslate"><span class="pre">self.data_store</span></code>, provides several methods and properties to interact
+with mongodb.</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">self.data_store.metadata(name)</span></code> - return the meta data object
+for the given object</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">self.data_store.collection(name)</span></code> - return the mongodb Collection
+instance for the given object</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">self.data_store.fs</span></code> (property) - return the mongodb GridFS instance</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">self.data_store.mongodb</span></code> (property) - return the mongodb Database
+instance</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>A custom backend shall not use any other means to access mongodb as doing
+so may cause unexpected side-effects.</p>
+</div>
+</section>
+<section id="generating-unique-names">
+<h2>Generating unique names<a class="headerlink" href="#generating-unique-names" title="Link to this heading">¶</a></h2>
+<p>To generate a unique name for an object that is compatible with MongoDB
+collection and GridFS naming rules use the <code class="code docutils literal notranslate"><span class="pre">self.data_store.object_store_key</span></code>
+method.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">.collection</span></code> method already uses <code class="code docutils literal notranslate"><span class="pre">object_store_key()</span></code>
+to set the collection name for a given object.</p>
+</div>
+</section>
+<section id="choosing-mongodb-gridfs-or-collection">
+<h2>Choosing MongoDB GridFS or collection<a class="headerlink" href="#choosing-mongodb-gridfs-or-collection" title="Link to this heading">¶</a></h2>
+<p>If the data type of an object is some form of iterable a MongoDB collection
+may be well suited to store the data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+   <span class="c1"># store obj in collection</span>
+   <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+   <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">])</span>
+   <span class="c1"># create meta data</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.rows&#39;</span><span class="p">)</span>
+   <span class="n">meta</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">collection</span>
+   <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">dict(item)</span></code> call may or may not be necessary. In general for
+MongoDB to be able to store the object, it must be BSON serializable. See
+the tutorial on <cite>MongoDB documents</cite> and <a class="reference external" href="http://api.mongodb.com/python/current/api/bson/index.html?highlight=data%20type">MongoDB type mapping</a>.</p>
+</div>
+<p>If the data type is of binary form, a GridFS file may be the better choice.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+   <span class="c1"># store obj in gridfs</span>
+   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+   <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+   <span class="n">fileid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+   <span class="c1"># create meta data</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.file&#39;</span><span class="p">)</span>
+   <span class="n">meta</span><span class="o">.</span><span class="n">gridfile</span> <span class="o">=</span> <span class="n">GridFSProxy</span><span class="p">(</span><span class="n">grid_id</span><span class="o">=</span><span class="n">fileid</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above code snippets only show the <code class="code docutils literal notranslate"><span class="pre">put</span></code> method. Implement the
+<code class="code docutils literal notranslate"><span class="pre">get</span></code> method to retrieve the object from the object’s collection or
+GridFS file, as indicated by <code class="code docutils literal notranslate"><span class="pre">meta.kind</span></code>. It is the responsibility of
+the backend to apply whatever data conversions are necessary, i.e.
+<code class="code docutils literal notranslate"><span class="pre">OmegaStore</span></code> does not implement any automatic conversions.</p>
+</div>
+</section>
+<section id="storing-data-outside-mongodb">
+<h2>Storing data outside MongoDB<a class="headerlink" href="#storing-data-outside-mongodb" title="Link to this heading">¶</a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">OmegaStore</span></code> is oblivious to the storage location of the actual data of
+an object, as long as there is a backend that handles storing (put) and
+retrieval (get). In other words OmegaStore in combination with a backend
+implementation can deal with arbitrary data and storage methods.</p>
+<p>For data stored in MongoDB, <code class="code docutils literal notranslate"><span class="pre">Metadata.collection</span></code> and <code class="code docutils literal notranslate"><span class="pre">Metadata.gridfile</span></code> provide
+the necessary pointers. For data stored outside mongodb, <code class="code docutils literal notranslate"><span class="pre">Metadata.uri</span></code> provides
+an arbitrary URI that a backend can set (on <code class="code docutils literal notranslate"><span class="pre">put</span></code>) and use for retrieval
+(on <code class="code docutils literal notranslate"><span class="pre">get</span></code>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+   <span class="c1"># store obj in some external file system</span>
+   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+   <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+   <span class="c1"># get instance of external file system and create file URI</span>
+   <span class="c1"># note the URI can be anything as long as your get method knows how</span>
+   <span class="c1"># to dereference</span>
+   <span class="n">foofs</span> <span class="o">=</span> <span class="o">...</span>
+   <span class="n">fileid</span> <span class="o">=</span> <span class="n">foofs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+   <span class="n">uri</span> <span class="o">=</span> <span class="s1">&#39;foofs://</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fileid</span><span class="p">)</span>
+   <span class="c1"># create meta data</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.file&#39;</span><span class="p">)</span>
+   <span class="n">meta</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span>
+   <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+   <span class="c1"># get metadata and URI</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+   <span class="n">uri</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">uri</span>
+   <span class="c1"># get object back using some service that understands this uri</span>
+   <span class="n">service</span> <span class="o">=</span> <span class="o">...</span>
+   <span class="n">obj</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">obj</span>
+</pre></div>
+</div>
+</section>
+<section id="data-backend">
+<h2>Data backend<a class="headerlink" href="#data-backend" title="Link to this heading">¶</a></h2>
+<p>A data backend minimally provides the <code class="code docutils literal notranslate"><span class="pre">put</span></code> and <code class="code docutils literal notranslate"><span class="pre">get</span></code> methods:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># code to store the object</span>
+    <span class="o">...</span>
+    <span class="c1"># create or update the metadata object</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+       <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+    <span class="c1"># always save the Metadata instance before returning</span>
+    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># code to retrieve the object</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="o">...</span>
+    <span class="k">return</span> <span class="n">obj</span>
+</pre></div>
+</div>
+</section>
+<section id="model-backend">
+<h2>Model backend<a class="headerlink" href="#model-backend" title="Link to this heading">¶</a></h2>
+<p>Model backends store and retrieve instances of models (in the scikit-learn
+sense of <a class="reference external" href="http://scikit-learn.org/stable/modules/model_persistence.html">model persistency</a>). In addition, they act as the model proxy used
+by <code class="code docutils literal notranslate"><span class="pre">OmegaRuntime</span></code> to perform arbitrary actions on an saved model using
+named data objects.</p>
+<p>The actions expected to be available minimally to <code class="code docutils literal notranslate"><span class="pre">OmegaRuntime</span></code>
+on a saved model are as follows. Note that these methods accept the <em>modelname</em>,
+<em>XName</em>, and <em>Yname</em> parameters, which must all reference existing objects
+in the <cite>om.models</cite> and <cite>om.datasets</cite> stores, respectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Technically, these methods are called from a worker in the compute cluster
+<em>without</em> prior loading of the model nor the data. The worker uses
+<cite>om.models.get_backend()</cite> to retrieve the model’s backend, then calls
+the requested method. Thus it is the responsibility of the backend to
+retrieve the model and any data required.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.fit">
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.predict">
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>predict using data stored in Xname</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>rName</strong> – the name of the result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the predicted outcome</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.basemodel.BaseModelBackend.transform">
+<span class="sig-prename descclassname"><span class="pre">BaseModelBackend.</span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/basemodel.html#BaseModelBackend.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.basemodel.BaseModelBackend.transform" title="Link to this definition">¶</a></dt>
+<dd><p>transform using data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>rName</strong> – the name of the transforms’s result data object or None</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s transform method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the transform data of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>This is in addition to the <code class="code docutils literal notranslate"><span class="pre">put</span></code> and <code class="code docutils literal notranslate"><span class="pre">get</span></code> methods required by
+any storage backend.</p>
+<p>Ideally and for user convenience, more methods should be supported,
+see the reference on <code class="code docutils literal notranslate"><span class="pre">BaseModelBackend</span></code>. Methods that are not supported
+will raise the <code class="code docutils literal notranslate"><span class="pre">NotImplemented</span></code> exception.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="metadata.html" class="btn btn-neutral float-left" title="Metadata" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mixins.html" class="btn btn-neutral float-right" title="Mixins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../0.11.3/devguide/storage.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../0.11.4/devguide/storage.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../0.12.0/devguide/storage.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../0.13.0/devguide/storage.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../0.13.2/devguide/storage.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../0.13.4/devguide/storage.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../0.13.5/devguide/storage.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../0.13.6/devguide/storage.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../0.13.7/devguide/storage.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../0.14.0/devguide/storage.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../0.15.1/devguide/storage.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../0.15.2/devguide/storage.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../latest/devguide/storage.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../release/0.15.3/devguide/storage.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../release/0.15.5/devguide/storage.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../release/0.16.0/devguide/storage.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../release/0.16.1/devguide/storage.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../release/0.16.2/devguide/storage.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../release/0.16.3/devguide/storage.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/devguide/storage.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../release/0.9/devguide/storage.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../stable/devguide/storage.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="storage.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
