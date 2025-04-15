@@ -1,0 +1,875 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&lt;no title&gt; &mdash; omega-ml 0.16.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/nb/tfestimator-tutorial.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sample using an Estimator model</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># load mnist dataset</span>
+<span class="p">((</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">),</span> <span class="p">(</span><span class="n">eval_data</span><span class="p">,</span> <span class="n">eval_labels</span><span class="p">))</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>  <span class="c1"># not required</span>
+
+<span class="n">eval_data</span> <span class="o">=</span> <span class="n">eval_data</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">eval_labels</span> <span class="o">=</span> <span class="n">eval_labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>  <span class="c1"># not required</span>
+
+<span class="c1"># Create the Estimator</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_classifier</span><span class="p">(</span><span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cnn_model_fn</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+      <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+      <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+
+      <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;Model function for CNN.&quot;&quot;&quot;</span>
+      <span class="c1"># Input Layer</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+      <span class="n">input_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+
+      <span class="c1"># Convolutional Layer #1</span>
+      <span class="n">conv1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
+          <span class="n">inputs</span><span class="o">=</span><span class="n">input_layer</span><span class="p">,</span>
+          <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+          <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+          <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+          <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+
+      <span class="c1"># Pooling Layer #1</span>
+      <span class="n">pool1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv1</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+      <span class="c1"># Convolutional Layer #2 and Pooling Layer #2</span>
+      <span class="n">conv2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
+          <span class="n">inputs</span><span class="o">=</span><span class="n">pool1</span><span class="p">,</span>
+          <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+          <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+          <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+          <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+      <span class="n">pool2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv2</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+      <span class="c1"># Dense Layer</span>
+      <span class="n">pool2_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pool2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">64</span><span class="p">])</span>
+      <span class="n">dense</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">pool2_flat</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+      <span class="n">dropout</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span>
+          <span class="n">inputs</span><span class="o">=</span><span class="n">dense</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">)</span>
+
+      <span class="c1"># Logits Layer</span>
+      <span class="n">logits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+      <span class="n">predictions</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="c1"># Generate predictions (for PREDICT and EVAL mode)</span>
+          <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+          <span class="c1"># Add `softmax_tensor` to the graph. It is used for PREDICT and by the</span>
+          <span class="c1"># `logging_hook`.</span>
+          <span class="s2">&quot;probabilities&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;softmax_tensor&quot;</span><span class="p">)</span>
+      <span class="p">}</span>
+
+      <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">)</span>
+
+      <span class="c1"># Calculate Loss (for both TRAIN and EVAL modes)</span>
+      <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span>
+
+      <span class="c1"># Configure the Training Op (for TRAIN mode)</span>
+      <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">GradientDescentOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+        <span class="n">train_op</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+            <span class="n">global_step</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_global_step</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">train_op</span><span class="o">=</span><span class="n">train_op</span><span class="p">)</span>
+
+      <span class="c1"># Add evaluation metrics (for EVAL mode)</span>
+      <span class="n">eval_metric_ops</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">accuracy</span><span class="p">(</span>
+              <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">[</span><span class="s2">&quot;classes&quot;</span><span class="p">])</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span>
+          <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">eval_metric_ops</span><span class="o">=</span><span class="n">eval_metric_ops</span><span class="p">)</span>
+
+    <span class="n">mnist_classifier</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">Estimator</span><span class="p">(</span><span class="n">model_fn</span><span class="o">=</span><span class="n">cnn_model_fn</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="n">model_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mnist_classifier</span>
+
+<span class="n">mnist_classifier</span> <span class="o">=</span> <span class="n">make_classifier</span><span class="p">(</span><span class="n">model_dir</span><span class="o">=</span><span class="s2">&quot;/tmp/mnist_convnet_model&quot;</span><span class="p">)</span>
+<span class="c1"># Set up logging for predictions</span>
+<span class="n">tensors_to_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;probabilities&quot;</span><span class="p">:</span> <span class="s2">&quot;softmax_tensor&quot;</span><span class="p">}</span>
+
+<span class="n">logging_hook</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">LoggingTensorHook</span><span class="p">(</span>
+    <span class="n">tensors</span><span class="o">=</span><span class="n">tensors_to_log</span><span class="p">,</span> <span class="n">every_n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c1"># Train the model</span>
+<span class="n">train_input_fn</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">numpy_input_fn</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">train_data</span><span class="p">},</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># train one step and display the probabilties</span>
+<span class="n">mnist_classifier</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+    <span class="n">input_fn</span><span class="o">=</span><span class="n">train_input_fn</span><span class="p">,</span>
+    <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">hooks</span><span class="o">=</span><span class="p">[</span><span class="n">logging_hook</span><span class="p">])</span>
+<span class="c1"># evaluate</span>
+<span class="n">eval_input_fn</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">numpy_input_fn</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">eval_data</span><span class="p">},</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">eval_labels</span><span class="p">,</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">eval_results</span> <span class="o">=</span> <span class="n">mnist_classifier</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">eval_input_fn</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eval_results</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-11-02 01:35:55.647364: I tensorflow/core/util/port.cc:111] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2023-11-02 01:35:55.648889: I tensorflow/tsl/cuda/cudart_stub.cc:28] Could not find cuda drivers on your machine, GPU will not be used.
+2023-11-02 01:35:55.668680: E tensorflow/compiler/xla/stream_executor/cuda/cuda_dnn.cc:9342] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2023-11-02 01:35:55.668701: E tensorflow/compiler/xla/stream_executor/cuda/cuda_fft.cc:609] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2023-11-02 01:35:55.668714: E tensorflow/compiler/xla/stream_executor/cuda/cuda_blas.cc:1518] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2023-11-02 01:35:55.672453: I tensorflow/tsl/cuda/cudart_stub.cc:28] Could not find cuda drivers on your machine, GPU will not be used.
+2023-11-02 01:35:55.672811: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-11-02 01:35:56.190441: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/compat/v2_compat.py:108: disable_resource_variables (from tensorflow.python.ops.variable_scope) is deprecated and will be removed in a future version.
+Instructions for updating:
+non-resource variables are not supported in the long term
+WARNING:tensorflow:From /tmp/ipykernel_372128/1736776514.py:93: Estimator.__init__ (from tensorflow_estimator.python.estimator.estimator) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/estimator.py:1844: RunConfig.__init__ (from tensorflow_estimator.python.estimator.run_config) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:Using default config.
+INFO:tensorflow:Using config: {&#39;_model_dir&#39;: &#39;/tmp/mnist_convnet_model&#39;, &#39;_tf_random_seed&#39;: None, &#39;_save_summary_steps&#39;: 100, &#39;_save_checkpoints_steps&#39;: None, &#39;_save_checkpoints_secs&#39;: 600, &#39;_session_config&#39;: allow_soft_placement: true
+graph_options {
+  rewrite_options {
+    meta_optimizer_iterations: ONE
+  }
+}
+, &#39;_keep_checkpoint_max&#39;: 5, &#39;_keep_checkpoint_every_n_hours&#39;: 10000, &#39;_log_step_count_steps&#39;: 100, &#39;_train_distribute&#39;: None, &#39;_device_fn&#39;: None, &#39;_protocol&#39;: None, &#39;_eval_distribute&#39;: None, &#39;_experimental_distribute&#39;: None, &#39;_experimental_max_worker_delay_secs&#39;: None, &#39;_session_creation_timeout_secs&#39;: 7200, &#39;_checkpoint_save_graph_def&#39;: True, &#39;_service&#39;: None, &#39;_cluster_spec&#39;: ClusterSpec({}), &#39;_task_type&#39;: &#39;worker&#39;, &#39;_task_id&#39;: 0, &#39;_global_id_in_cluster&#39;: 0, &#39;_master&#39;: &#39;&#39;, &#39;_evaluation_master&#39;: &#39;&#39;, &#39;_is_chief&#39;: True, &#39;_num_ps_replicas&#39;: 0, &#39;_num_worker_replicas&#39;: 1}
+WARNING:tensorflow:From /tmp/ipykernel_372128/1736776514.py:100: LoggingTensorHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/basic_session_run_hooks.py:232: SecondOrStepTimer.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /tmp/ipykernel_372128/1736776514.py:104: The name tf.estimator.inputs is deprecated. Please use tf.compat.v1.estimator.inputs instead.
+
+WARNING:tensorflow:From /tmp/ipykernel_372128/1736776514.py:104: numpy_input_fn (from tensorflow_estimator.python.estimator.inputs.numpy_io) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/estimator.py:385: StopAtStepHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/inputs/queues/feeding_queue_runner.py:60: QueueRunner.__init__ (from tensorflow.python.training.queue_runner_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+To construct input pipelines, use the `tf.data` module.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/inputs/queues/feeding_functions.py:491: add_queue_runner (from tensorflow.python.training.queue_runner_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+To construct input pipelines, use the `tf.data` module.
+INFO:tensorflow:Calling model_fn.
+WARNING:tensorflow:From /tmp/ipykernel_372128/1736776514.py:83: EstimatorSpec.__new__ (from tensorflow_estimator.python.estimator.model_fn) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:Done calling model_fn.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/estimator.py:1416: NanTensorHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow_estimator/python/estimator/estimator.py:1456: CheckpointSaverHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:Create CheckpointSaverHook.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:579: StepCounterHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:586: SummarySaverHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:Graph was finalized.
+INFO:tensorflow:Restoring parameters from /tmp/mnist_convnet_model/model.ckpt-1
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/saver.py:1176: get_checkpoint_mtimes (from tensorflow.python.checkpoint.checkpoint_management) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use standard file utilities to get mtimes.
+INFO:tensorflow:Running local_init_op.
+INFO:tensorflow:Done running local_init_op.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:910: start_queue_runners (from tensorflow.python.training.queue_runner_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+To construct input pipelines, use the `tf.data` module.
+INFO:tensorflow:Calling checkpoint listeners before saving checkpoint 1...
+INFO:tensorflow:Saving checkpoints for 1 into /tmp/mnist_convnet_model/model.ckpt.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/tmp/ipykernel_372128/1736776514.py:35: UserWarning: `tf.layers.conv2d` is deprecated and will be removed in a future version. Please Use `tf.keras.layers.Conv2D` instead.
+  conv1 = tf.layers.conv2d(
+/tmp/ipykernel_372128/1736776514.py:43: UserWarning: `tf.layers.max_pooling2d` is deprecated and will be removed in a future version. Please use `tf.keras.layers.MaxPooling2D` instead.
+  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+/tmp/ipykernel_372128/1736776514.py:46: UserWarning: `tf.layers.conv2d` is deprecated and will be removed in a future version. Please Use `tf.keras.layers.Conv2D` instead.
+  conv2 = tf.layers.conv2d(
+/tmp/ipykernel_372128/1736776514.py:52: UserWarning: `tf.layers.max_pooling2d` is deprecated and will be removed in a future version. Please use `tf.keras.layers.MaxPooling2D` instead.
+  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
+/tmp/ipykernel_372128/1736776514.py:56: UserWarning: `tf.layers.dense` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dense` instead.
+  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+/tmp/ipykernel_372128/1736776514.py:57: UserWarning: `tf.layers.dropout` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dropout` instead.
+  dropout = tf.layers.dropout(
+/tmp/ipykernel_372128/1736776514.py:61: UserWarning: `tf.layers.dense` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dense` instead.
+  logits = tf.layers.dense(inputs=dropout, units=10)
+2023-11-02 01:35:57.143511: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:382] MLIR V1 optimization pass is not enabled
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+INFO:tensorflow:Calling checkpoint listeners after saving checkpoint 1...
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:1455: SessionRunArgs.__new__ (from tensorflow.python.training.session_run_hook) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:1454: SessionRunContext.__init__ (from tensorflow.python.training.session_run_hook) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/monitored_session.py:1474: SessionRunValues.__new__ (from tensorflow.python.training.session_run_hook) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:probabilities = [[0.10017282 0.09569    0.11281838 0.10454207 0.09254646 0.07568298
+  0.08779176 0.09557801 0.11622369 0.11895383]
+ [0.09421608 0.07744012 0.1103489  0.10977615 0.08261666 0.08294503
+  0.10090858 0.11416768 0.12213971 0.10544109]
+ [0.0992114  0.08789022 0.09678107 0.10990681 0.10090436 0.08950637
+  0.09072031 0.10321424 0.11297487 0.10889037]
+ [0.0937236  0.08610134 0.10815279 0.10808839 0.09534946 0.09660148
+  0.0988886  0.09897055 0.09444247 0.11968125]
+ [0.09906912 0.08833797 0.12070209 0.10984048 0.09892864 0.09685462
+  0.09549295 0.09271861 0.09727667 0.10077877]
+ [0.10090563 0.08179738 0.11260463 0.09166076 0.08012803 0.0944057
+  0.08589818 0.11390393 0.12651286 0.11218295]
+ [0.09069768 0.08601109 0.11095282 0.12072533 0.10012206 0.09144076
+  0.08806292 0.10571991 0.10655374 0.09971371]
+ [0.08981869 0.08737255 0.11898033 0.11898778 0.09402594 0.08632319
+  0.09634466 0.10510256 0.10654331 0.09650093]
+ [0.09201554 0.08407855 0.11630212 0.11200764 0.10450767 0.08408318
+  0.08412259 0.0907798  0.10635474 0.12574819]
+ [0.09917878 0.08793195 0.12123707 0.10098124 0.0861265  0.10015293
+  0.08867048 0.1084096  0.11435169 0.09295982]
+ [0.10148621 0.0819141  0.11703216 0.09841318 0.09378221 0.09226754
+  0.08510892 0.10063939 0.11713135 0.11222503]
+ [0.11522378 0.08746088 0.09998708 0.11494957 0.08332314 0.08815327
+  0.10322885 0.08459677 0.12432148 0.09875514]
+ [0.10143565 0.08211847 0.10158957 0.1224784  0.08592372 0.10058979
+  0.08030927 0.11184487 0.11252611 0.10118413]
+ [0.11014187 0.07280059 0.11272095 0.13652045 0.07930638 0.08857762
+  0.09550411 0.10170542 0.1057147  0.0970079 ]
+ [0.12293687 0.08134238 0.11577497 0.10659027 0.0892144  0.07323505
+  0.08971731 0.09818332 0.11891436 0.10409099]
+ [0.09447809 0.08473936 0.11956592 0.12459151 0.08921368 0.08646297
+  0.08451524 0.09379971 0.12254898 0.10008453]
+ [0.09958997 0.08354048 0.11137257 0.10995089 0.09472121 0.0948751
+  0.08474243 0.09977763 0.11748735 0.10394242]
+ [0.09148647 0.06957909 0.11782336 0.13147679 0.07269634 0.0870851
+  0.08751058 0.08615434 0.1267104  0.1294776 ]
+ [0.11476916 0.09165605 0.0830319  0.11037077 0.0909787  0.08672167
+  0.08256871 0.09264189 0.14042002 0.10684119]
+ [0.09631828 0.10165374 0.09810781 0.10833977 0.09436683 0.09423049
+  0.07793487 0.10027988 0.116581   0.11218736]
+ [0.111568   0.09244432 0.10468989 0.1191786  0.09008961 0.09500205
+  0.09031017 0.08004456 0.10898355 0.10768929]
+ [0.10515285 0.082991   0.11536269 0.10135034 0.09685218 0.09332508
+  0.09405719 0.09111015 0.11142666 0.10837183]
+ [0.10254209 0.08669127 0.11003203 0.11370733 0.08927047 0.08592311
+  0.09857333 0.08887885 0.11385516 0.11052643]
+ [0.08738479 0.08838307 0.11778838 0.1128236  0.09275128 0.08834468
+  0.08444783 0.10924849 0.10133304 0.1174948 ]
+ [0.09589154 0.0880243  0.10270949 0.1070035  0.09960875 0.08426815
+  0.10016975 0.08775516 0.12497536 0.10959406]
+ [0.10356175 0.07962038 0.11943222 0.10528323 0.08964001 0.09210494
+  0.09920121 0.0807549  0.13343723 0.0969642 ]
+ [0.09530206 0.08665031 0.10643151 0.09931144 0.10590036 0.08935795
+  0.09997064 0.09150971 0.11297172 0.11259431]
+ [0.1030031  0.08283401 0.10486417 0.13179035 0.08864878 0.08795209
+  0.07659959 0.1005004  0.11895112 0.10485645]
+ [0.10735729 0.08108604 0.10948702 0.10954539 0.08297677 0.09467604
+  0.10095418 0.0872602  0.11334555 0.1133116 ]
+ [0.09221203 0.09224812 0.10111893 0.09816612 0.08444774 0.08675832
+  0.09777513 0.09156813 0.14939168 0.1063138 ]
+ [0.10778765 0.07066002 0.12437692 0.10945716 0.08324002 0.10304195
+  0.0908444  0.08827324 0.12608528 0.09623342]
+ [0.09252527 0.09245455 0.09863793 0.10650713 0.10314316 0.10124432
+  0.09765424 0.09044982 0.09844606 0.11893745]
+ [0.09878258 0.0978049  0.10822888 0.09852231 0.08666044 0.10636158
+  0.09215562 0.0886177  0.11227839 0.11058764]
+ [0.10916306 0.08654375 0.10396618 0.11137851 0.10096958 0.10093921
+  0.08278545 0.09367916 0.09816019 0.11241499]
+ [0.0953614  0.07851732 0.12175234 0.13888136 0.07648266 0.08330365
+  0.08521574 0.10553619 0.12239183 0.0925575 ]
+ [0.10440829 0.09159429 0.10276249 0.11326102 0.099319   0.08565933
+  0.08144828 0.10680412 0.10573664 0.10900652]
+ [0.09927283 0.08224938 0.11388674 0.097082   0.10241638 0.07590561
+  0.09727892 0.09969071 0.12887403 0.10334339]
+ [0.10927039 0.08283775 0.10030883 0.1088435  0.09025869 0.09297029
+  0.0864117  0.0967638  0.11816842 0.11416674]
+ [0.11042822 0.08872863 0.10123238 0.09906288 0.083758   0.07651035
+  0.09916266 0.10805126 0.11695688 0.1161088 ]
+ [0.09556855 0.08404732 0.11817745 0.1130165  0.0930365  0.09272342
+  0.09395988 0.09577379 0.09980977 0.11388683]
+ [0.09771863 0.08307598 0.1169894  0.10724492 0.10527605 0.09295549
+  0.09391613 0.08799638 0.10876957 0.10605746]
+ [0.0952765  0.0775682  0.10287552 0.10684977 0.10147464 0.08512327
+  0.09240948 0.08646145 0.11547989 0.13648131]
+ [0.10561056 0.08226699 0.11778095 0.114074   0.08345702 0.09494586
+  0.08464059 0.10283498 0.11175929 0.10262969]
+ [0.09677158 0.08669239 0.10186766 0.1144312  0.09278212 0.09089331
+  0.0866515  0.09174519 0.11893326 0.11923176]
+ [0.09542768 0.08833384 0.10228729 0.11588992 0.10009252 0.07374755
+  0.09496133 0.08361229 0.14294061 0.10270703]
+ [0.09219775 0.06963319 0.11070611 0.11683466 0.10269699 0.07913833
+  0.07893454 0.09605371 0.12255441 0.13125032]
+ [0.10458639 0.08520358 0.1252722  0.10112566 0.08101955 0.09053862
+  0.08910143 0.08936016 0.12858073 0.10521167]
+ [0.09942238 0.08021341 0.11385559 0.11663986 0.10233037 0.08503147
+  0.08455217 0.1002005  0.11862171 0.09913266]
+ [0.1125715  0.08930061 0.0991393  0.10384499 0.08911386 0.09197615
+  0.09719417 0.11710074 0.09955571 0.10020304]
+ [0.09774143 0.09000275 0.11181224 0.10451551 0.09212433 0.08779394
+  0.10172921 0.10040067 0.1026453  0.1112346 ]
+ [0.1056148  0.07526197 0.11345621 0.13152257 0.1069486  0.09383736
+  0.07144123 0.0913349  0.11623093 0.09435142]
+ [0.10245572 0.08623152 0.10714658 0.11034577 0.09422792 0.09823917
+  0.09606724 0.09644655 0.10134627 0.10749329]
+ [0.10915089 0.0827658  0.10050353 0.11427396 0.08841581 0.09716097
+  0.08659334 0.10304308 0.11178169 0.10631096]
+ [0.0854207  0.07255854 0.11691362 0.12592345 0.09116089 0.10655473
+  0.0943986  0.09838016 0.10584733 0.10284191]
+ [0.09645408 0.08408986 0.11626875 0.11205827 0.08664836 0.09376793
+  0.11105283 0.08360963 0.11764545 0.09840476]
+ [0.1002699  0.09372181 0.13388179 0.12142633 0.10379381 0.07333051
+  0.0652044  0.10176048 0.11057845 0.09603254]
+ [0.11209351 0.08954368 0.11052057 0.11176845 0.0881615  0.09435897
+  0.08883037 0.0874505  0.10757045 0.10970208]
+ [0.11413273 0.09185027 0.10290311 0.09775345 0.10373887 0.10304434
+  0.08950398 0.08126217 0.10909937 0.10671167]
+ [0.10129552 0.085298   0.10748119 0.10328601 0.10873546 0.08626079
+  0.08664554 0.10190027 0.11682617 0.10227099]
+ [0.08832953 0.09851857 0.09491474 0.10700393 0.08011928 0.09015151
+  0.09778203 0.10277014 0.13810362 0.1023066 ]
+ [0.10635804 0.09018906 0.11781217 0.11404641 0.08829182 0.1004506
+  0.08139161 0.08854378 0.1214302  0.0914864 ]
+ [0.09725167 0.09115163 0.09972456 0.10631298 0.08805861 0.09822468
+  0.10139402 0.1065034  0.11299203 0.09838635]
+ [0.11445695 0.08326352 0.10354241 0.11454817 0.09558605 0.08740104
+  0.08649792 0.09929999 0.10151438 0.11388958]
+ [0.09401567 0.08831994 0.10936236 0.09311453 0.09740542 0.07407869
+  0.10381866 0.10049496 0.12594935 0.11344039]
+ [0.10516907 0.08779472 0.11838809 0.12301464 0.08422471 0.09022169
+  0.09395128 0.09114929 0.10990637 0.09618015]
+ [0.1082462  0.08666196 0.09965029 0.10397051 0.08864681 0.09352002
+  0.08336762 0.08729319 0.13582939 0.11281408]
+ [0.08807626 0.08946037 0.10923186 0.09573652 0.10645089 0.08263885
+  0.10388665 0.10420483 0.1075501  0.11276376]
+ [0.08892964 0.08782406 0.11839123 0.09578878 0.10613867 0.09393673
+  0.09256019 0.10184368 0.11014125 0.1044457 ]
+ [0.11190318 0.0709236  0.10771675 0.10656141 0.0919515  0.10701869
+  0.1041225  0.09154379 0.11081177 0.0974469 ]
+ [0.08873259 0.07912818 0.11696368 0.10879079 0.09868764 0.07808899
+  0.09352045 0.10449184 0.10787877 0.1237171 ]
+ [0.08727191 0.08927333 0.10961769 0.11383715 0.08633411 0.08928475
+  0.07698754 0.10635095 0.13942528 0.10161734]
+ [0.1024975  0.09701188 0.11445899 0.11383207 0.08423985 0.0848072
+  0.08839088 0.09514572 0.11837394 0.10124198]
+ [0.09681951 0.07913403 0.1113112  0.10774128 0.08864316 0.09361336
+  0.09318371 0.09292947 0.10894263 0.12768155]
+ [0.09731981 0.0918213  0.11546019 0.10437903 0.09191506 0.09885605
+  0.08669468 0.1056312  0.10158189 0.10634077]
+ [0.08897922 0.07969942 0.11728859 0.1173746  0.09588995 0.08461825
+  0.09301349 0.10562018 0.12698233 0.09053401]
+ [0.10762454 0.08339968 0.12111687 0.09819318 0.074235   0.09888612
+  0.09042426 0.08744718 0.11156784 0.12710539]
+ [0.10789192 0.07941491 0.10495309 0.10873414 0.08656532 0.09540589
+  0.08411538 0.10518333 0.12105811 0.10667794]
+ [0.09278098 0.08401764 0.10833955 0.10484723 0.09965192 0.08492705
+  0.08824579 0.10304842 0.1192475  0.11489383]
+ [0.09266443 0.08529705 0.10609191 0.10369495 0.10231397 0.09498078
+  0.09009424 0.09954797 0.11789963 0.1074151 ]
+ [0.09241834 0.08025569 0.13262786 0.09449634 0.08855981 0.08393235
+  0.10251984 0.10109925 0.10938484 0.11470572]
+ [0.09824061 0.07624729 0.11651427 0.11740652 0.07937225 0.09079398
+  0.08161011 0.11099452 0.12245957 0.10636091]
+ [0.11135176 0.08612614 0.11300729 0.09939681 0.08555263 0.08980836
+  0.09858118 0.08433405 0.11916096 0.11268077]
+ [0.09533124 0.08296283 0.1219362  0.10268624 0.09367929 0.08834983
+  0.08866478 0.10219729 0.10596126 0.11823094]
+ [0.10152847 0.09384665 0.10673726 0.11090301 0.10409592 0.09603318
+  0.09043218 0.09719187 0.09737977 0.10185163]
+ [0.08801689 0.08359422 0.10706203 0.10459141 0.09446786 0.10383198
+  0.0930061  0.11276927 0.10380766 0.10885262]
+ [0.10382153 0.08587375 0.10853276 0.10759757 0.09288608 0.09017752
+  0.07889806 0.10357185 0.12161542 0.10702542]
+ [0.08946333 0.07645225 0.11848657 0.11427481 0.08646753 0.09767251
+  0.07709701 0.1078723  0.12274041 0.10947327]
+ [0.10795493 0.08972991 0.11210734 0.11296704 0.08119406 0.09148715
+  0.07909392 0.09728867 0.11432969 0.11384729]
+ [0.12318933 0.08029079 0.12248417 0.09927041 0.08933769 0.09167813
+  0.0884202  0.08808216 0.11442103 0.10282607]
+ [0.10070078 0.08977209 0.0978965  0.11388974 0.09201034 0.09285773
+  0.10231178 0.09035484 0.11558004 0.10462613]
+ [0.09495805 0.08344887 0.11489511 0.11077493 0.09494207 0.08668292
+  0.08382428 0.10377538 0.11354031 0.11315797]
+ [0.09498508 0.08556625 0.12408656 0.09514357 0.08989872 0.08913033
+  0.08177004 0.10657897 0.12260661 0.11023381]
+ [0.095385   0.09004287 0.11536197 0.12494937 0.08751544 0.08509893
+  0.09329274 0.08067542 0.12952974 0.09814853]
+ [0.11091086 0.08307981 0.10301284 0.11198067 0.07868645 0.09254515
+  0.09367403 0.09478337 0.1207056  0.11062118]
+ [0.10150212 0.08797894 0.13560542 0.10962114 0.08904944 0.08602739
+  0.08723088 0.10528119 0.09977064 0.09793284]
+ [0.09263664 0.09429497 0.10140718 0.11870535 0.09545396 0.08423284
+  0.09038619 0.09749864 0.11435388 0.11103033]
+ [0.10970576 0.09392827 0.1007241  0.10674125 0.10743909 0.08135716
+  0.08523772 0.09862238 0.10829139 0.10795297]
+ [0.10898308 0.074074   0.11278033 0.10195241 0.07807412 0.08822805
+  0.10465848 0.08947936 0.14064574 0.10112444]
+ [0.08825131 0.08341024 0.10767867 0.11434114 0.09264485 0.09576859
+  0.08393182 0.11233066 0.12361509 0.09802761]
+ [0.09426215 0.09033255 0.11278763 0.10588285 0.09412938 0.08602701
+  0.09223036 0.1038531  0.10971167 0.11078332]]
+INFO:tensorflow:loss = 2.3193746, step = 2
+INFO:tensorflow:Calling checkpoint listeners before saving checkpoint 2...
+INFO:tensorflow:Saving checkpoints for 2 into /tmp/mnist_convnet_model/model.ckpt.
+INFO:tensorflow:Calling checkpoint listeners after saving checkpoint 2...
+INFO:tensorflow:Loss for final step: 2.3193746.
+INFO:tensorflow:Calling model_fn.
+INFO:tensorflow:Done calling model_fn.
+INFO:tensorflow:Starting evaluation at 2023-11-02T01:35:57
+WARNING:tensorflow:From /home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/tensorflow/python/training/evaluation.py:260: FinalOpsHook.__init__ (from tensorflow.python.training.basic_session_run_hooks) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras instead.
+INFO:tensorflow:Graph was finalized.
+INFO:tensorflow:Restoring parameters from /tmp/mnist_convnet_model/model.ckpt-2
+INFO:tensorflow:Running local_init_op.
+INFO:tensorflow:Done running local_init_op.
+INFO:tensorflow:Inference Time : 1.44410s
+INFO:tensorflow:Finished evaluation at 2023-11-02-01:35:58
+INFO:tensorflow:Saving dict for global step 2: accuracy = 0.1244, global_step = 2, loss = 2.3051484
+INFO:tensorflow:Saving &#39;checkpoint_path&#39; summary for global step 2: /tmp/mnist_convnet_model/model.ckpt-2
+{&#39;accuracy&#39;: 0.1244, &#39;loss&#39;: 2.3051484, &#39;global_step&#39;: 2}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls<span class="w"> </span>/tmp/mnist_convnet_model
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+checkpoint                            model.ckpt-0.meta
+eval                                  model.ckpt-1.data-00000-of-00001
+events.out.tfevents.1698885310.varda  model.ckpt-1.index
+events.out.tfevents.1698885357.varda  model.ckpt-1.meta
+graph.pbtxt                           model.ckpt-2.data-00000-of-00001
+model.ckpt-0.data-00000-of-00001      model.ckpt-2.index
+model.ckpt-0.index                    model.ckpt-2.meta
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>freeze<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dill
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+dill==0.3.5.1
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OMEGA_FRAMEWORKS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;scikit-learn,tensorflow,keras&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/patrick/mambaforge/envs/omegaml-ce/lib/python3.10/site-packages/celery/fixups/django.py:56: FixupWarning: Environment variable DJANGO_SETTINGS_MODULE is defined
+but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
+
+  warnings.warn(FixupWarning(ERR_NOT_INSTALLED))
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># we can save the model so it can be reused and re-fitted on the cluster</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.tensorflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">TFEstimatorModel</span>
+
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="s1">&#39;mnist-Y&#39;</span><span class="p">)</span>
+
+<span class="n">saveable_model</span> <span class="o">=</span> <span class="n">TFEstimatorModel</span><span class="p">(</span><span class="n">estimator_fn</span><span class="o">=</span><span class="n">make_classifier</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">mnist_classifier</span><span class="p">,</span> <span class="n">v1_compat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">saveable_model</span><span class="p">,</span> <span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Metadata: Metadata(name=tf-model-mnist-fn,bucket=omegaml,prefix=models/,kind=tfestimator.model,created=2023-11-02 01:36:02.204794)&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># fit on the cluster. this may take a while</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">,</span> <span class="s1">&#39;mnist-Y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;&lt;Metadata: Metadata(name=tf-model-mnist-fn,bucket=omegaml,prefix=models/,kind=tfestimator.model,created=2023-11-02 01:36:02.204000)&gt;&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># re-load the model and predict from a numpy array</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+
+<span class="n">model_</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
+<span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/tmp/ipykernel_372128/1736776514.py:46: UserWarning: `tf.layers.conv2d` is deprecated and will be removed in a future version. Please Use `tf.keras.layers.Conv2D` instead.
+  conv2 = tf.layers.conv2d(
+/tmp/ipykernel_372128/1736776514.py:47: UserWarning: `tf.layers.max_pooling2d` is deprecated and will be removed in a future version. Please use `tf.keras.layers.MaxPooling2D` instead.
+  inputs=pool1,
+/tmp/ipykernel_372128/1736776514.py:55: UserWarning: `tf.layers.conv2d` is deprecated and will be removed in a future version. Please Use `tf.keras.layers.Conv2D` instead.
+  pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
+/tmp/ipykernel_372128/1736776514.py:56: UserWarning: `tf.layers.max_pooling2d` is deprecated and will be removed in a future version. Please use `tf.keras.layers.MaxPooling2D` instead.
+  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+/tmp/ipykernel_372128/1736776514.py:58: UserWarning: `tf.layers.dense` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dense` instead.
+  inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+/tmp/ipykernel_372128/1736776514.py:65: UserWarning: `tf.layers.dropout` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dropout` instead.
+  &#34;classes&#34;: tf.argmax(input=logits, axis=1),
+/tmp/ipykernel_372128/1736776514.py:68: UserWarning: `tf.layers.dense` is deprecated and will be removed in a future version. Please use `tf.keras.layers.Dense` instead.
+  &#34;probabilities&#34;: tf.nn.softmax(logits, name=&#34;softmax_tensor&#34;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;classes&#39;: 3,
+  &#39;probabilities&#39;: array([0.10634766, 0.08097006, 0.09523314, 0.12361997, 0.08386061,
+         0.10128708, 0.09661846, 0.09962774, 0.1153264 , 0.097109  ],
+        dtype=float32)},
+ {&#39;classes&#39;: 0,
+  &#39;probabilities&#39;: array([0.13886572, 0.06845843, 0.10557043, 0.10487789, 0.08427102,
+         0.09124744, 0.10032602, 0.09087245, 0.11948048, 0.09603014],
+        dtype=float32)}]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># predict on the cluster via direct input as numpy, or the numpy array stored as a dataset</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
+
+<span class="c1">#we can save the data as stacked images</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="s1">&#39;mnist-sample&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;mnist-sample&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="c1"># or just pass the data as is</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>classes</th>
+      <th>probabilities</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>[0.10634766, 0.080970064, 0.09523314, 0.123619...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>[0.13886572, 0.06845843, 0.10557043, 0.1048778...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># or use the model REST API</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.client.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthenticationEnv</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;OMEGA_RESTAPI_URL&#39;</span><span class="p">,</span> <span class="s1">&#39;http://localhost:5000&#39;</span><span class="p">)</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">AuthenticationEnv</span><span class="o">.</span><span class="n">get_restapi_auth</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="n">om</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="s1">&#39;mnist-sample&#39;</span>
+<span class="n">modelname</span> <span class="o">=</span> <span class="s1">&#39;tf-model-mnist-fn&#39;</span>
+<span class="n">predict_url</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{url}</span><span class="s1">/api/v1/model/</span><span class="si">{modelname}</span><span class="s1">/predict?datax=</span><span class="si">{dataset}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">predict_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">predict_url</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+http://localhost:5000/api/v1/model/tf-model-mnist-fn/predict?datax=mnist-sample
+{&#39;model&#39;: &#39;tf-model-mnist-fn&#39;, &#39;result&#39;: [{&#39;classes&#39;: 3, &#39;probabilities&#39;: [0.10634765774011612, 0.08097006380558014, 0.09523314237594604, 0.12361997365951538, 0.0838606134057045, 0.10128708183765411, 0.09661845862865448, 0.09962774068117142, 0.1153264045715332, 0.09710900485515594]}, {&#39;classes&#39;: 0, &#39;probabilities&#39;: [0.13886572420597076, 0.0684584304690361, 0.10557042807340622, 0.10487788915634155, 0.08427102118730545, 0.09124743938446045, 0.10032601654529572, 0.09087245166301727, 0.11948047578334808, 0.09603013843297958]}], &#39;resource_uri&#39;: &#39;tf-model-mnist-fn&#39;}
+</pre></div></div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="tfestimator-tutorial.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
