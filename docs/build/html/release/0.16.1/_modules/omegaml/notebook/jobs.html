@@ -1,0 +1,824 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.notebook.jobs &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.notebook.jobs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.notebook.jobs</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="linenos">  4</span><span class="kn">import</span><span class="w"> </span><span class="nn">gridfs</span>
+<span class="linenos">  5</span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="linenos">  6</span><span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="linenos">  7</span><span class="kn">from</span><span class="w"> </span><span class="nn">croniter</span><span class="w"> </span><span class="kn">import</span> <span class="n">croniter</span>
+<span class="linenos">  8</span><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span><span class="p">,</span> <span class="n">BytesIO</span>
+<span class="linenos">  9</span><span class="kn">from</span><span class="w"> </span><span class="nn">jupyter_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncKernelManager</span>
+<span class="linenos"> 10</span><span class="kn">from</span><span class="w"> </span><span class="nn">nbconvert.preprocessors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClearOutputPreprocessor</span>
+<span class="linenos"> 11</span><span class="kn">from</span><span class="w"> </span><span class="nn">nbconvert.preprocessors.execute</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutePreprocessor</span>
+<span class="linenos"> 12</span><span class="kn">from</span><span class="w"> </span><span class="nn">nbformat</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">nbread</span><span class="p">,</span> <span class="n">write</span> <span class="k">as</span> <span class="n">nbwrite</span><span class="p">,</span> <span class="n">v4</span> <span class="k">as</span> <span class="n">nbv4</span>
+<span class="linenos"> 13</span><span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+<span class="linenos"> 14</span>
+<span class="linenos"> 15</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.basecommon</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackendBaseCommon</span>
+<span class="linenos"> 16</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDREGISTRY</span>
+<span class="linenos"> 17</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.notebook.jobschedule</span><span class="w"> </span><span class="kn">import</span> <span class="n">JobSchedule</span>
+<span class="linenos"> 18</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaStore</span>
+<span class="linenos"> 19</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span> <span class="k">as</span> <span class="n">omega_settings</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span>
+<div class="viewcode-block" id="OmegaJobs">
+<a class="viewcode-back" href="../../../reference/public.html#omegaml.notebook.jobs.OmegaJobs">[docs]</a>
+<span class="linenos"> 22</span><span class="k">class</span><span class="w"> </span><span class="nc">OmegaJobs</span><span class="p">(</span><span class="n">BackendBaseCommon</span><span class="p">):</span>
+<span class="linenos"> 23</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 24</span><span class="sd">    Omega Jobs API</span>
+<span class="linenos"> 25</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 26</span>
+<span class="linenos"> 27</span>    <span class="c1"># TODO this class should be a proper backend class with a mixin for ipynb</span>
+<span class="linenos"> 28</span>
+<span class="linenos"> 29</span>    <span class="n">_nb_config_magic</span> <span class="o">=</span> <span class="s1">&#39;omega-ml&#39;</span><span class="p">,</span> <span class="s1">&#39;schedule&#39;</span><span class="p">,</span> <span class="s1">&#39;run-at&#39;</span><span class="p">,</span> <span class="s1">&#39;cron&#39;</span>
+<span class="linenos"> 30</span>    <span class="n">_dir_placeholder</span> <span class="o">=</span> <span class="s1">&#39;_placeholder.ipynb&#39;</span>
+<span class="linenos"> 31</span>
+<span class="linenos"> 32</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos"> 33</span>        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span> <span class="ow">or</span> <span class="n">omega_settings</span><span class="p">()</span>
+<span class="linenos"> 34</span>        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span> <span class="ow">or</span> <span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">prefix</span> <span class="k">if</span> <span class="n">store</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;jobs&#39;</span>
+<span class="linenos"> 35</span>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span> <span class="ow">or</span> <span class="n">OmegaStore</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span> <span class="n">bucket</span><span class="o">=</span><span class="n">bucket</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="n">defaults</span><span class="p">)</span>
+<span class="linenos"> 36</span>        <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">MDREGISTRY</span><span class="o">.</span><span class="n">OMEGAML_JOBS</span>
+<span class="linenos"> 37</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_include_dir_placeholder</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos"> 38</span>        <span class="c1"># convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))</span>
+<span class="linenos"> 39</span>        <span class="bp">self</span><span class="o">.</span><span class="n">Schedule</span> <span class="o">=</span> <span class="n">JobSchedule</span>
+<span class="linenos"> 40</span>
+<span class="linenos"> 41</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 42</span>        <span class="k">return</span> <span class="s1">&#39;OmegaJobs(store=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+<span class="linenos"> 43</span>
+<span class="linenos"> 44</span>    <span class="nd">@property</span>
+<span class="linenos"> 45</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 46</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">mongodb</span>
+<span class="linenos"> 47</span>
+<span class="linenos"> 48</span>    <span class="nd">@property</span>
+<span class="linenos"> 49</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_fs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 50</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">fs</span>
+<span class="linenos"> 51</span>
+<span class="linenos"> 52</span>    <span class="k">def</span><span class="w"> </span><span class="nf">collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos"> 53</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos"> 54</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos"> 55</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 56</span>
+<div class="viewcode-block" id="OmegaJobs.drop">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.drop">[docs]</a>
+<span class="linenos"> 57</span>    <span class="k">def</span><span class="w"> </span><span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos"> 58</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; remove the notebook</span>
+<span class="linenos"> 59</span>
+<span class="linenos"> 60</span><span class="sd">        Args:</span>
+<span class="linenos"> 61</span><span class="sd">            name (str): the name of the notebook</span>
+<span class="linenos"> 62</span><span class="sd">            force (bool): if True does not raise</span>
+<span class="linenos"> 63</span>
+<span class="linenos"> 64</span><span class="sd">        Returns:</span>
+<span class="linenos"> 65</span><span class="sd">            True if object was deleted, False if not.</span>
+<span class="linenos"> 66</span><span class="sd">            If force is True and the object does not exist it will still return True</span>
+<span class="linenos"> 67</span>
+<span class="linenos"> 68</span><span class="sd">        Raises:</span>
+<span class="linenos"> 69</span><span class="sd">            DoesNotExist if the notebook does not exist and ```force=False```</span>
+<span class="linenos"> 70</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 71</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 72</span>        <span class="n">name</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name</span>
+<span class="linenos"> 73</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)</span></div>
+
+<span class="linenos"> 74</span>
+<div class="viewcode-block" id="OmegaJobs.metadata">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.metadata">[docs]</a>
+<span class="linenos"> 75</span>    <span class="k">def</span><span class="w"> </span><span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 76</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; retrieve metadata of a notebook</span>
+<span class="linenos"> 77</span>
+<span class="linenos"> 78</span><span class="sd">        Args:</span>
+<span class="linenos"> 79</span><span class="sd">            name (str): the name of the notebook</span>
+<span class="linenos"> 80</span>
+<span class="linenos"> 81</span><span class="sd">        Returns:</span>
+<span class="linenos"> 82</span><span class="sd">            Metadata</span>
+<span class="linenos"> 83</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 84</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 85</span>        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos"> 86</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos"> 87</span>            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 88</span>        <span class="k">return</span> <span class="n">meta</span></div>
+
+<span class="linenos"> 89</span>
+<div class="viewcode-block" id="OmegaJobs.exists">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.exists">[docs]</a>
+<span class="linenos"> 90</span>    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos"> 91</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; check if the notebook exists</span>
+<span class="linenos"> 92</span>
+<span class="linenos"> 93</span><span class="sd">        Args:</span>
+<span class="linenos"> 94</span><span class="sd">            name (str): the name of the notebook</span>
+<span class="linenos"> 95</span>
+<span class="linenos"> 96</span><span class="sd">        Returns:</span>
+<span class="linenos"> 97</span><span class="sd">            Metadata</span>
+<span class="linenos"> 98</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 99</span>        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.ipynb&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+<span class="linenos">100</span>
+<div class="viewcode-block" id="OmegaJobs.put">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.put">[docs]</a>
+<span class="linenos">101</span>    <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">102</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; store a notebook job</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span><span class="sd">        Args:</span>
+<span class="linenos">105</span><span class="sd">            obj (str|NotebookNode): the notebook object or the notebook&#39;s code as a string</span>
+<span class="linenos">106</span><span class="sd">            name (str): the name of the job</span>
+<span class="linenos">107</span><span class="sd">            attributes (dict): the attributes to store with the job</span>
+<span class="linenos">108</span>
+<span class="linenos">109</span><span class="sd">        Returns:</span>
+<span class="linenos">110</span><span class="sd">            Metadata</span>
+<span class="linenos">111</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">112</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos">113</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos">114</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">115</span>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">116</span>        <span class="n">sbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="linenos">117</span>        <span class="n">bbuf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+<span class="linenos">118</span>        <span class="c1"># nbwrite expects string, fs.put expects bytes</span>
+<span class="linenos">119</span>        <span class="n">nbwrite</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">sbuf</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="linenos">120</span>        <span class="n">sbuf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="linenos">121</span>        <span class="n">bbuf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">sbuf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="linenos">122</span>        <span class="n">bbuf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="linenos">123</span>        <span class="c1"># see if we have a file already, if so replace the gridfile</span>
+<span class="linenos">124</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">125</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span><span class="p">:</span>
+<span class="linenos">126</span>            <span class="n">filename</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+<span class="linenos">127</span>            <span class="n">fileid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_to_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">,</span> <span class="n">bbuf</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="linenos">128</span>            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">_make_metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+<span class="linenos">129</span>                                             <span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span>
+<span class="linenos">130</span>                                             <span class="n">bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">bucket</span><span class="p">,</span>
+<span class="linenos">131</span>                                             <span class="n">kind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+<span class="linenos">132</span>                                             <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span>
+<span class="linenos">133</span>                                             <span class="n">gridfile</span><span class="o">=</span><span class="n">fileid</span><span class="p">)</span>
+<span class="linenos">134</span>            <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">135</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">136</span>            <span class="n">filename</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+<span class="linenos">137</span>            <span class="n">meta</span><span class="o">.</span><span class="n">gridfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_to_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">,</span> <span class="n">bbuf</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="linenos">138</span>            <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">139</span>        <span class="c1"># set config</span>
+<span class="linenos">140</span>        <span class="n">nb_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_notebook_config</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">141</span>        <span class="n">meta_config</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="linenos">142</span>        <span class="k">if</span> <span class="n">nb_config</span><span class="p">:</span>
+<span class="linenos">143</span>            <span class="n">meta_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">nb_config</span><span class="p">))</span>
+<span class="linenos">144</span>            <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_config</span>
+<span class="linenos">145</span>        <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">146</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;results&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;run-at&#39;</span> <span class="ow">in</span> <span class="n">meta_config</span><span class="p">):</span>
+<span class="linenos">147</span>            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">148</span>        <span class="k">return</span> <span class="n">meta</span></div>
+
+<span class="linenos">149</span>
+<div class="viewcode-block" id="OmegaJobs.get">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.get">[docs]</a>
+<span class="linenos">150</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos">151</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">152</span><span class="sd">        Retrieve a notebook and return a NotebookNode</span>
+<span class="linenos">153</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">154</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos">155</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos">156</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">157</span>        <span class="k">if</span> <span class="n">meta</span><span class="p">:</span>
+<span class="linenos">158</span>            <span class="k">try</span><span class="p">:</span>
+<span class="linenos">159</span>                <span class="n">outf</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">gridfile</span>
+<span class="linenos">160</span>            <span class="k">except</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NoFile</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">161</span>                <span class="k">raise</span> <span class="n">e</span>
+<span class="linenos">162</span>            <span class="c1"># nbwrite wants a string, outf is bytes</span>
+<span class="linenos">163</span>            <span class="n">sbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="linenos">164</span>            <span class="n">data</span> <span class="o">=</span> <span class="n">outf</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="linenos">165</span>            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">166</span>                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Expected content in </span><span class="si">{name}</span><span class="s1">, got None&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
+<span class="linenos">167</span>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="linenos">168</span>            <span class="n">sbuf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="linenos">169</span>            <span class="n">sbuf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="linenos">170</span>            <span class="n">nb</span> <span class="o">=</span> <span class="n">nbread</span><span class="p">(</span><span class="n">sbuf</span><span class="p">,</span> <span class="n">as_version</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="linenos">171</span>            <span class="k">return</span> <span class="n">nb</span>
+<span class="linenos">172</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">173</span>            <span class="k">raise</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NoFile</span><span class="p">(</span>
+<span class="linenos">174</span>                <span class="s2">&quot;&gt;</span><span class="si">{0}</span><span class="s2">&lt; does not exist in jobs bucket &#39;</span><span class="si">{1}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="linenos">175</span>                    <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">bucket</span><span class="p">))</span></div>
+
+<span class="linenos">176</span>
+<div class="viewcode-block" id="OmegaJobs.create">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.create">[docs]</a>
+<span class="linenos">177</span>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos">178</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">179</span><span class="sd">        create a notebook from code</span>
+<span class="linenos">180</span>
+<span class="linenos">181</span><span class="sd">        :param code: the code as a string</span>
+<span class="linenos">182</span><span class="sd">        :param name: the name of the job to create</span>
+<span class="linenos">183</span><span class="sd">        :return: the metadata object created</span>
+<span class="linenos">184</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">185</span>        <span class="n">cells</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos">186</span>        <span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nbv4</span><span class="o">.</span><span class="n">new_code_cell</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">code</span><span class="p">))</span>
+<span class="linenos">187</span>        <span class="n">notebook</span> <span class="o">=</span> <span class="n">nbv4</span><span class="o">.</span><span class="n">new_notebook</span><span class="p">(</span><span class="n">cells</span><span class="o">=</span><span class="n">cells</span><span class="p">)</span>
+<span class="linenos">188</span>        <span class="c1"># put the notebook</span>
+<span class="linenos">189</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">190</span>        <span class="k">return</span> <span class="n">meta</span></div>
+
+<span class="linenos">191</span>
+<span class="linenos">192</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_fs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">193</span>        <span class="c1"># legacy support</span>
+<span class="linenos">194</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span>
+<span class="linenos">195</span>
+<div class="viewcode-block" id="OmegaJobs.get_collection">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.get_collection">[docs]</a>
+<span class="linenos">196</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+<span class="linenos">197</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">198</span><span class="sd">        returns the collection object</span>
+<span class="linenos">199</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">200</span>        <span class="c1"># FIXME this should use store.collection</span>
+<span class="linenos">201</span>        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">mongodb</span><span class="p">,</span> <span class="n">collection</span><span class="p">)</span></div>
+
+<span class="linenos">202</span>
+<div class="viewcode-block" id="OmegaJobs.list">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.list">[docs]</a>
+<span class="linenos">203</span>    <span class="k">def</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">204</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">205</span><span class="sd">        list all jobs matching filter.</span>
+<span class="linenos">206</span><span class="sd">        filter is a regex on the name of the ipynb entry.</span>
+<span class="linenos">207</span><span class="sd">        The default is all, i.e. `.*`</span>
+<span class="linenos">208</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">209</span>        <span class="n">job_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">regexp</span><span class="o">=</span><span class="n">regexp</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">210</span>        <span class="n">name</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">raw</span> <span class="k">else</span> <span class="n">v</span>
+<span class="linenos">211</span>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_dir_placeholder</span><span class="p">:</span>
+<span class="linenos">212</span>            <span class="n">job_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">job_list</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dir_placeholder</span><span class="p">)]</span>
+<span class="linenos">213</span>        <span class="k">return</span> <span class="n">job_list</span></div>
+
+<span class="linenos">214</span>
+<div class="viewcode-block" id="OmegaJobs.get_notebook_config">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.get_notebook_config">[docs]</a>
+<span class="linenos">215</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_notebook_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_filename</span><span class="p">):</span>
+<span class="linenos">216</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">217</span><span class="sd">        returns the omegaml script config on the notebook&#39;s first cell</span>
+<span class="linenos">218</span>
+<span class="linenos">219</span><span class="sd">        The config cell is in any of the following formats:</span>
+<span class="linenos">220</span>
+<span class="linenos">221</span><span class="sd">        *Option 1*::</span>
+<span class="linenos">222</span>
+<span class="linenos">223</span><span class="sd">            # omega-ml:</span>
+<span class="linenos">224</span><span class="sd">            #    run-at: &quot;&lt;cron schedule&gt;&quot;</span>
+<span class="linenos">225</span>
+<span class="linenos">226</span><span class="sd">        *Option 2*::</span>
+<span class="linenos">227</span>
+<span class="linenos">228</span><span class="sd">            # omega-ml:</span>
+<span class="linenos">229</span><span class="sd">            #   schedule: &quot;weekday(s), hour[, month]&quot;</span>
+<span class="linenos">230</span>
+<span class="linenos">231</span><span class="sd">        *Option 3*::</span>
+<span class="linenos">232</span>
+<span class="linenos">233</span><span class="sd">            # omega-ml:</span>
+<span class="linenos">234</span><span class="sd">            #   cron: &quot;&lt;cron schedule&gt;&quot;</span>
+<span class="linenos">235</span>
+<span class="linenos">236</span><span class="sd">        You may optionally specify only ``run-at``, ``schedule`` or ``cron``,</span>
+<span class="linenos">237</span><span class="sd">        i.e. without the ``omega-ml`` header::</span>
+<span class="linenos">238</span>
+<span class="linenos">239</span><span class="sd">            # run-at: &quot;&lt;cron schedule&gt;&quot;</span>
+<span class="linenos">240</span><span class="sd">            # cron: &quot;&lt;cron schedule&gt;&quot;</span>
+<span class="linenos">241</span><span class="sd">            # schedule: &quot;weekday(s), hour[, month]&quot;</span>
+<span class="linenos">242</span>
+<span class="linenos">243</span><span class="sd">        Args:</span>
+<span class="linenos">244</span><span class="sd">            nb_filename (str): the name of the notebook</span>
+<span class="linenos">245</span>
+<span class="linenos">246</span><span class="sd">        Returns:</span>
+<span class="linenos">247</span><span class="sd">            config(dict) =&gt; ``{ &#39;run-at&#39;: &lt;specifier&gt; }``</span>
+<span class="linenos">248</span>
+<span class="linenos">249</span><span class="sd">        Raises:</span>
+<span class="linenos">250</span><span class="sd">            ValueError, if there is no config cell or the config cell is invalid</span>
+<span class="linenos">251</span>
+<span class="linenos">252</span><span class="sd">        See Also:</span>
+<span class="linenos">253</span><span class="sd">            * JobSchedule</span>
+<span class="linenos">254</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">255</span>        <span class="n">notebook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">nb_filename</span><span class="p">)</span>
+<span class="linenos">256</span>        <span class="n">config_cell</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">257</span>        <span class="n">config_magic</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;# </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_config_magic</span><span class="p">]</span>
+<span class="linenos">258</span>        <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">notebook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cells&#39;</span><span class="p">):</span>
+<span class="linenos">259</span>            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">config_magic</span><span class="p">):</span>
+<span class="linenos">260</span>                <span class="n">config_cell</span> <span class="o">=</span> <span class="n">cell</span>
+<span class="linenos">261</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">config_cell</span><span class="p">:</span>
+<span class="linenos">262</span>            <span class="k">return</span> <span class="p">{}</span>
+<span class="linenos">263</span>        <span class="n">yaml_conf</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+<span class="linenos">264</span>            <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span>
+<span class="linenos">265</span>                <span class="n">config_cell</span><span class="o">.</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()])</span>
+<span class="linenos">266</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">267</span>            <span class="n">yaml_conf</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yaml_conf</span><span class="p">)</span>
+<span class="linenos">268</span>            <span class="n">config</span> <span class="o">=</span> <span class="n">yaml_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nb_config_magic</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">yaml_conf</span><span class="p">)</span>
+<span class="linenos">269</span>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="linenos">270</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+<span class="linenos">271</span>                <span class="s1">&#39;Notebook configuration cannot be parsed&#39;</span><span class="p">)</span>
+<span class="linenos">272</span>        <span class="c1"># translate config to canonical form</span>
+<span class="linenos">273</span>        <span class="c1"># TODO refactor to seperate method / mapped translation functions</span>
+<span class="linenos">274</span>        <span class="k">if</span> <span class="s1">&#39;schedule&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+<span class="linenos">275</span>            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;run-at&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">JobSchedule</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;schedule&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">276</span>        <span class="k">if</span> <span class="s1">&#39;cron&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+<span class="linenos">277</span>            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;run-at&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">JobSchedule</span><span class="o">.</span><span class="n">from_cron</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">278</span>        <span class="k">if</span> <span class="s1">&#39;run-at&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+<span class="linenos">279</span>            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;run-at&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">JobSchedule</span><span class="o">.</span><span class="n">from_cron</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run-at&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">280</span>        <span class="k">return</span> <span class="n">config</span></div>
+
+<span class="linenos">281</span>
+<div class="viewcode-block" id="OmegaJobs.run">
+<a class="viewcode-back" href="../../../reference/public.html#omegaml.notebook.jobs.OmegaJobs.run">[docs]</a>
+<span class="linenos">282</span>    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">283</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">284</span><span class="sd">        Run a job immediately</span>
+<span class="linenos">285</span>
+<span class="linenos">286</span><span class="sd">        The job is run and the results are stored in om.jobs(&#39;results/name &lt;timestamp&gt;&#39;) and</span>
+<span class="linenos">287</span><span class="sd">        the result&#39;s Metadata is returned.</span>
+<span class="linenos">288</span>
+<span class="linenos">289</span><span class="sd">        ``Metadata.attributes`` of the original job as given by name is updated:</span>
+<span class="linenos">290</span>
+<span class="linenos">291</span><span class="sd">        * ``attributes[&#39;job_runs&#39;]`` (list) - list of status of each run. Status is</span>
+<span class="linenos">292</span><span class="sd">             a dict as below</span>
+<span class="linenos">293</span><span class="sd">        * ``attributes[&#39;job_results&#39;]`` (list) - list of results job names in same</span>
+<span class="linenos">294</span><span class="sd">             index-order as job_runs</span>
+<span class="linenos">295</span><span class="sd">        * ``attributes[&#39;trigger&#39;]`` (list) - list of triggers</span>
+<span class="linenos">296</span>
+<span class="linenos">297</span><span class="sd">        The status of each job run is a dict with keys:</span>
+<span class="linenos">298</span>
+<span class="linenos">299</span><span class="sd">        * ``status`` (str): the status of the job run, OK or ERROR</span>
+<span class="linenos">300</span><span class="sd">        * ``ts`` (datetime): time of execution</span>
+<span class="linenos">301</span><span class="sd">        * ``message`` (str): error mesasge in case of ERROR, else blank</span>
+<span class="linenos">302</span><span class="sd">        * ``results`` (str): name of results in case of OK, else blank</span>
+<span class="linenos">303</span>
+<span class="linenos">304</span><span class="sd">        Usage::</span>
+<span class="linenos">305</span>
+<span class="linenos">306</span><span class="sd">            # directly (sync)</span>
+<span class="linenos">307</span><span class="sd">            meta = om.jobs.run(&#39;mynb&#39;)</span>
+<span class="linenos">308</span>
+<span class="linenos">309</span><span class="sd">            # via runtime (async)</span>
+<span class="linenos">310</span><span class="sd">            job = om.runtime.job(&#39;mynb&#39;)</span>
+<span class="linenos">311</span><span class="sd">            result = job.run()</span>
+<span class="linenos">312</span>
+<span class="linenos">313</span><span class="sd">        Args:</span>
+<span class="linenos">314</span><span class="sd">            name (str): the name of the jobfile</span>
+<span class="linenos">315</span><span class="sd">            event (str): an event name</span>
+<span class="linenos">316</span><span class="sd">            timeout (int): timeout in seconds, None means no timeout</span>
+<span class="linenos">317</span>
+<span class="linenos">318</span><span class="sd">        Returns:</span>
+<span class="linenos">319</span><span class="sd">             Metadata of the results entry</span>
+<span class="linenos">320</span>
+<span class="linenos">321</span><span class="sd">        See Also:</span>
+<span class="linenos">322</span><span class="sd">            * OmegaJobs.run_notebook</span>
+<span class="linenos">323</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">324</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_notebook</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<span class="linenos">325</span>
+<div class="viewcode-block" id="OmegaJobs.run_notebook">
+<a class="viewcode-back" href="../../../reference/public.html#omegaml.notebook.jobs.OmegaJobs.run_notebook">[docs]</a>
+<span class="linenos">326</span>    <span class="k">def</span><span class="w"> </span><span class="nf">run_notebook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">327</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; run a given notebook immediately.</span>
+<span class="linenos">328</span>
+<span class="linenos">329</span><span class="sd">        Args:</span>
+<span class="linenos">330</span><span class="sd">            name (str): the name of the jobfile</span>
+<span class="linenos">331</span><span class="sd">            event (str): an event name</span>
+<span class="linenos">332</span><span class="sd">            timeout (int): timeout in seconds</span>
+<span class="linenos">333</span>
+<span class="linenos">334</span><span class="sd">        Returns:</span>
+<span class="linenos">335</span><span class="sd">            Metadata of results</span>
+<span class="linenos">336</span>
+<span class="linenos">337</span><span class="sd">        See Also:</span>
+<span class="linenos">338</span><span class="sd">            * nbconvert https://nbconvert.readthedocs.io/en/latest/execute_api.html</span>
+<span class="linenos">339</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">340</span>        <span class="n">notebook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">341</span>        <span class="n">meta_job</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">342</span>        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="linenos">343</span>        <span class="c1"># execute kwargs</span>
+<span class="linenos">344</span>        <span class="c1"># -- see ExecuteProcessor class</span>
+<span class="linenos">345</span>        <span class="c1"># -- see https://nbconvert.readthedocs.io/en/latest/execute_api.html</span>
+<span class="linenos">346</span>        <span class="n">ep_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">347</span>            <span class="c1"># avoid timeouts to stop kernel</span>
+<span class="linenos">348</span>            <span class="s1">&#39;timeout&#39;</span><span class="p">:</span> <span class="n">timeout</span><span class="p">,</span>
+<span class="linenos">349</span>            <span class="c1"># avoid kernel at exit functions</span>
+<span class="linenos">350</span>            <span class="c1"># -- this stops ipykernel AttributeError &#39;send_multipart&#39;</span>
+<span class="linenos">351</span>            <span class="s1">&#39;shutdown_kernel&#39;</span><span class="p">:</span> <span class="s1">&#39;immediate&#39;</span><span class="p">,</span>
+<span class="linenos">352</span>            <span class="c1"># set kernel name, blank is default</span>
+<span class="linenos">353</span>            <span class="c1"># -- e.g. python3, ir</span>
+<span class="linenos">354</span>            <span class="c1"># -- see https://stackoverflow.com/a/47053020/890242</span>
+<span class="linenos">355</span>            <span class="s1">&#39;kernel_name&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+<span class="linenos">356</span>            <span class="c1"># always use the async kernel manager</span>
+<span class="linenos">357</span>            <span class="c1"># -- see https://github.com/jupyter/nbconvert/issues/1964</span>
+<span class="linenos">358</span>            <span class="s1">&#39;kernel_manager_class&#39;</span><span class="p">:</span> <span class="n">AsyncKernelManager</span><span class="p">,</span>
+<span class="linenos">359</span>        <span class="p">}</span>
+<span class="linenos">360</span>        <span class="c1"># overrides from metadata</span>
+<span class="linenos">361</span>        <span class="n">ep_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">meta_job</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ep_kwargs&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+<span class="linenos">362</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">363</span>            <span class="n">resources</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">364</span>                <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">365</span>                    <span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_TMP</span><span class="p">,</span>
+<span class="linenos">366</span>                <span class="p">}</span>
+<span class="linenos">367</span>            <span class="p">}</span>
+<span class="linenos">368</span>            <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_job</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;keep_output&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<span class="linenos">369</span>                <span class="c1"># https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html</span>
+<span class="linenos">370</span>                <span class="n">cp</span> <span class="o">=</span> <span class="n">ClearOutputPreprocessor</span><span class="p">()</span>
+<span class="linenos">371</span>                <span class="n">cp</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">resources</span><span class="p">)</span>
+<span class="linenos">372</span>            <span class="n">ep</span> <span class="o">=</span> <span class="n">ExecutePreprocessor</span><span class="p">(</span><span class="o">**</span><span class="n">ep_kwargs</span><span class="p">)</span>
+<span class="linenos">373</span>            <span class="n">ep</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">resources</span><span class="p">)</span>
+<span class="linenos">374</span>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">375</span>            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;ERROR&#39;</span>
+<span class="linenos">376</span>            <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="linenos">377</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">378</span>            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;OK&#39;</span>
+<span class="linenos">379</span>            <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="linenos">380</span>        <span class="k">finally</span><span class="p">:</span>
+<span class="linenos">381</span>            <span class="k">del</span> <span class="n">ep</span>
+<span class="linenos">382</span>        <span class="c1"># record results</span>
+<span class="linenos">383</span>        <span class="n">meta_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span>
+<span class="linenos">384</span>                                <span class="s1">&#39;results/</span><span class="si">{name}</span><span class="s1">_</span><span class="si">{ts}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+<span class="linenos">385</span>        <span class="n">meta_results</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;source_job&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+<span class="linenos">386</span>        <span class="n">meta_results</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">387</span>        <span class="n">job_results</span> <span class="o">=</span> <span class="n">meta_job</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_results&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="linenos">388</span>        <span class="n">job_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meta_results</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">389</span>        <span class="n">meta_job</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;job_results&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">job_results</span>
+<span class="linenos">390</span>        <span class="c1"># record final job status</span>
+<span class="linenos">391</span>        <span class="n">job_runs</span> <span class="o">=</span> <span class="n">meta_job</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_runs&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="linenos">392</span>        <span class="n">runstate</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">393</span>            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span>
+<span class="linenos">394</span>            <span class="s1">&#39;ts&#39;</span><span class="p">:</span> <span class="n">ts</span><span class="p">,</span>
+<span class="linenos">395</span>            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+<span class="linenos">396</span>            <span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="n">meta_results</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">397</span>        <span class="p">}</span>
+<span class="linenos">398</span>        <span class="n">job_runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">runstate</span><span class="p">)</span>
+<span class="linenos">399</span>        <span class="n">meta_job</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;job_runs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">job_runs</span>
+<span class="linenos">400</span>        <span class="c1"># set event run state if event was specified</span>
+<span class="linenos">401</span>        <span class="k">if</span> <span class="n">event</span><span class="p">:</span>
+<span class="linenos">402</span>            <span class="n">attrs</span> <span class="o">=</span> <span class="n">meta_job</span><span class="o">.</span><span class="n">attributes</span>
+<span class="linenos">403</span>            <span class="n">triggers</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;triggers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;triggers&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="linenos">404</span>            <span class="n">scheduled</span> <span class="o">=</span> <span class="p">(</span><span class="n">trigger</span> <span class="k">for</span> <span class="n">trigger</span> <span class="ow">in</span> <span class="n">triggers</span>
+<span class="linenos">405</span>                         <span class="k">if</span> <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;event-kind&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;scheduled&#39;</span><span class="p">)</span>
+<span class="linenos">406</span>            <span class="k">for</span> <span class="n">trigger</span> <span class="ow">in</span> <span class="n">scheduled</span><span class="p">:</span>
+<span class="linenos">407</span>                <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;event&#39;</span><span class="p">]:</span>
+<span class="linenos">408</span>                    <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+<span class="linenos">409</span>                    <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ts</span>
+<span class="linenos">410</span>        <span class="n">meta_job</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">411</span>        <span class="k">return</span> <span class="n">meta_results</span></div>
+
+<span class="linenos">412</span>
+<div class="viewcode-block" id="OmegaJobs.schedule">
+<a class="viewcode-back" href="../../../reference/public.html#omegaml.notebook.jobs.OmegaJobs.schedule">[docs]</a>
+<span class="linenos">413</span>    <span class="k">def</span><span class="w"> </span><span class="nf">schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_file</span><span class="p">,</span> <span class="n">run_at</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">last_run</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">414</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">415</span><span class="sd">        Schedule a processing of a notebook as per the interval</span>
+<span class="linenos">416</span><span class="sd">        specified on the job script</span>
+<span class="linenos">417</span>
+<span class="linenos">418</span><span class="sd">        Notes:</span>
+<span class="linenos">419</span><span class="sd">            This updates the notebook&#39;s Metadata entry by adding the</span>
+<span class="linenos">420</span><span class="sd">            next scheduled run in ``attributes[&#39;triggers&#39;]```</span>
+<span class="linenos">421</span>
+<span class="linenos">422</span><span class="sd">        Args:</span>
+<span class="linenos">423</span><span class="sd">            nb_file (str): the name of the notebook</span>
+<span class="linenos">424</span><span class="sd">            run_at (str|dict|JobSchedule): the schedule specified in a format</span>
+<span class="linenos">425</span><span class="sd">               suitable for JobSchedule. If not specified, this value is</span>
+<span class="linenos">426</span><span class="sd">               extracted from the first cell of the notebook</span>
+<span class="linenos">427</span><span class="sd">            last_run (datetime): the last time this job was run, use this to</span>
+<span class="linenos">428</span><span class="sd">               reschedule the job for the next run. Defaults to the last</span>
+<span class="linenos">429</span><span class="sd">               timestamp listed in ``attributes[&#39;job_runs&#39;]``, or datetime.utcnow()</span>
+<span class="linenos">430</span><span class="sd">               if no previous run exists.</span>
+<span class="linenos">431</span>
+<span class="linenos">432</span><span class="sd">        See Also:</span>
+<span class="linenos">433</span><span class="sd">            * croniter.get_next()</span>
+<span class="linenos">434</span><span class="sd">            * JobSchedule</span>
+<span class="linenos">435</span><span class="sd">            * OmegaJobs.get_notebook_config</span>
+<span class="linenos">436</span><span class="sd">            * cron expression - https://en.wikipedia.org/wiki/Cron#CRON_expression</span>
+<span class="linenos">437</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">438</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">nb_file</span><span class="p">)</span>
+<span class="linenos">439</span>        <span class="n">attrs</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span>
+<span class="linenos">440</span>        <span class="c1"># get/set run-at spec</span>
+<span class="linenos">441</span>        <span class="n">config</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="linenos">442</span>        <span class="c1"># see what we have as a schedule</span>
+<span class="linenos">443</span>        <span class="c1"># -- a dictionary of JobSchedule</span>
+<span class="linenos">444</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_at</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="linenos">445</span>            <span class="n">run_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Schedule</span><span class="p">(</span><span class="o">**</span><span class="n">run_at</span><span class="p">)</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">446</span>        <span class="c1"># -- a cron string</span>
+<span class="linenos">447</span>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_at</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">448</span>            <span class="n">run_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Schedule</span><span class="p">(</span><span class="n">run_at</span><span class="p">)</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">449</span>        <span class="c1"># -- a JobSchedule</span>
+<span class="linenos">450</span>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_at</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Schedule</span><span class="p">):</span>
+<span class="linenos">451</span>            <span class="n">run_at</span> <span class="o">=</span> <span class="n">run_at</span><span class="o">.</span><span class="n">cron</span>
+<span class="linenos">452</span>        <span class="c1"># -- nothing, may we have it on the job&#39;s config already</span>
+<span class="linenos">453</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">run_at</span><span class="p">:</span>
+<span class="linenos">454</span>            <span class="n">interval</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run-at&#39;</span><span class="p">)</span>
+<span class="linenos">455</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">456</span>            <span class="c1"># store the new schedule</span>
+<span class="linenos">457</span>            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;run-at&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_at</span>
+<span class="linenos">458</span>            <span class="n">interval</span> <span class="o">=</span> <span class="n">run_at</span>
+<span class="linenos">459</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">interval</span><span class="p">:</span>
+<span class="linenos">460</span>            <span class="c1"># if we don&#39;t have a run-spec, return without scheduling</span>
+<span class="linenos">461</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no run-at specification found, cannot schedule&#39;</span><span class="p">)</span>
+<span class="linenos">462</span>        <span class="c1"># get last time the job was run</span>
+<span class="linenos">463</span>        <span class="k">if</span> <span class="n">last_run</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">464</span>            <span class="n">job_runs</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_runs&#39;</span><span class="p">)</span>
+<span class="linenos">465</span>            <span class="k">if</span> <span class="n">job_runs</span><span class="p">:</span>
+<span class="linenos">466</span>                <span class="n">last_run</span> <span class="o">=</span> <span class="n">job_runs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;ts&#39;</span><span class="p">]</span>
+<span class="linenos">467</span>            <span class="k">else</span><span class="p">:</span>
+<span class="linenos">468</span>                <span class="n">last_run</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+<span class="linenos">469</span>        <span class="c1"># calculate next run time</span>
+<span class="linenos">470</span>        <span class="n">iter_next</span> <span class="o">=</span> <span class="n">croniter</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">last_run</span><span class="p">)</span>
+<span class="linenos">471</span>        <span class="n">run_at</span> <span class="o">=</span> <span class="n">iter_next</span><span class="o">.</span><span class="n">get_next</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+<span class="linenos">472</span>        <span class="c1"># store next scheduled run</span>
+<span class="linenos">473</span>        <span class="n">triggers</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;triggers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;triggers&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="linenos">474</span>        <span class="c1"># set up a schedule event</span>
+<span class="linenos">475</span>        <span class="n">scheduled_run</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">476</span>            <span class="s1">&#39;event-kind&#39;</span><span class="p">:</span> <span class="s1">&#39;scheduled&#39;</span><span class="p">,</span>
+<span class="linenos">477</span>            <span class="s1">&#39;event&#39;</span><span class="p">:</span> <span class="n">run_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+<span class="linenos">478</span>            <span class="s1">&#39;run-at&#39;</span><span class="p">:</span> <span class="n">run_at</span><span class="p">,</span>
+<span class="linenos">479</span>            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;PENDING&#39;</span>
+<span class="linenos">480</span>        <span class="p">}</span>
+<span class="linenos">481</span>        <span class="c1"># remove all pending triggers, add new triggers</span>
+<span class="linenos">482</span>        <span class="n">past_triggers</span> <span class="o">=</span> <span class="p">[</span><span class="n">cur</span> <span class="k">for</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">triggers</span> <span class="k">if</span> <span class="n">cur</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;PENDING&#39;</span><span class="p">]</span>
+<span class="linenos">483</span>        <span class="n">triggers</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<span class="linenos">484</span>        <span class="n">triggers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">past_triggers</span><span class="p">)</span>
+<span class="linenos">485</span>        <span class="n">triggers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scheduled_run</span><span class="p">)</span>
+<span class="linenos">486</span>        <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+<span class="linenos">487</span>        <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+
+<span class="linenos">488</span>
+<div class="viewcode-block" id="OmegaJobs.get_schedule">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.get_schedule">[docs]</a>
+<span class="linenos">489</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">only_pending</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">490</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">491</span><span class="sd">        return the cron schedule and corresponding triggers</span>
+<span class="linenos">492</span>
+<span class="linenos">493</span><span class="sd">        Args:</span>
+<span class="linenos">494</span><span class="sd">            name (str): the name of the job</span>
+<span class="linenos">495</span>
+<span class="linenos">496</span><span class="sd">        Returns:</span>
+<span class="linenos">497</span><span class="sd">            tuple of (run_at, triggers)</span>
+<span class="linenos">498</span>
+<span class="linenos">499</span><span class="sd">            run_at (str): the cron spec, None if not scheduled</span>
+<span class="linenos">500</span><span class="sd">            triggers (list): the list of triggers</span>
+<span class="linenos">501</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">502</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">503</span>        <span class="n">attrs</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span>
+<span class="linenos">504</span>        <span class="n">config</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">)</span>
+<span class="linenos">505</span>        <span class="n">triggers</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;triggers&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="linenos">506</span>        <span class="k">if</span> <span class="n">only_pending</span><span class="p">:</span>
+<span class="linenos">507</span>            <span class="n">triggers</span> <span class="o">=</span> <span class="p">[</span><span class="n">trigger</span> <span class="k">for</span> <span class="n">trigger</span> <span class="ow">in</span> <span class="n">triggers</span>
+<span class="linenos">508</span>                        <span class="k">if</span> <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;PENDING&#39;</span><span class="p">]</span>
+<span class="linenos">509</span>        <span class="k">if</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;run-at&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+<span class="linenos">510</span>            <span class="n">run_at</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run-at&#39;</span><span class="p">)</span>
+<span class="linenos">511</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">512</span>            <span class="n">run_at</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">513</span>        <span class="k">return</span> <span class="n">run_at</span><span class="p">,</span> <span class="n">triggers</span></div>
+
+<span class="linenos">514</span>
+<div class="viewcode-block" id="OmegaJobs.drop_schedule">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.drop_schedule">[docs]</a>
+<span class="linenos">515</span>    <span class="k">def</span><span class="w"> </span><span class="nf">drop_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos">516</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">517</span><span class="sd">        Drop an existing schedule, if any</span>
+<span class="linenos">518</span>
+<span class="linenos">519</span><span class="sd">        This will drop any existing schedule and any pending triggers of</span>
+<span class="linenos">520</span><span class="sd">        event-kind &#39;scheduled&#39;.</span>
+<span class="linenos">521</span>
+<span class="linenos">522</span><span class="sd">        Args:</span>
+<span class="linenos">523</span><span class="sd">            name (str): the name of the job</span>
+<span class="linenos">524</span>
+<span class="linenos">525</span><span class="sd">        Returns:</span>
+<span class="linenos">526</span><span class="sd">            Metadata</span>
+<span class="linenos">527</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">528</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">529</span>        <span class="n">attrs</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span>
+<span class="linenos">530</span>        <span class="n">config</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">)</span>
+<span class="linenos">531</span>        <span class="n">triggers</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;triggers&#39;</span><span class="p">)</span>
+<span class="linenos">532</span>        <span class="k">if</span> <span class="s1">&#39;run-at&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+<span class="linenos">533</span>            <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;run-at&#39;</span><span class="p">]</span>
+<span class="linenos">534</span>        <span class="k">for</span> <span class="n">trigger</span> <span class="ow">in</span> <span class="n">triggers</span><span class="p">:</span>
+<span class="linenos">535</span>            <span class="k">if</span> <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;event-kind&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;scheduled&#39;</span> <span class="ow">and</span> <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;PENDING&#39;</span><span class="p">:</span>
+<span class="linenos">536</span>                <span class="n">trigger</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;CANCELLED&#39;</span>
+<span class="linenos">537</span>        <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+
+<span class="linenos">538</span>
+<div class="viewcode-block" id="OmegaJobs.export">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.export">[docs]</a>
+<span class="linenos">539</span>    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">localpath</span><span class="o">=</span><span class="s1">&#39;memory&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">):</span>
+<span class="linenos">540</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">541</span><span class="sd">        Export a job or result file to HTML</span>
+<span class="linenos">542</span>
+<span class="linenos">543</span><span class="sd">        The job is exported in the given format.</span>
+<span class="linenos">544</span>
+<span class="linenos">545</span><span class="sd">        :param name: the name of the job, as in jobs.get</span>
+<span class="linenos">546</span><span class="sd">        :param localpath: the path of the local file to write. If you</span>
+<span class="linenos">547</span><span class="sd">           specify an empty path or &#39;memory&#39; a tuple of (body, resource)</span>
+<span class="linenos">548</span><span class="sd">           is returned instead</span>
+<span class="linenos">549</span><span class="sd">        :param format: the output format. currently only :code:`&#39;html&#39;` is supported</span>
+<span class="linenos">550</span><span class="sd">        :return: the (data, resources) tuple as returned by nbconvert. For</span>
+<span class="linenos">551</span><span class="sd">           format html data is the HTML&#39;s body, for PDF it is the pdf file contents</span>
+<span class="linenos">552</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">553</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">traitlets.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="linenos">554</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">nbconvert</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlidesExporter</span>
+<span class="linenos">555</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">nbconvert.exporters.html</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLExporter</span>
+<span class="linenos">556</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">nbconvert.exporters.pdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PDFExporter</span>
+<span class="linenos">557</span>
+<span class="linenos">558</span>        <span class="c1"># https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html</span>
+<span class="linenos">559</span>        <span class="c1"># (exporter class, filemode, config-values</span>
+<span class="linenos">560</span>        <span class="n">EXPORTERS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">561</span>            <span class="s1">&#39;html&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">HTMLExporter</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">{}),</span>
+<span class="linenos">562</span>            <span class="s1">&#39;htmlbody&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">HTMLExporter</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">{}),</span>
+<span class="linenos">563</span>            <span class="s1">&#39;pdf&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">PDFExporter</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="p">{}),</span>
+<span class="linenos">564</span>            <span class="s1">&#39;slides&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">SlidesExporter</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;RevealHelpPreprocessor.url_prefix&#39;</span><span class="p">:</span>
+<span class="linenos">565</span>                                                <span class="s1">&#39;https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/&#39;</span><span class="p">}),</span>
+<span class="linenos">566</span>        <span class="p">}</span>
+<span class="linenos">567</span>        <span class="c1"># get exporter according to format</span>
+<span class="linenos">568</span>        <span class="k">if</span> <span class="nb">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">EXPORTERS</span><span class="p">:</span>
+<span class="linenos">569</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;format </span><span class="si">{}</span><span class="s1"> is invalid. Choose one of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span> <span class="n">EXPORTERS</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+<span class="linenos">570</span>        <span class="n">exporter_cls</span><span class="p">,</span> <span class="n">fmode</span><span class="p">,</span> <span class="n">configkw</span> <span class="o">=</span> <span class="n">EXPORTERS</span><span class="p">[</span><span class="nb">format</span><span class="p">]</span>
+<span class="linenos">571</span>        <span class="c1"># prepare config</span>
+<span class="linenos">572</span>        <span class="c1"># http://nbconvert.readthedocs.io/en/latest/nbconvert_library.html#Using-different-preprocessors</span>
+<span class="linenos">573</span>        <span class="n">c</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+<span class="linenos">574</span>        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">configkw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="linenos">575</span>            <span class="n">context</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="linenos">576</span>            <span class="nb">setattr</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">context</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+<span class="linenos">577</span>        <span class="c1"># get configured exporter</span>
+<span class="linenos">578</span>        <span class="n">exporter</span> <span class="o">=</span> <span class="n">exporter_cls</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+<span class="linenos">579</span>        <span class="c1"># get notebook, convert and store in file if requested</span>
+<span class="linenos">580</span>        <span class="n">notebook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">581</span>        <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">resources</span><span class="p">)</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">from_notebook_node</span><span class="p">(</span><span class="n">notebook</span><span class="p">)</span>
+<span class="linenos">582</span>        <span class="k">if</span> <span class="n">localpath</span> <span class="ow">and</span> <span class="n">localpath</span> <span class="o">!=</span> <span class="s1">&#39;memory&#39;</span><span class="p">:</span>
+<span class="linenos">583</span>            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span> <span class="o">+</span> <span class="n">fmode</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+<span class="linenos">584</span>                <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos">585</span>        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">resources</span></div>
+
+<span class="linenos">586</span>
+<div class="viewcode-block" id="OmegaJobs.help">
+<a class="viewcode-back" href="../../../reference/jobs.html#omegaml.notebook.jobs.OmegaJobs.help">[docs]</a>
+<span class="linenos">587</span>    <span class="k">def</span><span class="w"> </span><span class="nf">help</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_or_obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">588</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; get help for a notebook</span>
+<span class="linenos">589</span>
+<span class="linenos">590</span><span class="sd">        Args:</span>
+<span class="linenos">591</span><span class="sd">            name_or_obj (str|obj): the name or actual object to get help for</span>
+<span class="linenos">592</span><span class="sd">            kind (str): optional, if specified forces retrieval of backend for the given kind</span>
+<span class="linenos">593</span><span class="sd">            raw (bool): optional, if True forces help to be the backend type of the object.</span>
+<span class="linenos">594</span><span class="sd">                If False returns the attributes[docs] on the object&#39;s metadata, if available.</span>
+<span class="linenos">595</span><span class="sd">                Defaults to False</span>
+<span class="linenos">596</span>
+<span class="linenos">597</span><span class="sd">        Returns:</span>
+<span class="linenos">598</span><span class="sd">            * help(obj) if python is in interactive mode</span>
+<span class="linenos">599</span><span class="sd">            * text(str) if python is in not interactive mode</span>
+<span class="linenos">600</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">601</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">help</span><span class="p">(</span><span class="n">name_or_obj</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">)</span></div>
+
+<span class="linenos">602</span>
+<span class="linenos">603</span>    <span class="k">def</span><span class="w"> </span><span class="nf">to_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">604</span>        <span class="c1"># TODO remove, pending #218</span>
+<span class="linenos">605</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos">606</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos">607</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">to_archive</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">608</span>
+<span class="linenos">609</span>    <span class="k">def</span><span class="w"> </span><span class="nf">from_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">610</span>        <span class="c1"># TODO remove, pending #218</span>
+<span class="linenos">611</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">):</span>
+<span class="linenos">612</span>            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;.ipynb&#39;</span>
+<span class="linenos">613</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">from_archive</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">614</span>
+<span class="linenos">615</span>    <span class="k">def</span><span class="w"> </span><span class="nf">promote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">616</span>        <span class="c1"># TODO remove, pending #218</span>
+<span class="linenos">617</span>        <span class="n">nb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">618</span>        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos">619</span>
+<span class="linenos">620</span>    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">621</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.1
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="jobs.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
