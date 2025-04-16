@@ -1,0 +1,238 @@
+Metadata-Version: 2.4
+Name: omegaml
+Version: 0.17.0
+Summary: An open source DataOps, MLOps platform for humans
+Home-page: https://omegaml.io/
+Author: Patrick Senti
+Author-email: patrick.senti@omegaml.io
+License: Apache 2.0 + "No Sell, Consulting Yes" License Condition
+Project-URL: Documentation, https://omegaml.github.io/omegaml/
+Project-URL: Issues, https://github.com/omegaml/omegaml/issues
+Project-URL: Source, https://github.com/omegaml/omegaml
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Development Status :: 4 - Beta
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development
+Classifier: Operating System :: POSIX :: Linux
+Classifier: License :: OSI Approved :: Apache Software License
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+License-File: LICENSE-NOSELLCLAUSE
+License-File: LICENSES-THIRDPARTY
+License-File: NOTICE
+Requires-Dist: celery<6.0,>5
+Requires-Dist: joblib>=0.9.4
+Requires-Dist: jupyter-client>=4.1.1
+Requires-Dist: ipython>=8.0
+Requires-Dist: mongoengine>=0.29
+Requires-Dist: pandas<2.2,>=2.0.0
+Requires-Dist: numpy>=1.16.4
+Requires-Dist: scipy>=0.17.0
+Requires-Dist: scikit-learn>=1.2
+Requires-Dist: PyYAML>=3.12
+Requires-Dist: flask-restx>=1.1.0
+Requires-Dist: Flask>3.0
+Requires-Dist: Flask-Session
+Requires-Dist: croniter>=0.3.30
+Requires-Dist: nbformat>=4.0.1
+Requires-Dist: nbconvert>=6.4.0
+Requires-Dist: dill>0.3.6
+Requires-Dist: callable-pip>=1.0.0
+Requires-Dist: appdirs>=1.4.3
+Requires-Dist: cron-descriptor>=1.2.31
+Requires-Dist: docopt>=0.6.2
+Requires-Dist: requests>=2.20.0
+Requires-Dist: tqdm>=4.32.2
+Requires-Dist: yaspin
+Requires-Dist: honcho>=1.0.1
+Requires-Dist: tabulate>=0.8.2
+Requires-Dist: smart_open
+Requires-Dist: imageio>=2.3.0
+Requires-Dist: psutil>=5.8
+Requires-Dist: cachetools>=5.0.0
+Requires-Dist: apispec>=5.2.2
+Requires-Dist: marshmallow>=3.17.0
+Requires-Dist: sqlalchemy<2
+Requires-Dist: minibatch[omegaml]
+Requires-Dist: validators
+Requires-Dist: dnspython>=2.6.1
+Requires-Dist: idna>=3.7
+Requires-Dist: pymongo>=4.10
+Provides-Extra: all
+Requires-Dist: tables>=3.7; extra == "all"
+Requires-Dist: matplotlib>=3.5; extra == "all"
+Requires-Dist: seaborn>=0.11; extra == "all"
+Requires-Dist: dash>=2.9; extra == "all"
+Requires-Dist: plotly; extra == "all"
+Requires-Dist: jupyterlab; extra == "all"
+Requires-Dist: jupyterhub; extra == "all"
+Requires-Dist: notebook; extra == "all"
+Requires-Dist: nbclassic; extra == "all"
+Requires-Dist: mlflow-skinny>=1.2; extra == "all"
+Requires-Dist: tensorflow<2.16,>2; extra == "all"
+Requires-Dist: json5>0.9; extra == "all"
+Requires-Dist: google_auth_oauthlib>=1; extra == "all"
+Requires-Dist: filelock>=3.0.0; extra == "all"
+Requires-Dist: gitdb>4.0; extra == "all"
+Requires-Dist: debugpy>=1.7; extra == "all"
+Requires-Dist: cryptography>=41.0; extra == "all"
+Requires-Dist: Babel>2.13; extra == "all"
+Requires-Dist: attrs>=21.4.0; extra == "all"
+Requires-Dist: asttokens>=2.4; extra == "all"
+Requires-Dist: anyio>=3.7; extra == "all"
+Requires-Dist: tomli>=2.0.0; extra == "all"
+Requires-Dist: openai; extra == "all"
+Requires-Dist: markitdown; extra == "all"
+Requires-Dist: pgvector; extra == "all"
+Provides-Extra: client
+Requires-Dist: tables>=3.7; extra == "client"
+Requires-Dist: dash>=2.9; extra == "client"
+Requires-Dist: plotly; extra == "client"
+Provides-Extra: ai
+Requires-Dist: openai; extra == "ai"
+Requires-Dist: markitdown; extra == "ai"
+Requires-Dist: pgvector; extra == "ai"
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: twine; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mock; extra == "dev"
+Requires-Dist: behave; extra == "dev"
+Requires-Dist: splinter[selenium]; extra == "dev"
+Requires-Dist: ipdb; extra == "dev"
+Requires-Dist: bumpversion; extra == "dev"
+Requires-Dist: pip-tools; extra == "dev"
+Requires-Dist: pytest-instafail; extra == "dev"
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: provides-extra
+Dynamic: requires-dist
+
+omega|ml - MLOps for humans
+===========================
+
+with just a single line of code you can
+
+- deploy machine learning models straight from Jupyter Notebook (or any other code)
+- implement data pipelines quickly, without memory limitation, all from a Pandas-like API
+- serve models and data from an easy to use REST API
+
+Further, omega|ml is the fastest way to
+
+- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
+- collaborate on data science projects easily, sharing Jupyter Notebooks
+- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
+
+Quick start
+-----------
+
+Start the omega|ml server right from your laptop or virtual machine
+
+.. code::
+
+    $ wget https://raw.githubusercontent.com/omegaml/omegaml/master/docker-compose.yml
+    $ docker-compose up -d
+
+Jupyter Notebook is immediately available at http://localhost:8899 (`omegamlisfun` to login).
+Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+The REST API is available at http://localhost:5000.
+
+Already have a Python environment (e.g. Jupyter Notebook)?
+Leverage the power of omega|ml by installing as follows:
+
+.. code::
+
+    # assuming you have started the server as per above
+    $ pip install omegaml
+
+Further information
+-------------------
+
+* Documentation: https://omegaml.github.io/omegaml/
+* Contributions: http://bit.ly/omegaml-contribute
+
+Examples
+--------
+
+.. code::
+
+    # transparently store Pandas Series and DataFrames or any Python object
+    om.datasets.put(df, 'stats')
+    om.datasets.get('stats', sales__gte=100)
+
+    # transparently store and get models
+    clf = LogisticRegression()
+    om.models.put(clf, 'forecast')
+    clf = om.models.get('forecast')
+
+    # run and scale models directly on the integrated Python or Spark compute cluster
+    om.runtime.model('forecast').fit('stats[^sales]', 'stats[sales]')
+    om.runtime.model('forecast').predict('stats')
+    om.runtime.model('forecast').gridsearch(X, Y)
+
+    # use the REST API to store and retrieve data, run predictions
+    requests.put('/v1/dataset/stats', json={...})
+    requests.get('/v1/dataset/stats?sales__gte=100')
+    requests.put('/v1/model/forecast', json={...})
+
+
+Use Cases
+=========
+
+omega|ml currently supports scikit-learn, Keras and Tensorflow out of the box.
+Need to deploy a model from another framework? Open an issue at
+https://github.com/omegaml/omegaml/issues or drop us a line at support@omegaml.io
+
+
+Machine Learning Deployment
+---------------------------
+
+- deploy models to production with a single line of code
+- serve and use models or datasets from a REST API
+
+
+Data Science Collaboration
+--------------------------
+
+- get a fully integrated data science workplace within minutes
+- easily share models, data, jupyter notebooks and reports with your collaborators
+
+Centralized Data & Compute cluster
+----------------------------------
+
+- perform out-of-core computations on a pure-python or Apache Spark compute cluster
+- have a shared NoSQL database (MongoDB), out of the box, working like a Pandas dataframe
+- use a compute cluster to train your models with no additional setup
+
+Scalability and Extensibility
+-----------------------------
+
+- scale your data science work from your laptop to team to production with no code changes
+- integrate any machine learning framework or third party data science platform with a common API
+
+Towards Data Science recently published an article on omega|ml:
+https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
+
+In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
+compute cluster, database and data source.
+
+*Commercial Edition & Support*
+
+https://omegaml.io
+
+omega|ml Commercial Edition provides security on every level and is ready made for Kubernetes
+deployment. It is licensed separately for on-premise, private or hybrid cloud.
+Sign up at https://omegaml.io

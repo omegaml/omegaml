@@ -7,7 +7,7 @@ from laptop to cloud or on-premises.
 
 .. note::
 
-    Release 0.16.5 introduces Generative AI as a first-class citizen and a new structure in this
+    Release 0.17.0 introduces Generative AI as a first-class citizen and a new structure in this
     documentation to reflect this.
 
     .. collapse:: Read more

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working with R &mdash; omega-ml 0.16.4 documentation</title>
+  <title>Working with R &mdash; omega-ml 0.17.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=81998473"></script>
+      <script src="../../_static/documentation_options.js?v=0c3dd48d"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -135,6 +135,15 @@
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Using omega-ml in R</a><a class="headerlink" href="#using-omega-ml-in-r" title="Link to this heading">¶</a></h2>
 <p>omega-ml works with R through the reticulate package, which enables R
 users to have the same API and fidelity to omega-ml as in Python.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Reticulate loads a new instance of the Python interpreter. To ensure it uses
+the same virtual environment, set the RETICULATE_PYTHON environment variable
+to the Python interpreter you want to use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">RETICULATE_PYTHON</span><span class="o">=</span><span class="k">$(</span>which<span class="w"> </span>python<span class="k">)</span>
+</pre></div>
+</div>
+</div>
 <div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># load omegaml</span>
 <span class="nf">library</span><span class="p">(</span><span class="n">reticulate</span><span class="p">)</span>
 <span class="n">om</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">import</span><span class="p">(</span><span class="s">&quot;omegaml&quot;</span><span class="p">)</span>
