@@ -186,7 +186,7 @@ jobs:
             pip install -r requirements.txt
             make multihtml
             make publish
-            git push --force origin gh-pages
+            git push --force --tags origin gh-pages
 workflows:
   version: 2
   workflow:
@@ -201,7 +201,11 @@ workflows:
             branches:
               only: /.*release-build.*/
       - docs:
+          # run as a last step to conserve cpu / memory resources in circleci worker
           context: omegaml
+          requires:
+            - test
+            - release
           filters:
             branches:
-              only: /master|.*docs.*/
+              only: /master|.*docs.*|release-build.*/

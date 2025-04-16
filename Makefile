@@ -26,6 +26,7 @@ freeze:
 sanity:
 	# quick sanity check -- avoid easy mistakes
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli --version
+	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
 dist: sanity
 	: "run setup.py sdist bdist_wheel"

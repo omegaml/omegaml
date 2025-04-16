@@ -31,6 +31,11 @@ om.datasets
         - :py:class:`omegaml.backends.virtualobj.VirtualObjectBackend`
         - :py:class:`omegaml.backends.rawdict.PandasRawDictBackend`
         - :py:class:`omegaml.backends.rawfiles.PythonRawFileBackend`
+
+        Backends for ``openai`` (loaded if installed)
+
+        .. versionadded:: 0.17.0
+
         - :py:class:`omegaml.backends.genai.mongovector.MongoDBVectorStore`
         - :py:class:`omegaml.backends.genai.pgvector.PGVectorBackend`
 
