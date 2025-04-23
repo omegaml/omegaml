@@ -364,14 +364,15 @@ class TextModel(GenAIModel):
             self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
 
     def _call_tools(self, tool_calls, conversation_id):
-        # process tool calls
+        # process tool calls, and call respective function
+        # -- see https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models
         results = []
         tool_prompts = []
         for tool_call in tool_calls:
-            tool = [(ts, tf) for ts, tf in zip(self.tools_specs, self.tools)
+            tool = [(ts, tf, tf.__name__) for ts, tf in zip(self.tools_specs, self.tools)
                     if tf.__name__ == tool_call['function']['name']]
             if tool:
-                tool, tool_func = tool[0]
+                tool, tool_func, tool_name = tool[0]
                 try:
                     tool_kwargs = json.loads(tool_call['function']['arguments'])
                     tool_result = tool_func(**tool_kwargs)
@@ -379,6 +380,8 @@ class TextModel(GenAIModel):
                     tool_result = repr(e)
                 tool_response = {
                     "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "name": tool_name,
                     "content": tool_result,
                     "conversation_id": conversation_id,
                 }
@@ -386,6 +389,7 @@ class TextModel(GenAIModel):
                 tool_prompts.append({
                     "role": "tool",
                     "tool_call_id": tool_call["id"],
+                    "name": tool_name,
                     "content": str(tool_result)
                 })
         return results, tool_prompts
@@ -482,6 +486,12 @@ class TextModel(GenAIModel):
             else:
                 tool_calls = None
             if use_tools and tool_calls:
+                tool_calls = self.pipeline(method='toolcall',
+                                           prompt_message=prompt_message,
+                                           messages=messages,
+                                           template=template,
+                                           tool_calls=tool_calls,
+                                           conversation_id=conversation_id, **kwargs) or tool_calls
                 results, tool_prompts = self._call_tools(tool_calls, conversation_id)
                 # ask llm to respond to tool results
                 # -- avoid recursive tool calls
@@ -490,11 +500,12 @@ class TextModel(GenAIModel):
                 kkwargs.pop('stream', None)
                 kkwargs.pop('tools', None)
                 kkwargs.pop('tool_choice', None)
-                toolcall_messages = messages + [prompt_message] + [message] + tool_prompts
-                toolcall_messages = self.pipeline(method='toolcall',
+                toolcall_messages = messages + [prompt_message] + [message.to_dict()] + tool_prompts
+                toolcall_messages = self.pipeline(method='toolresult',
                                                   prompt_message=prompt_message,
                                                   messages=toolcall_messages,
                                                   template=template,
+                                                  tool_calls=tool_calls,
                                                   conversation_id=conversation_id, **kwargs) or toolcall_messages
                 response = self.provider.complete(
                     messages=toolcall_messages,
@@ -509,10 +520,11 @@ class TextModel(GenAIModel):
                     'tool_prompts': tool_prompts,
                     'tool_results': results,
                 }
-                tooled_response_message = self.pipeline(method='toolresult', response_message=tooled_response_message,
+                tooled_response_message = self.pipeline(method='toolresponse', response_message=tooled_response_message,
                                                         prompt_message=prompt_message,
                                                         messages=toolcall_messages,
                                                         template=template,
+                                                        tool_calls=tool_calls,
                                                         conversation_id=conversation_id,
                                                         **kwargs) or tooled_response_message
                 if as_delta:
