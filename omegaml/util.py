@@ -1327,6 +1327,8 @@ def inprogress(text="running {fn}", **__kwargs):
             with yaspin(text=text, **__kwargs) as sp:
                 return fn(*args, **kwargs)
 
+        wrapper.__name__ = fn.__name__
+        inprogress.__name__ = fn.__name__
         return wrapper
 
     return decorator
