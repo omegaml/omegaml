@@ -262,14 +262,31 @@ class TextModel(GenAIModel):
     def __repr__(self):
         return f'{self.__class__.__name__}(base_url={self.base_url}, model={self.model})'
 
-    def set_trace(self, methods=None):
+    def set_trace(self, methods=None, clear=False):
+        """ trace method calls
+
+        Args:
+            methods (list): list of method names to trace, defaults to ['complete', 'embed', 'chat', 'pipeline', '_call_tools']
+            clear (bool): clear the trace, i.e. remove the tracing
+
+        Returns:
+
+        """
+
         def trace(method):
+            # avoid setting twice, or clear if requested
+            if hasattr(method, '_traced_method'):
+                if clear:
+                    method = getattr(method, '_traced_method')
+                return method
+
             def wrapper(*args, **kwargs):
                 print(f"Calling {method.__name__} with args={args}, kwargs={kwargs}")
                 result = method(*args, **kwargs)
                 print(f"=> {result}")
                 return result
 
+            setattr(wrapper, '_traced_method', method)
             return wrapper
 
         methods = methods or ['complete', 'embed', 'chat', '_call_tools', 'pipeline']
@@ -681,6 +698,7 @@ class TextModel(GenAIModel):
 
 class Provider:
     URL_REGEX = None
+    PROVIDER_URL = None
 
     def __init__(self, api_key, base_url, model=None, **kwargs):
         self.api_key = api_key
@@ -742,7 +760,8 @@ class OpenAIProvider(Provider):
             model=model or self.model,
             input=documents,
             dimensions=dimensions,
-            encoding_format="float"
+            encoding_format="float",
+            **kwargs,
         )
         return [d.embedding for d in response.data]
 
