@@ -11,12 +11,30 @@
 ##
 script_dir=$(realpath "$(dirname "$0")")
 source $script_dir/easyoptions || exit
+BASE_DIR=$(realpath "$script_dir/..")
 RELEASE_PATTERNS=${tag:-"release/[02].[0-9]+(.[0-9]+)?$"}
 RELEASES=$(git tag | grep -E "$RELEASE_PATTERNS" | xargs)
-CHANGES_DIR=./source/changes
+CHANGES_DIR=$BASE_DIR/source/changes
+PACKAGE_DIR=$(realpath $BASE_DIR/../omegaml)
+VERSION=$(cat $PACKAGE_DIR/VERSION)
+
+# replace "next" version inside sphinx tags in rst, md and py files
+# - .. versionadded:: next => .. versionadded/:: <version>
+# - .. versionchanged:: next => .. versionchanged/:: <version>
+function update_next_release()
+{
+  echo "INFO Updating 'next' version strings for releases matching $RELEASE_PATTERNS"
+  CHANGE_TAGS="versionadded versionchanged"
+  EXTS="\.(rst|md|py)$"
+  set -x
+  for tag in $CHANGE_TAGS; do
+    find $PACKAGE_DIR | grep -E $EXTS | xargs -I {} sed -i "s/\.\. $tag:: next/.. $tag:: $VERSION/g" {}
+  done
+}
 
 function generate_changes()
 {
+  echo "INFO Generating changelogs for releases matching $RELEASE_PATTERNS"
   for release in $(sort_semver $RELEASES); do
     # prepare md and rst filenames
     changefn_base="$CHANGES_DIR/v${release/release\//}"
@@ -74,5 +92,6 @@ sort_semver() {
     done | sort -n | awk '{print $2}'
 }
 
+update_next_release
 generate_changes
 

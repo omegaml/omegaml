@@ -383,6 +383,11 @@ class _DillDip:
         return isinstance(obj, dict) and obj.get('__dipped__') == self.__calories
 
 
+def tool(fn):
+    setattr(fn, '_omega_virtual', True)
+    return fn
+
+
 dilldip = _DillDip()
 # enable recursive tracing of globals
 # -- fixes https://github.com/uqfoundation/dill/issues/255
