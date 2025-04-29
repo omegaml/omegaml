@@ -395,14 +395,16 @@ class TextModel(GenAIModel):
                     tool_result = tool_func(**tool_kwargs)
                 except Exception as e:
                     tool_result = repr(e)
+                # -- record the output of the tool
                 tool_response = {
                     "role": "tool",
                     "tool_call_id": tool_call["id"],
                     "name": tool_name,
-                    "content": tool_result,
+                    "content": str(tool_result),
                     "conversation_id": conversation_id,
                 }
                 results.append(tool_response)
+                # -- provide a response prompt to the model
                 tool_prompts.append({
                     "role": "tool",
                     "tool_call_id": tool_call["id"],
