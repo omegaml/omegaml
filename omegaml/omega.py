@@ -1,4 +1,5 @@
 import os
+import traceback
 from uuid import uuid4
 
 from omegaml.util import inprogress
@@ -227,7 +228,7 @@ class OmegaDeferredInstance(object):
             try:
                 omega = loader()
             except Exception as e:
-                errors.append((loader, e))
+                errors.append((loader.__name__, e, traceback.format_exc()))
                 if any(condition and loader is expected for condition, expected in must_load):
                     raise
             else:

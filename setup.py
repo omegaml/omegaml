@@ -122,7 +122,7 @@ setup(
         'all': test_deps,
         'client': client_deps,
         'ai': ai_deps,
-        'dev': dev_deps,
+        'dev': test_deps + dev_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

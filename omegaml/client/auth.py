@@ -1,8 +1,7 @@
 import os
-from requests.auth import AuthBase
-
 from omegaml import session_cache
 from omegaml.util import load_class, settings, DefaultsContext
+from requests.auth import AuthBase
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -249,14 +248,6 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
                                 bucket=bucket)
 
     @classmethod
-    def get_runtime_auth(cls, defaults=None, om=None):
-        assert defaults or om, "require either defaults or om"
-        defaults = defaults or om.defaults
-        return OmegaRuntimeAuthentication(defaults.OMEGA_USERID,
-                                          defaults.OMEGA_APIKEY,
-                                          defaults.OMEGA_QUALIFIER)
-
-    @classmethod
     def get_userconfig_from_api(cls, api_auth=None, api_url=None, userid=None, apikey=None,
                                 requested_userid=None, defaults=None, qualifier=None, view=False):
         from omegaml.client.userconf import _get_userconfig_from_api, ensure_api_url
@@ -269,6 +260,14 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
                                         qualifier=qualifier or defaults.OMEGA_QUALIFIER,
                                         requested_userid=requested_userid,
                                         view=view)
+
+    @classmethod
+    def get_runtime_auth(cls, defaults=None, om=None):
+        assert defaults or om, "require either defaults or om"
+        defaults = defaults or om.defaults
+        return OmegaRuntimeAuthentication(defaults.OMEGA_USERID,
+                                          defaults.OMEGA_APIKEY,
+                                          defaults.OMEGA_QUALIFIER)
 
     @classmethod
     def save_userconfig_from_apikey(cls, configfile, userid, apikey, api_url=None, requested_userid=None,

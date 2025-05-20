@@ -3,13 +3,47 @@ from collections import namedtuple
 import json
 import re
 import requests
-from omegaml.backends.genai.index import DocumentIndex
-from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
-from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr
+from copy import deepcopy
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs, urljoin
 from uuid import uuid4
+
+from omegaml.backends.genai.index import DocumentIndex
+from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
+from omegaml.client.util import dotable
+from omegaml.store import OmegaStore
+from omegaml.util import ensure_list, tryOr
+
+
+class ToolRepository:
+    def __init__(self, store):
+        self.store = store
+
+    def load(self, tools):
+        """ load tools from repository
+
+        Args:
+            tools (list): list of tools to load, can be a list of strings, classes or callables
+
+        Returns:
+            list: list of tool functions
+        """
+        tool_fns = []
+        tools = ensure_list(tools)
+        for tool in tools:
+            if isinstance(tool, str):
+                tool = self.store.get(f'tools/{tool}')
+            if isinstance(tool, type):
+                plugin = tool()
+                # get all tools marked
+                plugin_tools = getattr(plugin, 'tools', [])
+                # fallback to all callable methods as tools
+                plugin_tools = plugin_tools or [getattr(plugin, m) for m in dir(plugin)
+                                                if not m.startswith('_') and callable(getattr(plugin, m))]
+                tool_fns.extend(plugin_tools)
+            elif callable(tool):
+                tool_fns.append(tool)
+        return tool_fns
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -120,11 +154,12 @@ class TextModelBackend(GenAIBaseBackend):
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
         # build actual model instance
-        model = TextModel(base_url, model, api_key=creds, template=template,
-                          data_store=data_store, pipeline=pipeline, tools=tools,
-                          dataset=self._messages_dataset(name, meta=meta),
-                          provider=provider, documents=documents,
-                          **params)
+        model_kwargs = {**dict(api_key=creds, template=template,
+                               data_store=data_store, pipeline=pipeline, tools=tools,
+                               dataset=self._messages_dataset(name, meta=meta),
+                               provider=provider, documents=documents),
+                        **params, **kwargs}
+        model = TextModel(base_url, model, **model_kwargs)
         return model
 
     def drop(self, name, data_store=None, force=False, **kwargs):
@@ -140,8 +175,8 @@ class TextModelBackend(GenAIBaseBackend):
                                                                                                       user=user)
 
     def _load_tools(self, tools):
-        tool_fns = [tool if callable(tool) else self.model_store.get(f'tools/{tool}') for tool in tools]
-        return tool_fns
+        loader = ToolRepository(self.model_store)
+        return loader.load(tools)
 
     def _load_documents(self, documents):
         documents = self.data_store.get(documents, model_store=self.model_store) if isinstance(documents,
@@ -239,10 +274,45 @@ class TextModel(GenAIModel):
             api_key=api_key,
             base_url=base_url,
             model=model)
-        self.pipeline = pipeline or (lambda *args, **kwargs: None)
+        self.pipeline = pipeline or self._default_pipeline
         self.tools = tools
-        self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(base_url={self.base_url}, model={self.model})'
+
+    def set_trace(self, methods=None, clear=False):
+        """ trace method calls
+
+        Args:
+            methods (list): list of method names to trace, defaults to ['complete', 'embed', 'chat', 'pipeline', '_call_tools']
+            clear (bool): clear the trace, i.e. remove the tracing
+
+        Returns:
+
+        """
+
+        def trace(method):
+            # avoid setting twice, or clear if requested
+            if hasattr(method, '_traced_method'):
+                if clear:
+                    method = getattr(method, '_traced_method')
+                return method
+
+            def wrapper(*args, **kwargs):
+                print(f"Calling {method.__name__} with args={args}, kwargs={kwargs}")
+                result = method(*args, **kwargs)
+                print(f"=> {result}")
+                return result
+
+            setattr(wrapper, '_traced_method', method)
+            return wrapper
+
+        methods = methods or ['complete', 'embed', 'chat', '_call_tools', 'pipeline']
+
+        for method in methods:
+            if hasattr(self, method):
+                setattr(self, method, trace(getattr(self, method)))
 
     def load(self, method):
         pass
@@ -295,9 +365,19 @@ class TextModel(GenAIModel):
         response_gen = (response_parser(response) for response in responses)
         return response_gen if stream else [response for response in response_gen][-1]
 
+    @property
+    def tools_specs(self):
+        """ return the function specs for the tools
+
+        Returns:
+            list: list of function specs for the tools
+        """
+        return [self._get_function_spec(tool) for tool in self.tools] if self.tools else None
+
     def _do_chat(self, prompt, conversation_id=None, data=None, use_tools=False, raw=False, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         conversation_id = conversation_id or uuid4().hex
+        # FIXME: move this to _do_complete; here it only works if user initially provided a conversation_id
         messages = self.conversation(conversation_id)
         if hasattr(messages, 'to_dict'):
             # convert pandas dataframe to records
@@ -305,56 +385,75 @@ class TextModel(GenAIModel):
         if messages is None:
             messages = [self._system_message(prompt, conversation_id=conversation_id)]
             self.data_store.put(messages, self.dataset, kind='pandas.rawdict')
-        responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data,
+        responses = self._do_complete(prompt, messages=messages, conversation_id=conversation_id, data=data,
                                       use_tools=use_tools, raw=raw, **kwargs)
         to_store = []
         for response in responses:
             response, prompt_message, response_message = response
             # wrapping in dict() to avoid modification by the data store (e.g. adding _id)
-            to_store = [
-                dict(prompt_message),
-                dict(response_message)
-            ]
+            to_store.extend([
+                deepcopy(prompt_message),
+                deepcopy(response_message)
+            ])
             yield conversation_id, response, prompt_message, response_message
         else:
             self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
 
     def _call_tools(self, tool_calls, conversation_id):
-        # process tool calls
+        # process tool calls, and call respective function
+        # -- see https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models
         results = []
         tool_prompts = []
         for tool_call in tool_calls:
-            tool = [(ts, tf) for ts, tf in zip(self.tools_specs, self.tools)
+            tool = [(ts, tf, tf.__name__) for ts, tf in zip(self.tools_specs, self.tools)
                     if tf.__name__ == tool_call['function']['name']]
             if tool:
-                tool, tool_func = tool[0]
-                tool_kwargs = json.loads(tool_call['function']['arguments'])
+                tool, tool_func, tool_name = tool[0]
                 try:
+                    tool_kwargs = json.loads(tool_call['function']['arguments'])
                     tool_result = tool_func(**tool_kwargs)
                 except Exception as e:
-                    tool_result = str(e)
+                    tool_result = repr(e)
+                # -- record the output of the tool
                 tool_response = {
-                    "role": "assistant",
-                    "content": tool_result,
+                    "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "name": tool_name,
+                    "content": str(tool_result),
                     "conversation_id": conversation_id,
                 }
                 results.append(tool_response)
+                # -- provide a response prompt to the model
                 tool_prompts.append({
                     "role": "tool",
                     "tool_call_id": tool_call["id"],
+                    "name": tool_name,
                     "content": str(tool_result)
                 })
         return results, tool_prompts
 
     def conversation(self, conversation_id=None, raw=False):
+        import pandas as pd
         if conversation_id is None:
             filter = {}
         else:
             filter = {'conversation_id': conversation_id}
-        messages = self.data_store.get(self.dataset, **filter)
-        if messages is not None:
+        # TODO use tracking as a message store (to overcome pandas.rawdict limitations)
+        mdf = self.data_store.get(self.dataset, lazy=True, **filter)
+        if mdf is not None:
+            mdf.columns = ['role', 'content', 'conversation_id', 'tool_calls']
+            messages = mdf.value
+            messages.where(pd.notna(messages), None, inplace=True)  # replace NaN with None
             messages = messages[[c for c in messages.columns if c != '_id']]
-        return messages if not raw else messages.to_dict('records')
+            if raw:
+                messages = messages.to_dict('records')
+                for message in messages:
+                    # remove tool_calls from raw messages
+                    if message.get('tool_calls') is None:
+                        message.pop('tool_calls', None)
+        else:
+            messages = []
+        return messages
 
     def _system_message(self, prompt, conversation_id=None):
         return {
@@ -366,7 +465,7 @@ class TextModel(GenAIModel):
     def _do_complete(self, prompt, messages=None, conversation_id=None, data=None, stream=False,
                      use_tools=False, raw=False, **kwargs):
         conversation_id = conversation_id or uuid4().hex
-        messages = messages or []
+        messages = messages if messages is not None else []
         if prompt and isinstance(prompt, str):
             # support direct text input
             prompt_message = {
@@ -374,33 +473,34 @@ class TextModel(GenAIModel):
                 "content": self._augment_prompt(prompt, self.documents),
                 "conversation_id": conversation_id,
             }
-            messages = ([self._system_message(prompt, conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
+            messages = messages or ([self._system_message(prompt, conversation_id=conversation_id)] +
+                                    [self._augment_message(m, self.documents) for m in messages])
         elif isinstance(prompt, dict):
             # support structured input
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
             #    https://platform.openai.com/docs/api-reference/chat
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
-            messages = ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
+            messages = messages or ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
+                                    [self._augment_message(m, self.documents) for m in messages])
             prompt_message = prompt
+            prompt_message['conversation_id'] = conversation_id
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
             #    https://platform.openai.com/docs/api-reference/chat
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
             prompts = '\n\n'.join(m.get('content', '') for m in prompt)
-            messages = ([self._system_message(prompts,
-                                              conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in prompt])
+            messages = messages or ([self._system_message(prompts,
+                                                          conversation_id=conversation_id)] +
+                                    [self._augment_message(m, self.documents) for m in prompt])
             prompt_message = None
         else:
             # raw input, assume messages contains the user prompt
             prompt_message = None
             prompts = '\n\n'.join(m.get('content', '') for m in messages)
-            messages = ([self._system_message(prompts,
-                                              conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
+            messages = messages or ([self._system_message(prompts,
+                                                          conversation_id=conversation_id)] +
+                                    [self._augment_message(m, self.documents) for m in messages])
         if self.tools:
             kwargs.update(tools=self.tools_specs,
                           tool_choice='auto')
@@ -438,6 +538,12 @@ class TextModel(GenAIModel):
             else:
                 tool_calls = None
             if use_tools and tool_calls:
+                tool_calls = self.pipeline(method='toolcall',
+                                           prompt_message=prompt_message,
+                                           messages=messages,
+                                           template=template,
+                                           tool_calls=tool_calls,
+                                           conversation_id=conversation_id, **kwargs) or tool_calls
                 results, tool_prompts = self._call_tools(tool_calls, conversation_id)
                 # ask llm to respond to tool results
                 # -- avoid recursive tool calls
@@ -446,11 +552,12 @@ class TextModel(GenAIModel):
                 kkwargs.pop('stream', None)
                 kkwargs.pop('tools', None)
                 kkwargs.pop('tool_choice', None)
-                toolcall_messages = messages + [prompt_message] + [message] + tool_prompts
-                toolcall_messages = self.pipeline(method='toolcall',
+                toolcall_messages = messages + [prompt_message] + [message.to_dict()] + tool_prompts
+                toolcall_messages = self.pipeline(method='toolresult',
                                                   prompt_message=prompt_message,
                                                   messages=toolcall_messages,
                                                   template=template,
+                                                  tool_calls=tool_calls,
                                                   conversation_id=conversation_id, **kwargs) or toolcall_messages
                 response = self.provider.complete(
                     messages=toolcall_messages,
@@ -465,10 +572,11 @@ class TextModel(GenAIModel):
                     'tool_prompts': tool_prompts,
                     'tool_results': results,
                 }
-                tooled_response_message = self.pipeline(method='toolresult', response_message=tooled_response_message,
+                tooled_response_message = self.pipeline(method='toolresponse', response_message=tooled_response_message,
                                                         prompt_message=prompt_message,
                                                         messages=toolcall_messages,
                                                         template=template,
+                                                        tool_calls=tool_calls,
                                                         conversation_id=conversation_id,
                                                         **kwargs) or tooled_response_message
                 if as_delta:
@@ -590,7 +698,7 @@ class TextModel(GenAIModel):
             "type": "function",
             "function": {
                 "name": func.__name__,
-                "description": inspect.getdoc(func) or 'A function to return a response',
+                "description": inspect.getdoc(func) or f'A function to {func.__name__}',
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -619,9 +727,13 @@ class TextModel(GenAIModel):
         message['content'] = augmented if augmented else message.get('content')
         return message
 
+    def _default_pipeline(self, *args, **kwargs):
+        return None
+
 
 class Provider:
     URL_REGEX = None
+    PROVIDER_URL = None
 
     def __init__(self, api_key, base_url, model=None, **kwargs):
         self.api_key = api_key
@@ -629,14 +741,42 @@ class Provider:
         self.model = model
 
     def embed(self, documents, dimensions=None, **kwargs):
+        """ return embeddings for the documents
+
+        Args:
+            documents (list): list of documents to embed
+            dimensions (int): number of dimensions to embed to
+
+        Returns:
+            list: list of embeddings as list[list[float, ...]]
+        """
         raise NotImplementedError
 
-    def complete(self, model, messages, stream=False, **kwargs):
+    def complete(self, messages, stream=False, model=None, **kwargs):
+        """ return completions for the messages
+
+        Args:
+            messages (list): list of messages to complete
+            stream (bool): stream the response
+            model (str): model name to use for completion
+            kwargs (dict): additional arguments to pass to the provider
+
+        Returns:
+
+        """
         raise NotImplementedError
 
     @classmethod
     def match_url(cls, url):
         return re.match(cls.URL_REGEX, str(url)) if cls.URL_REGEX else False
+
+    def sanitize(self, resp):
+        if resp.status_code >= 400:
+            raise Exception(f"Error {resp.status_code} calling {resp.url}, text={resp.text}")
+        return resp
+
+    def response(self, resp):
+        return dotable(self.sanitize(resp).json())
 
 
 class OpenAIProvider(Provider):
@@ -651,13 +791,14 @@ class OpenAIProvider(Provider):
 
     def embed(self, documents, dimensions=None, model=None, **kwargs):
         documents = ensure_list(documents)
-        embeddings = self.client.embeddings.create(
+        response = self.client.embeddings.create(
             model=model or self.model,
             input=documents,
             dimensions=dimensions,
-            encoding_format="float"
+            encoding_format="float",
+            **kwargs,
         )
-        return embeddings
+        return [d.embedding for d in response.data]
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         response = self.client.chat.completions.create(
@@ -689,22 +830,21 @@ class JinaEmbeddingsProvider(Provider):
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}'
         }
-        url = urljoin(self.base_url, 'embeddings')
+        url = urljoin(self.base_url + '/', 'embeddings')
         resp = requests.post(url,
                              headers=headers,
-                             json={'model': self.model,
+                             json={'model': model or self.model,
                                    'input': [{
                                        'text': doc
                                    } for doc in documents]})
-        assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
+        data = self.sanitize(resp).json().get('data', [])
         return [d['embedding'] for d in sorted(data, key=lambda x: x['index'])]
 
 
 class AnythingLLMProvider(Provider):
     URL_REGEX = r'https?://(api\.anythingllm\.com|localhost:(3001)+|anythingllm\.com)/.*'
 
-    def embed(self, documents, dimensions=None, **kwargs):
+    def embed(self, documents, dimensions=None, model=None, **kwargs):
         """ Embed documents
 
         Args:
@@ -718,34 +858,38 @@ class AnythingLLMProvider(Provider):
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}',
         }
-        url = urljoin(self.base_url, 'embeddings')
+        url = urljoin(self.base_url + '/', 'embeddings')
         documents = ensure_list(documents)
         resp = requests.post(url,
                              headers=headers,
                              json={'inputs': documents,
-                                   'model': self.model})
-        assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
+                                   'model': model or self.model})
+        data = self.sanitize(resp).json().get('data', [])
         return [d['embedding'] for d in data]
 
-    def complete(self, messages, stream=False, **kwargs):
+    def complete(self, messages, stream=False, model=None, **kwargs):
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}',
         }
-        url = f'{self.base_url}/chat/completions'
+        url = urljoin(self.base_url + '/', 'chat/completions')
         resp = requests.post(url,
                              headers=headers,
                              json={'messages': messages,
-                                   'model': self.model,
+                                   'model': model or self.model,
                                    'stream': stream})
-        return resp.json()
+        return self.response(resp)
+
+
+class OllamaProvider(OpenAIProvider):
+    URL_REGEX = r'https?://localhost:11434/.*'
 
 
 PROVIDERS = {
     'openai': OpenAIProvider,
     'anythingllm': AnythingLLMProvider,
     'jina': JinaEmbeddingsProvider,
+    'ollama': OllamaProvider,
     'default': OpenAIProvider,
 }
 
