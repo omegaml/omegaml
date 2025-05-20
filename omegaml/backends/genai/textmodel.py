@@ -4,14 +4,46 @@ import json
 import re
 import requests
 from copy import deepcopy
+from openai import OpenAI
+from urllib.parse import urlparse, parse_qs, urljoin
+from uuid import uuid4
+
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.client.util import dotable
 from omegaml.store import OmegaStore
 from omegaml.util import ensure_list, tryOr
-from openai import OpenAI
-from urllib.parse import urlparse, parse_qs, urljoin
-from uuid import uuid4
+
+
+class ToolRepository:
+    def __init__(self, store):
+        self.store = store
+
+    def load(self, tools):
+        """ load tools from repository
+
+        Args:
+            tools (list): list of tools to load, can be a list of strings, classes or callables
+
+        Returns:
+            list: list of tool functions
+        """
+        tool_fns = []
+        tools = ensure_list(tools)
+        for tool in tools:
+            if isinstance(tool, str):
+                tool = self.store.get(f'tools/{tool}')
+            if isinstance(tool, type):
+                plugin = tool()
+                # get all tools marked
+                plugin_tools = getattr(plugin, 'tools', [])
+                # fallback to all callable methods as tools
+                plugin_tools = plugin_tools or [getattr(plugin, m) for m in dir(plugin)
+                                                if not m.startswith('_') and callable(getattr(plugin, m))]
+                tool_fns.extend(plugin_tools)
+            elif callable(tool):
+                tool_fns.append(tool)
+        return tool_fns
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -143,21 +175,8 @@ class TextModelBackend(GenAIBaseBackend):
                                                                                                       user=user)
 
     def _load_tools(self, tools):
-        tool_fns = []
-        for tool in tools:
-            if isinstance(tool, str):
-                tool = self.model_store.get(f'tools/{tool}')
-            if isinstance(tool, type):
-                plugin = tool()
-                # get all tools marked
-                plugin_tools = getattr(plugin, 'tools', [])
-                # fallback to all callable methods as tools
-                plugin_tools = plugin_tools or [getattr(plugin, m) for m in dir(plugin)
-                                                if not m.startswith('_') and callable(getattr(plugin, m))]
-                tool_fns.extend(plugin_tools)
-            elif callable(tool):
-                tool_fns.append(tool)
-        return tool_fns
+        loader = ToolRepository(self.model_store)
+        return loader.load(tools)
 
     def _load_documents(self, documents):
         documents = self.data_store.get(documents, model_store=self.model_store) if isinstance(documents,
@@ -414,14 +433,27 @@ class TextModel(GenAIModel):
         return results, tool_prompts
 
     def conversation(self, conversation_id=None, raw=False):
+        import pandas as pd
         if conversation_id is None:
             filter = {}
         else:
             filter = {'conversation_id': conversation_id}
-        messages = self.data_store.get(self.dataset, **filter)
-        if messages is not None:
+        # TODO use tracking as a message store (to overcome pandas.rawdict limitations)
+        mdf = self.data_store.get(self.dataset, lazy=True, **filter)
+        if mdf is not None:
+            mdf.columns = ['role', 'content', 'conversation_id', 'tool_calls']
+            messages = mdf.value
+            messages.where(pd.notna(messages), None, inplace=True)  # replace NaN with None
             messages = messages[[c for c in messages.columns if c != '_id']]
-        return messages if not raw else messages.to_dict('records')
+            if raw:
+                messages = messages.to_dict('records')
+                for message in messages:
+                    # remove tool_calls from raw messages
+                    if message.get('tool_calls') is None:
+                        message.pop('tool_calls', None)
+        else:
+            messages = []
+        return messages
 
     def _system_message(self, prompt, conversation_id=None):
         return {
@@ -451,6 +483,7 @@ class TextModel(GenAIModel):
             messages = messages or ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
                                     [self._augment_message(m, self.documents) for m in messages])
             prompt_message = prompt
+            prompt_message['conversation_id'] = conversation_id
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
