@@ -282,6 +282,29 @@ class OmegaSimpleTracker(TrackingProvider):
         data = self._common_log_data(event, key, value, step=step, dt=dt, **extra)
         self._write_log(data)
 
+    def log_events(self, event, key, values, step=None, dt=None, **extra):
+        """ log a series of events
+
+        This is a convenience method to log multiple values for the same event.
+        All values will be logged with the same commong log data, i.e. the same
+        datetime, step, and any extra values.
+
+        Args:
+            event (str): the event name
+            key (str): the key for the event
+            values (list): a list of values to log
+            step (int): the step, if any
+            dt (datetime): the datetime, defaults to now
+            **extra: any other values to store with event
+
+        .. versionadded:: NEXT
+
+        """
+        data = self._common_log_data(event, key, None, step=step, dt=dt, **extra)
+        for value in values:
+            data['value'] = value
+            self._write_log(dict(data))
+
     def log_param(self, key, value, step=None, dt=None, **extra):
         """ log an experiment parameter
 

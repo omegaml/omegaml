@@ -1,13 +1,14 @@
 from unittest import TestCase, mock
 
 import inspect
+from types import FunctionType
+
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.mongovector import MongoDBVectorStore
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
-from types import FunctionType
 
 
 class GenAIModelTests(OmegaTestMixin, TestCase):
@@ -114,7 +115,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
-    def test_openai_calling(self, OpenAIProvider):
+    def test_openai_completion(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
         # mock openai call
@@ -134,9 +135,8 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         kwargs = model.provider.complete.call_args.kwargs
         self.assertIn('model', kwargs)
         self.assertIn('messages', kwargs)
-        model = kwargs['model']
-        self.assertEqual(model, 'mymodel')
-        self.assertEqual(model, 'mymodel')
+        model_name = kwargs['model']
+        self.assertEqual(model_name, 'mymodel')
         messages = kwargs['messages']
         # check all conversation ids are the same
         conversation_id = None
@@ -149,6 +149,49 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(result['role'], 'assistant')
         self.assertEqual(result['content'], 'hello how are you')
         self.assertEqual(result['conversation_id'], conversation_id)
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_openai_chat(self, OpenAIProvider):
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = self.om.models.get('mymodel', data_store=self.om.datasets)
+        # mock openai call
+        openai_response = AttrDict({
+            'choices': [AttrDict({
+                'message': AttrDict({
+                    'role': 'assistant',
+                    'content': 'hello how are you',
+                })})]
+        })
+        model.provider = OpenAIProvider
+        model.provider.complete.return_value = openai_response
+        # check call to openai would be ok
+        conversation_id, result = model.chat('hello')
+        model.provider = OpenAIProvider
+        model.provider.complete.assert_called()
+        kwargs = model.provider.complete.call_args.kwargs
+        self.assertIn('model', kwargs)
+        self.assertIn('messages', kwargs)
+        model_name = kwargs['model']
+        self.assertEqual(model_name, 'mymodel')
+        self.assertEqual(model_name, 'mymodel')
+        messages = kwargs['messages']
+        # check all conversation ids are the same
+        for message in messages:
+            if conversation_id is not None:
+                self.assertEqual(message['conversation_id'], conversation_id)
+            else:
+                conversation_id = message['conversation_id']
+        # check conversation is returned as expected
+        self.assertEqual(result['role'], 'assistant')
+        self.assertEqual(result['content'], 'hello how are you')
+        self.assertEqual(result['conversation_id'], conversation_id)
+        # check we have a tracking log
+        self.assertIsNotNone(model.tracking)
+        conversation_log = model.conversation(raw=True)
+        self.assertEqual(len(conversation_log), 3)  # system, user, assistant
+        self.assertEqual(conversation_log[0]['role'], 'system')
+        self.assertEqual(conversation_log[1]['role'], 'user')
+        self.assertEqual(conversation_log[2]['role'], 'assistant')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_openai_stream(self, OpenAIProvider):
@@ -222,7 +265,19 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(toolfn(), 'sunny')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
-    def test_tool_use(self, OpenAIProvider):
+    def test_tool_use_notrack(self, OpenAIProvider):
+        self._test_tool_use(OpenAIProvider, tracking=False)
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_tool_use_tracked(self, OpenAIProvider):
+        model = self._test_tool_use(OpenAIProvider, tracking=True)
+        # check model tracking
+        self.assertIsNotNone(model.tracking)
+        data = model.tracking.data(event='toolcall')
+        self.assertIsNotNone(data)
+        self.assertEqual(len(data), 2)  # not streamed, streamed
+
+    def _test_tool_use(self, OpenAIProvider, tracking=False):
         om = self.om
 
         # define a tool
@@ -235,7 +290,11 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                              tools=['weather'])
         self.assertEqual(meta.attributes['tools'], ['weather'])
         # check model triggers tools
-        model = om.models.get('mymodel')
+        if not tracking:
+            model = om.models.get('mymodel')
+        else:
+            model = om.models.get('mymodel', data_store=om.datasets)
+            model._ensure_tracking()
         # mock openai call
         # -- Ref: https://platform.openai.com/docs/api-reference/chat/get
         # -- the model's response to initial prompt (calling a tool)
@@ -319,6 +378,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                          {'tool_calls': [{'id': 'call_tool_1', 'type': 'function',
                                           'function': {'name': 'weather', 'arguments': '{}'}}],
                           'tool_prompts': [{'role': 'tool', 'tool_call_id': 'call_tool_1', 'content': 'sunny'}]})
+        return model
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_documents_use(self, OpenAIProvider):

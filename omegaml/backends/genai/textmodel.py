@@ -1,15 +1,18 @@
 from collections import namedtuple
 
 import json
+import pandas as pd
 import re
 import requests
-from omegaml.backends.genai.index import DocumentIndex
-from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
-from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs, urljoin
 from uuid import uuid4
+
+from omegaml.backends.genai.index import DocumentIndex
+from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
+from omegaml.backends.tracking import OmegaSimpleTracker
+from omegaml.store import OmegaStore
+from omegaml.util import ensure_list, tryOr
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -88,7 +91,6 @@ class TextModelBackend(GenAIBaseBackend):
         }
         attributes = {
             'template': template or query.get('template'),
-            'dataset': self._messages_dataset(name),
             'pipeline': pipeline or None,
             'tools': tools or [],
             'documents': documents or [],
@@ -119,10 +121,9 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
-        # build actual model instance
         model = TextModel(base_url, model, api_key=creds, template=template,
                           data_store=data_store, pipeline=pipeline, tools=tools,
-                          dataset=self._messages_dataset(name, meta=meta),
+                          tracking=self.tracking,
                           provider=provider, documents=documents,
                           **params)
         return model
@@ -130,14 +131,7 @@ class TextModelBackend(GenAIBaseBackend):
     def drop(self, name, data_store=None, force=False, **kwargs):
         meta = self.model_store.metadata(name)
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
-        if data_store:
-            self.data_store.drop(self._messages_dataset(name, meta=meta), force=force, **kwargs)
         return self.model_store._drop(name, force=force, **kwargs)
-
-    def _messages_dataset(self, name, meta=None, user=None):
-        user = user or self.model_store.defaults.get('OMEGA_USERID', 'default')
-        return f'./openai/messages/{name}' if meta is None else meta.attributes.get('dataset').format(name=name,
-                                                                                                      user=user)
 
     def _load_tools(self, tools):
         tool_fns = [tool if callable(tool) else self.model_store.get(f'tools/{tool}') for tool in tools]
@@ -223,10 +217,14 @@ class TextModel(GenAIModel):
 
             model = om.models.get('mymodel')
             messages = model.conversation(conversation_id)
+
+    .. versionchanged:: NEXT
+        the ./openai/messages dataset has been replaced by standard experiment tracking
+        (use om.datasets to access prior conversations)
     """
 
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
-                 dataset=None, pipeline=None, provider='openai', tools=None, documents=None, **kwargs):
+                 tracking=None, pipeline=None, provider='openai', tools=None, documents=None, **kwargs):
         super().__init__()
         self.base_url = base_url
         self.model = model
@@ -234,7 +232,7 @@ class TextModel(GenAIModel):
         self.kwargs = kwargs
         self.template = template or 'You are a helpful assistant.'
         self.data_store = data_store
-        self.dataset = dataset
+        self.tracking = tracking
         self.provider = PROVIDERS[provider](
             api_key=api_key,
             base_url=base_url,
@@ -297,14 +295,12 @@ class TextModel(GenAIModel):
 
     def _do_chat(self, prompt, conversation_id=None, data=None, use_tools=False, raw=False, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
+        self._ensure_tracking()
         conversation_id = conversation_id or uuid4().hex
-        messages = self.conversation(conversation_id)
-        if hasattr(messages, 'to_dict'):
-            # convert pandas dataframe to records
-            messages = messages.to_dict('records')
-        if messages is None:
+        messages = self.conversation(conversation_id, raw=True)
+        if not messages:
             messages = [self._system_message(prompt, conversation_id=conversation_id)]
-            self.data_store.put(messages, self.dataset, kind='pandas.rawdict')
+            self._log_events('conversation', conversation_id, messages)
         responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data,
                                       use_tools=use_tools, raw=raw, **kwargs)
         to_store = []
@@ -317,7 +313,7 @@ class TextModel(GenAIModel):
             ]
             yield conversation_id, response, prompt_message, response_message
         else:
-            self.data_store.put(to_store, self.dataset, kind='pandas.rawdict')
+            self._log_events('conversation', conversation_id, to_store)
 
     def _call_tools(self, tool_calls, conversation_id):
         # process tool calls
@@ -344,16 +340,31 @@ class TextModel(GenAIModel):
                     "tool_call_id": tool_call["id"],
                     "content": str(tool_result)
                 })
+                self._log_events('toolcall', conversation_id, {
+                    'name': tool_call['function']['name'],
+                    'too_call_id': tool_call['id'],
+                    'arguments': tool_kwargs,
+                    'result': str(tool_result),
+                })
         return results, tool_prompts
 
-    def conversation(self, conversation_id=None, raw=False):
-        if conversation_id is None:
-            filter = {}
-        else:
-            filter = {'conversation_id': conversation_id}
-        messages = self.data_store.get(self.dataset, **filter)
-        if messages is not None:
-            messages = messages[[c for c in messages.columns if c != '_id']]
+    def conversation(self, conversation_id=None, raw=False, **filter):
+        """ Retrieve conversation messages
+
+        Args:
+            conversation_id (str): the conversation id to retrieve messages for
+            raw (bool): if True, return raw messages as dicts, otherwise return a DataFrame
+            filter (dict): additional filters to apply to the conversation messages
+
+        Returns:
+            pd.DataFrame or list[dict]: the conversation messages, either as a DataFrame or a list of dicts
+        """
+        assert self.data_store, "this model does not track conversations, specify .get(...., data_store=om.datasets)"
+        self._ensure_tracking()
+        filter.setdefault('conversation_id', conversation_id)
+        messages = self.tracking.data(event='conversation', **filter)
+        if 'value' in messages.columns:
+            messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
         return messages if not raw else messages.to_dict('records')
 
     def _system_message(self, prompt, conversation_id=None):
@@ -618,6 +629,21 @@ class TextModel(GenAIModel):
         augmented = self._augment_prompt(message.get('content', ''), documents=documents, query=query)
         message['content'] = augmented if augmented else message.get('content')
         return message
+
+    def _ensure_tracking(self):
+        # ensure we have a tracking instance for the model
+        # caveats:
+        # - this is typically a responsibility of the omega runtime, however
+        #   a conversation model without a tracking instance is useless
+        # - thus we adopt the convention that if the runtime does not provide a tracking instance,
+        #   we create one for the model
+        if self.tracking is None:
+            self.tracking = OmegaSimpleTracker(self.model, store=self.data_store)
+        self.tracking.use()
+
+    def _log_events(self, event, conversation_id, data):
+        if self.tracking:
+            self.tracking.log_events(event, conversation_id, ensure_list(data))
 
 
 class Provider:

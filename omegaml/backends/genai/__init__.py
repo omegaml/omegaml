@@ -1,2 +1,2 @@
 from .embedding import SimpleEmbeddingModel
-from .models import GenAIModel, virtual_genai
+from .models import GenAIModel, GenAIModelHandler, virtual_genai
