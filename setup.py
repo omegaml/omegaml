@@ -80,6 +80,7 @@ install_deps = [
     'sqlalchemy<2',  # currently no support for sqlalchemy 2
     'minibatch[omegaml]',  # required for streaming
     'validators',  # required for sec validations
+    'build',  # required to build packages
 ]
 setup(
     name='omegaml',
