@@ -1,14 +1,13 @@
-import smart_open
 import warnings
 from glob import iglob
 from itertools import tee, islice
 from markitdown import MarkItDown
+from pathlib import Path
+from types import GeneratorType, NoneType
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.genai import GenAIModel
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
-from pathlib import Path
-from types import GeneratorType, NoneType
-from uuid import uuid4
 
 """
 # create a document index
@@ -154,7 +153,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         collection = collection or meta.kind_meta.get('collection') or self._default_collection(name)
         vector_size = vector_size or meta.kind_meta['collections'][collection]['vector_size']
         index: DocumentIndex = self.get(name, vector_size=vector_size, embedding_model=embedding_model)
-        index.insert(obj, chunker=chunker)
+        index.insert(obj, loader=loader, chunker=chunker)
         return index
 
     def _get_collection(self, name):
@@ -205,8 +204,8 @@ class DocumentIndex:
         for document in loader.load(path):
             self.insert(document, chunker=chunker)
 
-    def insert(self, document, chunker=None):
-        self._insert_document(document, chunker=chunker)
+    def insert(self, document, loader=None, chunker=None):
+        self._insert_document(document, chunker=chunker, loader=loader)
 
     def retrieve(self, document, top=1, filter=None, distance=None, **kwargs):
         if isinstance(document, str):
@@ -296,10 +295,10 @@ class DocumentLoader:
         self.md = MarkItDown()
 
     def load(self, path):
-        if Path(path).exists:
-            documents = self._from_path(path)
-        elif path.startswith('http'):
+        if path.startswith('http'):
             documents = self._from_url(path)
+        elif Path(path).exists:
+            documents = self._from_path(path)
         else:
             raise ValueError(f'Cannot load documents from {path}')
         return documents
@@ -313,13 +312,7 @@ class DocumentLoader:
             document = result.text_content
             yield document, dict(source=fn)
 
-    def _from_url(self, url):
-        with smart_open.open(url, 'rb') as fin:
-            uuid = uuid4()
-            fn = url.split('/')[-1]
-            with open(f'/tmp/{uuid}/{fn}', 'rb') as fout:
-                fout.write(fin.read())
-            result = self.md.convert(fn)
-            document = result.text_content
-            Path(fn).unlink(missing_ok=True)
-            yield document, dict(source=fn)
+    def _from_url(self, path):
+        result = self.md.convert(path)
+        document = result.text_content
+        yield document, dict(source=path)
