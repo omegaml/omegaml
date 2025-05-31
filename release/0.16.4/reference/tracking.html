@@ -511,6 +511,30 @@ the slice is applied after all other filters</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_events">
+<span class="sig-name descname"><span class="pre">log_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_events" title="Link to this definition">¶</a></dt>
+<dd><p>log a series of events</p>
+<p>This is a convenience method to log multiple values for the same event.
+All values will be logged with the same commong log data, i.e. the same
+datetime, step, and any extra values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<em>str</em>) – the event name</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – the key for the event</p></li>
+<li><p><strong>values</strong> (<em>list</em>) – a list of values to log</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step, if any</p></li>
+<li><p><strong>dt</strong> (<em>datetime</em>) – the datetime, defaults to now</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version NEXT.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_extra">
 <span class="sig-name descname"><span class="pre">log_extra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remove</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_extra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_extra" title="Link to this definition">¶</a></dt>
 <dd><p>add additional log information for every subsequent logging call</p>
