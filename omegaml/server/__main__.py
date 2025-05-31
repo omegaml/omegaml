@@ -1,6 +1,7 @@
-import omegaml as om
 import os
 from flask import Flask
+
+import omegaml as om
 from omegaml.server.app import create_app
 
 SHOULD_STATUS_CHECK = os.environ.get('OMEGA_STATUS_CHECK', '0').lower() in ('true', '1')
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     om.status(wait=True) if SHOULD_STATUS_CHECK else None
     # simulate apphub
     app = Flask(__name__)
-    app = create_app(server=app, url_prefix='/dashboard', configure=True)
+    app = create_app(server=app, url_prefix='/', configure=True)
     debug_pycharm = dict(debug=True, passthrough_errors=True,
                          use_debugger=False, use_reloader=False)
     debug_console = dict(debug=True, passthrough_errors=True,
