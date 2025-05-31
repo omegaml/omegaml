@@ -242,6 +242,9 @@ class TextModel(GenAIModel):
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
 
+    def __repr__(self):
+        return f'TextModel(base_url={self.base_url}, model={self.model})'
+
     def load(self, method):
         pass
 
@@ -683,7 +686,7 @@ class OpenAIProvider(Provider):
             dimensions=dimensions,
             encoding_format="float"
         )
-        return embeddings
+        return [d.embedding for d in embeddings.data]
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         response = self.client.chat.completions.create(
@@ -766,6 +769,35 @@ class AnythingLLMProvider(Provider):
                                    'model': self.model,
                                    'stream': stream})
         return resp.json()
+
+
+class OllamaProvider(Provider):
+    URL_REGEX = r'https?://(api\.ollama\.com|localhost)(:\d+)?/.*'
+
+    def embed(self, documents, dimensions=None, **kwargs):
+        """ Embed documents using Ollama's embedding service.
+
+        Args:
+            documents (list): List of documents to embed.
+            dimensions (int): Number of dimensions to embed to.
+
+        Returns:
+            list: List of embeddings as list[list[float, ...]].
+        """
+        # see https://ollama.com/docs/api/embeddings
+        documents = ensure_list(documents)
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.api_key}'
+        }
+        url = urljoin(self.base_url, 'embeddings')
+        resp = requests.post(url,
+                             headers=headers,
+                             json={'model': self.model,
+                                   'input': documents})
+        assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
+        data = resp.json().get('data', [])
+        return [d['embedding'] for d in data]
 
 
 PROVIDERS = {
