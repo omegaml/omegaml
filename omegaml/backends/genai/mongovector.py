@@ -19,6 +19,17 @@ class MongoDBVectorStore(VectorStoreBackend):
     def _chunks(self, name):
         return self.data_store.collection(f'vecdb_{name}_chunks')
 
+    def list(self, name):
+        """
+        List all documents inside a collection.
+        """
+        docs = self._documents(name).find({},
+                                          {'_id': 1, 'source': 1, 'attributes': 1})
+        return [{'id': str(doc['_id']),
+                 'source': doc.get('source', ''),
+                 'attributes': doc.get('attributes', {})}
+                for doc in docs]
+
     def insert_chunks(self, chunks, name, embeddings, attributes=None, **kwargs):
         attributes = attributes or {}
         source = attributes.get('source', None)

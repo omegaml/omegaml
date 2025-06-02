@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.base import BaseView
+from omegaml.server.util import datatables_ajax
 from omegaml.util import utcnow
 
 
@@ -15,25 +16,43 @@ class GenAIView(BaseView):
     def index(self):
         om = self.om
         models = om.models.list(kind='genai.text', raw=True)
+        indices = om.datasets.list(kind='pgvector.conx', raw=True)
         return render_template('dashboard/genai/chat.html',
                                default=models[0] if models else None,
                                models=models,
-                               segment=self.segment)
-
-    @fv.route('/{self.segment}/chat/<path:name>')
-    def modelchat(self, name):
-        om = self.om
-        model = om.models.metadata(name)
-        return render_template('dashboard/genai/chat.html',
-                               default=model,
-                               models=None,
+                               indices=indices,
                                segment=self.segment)
 
     @fv.route('/{self.segment}/docs')
     def documents(self):
         om = self.om
+        indices = om.datasets.list(kind='pgvector.conx', raw=True)
         return render_template('dashboard/genai/documents.html',
+                               indices=indices,
                                segment=self.segment)
+
+    @fv.route('/{self.segment}/chat/<path:name>')
+    def modelchat(self, name):
+        om = self.om
+        model = om.models.metadata(name, data_store=om.datasets)
+        return render_template('dashboard/genai/chat.html',
+                               default=model,
+                               models=None,
+                               segment=self.segment)
+
+    @fv.route('/{self.segment}/docs/<path:name>/members')
+    def api_list_documents(self, name):
+        om = self.om
+        draw = int(self.request.args.get('draw', 0))
+        index = om.datasets.get(name, model_store=om.models)
+        members = [{
+            'id': item.get('id'),
+            'name': Path(item.get('source') or '').name,
+            'size': item.get('size', 0),
+            'type': (item.get('source') or '').split('.')[-1].lower(),
+            'excerpt': item.get('excerpt', ''),
+        } for item in index.list()]
+        return datatables_ajax(members, draw=draw)
 
     @fv.route('/{self.segment}/docs/upload', methods=['POST'])
     def api_upload_document(self):
@@ -75,7 +94,7 @@ class GenAIView(BaseView):
         }
         # add document to index
         index = om.datasets.get(index_name, model_store=om.models)
-        index.insert(unique_filename)
+        index.insert(file_path)
         success_msg = f'File "{filename}" uploaded successfully!'
         # Return JSON response for AJAX requests
         return jsonify({

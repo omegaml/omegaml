@@ -1,5 +1,4 @@
 import warnings
-from glob import iglob
 from itertools import tee, islice
 from markitdown import MarkItDown
 from pathlib import Path
@@ -38,6 +37,9 @@ class VectorStore:
                                vector_size=vector_size,
                                embedding_model=embedding_model, **kwargs)
         return self
+
+    def list(self, name):
+        raise NotImplementedError
 
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         raise NotImplementedError
@@ -194,6 +196,7 @@ class DocumentIndex:
         assert self._type_of_obj(documents) == 'documents', f"{type(documents)} is not iterable as documents"
         if not append:
             self.clear()
+        loader = loader or DocumentLoader()
         for document in documents:
             if callable(loader):
                 document = loader(document)
@@ -217,6 +220,13 @@ class DocumentIndex:
     def clear(self, filter=None, **kwargs):
         self.store.delete(self.name, filter=filter, **kwargs)
 
+    def list(self):
+        """ List all documents in the index """
+        return self.store.list(self.name)
+
+    def delete(self, name):
+        self.store.delete(self.name, obj=name)
+
     def _type_of_obj(self, obj):
         if isinstance(obj, GeneratorType):
             # enable probing of generator up to the first element
@@ -224,12 +234,12 @@ class DocumentIndex:
             probe = list(islice(probe, 1))
         else:
             probe = obj
+        _isfile = lambda x: isinstance(x, (str, Path)) and (Path(str(x)[:255]).exists() or str(x).startswith('http'))
         TYPES = {
             # fn()
             'loader': lambda obj: callable(obj),
             # path-like
-            'pathlike': lambda obj: isinstance(obj, str) and (
-                    Path(obj[:200]).exists() or obj.startswith('http')),
+            'pathlike': lambda obj: _isfile(obj),
             # str
             'text': lambda obj: isinstance(obj, str),
             # text, attributes
@@ -249,7 +259,8 @@ class DocumentIndex:
         raise ValueError(f'Cannot process obj of type {type(obj)}, it must be one of {TYPES.keys()}')
 
     def _insert_document(self, document, chunker=None, loader=None):
-        _default_chunker = lambda document: [document]
+        # default chunker splits by double newlines (roughly, paragraphs in markdown)
+        _default_chunker = lambda document: document.split('\n\n') if isinstance(document, str) else [document]
         chunker = chunker or _default_chunker
         doc_type = self._type_of_obj(document)
         if doc_type == 'embedded_tuple':
@@ -295,7 +306,7 @@ class DocumentLoader:
         self.md = MarkItDown()
 
     def load(self, path):
-        if path.startswith('http'):
+        if str(path).startswith('http'):
             documents = self._from_url(path)
         elif Path(path).exists:
             documents = self._from_path(path)
@@ -307,7 +318,9 @@ class DocumentLoader:
         return self._from_path(self.path)
 
     def _from_path(self, path):
-        for fn in iglob(path):
+        path = Path(path)
+        files = path.glob('**/*') if path.is_dir() else [path]
+        for fn in files:
             result = self.md.convert(fn)
             document = result.text_content
             yield document, dict(source=fn)
