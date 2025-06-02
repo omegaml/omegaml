@@ -560,8 +560,6 @@ class TextModel(GenAIModel):
             return response, prompt_message, response_message
 
         if stream:
-            # https://cookbook.openai.com/examples/how_to_stream_completions
-            print("*** streaming")
             chunks = []
             for chunk in response:
                 yield resolve_chunk(response, chunk, chunks, prompt_message, use_tools=use_tools)

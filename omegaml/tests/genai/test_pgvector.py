@@ -2,6 +2,7 @@ from unittest import TestCase, mock, skipUnless
 
 import os
 from contextlib import contextmanager
+from sklearn.exceptions import NotFittedError
 from unittest.mock import MagicMock
 
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
@@ -62,7 +63,45 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             index = om.datasets.get('mydocs')
             self.assertIsInstance(index, DocumentIndex)
 
-    @skipUnless(os.environ.get('TEST_PGVECTOR'), "skipping real pgvector test, set TEST_PGVECTOR=1 to run")
+    def test_delete_index(self):
+        om = self.om
+        cnx_str = 'pgvector://postgres:test@localhost:5432/postgres'
+        meta = om.datasets.put(cnx_str, 'mydocs',
+                               replace=True,
+                               collection='test',
+                               vector_size=3)
+        documents = [
+            ('my text', [1, 2, 3]),
+            ('my other text', [99, 100, 200]),
+        ]
+        om.datasets.put(documents, 'mydocs')
+        index = om.datasets.get('mydocs')
+        self.assertEqual(len(index.list()), 2)
+        om.datasets.drop('mydocs')
+        self.assertTrue('mydocs' not in om.datasets.list())
+
+    def test_delete_document(self):
+        om = self.om
+        cnx_str = 'pgvector://postgres:test@localhost:5432/postgres'
+        meta = om.datasets.put(cnx_str, 'mydocs',
+                               replace=True,
+                               collection='test',
+                               vector_size=3)
+        documents = [
+            ('my text', [1, 2, 3]),
+            ('my other text', [99, 100, 200]),
+        ]
+        om.datasets.put(documents, 'mydocs')
+        index = om.datasets.get('mydocs')
+        self.assertEqual(len(index.list()), 2)
+        # delete a document
+        index = om.datasets.get('mydocs')
+        documents = index.list()
+        om.datasets.drop('mydocs', obj=documents[0])
+        self.assertEqual(len(index.list()), 1)
+        om.datasets.drop('mydocs', obj=documents[0]['source'])
+        self.assertEqual(len(index.list()), 0)
+
     def test_simple_embedding(self):
         om = self.om
         cnx_str = 'pgvector://postgres:test@localhost:5432/postgres'
@@ -86,10 +125,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         docs = om.datasets.get('mydocs', document='quick brown', model_store=om.models)
         self.assertTrue(len(docs) > 0)
         self.assertTrue(docs[0]['text'] == documents[0])
-        with self.assertRaises(AssertionError):
-            # if model_store=om.models is not passed, embedding model cannot be loaded
+        with self.assertRaises(NotFittedError):
+            # if model_store=om.models is not passed, an unfitted model is used
             om.datasets.get('mydocs', document='quick brown')
-        # TODO test droping and recreating a collection with different vector size
 
     def test_index(self):
         om = self.om
