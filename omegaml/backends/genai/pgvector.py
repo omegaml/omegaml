@@ -2,6 +2,7 @@ import json
 import re
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, Integer, String, text, ForeignKey, select
+from sqlalchemy.engine import RowMapping
 from sqlalchemy.orm import Session, relationship
 
 from omegaml.backends.genai.index import VectorStoreBackend
@@ -78,10 +79,20 @@ class PGVectorBackend(VectorStoreBackend):
         collection, vector_size, model = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
-        # sqlalchemy filter on Document.obj
         with Session as session:
-            session.query(Chunk).delete()
-            session.query(Document).delete()
+            # get documents
+            if isinstance(obj, (dict, RowMapping)):
+                docs_query = select(Document.id).where(Document.id == obj['id'])
+            elif isinstance(obj, int):
+                docs_query = select(Document.id).where(Document.id == obj)
+            elif isinstance(obj, str):
+                docs_query = select(Document.id).where(Document.source == obj)
+            else:
+                docs_query = select(Document.id)
+            doc_ids = session.execute(docs_query).scalars().all()
+            if doc_ids:
+                session.query(Chunk).filter(Chunk.document_id.in_(doc_ids)).delete(synchronize_session='fetch')
+                session.query(Document).filter(Document.id.in_(doc_ids)).delete(synchronize_session='fetch')
             session.commit()
 
     def _create_collection(self, name, collection, vector_size, **kwargs):

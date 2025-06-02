@@ -76,9 +76,15 @@ class InMemoryVectorStore(VectorStoreBackend):
 
     def delete(self, name, obj=None, filter=None, **kwargs):
         # Clear all stored documents and chunks
-        self.documents.clear()
-        self.chunks.clear()
-        self.embeddings.clear()
+        if obj:
+            doc_id = obj.get('id')
+            del self.documents[doc_id]
+            del self.chunks[doc_id]
+            del self.embeddings[doc_id]
+        else:
+            self.documents.clear()
+            self.chunks.clear()
+            self.embeddings.clear()
 
     def _calculate_distance(self, vec1, vec2, metric):
         if metric == 'l2':

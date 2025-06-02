@@ -40,7 +40,7 @@ class GenAIView(BaseView):
                                models=None,
                                segment=self.segment)
 
-    @fv.route('/{self.segment}/docs/<path:name>/members')
+    @fv.route('/{self.segment}/docs/<path:name>')
     def api_list_documents(self, name):
         om = self.om
         draw = int(self.request.args.get('draw', 0))
@@ -53,6 +53,14 @@ class GenAIView(BaseView):
             'excerpt': item.get('excerpt', ''),
         } for item in index.list()]
         return datatables_ajax(members, draw=draw)
+
+    @fv.route('/{self.segment}/docs/<path:name>/<string:doc_id>', methods=['DELETE'])
+    def api_delete_document(self, name, doc_id):
+        """Delete index, or a document from the index"""
+        om = self.om
+        doc_id = int(doc_id) if doc_id.isdigit() else doc_id
+        om.datasets.drop(name, obj=doc_id)  # Remove from the index
+        return jsonify({'success': True}), 204
 
     @fv.route('/{self.segment}/docs/upload', methods=['POST'])
     def api_upload_document(self):

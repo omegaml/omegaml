@@ -50,6 +50,7 @@ class marshal_with_streaming:
             if inspect.isgenerator(data):
                 # server sent event
                 def events():
+                    logger.debug('sse streaming response')
                     try:
                         for chunk in data:
                             if isinstance(chunk, Exception):
@@ -58,6 +59,7 @@ class marshal_with_streaming:
                                 break
                             yield 'data: ' + json.dumps(marshal_one(chunk)) + '\n\n'
                     except Exception as e:
+                        logger.debug('error %s during SSE streaming', e)
                         yield 'event: error\n'
                         yield 'data: ' + json.dumps({'error': str(e)}) + '\n\n'
 

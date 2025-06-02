@@ -131,7 +131,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             if not force:
                 raise ValueError(text)
             warnings.warn(text)
-        return super().drop(name, force=force, **kwargs)
+        return True if obj is not None else super().drop(name, force=force, **kwargs)
 
     def _put_as_connection(self, url, name, attributes=None,
                            collection=None, **kwargs):
@@ -224,8 +224,8 @@ class DocumentIndex:
         """ List all documents in the index """
         return self.store.list(self.name)
 
-    def delete(self, name):
-        self.store.delete(self.name, obj=name)
+    def delete(self, name, obj=None, filter=None, **kwargs):
+        self.store.delete(self.name, obj=obj, filter=filter, **kwargs)
 
     def _type_of_obj(self, obj):
         if isinstance(obj, GeneratorType):
