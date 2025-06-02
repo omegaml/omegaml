@@ -91,7 +91,7 @@ def js_routes(app):
                     routes[rule.endpoint] = url_for(rule.endpoint)
                 routes[rule.endpoint] = unquote(routes[rule.endpoint])
             except:
-                logger.warn(f'cannot encode route {rule}')
+                logger.warning(f'cannot encode route {rule}')
         return base64.b64encode(json.dumps(routes).encode()).decode()
 
     @app.context_processor

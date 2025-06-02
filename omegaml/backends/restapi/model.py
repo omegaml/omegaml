@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-from celery.states import UNREADY_STATES
-from omegaml.util import ensure_json_serializable
+from celery.states import UNREADY_STATES, FAILURE
 from time import sleep
 
 from minibatch.tests.util import LocalExecutor
+from omegaml.util import ensure_json_serializable
 
 
 class GenericModelResource(object):
@@ -137,6 +137,10 @@ class GenericModelResource(object):
                         yield self.prepare_result(chunk, model_id=model_id, raw=raw)
                     buffer.clear()
                     sleep(0.01)
+                # get the final result, this is to clean up celery
+                if promise.state == FAILURE:
+                    value = promise.get()
+                    raise RuntimeError(value)
 
             return stream_result(promise)
         result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
