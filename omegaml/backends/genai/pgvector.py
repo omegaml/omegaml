@@ -1,9 +1,10 @@
 import json
 import re
-from omegaml.backends.genai.index import VectorStoreBackend
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, Integer, String, text, ForeignKey, select
 from sqlalchemy.orm import Session, relationship
+
+from omegaml.backends.genai.index import VectorStoreBackend
 
 
 class PGVectorBackend(VectorStoreBackend):
@@ -23,6 +24,7 @@ class PGVectorBackend(VectorStoreBackend):
         Session = self._get_connection(name, session=True)
         with Session as session:
             source = (attributes or {}).pop('source', None)
+            source = str(source) if source else ''
             attributes = json.dumps(attributes or {})
             doc = Document(source=source, attributes=attributes)
             session.add(doc)
@@ -30,6 +32,23 @@ class PGVectorBackend(VectorStoreBackend):
                 chunk = Chunk(document=doc, text=text, embedding=embedding)
                 session.add(chunk)
             session.commit()
+
+    def list(self, name):
+        """
+        List all documents inside a collections
+        """
+        collection, vector_size, model = self._get_collection(name)
+        Document, Chunk = self._create_collection(name, collection, vector_size)
+        Session = self._get_connection(name, session=True)
+        data = []
+        with Session as session:
+            query = (select(Document.id,
+                            Document.source,
+                            Document.attributes)
+                     .order_by(Document.source))
+            result = session.execute(query)
+            data = list(result.mappings().all())
+        return data
 
     def find_similar(self, name, obj, top=5, filter=None, distance=None, **kwargs):
         collection, vector_size, model = self._get_collection(name)
@@ -59,6 +78,7 @@ class PGVectorBackend(VectorStoreBackend):
         collection, vector_size, model = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
+        # sqlalchemy filter on Document.obj
         with Session as session:
             session.query(Chunk).delete()
             session.query(Document).delete()

@@ -64,7 +64,8 @@ class TextModelBackend(GenAIBaseBackend):
         return ParseResult(vendor, scheme, path, params, netloc, hostname, port, parsed.username,
                            parsed.password, parsed.query)
 
-    def put(self, obj, name, template=None, pipeline=None, provider=None, tools=None, documents=None, **kwargs):
+    def put(self, obj, name, template=None, pipeline=None, provider=None, tools=None, documents=None, strategy=None,
+            **kwargs):
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
         params = parse_qs(parsed.params)
@@ -94,6 +95,7 @@ class TextModelBackend(GenAIBaseBackend):
             'pipeline': pipeline or None,
             'tools': tools or [],
             'documents': documents or [],
+            'strategy': strategy or None,
         }
         kwargs.update(attributes=attributes)
         meta = self.model_store.make_metadata(name,
@@ -102,8 +104,10 @@ class TextModelBackend(GenAIBaseBackend):
                                               **kwargs)
         return meta.save()
 
-    def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, **kwargs):
+    def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, strategy=None,
+            **kwargs):
         meta = self.model_store.metadata(name)
+        # setup from connection string
         kind_meta = meta.kind_meta
         base_url = kind_meta['base_url']
         model = kind_meta['model']
@@ -111,13 +115,15 @@ class TextModelBackend(GenAIBaseBackend):
         params = kind_meta['params']
         creds = kind_meta['creds']
         provider = kind_meta['provider']
+        params.update(kwargs)
+        # setup from attributes
         pipeline = pipeline or meta.attributes.get('pipeline')
         tools = tools or meta.attributes.get('tools') or []
         documents = documents or meta.attributes.get('documents')
-        params.update(kwargs)
         template = template or query.get('template') or meta.attributes.get('template')
-        data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
+        strategy = {**(meta.attributes.get('strategy') or {}), **(strategy or {})}
         # load dependencies
+        data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
@@ -125,6 +131,7 @@ class TextModelBackend(GenAIBaseBackend):
                           data_store=data_store, pipeline=pipeline, tools=tools,
                           tracking=self.tracking,
                           provider=provider, documents=documents,
+                          strategy=strategy,
                           **params)
         return model
 
@@ -224,7 +231,8 @@ class TextModel(GenAIModel):
     """
 
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
-                 tracking=None, pipeline=None, provider='openai', tools=None, documents=None, **kwargs):
+                 tracking=None, pipeline=None, provider='openai', tools=None, documents=None,
+                 strategy=None, **kwargs):
         super().__init__()
         self.base_url = base_url
         self.model = model
@@ -241,6 +249,12 @@ class TextModel(GenAIModel):
         self.tools = tools
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
+        self.strategy = strategy or {
+            # kwargs to pass to DocumentIndex.retrieve()
+            'retrieve': {
+                'top': 1,
+            }
+        }
 
     def __repr__(self):
         return f'TextModel(base_url={self.base_url}, model={self.model})'
@@ -621,11 +635,12 @@ class TextModel(GenAIModel):
         query = query or prompt
         if documents is None or '{context}' not in prompt:
             return prompt
-        docs = documents.retrieve(query)
+        retrieve_kwargs = self.strategy.get('retrieve', {})
+        docs = documents.retrieve(query, **retrieve_kwargs)
         if docs:
-            context = ensure_list(docs)[0].get('text')
+            context = [d.get('text') for d in docs]
         else:
-            context = '(error: no documents found)'
+            context = '(no documents found)'
         return prompt.format_map(safeformat(context=context))
 
     def _augment_message(self, message, documents: DocumentIndex, query=None):

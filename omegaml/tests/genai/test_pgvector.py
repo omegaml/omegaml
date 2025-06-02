@@ -2,11 +2,12 @@ from unittest import TestCase, mock, skipUnless
 
 import os
 from contextlib import contextmanager
+from unittest.mock import MagicMock
+
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.pgvector import PGVectorBackend
 from omegaml.tests.util import OmegaTestMixin
-from unittest.mock import MagicMock
 
 
 class GenAIModelTests(OmegaTestMixin, TestCase):
@@ -47,6 +48,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             ('my other text', [99, 100, 200]),
         ]
         om.datasets.put(documents, 'mydocs')
+        index = om.datasets.get('mydocs')
+        self.assertIsInstance(index, DocumentIndex)
+        self.assertEqual(len(index.list()), 2)
         chunks = om.datasets.get('mydocs', document=[3, 0, 0])
         self.assertTrue(len(chunks) > 0)
         self.assertIn('text', chunks[0])

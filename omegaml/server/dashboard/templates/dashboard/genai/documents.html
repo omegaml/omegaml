@@ -135,11 +135,9 @@
                               </label>
                               <div class="input-group">
                                 <select class="form-control" id="indexSelect">
-                                  <option value="">Choose an index...</option>
-                                  <option value="general-knowledge">General Knowledge</option>
-                                  <option value="technical-docs">Technical Documentation</option>
-                                  <option value="legal-documents">Legal Documents</option>
-                                  <option value="research-papers">Research Papers</option>
+                                  {% for meta in indices %}
+                                  <option value="{{ meta.name }}">{{ meta.name }}</option>
+                                  {% endfor %}
                                 </select>
                                 <div class="input-group-append">
                                   <button class="btn btn-outline-primary btn-create-index" type="button"
@@ -423,11 +421,23 @@
 
     function loadDocuments() {
       const selectedIndex = $('#indexSelect').val();
-      const documents = selectedIndex ? (sampleDocuments[selectedIndex] || []) : [];
-
-      dataTable.clear();
-      dataTable.rows.add(documents);
-      dataTable.draw();
+      //const documents = selectedIndex ? (sampleDocuments[selectedIndex] || []) : [];
+      $.ajax({
+        url: url_for("omega-server.ai_api_list_documents", {
+          name: selectedIndex,
+        }),
+        type: 'GET',
+        data: { indexName: selectedIndex },
+        success: function (data) {
+          const documents = data.data || [];
+          dataTable.clear();
+          dataTable.rows.add(documents);
+          dataTable.draw();
+        },
+        error: function () {
+          alert('Failed to load documents. Please try again.', status = 'danger');
+        }
+      });
     }
 
     function getFileIcon(type) {
@@ -512,32 +522,8 @@
         }
       }).done(function () {
         alert(`File "${file.name}" uploaded successfully`);
-      });
-    }
-
-    function XuploadFile(file, indexName) {
-      const fileType = getFileTypeFromName(file.name);
-      const newDoc = {
-        id: Date.now() + Math.random(),
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: fileType,
-        excerpt: 'Document uploaded successfully. Content indexing in progress...'
-      };
-
-      if (!sampleDocuments[indexName]) {
-        sampleDocuments[indexName] = [];
-      }
-      sampleDocuments[indexName].unshift(newDoc);
-
-      loadDocuments();
-      showAlert(`Document "${file.name}" uploaded successfully`, 'success');
-
-      // Simulate content extraction
-      setTimeout(() => {
-        newDoc.excerpt = generateSampleExcerpt(file.name);
         loadDocuments();
-      }, 2000);
+      });
     }
 
     function getFileTypeFromName(filename) {
@@ -631,6 +617,12 @@
         }
       }
     };
+
+    // Load initial documents for the default index
+    const initialIndex = $('#indexSelect').val();
+    if (initialIndex) {
+      loadDocuments();
+    }
   });
 </script>
 {% endblock javascripts %}

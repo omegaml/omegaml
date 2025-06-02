@@ -24,6 +24,13 @@ class InMemoryVectorStore(VectorStoreBackend):
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
         return name.startswith('vecmem://')
 
+    def list(self, name):
+        return [{
+            'id': doc_id,
+            'source': doc['source'],
+            'attributes': doc['attributes'],
+        } for doc_id, doc in self.documents.items()]
+
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         doc_id = len(self.documents) + 1  # Simple ID generation
         source = attributes.get('source', None)
