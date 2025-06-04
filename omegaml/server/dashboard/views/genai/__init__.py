@@ -15,7 +15,7 @@ class GenAIView(BaseView):
     @fv.route('/{self.segment}')
     def index(self):
         om = self.om
-        models = om.models.list(kind='genai.text', raw=True)
+        models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
         return render_template('dashboard/genai/chat.html',
                                default=models[0] if models else None,

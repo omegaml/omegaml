@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 from celery.states import UNREADY_STATES, FAILURE
@@ -5,6 +6,8 @@ from time import sleep
 
 from minibatch.tests.util import LocalExecutor
 from omegaml.util import ensure_json_serializable
+
+logger = logging.getLogger(__name__)
 
 
 class GenericModelResource(object):
@@ -125,15 +128,18 @@ class GenericModelResource(object):
                         return True  # required to make work with minibatch
 
                 buffer = Sink()
+                logger.debug("complete:stream_result getting stream")
                 streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
                                                  executor=LocalExecutor(),
-                                                 interval=0.01,
                                                  sink=buffer)
                 emitter = streaming.make(lambda window: window.data)
                 has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
+                logger.debug("complete:stream_result waiting for status ")
                 while promise.state in UNREADY_STATES or has_chunks():
+                    logger.debug("complete:stream_result waiting for chunks")
                     emitter.run(blocking=False)
                     for chunk in buffer:
+                        logger.debug("complete:stream_result chunk received: %s", chunk)
                         yield self.prepare_result(chunk, model_id=model_id, raw=raw)
                     buffer.clear()
                     sleep(0.01)
@@ -143,5 +149,6 @@ class GenericModelResource(object):
                     raise RuntimeError(value)
 
             return stream_result(promise)
-        result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
+        else:
+            result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
