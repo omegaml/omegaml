@@ -50,6 +50,9 @@ class VectorStore:
     def delete(self, name, obj=None, filter=None, **kwargs):
         raise NotImplementedError
 
+    def embeddings(self, name):
+        raise NotImplementedError
+
 
 class VectorStoreBackend(VectorStore, BaseDataBackend):
     KIND = 'vector.conx'
@@ -227,6 +230,9 @@ class DocumentIndex:
     def delete(self, name, obj=None, filter=None, **kwargs):
         self.store.delete(self.name, obj=obj, filter=filter, **kwargs)
 
+    def embeddings(self):
+        return self.store.embeddings(self.name)
+
     def _type_of_obj(self, obj):
         if isinstance(obj, GeneratorType):
             # enable probing of generator up to the first element
@@ -260,7 +266,8 @@ class DocumentIndex:
 
     def _insert_document(self, document, chunker=None, loader=None):
         # default chunker splits by double newlines (roughly, paragraphs in markdown)
-        _default_chunker = lambda document: document.split('\n\n') if isinstance(document, str) else [document]
+        # this is not a good chunker: document.split('\n\n') if isinstance(document, str) else [document]
+        _default_chunker = lambda document: [document]
         chunker = chunker or _default_chunker
         doc_type = self._type_of_obj(document)
         if doc_type == 'embedded_tuple':
