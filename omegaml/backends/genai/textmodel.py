@@ -324,8 +324,9 @@ class TextModel(GenAIModel):
         to_store = []
         for response in responses:
             response, prompt_message, response_message, raw_response = response
-            finish_reason = response_message.get('finish_reson')
+            finish_reason = response_message.get('finish_reason')
             consolidated = finish_reason == 'stop.consolidated'
+            print(finish_reason, consolidated, response_message)
             if not stream or (stream and consolidated):
                 # only store consolidated responses
                 # -- if streaming, response_message is merged from all choices[0].delta
@@ -390,6 +391,8 @@ class TextModel(GenAIModel):
         messages = self.tracking.data(event='conversation', **filter)
         if messages is not None and 'value' in messages.columns:
             messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
+            messages.drop(columns=['value'], inplace=True)
+            messages.fillna('', inplace=True)
             return messages if not raw else messages.to_dict('records')
         return []
 
@@ -705,6 +708,7 @@ class TextModel(GenAIModel):
     def _log_events(self, event, conversation_id, data):
         if self.tracking:
             self.tracking.log_events(event, conversation_id, ensure_list(data))
+            self.tracking.flush()
 
 
 class Provider:

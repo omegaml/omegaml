@@ -119,12 +119,33 @@ class GenAIView(BaseView):
             }
         }), 201
 
-    @fv.route('/{self.segment}/chat/<path:name>/<string:conversation_id>/history')
+    @fv.route('/{self.segment}/chat/<path:name>/history')
+    def api_conversations(self, name):
+        """List conversations for a given model"""
+        om = self.om
+        model = om.models.get(name, data_store=om.datasets)
+        messages = model.conversation(run='*')
+        messages.drop_duplicates(['key'], inplace=True, keep='first')
+        return {'conversations': [
+            {
+                'id': msg.get('key'),
+                'dt': msg.get('dt'),
+                'title': msg.get('title', msg.get('content')),
+            } for msg in messages.to_dict(orient='records')
+        ]}
+
+    @fv.route('/{self.segment}/chat/<path:name>/history/<string:conversation_id>')
     def api_conversation_history(self, name, conversation_id):
+        """Get messages for a specific conversation"""
         om = self.om
         model = om.models.get(name, data_store=om.datasets)
         messages = model.conversation(conversation_id=conversation_id, raw=True)
-        return {'messages': messages}
+        return {'messages': [
+            {
+                'role': msg.get('role'),
+                'text': msg.get('content'),
+            } for msg in messages
+        ]}
 
 
 def create_view(bp):
