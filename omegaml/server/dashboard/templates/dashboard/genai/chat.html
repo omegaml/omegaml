@@ -76,12 +76,17 @@
 {% block javascripts %}
 <script type="module" src="{{ url_for('static', filename='assets/plugins/deepchat/deepchat.bundle.js') }}"></script>
 <script>
+  const context = {
+    model: "{{ default.name }}",
+    conversationId: "{{ conversation_id | default('', true) }}".trim(),
+  };
+  console.debug("Context for chat:", context);
   $(document).ready(function () {
     const chat = $('#deepchat')[0];
     chat.directConnection = {
       openAI: {
         chat: {
-          model: "{{ default.name }}",
+          model: context.model,
         },
         key: "apikey",
         validateKeyProperty: false,
@@ -91,15 +96,22 @@
       url: "/api/v2/openai/chat/completions",
       stream: true,
     };
+    chat.requestInterceptor = (request) => {
+      if (context.conversationId != "") {
+        request.body['conversation_id'] = context.conversationId;
+      }
+      return request;
+    };
     var width = $('#deepchat').parent().width();
     var height = $('#page-wrapper').height();
     chat.chatStyle = {
       width: `${width}px`,
       height: "${height}px",
     };
-    // don't ignore space key (some jquery plugin might do that)
+    // don't ignore space key (some jquery plugin might do that)  
     $('#deepchat').on('keydown', function (event) {
-      if (event.key === ' ') {
+      // Prevent the default action if the key is space
+      if (event.key == ' ') {
         event.stopPropagation();
         return true;
       }
@@ -112,6 +124,25 @@
       var model = $(this).text();
       chat._activeService.rawBody.model = model;
     });
+    if (context.conversationId != "") {
+      $.ajax({
+        url: url_for('omega-server.ai_api_conversation_history', {
+          name: context.model,
+          conversation_id: context.conversationId
+        }),
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          chat.loadHistory = (index) => {
+            return data.messages;
+          };
+        },
+        error: function (xhr, status, error) {
+          console.error("Error fetching conversation:", error);
+        }
+      });
+
+    }
   });  
 </script>
 {% endblock javascripts %}

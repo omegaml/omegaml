@@ -2,13 +2,12 @@ import mimetypes
 import os
 import time
 from flask import render_template, jsonify, abort
-from pathlib import Path
-from werkzeug.utils import secure_filename
-
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.base import BaseView
 from omegaml.server.util import datatables_ajax
 from omegaml.util import utcnow
+from pathlib import Path
+from werkzeug.utils import secure_filename
 
 
 class GenAIView(BaseView):
@@ -32,12 +31,14 @@ class GenAIView(BaseView):
                                segment=self.segment)
 
     @fv.route('/{self.segment}/chat/<path:name>')
-    def modelchat(self, name):
+    @fv.route('/{self.segment}/chat/<path:name>/<string:conversation_id>')
+    def modelchat(self, name, conversation_id=None):
         om = self.om
         model = om.models.metadata(name, data_store=om.datasets)
         return render_template('dashboard/genai/chat.html',
                                default=model,
                                models=None,
+                               conversation_id=conversation_id,
                                segment=self.segment)
 
     @fv.route('/{self.segment}/docs/<path:name>')
@@ -117,6 +118,13 @@ class GenAIView(BaseView):
                 'upload_date': document['upload_date']
             }
         }), 201
+
+    @fv.route('/{self.segment}/chat/<path:name>/<string:conversation_id>/history')
+    def api_conversation_history(self, name, conversation_id):
+        om = self.om
+        model = om.models.get(name, data_store=om.datasets)
+        messages = model.conversation(conversation_id=conversation_id, raw=True)
+        return {'messages': messages}
 
 
 def create_view(bp):
