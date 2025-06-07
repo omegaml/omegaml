@@ -31,6 +31,9 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+    def to_dict(self):
+        return dict(self)
+
 
 class dotable(dict):
     """" dot-accessible, recursive dictionary, e.g. d['key'] -> d.key """

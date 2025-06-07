@@ -1,9 +1,11 @@
 import json
 import re
-from omegaml.backends.genai.index import VectorStoreBackend
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Integer, String, text, ForeignKey, select
+from sqlalchemy import Column, Integer, String, text, ForeignKey, select, Index
+from sqlalchemy.engine import RowMapping
 from sqlalchemy.orm import Session, relationship
+
+from omegaml.backends.genai.index import VectorStoreBackend
 
 
 class PGVectorBackend(VectorStoreBackend):
@@ -23,6 +25,7 @@ class PGVectorBackend(VectorStoreBackend):
         Session = self._get_connection(name, session=True)
         with Session as session:
             source = (attributes or {}).pop('source', None)
+            source = str(source) if source else ''
             attributes = json.dumps(attributes or {})
             doc = Document(source=source, attributes=attributes)
             session.add(doc)
@@ -31,22 +34,40 @@ class PGVectorBackend(VectorStoreBackend):
                 session.add(chunk)
             session.commit()
 
+    def list(self, name):
+        """
+        List all documents inside a collections
+        """
+        collection, vector_size, model = self._get_collection(name)
+        Document, Chunk = self._create_collection(name, collection, vector_size)
+        Session = self._get_connection(name, session=True)
+        data = []
+        with Session as session:
+            query = (select(Document.id,
+                            Document.source,
+                            Document.attributes)
+                     .order_by(Document.source))
+            result = session.execute(query)
+            data = list(result.mappings().all())
+        return data
+
     def find_similar(self, name, obj, top=5, filter=None, distance=None, **kwargs):
         collection, vector_size, model = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size)
         Session = self._get_connection(name, session=True)
         METRIC_MAP = {
-            'l2': lambda obj: Chunk.embedding.l2_distance(obj),
-            'cos': lambda obj: Chunk.embedding.l2_distance(obj),
+            'l2': lambda target: Chunk.embedding.l2_distance(target),
+            'cos': lambda target: Chunk.embedding.cosine_distance(target),
         }
+        metric = distance or 'l2'
         with Session as session:
-            distance = METRIC_MAP[distance or 'l2'](obj)
+            distance_fn = METRIC_MAP[metric]
             chunks = (select(Document.id,
                              Document.source,
                              Document.attributes,
                              Chunk.text,
                              # Chunk.embedding,
-                             distance.label('distance'))
+                             distance_fn(obj).label('distance'))
                       .join(Chunk.document)
                       .order_by(distance))
             if isinstance(top, int) and top > 0:
@@ -55,13 +76,44 @@ class PGVectorBackend(VectorStoreBackend):
             data = list(results.mappings().all())
         return data
 
+    def embeddings(self, name):
+        """
+        List all embeddings inside a collection
+        """
+        collection, vector_size, model = self._get_collection(name)
+        Document, Chunk = self._create_collection(name, collection, vector_size)
+        Session = self._get_connection(name, session=True)
+        data = []
+        with Session as session:
+            query = (select(Chunk.id,
+                            Chunk.text,
+                            Chunk.embedding,
+                            Document.source,
+                            Document.attributes)
+                     .join(Chunk.document)
+                     .order_by(Document.source))
+            result = session.execute(query)
+            data = list(result.mappings().all())
+        return data
+
     def delete(self, name, obj=None, filter=None, **kwargs):
         collection, vector_size, model = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
         with Session as session:
-            session.query(Chunk).delete()
-            session.query(Document).delete()
+            # get documents
+            if isinstance(obj, (dict, RowMapping)):
+                docs_query = select(Document.id).where(Document.id == obj['id'])
+            elif isinstance(obj, int):
+                docs_query = select(Document.id).where(Document.id == obj)
+            elif isinstance(obj, str):
+                docs_query = select(Document.id).where(Document.source == obj)
+            else:
+                docs_query = select(Document.id)
+            doc_ids = session.execute(docs_query).scalars().all()
+            if doc_ids:
+                session.query(Chunk).filter(Chunk.document_id.in_(doc_ids)).delete(synchronize_session='fetch')
+                session.query(Document).filter(Document.id.in_(doc_ids)).delete(synchronize_session='fetch')
             session.commit()
 
     def _create_collection(self, name, collection, vector_size, **kwargs):
@@ -79,17 +131,30 @@ class PGVectorBackend(VectorStoreBackend):
 
         class Chunk(Base):
             __tablename__ = chunks_table
+
             id = Column(Integer, primary_key=True)
             text = Column(String)
             embedding = Column(Vector(vector_size))
             document_id = Column(Integer, ForeignKey(f'{docs_table}.id'))
             document = relationship('Document')
 
-        Session = self._get_connection(name, session=True)
-        with Session as session:
+        with self._get_connection(name, session=True) as session:
             session.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
             session.commit()
             Base.metadata.create_all(session.get_bind())
+            session.commit()
+        with self._get_connection(name, session=True) as session:
+            try:
+                index = Index(
+                    'l2_index',
+                    Chunk.embedding,
+                    postgresql_using='hnsw',
+                    postgresql_with={'m': 16, 'ef_construction': 64},
+                    postgresql_ops={'embedding': 'vector_l2_ops'}
+                )
+                index.create(session.get_bind())
+            except Exception as e:
+                pass
             session.commit()
         return Document, Chunk
 

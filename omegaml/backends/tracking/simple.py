@@ -9,12 +9,11 @@ import warnings
 from base64 import b64encode, b64decode
 from datetime import date
 from itertools import chain
-from typing import Iterable
-from uuid import uuid4
-
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
 from omegaml.util import _raise, ensure_index, batched, signature, tryOr, ensurelist
+from typing import Iterable
+from uuid import uuid4
 
 
 class NoTrackTracker(TrackingProvider):
@@ -581,6 +580,7 @@ class OmegaSimpleTracker(TrackingProvider):
         ]
         for specs in idxs:
             ensure_index(coll, specs)
+        self._store.put(coll, self._data_name)
 
     def restore_artifact(self, *args, **kwargs):
         """ restore a specific logged artifact

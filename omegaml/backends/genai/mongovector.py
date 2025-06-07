@@ -19,6 +19,17 @@ class MongoDBVectorStore(VectorStoreBackend):
     def _chunks(self, name):
         return self.data_store.collection(f'vecdb_{name}_chunks')
 
+    def list(self, name):
+        """
+        List all documents inside a collection.
+        """
+        docs = self._documents(name).find({},
+                                          {'_id': 1, 'source': 1, 'attributes': 1})
+        return [{'id': str(doc['_id']),
+                 'source': doc.get('source', ''),
+                 'attributes': doc.get('attributes', {})}
+                for doc in docs]
+
     def insert_chunks(self, chunks, name, embeddings, attributes=None, **kwargs):
         attributes = attributes or {}
         source = attributes.get('source', None)
@@ -95,5 +106,17 @@ class MongoDBVectorStore(VectorStoreBackend):
 
     def delete(self, name, obj=None, filter=None, **kwargs):
         # Clear all stored documents and chunks
-        self._documents(name).delete_many({})
-        self._chunks(name).delete_many({})
+        filter = filter or {}
+        if isinstance(obj, dict) and 'id' in obj:
+            filter.update({'id': obj.get('id')})
+        elif isinstance(obj, str):
+            filter.update({'source': obj})
+        elif isinstance(obj, (int, float)):
+            filter.update({'id': str(obj)})
+        elif obj is not None:
+            raise ValueError("Object must be a dict with 'id', or a string matching source")
+        doc_ids = self._documents(name).find(filter, {'_id': 1})
+        self._documents(name).delete_many(filter)
+        self._chunks(name).delete_many({
+            'document_id': {'$in': [doc['_id'] for doc in doc_ids]}
+        })

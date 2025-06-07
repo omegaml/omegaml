@@ -23,7 +23,7 @@ String.prototype.uri = function (path) {
 // -- see omegaml.server.util:js_routes()
 window.url_for = (endpoint, params = {}) => {
   try {
-    return (window._flr[endpoint] || "/404")
+    return (window._flr[endpoint] || "/404?url=" + endpoint)
       .format(params)
       .replace(/\/\//g, "/");
   } catch (error) {

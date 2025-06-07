@@ -50,7 +50,7 @@ OMEGA_MONGO_SSL_KWARGS = {
     'serverSelectionTimeoutMS': OMEGA_MONGO_TIMEOUT,
 }
 #: if set forces eager execution of runtime tasks
-OMEGA_LOCAL_RUNTIME = os.environ.get('OMEGA_LOCAL_RUNTIME', False)
+OMEGA_LOCAL_RUNTIME = truefalse(os.environ.get('OMEGA_LOCAL_RUNTIME', False))
 #: the celery broker name or URL
 OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
                 os.environ.get('RABBITMQ_URL') or
@@ -97,7 +97,7 @@ OMEGA_CELERY_CONFIG = {
     'CELERYD_CONCURRENCY': WORKER_CONCURRENCY,
 }
 #: enable cloud worker routing
-OMEGA_TASK_ROUTING_ENABLED = os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False)
+OMEGA_TASK_ROUTING_ENABLED = truefalse(os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False))
 #: celery task packages
 OMEGA_CELERY_IMPORTS = ['omegaml',
                         'omegaml.notebook',

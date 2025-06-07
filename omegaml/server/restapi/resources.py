@@ -12,12 +12,13 @@ from flask_restx import Resource, fields, Api, marshal_with
 from flask_restx.apidoc import apidoc
 from functools import wraps
 from mongoengine import DoesNotExist
+from urllib.parse import unquote, urljoin
+from werkzeug.exceptions import NotFound
+
 from omegaml import _base_config
 from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin, AsyncResponseMixin, resolve
 from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
 from omegaml.util import isTrue
-from urllib.parse import unquote, urljoin
-from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +49,21 @@ class marshal_with_streaming:
                 headers = {}
             if inspect.isgenerator(data):
                 # server sent event
-                streamed_resp = ('data: ' + json.dumps(marshal_one(chunk)) + '\n\n' for chunk in data)
-                return flask.Response(streamed_resp, content_type='text/event-stream', status=status, headers=headers)
+                def events():
+                    logger.debug('sse streaming response')
+                    try:
+                        for chunk in data:
+                            if isinstance(chunk, Exception):
+                                yield 'event: error\n'
+                                yield 'data: ' + json.dumps({'error': str(chunk)}) + '\n\n'
+                                break
+                            yield 'data: ' + json.dumps(marshal_one(chunk)) + '\n\n'
+                    except Exception as e:
+                        logger.debug('error %s during SSE streaming', e)
+                        yield 'event: error\n'
+                        yield 'data: ' + json.dumps({'error': str(e)}) + '\n\n'
+
+                return flask.Response(events(), content_type='text/event-stream', status=status, headers=headers)
             return marshal_one(resp)
 
         def marshal_one(resp):
