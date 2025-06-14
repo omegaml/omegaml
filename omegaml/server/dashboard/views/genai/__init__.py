@@ -1,13 +1,15 @@
 import mimetypes
 import os
 import time
+from datetime import timezone
 from flask import render_template, jsonify, abort
+from pathlib import Path
+from werkzeug.utils import secure_filename
+
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.base import BaseView
 from omegaml.server.util import datatables_ajax
 from omegaml.util import utcnow
-from pathlib import Path
-from werkzeug.utils import secure_filename
 
 
 class GenAIView(BaseView):
@@ -16,10 +18,16 @@ class GenAIView(BaseView):
         om = self.om
         models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
-        return render_template('dashboard/genai/chat.html',
+        return render_template('dashboard/genai/conversations.html',
                                default=models[0] if models else None,
                                models=models,
                                indices=indices,
+                               segment=self.segment)
+
+    @fv.route('/{self.segment}/chat/<string:name>')
+    def chat(self, name):
+        return render_template('dashboard/genai/conversations.html',
+                               name=name,
                                segment=self.segment)
 
     @fv.route('/{self.segment}/docs')
@@ -30,7 +38,6 @@ class GenAIView(BaseView):
                                indices=indices,
                                segment=self.segment)
 
-    @fv.route('/{self.segment}/chat/<path:name>')
     @fv.route('/{self.segment}/chat/<path:name>/<string:conversation_id>')
     def modelchat(self, name, conversation_id=None):
         om = self.om
@@ -119,7 +126,7 @@ class GenAIView(BaseView):
             }
         }), 201
 
-    @fv.route('/{self.segment}/chat/<path:name>/history')
+    @fv.route('/{self.segment}/chat/history/<path:name>')
     def api_conversations(self, name):
         """List conversations for a given model"""
         om = self.om
@@ -129,12 +136,13 @@ class GenAIView(BaseView):
         return {'conversations': [
             {
                 'id': msg.get('key'),
-                'dt': msg.get('dt'),
+                'timestamp': msg.get('dt').replace(tzinfo=timezone.utc).isoformat() if msg.get('dt') else None,
                 'title': msg.get('title', msg.get('content')),
+                'tags': msg.get('tags', []),
             } for msg in messages.to_dict(orient='records')
         ]}
 
-    @fv.route('/{self.segment}/chat/<path:name>/history/<string:conversation_id>')
+    @fv.route('/{self.segment}/chat/history/<path:name>/<string:conversation_id>')
     def api_conversation_history(self, name, conversation_id):
         """Get messages for a specific conversation"""
         om = self.om

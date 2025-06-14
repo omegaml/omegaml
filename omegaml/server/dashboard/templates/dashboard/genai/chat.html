@@ -1,72 +1,27 @@
 {% extends "dashboard/layouts/base.html" %}
 
 {% block stylesheets %}
+<style>
+</style>
 {% endblock stylesheets %}
+
+{% block nav %}
+<label class="d-none">
+  <i class="icon feather icon-sun" id="theme-indicator"></i>
+  <input type="checkbox" id="theme-switch" class="d-none">
+</label>
+{% endblock nav %}
 
 {% block content %}
 <!-- [ Main Content ] start -->
-<div class="pcoded-main-container">
-  <div class="pcoded-wrapper">
-    <div class="pcoded-content">
-      <div class="pcoded-inner-content">
-        <!-- [ breadcrumb ] start -->
-        <div class="page-header">
-          <div class="page-block">
-            <div class="row align-items-center">
-              <div class="col-md-12">
-                <div class="page-header-title"></div>
-                <ul class="breadcrumb">
-                  <li class="breadcrumb-item">
-                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
-                  </li>
-                  <li class="breadcrumb-item">
-                    <a href="javascript:">{{ segment | title }}</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- [ breadcrumb ] end -->
-        <div class="main-body">
-          <div class="page-wrapper">
-            <!-- [ Main Content ] start -->
-            <div class="row">
-              <div class="col-sm-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h5>{{ segment | title }} Chats</h5>
-                    {% block segmentheader %}
-                    {% endblock segmentheader %}
-                  </div>
-                </div>
-                {% if models %}
-                <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
-                  <div class=" dropdown">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownModels"
-                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Model
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownModels">
-                      {% for model in models %}<a class="dropdown-item model" href="#">{{ model.name
-                        }}</a>{%
-                      endfor %}
-                    </div>
-                  </div>
-                </div>
-                {% endif %}
-                <div class="row clearfix">
-                  <div class="col-lg-12">
-                    <deep-chat id="deepchat" key="sessionKey" ;
-                      messageStyles='{" default": {"shared": {"innerContainer": {"fontSize": "1rem" }}}}'
-                      inputAreaStyle='{"fontSize": "1rem"}'>
-                    </deep-chat>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="row">
+  <div class="col-sm-12">
+    <div class="row clearfix">
+      <div class="col-lg-12">
+        <deep-chat id="deepchat" key="sessionKey" ;
+          messageStyles='{" default": {"shared": {"innerContainer": {"fontSize": "1rem" }}}}'
+          inputAreaStyle='{"fontSize": "1rem"}'>
+        </deep-chat>
       </div>
     </div>
   </div>
@@ -102,11 +57,11 @@
       }
       return request;
     };
-    var width = $('#deepchat').parent().width();
-    var height = $('#page-wrapper').height();
+    var width = $('#deepchat').parent().width() - 40; // Adjust for padding/margin
+    var height = $(window).height() || $(window).innerHeight() || $('#page-wrapper').height() || 600; // Fallback height
     chat.chatStyle = {
       width: `${width}px`,
-      height: "${height}px",
+      height: `${height}px`,
     };
     // don't ignore space key (some jquery plugin might do that)  
     $('#deepchat').on('keydown', function (event) {
