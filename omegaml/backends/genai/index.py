@@ -1,14 +1,12 @@
-import smart_open
 import warnings
-from glob import iglob
 from itertools import tee, islice
 from markitdown import MarkItDown
+from pathlib import Path
+from types import GeneratorType, NoneType
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.genai import GenAIModel
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
-from pathlib import Path
-from types import GeneratorType, NoneType
-from uuid import uuid4
 
 """
 # create a document index
@@ -40,6 +38,9 @@ class VectorStore:
                                embedding_model=embedding_model, **kwargs)
         return self
 
+    def list(self, name):
+        raise NotImplementedError
+
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         raise NotImplementedError
 
@@ -47,6 +48,9 @@ class VectorStore:
         raise NotImplementedError
 
     def delete(self, name, obj=None, filter=None, **kwargs):
+        raise NotImplementedError
+
+    def embeddings(self, name):
         raise NotImplementedError
 
 
@@ -130,7 +134,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             if not force:
                 raise ValueError(text)
             warnings.warn(text)
-        return super().drop(name, force=force, **kwargs)
+        return True if obj is not None else super().drop(name, force=force, **kwargs)
 
     def _put_as_connection(self, url, name, attributes=None,
                            collection=None, **kwargs):
@@ -154,7 +158,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         collection = collection or meta.kind_meta.get('collection') or self._default_collection(name)
         vector_size = vector_size or meta.kind_meta['collections'][collection]['vector_size']
         index: DocumentIndex = self.get(name, vector_size=vector_size, embedding_model=embedding_model)
-        index.insert(obj, chunker=chunker)
+        index.insert(obj, loader=loader, chunker=chunker)
         return index
 
     def _get_collection(self, name):
@@ -195,6 +199,7 @@ class DocumentIndex:
         assert self._type_of_obj(documents) == 'documents', f"{type(documents)} is not iterable as documents"
         if not append:
             self.clear()
+        loader = loader or DocumentLoader()
         for document in documents:
             if callable(loader):
                 document = loader(document)
@@ -205,8 +210,8 @@ class DocumentIndex:
         for document in loader.load(path):
             self.insert(document, chunker=chunker)
 
-    def insert(self, document, chunker=None):
-        self._insert_document(document, chunker=chunker)
+    def insert(self, document, loader=None, chunker=None):
+        self._insert_document(document, chunker=chunker, loader=loader)
 
     def retrieve(self, document, top=1, filter=None, distance=None, **kwargs):
         if isinstance(document, str):
@@ -218,6 +223,16 @@ class DocumentIndex:
     def clear(self, filter=None, **kwargs):
         self.store.delete(self.name, filter=filter, **kwargs)
 
+    def list(self):
+        """ List all documents in the index """
+        return self.store.list(self.name)
+
+    def delete(self, name, obj=None, filter=None, **kwargs):
+        self.store.delete(self.name, obj=obj, filter=filter, **kwargs)
+
+    def embeddings(self):
+        return self.store.embeddings(self.name)
+
     def _type_of_obj(self, obj):
         if isinstance(obj, GeneratorType):
             # enable probing of generator up to the first element
@@ -225,12 +240,12 @@ class DocumentIndex:
             probe = list(islice(probe, 1))
         else:
             probe = obj
+        _isfile = lambda x: isinstance(x, (str, Path)) and (Path(str(x)[:255]).exists() or str(x).startswith('http'))
         TYPES = {
             # fn()
             'loader': lambda obj: callable(obj),
             # path-like
-            'pathlike': lambda obj: isinstance(obj, str) and (
-                    Path(obj[:200]).exists() or obj.startswith('http')),
+            'pathlike': lambda obj: _isfile(obj),
             # str
             'text': lambda obj: isinstance(obj, str),
             # text, attributes
@@ -250,6 +265,8 @@ class DocumentIndex:
         raise ValueError(f'Cannot process obj of type {type(obj)}, it must be one of {TYPES.keys()}')
 
     def _insert_document(self, document, chunker=None, loader=None):
+        # default chunker splits by double newlines (roughly, paragraphs in markdown)
+        # this is not a good chunker: document.split('\n\n') if isinstance(document, str) else [document]
         _default_chunker = lambda document: [document]
         chunker = chunker or _default_chunker
         doc_type = self._type_of_obj(document)
@@ -296,10 +313,10 @@ class DocumentLoader:
         self.md = MarkItDown()
 
     def load(self, path):
-        if Path(path).exists:
-            documents = self._from_path(path)
-        elif path.startswith('http'):
+        if str(path).startswith('http'):
             documents = self._from_url(path)
+        elif Path(path).exists:
+            documents = self._from_path(path)
         else:
             raise ValueError(f'Cannot load documents from {path}')
         return documents
@@ -308,18 +325,14 @@ class DocumentLoader:
         return self._from_path(self.path)
 
     def _from_path(self, path):
-        for fn in iglob(path):
+        path = Path(path)
+        files = path.glob('**/*') if path.is_dir() else [path]
+        for fn in files:
             result = self.md.convert(fn)
             document = result.text_content
             yield document, dict(source=fn)
 
-    def _from_url(self, url):
-        with smart_open.open(url, 'rb') as fin:
-            uuid = uuid4()
-            fn = url.split('/')[-1]
-            with open(f'/tmp/{uuid}/{fn}', 'rb') as fout:
-                fout.write(fin.read())
-            result = self.md.convert(fn)
-            document = result.text_content
-            Path(fn).unlink(missing_ok=True)
-            yield document, dict(source=fn)
+    def _from_url(self, path):
+        result = self.md.convert(path)
+        document = result.text_content
+        yield document, dict(source=path)

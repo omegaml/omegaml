@@ -1,14 +1,13 @@
 from unittest import TestCase, mock
 
 import inspect
-from types import FunctionType
-
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.mongovector import MongoDBVectorStore
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
+from types import FunctionType
 
 
 class GenAIModelTests(OmegaTestMixin, TestCase):
@@ -199,13 +198,15 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model = self.om.models.get('mymodel')
         # mock openai call
         # -- simulate tokenized responses, one character at a time
+        assistant_response = 'hello how are you'
         openai_responses = [AttrDict({
             'choices': [AttrDict({
+                'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
                 'delta': AttrDict({
                     'role': 'assistant',
                     'content': c,
                 })})]
-        }) for c in 'hello how are you']
+        }) for i, c in enumerate(assistant_response)]
         model.provider = OpenAIProvider
         model.provider.complete.return_value = openai_responses
         # check call to openai returns a generator to stream
@@ -301,6 +302,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         openai_response_to_call_tool = dotable({
             "choices": [
                 {
+                    "finish_reason": "tool_calls",
                     "message": {
                         "role": "assistant",
                         "content": None,
@@ -319,6 +321,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         openai_response_to_tool_result = dotable({
             "choices": [
                 {
+                    "finish_reason": "tool_calls",
                     "message": {
                         "role": "assistant",
                         "content": "the weather is sunny",
@@ -330,6 +333,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         openai_response_to_call_tool_stream = dotable({
             "choices": [
                 {
+                    "finish_reason": "tool_calls",
                     "delta": {
                         "role": "assistant",
                         "content": None,
@@ -404,6 +408,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
             "choices": [
                 {
+                    "finish_reason": "stop",
                     "message": {
                         "role": "assistant",
                         "content": dotable(kwargs)

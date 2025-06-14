@@ -11,7 +11,7 @@ $(document)
     if (activeRequests <= 0) {
       hideLoading();
     }
-    if (xhr.status !== 200) {
+    if (xhr.status >= 400) {
       // Check if the response status is not OK
       let errorMessage = "Loading a resource failed. Please try again later.";
       // Try to get a more specific error message from the response
