@@ -117,6 +117,28 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.cli(f'runtime import --promote --path={expfile} models/*')
         self.assertEqual(len(om.models.revisions('reg')), 4)
 
+    def test_cli_export_import_compressed_subpaths(self):
+        om = self.om
+        self.make_model('foo/bar/reg')
+        self.make_model('foo/bar/reg/helper')
+        self.make_dataset_from_dataframe('sample')
+        # export into a compressed archive
+        self.cli('runtime export --compress --path=/tmp/testcli')
+        expfile = self.get_log('info', as_text=True)[-1]
+        self.assertTrue(Path(expfile).exists())
+        # delete everything, import
+        self.clean()
+        self.cli(f'runtime import --path={expfile}')
+        self.assertIn('foo/bar/reg', om.models.list())
+        self.assertIn('foo/bar/reg_helper', om.models.list())
+        self.assertIn('sample', om.datasets.list())
+        # import and promote model (twice to get 2 versions)
+        # -- note model export has a base model + the actual (latest) version
+        self.clean()
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.cli(f'runtime import --promote --path={expfile} models/*')
+        self.assertEqual(len(om.models.revisions('foo/bar/reg')), 4)
+
     def test_cli_export_import_path(self):
         om = self.om
         self.make_model('reg')
