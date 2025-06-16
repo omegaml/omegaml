@@ -1,4 +1,4 @@
-{% extends "dashboard/layouts/base.html" %}
+{% extends "dashboard/layouts/genai/base.html" %}
 
 {% block stylesheets %}
 <style>
@@ -180,7 +180,7 @@
                 <div class="page-header-title"></div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
-                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                    <a href="{{ url_for('.index_index') }}"><i class="feather icon-home"></i></a>
                   </li>
                   <li class="breadcrumb-item">
                     <a href="javascript:">{{ segment | title }}</a>
@@ -265,7 +265,7 @@
 
     loadConversations() {
       $.ajax({
-        url: url_for('omega-server.ai_api_conversations', {
+        url: url_for('.index_api_conversations', {
           name: context.model,
         }),
         method: 'GET',
@@ -467,7 +467,7 @@
     selectConversation(id) {
       this.activeConversation = id;
       this.render();
-      $('#deepchat').attr('src', url_for('omega-server.ai_modelchat', {
+      $('#deepchat').attr('src', url_for('.index_modelchat', {
         name: context.model,
         conversation_id: id,
       }));

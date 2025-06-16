@@ -126,7 +126,7 @@
     });
     if (context.conversationId != "") {
       $.ajax({
-        url: url_for('omega-server.ai_api_conversation_history', {
+        url: url_for('.index_api_conversation_history', {
           name: context.model,
           conversation_id: context.conversationId
         }),

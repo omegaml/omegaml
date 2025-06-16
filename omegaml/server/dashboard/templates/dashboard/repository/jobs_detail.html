@@ -84,6 +84,7 @@
   const _schedule = {{ schedule | tojson }};
   const _triggers = {{ triggers | tojson }};
   window.context = {
+    ...window.context,
     "name": "{{ meta.name }}",
     "triggers": _triggers,
     "schedule": _schedule,

@@ -23,12 +23,19 @@ String.prototype.uri = function (path) {
 // -- see omegaml.server.util:js_routes()
 window.url_for = (endpoint, params = {}) => {
   try {
+    if (endpoint.startsWith(".")) {
+      // if the endpoint starts with a dot, it is a relative path
+      endpoint = window.context.blueprint + endpoint;
+    }
     return (window._flr[endpoint] || "/404?url=" + endpoint)
       .format(params)
       .replace(/\/\//g, "/");
   } catch (error) {
     console.error(`Failed to retrieve URL for endpoint: ${endpoint}`, error);
   }
+};
+String.prototype.joinUri = function (path) {
+  return `${this.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 };
 // format option that can replace markdown {variable} with object properties
 String.prototype.sformat = function (params) {
