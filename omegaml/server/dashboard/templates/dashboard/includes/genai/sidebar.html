@@ -1,0 +1,67 @@
+<!-- [ navigation menu ] start -->
+<nav class="pcoded-navbar">
+  <div class="navbar-wrapper">
+    <div class="navbar-brand header-logo">
+      <a href="{{ url_for('.index_index') }}" class="b-brand">
+        <div class="b-bg">
+          <img class="img-fluid" src="{{ url_for('static', filename='/assets/images/logo-thumb.png') }}"
+            alt="omega-ml logo">
+        </div>
+        <span class="b-title">omega-ml</span>
+      </a>
+      <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+    </div>
+    <div class="navbar-content scroll-div">
+      <ul class="nav pcoded-inner-navbar">
+        <li class="nav-item pcoded-menu-caption">
+          <label>AI Lab</label>
+        </li>
+        <li data-username="form elements advance componant validation masking wizard picker select"
+          class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+          <a href="{{url_for('.prompts_view_list')}}" class="nav-link ">
+            <span class="pcoded-micon"><i class="fas fa-brain"></i></span><span class="pcoded-mtext">Prompts</span></a>
+        </li>
+        <li data-username="form elements advance componant validation masking wizard picker select"
+          class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+          <a href="{{url_for('.index_documents')}}" class="nav-link ">
+            <span class="pcoded-micon"><i class="fas fa-database"></i></span><span
+              class="pcoded-mtext">Documents</span></a>
+        </li>
+        <li data-username="form elements advance componant validation masking wizard picker select"
+          class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+          <a href="{{url_for('.prompts_view_list')}}" class="nav-link ">
+            <span class="pcoded-micon"><i class="fas fa-file-code"></i></span><span
+              class="pcoded-mtext">Evaluation</span></a>
+        </li>
+        <li data-username="form elements advance componant validation masking wizard picker select"
+          class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+          <a href="{{url_for('.index_chat', name='demo')}}" class="nav-link ">
+            <span class="pcoded-micon"><i class="fas fa-file-code"></i></span><span
+              class="pcoded-mtext">Workbench</span></a>
+        </li>
+      </ul>
+      <ul class="nav pcoded-inner-navbar mt-auto" style="position: absolute; bottom: 0; width: 100%;">
+        <li class="nav-item pcoded-menu-caption ">
+          <label>Information</label>
+        </li>
+        <li data-username="Support Page" class="nav-item ">
+          <a target="_blank" href="https://omegaml.github.io/omegaml/" class="nav-link">
+            <span class="pcoded-micon">
+              <i class="feather icon-book"></i>
+            </span>
+            <span class="pcoded-mtext">Docs</span>
+          </a>
+        </li>
+        <li data-username="Support Page" class="nav-item ">
+          <a target="_blank" href="https://github.com/omegaml/omegaml/issues" class="nav-link">
+            <span class="pcoded-micon">
+              <i class="feather icon-headphones"></i>
+            </span>
+            <span class="pcoded-mtext">Support</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- [ navigation menu ] end -->

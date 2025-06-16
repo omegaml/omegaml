@@ -12,6 +12,11 @@
 <script src="{{ url_for('static', filename='assets/plugins/backbone/backbone.min.js') }}"></script>
 <!-- load notifications -->
 <script>
+  window.context = {
+    "blueprint": "{{ request.blueprint }}",
+    "segment": "{{ segment }}",
+  };
+  console.debug('context', window.context);
   $(function () {
     $.ajax({
       url: "{{ url_for('omega-server.tracking_api_list_alerts') }}",
@@ -19,7 +24,7 @@
       success: function (data) {
         var alerts = data.alerts || [];
         alerts.forEach(function (alert) {
-          var url = url_for('omega-server.index') + '/' + alert.resource;
+          var url = url_for('omega-server.index').joinUri('/' + alert.resource);
           var dt = new Date(alert.dt).toLocaleDateString();
           var notification = `
             <li class="notification">

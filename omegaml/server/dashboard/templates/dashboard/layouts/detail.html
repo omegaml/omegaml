@@ -17,19 +17,21 @@
           <div class="page-block">
             <div class="row align-items-center">
               <div class="col-md-12">
+                {% block pageheader %}
                 <div class="page-header-title"></div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
-                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                    <a href="{{ url_for('.index_index') }}"><i class="feather icon-home"></i></a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="{{ url_for('omega-server.index') }}/{{ segment }}">{{ segment | title
+                    <a href="{{ url_for('.index') }}/{{ segment }}">{{ segment | title
                       }}</a>
                   </li>
                   <li class="breadcrumb-item">
                     <a href="javascript:">{{ name }}</a>
                   </li>
                 </ul>
+                {% endblock pageheader %}
               </div>
             </div>
           </div>
@@ -41,11 +43,13 @@
             <div class="row">
               <!-- [ tabs ] start -->
               <div class="col-sm-12">
+                {% block cardheader %}
                 <div class="card">
                   <div class="card-header">
                     <h5>{{ meta.name }}</h5>
                   </div>
                 </div>
+                {% endblock cardheader %}
                 <hr>
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                   <li class="nav-item">
@@ -134,7 +138,7 @@
       attributes: json,
     };
     $.ajax({
-      url: url_for('omega-server.index') + '/{{segment}}/{{meta.name}}/update',
+      url: url_for('omega-server.index').joinUri('/{{segment}}/{{meta.name}}/update'),
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',
@@ -217,7 +221,7 @@
       }
     };
     $.ajax({
-      url: url_for('omega-server.index') + '/{{segment}}/{{meta.name}}/update',
+      url: url_for('.index').joinUri('/{{segment}}/{{meta.name}}/update'),
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',

@@ -5,14 +5,15 @@ import pandas as pd
 import re
 import requests
 from copy import deepcopy
+from openai import OpenAI
+from urllib.parse import urlparse, parse_qs, urljoin
+from uuid import uuid4
+
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
 from omegaml.util import ensure_list, tryOr
-from openai import OpenAI
-from urllib.parse import urlparse, parse_qs, urljoin
-from uuid import uuid4
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -315,9 +316,12 @@ class TextModel(GenAIModel):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         self._ensure_tracking()
         conversation_id = conversation_id or uuid4().hex
+        # if the client sends in messages, don't recall past conversations (they are already in messages)
         messages = messages or self.conversation(conversation_id, raw=True)
-        if not messages:
-            messages = [self._system_message(prompt, conversation_id=conversation_id)]
+        system_message_missing = not any(m.get('role') == 'system' for m in messages)
+        if not messages or system_message_missing:
+            # no message history, insert the system message to start off the conversation)
+            messages = [self._system_message(prompt, conversation_id=conversation_id)] + (messages if messages else [])
             self._log_events('conversation', conversation_id, messages)
         responses = self._do_complete(prompt, messages=messages, conversation_id=conversation_id, data=data,
                                       use_tools=use_tools, raw=raw, stream=stream, **kwargs)
@@ -424,7 +428,7 @@ class TextModel(GenAIModel):
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
             messages = ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
                         [self._augment_message(m, self.documents) for m in messages])
-            prompt_message = prompt
+            prompt_message = prompt[-1]
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter

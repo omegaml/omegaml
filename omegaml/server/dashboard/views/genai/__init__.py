@@ -13,12 +13,12 @@ from omegaml.util import utcnow
 
 
 class GenAIView(BaseView):
-    @fv.route('/{self.segment}')
+    @fv.route('/index')
     def index(self):
         om = self.om
         models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
-        return render_template('dashboard/genai/conversations.html',
+        return render_template('dashboard/genai/index.html',
                                default=models[0] if models else None,
                                models=models,
                                indices=indices,
@@ -157,7 +157,7 @@ class GenAIView(BaseView):
 
 
 def create_view(bp):
-    view = GenAIView('ai')
+    view = GenAIView('index')
     view.create_routes(bp)
     return
 
