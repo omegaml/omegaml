@@ -4,3 +4,15 @@
 {% include 'dashboard/includes/genai/sidebar.html' %}
 {% include 'dashboard/includes/navigation.html' %}
 {% endblock nav %}
+
+{% block content %}
+{{ super() }}
+{% block segmentheader %}
+<div class="card-tools">
+  <a href="{{ url_for('.prompts_new') }}"
+    class="btn btn-sm btn-primary px-3 py-0 d-flex align-items-center justify-content-center">
+    <i class="fa-solid fa-plus" style="margin: auto; color:white"></i>
+  </a>
+</div>
+{% endblock segmentheader %}
+{% endblock content %}
