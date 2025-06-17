@@ -113,6 +113,8 @@
   </div>
 </div>
 {% endblock content %}
+{% block extension %}
+{% endblock extension %}
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <script src="{{ config.ASSETS_ROOT }}/plugins/jsoneditor/jsoneditor.min.js"></script>
@@ -235,6 +237,6 @@
       }
     });
   });
-        });
+  });
 </script>
 {% endblock javascripts %}

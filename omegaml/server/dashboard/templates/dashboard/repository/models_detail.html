@@ -1,23 +1,24 @@
 {% extends "dashboard/layouts/detail.html" %}
-{% block content %}
-{{ super() }}
+<!-- tabs labels-->
 {% block tabitems %}
 <li class="nav-item">
   <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
-    aria-controls="experiments" aria-selected="false">Experiments</a>
+    aria-controls="experiments" aria-selected="false">xExperiments</a>
 </li>
 <li class="nav-item">
   <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
     aria-controls="experiments" aria-selected="false">Monitoring</a>
 </li>
-{% endblock tabitems %} {% block tabcontents %}
+{% endblock tabitems %}
+<!-- tabs conents-->
+{% block tabcontents %}
 <!-- experiments -->
 <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
     <div class=" dropdown">
       <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownExperiments"
         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Experiment
+        xExperiment
       </button>
       <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
         {% for exp in meta.attributes.tracking.experiments %}<a class="dropdown-item exp" href="#">{{ exp }}</a>{%
@@ -106,7 +107,6 @@
   </div>
 </div>
 {% endblock tabcontents %}
-{% endblock content %}
 {% block javascripts %} {{
 super() }}
 <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>

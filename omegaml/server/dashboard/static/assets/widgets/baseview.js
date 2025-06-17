@@ -1,6 +1,5 @@
 import $ from "../plugins/jquery/js/jquery.module.js";
 import { _, Backbone } from "../plugins/backbone/backbone.module.js";
-
 /*
  * BaseView class to handle rendering of views
  *
