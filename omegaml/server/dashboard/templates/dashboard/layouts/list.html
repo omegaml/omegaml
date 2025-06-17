@@ -17,7 +17,7 @@
                 <div class="page-header-title"></div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
-                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                    <a href="{{ url_for('.index_index') }}"><i class="feather icon-home"></i></a>
                   </li>
                   <li class="breadcrumb-item">
                     <a href="javascript:">{{ segment | title }}</a>
@@ -59,7 +59,7 @@
                             <td></td>
                             <td>
                               <a data-name="{{ item.name }}"
-                                href="{{ url_for('omega-server.index') }}/{{ segment }}/{{ item.name }}">
+                                href="{{ url_for('.index') | default('/') }}{{ segment }}/{{ item.name }}">
                                 {{ item.name }}</a>
                             </td>
                             <td>{{ item.kind }}</td>
@@ -150,7 +150,7 @@
         selected.forEach(function (item) {
           var name = $(item[1]).data('name'); // item is array of all column values, item[1] is our <a> tag
           requests.push($.ajax({
-            url: "{{ url_for('omega-server.index') }}/{{ segment }}/" + name,
+            url: "{{ url_for('.index') }}/{{ segment }}/" + name,
             type: 'DELETE',
             success: function (result) {
               alert(`${name} deleted`);

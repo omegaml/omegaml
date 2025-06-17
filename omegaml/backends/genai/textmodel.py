@@ -4,13 +4,14 @@ import json
 import pandas as pd
 import re
 import requests
+from copy import deepcopy
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs, urljoin
 from uuid import uuid4
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
-from omegaml.backends.tracking import OmegaSimpleTracker
+from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
 from omegaml.util import ensure_list, tryOr
 
@@ -64,7 +65,8 @@ class TextModelBackend(GenAIBaseBackend):
         return ParseResult(vendor, scheme, path, params, netloc, hostname, port, parsed.username,
                            parsed.password, parsed.query)
 
-    def put(self, obj, name, template=None, pipeline=None, provider=None, tools=None, documents=None, **kwargs):
+    def put(self, obj, name, template=None, pipeline=None, provider=None, tools=None, documents=None, strategy=None,
+            **kwargs):
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
         params = parse_qs(parsed.params)
@@ -94,6 +96,7 @@ class TextModelBackend(GenAIBaseBackend):
             'pipeline': pipeline or None,
             'tools': tools or [],
             'documents': documents or [],
+            'strategy': strategy or None,
         }
         kwargs.update(attributes=attributes)
         meta = self.model_store.make_metadata(name,
@@ -102,8 +105,10 @@ class TextModelBackend(GenAIBaseBackend):
                                               **kwargs)
         return meta.save()
 
-    def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, **kwargs):
+    def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, strategy=None,
+            **kwargs):
         meta = self.model_store.metadata(name)
+        # setup from connection string
         kind_meta = meta.kind_meta
         base_url = kind_meta['base_url']
         model = kind_meta['model']
@@ -111,13 +116,15 @@ class TextModelBackend(GenAIBaseBackend):
         params = kind_meta['params']
         creds = kind_meta['creds']
         provider = kind_meta['provider']
+        params.update(kwargs)
+        # setup from attributes
         pipeline = pipeline or meta.attributes.get('pipeline')
         tools = tools or meta.attributes.get('tools') or []
         documents = documents or meta.attributes.get('documents')
-        params.update(kwargs)
         template = template or query.get('template') or meta.attributes.get('template')
-        data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
+        strategy = {**(meta.attributes.get('strategy') or {}), **(strategy or {})}
         # load dependencies
+        data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
@@ -125,6 +132,7 @@ class TextModelBackend(GenAIBaseBackend):
                           data_store=data_store, pipeline=pipeline, tools=tools,
                           tracking=self.tracking,
                           provider=provider, documents=documents,
+                          strategy=strategy,
                           **params)
         return model
 
@@ -224,7 +232,8 @@ class TextModel(GenAIModel):
     """
 
     def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
-                 tracking=None, pipeline=None, provider='openai', tools=None, documents=None, **kwargs):
+                 tracking=None, pipeline=None, provider='openai', tools=None, documents=None,
+                 strategy=None, **kwargs):
         super().__init__()
         self.base_url = base_url
         self.model = model
@@ -241,6 +250,15 @@ class TextModel(GenAIModel):
         self.tools = tools
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
+        self.strategy = strategy or {
+            # kwargs to pass to DocumentIndex.retrieve()
+            'retrieve': {
+                'top': 1,
+            }
+        }
+
+    def __repr__(self):
+        return f'TextModel(base_url={self.base_url}, model={self.model})'
 
     def load(self, method):
         pass
@@ -255,12 +273,12 @@ class TextModel(GenAIModel):
                  chat=False, stream=False, use_tools=True, **kwargs):
 
         def parse_completion_response(r):
-            response, _, response_message = r
-            return response_message
+            response, _, response_message, raw_response = r
+            return response_message if not raw else raw_response
 
         def parse_chat_response(r):
-            conversation_id, response, _, response_message = r
-            return response_message
+            conversation_id, response, _, response_message, raw_response = r
+            return response_message if not raw else raw_response
 
         if not chat and conversation_id is None:
             responses = self._do_complete(prompt, messages=messages, data=data,
@@ -268,7 +286,7 @@ class TextModel(GenAIModel):
             response_parser = parse_completion_response
         else:
             # chat or conversation id provided
-            responses = self._do_chat(prompt, conversation_id=conversation_id,
+            responses = self._do_chat(prompt, messages=messages, conversation_id=conversation_id,
                                       data=data,
                                       stream=stream,
                                       use_tools=use_tools,
@@ -287,33 +305,45 @@ class TextModel(GenAIModel):
                                   **kwargs)
 
         def response_parser(r):
-            conversation_id, response, prompt_response, response_message = r
+            conversation_id, response, prompt_response, response_message, raw_response = r
             return conversation_id, (response if raw else response_message)
 
         response_gen = (response_parser(response) for response in responses)
         return response_gen if stream else [response for response in response_gen][-1]
 
-    def _do_chat(self, prompt, conversation_id=None, data=None, use_tools=False, raw=False, **kwargs):
+    def _do_chat(self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False,
+                 stream=False, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         self._ensure_tracking()
         conversation_id = conversation_id or uuid4().hex
-        messages = self.conversation(conversation_id, raw=True)
-        if not messages:
-            messages = [self._system_message(prompt, conversation_id=conversation_id)]
+        # if the client sends in messages, don't recall past conversations (they are already in messages)
+        messages = messages or self.conversation(conversation_id, raw=True)
+        system_message_missing = not any(m.get('role') == 'system' for m in messages)
+        if not messages or system_message_missing:
+            # no message history, insert the system message to start off the conversation)
+            messages = [self._system_message(prompt, conversation_id=conversation_id)] + (messages if messages else [])
             self._log_events('conversation', conversation_id, messages)
-        responses = self._do_complete(prompt, messages, conversation_id=conversation_id, data=data,
-                                      use_tools=use_tools, raw=raw, **kwargs)
+        responses = self._do_complete(prompt, messages=messages, conversation_id=conversation_id, data=data,
+                                      use_tools=use_tools, raw=raw, stream=stream, **kwargs)
         to_store = []
         for response in responses:
-            response, prompt_message, response_message = response
-            # wrapping in dict() to avoid modification by the data store (e.g. adding _id)
-            to_store = [
-                dict(prompt_message),
-                dict(response_message)
-            ]
-            yield conversation_id, response, prompt_message, response_message
-        else:
-            self._log_events('conversation', conversation_id, to_store)
+            response, prompt_message, response_message, raw_response = response
+            finish_reason = response_message.get('finish_reason')
+            consolidated = finish_reason == 'stop.consolidated'
+            print(finish_reason, consolidated, response_message)
+            if not stream or (stream and consolidated):
+                # only store consolidated responses
+                # -- if streaming, response_message is merged from all choices[0].delta
+                # -- if not streaming, response_message is the choices[0].message
+                # wrapping in deepcopy() to avoid modification by the data store (e.g. adding _id)
+                to_store.extend([
+                    deepcopy(prompt_message),
+                    deepcopy(response_message)
+                ])
+            if not consolidated:
+                # the stop.consolidated message is internal to TextModel, do not return it
+                yield conversation_id, response, prompt_message, response_message, raw_response
+        self._log_events('conversation', conversation_id, to_store)
 
     def _call_tools(self, tool_calls, conversation_id):
         # process tool calls
@@ -361,11 +391,14 @@ class TextModel(GenAIModel):
         """
         assert self.data_store, "this model does not track conversations, specify .get(...., data_store=om.datasets)"
         self._ensure_tracking()
-        filter.setdefault('conversation_id', conversation_id)
+        filter.setdefault('key', conversation_id)
         messages = self.tracking.data(event='conversation', **filter)
-        if 'value' in messages.columns:
+        if messages is not None and 'value' in messages.columns:
             messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
-        return messages if not raw else messages.to_dict('records')
+            messages.drop(columns=['value'], inplace=True)
+            messages.fillna('', inplace=True)
+            return messages if not raw else messages.to_dict('records')
+        return []
 
     def _system_message(self, prompt, conversation_id=None):
         return {
@@ -378,6 +411,7 @@ class TextModel(GenAIModel):
                      use_tools=False, raw=False, **kwargs):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or []
+        # FIXME: system messages should only be included in first request
         if prompt and isinstance(prompt, str):
             # support direct text input
             prompt_message = {
@@ -394,7 +428,7 @@ class TextModel(GenAIModel):
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
             messages = ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
                         [self._augment_message(m, self.documents) for m in messages])
-            prompt_message = prompt
+            prompt_message = prompt[-1]
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
@@ -404,14 +438,14 @@ class TextModel(GenAIModel):
             messages = ([self._system_message(prompts,
                                               conversation_id=conversation_id)] +
                         [self._augment_message(m, self.documents) for m in prompt])
-            prompt_message = None
+            prompt_message = messages[-1]
         else:
             # raw input, assume messages contains the user prompt
-            prompt_message = None
             prompts = '\n\n'.join(m.get('content', '') for m in messages)
             messages = ([self._system_message(prompts,
                                               conversation_id=conversation_id)] +
                         [self._augment_message(m, self.documents) for m in messages])
+            prompt_message = messages[-1]
         if self.tools:
             kwargs.update(tools=self.tools_specs,
                           tool_choice='auto')
@@ -468,9 +502,10 @@ class TextModel(GenAIModel):
                     model=self.model,
                     **kkwargs,
                 )
-                tooled_response, tooled_prompt_message, tooled_response_message = resolve_response(response,
-                                                                                                   prompt_message,
-                                                                                                   use_tools=False)
+                tooled_response, tooled_prompt_message, tooled_response_message, raw_response = resolve_response(
+                    response,
+                    prompt_message,
+                    use_tools=False)
                 tooled_response_message['intermediate_results'] = {
                     'tool_calls': tool_calls,
                     'tool_prompts': tool_prompts,
@@ -493,10 +528,11 @@ class TextModel(GenAIModel):
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
+            raw_response = response.to_dict()
             if raw:
                 # native response message
                 # Ref: https://platform.openai.com/docs/api-reference/chat/get
-                response_message = response.to_dict()
+                response_message = response.choices[0].message.to_dict()
             elif getattr(response, 'error', None):
                 return response, prompt_message, {
                     "role": "system",
@@ -518,36 +554,66 @@ class TextModel(GenAIModel):
                                              template=template,
                                              conversation_id=conversation_id,
                                              **kwargs) or response_message
-            return response, prompt_message, response_message
+            return response, prompt_message, response_message, raw_response
 
-        def resolve_chunk(response, chunk, chunks, prompt_message, use_tools=False):
+        def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
+            """ resolve a single chunk of a streamed response
+
+            Args:
+                response (OpenAIResponse): the full response object
+                chunk (OpenAIResponseChunk): the current chunk of the response
+                chunks (list): list of all chunks received so far
+                prompt_message (dict): the prompt message used for this request
+                consolidated_response (dict): the consolidated response so far
+                use_tools (bool): whether to use tools in this response
+
+            Returns:
+                tuple: (response, prompt_message, response_message, raw_response)
+
+                where:
+                    response: the full response object
+                    prompt_message: the prompt message used for this request
+                    response_message: the response message as a dictionary (choices[0].delta)
+                    raw_response: the raw response chunk as a dictionary
+
+            """
+            raw_response = chunk.to_dict()
+            content = ''.join(c['choices'][0]['delta']['content'] for c in chunks) + str(
+                chunk.choices[0].delta.content or '')
             if raw:
-                response_message = chunk.to_dict()
+                response_message = chunk.choices[0].delta.to_dict()
             else:
+                # consolidate content
                 response_message = {
                     "role": chunk.choices[0].delta.role,
                     "delta": chunk.choices[0].delta.content,
-                    "content": ''.join(c['delta'] for c in chunks) + str(chunk.choices[0].delta.content or ''),
+                    "content": content,
                     "conversation_id": conversation_id,
+                    "finish_reason": chunk.choices[0].finish_reason,
                 }
             response, prompt_message, response_message = maybe_call_tools(chunk, prompt_message,
                                                                           response_message, use_tools=use_tools,
                                                                           as_delta=True)
-            chunks.append(response_message)
             response_message = self.pipeline(method='process', response_message=response_message,
                                              prompt_message=prompt_message,
                                              messages=messages,
                                              template=template,
                                              conversation_id=conversation_id,
                                              **kwargs) or response_message
-            return response, prompt_message, response_message
+            # consolidate response
+            chunks.append(raw_response)
+            consolidated_response.update(response_message) if not consolidated_response else None
+            consolidated_response['content'] = content
+            return response, prompt_message, response_message, raw_response
 
         if stream:
-            # https://cookbook.openai.com/examples/how_to_stream_completions
-            print("*** streaming")
             chunks = []
+            consolidated_response = {}
             for chunk in response:
-                yield resolve_chunk(response, chunk, chunks, prompt_message, use_tools=use_tools)
+                yield resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response,
+                                    use_tools=use_tools)
+            consolidated_response['finish_reason'] = 'stop.consolidated'
+            yield response, prompt_message, consolidated_response, chunks[-1] if chunks else {}
         else:
             yield resolve_response(response, prompt_message, use_tools=use_tools)
 
@@ -618,11 +684,12 @@ class TextModel(GenAIModel):
         query = query or prompt
         if documents is None or '{context}' not in prompt:
             return prompt
-        docs = documents.retrieve(query)
+        retrieve_kwargs = self.strategy.get('retrieve', {})
+        docs = documents.retrieve(query, **retrieve_kwargs)
         if docs:
-            context = ensure_list(docs)[0].get('text')
+            context = '\n\n'.join(d.get('text') for d in docs)
         else:
-            context = '(error: no documents found)'
+            context = '(no documents found)'
         return prompt.format_map(safeformat(context=context))
 
     def _augment_message(self, message, documents: DocumentIndex, query=None):
@@ -637,13 +704,15 @@ class TextModel(GenAIModel):
         #   a conversation model without a tracking instance is useless
         # - thus we adopt the convention that if the runtime does not provide a tracking instance,
         #   we create one for the model
-        if self.tracking is None:
+        # TODO: verify that this is the right place to do this
+        if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
             self.tracking = OmegaSimpleTracker(self.model, store=self.data_store)
-        self.tracking.use()
+            self.tracking.use()
 
     def _log_events(self, event, conversation_id, data):
         if self.tracking:
             self.tracking.log_events(event, conversation_id, ensure_list(data))
+            self.tracking.flush()
 
 
 class Provider:
@@ -683,7 +752,7 @@ class OpenAIProvider(Provider):
             dimensions=dimensions,
             encoding_format="float"
         )
-        return embeddings
+        return [d.embedding for d in embeddings.data]
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         response = self.client.chat.completions.create(
@@ -766,6 +835,35 @@ class AnythingLLMProvider(Provider):
                                    'model': self.model,
                                    'stream': stream})
         return resp.json()
+
+
+class OllamaProvider(Provider):
+    URL_REGEX = r'https?://(api\.ollama\.com|localhost)(:\d+)?/.*'
+
+    def embed(self, documents, dimensions=None, **kwargs):
+        """ Embed documents using Ollama's embedding service.
+
+        Args:
+            documents (list): List of documents to embed.
+            dimensions (int): Number of dimensions to embed to.
+
+        Returns:
+            list: List of embeddings as list[list[float, ...]].
+        """
+        # see https://ollama.com/docs/api/embeddings
+        documents = ensure_list(documents)
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.api_key}'
+        }
+        url = urljoin(self.base_url, 'embeddings')
+        resp = requests.post(url,
+                             headers=headers,
+                             json={'model': self.model,
+                                   'input': documents})
+        assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
+        data = resp.json().get('data', [])
+        return [d['embedding'] for d in data]
 
 
 PROVIDERS = {

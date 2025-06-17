@@ -13,18 +13,27 @@ omega_bp = Blueprint('omega-server', __name__,
                      static_folder='static',
                      template_folder='templates')
 
+omega_ai_bp = Blueprint('omega-ai', __name__,
+                        static_folder='static',
+                        template_folder='templates')
+
 from omegaml.server.dashboard.views.respository import scripts, datasets, jobs, models, dashboard
 from omegaml.server.dashboard.views.runtime import summary, streams, tracking
+from omegaml.server.dashboard.views.genai import prompts
 
 
-@omega_bp.route('/')
-def index():
-    return redirect(url_for('omega-server.index_index'))
+def add_common_routes(bp):
+    @bp.route('/')
+    def index():
+        return redirect(url_for('.index_index'))
+
+    @bp.route('/docs')
+    def docs():
+        return redirect("https://omegaml.github.io/omegaml/", code=302)
 
 
-@omega_bp.route('/docs')
-def docs():
-    return redirect("https://omegaml.github.io/omegaml/", code=302)
+add_common_routes(omega_bp)
+add_common_routes(omega_ai_bp)
 
 
 @debug_only
@@ -52,6 +61,15 @@ def explain(segment):
     obj_meta = None
     template_string = ""
     defaults = {}
+    segments_to_store = {
+        'models': 'model',
+        'datasets': 'dataset',
+        'jobs': 'job',
+        'scripts': 'script',
+        'streams': 'stream',
+        'tracking': 'models',
+        'prompts': 'models',
+    }
     # resolve template, in this order
     # 1. if object's metadata is available, use its attributes.explain as a template string
     # 2. elif there is a obj explain dataset, use its attributes.docs as a template string
@@ -63,8 +81,9 @@ def explain(segment):
     # attributes.docs can be edited in the dashboard.
     if om is not None:
         defaults = om.defaults
-        if name and isinstance(getattr(om, segment), OmegaStore):
-            store = getattr(om, segment)
+        segment_store = segments_to_store.get(segment, segment)
+        if name and isinstance(getattr(om, segment_store), OmegaStore):
+            store = getattr(om, segment_store)
             obj_meta = store.metadata(name)
             template_string = obj_meta.attributes.get('explain', '').strip()
         elif name and om.datasets.exists(obj_template_fqdn):
@@ -104,4 +123,6 @@ tracking.create_view(omega_bp)
 users.create_view(omega_bp)
 # -- apps
 plotcards.create_view(omega_bp)
-genai.create_view(omega_bp)
+# -- ai
+genai.create_view(omega_ai_bp)
+prompts.create_view(omega_ai_bp)

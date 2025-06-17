@@ -1,0 +1,568 @@
+{% extends "dashboard/layouts/genai/base.html" %}
+
+{% block stylesheets %}
+<style>
+  .assistant-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .assistant-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .tools-container,
+  .documents-container,
+  .pipelines-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+  }
+
+  .selected-item {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+  }
+
+  .item-checkbox {
+    margin-right: 8px;
+  }
+
+  .modal-lg {
+    max-width: 900px;
+  }
+
+  .badge-tool {
+    background-color: #28a745;
+  }
+
+  .badge-document {
+    background-color: #17a2b8;
+  }
+
+  .badge-pipeline {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  .system-prompt-preview {
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 0.85em;
+    color: #6c757d;
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('omega-server.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ segment | title }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>{{ segment | title }} Chats</h5>
+                    {% block segmentheader %}
+                    {% endblock segmentheader %}
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-block">
+                    <div class="row">
+                      <div class="col-12">
+                        <div class="d-flex justify align-items-right mb-4">
+                          <button class="btn btn-primary" id="createAssistantBtn">
+                            <i class="fas fa-plus mr-2"></i>Create Assistant
+                          </button>
+                        </div>
+
+                        <!-- Assistants List -->
+                        <div id="assistantsList">
+                          <!-- Assistants will be loaded here -->
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Assistant Modal -->
+                  <div class="modal fade" id="assistantModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="modalTitle">Create Assistant</h5>
+                          <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <form id="assistantForm">
+                            <input type="hidden" id="assistantId" value="">
+
+                            <!-- Basic Information -->
+                            <div class="row">
+                              <div class="col-md-6">
+                                <div class="form-group">
+                                  <label for="assistantName">Name <span class="text-danger">*</span></label>
+                                  <input type="text" class="form-control" id="assistantName" required>
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <div class="form-group">
+                                  <label for="assistantDescription">Description</label>
+                                  <input type="text" class="form-control" id="assistantDescription">
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- System Prompt -->
+                            <div class="form-group">
+                              <label for="systemPrompt">System Prompt</label>
+                              <textarea class="form-control" id="systemPrompt" rows="4"
+                                placeholder="Enter the system prompt that defines the assistant's behavior and role..."></textarea>
+                            </div>
+
+                            <!-- Prompt Template -->
+                            <div class="form-group">
+                              <label for="promptTemplate">Prompt Template</label>
+                              <textarea class="form-control" id="promptTemplate" rows="3"
+                                placeholder="Enter the prompt template with placeholders like {{variable}}..."></textarea>
+                            </div>
+
+                            <!-- Document Selection -->
+                            <div class="form-group">
+                              <label>Document</label>
+                              <select class="form-control" id="documentSelect">
+                                <option value="">Select a document (optional)</option>
+                              </select>
+                            </div>
+
+                            <!-- Tools Selection -->
+                            <div class="form-group">
+                              <label>Tools</label>
+                              <div class="tools-container" id="toolsContainer">
+                                <!-- Tools will be loaded here -->
+                              </div>
+                            </div>
+
+                            <!-- Pipeline Selection -->
+                            <div class="form-group">
+                              <label>Pipeline</label>
+                              <select class="form-control" id="pipelineSelect">
+                                <option value="">Select a pipeline (optional)</option>
+                              </select>
+                            </div>
+                          </form>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                          <button type="button" class="btn btn-primary" id="saveAssistantBtn">Save
+                            Assistant</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- View Assistant Modal -->
+                  <div class="modal fade" id="viewAssistantModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="viewModalTitle">Assistant Details</h5>
+                          <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" id="viewModalBody">
+                          <!-- Assistant details will be displayed here -->
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-primary" id="editFromViewBtn">Edit</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- [ Main Content ] end -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+    {% block javascripts %}
+    <script>
+      // Sample data - in a real application, this would come from an API
+      const sampleDocuments = [
+        { id: 1, name: "API Documentation", type: "Technical" },
+        { id: 2, name: "User Manual", type: "Guide" },
+        { id: 3, name: "FAQ Database", type: "Support" },
+        { id: 4, name: "Product Specifications", type: "Technical" },
+        { id: 5, name: "Training Materials", type: "Educational" }
+      ];
+
+      const sampleTools = [
+        { id: 1, name: "Web Search", description: "Search the internet for information" },
+        { id: 2, name: "Calculator", description: "Perform mathematical calculations" },
+        { id: 3, name: "Email Sender", description: "Send emails to users" },
+        { id: 4, name: "File Reader", description: "Read and analyze files" },
+        { id: 5, name: "Database Query", description: "Query database for information" },
+        { id: 6, name: "Image Generator", description: "Generate images from text" },
+        { id: 7, name: "Code Executor", description: "Execute code snippets" }
+      ];
+
+      const samplePipelines = [
+        { id: 1, name: "Standard Processing", description: "Default processing pipeline" },
+        { id: 2, name: "Advanced Analysis", description: "Deep analysis with multiple steps" },
+        { id: 3, name: "Quick Response", description: "Fast response pipeline" },
+        { id: 4, name: "Research Pipeline", description: "Comprehensive research workflow" }
+      ];
+
+      // In-memory storage for assistants
+      let assistants = [
+        {
+          id: 1,
+          name: "Support Assistant",
+          description: "Customer support chatbot",
+          systemPrompt: "You are a helpful customer support assistant. Always be polite and try to resolve issues efficiently.",
+          promptTemplate: "Customer query: {{query}}\nPrevious context: {{context}}",
+          document: { id: 3, name: "FAQ Database" },
+          tools: [
+            { id: 1, name: "Web Search" },
+            { id: 3, name: "Email Sender" }
+          ],
+          pipeline: { id: 1, name: "Standard Processing" }
+        },
+        {
+          id: 2,
+          name: "Code Assistant",
+          description: "Programming helper",
+          systemPrompt: "You are an expert programmer. Help users with coding questions and provide clean, efficient solutions.",
+          promptTemplate: "Programming language: {{language}}\nCode problem: {{problem}}",
+          document: { id: 1, name: "API Documentation" },
+          tools: [
+            { id: 2, name: "Calculator" },
+            { id: 4, name: "File Reader" },
+            { id: 7, name: "Code Executor" }
+          ],
+          pipeline: { id: 2, name: "Advanced Analysis" }
+        }
+      ];
+
+      let currentAssistantId = null;
+
+      $(document).ready(function () {
+        loadDocuments();
+        loadTools();
+        loadPipelines();
+        loadAssistants();
+
+        // Event handlers
+        $('#createAssistantBtn').click(function () {
+          openCreateModal();
+        });
+
+        $('#saveAssistantBtn').click(function () {
+          saveAssistant();
+        });
+
+        $('#editFromViewBtn').click(function () {
+          $('#viewAssistantModal').modal('hide');
+          setTimeout(() => {
+            openEditModal(currentAssistantId);
+          }, 300);
+        });
+      });
+
+      function loadDocuments() {
+        const select = $('#documentSelect');
+        select.empty().append('<option value="">Select a document (optional)</option>');
+
+        sampleDocuments.forEach(doc => {
+          select.append(`<option value="${doc.id}">${doc.name} (${doc.type})</option>`);
+        });
+      }
+
+      function loadTools() {
+        const container = $('#toolsContainer');
+        container.empty();
+
+        sampleTools.forEach(tool => {
+          container.append(`
+                    <div class="form-check">
+                        <input class="form-check-input item-checkbox" type="checkbox" value="${tool.id}" id="tool${tool.id}">
+                        <label class="form-check-label" for="tool${tool.id}">
+                            <strong>${tool.name}</strong><br>
+                            <small class="text-muted">${tool.description}</small>
+                        </label>
+                    </div>
+                `);
+        });
+      }
+
+      function loadPipelines() {
+        const select = $('#pipelineSelect');
+        select.empty().append('<option value="">Select a pipeline (optional)</option>');
+
+        samplePipelines.forEach(pipeline => {
+          select.append(`<option value="${pipeline.id}">${pipeline.name}</option>`);
+        });
+      }
+
+      function loadAssistants() {
+        const container = $('#assistantsList');
+        container.empty();
+
+        if (assistants.length === 0) {
+          container.append(`
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        No assistants created yet. Click "Create Assistant" to get started.
+                    </div>
+                `);
+          return;
+        }
+
+        assistants.forEach(assistant => {
+          const toolsBadges = assistant.tools ? assistant.tools.map(tool =>
+            `<span class="badge badge-tool mr-1">${tool.name}</span>`
+          ).join('') : '';
+
+          const documentBadge = assistant.document ?
+            `<span class="badge badge-document mr-1">${assistant.document.name}</span>` : '';
+
+          const pipelineBadge = assistant.pipeline ?
+            `<span class="badge badge-pipeline mr-1">${assistant.pipeline.name}</span>` : '';
+
+          container.append(`
+                    <div class="assistant-card card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title mb-2">
+                                        <i class="fas fa-robot mr-2 text-primary"></i>
+                                        ${assistant.name}
+                                    </h5>
+                                    <p class="card-text text-muted mb-2">${assistant.description || 'No description'}</p>
+                                    
+                                    ${assistant.systemPrompt ? `
+                                        <div class="system-prompt-preview mb-2">
+                                            <small><strong>System Prompt:</strong> ${assistant.systemPrompt.substring(0, 100)}${assistant.systemPrompt.length > 100 ? '...' : ''}</small>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <div class="mb-2">
+                                        ${documentBadge}
+                                        ${toolsBadges}
+                                        ${pipelineBadge}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAssistant(${assistant.id})">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="openEditModal(${assistant.id})">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAssistant(${assistant.id})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+        });
+      }
+
+      function openCreateModal() {
+        $('#modalTitle').text('Create Assistant');
+        $('#assistantForm')[0].reset();
+        $('#assistantId').val('');
+        clearToolSelections();
+        $('#assistantModal').modal('show');
+      }
+
+      function openEditModal(assistantId) {
+        const assistant = assistants.find(a => a.id === assistantId);
+        if (!assistant) return;
+
+        $('#modalTitle').text('Edit Assistant');
+        $('#assistantId').val(assistant.id);
+        $('#assistantName').val(assistant.name);
+        $('#assistantDescription').val(assistant.description || '');
+        $('#systemPrompt').val(assistant.systemPrompt || '');
+        $('#promptTemplate').val(assistant.promptTemplate || '');
+
+        // Set document
+        $('#documentSelect').val(assistant.document ? assistant.document.id : '');
+
+        // Set tools
+        clearToolSelections();
+        if (assistant.tools) {
+          assistant.tools.forEach(tool => {
+            $(`#tool${tool.id}`).prop('checked', true);
+          });
+        }
+
+        // Set pipeline
+        $('#pipelineSelect').val(assistant.pipeline ? assistant.pipeline.id : '');
+
+        $('#assistantModal').modal('show');
+      }
+
+      function viewAssistant(assistantId) {
+        const assistant = assistants.find(a => a.id === assistantId);
+        if (!assistant) return;
+
+        currentAssistantId = assistantId;
+        $('#viewModalTitle').text(`Assistant: ${assistant.name}`);
+
+        const toolsList = assistant.tools && assistant.tools.length > 0 ?
+          assistant.tools.map(tool => `<li>${tool.name}</li>`).join('') :
+          '<li class="text-muted">No tools selected</li>';
+
+        const documentInfo = assistant.document ?
+          `<strong>${assistant.document.name}</strong>` :
+          '<span class="text-muted">No document selected</span>';
+
+        const pipelineInfo = assistant.pipeline ?
+          `<strong>${assistant.pipeline.name}</strong>` :
+          '<span class="text-muted">No pipeline selected</span>';
+
+        $('#viewModalBody').html(`
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-info-circle mr-2"></i>Basic Information</h6>
+                        <p><strong>Name:</strong> ${assistant.name}</p>
+                        <p><strong>Description:</strong> ${assistant.description || '<span class="text-muted">No description</span>'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-cogs mr-2"></i>Configuration</h6>
+                        <p><strong>Document:</strong> ${documentInfo}</p>
+                        <p><strong>Pipeline:</strong> ${pipelineInfo}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-comment-dots mr-2"></i>System Prompt</h6>
+                <div class="bg-light p-3 rounded mb-3">
+                    <pre class="mb-0" style="white-space: pre-wrap;">${assistant.systemPrompt || '<span class="text-muted">No system prompt defined</span>'}</pre>
+                </div>
+                
+                <h6><i class="fas fa-template mr-2"></i>Prompt Template</h6>
+                <div class="bg-light p-3 rounded mb-3">
+                    <pre class="mb-0" style="white-space: pre-wrap;">${assistant.promptTemplate || '<span class="text-muted">No prompt template defined</span>'}</pre>
+                </div>
+                
+                <h6><i class="fas fa-tools mr-2"></i>Tools</h6>
+                <ul>${toolsList}</ul>
+            `);
+
+        $('#viewAssistantModal').modal('show');
+      }
+
+      function saveAssistant() {
+        const assistantId = $('#assistantId').val();
+        const name = $('#assistantName').val().trim();
+
+        if (!name) {
+          alert('Please enter a name for the assistant.');
+          return;
+        }
+
+        // Get selected tools
+        const selectedTools = [];
+        $('#toolsContainer input:checked').each(function () {
+          const toolId = parseInt($(this).val());
+          const tool = sampleTools.find(t => t.id === toolId);
+          if (tool) {
+            selectedTools.push({ id: tool.id, name: tool.name });
+          }
+        });
+
+        // Get selected document
+        const documentId = $('#documentSelect').val();
+        const selectedDocument = documentId ? sampleDocuments.find(d => d.id == documentId) : null;
+
+        // Get selected pipeline
+        const pipelineId = $('#pipelineSelect').val();
+        const selectedPipeline = pipelineId ? samplePipelines.find(p => p.id == pipelineId) : null;
+
+        const assistantData = {
+          name: name,
+          description: $('#assistantDescription').val().trim(),
+          systemPrompt: $('#systemPrompt').val().trim(),
+          promptTemplate: $('#promptTemplate').val().trim(),
+          document: selectedDocument ? { id: selectedDocument.id, name: selectedDocument.name } : null,
+          tools: selectedTools,
+          pipeline: selectedPipeline ? { id: selectedPipeline.id, name: selectedPipeline.name } : null
+        };
+
+        if (assistantId) {
+          // Update existing assistant
+          const index = assistants.findIndex(a => a.id == assistantId);
+          if (index !== -1) {
+            assistants[index] = { ...assistants[index], ...assistantData };
+          }
+        } else {
+          // Create new assistant
+          const newId = Math.max(...assistants.map(a => a.id), 0) + 1;
+          assistants.push({ id: newId, ...assistantData });
+        }
+
+        $('#assistantModal').modal('hide');
+        loadAssistants();
+      }
+
+      function deleteAssistant(assistantId) {
+        const assistant = assistants.find(a => a.id === assistantId);
+        if (!assistant) return;
+
+        if (confirm(`Are you sure you want to delete "${assistant.name}"?`)) {
+          assistants = assistants.filter(a => a.id !== assistantId);
+          loadAssistants();
+        }
+      }
+
+      function clearToolSelections() {
+        $('#toolsContainer input[type="checkbox"]').prop('checked', false);
+      }
+    </script>
+    {% endblock javascripts %}

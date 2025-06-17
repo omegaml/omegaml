@@ -8,6 +8,11 @@ from omegaml.server.flaskview import route, FlaskView
 
 
 class OmegaViewMixin:
+    def __init__(self, *args, store=None, **kwargs):
+        """ Initialize the view with an optional store """
+        super().__init__(*args, **kwargs)
+        self._store = store
+
     @property
     def om(self):
         flask.current_app.current_om = om = flask.current_app.current_om[self.bucket];
@@ -28,7 +33,7 @@ class OmegaViewMixin:
 
     @property
     def store(self):
-        return getattr(self.om, self.segment)
+        return getattr(self.om, self._store or self.segment)
 
     def members(self, excludes=None):
         excludes = excludes or []

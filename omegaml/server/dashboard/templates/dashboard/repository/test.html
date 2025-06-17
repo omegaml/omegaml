@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>
+    MLOps by omega-ml
+  </title>
+  <!-- Meta -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="description" content="omegaml dashboard" />
+  <meta name="keywords" content="mlops omegaml dashboard" />
+  <meta name="author" content="CodedThemes" />
+  <!-- Favicon icon -->
+  <link rel="icon" href="/static/assets/images/favicon.ico" type="image/x-icon">
+  <!-- fontawesome icon -->
+  <link rel="stylesheet" href="/static/assets/fonts/fontawesome/css/all.min.css">
+  <!-- animation css -->
+  <link rel="stylesheet" href="/static/assets/plugins/animation/css/animate.min.css">
+  <!-- datatables css -->
+  <link rel="stylesheet" type="text/css" href="/static/assets/plugins/datatables/datatables.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/assets/plugins/datatables/datatables.bootstrap4.min.css" />
+  <!-- vendor css -->
+  <link rel="stylesheet" href="/static/assets/css/style.css">
+  <!-- dark mode css -->
+  <link rel="stylesheet" href="/static/assets/css/dark.css">
+  <!-- notify css -->
+  <link rel="stylesheet" href="/static/assets/plugins/simple-notify/simple-notify.css" />
+  <!-- omegaml css -->
+  <link rel="stylesheet" href="/static/assets/css/omegaml.css">
+  <!-- plugin css -->
+  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
+  <!-- Specific CSS goes HERE -->
+
+  <link rel="stylesheet" href="/static/assets/plugins/toastui/toastui-editor.min.css" />
+  <link rel="stylesheet" href="/static/assets/plugins/toastui/prism.min.css" />
+  <link rel="stylesheet" href="/static/assets/plugins/toastui/toastui-editor-plugin-code-syntax-highlight.min.css" />
+  <link rel="stylesheet" href="/static/assets/plugins/jsoneditor/jsoneditor.min.css" />
+
+  <script>
+    (function () {
+      window._flr = JSON.parse(atob("eyJzdGF0aWMiOiAiL3N0YXRpYy97ZmlsZW5hbWV9IiwgIm9tZWdhLXNlcnZlci5zdGF0aWMiOiAiL3N0YXRpYy97ZmlsZW5hbWV9IiwgIm9tZWdhLXNlcnZlci5pbmRleCI6ICIvIiwgIm9tZWdhLXNlcnZlci5kb2NzIjogIi9kb2NzIiwgIm9tZWdhLXNlcnZlci5tb2RhbF90ZXN0IjogIi90ZXN0L21vZGFsL3t0ZW1wbGF0ZX0iLCAib21lZ2Etc2VydmVyLmV4cGxhaW4iOiAiL2V4cGxhaW4ve3NlZ21lbnR9IiwgIm9tZWdhLXNlcnZlci5pbmRleF9pbmRleCI6ICIvaW5kZXgiLCAib21lZ2Etc2VydmVyLm1vZGVsc19hcGlfaGFuZGxlX2RlbGV0ZSI6ICIvbW9kZWxzL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIubW9kZWxzX2FwaV9oYW5kbGVfdXBkYXRlIjogIi9tb2RlbHMve25hbWV9L3VwZGF0ZSIsICJvbWVnYS1zZXJ2ZXIubW9kZWxzX2luZGV4IjogIi9pbmRleCIsICJvbWVnYS1zZXJ2ZXIubW9kZWxzX3ZpZXdfZGV0YWlsIjogIi9tb2RlbHMve25hbWV9IiwgIm9tZWdhLXNlcnZlci5tb2RlbHNfdmlld19saXN0IjogIi9tb2RlbHMiLCAib21lZ2Etc2VydmVyLmRhdGFzZXRzX2FwaV9oYW5kbGVfZGVsZXRlIjogIi9kYXRhc2V0cy97bmFtZX0iLCAib21lZ2Etc2VydmVyLmRhdGFzZXRzX2FwaV9oYW5kbGVfdXBkYXRlIjogIi9kYXRhc2V0cy97bmFtZX0vdXBkYXRlIiwgIm9tZWdhLXNlcnZlci5kYXRhc2V0c19pbmRleCI6ICIvaW5kZXgiLCAib21lZ2Etc2VydmVyLmRhdGFzZXRzX3ZpZXdfZGV0YWlsIjogIi9kYXRhc2V0cy97bmFtZX0iLCAib21lZ2Etc2VydmVyLmRhdGFzZXRzX3ZpZXdfbGlzdCI6ICIvZGF0YXNldHMiLCAib21lZ2Etc2VydmVyLmpvYnNfYXBpX2dldF9yZXN1bHRzIjogIi9qb2JzL3Jlc3VsdHMve25hbWV9IiwgIm9tZWdhLXNlcnZlci5qb2JzX2FwaV9nZXRfc2NoZWR1bGUiOiAiL2pvYnMvc2NoZWR1bGUve25hbWV9IiwgIm9tZWdhLXNlcnZlci5qb2JzX2FwaV9oYW5kbGVfZGVsZXRlIjogIi9qb2JzL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIuam9ic19hcGlfaGFuZGxlX3VwZGF0ZSI6ICIvam9icy97bmFtZX0vdXBkYXRlIiwgIm9tZWdhLXNlcnZlci5qb2JzX2FwaV9saXN0X3J1bnMiOiAiL2pvYnMvcnVucy97bmFtZX0iLCAib21lZ2Etc2VydmVyLmpvYnNfYXBpX3NldF9zY2hlZHVsZSI6ICIvam9icy9zY2hlZHVsZS97bmFtZX0iLCAib21lZ2Etc2VydmVyLmpvYnNfaW5kZXgiOiAiL2luZGV4IiwgIm9tZWdhLXNlcnZlci5qb2JzX3ZpZXdfZGV0YWlsIjogIi9qb2JzL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIuam9ic192aWV3X2xpc3QiOiAiL2pvYnMiLCAib21lZ2Etc2VydmVyLnNjcmlwdHNfYXBpX2hhbmRsZV9kZWxldGUiOiAiL3NjcmlwdHMve25hbWV9IiwgIm9tZWdhLXNlcnZlci5zY3JpcHRzX2FwaV9oYW5kbGVfdXBkYXRlIjogIi9zY3JpcHRzL3tuYW1lfS91cGRhdGUiLCAib21lZ2Etc2VydmVyLnNjcmlwdHNfaW5kZXgiOiAiL2luZGV4IiwgIm9tZWdhLXNlcnZlci5zY3JpcHRzX3ZpZXdfZGV0YWlsIjogIi9zY3JpcHRzL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIuc2NyaXB0c192aWV3X2xpc3QiOiAiL3NjcmlwdHMiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfYXBpX2dldF9sb2ciOiAiL3J1bnRpbWUvbG9nIiwgIm9tZWdhLXNlcnZlci5ydW50aW1lX2FwaV9ydW50aW1lX2Ric3RhdHNfcGxvdCI6ICIvcnVudGltZS9kYXRhYmFzZS9kYnN0YXRzL3Bsb3QiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfYXBpX3J1bnRpbWVfcmVwb3N0YXRzX3Bsb3QiOiAiL3J1bnRpbWUvZGF0YWJhc2UvcmVwb3N0YXRzL3Bsb3QiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfYXBpX3N0YXR1c19wbG90X2hlYWx0aCI6ICIvcnVudGltZS9zdGF0dXMvcGxvdC9oZWFsdGgiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfYXBpX3N0YXR1c19wbG90X3VwdGltZSI6ICIvcnVudGltZS9zdGF0dXMvcGxvdC91cHRpbWUiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfYXBpX3dvcmtlcl9wbG90X2xvYWQiOiAiL3J1bnRpbWUvd29ya2VyL3Bsb3QvbG9hZCIsICJvbWVnYS1zZXJ2ZXIucnVudGltZV9pbmRleCI6ICIvaW5kZXgiLCAib21lZ2Etc2VydmVyLnJ1bnRpbWVfc3RhdHVzIjogIi9ydW50aW1lL3N0YXR1cyIsICJvbWVnYS1zZXJ2ZXIucnVudGltZV9zdW1tYXJ5IjogIi9ydW50aW1lIiwgIm9tZWdhLXNlcnZlci5ydW50aW1lX3dvcmtlciI6ICIvcnVudGltZS93b3JrZXIve25hbWV9IiwgIm9tZWdhLXNlcnZlci5zdHJlYW1zX2FwaV9oYW5kbGVfZGVsZXRlIjogIi9zdHJlYW1zL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIuc3RyZWFtc19hcGlfaGFuZGxlX3VwZGF0ZSI6ICIvc3RyZWFtcy97bmFtZX0vdXBkYXRlIiwgIm9tZWdhLXNlcnZlci5zdHJlYW1zX2luZGV4IjogIi9pbmRleCIsICJvbWVnYS1zZXJ2ZXIuc3RyZWFtc192aWV3X2RldGFpbCI6ICIvc3RyZWFtcy97bmFtZX0iLCAib21lZ2Etc2VydmVyLnN0cmVhbXNfdmlld19saXN0IjogIi9zdHJlYW1zIiwgIm9tZWdhLXNlcnZlci50cmFja2luZ19hcGlfY29tcGFyZV9tb25pdG9yIjogIi90cmFja2luZy9tb25pdG9yL2NvbXBhcmUve21vZGVsfSIsICJvbWVnYS1zZXJ2ZXIudHJhY2tpbmdfYXBpX2V4cGVyaW1lbnRfZGF0YSI6ICIvdHJhY2tpbmcvZXhwZXJpbWVudC9kYXRhL3tuYW1lfSIsICJvbWVnYS1zZXJ2ZXIudHJhY2tpbmdfYXBpX2dldF9tb2RlbF9hbGVydHMiOiAiL3RyYWNraW5nL21vbml0b3IvYWxlcnRzL3ttb2RlbH0iLCAib21lZ2Etc2VydmVyLnRyYWNraW5nX2FwaV9oYW5kbGVfZGVsZXRlIjogIi90cmFja2luZy97bmFtZX0iLCAib21lZ2Etc2VydmVyLnRyYWNraW5nX2FwaV9oYW5kbGVfdXBkYXRlIjogIi90cmFja2luZy97bmFtZX0vdXBkYXRlIiwgIm9tZWdhLXNlcnZlci50cmFja2luZ19hcGlfbGlzdF9hbGVydHMiOiAiL3RyYWNraW5nL21vbml0b3IvYWxlcnRzIiwgIm9tZWdhLXNlcnZlci50cmFja2luZ19hcGlfcGxvdF9tZXRyaWNzIjogIi90cmFja2luZy9leHBlcmltZW50L3Bsb3Qve25hbWV9IiwgIm9tZWdhLXNlcnZlci50cmFja2luZ19hcGlfcGxvdF9tb25pdG9yIjogIi90cmFja2luZy9tb25pdG9yL3Bsb3Qve21vZGVsfSIsICJvbWVnYS1zZXJ2ZXIudHJhY2tpbmdfaW5kZXgiOiAiL2luZGV4IiwgIm9tZWdhLXNlcnZlci50cmFja2luZ192aWV3X2RldGFpbCI6ICIvdHJhY2tpbmcve25hbWV9IiwgIm9tZWdhLXNlcnZlci50cmFja2luZ192aWV3X2xpc3QiOiAiL3RyYWNraW5nIiwgIm9tZWdhLXNlcnZlci51c2Vyc19pbmRleCI6ICIvaW5kZXgiLCAib21lZ2Etc2VydmVyLnVzZXJzX3ZpZXdfZGV0YWlsIjogIi91c2Vycy97bmFtZX0iLCAib21lZ2Etc2VydmVyLnVzZXJzX3ZpZXdfbGlzdCI6ICIvdXNlcnMiLCAib21lZ2Etc2VydmVyLmNhcmRzX2luZGV4IjogIi9jYXJkcyIsICJvbWVnYS1zZXJ2ZXIuY2FyZHNfcGxvdGNhcmRzIjogIi9jYXJkcy97bmFtZX0iLCAib21lZ2EtYWkuc3RhdGljIjogIi9haS9zdGF0aWMve2ZpbGVuYW1lfSIsICJvbWVnYS1haS5pbmRleCI6ICIvYWkvIiwgIm9tZWdhLWFpLmRvY3MiOiAiL2FpL2RvY3MiLCAib21lZ2EtYWkuaW5kZXhfYXBpX2NvbnZlcnNhdGlvbl9oaXN0b3J5IjogIi9haS9pbmRleC9jaGF0L2hpc3Rvcnkve25hbWV9L3tjb252ZXJzYXRpb25faWR9IiwgIm9tZWdhLWFpLmluZGV4X2FwaV9jb252ZXJzYXRpb25zIjogIi9haS9pbmRleC9jaGF0L2hpc3Rvcnkve25hbWV9IiwgIm9tZWdhLWFpLmluZGV4X2FwaV9kZWxldGVfZG9jdW1lbnQiOiAiL2FpL2luZGV4L2RvY3Mve25hbWV9L3tkb2NfaWR9IiwgIm9tZWdhLWFpLmluZGV4X2FwaV9saXN0X2RvY3VtZW50cyI6ICIvYWkvaW5kZXgvZG9jcy97bmFtZX0iLCAib21lZ2EtYWkuaW5kZXhfYXBpX3VwbG9hZF9kb2N1bWVudCI6ICIvYWkvaW5kZXgvZG9jcy91cGxvYWQiLCAib21lZ2EtYWkuaW5kZXhfY2hhdCI6ICIvYWkvaW5kZXgvY2hhdC97bmFtZX0iLCAib21lZ2EtYWkuaW5kZXhfZG9jdW1lbnRzIjogIi9haS9pbmRleC9kb2NzIiwgIm9tZWdhLWFpLmluZGV4X2luZGV4IjogIi9haS9pbmRleCIsICJvbWVnYS1haS5pbmRleF9tb2RlbGNoYXQiOiAiL2FpL2luZGV4L2NoYXQve25hbWV9L3tjb252ZXJzYXRpb25faWR9IiwgIm9tZWdhLWFpLnByb21wdHNfYXBpX2hhbmRsZV9kZWxldGUiOiAiL2FpL3Byb21wdHMve25hbWV9IiwgIm9tZWdhLWFpLnByb21wdHNfYXBpX2hhbmRsZV91cGRhdGUiOiAiL2FpL3Byb21wdHMve25hbWV9L3VwZGF0ZSIsICJvbWVnYS1haS5wcm9tcHRzX2luZGV4IjogIi9haS9pbmRleCIsICJvbWVnYS1haS5wcm9tcHRzX25ldyI6ICIvYWkvcHJvbXB0cy9uZXciLCAib21lZ2EtYWkucHJvbXB0c192aWV3X2RldGFpbCI6ICIvYWkvcHJvbXB0cy97bmFtZX0iLCAib21lZ2EtYWkucHJvbXB0c192aWV3X2xpc3QiOiAiL2FpL3Byb21wdHMiLCAib21lZ2EtYXBpLnNwZWNzIjogIi9zd2FnZ2VyLmpzb24iLCAib21lZ2EtYXBpLmRvYyI6ICIvYXBpL2RvYyIsICJvbWVnYS1hcGkucm9vdCI6ICIvIiwgInJlc3R4X2RvYy5zdGF0aWMiOiAiL3N3YWdnZXJ1aS97ZmlsZW5hbWV9IiwgIm9tZWdhLWFwaS5hcGlfZG9jcyI6ICIvYXBpL2RvY3MiLCAib21lZ2EtYXBpLnBpbmdfcmVzb3VyY2UiOiAiL2FwaS92MS9waW5nIiwgIm9tZWdhLWFwaS50YXNrX3Jlc291cmNlIjogIi9hcGkvdjEvdGFzay97dGFza2lkfS97YWN0aW9ufSIsICJvbWVnYS1hcGkubW9kZWxfcmVzb3VyY2VfMiI6ICIvYXBpL3YxL21vZGVsL3ttb2RlbF9pZH0ve2FjdGlvbn0iLCAib21lZ2EtYXBpLnNjcmlwdF9yZXNvdXJjZSI6ICIvYXBpL3YxL3NjcmlwdC97c2NyaXB0X2lkfS9ydW4iLCAib21lZ2EtYXBpLnNlcnZpY2VfcmVzb3VyY2UiOiAiL2FwaS92MS9zZXJ2aWNlL3tyZXNvdXJjZV9pZH0ve2FjdGlvbn0iLCAib21lZ2EtYXBpLnNlcnZpY2VfcmVzb3VyY2VfNCI6ICIvYXBpL3NlcnZpY2Uve3Jlc291cmNlX2lkfS97YWN0aW9ufSIsICJvbWVnYS1hcGkuam9iX3Jlc291cmNlXzIiOiAiL2FwaS92MS9qb2Ive2pvYl9pZH0vIiwgIm9tZWdhLWFwaS5qb2JfcmVzb3VyY2VfMyI6ICIvYXBpL3YxL2pvYi97am9iX2lkfS9ydW4iLCAib21lZ2EtYXBpLmRhdGFzZXRfcmVzb3VyY2UiOiAiL2FwaS92MS9kYXRhc2V0L3tkYXRhc2V0X2lkfSIsICJvbWVnYS1hcGkuZ2VuZXJhdGl2ZV9haV9yZXNvdXJjZV8zIjogIi9hcGkvdjIvYWkve21vZGVsX2lkfS97YWN0aW9ufSJ9"));
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- [ Pre-loader ] start -->
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+  <!-- [ Pre-loader ] End -->
+  <!-- Loading Bar -->
+  <div id="loading-bar"></div>
+  <div id="loading-indicator" class="alert alert-info">
+    <i class="fas fa-spinner fa-spin"></i>
+  </div>
+
+  <!-- [ navigation menu ] start -->
+  <nav class="pcoded-navbar">
+    <div class="navbar-wrapper">
+      <div class="navbar-brand header-logo">
+        <a href="/index" class="b-brand">
+          <div class="b-bg">
+            <img class="img-fluid" src="/static//assets/images/logo-thumb.png" alt="omega-ml logo">
+          </div>
+          <span class="b-title">omega-ml</span>
+        </a>
+        <a class="mobile-menu" id="mobile-collapse" href="javascript:"><span></span></a>
+      </div>
+      <div class="navbar-content scroll-div">
+        <ul class="nav pcoded-inner-navbar">
+
+          <li class="nav-item pcoded-menu-caption">
+            <label>Repository</label>
+          </li>
+
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/models" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-brain"></i></span><span class="pcoded-mtext">Models</span></a>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/datasets" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-database"></i></span><span
+                class="pcoded-mtext">Datasets</span></a>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/jobs" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-file-code"></i></span><span
+                class="pcoded-mtext">Jobs</span></a>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/scripts" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-book"></i></span><span class="pcoded-mtext">Scripts</span></a>
+          </li>
+          <li class="nav-item pcoded-menu-caption">
+            <label>DEPLOYMENT</label>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/runtime" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-cloud"></i></span><span
+                class="pcoded-mtext">Runtime</span></a>
+          </li>
+          <!--
+                          <li data-username="form elements advance componant validation masking wizard picker select"
+                              class="nav-item ">
+                              <a href="/tracking" class="nav-link ">
+                                  <span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span
+                                      class="pcoded-mtext">Tracking</span></a>
+                          </li>
+                          -->
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/apps" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-desktop"></i></span><span class="pcoded-mtext">Apps</span></a>
+          </li>
+
+          <!--
+                          <li data-username="form elements advance componant validation masking wizard picker select"
+                              class="nav-item ">
+                              <a href="/streams" class="nav-link ">
+                                  <span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span
+                                      class="pcoded-mtext">Streams</span></a>
+                          </li>
+                          -->
+          <li class="nav-item pcoded-menu-caption">
+            <label>Admin</label>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/admin/auth/user/" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-user"></i></span><span class="pcoded-mtext">Users</span></a>
+          </li>
+          <li data-username="form elements advance componant validation masking wizard picker select" class="nav-item ">
+            <a href="/admin/landingpage/servicedeployment/" class="nav-link ">
+              <span class="pcoded-micon"><i class="fas fa-cube"></i></span><span
+                class="pcoded-mtext">Environments</span></a>
+          </li>
+        </ul>
+        <ul class="nav pcoded-inner-navbar mt-auto" style="position: absolute; bottom: 0; width: 100%;">
+          <li class="nav-item pcoded-menu-caption ">
+            <label>Information</label>
+          </li>
+          <li data-username="Support Page" class="nav-item ">
+            <a target="_blank" href="https://omegaml.github.io/omegaml/" class="nav-link">
+              <span class="pcoded-micon">
+                <i class="feather icon-book"></i>
+              </span>
+              <span class="pcoded-mtext">Docs</span>
+            </a>
+          </li>
+          <li data-username="Support Page" class="nav-item ">
+            <a target="_blank" href="https://github.com/omegaml/omegaml/issues" class="nav-link">
+              <span class="pcoded-micon">
+                <i class="feather icon-headphones"></i>
+              </span>
+              <span class="pcoded-mtext">Support</span>
+            </a>
+          </li>
+        </ul>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- [ navigation menu ] end -->
+  <!-- [ Header ] start -->
+  <header class="navbar pcoded-header navbar-expand-lg navbar-light">
+    <div class="m-header">
+      <a class="mobile-menu" id="mobile-collapse1" href="javascript:"><span></span></a>
+      <a href="/index" class="b-brand">
+        <div class="b-bg">
+          <img class="img-fluid" src="/static//assets/images/logo-thumb.png" alt="Datta Able Logo">
+        </div>
+        <span class="b-title">omega-ml</span>
+      </a>
+    </div>
+    <a class="mobile-menu" id="mobile-header" href="javascript:">
+      <i class="feather icon-more-horizontal"></i>
+    </a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav mr-auto">
+        <li>
+          <a href="javascript:" class="full-screen" onclick="javascript:toggleFullScreen()"><i
+              class="feather icon-maximize"></i></a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown">default</a>
+          <ul class="dropdown-menu">
+
+            <li>
+              <a class="dropdown-item" href="/index?bucket=default">default</a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="/index?bucket=prod">prod</a>
+            </li>
+
+          </ul>
+        </li>
+        <li class="nav-item ">
+          <div class="text-center">
+            <a href="/" class="">
+              <i class="feather icon-grid"></i>Platform
+            </a>
+          </div>
+        </li>
+        <li class="nav-item ">
+          <div class="text-center">
+            <a href="/ai/prompts" class="text-primary font-weight-bold">
+              <i class="fas fa-robot"></i>AI Lab
+            </a>
+          </div>
+        </li>
+        <!--
+            <li class="nav-item">
+                <div class="main-search">
+                    <div class="input-group">
+                        <input type="text" id="m-search" class="form-control" placeholder="Search . . .">
+                        <a href="javascript:" class="input-group-append search-close">
+                            <i class="feather icon-x input-group-text"></i>
+                        </a>
+                        <span class="input-group-append search-btn btn btn-primary">
+              <i class="feather icon-search input-group-text"></i>
+            </span>
+                    </div>
+                </div>
+            </li>
+            -->
+      </ul>
+      <ul class="navbar-nav ml-auto">
+        <li>
+          <div class="dropdown">
+            <a class="dropdown-toggle" href="javascript:" data-toggle="dropdown"><i
+                class="icon feather icon-bell"></i></a>
+            <div class="dropdown-menu dropdown-menu-right notification">
+              <div class="noti-head">
+                <h6 class="d-inline-block m-b-0">Notifications</h6>
+                <div class="float-right">
+                  <!--
+                <a href="javascript:" class="m-r-10">mark as read</a>
+                <a href="javascript:">clear all</a>
+                -->
+                </div>
+              </div>
+              <ul class="noti-body">
+              </ul>
+            </div>
+          </div>
+        </li>
+        <li>
+          <label>
+            <i class="icon feather icon-sun" id="theme-indicator"></i>
+            <input type="checkbox" id="theme-switch" class="d-none">
+          </label>
+        </li>
+      </ul>
+    </div>
+  </header>
+  <!-- [ Header ] end -->
+
+
+
+  <div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+      <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+          <!-- [ breadcrumb ] start -->
+          <div class="page-header">
+            <div class="page-block">
+              <div class="row align-items-center">
+                <div class="col-md-12">
+
+                  <div class="page-header-title"></div>
+                  <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                      <a href="/index"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item">
+                      <a href="//models">Models</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                      <a href="javascript:"></a>
+                    </li>
+                  </ul>
+
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- [ breadcrumb ] end -->
+          <div class="main-body">
+            <div class="page-wrapper">
+              <!-- [ Main Content ] start -->
+              <div class="row">
+                <!-- [ tabs ] start -->
+                <div class="col-sm-12">
+
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>d-reg-0</h5>
+                    </div>
+                  </div>
+
+                  <hr>
+                  <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link active text-uppercase" id="docs-tab" data-toggle="tab" href="#docs" role="tab"
+                        aria-controls="docs" aria-selected="false">Documentation</a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments"
+                        role="tab" aria-controls="experiments" aria-selected="false">Experiments</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring"
+                        role="tab" aria-controls="experiments" aria-selected="false">Monitoring</a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase" id="revisions-tab" data-toggle="tab" href="#revisions"
+                        role="tab" aria-controls="revisions" aria-selected="false">Revisions</a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase" id="explain-tab" data-toggle="tab" href="#explain" role="tab"
+                        aria-controls="explain" aria-selected="false">explain</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link text-uppercase" id="metadata-tab" data-toggle="tab" href="#metadata" role="tab"
+                        aria-controls="metadata" aria-selected="false">Metadata</a>
+                    </li>
+                  </ul>
+                  <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="docs" role="tabpanel" aria-labelledby="docs-tab">
+                      <button type="submit" id="save-docs" class="btn btn-icon mb-2"><i
+                          class="fa-regular fa-floppy-disk"></i></button>
+                      <button type="reset" id="edit-docs" class="btn btn-icon mb-2"><i
+                          class="fa-regular fa-pen-to-square"></i></button>
+                      <div id="docseditor" class="form-group" style="width: 100pct;
+                                  min-height: 500px"></div>
+                      <div id="docsviewer" class="form-group" style="width: 100pct;
+                                  min-height: 500px"></div>
+                    </div>
+                    <div class="tab-pane fade" id="revisions" role="tabpanel" aria-labelledby="revisions-tab">
+                      <p>[&#39;d-reg-0@latest&#39;]</p>
+                    </div>
+
+                    <!-- experiments -->
+                    <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
+                      <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+                        <div class=" dropdown">
+                          <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownExperiments"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Experiment
+                          </button>
+                          <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
+                            <a class="dropdown-item exp" href="#">d-reg-0</a>
+                          </div>
+                        </div>
+                        <div id="exp-sinceRangePicker"></div>
+                        <!-- choose display style -->
+                        <div class="btn-group mr-2" role="group">
+                          <button type="button" id="showtable" class="btn btn-icon  ">
+                            <i class="fa-solid far fa-table-list"></i>
+                          </button>
+                          <button type="button" id="details" class="btn btn-icon  ">
+                            <i class="fa-solid far fa-table-cells"></i>
+                          </button>
+                        </div>
+                        <div class="btn-group mr-2" role="group">
+                          <button type="button" id="plotchart" class="btn btn-icon  ">
+                            <i class="fa-solid fa-chart-line"></i>
+                          </button>
+                          <button type="button" id="multicharts" class="btn btn-icon  ">
+                            <i class="fa-solid fa-table-columns"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div id="exptable" class="table-responsive">
+                        <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%">
+                        </table>
+                      </div>
+                      <div id="expcards"></div>
+                      <div id="expchart"></div>
+                    </div>
+                    <!-- drift -->
+                    <div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+                      <div class="nav">
+                        <div class="dropdown">
+                          <button class="btn btn-outline-primary mon dropdown-toggle" type="button"
+                            id="dropdownDriftColumns" data-toggle="dropdown" data-default='Columns' aria-haspopup="true"
+                            aria-expanded="false">
+                            Columns
+                          </button>
+                          <div class="dropdown-menu mon column items" aria-labelledby="dropdownDriftColumns">
+                            <a class="dropdown-item mon column refresh" href="#">(all)</a>
+                          </div>
+                        </div>
+                        <div class="dropdown">
+                          <button class="btn btn-outline-primary mon dropdown-toggle" type="button"
+                            id="dropdownStatistics" data-toggle="dropdown" data-default='Statistics'
+                            aria-haspopup="true" aria-expanded="false">
+                            Statistics
+                          </button>
+                          <div class="dropdown-menu mon stats items" aria-labelledby="dropdownStatistics">
+                            <a class="dropdown-item mon stats refresh" href="#">score</a>
+                          </div>
+                        </div>
+                        <div id="mon-sinceRangePicker"></div>
+                        <button type="button" id="plotmon-time" class="btn btn-icon  ">
+                          <i class="fa-solid fa-chart-line"></i>
+                        </button>
+                        <button type="button" id="plotmon-dist" class="btn btn-icon  ">
+                          <i class="fa-solid fa-chart-bar"></i>
+                        </button>
+                      </div>
+                      <div class="container-fluid mt-3 pl-0">
+                        <div class="row">
+                          <!-- Left Panel - Snapshots List -->
+                          <div class="col-md-3">
+                            <div class="">
+                              <div>
+                                <h5 class="mb-0">Snapshots</h5>
+                                <hr>
+                              </div>
+                              <div class="p-0 snapshot-list">
+                                <div id="snapshotsList">
+                                  <!-- Dynamically populated list -->
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Right Panel - Chart -->
+                          <div class="col-md-9">
+                            <h5 class="mb-0">Drift Statistics</h5>
+                            <hr>
+                            <div class="chart-container">
+                              <div id="monchart"><img id="monplot" /></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+                      <button type="submit" id="save-meta" class="btn btn-icon mb-2"><i
+                          class="fa-regular fa-floppy-disk"></i></button>
+                      <p>
+                        <b>Kind</b>&nbsp;sklearn.joblib&nbsp;<b>Created</b>&nbsp;2025-05-20
+                        20:30:59.084000&nbsp;<b>Modified</b>&nbsp;2025-06-16 18:51:07.954000&nbsp;
+                      </p>
+                      <div id="jsoneditor" class="form-group" style="width: 100pct;
+                                  height: 500px"></div>
+                    </div>
+                    <div class="tab-pane fade" id="explain" role="tabpanel" aria-labelledby="explain-tab">
+                    </div>
+                  </div>
+                </div>
+                <!-- [ tabs ] end -->
+              </div>
+              <!-- [ Main Content ] end -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <li class="nav-item">
+    <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
+      aria-controls="experiments" aria-selected="false">Experiments</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
+      aria-controls="experiments" aria-selected="false">Monitoring</a>
+  </li>
+
+  <!-- experiments -->
+  <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
+    <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+      <div class=" dropdown">
+        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownExperiments"
+          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Experiment
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
+          <a class="dropdown-item exp" href="#">d-reg-0</a>
+        </div>
+      </div>
+      <div id="exp-sinceRangePicker"></div>
+      <!-- choose display style -->
+      <div class="btn-group mr-2" role="group">
+        <button type="button" id="showtable" class="btn btn-icon  ">
+          <i class="fa-solid far fa-table-list"></i>
+        </button>
+        <button type="button" id="details" class="btn btn-icon  ">
+          <i class="fa-solid far fa-table-cells"></i>
+        </button>
+      </div>
+      <div class="btn-group mr-2" role="group">
+        <button type="button" id="plotchart" class="btn btn-icon  ">
+          <i class="fa-solid fa-chart-line"></i>
+        </button>
+        <button type="button" id="multicharts" class="btn btn-icon  ">
+          <i class="fa-solid fa-table-columns"></i>
+        </button>
+      </div>
+    </div>
+    <div id="exptable" class="table-responsive">
+      <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%"></table>
+    </div>
+    <div id="expcards"></div>
+    <div id="expchart"></div>
+  </div>
+  <!-- drift -->
+  <div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+    <div class="nav">
+      <div class="dropdown">
+        <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownDriftColumns"
+          data-toggle="dropdown" data-default='Columns' aria-haspopup="true" aria-expanded="false">
+          Columns
+        </button>
+        <div class="dropdown-menu mon column items" aria-labelledby="dropdownDriftColumns">
+          <a class="dropdown-item mon column refresh" href="#">(all)</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownStatistics"
+          data-toggle="dropdown" data-default='Statistics' aria-haspopup="true" aria-expanded="false">
+          Statistics
+        </button>
+        <div class="dropdown-menu mon stats items" aria-labelledby="dropdownStatistics">
+          <a class="dropdown-item mon stats refresh" href="#">score</a>
+        </div>
+      </div>
+      <div id="mon-sinceRangePicker"></div>
+      <button type="button" id="plotmon-time" class="btn btn-icon  ">
+        <i class="fa-solid fa-chart-line"></i>
+      </button>
+      <button type="button" id="plotmon-dist" class="btn btn-icon  ">
+        <i class="fa-solid fa-chart-bar"></i>
+      </button>
+    </div>
+    <div class="container-fluid mt-3 pl-0">
+      <div class="row">
+        <!-- Left Panel - Snapshots List -->
+        <div class="col-md-3">
+          <div class="">
+            <div>
+              <h5 class="mb-0">Snapshots</h5>
+              <hr>
+            </div>
+            <div class="p-0 snapshot-list">
+              <div id="snapshotsList">
+                <!-- Dynamically populated list -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right Panel - Chart -->
+        <div class="col-md-9">
+          <h5 class="mb-0">Drift Statistics</h5>
+          <hr>
+          <div class="chart-container">
+            <div id="monchart"><img id="monplot" /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- dattaable js -->
+  <script type="text/javascript" src="/static/assets/plugins/jquery/js/jquery.min.js"></script>
+  <script src="/static/assets/js/vendor-all.min.js"></script>
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+  <script src="/static/assets/js/pcoded.min.js"></script>
+  <script src="/static/assets/js/dark-mode.js"></script>
+  <script type="text/javascript" src="/static/assets/plugins/datatables/datatables.min.js"></script>
+  <script src="/static/assets/plugins/moment/moment.min.js"></script>
+  <script src="/static/assets/plugins/daterangepicker/daterangepicker.min.js"></script>
+  <!-- https://github.com/simple-notify/simple-notify -->
+  <script src="/static/assets/plugins/simple-notify/simple-notify.min.js"></script>
+  <!-- omegaml js -->
+  <script src="/static/assets/views/common.js"></script>
+  <script src="/static/assets/widgets/taborder.js"></script>
+  <script src="/static/assets/widgets/loading.js"></script>
+  <script src="/static/assets/plugins/backbone/underscore.min.js"></script>
+  <script src="/static/assets/plugins/backbone/backbone.min.js"></script>
+  <!-- load notifications -->
+  <script>
+    window.context = {
+      "blueprint": "omega-server",
+      "segment": "models",
+    };
+    console.debug('context', window.context);
+    $(function () {
+      $.ajax({
+        url: "/tracking/monitor/alerts",
+        type: 'GET',
+        success: function (data) {
+          var alerts = data.alerts || [];
+          alerts.forEach(function (alert) {
+            var url = url_for('omega-server.index').joinUri('/' + alert.resource);
+            var dt = new Date(alert.dt).toLocaleDateString();
+            var notification = `
+            <li class="notification">
+                <a href="${url}">
+                <div class="media">
+                    <img class="img-radius" src="/static/assets/images/logo-thumb.png"
+                          alt="Generic placeholder image">
+                    <div class="media-body">
+                        
+                            <p><strong>System</strong><span class="n-time text-muted"><i
+                                class="icon feather icon-clock m-r-10"></i>${dt}</span>
+                        </p>
+                        <p>${alert.message}</p>
+                    </div>
+                </div></a>
+            </li>`;
+            $('.noti-body').append(notification);
+          });
+        }
+      });
+    });
+  </script>
+  <!-- Specific Page JS goes HERE  -->
+
+  <script src="/static/assets/plugins/jsoneditor/jsoneditor.min.js"></script>
+  <!-- toastui editor + plugins -->
+  <script src="/static/assets/plugins/toastui/toastui-editor-all.min.js"></script>
+  <script src="/static/assets/plugins/toastui/toastui-editor-plugin-code-syntax-highlight-all.min.js"></script>
+  <script type="module" src="/static/assets/views/detail.js"></script>
+  <script>
+    // metadata editor
+    var metadata = { "_id": "682cca631d1820471d02d425", "attributes": { "docs": "## {metadata.name}\n\nA {meta.kind} object created on {meta.created} and last modified on {meta.modified}.\n\n\u003e Edit this document to provide your own documentation in Markdown format. \n  You may use either [CommonMark](http://commonmark.org/) or [GFM](https://github.github.com/gfm/).\n\n\u003e To access metadata, use {{metadata.key}} where key is the part of the metadata to show.\n  For example, to show the object\u0027s kind, use {{metadata.kind}}. To access metadata.attributes,\n  use {{attributes.key}}.", "tracking": { "default": "d-reg-0", "experiments": ["d-reg-0"], "monitors": [{ "alerts": [{ "event": "drift", "recipients": [] }], "experiment": "d-reg-0", "job": "monitors/d-reg-0/d-reg-0", "provider": "models", "schedule": "daily" }] }, "versions": { "commits": [{ "name": "_versions/d-reg-0/b02f89ca8a9762ecdb0c606e7f3098c4680d8749", "ref": "b02f89ca8a9762ecdb0c606e7f3098c4680d8749" }], "tags": { "latest": "b02f89ca8a9762ecdb0c606e7f3098c4680d8749" }, "tree": { "b02f89ca8a9762ecdb0c606e7f3098c4680d8749": null } } }, "bucket": "omegaml", "created": "2025-05-20T20:30:59.084000", "gridfile": "682cca631d1820471d02d423", "kind": "sklearn.joblib", "kind_meta": { "_om_backend_version": "1" }, "modified": "2025-06-16T18:51:07.954000", "name": "d-reg-0", "prefix": "models/", "s3file": {} };
+    var segment = "models";
+    $(function () {
+      // initialize metadata editor
+      var jsonEditor = new JSONEditor($('#jsoneditor')[0], {
+        mode: 'tree',
+      });
+      var attributes = { "docs": "## {metadata.name}\n\nA {meta.kind} object created on {meta.created} and last modified on {meta.modified}.\n\n\u003e Edit this document to provide your own documentation in Markdown format. \n  You may use either [CommonMark](http://commonmark.org/) or [GFM](https://github.github.com/gfm/).\n\n\u003e To access metadata, use {{metadata.key}} where key is the part of the metadata to show.\n  For example, to show the object\u0027s kind, use {{metadata.kind}}. To access metadata.attributes,\n  use {{attributes.key}}.", "tracking": { "default": "d-reg-0", "experiments": ["d-reg-0"], "monitors": [{ "alerts": [{ "event": "drift", "recipients": [] }], "experiment": "d-reg-0", "job": "monitors/d-reg-0/d-reg-0", "provider": "models", "schedule": "daily" }] }, "versions": { "commits": [{ "name": "_versions/d-reg-0/b02f89ca8a9762ecdb0c606e7f3098c4680d8749", "ref": "b02f89ca8a9762ecdb0c606e7f3098c4680d8749" }], "tags": { "latest": "b02f89ca8a9762ecdb0c606e7f3098c4680d8749" }, "tree": { "b02f89ca8a9762ecdb0c606e7f3098c4680d8749": null } } };
+      $("#save-meta").on('click', function (e) {
+        e.preventDefault();
+        var json = jsonEditor.get();
+        var payload = {
+          attributes: json,
+        };
+        $.ajax({
+          url: url_for('omega-server.index').joinUri('/models/d-reg-0/update'),
+          type: 'POST',
+          contentType: 'application/json',
+          dataType: 'json',
+          data: JSON.stringify(payload),
+          success: function (data) {
+            attributes = json;
+          }
+        });
+      });
+      jsonEditor.set(attributes);
+      // docs editor
+      // initialize docs editor
+      $('#docseditor').hide();
+      $('#save-docs').hide();
+      //const { codeSyntaxHighlight, colorSyntax, tableMergedCell, uml } = toastui.Editor.plugin;
+      const { codeSyntaxHighlight } = toastui.Editor.plugin;
+      var docsEditor = new toastui.Editor({
+        el: $('#docseditor')[0],
+        initialValue: attributes.docs || '',
+        //plugins: [[chart, chartOptions], [codeSyntaxHighlight, { highlighter: Prism }], colorSyntax, tableMergedCell, uml],
+        plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
+        usageStatistics: false,
+      });
+      // Function to fetch the content of the included file
+      async function fetchIncludedContent(path) {
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return await response.text();
+      }
+      var docsViewer = new toastui.Editor.factory({
+        el: $('#docsviewer')[0],
+        initialValue: attributes.docs || '',
+        viewer: true,
+        //plugins: [[chart, chartOptions], [codeSyntaxHighlight, { highlighter: Prism }], colorSyntax, tableMergedCell, uml]
+        plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
+        usageStatistics: false,
+        customHTMLRenderer: {
+          text: function (node, context) {
+            var variables = {
+              metadata: metadata,
+              meta: metadata,
+              attributes: metadata.attributes,
+            }
+            const includeRegex = /{!include (.+?)}/g;
+            const matches = node.literal.match(includeRegex);
+            if (matches) {
+              const filePath = matches[0].replace(/{!include\s+(.+?)}/, '$1').trim();
+              $.get(filePath, function (data) {
+                $('#sourced').html(data)
+              });
+              return {
+                type: 'html',
+                content: "<div id='sourced'></div>",
+              }
+            } else {
+              return {
+                type: 'text',
+                content: node.literal.sformat(variables),
+              }
+            }
+            return node.content; // Return the modified content
+          },
+        }
+      });
+      $('#edit-docs').on('click', function (e) {
+        e.preventDefault();
+        $('#docsviewer').hide();
+        $('#edit-docs').hide();
+        $('#docseditor').show();
+        $('#save-docs').show();
+      });
+      $('#save-docs').on('click', function (e) {
+        e.preventDefault();
+        var markdown = docsEditor.getMarkdown();
+        var payload = {
+          attributes: {
+            docs: markdown || '',
+          }
+        };
+        $.ajax({
+          url: url_for('.index').joinUri('/models/d-reg-0/update'),
+          type: 'POST',
+          contentType: 'application/json',
+          dataType: 'json',
+          data: JSON.stringify(payload),
+          success: function (data) {
+            docsViewer.setMarkdown(markdown);
+            $('#edit-docs').show();
+            $('#save-docs').hide();
+            $('#docseditor').hide();
+            $('#docsviewer').show();
+          }
+        });
+      });
+    });
+  </script>
+
+  <script type="text/javascript" src="/static/assets/plugins/datatables/datatables.min.js"></script>
+  <script src="/static/assets/plugins/plotly/plotly.min.js"></script>
+  <script type="module" src="/static/assets/views/repository/models_detail.js"></script>
+
+</body>
+
+</html>

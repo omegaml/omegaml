@@ -1,24 +1,97 @@
 {% extends "dashboard/layouts/detail.html" %}
-<!-- tabs labels-->
+
+{% block nav %}
+{% include 'dashboard/includes/genai/sidebar.html' %}
+{% include 'dashboard/includes/navigation.html' %}
+{% endblock nav %}
+
+{% block cardheader %}
+<style>
+  .card-header {
+    margin: -10px;
+  }
+</style>
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">{{ meta.name }}</h5>
+      <a class="btn btn-primary no-padding" href="{{ url_for('.index_chat', name=meta.name) }}">Try</a>
+    </div>
+  </div>
+</div>
+{% endblock cardheader %}
 {% block tabitems %}
 <li class="nav-item">
   <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
-    aria-controls="experiments" aria-selected="false">xExperiments</a>
+    aria-controls="experiments" aria-selected="false">Experiments</a>
 </li>
 <li class="nav-item">
   <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
     aria-controls="experiments" aria-selected="false">Monitoring</a>
 </li>
+<li class="nav-item">
+  <a class="nav-link active text-uppercase" id="prompts-tab" data-toggle="tab" href="#prompt" role="tab"
+    aria-controls="prompt" aria-selected="false">Prompt</a>
+</li>
 {% endblock tabitems %}
-<!-- tabs conents-->
 {% block tabcontents %}
+<!-- prompts -->
+<div class="tab-pane fade" id="prompt" role="tabpanel" aria-labelledby="prompts-tab">
+  <form id="assistantForm">
+    <input type="hidden" id="assistantId" value="">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label for="assistantName">Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="assistantName" required>
+        </div>
+      </div>
+
+    </div>
+    <!-- System Prompt -->
+    <div class="form-group">
+      <label for="systemPrompt">System Prompt</label>
+      <textarea class="form-control" id="systemPrompt" rows="4"
+        placeholder="Enter the system prompt that defines the assistant's behavior and role..."></textarea>
+    </div>
+    <!-- Prompt Template -->
+    <div class="form-group">
+      <label for="promptTemplate">Prompt Template</label>
+      <textarea class="form-control" id="promptTemplate" rows="3"
+        placeholder="Enter the prompt template with placeholders like {{variable}}..."></textarea>
+    </div>
+    <!-- Document Selection -->
+    <div class="form-group">
+      <label>Document</label>
+      <select class="form-control" id="documentSelect">
+        <option value="">Select a document (optional)</option>
+      </select>
+    </div>
+
+    <!-- Tools Selection -->
+    <div class="form-group">
+      <label>Tools</label>
+      <div class="tools-container" id="toolsContainer">
+        <!-- Tools will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Pipeline Selection -->
+    <div class="form-group">
+      <label>Pipeline</label>
+      <select class="form-control" id="pipelineSelect">
+        <option value="">Select a pipeline (optional)</option>
+      </select>
+    </div>
+  </form>
+</div>
 <!-- experiments -->
 <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
     <div class=" dropdown">
       <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownExperiments"
         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        xExperiment
+        Experiment
       </button>
       <div class="dropdown-menu" aria-labelledby="dropdownExperiments">
         {% for exp in meta.attributes.tracking.experiments %}<a class="dropdown-item exp" href="#">{{ exp }}</a>{%
@@ -112,4 +185,13 @@ super() }}
 <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
 <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+<script>
+  $(document).ready(function () {
+    // reorder tabs
+    new TabOrder('#myTab', {
+      'prompts-tab': 1,
+    }).apply();
+  });
+</script>
+
 {% endblock javascripts %}

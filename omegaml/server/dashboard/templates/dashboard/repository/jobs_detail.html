@@ -1,4 +1,4 @@
-{% extends "dashboard/layouts/detail.html" %} {% block content %} {{ super() }}
+{% extends "dashboard/layouts/detail.html" %}
 {% block tabitems %}
 <li class="nav-item">
   <a class="nav-link text-uppercase" id="results-tab" data-toggle="tab" href="#results-content" role="tab"
@@ -51,6 +51,7 @@
   </div>
 </div>
 {% endblock tabcontents %}
+{% block extension %}
 <div id="modals">
   <!-- [ Modals ] end -->
   <div class="modal fade" id="jobview-modal" tabindex="-1" role="dialog" aria-labelledby="jobview-modal"
@@ -75,7 +76,8 @@
     </div>
   </div>
 </div>
-{% endblock content %} {% block javascripts %} {{ super() }}
+{% endblock extension %}
+{% block javascripts %} {{ super() }}
 <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
 <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='assets/views/repository/jobs_detail.js') }}"></script>
@@ -84,6 +86,7 @@
   const _schedule = {{ schedule | tojson }};
   const _triggers = {{ triggers | tojson }};
   window.context = {
+    ...window.context,
     "name": "{{ meta.name }}",
     "triggers": _triggers,
     "schedule": _schedule,
