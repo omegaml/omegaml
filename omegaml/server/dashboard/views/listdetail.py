@@ -1,7 +1,9 @@
 from flask import render_template
+from textwrap import dedent
+
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.base import BaseView, mixin_for
-from textwrap import dedent
+from omegaml.util import tryOr
 
 
 class ListDetailMixin(mixin_for(BaseView)):
@@ -21,17 +23,25 @@ class ListDetailMixin(mixin_for(BaseView)):
     def view_detail(self, name, template=None):
         template = template or self.detail_template.format(self=self)
         meta = self.store.metadata(name)
-        summary = self.store.summary(name)
         meta.attributes['docs'] = meta.attributes.get('docs', '').strip() or self._default_markdown(meta)
-        data = {
-            'meta': meta.to_dict(),
-            'summary': summary,
-        }
+        data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
         return render_template(f"dashboard/{template}",
                                segment=self.segment,
                                buckets=self.buckets,
+                               data=data,
                                **data)
+
+    def _default_detail_data(self, name, meta=None):
+        # call this method in subclasses that provide additional detail views (other than list, detail)
+        summary = tryOr(lambda: self.store.summary(name), '')
+        data = {
+            'meta': meta.to_dict(),
+            'summary': summary,
+        }
+        # avoid leaking secrets to the client
+        data['meta'].pop('kind_meta', None)
+        return data
 
     def detail_data(self, name, data=None, meta=None):
         return {}

@@ -1,0 +1,59 @@
+<form id="assistantForm">
+  <button type="submit" class="btn btn-primary">Save</button>
+  <input type="hidden" id="assistantId" value="">
+  <div class="row">
+    <!-- Assistant Name, for new only -->
+    <div class="col-md-12" <% if (!isNew) { %>style="display:none;"<% } %>>
+        <div class="form-group">
+          <label for="assistantName">Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="assistantName" required>
+        </div>
+    </div>
+  </div>
+  <!-- Model Selection -->
+  <div class="form-group">
+    <label>Model</label>
+    <div class="tools-container" id="toolsContainer">
+      <select class="form-control" id="modelSelect" required>
+        <option value="_select_">select a model</option>
+        <option value="demo">demo</option>
+        <option value="jinja">jinja</option>
+      </select>
+    </div>
+  </div>
+  <!-- System Prompt -->
+  <div class="form-group">
+    <label for="systemPrompt">System Prompt</label>
+    <textarea class="form-control" id="systemPrompt" rows="4"
+      placeholder="Enter the system prompt that defines the assistant's behavior and role..."></textarea>
+  </div>
+  <!-- Prompt Template -->
+  <div class="form-group">
+    <label for="promptTemplate">Prompt Template</label>
+    <textarea class="form-control" id="promptTemplate" rows="3"
+      placeholder="Enter the prompt template with placeholders like {{variable}}..."></textarea>
+  </div>
+  <!-- Document Selection -->
+  <div class="form-group">
+    <label>Document</label>
+    <select class="form-control" id="documentSelect">
+      <option value="">Select a document (optional)</option>
+    </select>
+  </div>
+  <!-- Tools Selection -->
+  <div class="form-group">
+    <label>Tools</label>
+    <div class="tools-container" id="toolsContainer">
+      <select class="form-control" id="documentSelect">
+        <option value="">Select a tool (optional)</option>
+      </select>
+    </div>
+  </div>
+  <!-- Pipeline Selection -->
+  <div class="form-group">
+    <label>Pipeline</label>
+    <select class="form-control" id="pipelineSelect">
+      <option value="">Select a pipeline (optional)</option>
+    </select>
+  </div>
+</form>
