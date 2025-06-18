@@ -16,6 +16,7 @@
   window.context = {
     "blueprint": "{{ request.blueprint }}",
     "segment": "{{ segment }}",
+    "data": {{ data | default ({}) | tojson }},
   };
   console.debug('context', window.context);
   $(function () {

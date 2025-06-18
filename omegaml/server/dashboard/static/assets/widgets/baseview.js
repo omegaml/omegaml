@@ -50,7 +50,10 @@ import { _, Backbone } from "../plugins/backbone/backbone.module.js";
 class BaseView extends Backbone.View {
   constructor(options) {
     super(options);
+    this.options = options || {};
     this.templateUrl = options.templateUrl; // URL of the template file
+    this.data = options.data || {}; // Data to be used in the template
+    this.fieldMap = options.fieldMap || {}; // Map of field IDs to data keys
   }
   // Render the view using the provided data
   render(data) {
@@ -59,6 +62,7 @@ class BaseView extends Backbone.View {
         this.$el.html(""); // Clear the view's element
         this.template = _.template(template);
         this.$el.append(this.template(data));
+        this.populateForm(); // Populate the form with data
         return this; // Enable method chaining
       })
       .catch((error) => {
@@ -68,6 +72,38 @@ class BaseView extends Backbone.View {
   trigger(event, data) {
     this.$el.trigger(event, data);
     super.trigger(event, data);
+  }
+  // Unified change handler for all form fields
+  onFieldChange(event) {
+    const fieldId = event.target.id;
+    this.data[fieldId] = event.target.value;
+  }
+  // Handle form submission
+  onSubmit(event) {
+    event.preventDefault();
+    console.debug("Form submitted with data: ", this.data);
+    this.readFormData();
+    this.trigger("submit", this.data);
+  }
+  // Populate the form fields with data from `this.data`
+  populateForm() {
+    this.data = this.data || {}; // Ensure data is defined
+    for (const [id, key] of Object.entries(this.fieldMap)) {
+      const el = this.$(`#${id}`);
+      if (el.length > 0 && this.data[key] !== undefined) {
+        el.val(this.data[key]);
+      }
+    }
+  }
+  // Read form data into `this.data` from the form fields
+  readFormData() {
+    this.data = {}; // reset or keep existing
+    for (const [id, key] of Object.entries(this.fieldMap)) {
+      const el = this.$(`#${id}`);
+      if (el.length > 0) {
+        this.data[key] = el.val();
+      }
+    }
   }
 }
 

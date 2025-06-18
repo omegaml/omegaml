@@ -37,53 +37,7 @@
 {% block tabcontents %}
 <!-- prompts -->
 <div class="tab-pane fade" id="prompt" role="tabpanel" aria-labelledby="prompts-tab">
-  <form id="assistantForm">
-    <input type="hidden" id="assistantId" value="">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="form-group">
-          <label for="assistantName">Name <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="assistantName" required>
-        </div>
-      </div>
-
-    </div>
-    <!-- System Prompt -->
-    <div class="form-group">
-      <label for="systemPrompt">System Prompt</label>
-      <textarea class="form-control" id="systemPrompt" rows="4"
-        placeholder="Enter the system prompt that defines the assistant's behavior and role..."></textarea>
-    </div>
-    <!-- Prompt Template -->
-    <div class="form-group">
-      <label for="promptTemplate">Prompt Template</label>
-      <textarea class="form-control" id="promptTemplate" rows="3"
-        placeholder="Enter the prompt template with placeholders like {{variable}}..."></textarea>
-    </div>
-    <!-- Document Selection -->
-    <div class="form-group">
-      <label>Document</label>
-      <select class="form-control" id="documentSelect">
-        <option value="">Select a document (optional)</option>
-      </select>
-    </div>
-
-    <!-- Tools Selection -->
-    <div class="form-group">
-      <label>Tools</label>
-      <div class="tools-container" id="toolsContainer">
-        <!-- Tools will be loaded here -->
-      </div>
-    </div>
-
-    <!-- Pipeline Selection -->
-    <div class="form-group">
-      <label>Pipeline</label>
-      <select class="form-control" id="pipelineSelect">
-        <option value="">Select a pipeline (optional)</option>
-      </select>
-    </div>
-  </form>
+  <div id="assistantForm"></div>
 </div>
 <!-- experiments -->
 <div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
@@ -185,6 +139,7 @@ super() }}
 <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
 <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/genai/prompts_detail.js') }}"></script>
 <script>
   $(document).ready(function () {
     // reorder tabs
