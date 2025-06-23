@@ -4,8 +4,9 @@ $(function () {
   // Initialize the assistant form view
   const assistantFormView = new AssistantFormView({
     el: "#assistantForm",
-    isNew: window.context.is_new, // Check if this is a new prompt,
     data: window.context.data,
+    availableModels: window.context.availableModels || [],
+    isNew: window.context.isNew || false,
   });
   assistantFormView.render();
   assistantFormView.on("submit", function (data) {

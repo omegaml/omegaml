@@ -118,6 +118,7 @@ class TextModelBackend(GenAIBaseBackend):
         provider = kind_meta['provider']
         params.update(kwargs)
         # setup from attributes
+        model = meta.attributes.get('model') or model
         pipeline = pipeline or meta.attributes.get('pipeline')
         tools = tools or meta.attributes.get('tools') or []
         documents = documents or meta.attributes.get('documents')
@@ -128,12 +129,19 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
-        model = TextModel(base_url, model, api_key=creds, template=template,
-                          data_store=data_store, pipeline=pipeline, tools=tools,
-                          tracking=self.tracking,
-                          provider=provider, documents=documents,
-                          strategy=strategy,
-                          **params)
+        if self.model_store.exists(model):
+            # model is a stored model, load it
+            model = self.model_store.get(model, template=template, data_store=data_store,
+                                         pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
+                                         **kwargs)
+
+        else:
+            model = TextModel(base_url, model, api_key=creds, template=template,
+                              data_store=data_store, pipeline=pipeline, tools=tools,
+                              tracking=self.tracking,
+                              provider=provider, documents=documents,
+                              strategy=strategy,
+                              **params)
         return model
 
     def drop(self, name, data_store=None, force=False, **kwargs):

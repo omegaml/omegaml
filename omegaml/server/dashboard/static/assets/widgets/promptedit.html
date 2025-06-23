@@ -16,8 +16,11 @@
     <div class="tools-container" id="toolsContainer">
       <select class="form-control" id="modelSelect" required>
         <option value="_select_">select a model</option>
-        <option value="demo">demo</option>
-        <option value="jinja">jinja</option>
+        <% availableModels.forEach(function(name) { %>
+          <option value="<%= name %>">
+            <%= name %>
+          </option>
+          <% }); %>
       </select>
     </div>
   </div>
@@ -38,22 +41,35 @@
     <label>Document</label>
     <select class="form-control" id="documentSelect">
       <option value="">Select a document (optional)</option>
+      <% availableDocuments.forEach(function(name) { %>
+        <option value="<%= name %>">
+          <%= name %>
+        </option>
+        <% }); %>
     </select>
   </div>
   <!-- Tools Selection -->
   <div class="form-group">
     <label>Tools</label>
     <div class="tools-container" id="toolsContainer">
-      <select class="form-control" id="documentSelect">
+      <select class="form-control" id="toolSelect">
         <option value="">Select a tool (optional)</option>
+        <% availableTools.forEach(function(name) { %>
+          <option value="<%= name %>">
+            <%= name %>
+          </option>
+          <% }); %>
       </select>
     </div>
   </div>
+
   <!-- Pipeline Selection -->
+  <!-- 
   <div class="form-group">
     <label>Pipeline</label>
     <select class="form-control" id="pipelineSelect">
       <option value="">Select a pipeline (optional)</option>
     </select>
   </div>
+  -->
 </form>

@@ -43,6 +43,7 @@ class AssistantFormView extends BaseView {
       "change #promptTemplate": "onFieldChange",
       "change #documentSelect": "onFieldChange",
       "change #pipelineSelect": "onFieldChange",
+      "change #toolSelect": "onFieldChange",
     });
     super(options);
     this.fieldMap = {
@@ -52,18 +53,8 @@ class AssistantFormView extends BaseView {
       promptTemplate: "template",
       documentSelect: "documents",
       pipelineSelect: "pipeline",
+      toolSelect: "tools",
     };
-  }
-  render(data) {
-    return super
-      .render({
-        isNew: this.options.isNew || false,
-      })
-      .then(() => {
-        // Populate the form fields with the current data
-        this.populateForm();
-        return this;
-      });
   }
 }
 
