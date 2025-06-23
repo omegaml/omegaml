@@ -26,11 +26,11 @@ class ListDetailMixin(mixin_for(BaseView)):
         meta.attributes['docs'] = meta.attributes.get('docs', '').strip() or self._default_markdown(meta)
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
+        context = self.context_data()
         return render_template(f"dashboard/{template}",
-                               segment=self.segment,
-                               buckets=self.buckets,
+                               context=context,
                                data=data,
-                               **data)
+                               **data, **context)
 
     def _default_detail_data(self, name, meta=None):
         # call this method in subclasses that provide additional detail views (other than list, detail)
@@ -45,6 +45,12 @@ class ListDetailMixin(mixin_for(BaseView)):
 
     def detail_data(self, name, data=None, meta=None):
         return {}
+
+    def context_data(self):
+        return {
+            'segment': self.segment,
+            'buckets': self.buckets,
+        }
 
     def _default_markdown(self, meta):
         return dedent("""

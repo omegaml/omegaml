@@ -56,12 +56,15 @@ class BaseView extends Backbone.View {
     this.fieldMap = options.fieldMap || {}; // Map of field IDs to data keys
   }
   // Render the view using the provided data
-  render(data) {
+  render(context) {
+    context = context || {};
+    _.defaults(context, this.options, window.context || {});
+    console.debug("Rendering view with context: ", context);
     return $.get(this.templateUrl)
       .then((template) => {
         this.$el.html(""); // Clear the view's element
         this.template = _.template(template);
-        this.$el.append(this.template(data));
+        this.$el.append(this.template(context));
         this.populateForm(); // Populate the form with data
         return this; // Enable method chaining
       })

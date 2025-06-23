@@ -18,6 +18,7 @@
     "segment": "{{ segment }}",
     "data": {{ data | default ({}) | tojson }},
   };
+  _.extend(window.context, {{ context | default({}) | tojson }});
   console.debug('context', window.context);
   $(function () {
     $.ajax({

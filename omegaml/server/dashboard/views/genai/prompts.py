@@ -16,7 +16,7 @@ class AIPromptsView(AIRepositoryView):
         data['meta']['attributes']['tracking'].setdefault('experiments', [])
         data.update({
             'name': meta.name,
-            'model': meta.kind_meta.get('model', 'demo'),
+            'model': meta.attributes.get('model', ''),
             'template': meta.attributes.get('template', ''),
             'systemPrompt': meta.attributes.get('systemPrompt', ''),
             'pipeline': meta.attributes.get('pipeline', 'default'),
@@ -24,6 +24,16 @@ class AIPromptsView(AIRepositoryView):
             'documents': meta.attributes.get('documents', []),
         })
         return data
+
+    def context_data(self, **kwargs):
+        context = super().context_data()
+        context.update({
+            'availableModels': self.om.models.list(kind=['genai.text', 'genai.llm']),
+            'availableDocuments': self.om.datasets.list(kind='pgvector.conx'),
+            'availableTools': self.om.models.list('tools/*'),
+        })
+        context.update(kwargs)
+        return context
 
     def members(self, excludes=None):
         excludes = (
@@ -43,10 +53,11 @@ class AIPromptsView(AIRepositoryView):
         meta.attributes['docs'] = meta.attributes.get('docs', '').strip() or self._default_markdown(meta)
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
+        context = self.context_data(isNew=True)
         return render_template(f"dashboard/{template}",
-                               is_new=True,
                                segment=self.segment,
                                buckets=self.buckets,
+                               context=context,
                                data=data, **data)
 
     @fv.route('/{self.segment}/<path:name>/save', methods=['POST'])
