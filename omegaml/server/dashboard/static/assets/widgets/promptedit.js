@@ -56,6 +56,17 @@ class AssistantFormView extends BaseView {
       toolSelect: "tools",
     };
   }
+  render(context) {
+    super.render(context).then(() => {
+      // Initialize Choices.js for select elements
+      const choices = new window.Choices($("#toolSelect")[0], {
+        searchEnabled: true,
+        searchChoices: true,
+        removeItems: true,
+        removeItemButton: true,
+      });
+    });
+  }
 }
 
 export default AssistantFormView;
