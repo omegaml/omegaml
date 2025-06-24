@@ -52,7 +52,7 @@
   <div class="form-group">
     <label>Tools</label>
     <div class="tools-container" id="toolsContainer">
-      <select class="form-control" id="toolSelect">
+      <select class="form-control" id="toolSelect" multiple>
         <option value="">Select a tool (optional)</option>
         <% availableTools.forEach(function(name) { %>
           <option value="<%= name %>">
@@ -62,7 +62,6 @@
       </select>
     </div>
   </div>
-
   <!-- Pipeline Selection -->
   <!-- 
   <div class="form-group">

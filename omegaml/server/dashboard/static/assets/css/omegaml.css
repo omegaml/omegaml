@@ -315,3 +315,7 @@ strong {
 .code-explain pre[class*="language-"] {
   color: #0a2942;
 }
+/* choices custom styles */
+.choices__list--multiple .choices__item {
+  background-color: #04a9f5 !important;
+}
