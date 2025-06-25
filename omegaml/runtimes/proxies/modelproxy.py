@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import logging
+
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class OmegaModelProxy(RuntimeProxyBase):
             OmegaTrackingProxy() instance
         """
         label = label or self.runtime._default_label or 'default'
+        label = self.runtime._default_label if label in ('default', 'local') else label
         exps = self.experiments(label=label) if experiment is None else None
         exp = exps.get(label) if exps else None
         experiment = experiment or self.modelname

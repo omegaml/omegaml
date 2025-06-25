@@ -9,11 +9,12 @@ import warnings
 from base64 import b64encode, b64decode
 from datetime import date
 from itertools import chain
+from typing import Iterable
+from uuid import uuid4
+
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
 from omegaml.util import _raise, ensure_index, batched, signature, tryOr, ensurelist
-from typing import Iterable
-from uuid import uuid4
 
 
 class NoTrackTracker(TrackingProvider):
@@ -577,10 +578,13 @@ class OmegaSimpleTracker(TrackingProvider):
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
              'data.experiment': pymongo.ASCENDING},
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING},
+            # fast retrieval by event, key, userid across all runs
+            {'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING, 'data.userid': pymongo.ASCENDING,
+             'data.experiment': pymongo.ASCENDING},
         ]
         for specs in idxs:
             ensure_index(coll, specs)
-        self._store.put(coll, self._data_name)
+        # self._store.put(coll, self._data_name)
 
     def restore_artifact(self, *args, **kwargs):
         """ restore a specific logged artifact

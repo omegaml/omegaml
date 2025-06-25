@@ -131,6 +131,7 @@ class GenAIView(BaseView):
         """List conversations for a given model"""
         om = self.om
         model = om.models.get(name, data_store=om.datasets)
+        model.tracking = om.runtime.model(name).experiment()
         messages = model.conversation(run='*')
         messages.drop_duplicates(['key'], inplace=True, keep='first')
         return {'conversations': [
@@ -146,7 +147,8 @@ class GenAIView(BaseView):
     def api_conversation_history(self, name, conversation_id):
         """Get messages for a specific conversation"""
         om = self.om
-        model = om.models.get(name, data_store=om.datasets)
+        exp = om.runtime.model(name).experiment()
+        model = om.models.get(name, data_store=om.datasets, tracking=exp)
         messages = model.conversation(conversation_id=conversation_id, raw=True)
         return {'messages': [
             {
