@@ -106,7 +106,7 @@ class TextModelBackend(GenAIBaseBackend):
         return meta.save()
 
     def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, strategy=None,
-            **kwargs):
+            tracking=None, **kwargs):
         meta = self.model_store.metadata(name)
         # setup from connection string
         kind_meta = meta.kind_meta
@@ -129,17 +129,18 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
+        self.tracking = tracking or self.tracking
+        # infer model provider
         if self.model_store.exists(model):
             # model is a stored model, load it
             model = self.model_store.get(model, template=template, data_store=data_store,
                                          pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
-                                         **kwargs)
+                                         tracking=self.tracking, **kwargs)
 
         else:
             model = TextModel(base_url, model, api_key=creds, template=template,
                               data_store=data_store, pipeline=pipeline, tools=tools,
-                              tracking=self.tracking,
-                              provider=provider, documents=documents,
+                              tracking=self.tracking, provider=provider, documents=documents,
                               strategy=strategy,
                               **params)
         return model
@@ -168,6 +169,17 @@ class TextModelBackend(GenAIBaseBackend):
             if cls.match_url(url):
                 return provider
         return 'default'
+
+    def _ensure_tracking(self, default_name):
+        # ensure we have a tracking instance for the model
+        # caveats:
+        # - this is typically a responsibility of the omega runtime, however
+        #   a conversation model without a tracking instance is useless
+        # - thus we adopt the convention that if the runtime does not provide a tracking instance,
+        #   we create one for the model
+        # TODO: verify that this is the right place to do this
+        if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
+            self.tracking = OmegaSimpleTracker(default_name, store=self.data_store)
 
 
 class TextModel(GenAIModel):
@@ -322,7 +334,7 @@ class TextModel(GenAIModel):
     def _do_chat(self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False,
                  stream=False, **kwargs):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
-        self._ensure_tracking()
+        assert self.tracking, "chat requires a tracking instance, use with om.runtime.experiment(): ... "
         conversation_id = conversation_id or uuid4().hex
         # if the client sends in messages, don't recall past conversations (they are already in messages)
         messages = messages or self.conversation(conversation_id, raw=True)
@@ -338,7 +350,6 @@ class TextModel(GenAIModel):
             response, prompt_message, response_message, raw_response = response
             finish_reason = response_message.get('finish_reason')
             consolidated = finish_reason == 'stop.consolidated'
-            print(finish_reason, consolidated, response_message)
             if not stream or (stream and consolidated):
                 # only store consolidated responses
                 # -- if streaming, response_message is merged from all choices[0].delta
@@ -398,15 +409,17 @@ class TextModel(GenAIModel):
             pd.DataFrame or list[dict]: the conversation messages, either as a DataFrame or a list of dicts
         """
         assert self.data_store, "this model does not track conversations, specify .get(...., data_store=om.datasets)"
-        self._ensure_tracking()
+        assert self.tracking, "this model does not track conversations, use with om.runtime.experiment(): ... "
+        filter.setdefault('run', '*')
         filter.setdefault('key', conversation_id)
         messages = self.tracking.data(event='conversation', **filter)
         if messages is not None and 'value' in messages.columns:
             messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
             messages.drop(columns=['value'], inplace=True)
-            # messages.fillna(None, inplace=True)
+            # FIXME fillna('') is deprecated for numeric columns (handle in serialization?)
+            messages.fillna('', inplace=True)
             return messages if not raw else messages.to_dict('records')
-        return []
+        return pd.DataFrame() if not raw else []
 
     def _system_message(self, prompt, conversation_id=None):
         return {
@@ -704,18 +717,6 @@ class TextModel(GenAIModel):
         augmented = self._augment_prompt(message.get('content', ''), documents=documents, query=query)
         message['content'] = augmented if augmented else message.get('content')
         return message
-
-    def _ensure_tracking(self):
-        # ensure we have a tracking instance for the model
-        # caveats:
-        # - this is typically a responsibility of the omega runtime, however
-        #   a conversation model without a tracking instance is useless
-        # - thus we adopt the convention that if the runtime does not provide a tracking instance,
-        #   we create one for the model
-        # TODO: verify that this is the right place to do this
-        if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
-            self.tracking = OmegaSimpleTracker(self.model, store=self.data_store)
-            self.tracking.use()
 
     def _log_events(self, event, conversation_id, data):
         if self.tracking:

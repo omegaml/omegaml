@@ -65,16 +65,19 @@ class AIPromptsView(AIRepositoryView):
         """Save a new or existing prompt"""
         om = self.om
         data = self.request.json
+        model = data['model']
         meta = om.models.metadata(name)
         if meta is None:
-            model_meta = om.models.metadata(data['model'], data_store=om.datasets)
+            model_meta = om.models.metadata(model, data_store=om.datasets)
             meta = om.models._make_metadata(name=name, kind=model_meta.kind,
                                             bucket=self.bucket,
                                             attributes=model_meta.attributes,
                                             kind_meta=model_meta.kind_meta)
+            meta.save()
+            om.models.link_experiment(name, name, label=om.runtime._default_label)
         else:
             meta.attributes.update(data)
-        meta.save()
+            meta.save()
         return {'message': 'Prompt saved successfully', 'name': name}, 200
 
 
