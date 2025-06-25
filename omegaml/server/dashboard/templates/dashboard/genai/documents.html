@@ -507,7 +507,7 @@
         status: 'uploading'
       };
       return $.ajax({
-        url: url_for("omega-server.ai_api_upload_document"),
+        url: url_for("omega-ai.index_api_upload_document"),
         type: 'POST',
         data: formData,
         processData: false,
@@ -612,7 +612,7 @@
     window.removeDocument = function (docId) {
       if (confirm('Are you sure you want to remove this document?')) {
         $.ajax({
-          url: url_for("omega-server.ai_api_delete_document", {
+          url: url_for("omega-ai.index_api_delete_document", {
             name: $('#indexSelect').val(),
             doc_id: docId
           }),

@@ -319,3 +319,7 @@ strong {
 .choices__list--multiple .choices__item {
   background-color: #04a9f5 !important;
 }
+/* button small */
+.btn-sml {
+  height: 4vh;
+}

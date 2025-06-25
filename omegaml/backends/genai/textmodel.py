@@ -404,7 +404,7 @@ class TextModel(GenAIModel):
         if messages is not None and 'value' in messages.columns:
             messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
             messages.drop(columns=['value'], inplace=True)
-            messages.fillna('', inplace=True)
+            # messages.fillna(None, inplace=True)
             return messages if not raw else messages.to_dict('records')
         return []
 
