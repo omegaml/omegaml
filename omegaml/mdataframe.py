@@ -593,7 +593,8 @@ class MDataFrame(object):
         the projected number of rows when resolving
         """
         # we reduce to just 1 column to reduce speed
-        short = self._clone()[self.columns[0]]
+        short = self._clone()
+        short = short[self.columns[0]] if self.columns else short
         return sum(1 for d in short._get_cursor())
 
     @property

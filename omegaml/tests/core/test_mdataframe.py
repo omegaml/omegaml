@@ -1,16 +1,12 @@
 from __future__ import absolute_import
 
-import warnings
-
-from datetime import datetime
-
-import random
-import string
-
 import numpy as np
 import os
 import pandas as pd
+import random
+import string
 import unittest
+from datetime import datetime
 from pandas.testing import assert_frame_equal, assert_series_equal
 from unittest.case import TestCase, skip
 
@@ -601,3 +597,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         mdf = om.datasets.getl('sample', filter=injected, sanitize=False)
         df = om.datasets.get('sample')
         self.assertEqual(len(mdf.value), len(df))
+
+    def test_empty_cursor(self):
+        om = self.om
+        coll = om.datasets.collection('test')
+        assert MDataFrame(coll).value.empty
+        assert MDataFrame(coll).count().empty
+        assert len(MDataFrame(coll)) == 0
