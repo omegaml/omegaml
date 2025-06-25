@@ -133,7 +133,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._run = run or self._run or self._latest_run
         data = self.data(event=['start', 'stop'], run=self._run, raw=True)
         no_runs = data is None or len(data) == 0
-        has_stop = sum(1 for row in (data or []) if row.get('event') == 'stop')
+        has_stop = not no_runs and sum(1 for row in data if row.get('event') == 'stop')
         return 'PENDING' if no_runs else 'STOPPED' if has_stop else 'STARTED'
 
     def start(self, run=None, immediate=True):
