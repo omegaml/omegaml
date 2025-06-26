@@ -24,7 +24,7 @@ class GenAIView(BaseView):
                                indices=indices,
                                segment=self.segment)
 
-    @fv.route('/{self.segment}/chat/<string:name>')
+    @fv.route('/{self.segment}/chat/<path:name>')
     def chat(self, name):
         return render_template('dashboard/genai/conversations.html',
                                name=name,
@@ -38,7 +38,7 @@ class GenAIView(BaseView):
                                indices=indices,
                                segment=self.segment)
 
-    @fv.route('/{self.segment}/chat/<path:name>/<string:conversation_id>')
+    @fv.route('/{self.segment}/chat/<path:name>/c/<string:conversation_id>')
     def modelchat(self, name, conversation_id=None):
         om = self.om
         model = om.models.metadata(name, data_store=om.datasets)
@@ -143,7 +143,7 @@ class GenAIView(BaseView):
             } for msg in messages.to_dict(orient='records')
         ]}
 
-    @fv.route('/{self.segment}/chat/history/<path:name>/<string:conversation_id>')
+    @fv.route('/{self.segment}/chat/history/<path:name>/c/<string:conversation_id>')
     def api_conversation_history(self, name, conversation_id):
         """Get messages for a specific conversation"""
         om = self.om
