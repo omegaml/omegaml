@@ -1,0 +1,502 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deploying dbt projects &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Deploying dbt projects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/guide/advanced/integration/dbt_multiple.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="deploying-dbt-projects">
+<h1>Deploying dbt projects<a class="headerlink" href="#deploying-dbt-projects" title="Link to this heading">¶</a></h1>
+<p>dbt projects can be deployed to run on the omega-ml runtime as an ad-hoc or a scheduled
+job as follows. dbt projects are essentially a collection of files that make up a SQL-based
+workflow. This means we can easily deploy dbt projects to omega-ml as a script, and run them
+on schedule or on-demand.</p>
+<p>The steps to deploy dbt projects to omega-ml are as follows:</p>
+<ol class="arabic simple">
+<li><p>Package the dbt project(s) and deploy to omega-ml</p></li>
+<li><p>Schedule a job to run the dbt project(s)</p></li>
+<li><p>Serve the dbt project(s) documentation via omegaml’s apphub (or browse locally)</p></li>
+</ol>
+<p>Here’s a quick schematic overview of the components involved:</p>
+<img alt="dbt-deploy" class="align-center" src="../../../_images/dbt-deploy.png" />
+<p>The following sections provide a step-by-step guide to deploy dbt projects to omega-ml,
+explaining each component. If you are just looking to deploy dbt projects without regard
+to all the gory details, follow the Quick Start section.</p>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
+<p>If you are looking to deploy dbt projects to omega-ml without going through all the details,
+here’s a quick start guide:</p>
+<ol class="arabic">
+<li><p>Copy the <cite>dbtdeploy</cite> application to your dbt project’s root directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cp -r /path/to/omegaml/examples/dbt/dbtdeploy /path/to/dbt
+</pre></div>
+</div>
+</li>
+<li><p>Update the <cite>profiles.yml</cite> file in the <cite>dbtdeploy</cite> directory with your connection details:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cp /path/to/dbt/myproject/profiles.yml /path/to/dbt/dbtdeploy/profiles.yml
+</pre></div>
+</div>
+</li>
+<li><p>Link your dbt project(s) into the <cite>dbtdeploy</cite> directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ln -s /path/to/dbt/myproject /path/to/dbt/dbtdeploy/myproject
+</pre></div>
+</div>
+</li>
+<li><p>Package the <cite>dbtdeploy</cite> application and deploy to omega-ml:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om scripts put /path/to/dbt/dbtdeploy dbt/dbtdeploy
+</pre></div>
+</div>
+</li>
+<li><p>Run the dbt project on-demand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om runtime script dbtdeploy run project=myproject
+</pre></div>
+</div>
+</li>
+<li><p>Schedule the dbt project to run on a schedule:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># store the dbt_run notebook in om.jobs
+$ om jobs put /path/to/dbt/dbt_run.ipynb dbt_run
+
+# update the dbt_run notebook to run the dbt project(s)
+$ om shell jupyter
+</pre></div>
+</div>
+</li>
+<li><p>Serve the dbt project documentation via omegaml’s apphub:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># package the app
+$ om scripts put /path/to/dbt/dbtdeploy apps/dbtdeploy
+$ om runtime restart app dbtdeploy
+
+Alternatively, serve the docs locally by running the following command:
+
+$ FLASK_APP=/path/to/dbt/dbtdeploy:create_app flask run
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="create-the-dbtdeploy-application">
+<h2>Create the dbtdeploy application<a class="headerlink" href="#create-the-dbtdeploy-application" title="Link to this heading">¶</a></h2>
+<p>While we could package each dbt project separately, it is easier to use
+a single package, and include all dbt projects in one step. We’ll call
+this the <cite>dbtdeploy</cite> script.</p>
+<p>The <cite>dbtdeploy</cite> script is a small Python package that provides a utility function,
+<cite>update_dbt_profile</cite>, that updates the dbt <cite>profiles.yml</cite> file with omega-ml
+defaults. This is useful to ensure that the dbt project can connect to the
+SQL database, however without storing the connection details in the dbt project
+itself. We also include a <cite>run</cite> function in order to run the dbt project on demand
+using the omega-ml runtime. Later we will add a Flask application to serve the
+dbt project documentation, and also provide an example of how to run dbt projects
+on a schedule.</p>
+<p>Here’s how to create the “dbtdeploy” application:</p>
+<ol class="arabic">
+<li><p>Create the dbtdeploy application directory structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># in /path/to/dbt
+$ mkdir dbtdeploy
+$ touch dbtdeploy/__init__.py
+$ touch dbtdeploy/setup.py
+$ touch dbtdeploy/MANIFEST.in
+$ touch dbtdeploy/profiles.yml
+</pre></div>
+</div>
+</li>
+<li><p>Update the <cite>setup.py</cite> and <cite>MANIFEST.in</cite> files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># dbtdeploy/setup.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span>
+
+<span class="n">setup</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dbtdeploy&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;0.1&#39;</span><span class="p">,</span>
+    <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(),</span>
+    <span class="n">include_package_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">install_requires</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;dbt-core&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># dbtdeploy/MANIFEST.in</span>
+<span class="n">include</span> <span class="o">*.</span><span class="ow">in</span>
+<span class="n">recursive</span><span class="o">-</span><span class="n">include</span> <span class="n">dbtdeploy</span> <span class="o">*</span>
+</pre></div>
+</div>
+</li>
+<li><p>Update the __init__.py file for the dbtdeploy application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># /path/to/dbt/myproject/__init__.py</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_dbt_profile</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    update dbt profiles.yaml with omegaml defaults</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">        import omegaml as om</span>
+<span class="sd">        mod = om.scripts.get(&#39;dbt/foo&#39;, install=True)</span>
+<span class="sd">        update_dbt_profile(mod=mod, om=om)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+    <span class="n">default_fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;__file__&#39;</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">&#39;profiles.yml&#39;</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="k">if</span> <span class="n">fn</span> <span class="k">else</span> <span class="n">default_fn</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fn</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;dbt profiles.yml not found at </span><span class="si">{</span><span class="n">fn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">vars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span> <span class="k">if</span> <span class="n">om</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">profiles</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">profiles</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">parent</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+    <span class="n">dbt_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">project_dir</span> <span class="o">=</span> <span class="n">dbt_dir</span> <span class="o">/</span> <span class="n">project</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dbt run -d --profiles-dir </span><span class="si">{</span><span class="n">dbt_dir</span><span class="si">}</span><span class="s2"> --project-dir </span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">update_dbt_profile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dbt_dir</span><span class="si">}</span><span class="s2">/profiles.yml&quot;</span><span class="p">,</span> <span class="n">om</span><span class="o">=</span><span class="n">om</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="include-your-dbt-project-s">
+<h2>Include your dbt project(s)<a class="headerlink" href="#include-your-dbt-project-s" title="Link to this heading">¶</a></h2>
+<p>Now we’re ready to package up all dbt projects, by linking each dbt project
+into the <cite>dbtdeploy</cite> script. This way we can keep the dbt project(s) as is,
+and update the <cite>dbtdeploy</cite> script with a single command.</p>
+<ol class="arabic">
+<li><p>Copy your profiles.yml from <cite>$HOME/.dbt/profiles.yml</cite></p>
+<blockquote>
+<div><p>$ cp /path/to/dbt/myproject/profiles.yml dbtdeploy/profiles.yml</p>
+</div></blockquote>
+</li>
+<li><p>Update the <cite>profiles.yml</cite> to remove any secrets and replace with
+them with <cite>{OMEGA_VARIABLE}</cite> placeholders.</p>
+<p>The <cite>profiles.yml</cite> file should look something like this (adopt to the specific variables used
+in your omega-ml qualifier context):</p>
+</li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">myproject</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">    </span><span class="nt">outputs</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">prod</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlserver</span>
+<span class="w">        </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{OMEGA_SQL_SERVER_DRIVER}&#39;</span><span class="w"> </span><span class="c1"># (The ODBC Driver installed on your system)</span>
+<span class="w">        </span><span class="nt">server</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_HOST</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1433</span>
+<span class="w">        </span><span class="nt">database</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_DB</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">schema_name</span>
+<span class="w">        </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_USER</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_PASSWORD</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<ol class="arabic" start="3">
+<li><p>Link each dbt project into the directory of the dbtdeploy application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ln -s /path/to/dbt/myproject dbtdeploy/myproject
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="deploy-and-run-the-dbtdeploy-application">
+<h2>Deploy and run the dbtdeploy application<a class="headerlink" href="#deploy-and-run-the-dbtdeploy-application" title="Link to this heading">¶</a></h2>
+<p>Every time we update the dbt project(s), we need to update the
+dbtdeploy application and deploy it to omega-ml.</p>
+<ol class="arabic">
+<li><p>Package the dbtdeploy application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om scripts put . dbtdeploy dbt/dbtdeploy
+</pre></div>
+</div>
+</li>
+<li><p>We can now run the dbt project on-demand, running in the omega-ml runtime,
+using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om runtime script dbtdeploy run project=myproject
+</pre></div>
+</div>
+</li>
+<li><p>For testing and debugging, add <cite>–local</cite> to run the script locally:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om runtime --local script dbtdeploy run project=myproject
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="schedule-dbt-projects">
+<h2>Schedule dbt projects<a class="headerlink" href="#schedule-dbt-projects" title="Link to this heading">¶</a></h2>
+<p>To run the dbt project as a scheduled job, we need to create a job (notebook) that runs one or
+all dbt projects. This notebook, we’ll call it <cite>dbt_run</cite>, should look as follows
+and be stored in om.jobs.</p>
+<p>The notebook essentially has three parts:</p>
+<ol class="arabic simple">
+<li><p>Import the dbtdeploy application, and update the dbt profile with omega-ml defaults</p></li>
+<li><p>Run each dbt project</p></li>
+<li><p>Generate and save the dbt docs, so they is available for later inspection or
+serving via omegaml’s apphub</p></li>
+</ol>
+<p>Here’s how to create the job:</p>
+<ol class="arabic">
+<li><p>Create a job (notebook) to run the dbtdeploy application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># in /path/to/dbt/dbt_run.ipynb
+# store this in om.jobs (om jobs put dbt_run.ipynb dbt_run)
+[1] # cron: 0 0 * * 1
+    # comment: run every Monday at midnight
+[2] # (1) import dbt project and prepare dbt profile
+    dbtdeploy = om.scripts.get(&#39;dbt/dbtdeploy&#39;, install=True)
+    dbt_dir = Path(dbtdeploy.__file__).parent
+    dbtdeploy.update_dbt_profile(f&quot;{dbt_dir}/profiles.yml&quot;, om=om)
+[3] # (2) run dbt projects (repeat (2) and (3) for each dbt project)
+    project_dir =  dbt_dir / &#39;foo`
+    !dbt run --profiles-dir $dbt_dir --project-dir $project_dir
+[4] # (3) generate docs and save to om.datasets as dbt/&lt;project&gt;/report.zip
+    # generate docs
+    !dbt docs generate --profiles-dir $dbt_dir --project-dir $project_dir --target-path report
+    !python -m zipfile -c report.zip $project_dir/report
+    !om datasets put ./report.zip $project/report.zip
+</pre></div>
+</div>
+</li>
+<li><p>Save the notebook to om.jobs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ om jobs put dbtdeploy/dbt_run.ipynb dbt_run
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="serve-the-dbt-project-documentation">
+<h2>Serve the dbt project documentation<a class="headerlink" href="#serve-the-dbt-project-documentation" title="Link to this heading">¶</a></h2>
+<p>Finally, we can serve the dbt project documentation via omegaml’s apphub or
+locally. For this we need to create a Flask application that serves the dbt project:</p>
+<ol class="arabic">
+<li><p>Update the <cite>dbtdeploy/__init__.py</cite> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># add this to path/to/dbt/myproject/__init__.py</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">(</span><span class="n">server</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uri</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">abort</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Blueprint</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+
+    <span class="n">server</span> <span class="o">=</span> <span class="n">server</span> <span class="ow">or</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">url_prefix</span><span class="o">=</span><span class="n">uri</span><span class="p">,</span>
+                    <span class="n">template_folder</span><span class="o">=</span><span class="s1">&#39;templates&#39;</span><span class="p">)</span>
+
+    <span class="n">file_cache</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">om</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">():</span>
+        <span class="c1"># present a list of project reports stored in om.datasets</span>
+        <span class="c1"># -- each project report is stored as dbt/&lt;project&gt;/report.zip</span>
+        <span class="n">href</span> <span class="o">=</span> <span class="s2">&quot;&lt;a href=&#39;</span><span class="si">{uri}</span><span class="s2">/</span><span class="si">{project}</span><span class="s2">/index&#39;&gt;</span><span class="si">{project}</span><span class="s2">&lt;/a&gt;&lt;br&gt;&quot;</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">href</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">project</span><span class="p">)),</span>
+                                <span class="n">uri</span><span class="o">=</span><span class="n">uri</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s1">&#39;dbt/*&#39;</span><span class="p">)]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;select a project to view its dbt report&lt;/p&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">text</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span> <span class="k">if</span> <span class="n">projects</span> <span class="k">else</span> <span class="s2">&quot;No projects found&quot;</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/index&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+        <span class="c1"># open the project report&#39;s index.html</span>
+        <span class="n">_send_report_file</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">)</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/&lt;path:path&gt;&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">static_file</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="c1"># open a static file from the project report</span>
+        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">},</span> <span class="mi">404</span>
+
+    <span class="nd">@file_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">report_fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s1">/report.zip&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_fn</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">zipfile</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;report/</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">zipfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="n">server</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">server</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p>Serve the docs locally by running the following command:</p>
+<blockquote>
+<div><p>$ FLASK_APP=dbtdeploy:create_app flask run</p>
+</div></blockquote>
+</li>
+</ol>
+<ol class="arabic" start="2">
+<li><p>Serve the dbt project documentation via omegaml’s apphub:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># package the app
+$ om scripts put . dbtdeploy apps/dbtdeploy
+$ om runtime restart app dbtdeploy
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.17.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../latest/guide/advanced/integration/dbt_multiple.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="dbt_multiple.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../stable/guide/advanced/integration/dbt_multiple.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/guide/advanced/integration/dbt_multiple.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
