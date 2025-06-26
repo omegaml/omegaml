@@ -28,7 +28,7 @@ class AIPromptsView(AIRepositoryView):
     def context_data(self, **kwargs):
         context = super().context_data()
         context.update({
-            'availableModels': self.om.models.list(kind=['genai.text', 'genai.llm']),
+            'availableModels': self.om.models.list('llms/*', kind=['genai.text', 'genai.llm']),
             'availableDocuments': self.om.datasets.list(kind='pgvector.conx'),
             'availableTools': self.om.models.list('tools/*'),
         })
@@ -41,7 +41,8 @@ class AIPromptsView(AIRepositoryView):
             lambda m: m.name.startswith('experiments/')
         )
         kind = ['genai.text', 'genai.llm']
-        items = [m for m in self.store.list(kind=kind, raw=True) if not any(e(m) for e in excludes)]
+        items = [m for m in self.store.list('prompts/*',
+                                            kind=kind, raw=True) if not any(e(m) for e in excludes)]
         return items
 
     @fv.route('/{self.segment}/new')
@@ -66,8 +67,10 @@ class AIPromptsView(AIRepositoryView):
         om = self.om
         data = self.request.json
         model = data['model']
+        name = f'prompts/{name}' if not name.startswith('prompts/') else name
         meta = om.models.metadata(name)
         if meta is None:
+            # create a new instance
             model_meta = om.models.metadata(model, data_store=om.datasets)
             meta = om.models._make_metadata(name=name, kind=model_meta.kind,
                                             bucket=self.bucket,
@@ -75,9 +78,8 @@ class AIPromptsView(AIRepositoryView):
                                             kind_meta=model_meta.kind_meta)
             meta.save()
             om.models.link_experiment(name, name, label=om.runtime._default_label)
-        else:
-            meta.attributes.update(data)
-            meta.save()
+        meta.attributes.update(data)
+        meta.save()
         return {'message': 'Prompt saved successfully', 'name': name}, 200
 
 
