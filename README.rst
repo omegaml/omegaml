@@ -101,7 +101,7 @@ Scalability and Extensibility
 - integrate any machine learning framework or third party data science platform with a common API
 
 Towards Data Science recently published an article on omega|ml:
-https://towardsdatascience.com/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
+https://medium.com/data-science/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
 
 In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
 compute cluster, database and data source.
