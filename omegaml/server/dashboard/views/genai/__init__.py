@@ -38,6 +38,19 @@ class GenAIView(BaseView):
                                indices=indices,
                                segment=self.segment)
 
+    @fv.route('/{self.segment}/evals')
+    def evals(self):
+        om = self.om
+        models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
+        experiments = set()
+        for model in models:
+            experiments.update(model.attributes.get('tracking', {}).get('experiments', []))
+        return render_template('dashboard/genai/evaluations.html',
+                               segment=self.segment,
+                               context={
+                                   'experiments': list(experiments),
+                               })
+
     @fv.route('/{self.segment}/chat/<path:name>/c/<string:conversation_id>')
     def modelchat(self, name, conversation_id=None):
         om = self.om

@@ -1,0 +1,69 @@
+{% extends "dashboard/layouts/genai/base.html" %}
+
+{% block stylesheets %}
+{% endblock stylesheets %}
+
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ segment | title }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5><i class="fas fa-flask text-primary mr-2"></i>
+                      Evaluations
+                    </h5>
+                    {% block segmentheader %}
+                    {% endblock segmentheader %}
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-12">
+                    <!-- Main Card -->
+                    <div class="card">
+                      <div class="card-body">
+                        <div id="evaluationsView">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script type="module" src="{{ url_for('static', filename='assets/views/genai/evaluations.js') }}"></script>
+{% endblock javascripts %}
