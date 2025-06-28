@@ -1,13 +1,14 @@
 from unittest import TestCase, mock
 
 import inspect
+from types import FunctionType
+
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.mongovector import MongoDBVectorStore
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
-from types import FunctionType
 
 
 class GenAIModelTests(OmegaTestMixin, TestCase):
@@ -295,7 +296,6 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             model = om.models.get('mymodel')
         else:
             model = om.models.get('mymodel', data_store=om.datasets)
-            model._ensure_tracking()
         # mock openai call
         # -- Ref: https://platform.openai.com/docs/api-reference/chat/get
         # -- the model's response to initial prompt (calling a tool)

@@ -39,6 +39,7 @@ class TextModelBackend(GenAIBaseBackend):
           this only provides the model store interface and acts as any VirtualObjectHandler
     """
     KIND = 'genai.text'
+    STORED_MODEL_URL = 'omegaml://models'
 
     @classmethod
     def supports(cls, obj, name, **kwargs):
@@ -129,9 +130,9 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
-        self.tracking = tracking or self.tracking
+        self.tracking = tracking or self.tracking or self._ensure_tracking(model)
         # infer model provider
-        if self.model_store.exists(model):
+        if base_url == self.STORED_MODEL_URL and self.model_store.exists(model):
             # model is a stored model, load it
             model = self.model_store.get(model, template=template, data_store=data_store,
                                          pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
@@ -180,6 +181,8 @@ class TextModelBackend(GenAIBaseBackend):
         # TODO: verify that this is the right place to do this
         if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
             self.tracking = OmegaSimpleTracker(default_name, store=self.data_store)
+            self.tracking.start()
+        return self.tracking
 
 
 class TextModel(GenAIModel):

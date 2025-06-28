@@ -71,7 +71,9 @@ class AIPromptsView(AIRepositoryView):
         meta = om.models.metadata(name)
         if meta is None:
             # create a new instance
+            from omegaml.backends.genai.textmodel import TextModelBackend
             model_meta = om.models.metadata(model, data_store=om.datasets)
+            model_meta.kind_meta['base_url'] = TextModelBackend.STORED_MODEL_URL
             meta = om.models._make_metadata(name=name, kind=model_meta.kind,
                                             bucket=self.bucket,
                                             attributes=model_meta.attributes,
