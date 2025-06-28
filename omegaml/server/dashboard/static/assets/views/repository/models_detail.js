@@ -1,142 +1,14 @@
 import DateRangeView from "../../widgets/sincepick.js";
 import PaginatedRunGridView from "../../widgets/pagedcards.js";
+import ExperimentView from "./experimentsview.js";
 
 $(function () {
   $("#experiments-tab").on("shown.bs.tab", function (e) {
-    // since/date range picker
-    const dateRangeView = new DateRangeView({
-      el: "#exp-sinceRangePicker",
-      events: {
-        "since:selected": function (event, data) {
-          console.debug("since:selected", data);
-          var exp = $("#dropdownExperiments").text();
-          showTable(exp);
-        },
-        "range:selected": function (event, data) {
-          console.debug("range:selected", data);
-        },
-      },
+    const experimentsview = new ExperimentView({
+      el: "#experimentsView",
+      experiments: context.data.meta.attributes.tracking.experiments,
     });
-    dateRangeView.render();
-    // cards view
-    const gridView = new PaginatedRunGridView({
-      el: "#expcards",
-    });
-    // query experiment data and show as a table
-    function initializeTable(headers, exp, since, end, runs) {
-      // https://datatables.net/forums/discussion/79217
-      var columns = headers.map(function (header) {
-        return { data: header, title: header };
-      });
-      var summary = runs ? 0 : 1;
-      var datatable = $("#expviewer").DataTable({
-        destroy: true, // remove previuos table, recreate it
-        processing: true,
-        serverSide: true,
-        responsive: true,
-        paging: true,
-        select: true,
-        pageLength: 50,
-        layout: {
-          topEnd: "paging",
-        },
-        ajax: {
-          url:
-            url_for("omega-server.tracking_api_experiment_data", {
-              name: exp,
-            }) + `?&since=${since}&end=${end}&summary=${summary}&run=${runs}`,
-          type: "GET",
-        },
-        columns: columns,
-      });
-    }
-    function showRunCards(exp) {
-      const since = dateRangeView.model.get("startDate");
-      const end = dateRangeView.model.get("endDate");
-      gridView.collection.url =
-        url_for("omega-server.tracking_api_experiment_data", {
-          name: exp,
-        }) + `?&since=${since}&end=${end}&summary=1`;
-      gridView.collection.fetch({ reset: true });
-      gridView.render();
-    }
-    function showTable(exp, recreate = false, runs) {
-      $("#expchart").hide();
-      $("#exptable").show();
-      $("#dropdownExperiments").text(exp) || "Experiment";
-      const since = dateRangeView.model.get("startDate");
-      const end = dateRangeView.model.get("endDate");
-      const summary = runs ? 0 : 1;
-      $.ajax({
-        url:
-          url_for("omega-server.tracking_api_experiment_data", {
-            name: exp,
-          }) + `?initialize=1&summary=${summary}&since=${since}&end=${end}`,
-        type: "GET",
-        success: function (json) {
-          $("#expviewer").DataTable().destroy();
-          var headers = json.columns || Object.keys(json.data[0]);
-          var thead = "<thead><tr>";
-          headers.forEach(function (header) {
-            thead += "<th>" + header + "</th>";
-          });
-          thead += "</tr></thead>";
-          $("#expviewer").html(thead);
-          initializeTable(headers, exp, since, end, runs);
-        },
-      });
-    }
-    $(".dropdown-item.exp").on("click", function () {
-      var exp = $(this).text();
-      showTable(exp);
-    });
-    $("#showtable").on("click", function () {
-      var exp = $("#dropdownExperiments").text();
-      showTable(exp);
-    });
-    $("#details").on("click", function () {
-      var datatable = $("#expviewer").DataTable({
-        retrieve: true,
-      });
-      var exp = $("#dropdownExperiments").text();
-      var selected = datatable.rows({ selected: true }).data().toArray();
-      selected = selected.map((row) => row.run);
-      showTable(exp, true, selected);
-    });
-    // plot experiment data
-    function plotchart(exp, since, end, multi = false) {
-      var multi = multi ? 1 : 0;
-      var selected = $("#expviewer")
-        .DataTable({ retrieve: true })
-        .rows({ selected: true })
-        .data()
-        .toArray();
-      selected = selected.map((row) => row.run);
-      $.ajax({
-        dataType: "json",
-        url:
-          url_for("omega-server.tracking_api_plot_metrics", { name: exp }) +
-          `?multicharts=${multi}&since=${since}&end=${end}&runs=${selected}`,
-        success: function (data) {
-          $("#exptable").hide();
-          $("#expchart").show();
-          Plotly.newPlot("expchart", data, {});
-        },
-      });
-    }
-    $("#plotchart").on("click", function () {
-      var exp = $("#dropdownExperiments").text();
-      var since = dateRangeView.model.get("startDate");
-      var end = dateRangeView.model.get("endDate");
-      plotchart(exp, since, end, false);
-    });
-    $("#multicharts").on("click", function () {
-      var exp = $("#dropdownExperiments").text();
-      var since = dateRangeView.model.get("startDate");
-      var end = dateRangeView.model.get("endDate");
-      plotchart(exp, since, end, true);
-    });
-    showTable("Experiment", true);
+    experimentsview.render();
   });
   $("#monitoring-tab").on("shown.bs.tab", function (e) {
     // since/date range picker

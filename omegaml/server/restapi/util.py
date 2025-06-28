@@ -4,6 +4,7 @@ from werkzeug.exceptions import BadRequest, HTTPException
 
 from omegaml.util import MongoEncoder
 
+
 class StrictModel(Model):
     # To implement a model that supports strict validation
     # on fields, we need to explicitly add into the schema
@@ -104,13 +105,21 @@ class OmegaResourceMixin(object):
         # - if the exception is an HTTPException, return that
         # - if the exception has a tuple of arguments as (str, int),
         #   assume it is Exception(message, code) => HTTPException(args[0]).code = args[1]
+        # - for any other exception, log the traceback and return an error message with a status code of 400
         if isinstance(e, HTTPException):
             return e
         has_status_code = len(e.args) > 1 and isinstance(e.args[1], int)
         if has_status_code:
             message, status_code = e.args
         else:
-            message, status_code = repr(e), BadRequest.code
+            # retrieve lowest farme to get the context of the exception
+            import traceback
+            import uuid
+            import logging
+            error_id = str(uuid.uuid4())
+            tb = traceback.format_exc()
+            logging.error(f"Error ID: {error_id}\n{tb}")
+            message, status_code = f"{repr(e)} [Error ID: {error_id}]", BadRequest.code
         exc = HTTPException(message)
         exc.code = status_code
         return exc

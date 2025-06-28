@@ -578,9 +578,13 @@ class OmegaSimpleTracker(TrackingProvider):
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
              'data.experiment': pymongo.ASCENDING},
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING},
+            # fast retrieval by event, key, userid across all runs
+            {'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING, 'data.userid': pymongo.ASCENDING,
+             'data.experiment': pymongo.ASCENDING},
         ]
         for specs in idxs:
             ensure_index(coll, specs)
+        # self._store.put(coll, self._data_name)
 
     def restore_artifact(self, *args, **kwargs):
         """ restore a specific logged artifact

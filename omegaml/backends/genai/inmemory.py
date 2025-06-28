@@ -24,6 +24,13 @@ class InMemoryVectorStore(VectorStoreBackend):
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
         return name.startswith('vecmem://')
 
+    def list(self, name):
+        return [{
+            'id': doc_id,
+            'source': doc['source'],
+            'attributes': doc['attributes'],
+        } for doc_id, doc in self.documents.items()]
+
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         doc_id = len(self.documents) + 1  # Simple ID generation
         source = attributes.get('source', None)
@@ -69,9 +76,15 @@ class InMemoryVectorStore(VectorStoreBackend):
 
     def delete(self, name, obj=None, filter=None, **kwargs):
         # Clear all stored documents and chunks
-        self.documents.clear()
-        self.chunks.clear()
-        self.embeddings.clear()
+        if obj:
+            doc_id = obj.get('id')
+            del self.documents[doc_id]
+            del self.chunks[doc_id]
+            del self.embeddings[doc_id]
+        else:
+            self.documents.clear()
+            self.chunks.clear()
+            self.embeddings.clear()
 
     def _calculate_distance(self, vec1, vec2, metric):
         if metric == 'l2':

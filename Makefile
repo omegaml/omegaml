@@ -137,4 +137,4 @@ scan: freeze pipsync
 
 server:
 	# start omegaml server
-	python -m omegaml.server
+	export OMEGA_LOCAL_RUNTIME=1; python -m omegaml.server

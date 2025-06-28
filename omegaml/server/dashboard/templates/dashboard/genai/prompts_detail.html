@@ -1,0 +1,119 @@
+{% extends "dashboard/layouts/detail.html" %}
+
+{% block nav %}
+{% include 'dashboard/includes/genai/sidebar.html' %}
+{% include 'dashboard/includes/navigation.html' %}
+{% endblock nav %}
+
+{% block cardheader %}
+<style>
+  .card-header {
+    margin: -10px;
+  }
+</style>
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">{{ meta.name }}</h5>
+      <a class="btn btn-sml px-4 py-2 btn-primary no-padding"
+        href="{{ url_for('.index_chat', name=meta.name) }}">Try</a>
+    </div>
+  </div>
+</div>
+{% endblock cardheader %}
+{% block tabitems %}
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="experiments-tab" data-toggle="tab" href="#experiments" role="tab"
+    aria-controls="experiments" aria-selected="false">Experiments</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link text-uppercase" id="monitoring-tab" data-toggle="tab" href="#monitoring" role="tab"
+    aria-controls="experiments" aria-selected="false">Monitoring</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link active text-uppercase" id="prompts-tab" data-toggle="tab" href="#prompt" role="tab"
+    aria-controls="prompt" aria-selected="false">Prompt</a>
+</li>
+{% endblock tabitems %}
+{% block tabcontents %}
+<!-- prompts -->
+<div class="tab-pane fade" id="prompt" role="tabpanel" aria-labelledby="prompts-tab">
+  <div id="assistantForm"></div>
+</div>
+<!-- experiments -->
+<div class="tab-pane fade" id="experiments" role="tabpanel" aria-labelledby="experiments-tab">
+  <div id="experimentsView"></div>
+</div>
+<!-- drift -->
+<div class="tab-pane fade" id="monitoring" role="tabpanel" aria-labelledby="monitoring-tab">
+  <div class="nav">
+    <div class="dropdown">
+      <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownDriftColumns"
+        data-toggle="dropdown" data-default='Columns' aria-haspopup="true" aria-expanded="false">
+        Columns
+      </button>
+      <div class="dropdown-menu mon column items" aria-labelledby="dropdownDriftColumns">
+        <a class="dropdown-item mon column refresh" href="#">(all)</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary mon dropdown-toggle" type="button" id="dropdownStatistics"
+        data-toggle="dropdown" data-default='Statistics' aria-haspopup="true" aria-expanded="false">
+        Statistics
+      </button>
+      <div class="dropdown-menu mon stats items" aria-labelledby="dropdownStatistics">
+        <a class="dropdown-item mon stats refresh" href="#">score</a>
+      </div>
+    </div>
+    <div id="mon-sinceRangePicker"></div>
+    <button type="button" id="plotmon-time" class="btn btn-icon  ">
+      <i class="fa-solid fa-chart-line"></i>
+    </button>
+    <button type="button" id="plotmon-dist" class="btn btn-icon  ">
+      <i class="fa-solid fa-chart-bar"></i>
+    </button>
+  </div>
+  <div class="container-fluid mt-3 pl-0">
+    <div class="row">
+      <!-- Left Panel - Snapshots List -->
+      <div class="col-md-3">
+        <div class="">
+          <div>
+            <h5 class="mb-0">Snapshots</h5>
+            <hr>
+          </div>
+          <div class="p-0 snapshot-list">
+            <div id="snapshotsList">
+              <!-- Dynamically populated list -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right Panel - Chart -->
+      <div class="col-md-9">
+        <h5 class="mb-0">Drift Statistics</h5>
+        <hr>
+        <div class="chart-container">
+          <div id="monchart"><img id="monplot" /></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock tabcontents %}
+{% block javascripts %} {{
+super() }}
+<script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='assets/views/genai/prompts_detail.js') }}"></script>
+<script>
+  $(document).ready(function () {
+    // reorder tabs
+    new TabOrder('#myTab', {
+      'prompts-tab': 1,
+    }).apply();
+  });
+</script>
+
+{% endblock javascripts %}

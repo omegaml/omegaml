@@ -4,7 +4,7 @@ import CronView from "../../widgets/cronpick.js";
 $(function () {
   var resultsViewer = null;
   var scheduleViewer = null;
-  const context = window.context;
+  window.context = window.context || {};
   // build experiment data viewer on showing tab
   $("#results-tab").on("shown.bs.tab", function (e) {
     resultsViewer ? resultsViewer.ajax.reload() : null;

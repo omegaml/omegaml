@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     from omegaml.server.restapi.resources import create_app as create_restapi_app
-    from omegaml.server.dashboard.app import omega_bp as dashboard_bp
+    from omegaml.server.dashboard.app import omega_bp, omega_ai_bp
 
     url_prefix = url_prefix[:-1] if url_prefix and url_prefix.endswith('/') else url_prefix or ''
     # local configuration
@@ -58,7 +58,7 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     # see https://stackoverflow.com/a/33285603/890242
     app.url_map.strict_slashes = True
     # assets are served from the blueprint folder
-    app.root_path = dashboard_bp.root_path
+    app.root_path = omega_bp.root_path
     app.static_folder = 'static'
     app.config['ASSETS_ROOT'] = f'{url_prefix}/static/assets'
     # use Flask json encoder to support datetime
@@ -67,7 +67,8 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     # -- https://flask-restx.readthedocs.io/en/latest/swagger.html
     app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
     app.config['CARDS_ENABLED'] = True if os.environ.get('OMEGA_CARDS_ENABLED') in ('1', 'true', 'yes') else False
-    app.register_blueprint(dashboard_bp, url_prefix=url_prefix)
+    app.register_blueprint(omega_bp, url_prefix=url_prefix)
+    app.register_blueprint(omega_ai_bp, url_prefix=url_prefix + '/ai')
     restapi_bp = create_restapi_app(url_prefix=url_prefix)
     app.register_blueprint(restapi_bp, url_prefix=url_prefix)
     js_routes(app)

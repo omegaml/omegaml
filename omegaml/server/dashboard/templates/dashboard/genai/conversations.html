@@ -1,0 +1,526 @@
+{% extends "dashboard/layouts/genai/base.html" %}
+
+{% block stylesheets %}
+<style>
+  .conversation-sidebar {
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    background: white;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .new-chat-btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .conversation-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .conversation-item:hover {
+    background-color: #e9ecef;
+  }
+
+  .conversation-item.active {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .conversation-title {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+
+  .conversation-tags {
+    margin-bottom: 5px;
+  }
+
+  .tag {
+    display: inline-block;
+    background: #6c757d;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+  }
+
+  .conversation-item.active .tag {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .conversation-time {
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  .conversation-item.active .conversation-time {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .tag-input {
+    display: none;
+    margin-top: 5px;
+  }
+
+  .tag-input input {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .add-tag-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 12px;
+    padding: 2px 4px;
+    margin-left: 5px;
+  }
+
+  .conversation-item.active .add-tag-btn {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .remove-tag {
+    margin-left: 3px;
+    cursor: pointer;
+    font-size: 10px;
+  }
+
+  .chat-main {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #6c757d;
+  }
+
+  .filter-tags {
+    margin-bottom: 15px;
+  }
+
+  .filter-tag {
+    background: #e9ecef;
+    color: #495057;
+    border: none;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+  }
+
+  .filter-tag.active {
+    background: #007bff;
+    color: white;
+  }
+
+  .clear-filter {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 11px;
+    text-decoration: underline;
+    margin-left: 10px;
+  }
+
+  .conversation-sidebar {
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .col-md-8,
+  .col-lg-9 {
+    padding-left: 0;
+    padding-right: 0;
+    overflow-x: hidden;
+  }
+
+  #deepchat {
+    width: 100%;
+    height: calc(100vh - 200px);
+    overflow: hidden;
+    margin: 0;
+    background-color: white;
+    ;
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title"></div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="{{ url_for('.index_index') }}"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">{{ segment | title }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>{{ segment | title }} Chats</h5>
+                    {% block segmentheader %}
+                    {% endblock segmentheader %}
+                  </div>
+                </div>
+
+                <div class="container-fluid p-0">
+                  <div class="row no-gutters">
+                    <!-- Simple Conversation Sidebar -->
+                    <div class="col-md-4 col-lg-3">
+                      <div class="conversation-sidebar">
+                        <div class="sidebar-header">
+                          <button class="btn btn-primary new-chat-btn" id="newChatBtn">
+                            <i class="fas fa-plus mr-2"></i>New Chat
+                          </button>
+
+                          <!-- Tag Filters -->
+                          <div class="filter-tags" id="filterTags">
+                            <small class="text-muted d-block mb-2">Filter by tags:</small>
+                            <!-- Dynamic tag filters will appear here -->
+                          </div>
+                        </div>
+
+                        <!-- Conversations List -->
+                        <div id="conversationsList">
+                          <!-- Conversations will be loaded here -->
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Main Chat Area -->
+                    <div class="col-md-8 col-lg-9">
+                      <iframe src="" id="deepchat" scrolling="no"></iframe>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<script>
+  const context = {
+    model: "{{ name }}",
+  }
+
+  class SimpleConversationList {
+    constructor() {
+      this.conversations = [];
+      this.activeConversation = null;
+      this.activeFilter = null;
+      this.init();
+    }
+
+    init() {
+      this.loadConversations();
+    }
+
+    loadConversations() {
+      $.ajax({
+        url: url_for('.index_api_conversations', {
+          name: context.model,
+        }),
+        method: 'GET',
+        dataType: 'json',
+        success: (data) => {
+          this.conversations = (data.conversations.map(conv => {
+            return {
+              ...conv,
+              timestamp: new Date(conv.timestamp)
+            };
+          }) || []).sort((a, b) => b.timestamp - a.timestamp);
+          this.render();
+          this.bindEvents();
+        },
+        error: (err) => {
+          console.error('Error loading conversations:', err);
+          this.loadSampleData(); // Load sample data on error
+        }
+      });
+    }
+
+    loadSampleData() {
+      this.conversations = [
+        {
+          id: '1',
+          title: 'JavaScript Help',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30),
+          tags: ['javascript', 'help', 'coding']
+        },
+        {
+          id: '2',
+          title: 'UI Design Discussion',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+          tags: ['design', 'ui', 'feedback']
+        },
+        {
+          id: '3',
+          title: 'Database Questions',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
+          tags: ['database', 'sql', 'help']
+        },
+        {
+          id: '4',
+          title: 'Project Planning',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
+          tags: ['planning', 'project', 'work']
+        },
+        {
+          id: '5',
+          title: 'Bug Troubleshooting',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
+          tags: ['bug', 'troubleshooting', 'urgent']
+        }
+      ];
+    }
+
+    bindEvents() {
+      // New chat button
+      $('#newChatBtn').on('click', () => {
+        this.createNewConversation();
+      });
+
+      // Conversation selection
+      $(document).on('click', '.conversation-item', (e) => {
+        if ($(e.target).hasClass('add-tag-btn') || $(e.target).hasClass('remove-tag')) {
+          return;
+        }
+        const id = $(e.currentTarget).data('id');
+        this.selectConversation(id);
+      });
+
+      // Add tag button
+      $(document).on('click', '.add-tag-btn', (e) => {
+        e.stopPropagation();
+        const conversationItem = $(e.target).closest('.conversation-item');
+        const tagInput = conversationItem.find('.tag-input');
+        tagInput.toggle();
+        if (tagInput.is(':visible')) {
+          tagInput.find('input').focus();
+        }
+      });
+
+      // Add tag on enter
+      $(document).on('keypress', '.tag-input input', (e) => {
+        if (e.which === 13) {
+          const input = $(e.target);
+          const tag = input.val().trim().toLowerCase();
+          if (tag) {
+            const conversationId = input.closest('.conversation-item').data('id');
+            this.addTag(conversationId, tag);
+            input.val('');
+            input.closest('.tag-input').hide();
+          }
+        }
+      });
+
+      // Remove tag
+      $(document).on('click', '.remove-tag', (e) => {
+        e.stopPropagation();
+        const tag = $(e.target).data('tag');
+        const conversationId = $(e.target).closest('.conversation-item').data('id');
+        this.removeTag(conversationId, tag);
+      });
+
+      // Filter by tag
+      $(document).on('click', '.filter-tag', (e) => {
+        const tag = $(e.target).data('tag');
+        if (this.activeFilter === tag) {
+          this.activeFilter = null;
+        } else {
+          this.activeFilter = tag;
+        }
+        this.render();
+      });
+
+      // Clear filter
+      $(document).on('click', '.clear-filter', () => {
+        this.activeFilter = null;
+        this.render();
+      });
+    }
+
+    render() {
+      this.renderConversations();
+      this.renderTagFilters();
+    }
+
+    renderConversations() {
+      const filteredConversations = this.activeFilter
+        ? this.conversations.filter(conv => conv.tags.includes(this.activeFilter))
+        : this.conversations;
+
+      const html = filteredConversations.map(conv => {
+        const isActive = this.activeConversation === conv.id;
+        const timeAgo = this.formatTimeAgo(conv.timestamp);
+
+        const tagsHtml = conv.tags.map(tag =>
+          `<span class="tag">${tag} <span class="remove-tag" data-tag="${tag}">×</span></span>`
+        ).join('');
+
+        return `
+                        <div class="conversation-item ${isActive ? 'active' : ''}" data-id="${conv.id}">
+                            <div class="conversation-title">${conv.title}</div>
+                            <!--
+                            <div class="conversation-tags">
+                                ${tagsHtml}
+                                <button class="add-tag-btn" title="Add tag">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="tag-input">
+                                <input type="text" class="form-control form-control-sm" placeholder="Add tag...">
+                            </div>
+                            -->
+                            <div class="conversation-time">${timeAgo}</div>
+                        </div>
+                    `;
+      }).join('');
+
+      $('#conversationsList').html(html);
+    }
+
+    renderTagFilters() {
+      const allTags = [...new Set(this.conversations.flatMap(conv => conv.tags))].sort();
+
+      if (allTags.length === 0) {
+        $('#filterTags').hide();
+        return;
+      }
+
+      $('#filterTags').show();
+
+      const filtersHtml = allTags.map(tag =>
+        `<button class="filter-tag ${this.activeFilter === tag ? 'active' : ''}" data-tag="${tag}">${tag}</button>`
+      ).join('');
+
+      const clearButton = this.activeFilter ? '<button class="clear-filter">Clear filter</button>' : '';
+
+      $('#filterTags').html(`
+                    <small class="text-muted d-block mb-2">Filter by tags:</small>
+                    ${filtersHtml}
+                    ${clearButton}
+                `);
+    }
+
+    formatTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days === 1) return 'Yesterday';
+      return `${days}d ago`;
+    }
+
+    selectConversation(id) {
+      this.activeConversation = id;
+      this.render();
+      $('#deepchat').attr('src', url_for('.index_modelchat', {
+        name: context.model,
+        conversation_id: id,
+      }));
+      console.log('Selected conversation:', id);
+      // Integrate with your DeepChat here
+    }
+
+    addTag(conversationId, tag) {
+      const conversation = this.conversations.find(c => c.id === conversationId);
+      if (conversation && !conversation.tags.includes(tag)) {
+        conversation.tags.push(tag);
+        this.render();
+      }
+    }
+
+    removeTag(conversationId, tag) {
+      const conversation = this.conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        conversation.tags = conversation.tags.filter(t => t !== tag);
+        this.render();
+      }
+    }
+
+    createNewConversation() {
+      const newId = crypto.randomUUID();
+      this.selectConversation(newId);
+    }
+
+    // Public methods for external integration
+    updateTitle(conversationId, title) {
+      const conversation = this.conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        conversation.title = title;
+        this.render();
+      }
+    }
+
+    addTagToConversation(conversationId, tag) {
+      this.addTag(conversationId, tag);
+    }
+
+    getActiveConversation() {
+      return this.activeConversation;
+    }
+  }
+
+  // Initialize
+  $(document).ready(() => {
+    window.conversationList = new SimpleConversationList();
+    window.conversationList.createNewConversation();
+    setInterval(() => {
+      window.conversationList.loadConversations();
+    }, 5000);
+  });
+</script>
+{% endblock javascripts %}
