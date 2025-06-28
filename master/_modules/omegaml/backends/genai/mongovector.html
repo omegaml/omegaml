@@ -85,110 +85,136 @@
            <div itemprop="articleBody">
              
   <h1>Source code for omegaml.backends.genai.mongovector</h1><div class="highlight"><pre>
-<span></span><span class="linenos"> 1</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.genai.index</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorStoreBackend</span>
-<span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">mongo_compatible</span>
-<span class="linenos"> 3</span>
-<span class="linenos"> 4</span>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.genai.index</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorStoreBackend</span>
+<span class="linenos">  2</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">mongo_compatible</span>
+<span class="linenos">  3</span>
+<span class="linenos">  4</span>
 <div class="viewcode-block" id="MongoDBVectorStore">
 <a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore">[docs]</a>
-<span class="linenos"> 5</span><span class="k">class</span><span class="w"> </span><span class="nc">MongoDBVectorStore</span><span class="p">(</span><span class="n">VectorStoreBackend</span><span class="p">):</span>
-<span class="linenos"> 6</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 7</span><span class="sd">    MongoDB vector store for storing documents and their embeddings.</span>
-<span class="linenos"> 8</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos"> 9</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;vector.conx&#39;</span>
-<span class="linenos">10</span>    <span class="n">PROMOTE</span> <span class="o">=</span> <span class="s1">&#39;metadata&#39;</span>
-<span class="linenos">11</span>
+<span class="linenos">  5</span><span class="k">class</span><span class="w"> </span><span class="nc">MongoDBVectorStore</span><span class="p">(</span><span class="n">VectorStoreBackend</span><span class="p">):</span>
+<span class="linenos">  6</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">  7</span><span class="sd">    MongoDB vector store for storing documents and their embeddings.</span>
+<span class="linenos">  8</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">  9</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;vector.conx&#39;</span>
+<span class="linenos"> 10</span>    <span class="n">PROMOTE</span> <span class="o">=</span> <span class="s1">&#39;metadata&#39;</span>
+<span class="linenos"> 11</span>
 <div class="viewcode-block" id="MongoDBVectorStore.supports">
 <a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.supports">[docs]</a>
-<span class="linenos">12</span>    <span class="nd">@classmethod</span>
-<span class="linenos">13</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">14</span>        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;vector://&#39;</span><span class="p">)</span>  <span class="c1"># Always supports since it&#39;s MongoDB</span></div>
+<span class="linenos"> 12</span>    <span class="nd">@classmethod</span>
+<span class="linenos"> 13</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 14</span>        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;vector://&#39;</span><span class="p">)</span>  <span class="c1"># Always supports since it&#39;s MongoDB</span></div>
 
-<span class="linenos">15</span>
-<span class="linenos">16</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="linenos">17</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;vecdb_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">_docs&#39;</span><span class="p">)</span>
-<span class="linenos">18</span>
-<span class="linenos">19</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="linenos">20</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;vecdb_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">_chunks&#39;</span><span class="p">)</span>
-<span class="linenos">21</span>
-<span class="linenos">22</span>    <span class="k">def</span><span class="w"> </span><span class="nf">insert_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">23</span>        <span class="n">attributes</span> <span class="o">=</span> <span class="n">attributes</span> <span class="ow">or</span> <span class="p">{}</span>
-<span class="linenos">24</span>        <span class="n">source</span> <span class="o">=</span> <span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-<span class="linenos">25</span>
-<span class="linenos">26</span>        <span class="c1"># Insert the document metadata</span>
-<span class="linenos">27</span>        <span class="n">doc_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span>
-<span class="linenos">28</span>            <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
-<span class="linenos">29</span>            <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="n">attributes</span><span class="p">,</span>
-<span class="linenos">30</span>        <span class="p">})</span><span class="o">.</span><span class="n">inserted_id</span>
-<span class="linenos">31</span>
-<span class="linenos">32</span>        <span class="c1"># Insert the chunks and their embeddings</span>
-<span class="linenos">33</span>        <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">):</span>
-<span class="linenos">34</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span>
-<span class="linenos">35</span>                <span class="s1">&#39;document_id&#39;</span><span class="p">:</span> <span class="n">doc_id</span><span class="p">,</span>
-<span class="linenos">36</span>                <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
-<span class="linenos">37</span>                <span class="s1">&#39;embedding&#39;</span><span class="p">:</span> <span class="n">mongo_compatible</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
-<span class="linenos">38</span>            <span class="p">})</span>
-<span class="linenos">39</span>
-<span class="linenos">40</span>    <span class="k">def</span><span class="w"> </span><span class="nf">find_similar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">41</span>        <span class="c1"># Create a pipeline to calculate distances</span>
-<span class="linenos">42</span>        <span class="n">obj</span> <span class="o">=</span> <span class="n">mongo_compatible</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-<span class="linenos">43</span>        <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
-<span class="linenos">44</span>            <span class="p">{</span>
-<span class="linenos">45</span>                <span class="s1">&#39;$lookup&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">46</span>                    <span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-<span class="linenos">47</span>                    <span class="s1">&#39;localField&#39;</span><span class="p">:</span> <span class="s1">&#39;document_id&#39;</span><span class="p">,</span>
-<span class="linenos">48</span>                    <span class="s1">&#39;foreignField&#39;</span><span class="p">:</span> <span class="s1">&#39;_id&#39;</span><span class="p">,</span>
-<span class="linenos">49</span>                    <span class="s1">&#39;as&#39;</span><span class="p">:</span> <span class="s1">&#39;document&#39;</span>
-<span class="linenos">50</span>                <span class="p">}</span>
-<span class="linenos">51</span>            <span class="p">},</span>
-<span class="linenos">52</span>            <span class="p">{</span>
-<span class="linenos">53</span>                <span class="s1">&#39;$unwind&#39;</span><span class="p">:</span> <span class="s1">&#39;$document&#39;</span>
-<span class="linenos">54</span>            <span class="p">},</span>
-<span class="linenos">55</span>            <span class="p">{</span>
-<span class="linenos">56</span>                <span class="s1">&#39;$project&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">57</span>                    <span class="s1">&#39;document_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-<span class="linenos">58</span>                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-<span class="linenos">59</span>                    <span class="s1">&#39;embedding&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-<span class="linenos">60</span>                    <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;$document.source&#39;</span><span class="p">,</span>
-<span class="linenos">61</span>                    <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="s1">&#39;$document.attributes&#39;</span><span class="p">,</span>
-<span class="linenos">62</span>                    <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">63</span>                        <span class="s1">&#39;$sqrt&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">64</span>                            <span class="s1">&#39;$sum&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">65</span>                                <span class="s1">&#39;$map&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">66</span>                                    <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">67</span>                                        <span class="s1">&#39;$range&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)],</span>
-<span class="linenos">68</span>                                    <span class="p">},</span>
-<span class="linenos">69</span>                                    <span class="s1">&#39;as&#39;</span><span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
-<span class="linenos">70</span>                                    <span class="s1">&#39;in&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">71</span>                                        <span class="s1">&#39;$pow&#39;</span><span class="p">:</span> <span class="p">[</span>
-<span class="linenos">72</span>                                            <span class="p">{</span><span class="s1">&#39;$subtract&#39;</span><span class="p">:</span> <span class="p">[</span>
-<span class="linenos">73</span>                                                <span class="p">{</span><span class="s1">&#39;$arrayElemAt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;$embedding&#39;</span><span class="p">,</span> <span class="s1">&#39;$$i&#39;</span><span class="p">]},</span>
-<span class="linenos">74</span>                                                <span class="p">{</span><span class="s1">&#39;$arrayElemAt&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;$literal&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">},</span> <span class="s1">&#39;$$i&#39;</span><span class="p">]}</span>
-<span class="linenos">75</span>                                            <span class="p">]},</span>
-<span class="linenos">76</span>                                            <span class="mi">2</span>
-<span class="linenos">77</span>                                        <span class="p">]</span>
-<span class="linenos">78</span>                                    <span class="p">}</span>
-<span class="linenos">79</span>                                <span class="p">}</span>
-<span class="linenos">80</span>                            <span class="p">}</span>
-<span class="linenos">81</span>                        <span class="p">}</span>
-<span class="linenos">82</span>                    <span class="p">},</span>
-<span class="linenos">83</span>                <span class="p">}</span>
-<span class="linenos">84</span>            <span class="p">},</span>
-<span class="linenos">85</span>            <span class="p">{</span>
-<span class="linenos">86</span>                <span class="s1">&#39;$sort&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-<span class="linenos">87</span>            <span class="p">},</span>
-<span class="linenos">88</span>            <span class="p">{</span>
-<span class="linenos">89</span>                <span class="s1">&#39;$limit&#39;</span><span class="p">:</span> <span class="n">top</span>
-<span class="linenos">90</span>            <span class="p">}</span>
-<span class="linenos">91</span>        <span class="p">]</span>
-<span class="linenos">92</span>        <span class="c1"># Execute the aggregation pipeline</span>
-<span class="linenos">93</span>        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="n">top</span><span class="p">]</span>
-<span class="linenos">94</span>        <span class="k">return</span> <span class="n">results</span>
-<span class="linenos">95</span>
-<span class="linenos">96</span>    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">97</span>        <span class="c1"># Clear all stored documents and chunks</span>
-<span class="linenos">98</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">delete_many</span><span class="p">({})</span>
-<span class="linenos">99</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">delete_many</span><span class="p">({})</span></div>
+<span class="linenos"> 15</span>
+<span class="linenos"> 16</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos"> 17</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;vecdb_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">_docs&#39;</span><span class="p">)</span>
+<span class="linenos"> 18</span>
+<span class="linenos"> 19</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos"> 20</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;vecdb_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">_chunks&#39;</span><span class="p">)</span>
+<span class="linenos"> 21</span>
+<div class="viewcode-block" id="MongoDBVectorStore.list">
+<a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.list">[docs]</a>
+<span class="linenos"> 22</span>    <span class="k">def</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="linenos"> 23</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 24</span><span class="sd">        List all documents inside a collection.</span>
+<span class="linenos"> 25</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 26</span>        <span class="n">docs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">({},</span>
+<span class="linenos"> 27</span>                                          <span class="p">{</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="linenos"> 28</span>        <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s1">&#39;_id&#39;</span><span class="p">]),</span>
+<span class="linenos"> 29</span>                 <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+<span class="linenos"> 30</span>                 <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attributes&#39;</span><span class="p">,</span> <span class="p">{})}</span>
+<span class="linenos"> 31</span>                <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">]</span></div>
+
+<span class="linenos"> 32</span>
+<span class="linenos"> 33</span>    <span class="k">def</span><span class="w"> </span><span class="nf">insert_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 34</span>        <span class="n">attributes</span> <span class="o">=</span> <span class="n">attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos"> 35</span>        <span class="n">source</span> <span class="o">=</span> <span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos"> 36</span>
+<span class="linenos"> 37</span>        <span class="c1"># Insert the document metadata</span>
+<span class="linenos"> 38</span>        <span class="n">doc_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span>
+<span class="linenos"> 39</span>            <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+<span class="linenos"> 40</span>            <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="n">attributes</span><span class="p">,</span>
+<span class="linenos"> 41</span>        <span class="p">})</span><span class="o">.</span><span class="n">inserted_id</span>
+<span class="linenos"> 42</span>
+<span class="linenos"> 43</span>        <span class="c1"># Insert the chunks and their embeddings</span>
+<span class="linenos"> 44</span>        <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">):</span>
+<span class="linenos"> 45</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span>
+<span class="linenos"> 46</span>                <span class="s1">&#39;document_id&#39;</span><span class="p">:</span> <span class="n">doc_id</span><span class="p">,</span>
+<span class="linenos"> 47</span>                <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+<span class="linenos"> 48</span>                <span class="s1">&#39;embedding&#39;</span><span class="p">:</span> <span class="n">mongo_compatible</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
+<span class="linenos"> 49</span>            <span class="p">})</span>
+<span class="linenos"> 50</span>
+<span class="linenos"> 51</span>    <span class="k">def</span><span class="w"> </span><span class="nf">find_similar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 52</span>        <span class="c1"># Create a pipeline to calculate distances</span>
+<span class="linenos"> 53</span>        <span class="n">obj</span> <span class="o">=</span> <span class="n">mongo_compatible</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="linenos"> 54</span>        <span class="n">pipeline</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos"> 55</span>            <span class="p">{</span>
+<span class="linenos"> 56</span>                <span class="s1">&#39;$lookup&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 57</span>                    <span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<span class="linenos"> 58</span>                    <span class="s1">&#39;localField&#39;</span><span class="p">:</span> <span class="s1">&#39;document_id&#39;</span><span class="p">,</span>
+<span class="linenos"> 59</span>                    <span class="s1">&#39;foreignField&#39;</span><span class="p">:</span> <span class="s1">&#39;_id&#39;</span><span class="p">,</span>
+<span class="linenos"> 60</span>                    <span class="s1">&#39;as&#39;</span><span class="p">:</span> <span class="s1">&#39;document&#39;</span>
+<span class="linenos"> 61</span>                <span class="p">}</span>
+<span class="linenos"> 62</span>            <span class="p">},</span>
+<span class="linenos"> 63</span>            <span class="p">{</span>
+<span class="linenos"> 64</span>                <span class="s1">&#39;$unwind&#39;</span><span class="p">:</span> <span class="s1">&#39;$document&#39;</span>
+<span class="linenos"> 65</span>            <span class="p">},</span>
+<span class="linenos"> 66</span>            <span class="p">{</span>
+<span class="linenos"> 67</span>                <span class="s1">&#39;$project&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 68</span>                    <span class="s1">&#39;document_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos"> 69</span>                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos"> 70</span>                    <span class="s1">&#39;embedding&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos"> 71</span>                    <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;$document.source&#39;</span><span class="p">,</span>
+<span class="linenos"> 72</span>                    <span class="s1">&#39;attributes&#39;</span><span class="p">:</span> <span class="s1">&#39;$document.attributes&#39;</span><span class="p">,</span>
+<span class="linenos"> 73</span>                    <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 74</span>                        <span class="s1">&#39;$sqrt&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 75</span>                            <span class="s1">&#39;$sum&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 76</span>                                <span class="s1">&#39;$map&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 77</span>                                    <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 78</span>                                        <span class="s1">&#39;$range&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)],</span>
+<span class="linenos"> 79</span>                                    <span class="p">},</span>
+<span class="linenos"> 80</span>                                    <span class="s1">&#39;as&#39;</span><span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
+<span class="linenos"> 81</span>                                    <span class="s1">&#39;in&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 82</span>                                        <span class="s1">&#39;$pow&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos"> 83</span>                                            <span class="p">{</span><span class="s1">&#39;$subtract&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos"> 84</span>                                                <span class="p">{</span><span class="s1">&#39;$arrayElemAt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;$embedding&#39;</span><span class="p">,</span> <span class="s1">&#39;$$i&#39;</span><span class="p">]},</span>
+<span class="linenos"> 85</span>                                                <span class="p">{</span><span class="s1">&#39;$arrayElemAt&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;$literal&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">},</span> <span class="s1">&#39;$$i&#39;</span><span class="p">]}</span>
+<span class="linenos"> 86</span>                                            <span class="p">]},</span>
+<span class="linenos"> 87</span>                                            <span class="mi">2</span>
+<span class="linenos"> 88</span>                                        <span class="p">]</span>
+<span class="linenos"> 89</span>                                    <span class="p">}</span>
+<span class="linenos"> 90</span>                                <span class="p">}</span>
+<span class="linenos"> 91</span>                            <span class="p">}</span>
+<span class="linenos"> 92</span>                        <span class="p">}</span>
+<span class="linenos"> 93</span>                    <span class="p">},</span>
+<span class="linenos"> 94</span>                <span class="p">}</span>
+<span class="linenos"> 95</span>            <span class="p">},</span>
+<span class="linenos"> 96</span>            <span class="p">{</span>
+<span class="linenos"> 97</span>                <span class="s1">&#39;$sort&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="linenos"> 98</span>            <span class="p">},</span>
+<span class="linenos"> 99</span>            <span class="p">{</span>
+<span class="linenos">100</span>                <span class="s1">&#39;$limit&#39;</span><span class="p">:</span> <span class="n">top</span>
+<span class="linenos">101</span>            <span class="p">}</span>
+<span class="linenos">102</span>        <span class="p">]</span>
+<span class="linenos">103</span>        <span class="c1"># Execute the aggregation pipeline</span>
+<span class="linenos">104</span>        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">pipeline</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="n">top</span><span class="p">]</span>
+<span class="linenos">105</span>        <span class="k">return</span> <span class="n">results</span>
+<span class="linenos">106</span>
+<span class="linenos">107</span>    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">108</span>        <span class="c1"># Clear all stored documents and chunks</span>
+<span class="linenos">109</span>        <span class="nb">filter</span> <span class="o">=</span> <span class="nb">filter</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="linenos">110</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;id&#39;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+<span class="linenos">111</span>            <span class="nb">filter</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)})</span>
+<span class="linenos">112</span>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">113</span>            <span class="nb">filter</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">})</span>
+<span class="linenos">114</span>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+<span class="linenos">115</span>            <span class="nb">filter</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)})</span>
+<span class="linenos">116</span>        <span class="k">elif</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">117</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Object must be a dict with &#39;id&#39;, or a string matching source&quot;</span><span class="p">)</span>
+<span class="linenos">118</span>        <span class="n">doc_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">filter</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="linenos">119</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_documents</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">delete_many</span><span class="p">(</span><span class="nb">filter</span><span class="p">)</span>
+<span class="linenos">120</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_chunks</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">delete_many</span><span class="p">({</span>
+<span class="linenos">121</span>            <span class="s1">&#39;document_id&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;$in&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">doc</span><span class="p">[</span><span class="s1">&#39;_id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">doc_ids</span><span class="p">]}</span>
+<span class="linenos">122</span>        <span class="p">})</span></div>
 
 </pre></div>
 
