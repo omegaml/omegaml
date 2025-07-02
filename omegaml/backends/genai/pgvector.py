@@ -1,10 +1,11 @@
 import json
 import re
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Integer, String, text, ForeignKey, select, Index
+from sqlalchemy import Column, Integer, String, text, ForeignKey, select, Index, LargeBinary
 from sqlalchemy.engine import RowMapping
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session, relationship, declarative_base
 
+from omegaml.backends.genai.dbmigrate import DatabaseMigrator
 from omegaml.backends.genai.index import VectorStoreBackend
 
 
@@ -19,7 +20,7 @@ class PGVectorBackend(VectorStoreBackend):
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
         return _is_valid_url(obj)  # or data_store.exists(name)
 
-    def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
+    def insert_chunks(self, chunks, name, embeddings, attributes, data=None, **kwargs):
         collection, vector_size, model = self._get_collection(name)
         Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
@@ -27,7 +28,7 @@ class PGVectorBackend(VectorStoreBackend):
             source = (attributes or {}).pop('source', None)
             source = str(source) if source else ''
             attributes = json.dumps(attributes or {})
-            doc = Document(source=source, attributes=attributes)
+            doc = Document(source=source, attributes=attributes, data=data)
             session.add(doc)
             for text, embedding in zip(chunks, embeddings):
                 chunk = Chunk(document=doc, text=text, embedding=embedding)
@@ -117,7 +118,6 @@ class PGVectorBackend(VectorStoreBackend):
             session.commit()
 
     def _create_collection(self, name, collection, vector_size, **kwargs):
-        from sqlalchemy.orm import declarative_base
         Base = declarative_base()
         collection = collection or self._default_collection(name)
         docs_table = f'{collection}_docs'
@@ -128,6 +128,7 @@ class PGVectorBackend(VectorStoreBackend):
             id = Column(Integer, primary_key=True)
             source = Column(String)
             attributes = Column(String)
+            data = Column('data', String().with_variant(LargeBinary, 'postgresql'))
 
         class Chunk(Base):
             __tablename__ = chunks_table
@@ -143,6 +144,9 @@ class PGVectorBackend(VectorStoreBackend):
             session.commit()
             Base.metadata.create_all(session.get_bind())
             session.commit()
+            migrator = DatabaseMigrator(session.connection())
+            with migrator(Document) as m:
+                m.run_migration()
         with self._get_connection(name, session=True) as session:
             try:
                 index = Index(
