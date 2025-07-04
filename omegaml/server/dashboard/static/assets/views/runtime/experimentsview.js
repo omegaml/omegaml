@@ -31,6 +31,7 @@ import Plotly from "../../plugins/plotly/plotly.module.js";
 import BaseView from "../../widgets/baseview.js";
 import DateRangeView from "../../widgets/sincepick.js";
 import PaginatedRunGridView from "../../widgets/pagedcards.js";
+import ExecutionView from "./experiment_detail.js";
 
 class ExperimentView extends BaseView {
   constructor(options) {
@@ -38,7 +39,7 @@ class ExperimentView extends BaseView {
       events: {},
       experiments: [],
       templateUrl: url_for("static", {
-        filename: "/assets/views/repository/experimentsview.html",
+        filename: "/assets/views/runtime/experimentsview.html",
       }),
       el: "#experimentsView",
     });
@@ -49,6 +50,7 @@ class ExperimentView extends BaseView {
       "click #details": "onDetailsClick",
       "click #plotchart": "onPlotChartClick",
       "click #multicharts": "onMultiChartsClick",
+      "click #expviewer a.view.detail": "onRunDetailsClick",
     });
     super(options);
   }
@@ -69,6 +71,34 @@ class ExperimentView extends BaseView {
       });
 
       this.showTable("Experiment", true);
+      // populate events dropdown
+      const table = $("#expviewer").DataTable({ retrieve: true });
+      // initialize event dropdown
+      const events = [
+        "start",
+        "stop",
+        "X",
+        "Y",
+        "artifact",
+        "data",
+        "complete",
+        "conversation",
+        "task_call",
+        "task_success",
+        "task_failure",
+      ];
+      const eventDropdown = $("#dropDownEvents");
+      eventDropdown.empty();
+      _.forEach(events, (event) => {
+        const eventItem = `<a class="dropdown-item event" href="#" data-value="${event}">${event}</a>`;
+        eventDropdown.append(eventItem);
+      });
+      eventDropdown.on("click", ".event", (e) => {
+        const eventValue = $(e.currentTarget).data("value");
+        this.options.eventsFilter = [eventValue];
+        const exp = $("#dropdownExperiments").text();
+        this.showTable(exp);
+      });
     });
   }
 
@@ -83,25 +113,39 @@ class ExperimentView extends BaseView {
   }
 
   initializeTable(headers, exp, since, end, runs) {
-    const columns = headers.map((header) => ({ data: header, title: header }));
+    const columns = headers.map((header) => ({
+      data: header,
+      title: header,
+      className: "dt-left", // left justify
+      render: function (data, type, row) {
+        if (type === "display" && header === "run") {
+          return `<a href="#" class="view detail" data-value="${row.run}"><i class="fa fa-eye"></i></a>${data}`;
+        }
+        return data;
+      },
+    }));
     const summary = runs ? 0 : 1;
+    const eventsFilter = this.options.eventsFilter || [];
 
     $("#expviewer").DataTable({
       destroy: true,
       processing: true,
       serverSide: true,
-      responsive: true,
+      responsive: false,
       paging: true,
       select: true,
-      pageLength: 50,
+      pageLength: 10,
+      scrollX: true,
       layout: {
+        topStart: "pageLength",
         topEnd: "paging",
+        bottomStart: "info",
+        bottomEnd: "paging",
       },
       ajax: {
         url: `${url_for("omega-server.tracking_api_experiment_data", {
           name: exp,
-        })}?&since=${since}&end=${end}&summary=${summary}&run=${runs}`,
-        type: "GET",
+        })}?&since=${since}&end=${end}&summary=${summary}&run=${runs}&events=${eventsFilter}`,
       },
       columns: columns,
     });
@@ -130,7 +174,6 @@ class ExperimentView extends BaseView {
       url: `${url_for("omega-server.tracking_api_experiment_data", {
         name: exp,
       })}?initialize=1&summary=${summary}&since=${since}&end=${end}`,
-      type: "GET",
       success: (json) => {
         $("#expviewer").DataTable().destroy();
         const headers = json.columns || Object.keys(json.data[0]);
@@ -198,6 +241,19 @@ class ExperimentView extends BaseView {
     const since = this.dateRangeView.model.get("startDate");
     const end = this.dateRangeView.model.get("endDate");
     this.plotChart(exp, since, end, true);
+  }
+
+  onRunDetailsClick(event) {
+    const exp = $("#dropdownExperiments").text();
+    const run = $(event.currentTarget).data("value");
+    const executionView = new ExecutionView({
+      el: "#trace-modal .modal-body",
+      context: { experiment: exp, run: run },
+    });
+    executionView.render().then(() => {
+      $("#trace-modal .modal-title").text(`Run Details: ${exp} ${run}`);
+      $("#trace-modal").modal("show");
+    });
   }
 }
 

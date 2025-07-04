@@ -1,8 +1,9 @@
 import logging
+from time import sleep
+
 import numpy as np
 import pandas as pd
 from celery.states import UNREADY_STATES, FAILURE
-from time import sleep
 
 from minibatch.tests.util import LocalExecutor
 from omegaml.util import ensure_json_serializable
@@ -130,6 +131,7 @@ class GenericModelResource(object):
                 logger.debug("complete:stream_result getting stream")
                 streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
                                                  executor=LocalExecutor(),
+                                                 interval=0.01,
                                                  sink=buffer)
                 emitter = streaming.make(lambda window: window.data)
                 has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0

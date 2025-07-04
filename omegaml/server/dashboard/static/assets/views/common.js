@@ -61,6 +61,6 @@ window.alert = (message, title = "", status = "info") => {
   new Notify({
     status,
     title,
-    text: message,
+    text: `${message}`,
   });
 };
