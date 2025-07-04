@@ -6,14 +6,14 @@ from omegaml.server.restapi.resources import omega_bp
 
 
 def create_app(*args, **kwargs):
-    from omegaml.server.restapi.util import JSONEncoder
+    from omegaml.server.restapi.util import AwareJSONEncoder
 
     app = Flask(__name__)
     # ensure slashes in URIs are matched as specified
     # see https://stackoverflow.com/a/33285603/890242
     app.url_map.strict_slashes = True
     # use Flask json encoder to support datetime
-    app.config['RESTX_JSON'] = {'cls': JSONEncoder}
+    app.config['RESTX_JSON'] = {'cls': AwareJSONEncoder}
     # disable 404 help as it interferes with our api.errorhandler
     app.config['RESTX_ERROR_404_HELP'] = False
 

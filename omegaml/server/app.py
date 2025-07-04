@@ -13,8 +13,8 @@ from matplotlib import pyplot as plt
 
 from omegaml.server.config import CONFIG_MAP
 from omegaml.server.logutil import configure_logging, logutil_flask
-from omegaml.server.restapi.util import JSONEncoder
-from omegaml.server.util import js_routes
+from omegaml.server.restapi.util import AwareJSONEncoder
+from omegaml.server.util import js_routes, setup_flask_json_encoding
 from omegaml.store import OmegaStore
 from omegaml.util import json_dumps_np
 
@@ -62,7 +62,8 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     app.static_folder = 'static'
     app.config['ASSETS_ROOT'] = f'{url_prefix}/static/assets'
     # use Flask json encoder to support datetime
-    app.config['RESTX_JSON'] = {'cls': JSONEncoder}
+    app.config['RESTX_JSON'] = {'cls': AwareJSONEncoder}
+    setup_flask_json_encoding(app, AwareJSONEncoder)
     # configure swagger ui (flask-restx)
     # -- https://flask-restx.readthedocs.io/en/latest/swagger.html
     app.config['SWAGGER_UI_DOC_EXPANSION'] = 'list'
