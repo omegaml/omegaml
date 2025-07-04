@@ -429,7 +429,9 @@ def add_api_endpoints(api):
 
     @api.route('/api/v2/ai/<path:model_id>/<string:action>', methods=['POST', 'PUT'])
     @api.route('/api/v2/ai/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
-    @api.route('/api/v2/openai/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
+    @api.route('/api/openai/v1/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
+               methods=['PUT', 'POST'])
+    @api.route('/api/openai/v1/embeddings', defaults={'action': 'embeddings', 'model_id': '_query_'},
                methods=['PUT', 'POST'])
     class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'

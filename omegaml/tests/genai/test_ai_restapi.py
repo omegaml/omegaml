@@ -1,6 +1,7 @@
 import json
 import unittest
 import warnings
+
 from omegaml import Omega
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModelHandler
 from omegaml.backends.genai.textmodel import TextModelBackend
@@ -26,7 +27,8 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
     def _headers(self):
         return {}
 
-    def test_completion(self):
+    def test_model_completion(self):
+        """ Test the /v1/model/complete API endpoint."""
         om = self.om
 
         # test save and restore
@@ -79,6 +81,32 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
                          {'model': 'mymodel',
                           'result': {'content': 'hello', 'delta': 'o', 'model': 'mymodel'},
                           'resource_uri': 'mymodel'})
+
+    def test_model_embedding(self):
+        """ Test the /v1/model/embed API endpoint."""
+        om = self.om
+
+        # test save and restore
+        class MyEmbeddingModel(GenAIModelHandler):
+            def embed(self, documents, **kwargs):
+                return {
+                    'model': 'mymodel',
+                    'embeddings': [[1.0] * 10] * len(documents),
+                }
+
+        self.om.models.put(MyEmbeddingModel, 'mymodel')
+        # get a single response
+        resp = self.client.put('/api/v1/model/mymodel/embed', json={
+            "documents": ["hello", "world"],
+        }, auth=self.auth, headers=self._headers)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json, {'model': 'mymodel',
+                                     'result': {
+                                         'model': 'mymodel',
+                                         'embeddings': [[1.0] * 10] * 2,
+                                     },
+                                     'resource_uri': 'mymodel'})
 
 
 if __name__ == '__main__':

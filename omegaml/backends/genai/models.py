@@ -1,5 +1,6 @@
-from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 from types import FunctionType
+
+from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 
 
 class GenAIBaseBackend(VirtualObjectBackend):
@@ -75,7 +76,22 @@ class GenAIBaseBackend(VirtualObjectBackend):
         model = self.get(modelname)
         model.load('embed')
         data = self._resolve_input_data('embed', Xname, **kwargs)
-        return model.embed(data)
+        if isinstance(data, str):
+            # a single document
+            documents = [data]
+            dimensions = None  # default to None, let the model decide
+        elif isinstance(data, list):
+            # a list of documents
+            data = data[0] if isinstance(data, list) and len(data) == 1 else data
+            documents = data.get('documents', data) if isinstance(data, dict) else data
+            dimensions = data.get('dimensions', None) if isinstance(data, dict) else None
+        elif isinstance(data, dict):
+            # a dict with documents, e.g. {'documents': ['doc1', 'doc2']}
+            # -- 'input' is the openai format
+            # -- 'documents' is the omegaml format
+            documents = data.get('documents', []) or data.get('input', [])
+            dimensions = data.get('dimensions', None)
+        return model.embed(documents, dimensions=dimensions)
 
     def predict(self, *args, **kwargs):
         raise NotImplementedError('A GenAIModel does not support prediction, use complete or generate')

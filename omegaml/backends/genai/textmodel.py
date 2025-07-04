@@ -286,11 +286,12 @@ class TextModel(GenAIModel):
     def load(self, method):
         pass
 
-    def embed(self, documents, dimensions=None, **kwargs):
+    def embed(self, documents, dimensions=None, raw=False, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
-        embeddings = self.provider.embed(documents, dimensions=dimensions, model=self.model,
-                                         **kwargs)
-        return embeddings
+        response = self.provider.embed(documents, dimensions=dimensions, model=self.model,
+                                       **kwargs)
+        transformed = (d['embedding'] for d in response['data'])
+        return response if raw else list(transformed)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
                  chat=False, stream=False, use_tools=True, **kwargs):
@@ -758,13 +759,13 @@ class OpenAIProvider(Provider):
 
     def embed(self, documents, dimensions=None, model=None, **kwargs):
         documents = ensure_list(documents)
-        embeddings = self.client.embeddings.create(
+        response = self.client.embeddings.create(
             model=model or self.model,
             input=documents,
             dimensions=dimensions,
             encoding_format="float"
         )
-        return [d.embedding for d in embeddings.data]
+        return response
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         response = self.client.chat.completions.create(
@@ -804,8 +805,8 @@ class JinaEmbeddingsProvider(Provider):
                                        'text': doc
                                    } for doc in documents]})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in sorted(data, key=lambda x: x['index'])]
+        response = resp.json()
+        return response
 
 
 class AnythingLLMProvider(Provider):
@@ -832,8 +833,8 @@ class AnythingLLMProvider(Provider):
                              json={'inputs': documents,
                                    'model': self.model})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in data]
+        response = resp.json()
+        return response
 
     def complete(self, messages, stream=False, **kwargs):
         headers = {
@@ -874,8 +875,8 @@ class OllamaProvider(Provider):
                              json={'model': self.model,
                                    'input': documents})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in data]
+        response = resp.json()
+        return response
 
 
 PROVIDERS = {
