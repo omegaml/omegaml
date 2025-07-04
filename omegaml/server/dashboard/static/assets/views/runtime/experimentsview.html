@@ -29,9 +29,35 @@
       <i class="fa-solid fa-table-columns"></i>
     </button>
   </div>
+  <div class=" dropdown">
+    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+      aria-expanded="false">
+      Events
+    </button>
+    <div class="dropdown-menu" id="dropDownEvents" aria-labelledby="dropDownEvents">
+      <!-- we have to add the <a> tags by expansion to avoid empty spaces around ${exp} -->
+      <a class="dropdown-item event" href="#" data-value="${exp}">Foo</a>`
+    </div>
+  </div>
 </div>
 <div id="exptable" class="table-responsive">
   <table id="expviewer" class="table nowrap table-hover display compact" style="width: 100%"></table>
 </div>
 <div id="expcards"></div>
 <div id="expchart"></div>
+<!-- [ Modals ] end -->
+<div class="modal fade" id="trace-modal" tabindex="-1" role="dialog" aria-labelledby="trace-modal" aria-hidden="true">
+  <div class="modal-dialog modal-fullview modal-dialog-slideout" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="trace-modal-title">Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">...</div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->

@@ -82,6 +82,9 @@ body > header > div.collapse.navbar-collapse {
 
 /* slide-in modal panels  */
 /* https://bootsnipp.com/snippets/D0aq4 */
+.modal-fullview {
+  min-width: 100%;
+}
 .modal-dialog-slideout {
   min-height: 100%;
   margin: 0 0 0 auto;

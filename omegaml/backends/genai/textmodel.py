@@ -1,13 +1,13 @@
-from collections import namedtuple
-
 import json
-import pandas as pd
 import re
-import requests
+from collections import namedtuple
 from copy import deepcopy
-from openai import OpenAI
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
+
+import pandas as pd
+import requests
+from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
@@ -420,11 +420,11 @@ class TextModel(GenAIModel):
         filter.setdefault('key', conversation_id)
         messages = self.tracking.data(event='conversation', **filter)
         if messages is not None and 'value' in messages.columns:
-            messages = pd.concat([messages, pd.json_normalize(messages['value'])], axis=1)
-            messages.drop(columns=['value'], inplace=True)
+            messages = pd.concat([messages.reset_index(), pd.json_normalize(messages['value'])], axis=1)
             # FIXME fillna('') is deprecated for numeric columns (handle in serialization?)
             messages.fillna('', inplace=True)
-            return messages if not raw else messages.to_dict('records')
+            columns = list(set(messages.columns) & {'key', 'role', 'content', 'finish_reason', 'dt'})
+            return messages[columns] if not raw else messages.to_dict('records')
         return pd.DataFrame() if not raw else []
 
     def _system_message(self, prompt, conversation_id=None):
@@ -605,7 +605,7 @@ class TextModel(GenAIModel):
 
             """
             raw_response = chunk.to_dict()
-            content = ''.join(c['choices'][0]['delta']['content'] for c in chunks) + str(
+            content = ''.join((c['choices'][0]['delta']['content'] or '') for c in chunks) + str(
                 chunk.choices[0].delta.content or '')
             if raw:
                 response_message = chunk.choices[0].delta.to_dict()

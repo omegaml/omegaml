@@ -51,6 +51,7 @@ class BaseView extends Backbone.View {
   constructor(options) {
     super(options);
     this.options = options || {};
+    _.defaults(this.options, { context });
     this.templateUrl = options.templateUrl; // URL of the template file
     this.data = options.data || {}; // Data to be used in the template
     this.fieldMap = options.fieldMap || {}; // Map of field IDs to data keys
@@ -58,7 +59,12 @@ class BaseView extends Backbone.View {
   // Render the view using the provided data
   render(context) {
     context = context || {};
-    _.defaults(context, this.options, window.context || {});
+    _.defaults(
+      context,
+      this.options.context,
+      this.options,
+      window.context || {}
+    );
     console.debug("Rendering view with context: ", context);
     return $.get(this.templateUrl)
       .then((template) => {
