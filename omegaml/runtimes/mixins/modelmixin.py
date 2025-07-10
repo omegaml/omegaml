@@ -112,7 +112,6 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict.delay(self.modelname, Xname, rName=rName, **kwargs)
 
-
     def predict_proba(self, Xpath_or_data, rName=None, **kwargs):
         """
         predict probabilities
@@ -145,6 +144,22 @@ class ModelMixin(object):
         omega_complete = self.task('omegaml.tasks.omega_complete')
         Xname = self._ensure_data_is_stored(Xname)
         return omega_complete.delay(self.modelname, Xname, rName=rName, **kwargs)
+
+    def embed(self, Xname, rName=None, **kwargs):
+        """
+        embed
+
+        Calls :code:`.embed(X)`. If rName is given the result is
+        stored as object rName
+
+        :param Xname: name of the X dataset
+        :param rName: name of the resulting dataset (optional)
+        :return: the data returned by .embed, or the metadata of the rName
+            dataset if rName was given
+        """
+        omega_embed = self.task('omegaml.tasks.omega_embed')
+        Xname = self._ensure_data_is_stored(Xname)
+        return omega_embed.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def score(self, Xname, Yname=None, rName=None, **kwargs):
         """
@@ -197,7 +212,8 @@ class ModelMixin(object):
             if sys.getsizeof(name_or_data) <= PassthroughDataset.MAX_SIZE:
                 return PassthroughDataset(name_or_data)
             else:
-                warnings.warn(f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets')
+                warnings.warn(
+                    f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets')
                 name = '%s_%s' % (prefix, uuid4().hex)
                 self.runtime.omega.datasets.put(name_or_data, name)
         elif is_dataframe(name_or_data) or is_series(name_or_data):
@@ -210,4 +226,3 @@ class ModelMixin(object):
             raise TypeError(
                 'invalid type for Xpath_or_data', type(name_or_data))
         return name
-

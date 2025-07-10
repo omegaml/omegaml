@@ -112,8 +112,7 @@ class GenericModelResource(object):
         return result
 
     def complete(self, model_id, query, payload):
-        if model_id == '_query_':
-            model_id = payload.get('model')
+        model_id = self._resolve_model_id(model_id, payload)
         raw = payload.get('raw')
         datax = payload if raw else (query.get('datax') or query.get('prompt') or payload)
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
@@ -152,3 +151,16 @@ class GenericModelResource(object):
         else:
             result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
+
+    def embed(self, model_id, query, payload):
+        model_id = self._resolve_model_id(model_id, payload)
+        raw = payload.get('raw')
+        datax = payload if raw else (query.get('datax') or query.get('prompt') or payload)
+        promise = self.om.runtime.model(model_id).embed(datax, raw=raw)
+        result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
+        return result
+
+    def _resolve_model_id(self, model_id, payload):
+        if model_id == '_query_':
+            model_id = payload.get('model')
+        return model_id

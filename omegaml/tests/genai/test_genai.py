@@ -249,7 +249,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.provider = OpenAIProvider
         model.provider.embed.return_value = openai_responses
         # check call to openai returns a generator to stream
-        result = model.embed('the quick brown fox jumps')
+        result = model.embed('the quick brown fox jumps', raw=True)
         self.assertEqual(result, openai_responses)
 
     def test_tool_function(self):
