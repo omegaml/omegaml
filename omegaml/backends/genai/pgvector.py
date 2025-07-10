@@ -17,8 +17,9 @@ class PGVectorBackend(VectorStoreBackend):
     PROMOTE = 'metadata'
 
     @classmethod
-    def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
-        return _is_valid_url(obj)  # or data_store.exists(name)
+    def supports(cls, obj, name, insert=False, data_store=None, model_store=None, meta=None, *args, **kwargs):
+        valid_types = (meta is not None and isinstance(obj, (str, list, tuple, dict)))
+        return valid_types or _is_valid_url(obj)
 
     def insert_chunks(self, chunks, name, embeddings, attributes, data=None, **kwargs):
         collection, vector_size, model = self._get_collection(name)
@@ -97,10 +98,15 @@ class PGVectorBackend(VectorStoreBackend):
             data = list(result.mappings().all())
         return data
 
-    def delete(self, name, obj=None, filter=None, **kwargs):
+    def delete(self, name, obj=None, filter=None, drop=False, **kwargs):
         collection, vector_size, model = self._get_collection(name)
-        Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
         Session = self._get_connection(name, session=True)
+        Document, Chunk = self._create_collection(name, collection, vector_size, **kwargs)
+        if drop:
+            with Session as session:
+                Chunk.__table__.drop(session.get_bind(), checkfirst=False)
+                Document.__table__.drop(session.get_bind(), checkfirst=False)
+            return
         with Session as session:
             # get documents
             if isinstance(obj, (dict, RowMapping)):
@@ -145,8 +151,7 @@ class PGVectorBackend(VectorStoreBackend):
             Base.metadata.create_all(session.get_bind())
             session.commit()
             migrator = DatabaseMigrator(session.connection())
-            with migrator(Document) as m:
-                m.run_migration()
+            migrator.run_migrations([Document, Chunk])
         with self._get_connection(name, session=True) as session:
             try:
                 index = Index(

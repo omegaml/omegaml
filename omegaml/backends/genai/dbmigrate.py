@@ -122,19 +122,22 @@ class DatabaseMigrator:
         table_name = self.model.__tablename__
         current_columns = self.get_current_columns(table_name)
         model_columns = {column.name: column.type for column in self.model.__table__.columns}
-
+        dialect = self.engine.dialect
         # Begin a transaction
         try:
             # Determine columns to add or modify
             for column_name, column_type in model_columns.items():
+                current_column_type_str = current_columns[column_name].compile(dialect)
+                column_type_str = column_type.compile(dialect)
                 if column_name not in current_columns:
                     self.add_column(table_name, column_name, column_type)
-                elif str(current_columns[column_name]) != str(column_type):
+                elif current_column_type_str != column_type_str:
                     print(
-                        f"Altering column: {column_name} in {table_name} from {current_columns[column_name]} to {column_type}")
+                        f"Altering column: {column_name} in {table_name} from {current_column_type_str} to {column_type_str}")
                     # Note: Altering column types can be complex and may require additional handling
                     self.session.execute(
-                        text(f'ALTER TABLE {table_name} ALTER COLUMN {column_name} {column_type.compile()}'))
+                        text(
+                            f'ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {column_type_str}'))
 
             # Determine columns to drop
             columns_to_drop = [column_name for column_name in current_columns if column_name not in model_columns]
@@ -150,9 +153,10 @@ class DatabaseMigrator:
             self.session.rollback()
             raise
 
-    def run_migration(self):
-        """Run the migration for the given model."""
-        self.apply_migration()
+    def run_migrations(self, models):
+        for model in models:
+            with self(model):
+                self.apply_migration()
 
 
 def test():

@@ -838,6 +838,7 @@ class OmegaStore(object):
                 if not backend.supports(obj, name, attributes=attributes,
                                         data_store=data_store,
                                         model_store=model_store,
+                                        meta=meta,
                                         kind=kind, **kwargs):
                     warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
             else:
