@@ -157,7 +157,7 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
     _omega_virtual_genai = True
 
     handler_methods = ['template', 'prepare', 'chat', 'complete', 'generate', 'embed', 'toolcall', 'toolresult',
-                       'process']
+                       'process', 'retrieve']
 
     def __init__(self, *args, fn=None, **kwargs):
         if callable(fn):
@@ -175,10 +175,6 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
         return {
             m: getattr(self, m, self._genai_method) for m in self.handler_methods
         } | super()._vobj_call_map()
-
-    @classmethod
-    def wrap(cls, fn):
-        return GenAIModel(fn=fn)
 
 
 def virtual_genai(fn):

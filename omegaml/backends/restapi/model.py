@@ -157,7 +157,7 @@ class GenericModelResource(object):
         raw = payload.get('raw')
         datax = payload if raw else (query.get('datax') or query.get('prompt') or payload)
         promise = self.om.runtime.model(model_id).embed(datax, raw=raw)
-        result = self.prepare_result(promise.get(), model_id=model_id) if not self.is_async else promise
+        result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
 
     def _resolve_model_id(self, model_id, payload):
