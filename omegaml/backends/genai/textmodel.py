@@ -6,7 +6,7 @@ import re
 import requests
 from copy import deepcopy
 from openai import OpenAI
-from urllib.parse import urlparse, parse_qs, urljoin
+from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
 
 from omegaml.backends.genai.index import DocumentIndex
@@ -43,7 +43,7 @@ class TextModelBackend(GenAIBaseBackend):
 
     @classmethod
     def supports(cls, obj, name, **kwargs):
-        return isinstance(obj, str) and re.match(r'openai(\+.*)?://', obj)
+        return isinstance(obj, str) and (re.match(r'openai(\+.*)?://', obj) or obj.startswith(cls.STORED_MODEL_URL))
 
     def _parse_url(self, obj):
         # properly parse RFC 1808 URLs
@@ -54,9 +54,10 @@ class TextModelBackend(GenAIBaseBackend):
         # -- we fix that by adjusting the parsed result
         # -- .vendor is the vendor, e.g. openai
         # -- .scheme is the protocol, e.g. https
-        parsed = urlparse(obj)
-        vendor, scheme = parsed.scheme.split('+') if '+' in parsed.scheme else ('', 'https')
-        path, params = parsed.path.split(';', 1) if ';' in parsed.path else (parsed.path, '')
+        uri, params = obj.split(';', 1) if ';' in obj else (obj, '')
+        parsed = urlsplit(uri)
+        vendor, scheme = parsed.scheme.split('+') if '+' in parsed.scheme else ('', parsed.scheme)
+        path, params = parsed.path.split(';', 1) if ';' in parsed.path else (parsed.path, params)
         netloc, params = parsed.netloc.split(';', 1) if ';' in parsed.netloc else (parsed.netloc, params)
         hostname, params = parsed.hostname.split(';', 1) if ';' in parsed.hostname else (parsed.hostname, params)
         port = parsed.port or (443 if scheme == 'https' else 80)
@@ -130,9 +131,9 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
-        self.tracking = tracking or self.tracking or self._ensure_tracking(model)
+        self.tracking = tracking or self.tracking or self._ensure_tracking(meta)
         # infer model provider
-        if base_url == self.STORED_MODEL_URL and self.model_store.exists(model):
+        if base_url.startswith(self.STORED_MODEL_URL) and self.model_store.exists(model):
             # model is a stored model, load it
             model = self.model_store.get(model, template=template, data_store=data_store,
                                          pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
@@ -171,7 +172,7 @@ class TextModelBackend(GenAIBaseBackend):
                 return provider
         return 'default'
 
-    def _ensure_tracking(self, default_name):
+    def _ensure_tracking(self, meta):
         # ensure we have a tracking instance for the model
         # caveats:
         # - this is typically a responsibility of the omega runtime, however
@@ -179,6 +180,7 @@ class TextModelBackend(GenAIBaseBackend):
         # - thus we adopt the convention that if the runtime does not provide a tracking instance,
         #   we create one for the model
         # TODO: verify that this is the right place to do this
+        default_name = meta.attributes.get('tracking', {}).get('default', meta.kind_meta.get('model'))
         if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
             self.tracking = OmegaSimpleTracker(default_name, store=self.data_store)
             self.tracking.start()

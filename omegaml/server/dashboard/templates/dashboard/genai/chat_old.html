@@ -93,7 +93,7 @@
       }
     };
     chat.connect = {
-      url: "/api/v2/openai/chat/completions",
+      url: "{{ url_for('omega-api.openai_chat_completions')}}",
       stream: true,
     };
     chat.requestInterceptor = (request) => {

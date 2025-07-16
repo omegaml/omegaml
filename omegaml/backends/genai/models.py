@@ -40,6 +40,19 @@ class GenAIBaseBackend(VirtualObjectBackend):
             })
         return data
 
+    def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
+        # TODO this should not be necessary, the data should be resolved by super()
+        #      we need this only due to VirtualObjectBackend not being a ModelBackend
+        if pure_python:
+            result = result.tolist()
+        if rName:
+            meta = self.data_store.put(result, rName)
+            result = meta
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
+            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
+                                   event=method)
+        return result
+
     def complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
         # Xname is the input given by the user
         model: GenAIModel
