@@ -244,12 +244,14 @@ class ExperimentView extends BaseView {
   }
 
   onRunDetailsClick(event) {
+    const exp = $("#dropdownExperiments").text();
     const run = $(event.currentTarget).data("value");
     const executionView = new ExecutionView({
       el: "#trace-modal .modal-body",
+      context: { experiment: exp, run: run },
     });
-    executionView.render({ run: run }).then(() => {
-      $("#trace-modal .modal-title").text(`Run Details: ${run}`);
+    executionView.render().then(() => {
+      $("#trace-modal .modal-title").text(`Run Details: ${exp} ${run}`);
       $("#trace-modal").modal("show");
     });
   }

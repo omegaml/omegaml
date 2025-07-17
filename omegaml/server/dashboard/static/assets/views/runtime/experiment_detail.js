@@ -6,7 +6,6 @@ export class ExecutionView extends BaseView {
   constructor(options) {
     _.defaults(options, {
       events: {},
-      experiments: [],
       templateUrl: url_for("static", {
         filename: "/assets/views/runtime/experiment_detail.html",
       }),
@@ -18,9 +17,99 @@ export class ExecutionView extends BaseView {
       "click #show-all-steps": "onAllStepsClick",
     });
     super(options);
-    // Initialize the model and listen for changes
-    this.model = {};
-    //this.listenTo(this.model, "change", this.render); // Re-render the view on model changes
+    this.model = options.context;
+  }
+
+  getEventsData(experiment, run) {
+    return $.ajax({
+      dataType: "json",
+      url: `${url_for("omega-server.tracking_api_experiment_data", {
+        name: experiment,
+      })}?&run=${run}`,
+    }).then((data) => {
+      return this.convertEvents2Request(data.data);
+    });
+  }
+
+  convertEvents2Request(events) {
+    // Find the event with name 'task_call', or fallback to the first event
+    const inputEvent =
+      _.find(events, (e) => e.event === "task_call") || _.first(events) || {};
+    const outputEvent =
+      _.find(events, (e) => e.event === "task_success") || _.last(events) || {};
+    // Calculate duration in seconds from inputEvent.dt and outputEvent.dt (ISO format)
+    let startedAt = new Date(inputEvent.dt);
+    let completedAt = new Date(outputEvent.dt);
+    let totalDuration = Math.round((completedAt - startedAt) / 1000); // seconds
+    return {
+      input: inputEvent.value || {},
+      output: outputEvent.value || {},
+      status: (outputEvent.event || "unknown").replace("task_", ""),
+      total_duration: totalDuration,
+      started_at: startedAt,
+      completed_at: completedAt,
+      steps: events.map((event, index) => ({
+        id: index,
+        name: event.event,
+        status: event.status || "unknown",
+        duration: event.duration || 0,
+        percentage: event.percentage || 0,
+        input: event.input || {},
+        output: event.value || {},
+        metrics: event.metrics || {},
+        logs: event.logs || "",
+      })),
+    };
+  }
+
+  // Render the view
+  render(context) {
+    const request = this.model.request || this.sampleData().request;
+    context = _.defaults(context || {}, this.options.context);
+    const promise = this.getEventsData(context.experiment, context.run).then(
+      (request) => {
+        this.model.request = request;
+        context.req = request;
+        context.steps = request.steps || [];
+        console.debug("Rendering execution view with context:", context);
+        super.render(context).then(() => {});
+      }
+    );
+    return promise;
+  }
+
+  onAllStepsClick(event) {
+    event.preventDefault();
+    this.render({});
+  }
+
+  onStepClick(event) {
+    const stepId = $(event.currentTarget).data("step-id");
+    const request = this.model.request || this.sampleData().request;
+    const step = request.steps.find((s) => s.id === stepId);
+    if (!step) return;
+    super
+      .render({
+        req: step,
+        steps: this.model.request.steps || [],
+        formatDuration: this.formatDuration,
+      })
+      .then(() => {
+        $(".step-item").removeClass("active");
+        $(`.step-item[data-step-id="${stepId}"]`).addClass("active");
+      });
+  }
+
+  // Format duration
+  formatDuration(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
   }
 
   sampleData() {
@@ -228,45 +317,6 @@ export class ExecutionView extends BaseView {
       },
     };
     return executionData;
-  }
-
-  // Render the view
-  render(context) {
-    const request = this.model.request || this.sampleData().request;
-    context.req = context.request || request;
-    context.steps = request.steps || [];
-    return super.render(context).then(() => {});
-  }
-
-  onAllStepsClick(event) {
-    event.preventDefault();
-    this.render({});
-  }
-
-  onStepClick(event) {
-    const stepId = $(event.currentTarget).data("step-id");
-    const request = this.model.request || this.sampleData().request;
-    const step = request.steps.find((s) => s.id === stepId);
-    if (!step) return;
-    this.render({
-      request: step,
-      formatDuration: this.formatDuration,
-    }).then(() => {
-      $(".step-item").removeClass("active");
-      $(`.step-item[data-step-id="${stepId}"]`).addClass("active");
-    });
-  }
-
-  // Format duration
-  formatDuration(ms) {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-
-    if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
-    }
-    return `${remainingSeconds}s`;
   }
 }
 

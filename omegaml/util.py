@@ -1071,7 +1071,7 @@ class MongoEncoder(json.JSONEncoder):
             return pd.to_numeric(obj, downcast='float')
         elif is_array_like(obj) and is_float_dtype(obj):
             return pd.to_numeric(obj, downcast='float')
-        elif isinstance(obj, datetime):
+        elif isinstance(obj, (datetime, pd.Timestamp)):
             return obj.isoformat()
         elif isinstance(obj, date):
             return obj.isoformat()
