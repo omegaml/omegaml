@@ -19,6 +19,7 @@ from hashlib import sha256
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
+from typing import Iterator, Any
 
 try:
     import urlparse
@@ -1044,6 +1045,12 @@ class MongoEncoder(json.JSONEncoder):
         https://stackoverflow.com/a/49677241/890242
         https://stackoverflow.com/a/11875813/890242
     """
+
+    def encode(self, o):
+        return super().encode(o)
+
+    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
+        return super().iterencode(o, _one_shot=_one_shot)
 
     def default(self, obj):
         # TODO improve for speed

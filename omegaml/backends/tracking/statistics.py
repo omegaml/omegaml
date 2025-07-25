@@ -149,13 +149,7 @@ class ExperimentStatistics:
 
         def stats(time_data):
             if delta:
-                duration = (time_data
-                            .groupby(groupby, sort=False)
-                            ['dt']
-                            .apply(lambda v: v.diff().fillna(pd.Timedelta(seconds=0)))
-                                   )
-                            )
-                print(duration)
+                duration = 0
             else:
                 duration = (time_data
                             .groupby(groupby)

@@ -1,5 +1,4 @@
 import base64
-import json
 from cachetools import TTLCache, cached
 from flask import jsonify
 from io import BytesIO
@@ -90,8 +89,7 @@ class TrackingView(RepositoryBaseView):
                     .reset_index()
                     .fillna(''))
             if not as_dataframe:
-                data = data.to_json(orient='records', date_format='iso')
-                data = json.loads(data)
+                data = data.to_dict(orient='records')
         else:
             data = []
             totalRows = 0

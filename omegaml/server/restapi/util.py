@@ -154,5 +154,5 @@ class OmegaResourceMixin(object):
         return self._omega.runtime.celeryapp
 
 
-class JSONEncoder(MongoEncoder):
+class AwareJSONEncoder(MongoEncoder):
     pass
