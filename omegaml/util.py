@@ -19,6 +19,7 @@ from hashlib import sha256
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
+from typing import Iterator, Any
 
 try:
     import urlparse
@@ -639,6 +640,16 @@ def dict_update_if(condition, dict, other):
         dict.update(other)
 
 
+def ignorewarnings(fn):
+    def wrapper(*args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            return fn(*args, **kwargs)
+
+    return wrapper
+
+
+@ignorewarnings
 def module_available(modname):
     try:
         import_module(modname)
@@ -663,13 +674,6 @@ def mlflow_available():
     # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
     # see https://github.com/mlflow/mlflow/pull/13023
     available = module_available('mlflow')
-    if available:
-        try:
-            from pydantic import PydanticDeprecatedSince20
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
-        except ImportError:
-            pass
     return available
 
 
@@ -1042,6 +1046,12 @@ class MongoEncoder(json.JSONEncoder):
         https://stackoverflow.com/a/11875813/890242
     """
 
+    def encode(self, o):
+        return super().encode(o)
+
+    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
+        return super().iterencode(o, _one_shot=_one_shot)
+
     def default(self, obj):
         # TODO improve for speed
         import numpy as np
@@ -1068,7 +1078,7 @@ class MongoEncoder(json.JSONEncoder):
             return pd.to_numeric(obj, downcast='float')
         elif is_array_like(obj) and is_float_dtype(obj):
             return pd.to_numeric(obj, downcast='float')
-        elif isinstance(obj, datetime):
+        elif isinstance(obj, (datetime, pd.Timestamp)):
             return obj.isoformat()
         elif isinstance(obj, date):
             return obj.isoformat()
@@ -1324,7 +1334,9 @@ def inprogress(text="running {fn}", **__kwargs):
     def decorator(fn):
         def wrapper(*args, **kwargs):
             text.format(fn=fn.__name__)
-            with yaspin(text=text, **__kwargs) as sp:
+            with (warnings.catch_warnings(),
+                  yaspin(text=text, **__kwargs) as sp):
+                warnings.simplefilter("ignore", append=True)
                 return fn(*args, **kwargs)
 
         return wrapper

@@ -79,7 +79,7 @@ class AIPromptsView(AIRepositoryView):
                                             attributes=model_meta.attributes,
                                             kind_meta=model_meta.kind_meta)
             meta.save()
-            om.models.link_experiment(name, name, label=om.runtime._default_label)
+            meta = om.models.link_experiment(name, name, label=om.runtime._default_label)
         meta.attributes.update(data)
         meta.save()
         return {'message': 'Prompt saved successfully', 'name': name}, 200

@@ -124,7 +124,8 @@ class TrackingView(RepositoryBaseView):
         run = [int(v) for v in self.request.args.get('run', '').split(',') if v and v.isnumeric()] or 'all'
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
-        events = ['start', 'metric', 'stop'] if summary else None
+        events = validOrNone(self.request.args.get('events', None)) or 'all'
+        events = ['start', 'metric', 'stop'] if summary else events.split(',') if ',' in events else events
         data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=summary,
                                                 run=run, since=since, end=end, event=events)
 

@@ -6,7 +6,7 @@ import re
 import requests
 from copy import deepcopy
 from openai import OpenAI
-from urllib.parse import urlparse, parse_qs, urljoin
+from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
 
 from omegaml.backends.genai.index import DocumentIndex
@@ -43,7 +43,7 @@ class TextModelBackend(GenAIBaseBackend):
 
     @classmethod
     def supports(cls, obj, name, **kwargs):
-        return isinstance(obj, str) and re.match(r'openai(\+.*)?://', obj)
+        return isinstance(obj, str) and (re.match(r'openai(\+.*)?://', obj) or obj.startswith(cls.STORED_MODEL_URL))
 
     def _parse_url(self, obj):
         # properly parse RFC 1808 URLs
@@ -54,9 +54,10 @@ class TextModelBackend(GenAIBaseBackend):
         # -- we fix that by adjusting the parsed result
         # -- .vendor is the vendor, e.g. openai
         # -- .scheme is the protocol, e.g. https
-        parsed = urlparse(obj)
-        vendor, scheme = parsed.scheme.split('+') if '+' in parsed.scheme else ('', 'https')
-        path, params = parsed.path.split(';', 1) if ';' in parsed.path else (parsed.path, '')
+        uri, params = obj.split(';', 1) if ';' in obj else (obj, '')
+        parsed = urlsplit(uri)
+        vendor, scheme = parsed.scheme.split('+') if '+' in parsed.scheme else ('', parsed.scheme)
+        path, params = parsed.path.split(';', 1) if ';' in parsed.path else (parsed.path, params)
         netloc, params = parsed.netloc.split(';', 1) if ';' in parsed.netloc else (parsed.netloc, params)
         hostname, params = parsed.hostname.split(';', 1) if ';' in parsed.hostname else (parsed.hostname, params)
         port = parsed.port or (443 if scheme == 'https' else 80)
@@ -130,9 +131,9 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
-        self.tracking = tracking or self.tracking or self._ensure_tracking(model)
+        self.tracking = tracking or self.tracking or self._ensure_tracking(meta)
         # infer model provider
-        if base_url == self.STORED_MODEL_URL and self.model_store.exists(model):
+        if base_url.startswith(self.STORED_MODEL_URL) and self.model_store.exists(model):
             # model is a stored model, load it
             model = self.model_store.get(model, template=template, data_store=data_store,
                                          pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
@@ -171,7 +172,7 @@ class TextModelBackend(GenAIBaseBackend):
                 return provider
         return 'default'
 
-    def _ensure_tracking(self, default_name):
+    def _ensure_tracking(self, meta):
         # ensure we have a tracking instance for the model
         # caveats:
         # - this is typically a responsibility of the omega runtime, however
@@ -179,6 +180,7 @@ class TextModelBackend(GenAIBaseBackend):
         # - thus we adopt the convention that if the runtime does not provide a tracking instance,
         #   we create one for the model
         # TODO: verify that this is the right place to do this
+        default_name = meta.attributes.get('tracking', {}).get('default', meta.kind_meta.get('model'))
         if self.tracking is None or isinstance(self.tracking.experiment, NoTrackTracker):
             self.tracking = OmegaSimpleTracker(default_name, store=self.data_store)
             self.tracking.start()
@@ -286,11 +288,12 @@ class TextModel(GenAIModel):
     def load(self, method):
         pass
 
-    def embed(self, documents, dimensions=None, **kwargs):
+    def embed(self, documents, dimensions=None, raw=False, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
-        embeddings = self.provider.embed(documents, dimensions=dimensions, model=self.model,
-                                         **kwargs)
-        return embeddings
+        response = self.provider.embed(documents, dimensions=dimensions, model=self.model,
+                                       **kwargs)
+        transformed = (d['embedding'] for d in response['data'])
+        return response if raw else list(transformed)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
                  chat=False, stream=False, use_tools=True, **kwargs):
@@ -758,13 +761,13 @@ class OpenAIProvider(Provider):
 
     def embed(self, documents, dimensions=None, model=None, **kwargs):
         documents = ensure_list(documents)
-        embeddings = self.client.embeddings.create(
+        response = self.client.embeddings.create(
             model=model or self.model,
             input=documents,
             dimensions=dimensions,
             encoding_format="float"
         )
-        return [d.embedding for d in embeddings.data]
+        return response
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         response = self.client.chat.completions.create(
@@ -804,8 +807,8 @@ class JinaEmbeddingsProvider(Provider):
                                        'text': doc
                                    } for doc in documents]})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in sorted(data, key=lambda x: x['index'])]
+        response = resp.json()
+        return response
 
 
 class AnythingLLMProvider(Provider):
@@ -832,8 +835,8 @@ class AnythingLLMProvider(Provider):
                              json={'inputs': documents,
                                    'model': self.model})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in data]
+        response = resp.json()
+        return response
 
     def complete(self, messages, stream=False, **kwargs):
         headers = {
@@ -874,8 +877,8 @@ class OllamaProvider(Provider):
                              json={'model': self.model,
                                    'input': documents})
         assert resp.status_code == 200, f'Error {resp.status_code} calling {url}: {resp.text}'
-        data = resp.json().get('data', [])
-        return [d['embedding'] for d in data]
+        response = resp.json()
+        return response
 
 
 PROVIDERS = {

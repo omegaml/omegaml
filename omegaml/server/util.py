@@ -156,3 +156,55 @@ def TestableMock(fn, args, kwargs):
 
 
 _BareTestableMock = TestableMock  # capture identiy of the original TestableMock
+
+
+def setup_flask_json_encoding(app, encoder=None, json=None):
+    """
+    Setup custom JSON encoding for Flask app. This replaces Flask's default JSON handling.
+
+    Changing the default JSON encoder used by Flask is a bit tricky, because different
+    Flask versions use different mechanisms. This function makes it easy to sets a custom
+    JSON encoder, or use a custom json module.
+
+    Args:
+        app: Flask application instance.
+        encoder: Optional Custom JSON encoder class that extends `json.JSONEncoder`.
+        json: Optional JSON module to use. If not provided, defaults to the python.json module.
+
+    Returns:
+        None. Modifies the app's JSON handling to use the custom encoder.
+
+    Usage:
+        class MyEncoder(json.JSONEncoder):
+            def default(self, obj):
+                return ... # Custom encoding logic here
+
+        app = Flask(__name__)
+        setup_flask_json_encoding(app, encoder=MyEncoder)
+
+    Rationale:
+        - Flask's default JSON handling does not support custom encoders directly.
+        - This function allows you to set a custom JSON encoder, or json module, which can handle
+          complex data types like datetime, numpy arrays, etc.
+
+    See Also:
+        - https://stackoverflow.com/a/75666126/890242
+    """
+    import json as default_json
+    from flask.json.provider import DefaultJSONProvider
+
+    json = json or default_json
+
+    class CustomJSONProvider(DefaultJSONProvider):
+        def dumps(self, obj, **kwargs):
+            return json.dumps(obj, cls=encoder, **kwargs)
+
+        def loads(self, s, **kwargs):
+            return json.loads(s, **kwargs)
+
+    try:
+        # For Flask 2.2+
+        app.json = CustomJSONProvider(app)
+    except AttributeError:
+        # For older Flask versions
+        app.json_encoder = encoder
