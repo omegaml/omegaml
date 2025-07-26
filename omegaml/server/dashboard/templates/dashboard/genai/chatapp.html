@@ -384,24 +384,29 @@
     class ChatApp extends SimpleConversationList {
       init() {
         console.log('ChatApp initialized');
+        this.bindStaticEvents();
         this.bindEvents();
       }
 
-      bindEvents() {
-        // Bind click events for assistant selection, new chat, etc.
+      bindStaticEvents() {
+        // bind events to static elements
+        $('.user-profile').on('click', this.openUserProfile);
+        $('.settings-btn').on('click', this.openSettings);
         $('.assistant-item').on('click', this.selectAssistant);
         $('.new-chat-btn').on('click', (e) => {
           e.preventDefault();
           this.createNewConversation();
           this.render();
         });
+      }
+
+      bindEvents() {
+        // bind click events for dynamically rendered events
         $('.conversation-item').on('click', (e) => {
           console.debug('Conversation item clicked');
           const activeConversation = $(e.target).closest('.conversation-item').data('id');
           this.selectConversation(activeConversation);
         });
-        $('.user-profile').on('click', this.openUserProfile);
-        $('.settings-btn').on('click', this.openSettings);
       }
 
       currentAssistant() {
