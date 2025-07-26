@@ -295,13 +295,15 @@
     <div class="section-title">Choose Assistant</div>
 
     {% for assistant in assistants %}
-    <div class="assistant-item" data-assistant="claude">
+    <div class="assistant-item  {% if loop.index == 1 %}active{% endif %}" data-assistant="claude">
       <div class="assistant-avatar" style="background: #1e40af;">
         <i class="fas fa-brain"></i>
       </div>
       <div class="assistant-info">
-        <div class="assistant-name">{{ assistant.name }}</div>
-        <div class="assistant-description">{{ assistant.name }}</div>
+        <div class="assistant-name" data-name="{{ assistant.name }}">{{
+          assistant.name | replace('prompts/', '') }}
+        </div>
+        <div class="assistant-description">{{ assistant.title }}</div>
       </div>
     </div>
     {% endfor %}
@@ -311,41 +313,13 @@
   <div class="conversations-section">
     <div class="section-title">Recent Conversations</div>
     <div id="conversationsList">
+      <!-- Example conversation items. real items are rendered by ChatApp.loadConversations()
       <div class="conversation-item">
         <i class="fas fa-message conversation-icon"></i>
         <div class="conversation-text">How to implement OAuth in React</div>
         <div class="conversation-time">2h</div>
       </div>
-
-      <div class="conversation-item">
-        <i class="fas fa-message conversation-icon"></i>
-        <div class="conversation-text">Data visualization best practices</div>
-        <div class="conversation-time">5h</div>
-      </div>
-
-      <div class="conversation-item">
-        <i class="fas fa-message conversation-icon"></i>
-        <div class="conversation-text">Python async programming guide</div>
-        <div class="conversation-time">1d</div>
-      </div>
-
-      <div class="conversation-item">
-        <i class="fas fa-message conversation-icon"></i>
-        <div class="conversation-text">Machine learning fundamentals</div>
-        <div class="conversation-time">2d</div>
-      </div>
-
-      <div class="conversation-item">
-        <i class="fas fa-message conversation-icon"></i>
-        <div class="conversation-text">CSS Grid vs Flexbox comparison</div>
-        <div class="conversation-time">3d</div>
-      </div>
-
-      <div class="conversation-item">
-        <i class="fas fa-message conversation-icon"></i>
-        <div class="conversation-text">API design principles</div>
-        <div class="conversation-time">1w</div>
-      </div>
+      -->
     </div>
   </div>
 
@@ -410,7 +384,7 @@
       }
 
       currentAssistant() {
-        return $('.assistant-item.active').find('.assistant-name').text() || context.name;
+        return $('.assistant-item.active').find('.assistant-name').data('name') || context.name;
       }
 
       selectAssistant() {
@@ -457,7 +431,14 @@
                 <div class="conversation-time">${timeAgo}</div>
             </div >`;
       }
+
+      refreshConversations() {
+        const assistantName = this.currentAssistant();
+        if (!assistantName) return;
+        this.loadConversations(assistantName);
+      }
     }
+
 
     // User profile click
     $('.user-profile').click(function () {
@@ -517,11 +498,10 @@
     console.debug('ChatApp initializing...');
     window.chatApp = new ChatApp();
     window.chatApp.createNewConversation();
+    window.chatApp.refreshConversations();
     setInterval(() => {
       const app = window.chatApp;
-      const assistantName = app.currentAssistant();
-      if (!assistantName) return;
-      app.loadConversations(assistantName);
+      app.refreshConversations();
     }, 5000);
   });
 </script>

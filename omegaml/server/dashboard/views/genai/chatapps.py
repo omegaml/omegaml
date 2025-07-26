@@ -10,9 +10,15 @@ class ChatAppsView(BaseView):
     def chat(self, name):
         """Render the chat applications page."""
         prompts = self.om.models.list('prompts/*', kind=['genai.text', 'genai.llm'], raw=True)
+        assistants = [{
+            'name': prompt.name,
+            'title': (prompt.attributes.get('title') or
+                      prompt.attributes.get('docs', '').split('\n')[0].replace('#', '').strip()),
+            'attributes': prompt.attributes,
+        } for prompt in prompts if not prompt.name.startswith('_')]
         return render_template('dashboard/genai/chatapp.html',
                                name=name,
-                               assistants=prompts,
+                               assistants=assistants,
                                segment=self.segment)
 
 
