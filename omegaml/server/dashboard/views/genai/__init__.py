@@ -145,7 +145,7 @@ class GenAIView(BaseView):
         om = self.om
         model = om.models.get(name, data_store=om.datasets)
         model.tracking = om.runtime.model(name).experiment()
-        messages = model.conversation(run='*')
+        messages = model.conversation(run='*', userid=self.userid)
         messages.drop_duplicates(['key'], inplace=True, keep='first')
         return {'conversations': [
             {
@@ -162,7 +162,7 @@ class GenAIView(BaseView):
         om = self.om
         exp = om.runtime.model(name).experiment()
         model = om.models.get(name, data_store=om.datasets, tracking=exp)
-        messages = model.conversation(conversation_id=conversation_id, raw=True)
+        messages = model.conversation(conversation_id=conversation_id, userid=self.userid, raw=True)
         return {'messages': [
             {
                 'role': msg.get('role'),
