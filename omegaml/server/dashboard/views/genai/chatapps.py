@@ -1,3 +1,4 @@
+import os
 from flask import render_template
 
 from omegaml.server import flaskview as fv
@@ -9,7 +10,9 @@ class ChatAppsView(BaseView):
     @fv.route('/{self.segment}/chat/<path:name>')
     def chat(self, name):
         """Render the chat applications page."""
-        prompts = self.om.models.list('prompts/*', kind=['genai.text', 'genai.llm'], raw=True)
+        # TODO consider listing only prompts under /<name> (e.g. prompts/<name>/*)
+        prompt_path = os.path.join('prompts', name.replace('sybil', ''), '*')
+        prompts = self.om.models.list(prompt_path, kind=['genai.text', 'genai.llm'], raw=True)
         assistants = [{
             'name': prompt.name,
             'title': (prompt.attributes.get('title') or

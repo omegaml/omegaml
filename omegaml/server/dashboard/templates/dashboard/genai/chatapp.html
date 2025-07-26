@@ -281,18 +281,18 @@
   <!-- Header Section -->
   <div class="sidebar-header">
     <div class="logo">
-      <i class="fas fa-robot"></i>
-      AI Assistant Hub
+      <i class="fas fa-feather-alt"></i>
+      Sybil
     </div>
     <button class="btn new-chat-btn">
       <i class="fas fa-plus me-2"></i>
-      New Conversation
+      New Chat
     </button>
   </div>
 
   <!-- Assistant Selector -->
   <div class="assistant-selector">
-    <div class="section-title">Choose Assistant</div>
+    <div class="section-title">Assistants</div>
 
     {% for assistant in assistants %}
     <div class="assistant-item  {% if loop.index == 1 %}active{% endif %}" data-assistant="claude">
@@ -311,7 +311,7 @@
 
   <!-- Recent Conversations -->
   <div class="conversations-section">
-    <div class="section-title">Recent Conversations</div>
+    <div class="section-title">Conversations</div>
     <div id="conversationsList">
       <!-- Example conversation items. real items are rendered by ChatApp.loadConversations()
       <div class="conversation-item">
