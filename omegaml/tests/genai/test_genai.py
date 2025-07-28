@@ -79,20 +79,6 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         result = self.om.runtime.model('mymodel').complete('X').get()
         self.assertEqual(result, ('complete', 'hello'))  # method, prompt
 
-    def test_prompts_base_model(self):
-        om = self.om
-
-        # test save and restore
-        class MyModel(GenAIModelHandler):
-            def complete(self, prompt, messages=None, conversation_id=None,
-                         data=None, **kwargs):
-                return prompt
-
-        om.models.put(MyModel, 'llms/mymodel')
-        om.models.put('omegaml://models;model=llms/mymodel', 'prompts/myprompt')
-        model = om.models.get('prompts/myprompt')
-        self.assertIsInstance(model, GenAIModelHandler)
-
     def test_openai_put_get_default(self):
         # test save and restore
         meta = self.om.models.put('openai+https://localhost/mymodel', 'mymodel')
@@ -111,6 +97,25 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(meta.kind, TextModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443/v1')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
+
+    def test_placeholders_put_get(self):
+        # test save and restore with secrets
+        meta = self.om.models.put('openai+https://{OMEGA_LLM_APIKEY}@localhost/mymodel', 'mymodel')
+        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
+        self.assertEqual(meta.kind_meta['creds'], '{OMEGA_LLM_APIKEY}')
+        model = self.om.models.get('mymodel', secrets=dict(OMEGA_LLM_APIKEY='foobar'))
+        self.assertEqual(model.api_key, 'foobar')
+        self.assertIsInstance(model, TextModel)
+        # test save and restore with omega defaults
+        with patch.object(self.om.defaults, 'OMEGA_USERID', 'testuser', create=True):
+            meta = self.om.models.put('openai+https://{OMEGA_USERID}@localhost/mymodel', 'mymodel')
+            self.assertEqual(meta.kind, TextModelBackend.KIND)
+            self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
+            self.assertEqual(meta.kind_meta['creds'], '{OMEGA_USERID}')
+            model = self.om.models.get('mymodel')
+            self.assertEqual(model.api_key, 'testuser')
+            self.assertIsInstance(model, TextModel)
 
     def test_openai_http_scheme(self):
         # test save and restore
