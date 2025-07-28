@@ -1,6 +1,8 @@
 from http import HTTPStatus
 
+import logging
 import os
+import sys
 import warnings
 
 from omegaml import Omega
@@ -9,6 +11,7 @@ from omegaml.client.lunamon import LunaMonitor
 
 class OmegaTestMixin(object):
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, force=True)
         super().setUp()
         self.om = Omega()
         self.clean()
