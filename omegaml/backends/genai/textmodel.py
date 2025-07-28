@@ -1,15 +1,15 @@
+from collections import namedtuple
+
 import json
 import os
+import pandas as pd
 import re
-from collections import namedtuple
+import requests
 from copy import deepcopy
 from getpass import getuser
+from openai import OpenAI
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
-
-import pandas as pd
-import requests
-from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
@@ -309,6 +309,9 @@ class TextModel(GenAIModel):
         self._track_usage(response, conversation_id=conversation_id)
         transformed = (d['embedding'] for d in response['data'])
         return response if raw else list(transformed)
+
+    def generate(self, prompt, raw=False):
+        return self.complete(prompt, raw=raw)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
                  chat=False, stream=False, use_tools=True, **kwargs):

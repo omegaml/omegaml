@@ -160,6 +160,9 @@ OMEGA_STORE_BACKENDS_OPENAI = {
 OMEGA_STORE_BACKENDS_OPTIONAL = {
     'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'},
 }
+OMEGA_STORE_BACKENDS_TRANSFORMERS = {
+    'hf.pipeline': 'omegaml.backends.transformers.TransformerModelBackend',
+}
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
@@ -477,6 +480,9 @@ def load_framework_support(vars=globals()):
     #: r environment
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
+    #: hugginface backends
+    if module_available('transformers'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TRANSFORMERS'])
     #: mlflow backends
     if mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
