@@ -11,6 +11,8 @@ class GenAIBaseBackend(VirtualObjectBackend):
     e.g. backend.perform('complete', 'mymodel', 'X'). Works the same
     as VirtualObjectBackend, but with a different KIND and supports
     other methods.
+
+    .. versionadded:: 0.17.0
     """
     KIND = 'genai.llm'
 
@@ -165,6 +167,8 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
         * all methods called are guaranteed to call .load() before calling the
           actual method, subsequent calls will re-instantiate the handler and thus
           call .load() again (i.e. do not assume caching across calls)
+
+    .. versionadded:: 0.17.0
     """
     _omega_virtual = False
     _omega_virtual_genai = True
@@ -234,6 +238,8 @@ def virtual_genai(fn):
 
     Returns:
         fn
+
+    .. versionadded:: 0.17.0
     """
     setattr(fn, '_omega_virtual_genai', True)
     return fn
