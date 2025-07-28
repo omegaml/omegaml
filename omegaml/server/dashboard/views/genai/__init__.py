@@ -72,6 +72,7 @@ class GenAIView(BaseView):
             'size': item.get('size', 0),
             'type': (item.get('source') or '').split('.')[-1].lower(),
             'excerpt': item.get('excerpt', ''),
+            'attributes': item.get('attributes'),
         } for item in index.list()]
         return datatables_ajax(members, draw=draw)
 

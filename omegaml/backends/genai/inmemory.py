@@ -1,8 +1,11 @@
-import json
-import numpy as np
+from collections import Counter
 
-from omegaml.backends.genai.embedding import SimpleEmbeddingModel
+import numpy as np
+import re
+
 from omegaml.backends.genai.index import VectorStoreBackend
+
+INMEMORY_VECTOR_STORE = {}
 
 
 class InMemoryVectorStore(VectorStoreBackend):
@@ -13,16 +16,17 @@ class InMemoryVectorStore(VectorStoreBackend):
     PROMOTE = 'metadata'
 
     def load(self, name, store=None, vector_size=None, embedding_model=None, index_cls=None, **kwargs):
-        embedding_model = embedding_model or SimpleEmbeddingModel()
-        super().load(name, store=store, vector_size=vector_size, embedding_model=embedding_model, index_cls=index_cls,
-                     **kwargs)
-        self.documents = {}  # Maps document IDs to documents
-        self.chunks = {}  # Maps document IDs to lists of chunks
-        self.embeddings = {}  # Maps document IDs to their embeddings
+        super().load(name, store=store, vector_size=vector_size, embedding_model=embedding_model,
+                     index_cls=index_cls, **kwargs)
+        store = INMEMORY_VECTOR_STORE.setdefault(name, {})
+        self.documents = store.setdefault('documents', {})  # Maps document IDs to their metadata
+        self.chunks = store.setdefault('chunks', {})  # Maps document IDs to lists of chunks
+        self.embeddings = store.setdefault('embeddings', {})  # Maps document IDs to their embeddings
+        return self
 
     @classmethod
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
-        return name.startswith('vecmem://')
+        return bool(re.match(r'^(vecmem|vector\+memory)://', str(obj)))
 
     def list(self, name):
         return [{
@@ -33,13 +37,14 @@ class InMemoryVectorStore(VectorStoreBackend):
 
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         doc_id = len(self.documents) + 1  # Simple ID generation
-        source = attributes.get('source', None)
-        attributes_json = json.dumps(attributes or {})
-
+        attributes = attributes or {}
+        source = attributes.get('source', '')
+        attributes.setdefault('source', source)
+        attributes.setdefault('tags', [])
         # Store the document
         self.documents[doc_id] = {
             'source': source,
-            'attributes': attributes_json
+            'attributes': attributes,
         }
 
         # Store the chunks and their embeddings
@@ -50,10 +55,17 @@ class InMemoryVectorStore(VectorStoreBackend):
             self.chunks[doc_id].append(text)
             self.embeddings[doc_id].append(embedding)
 
-    def find_similar(self, name, obj, top=5, filter=None, distance='l2', **kwargs):
+    def find_similar(self, name, obj, top=5, filter=None, distance=None, max_distance=None, **kwargs):
         # Calculate distances and find the top similar documents
+        distance = distance or 'l2'
         distances = []
+        all_match = lambda filter: all(
+            set(value).issubset(self.documents[doc_id]['attributes'][key]) for key, value in filter.items())
+        any_match = lambda filter: any(
+            str(value) == str(self.documents[doc_id]['attributes'][key]) for key, value in filter.items())
         for doc_id, embeddings in self.embeddings.items():
+            if filter and not (all_match(filter) or any_match(filter)):
+                continue
             for embedding in embeddings:
                 dist = self._calculate_distance(obj, embedding, distance)
                 distances.append((doc_id, dist))
@@ -65,17 +77,20 @@ class InMemoryVectorStore(VectorStoreBackend):
         # Prepare the results
         results = []
         for doc_id, dist in top_results:
+            if (dist >= max_distance) if max_distance is not None else False:
+                continue
             results.append({
                 'id': doc_id,
                 'source': self.documents[doc_id]['source'],
                 'attributes': self.documents[doc_id]['attributes'],
-                'chunks': self.chunks[doc_id],
+                'text': ' '.join(self.chunks[doc_id]),
                 'distance': dist
             })
         return results
 
     def delete(self, name, obj=None, filter=None, **kwargs):
         # Clear all stored documents and chunks
+        self.load(name)
         if obj:
             doc_id = obj.get('id')
             del self.documents[doc_id]
@@ -85,6 +100,17 @@ class InMemoryVectorStore(VectorStoreBackend):
             self.documents.clear()
             self.chunks.clear()
             self.embeddings.clear()
+
+    def attributes(self, name, key=None):
+        results = {}
+        for doc in self.documents.values():
+            for k, values in doc.get('attributes', {}).items():
+                if key and k != key:
+                    continue
+                counter = results.setdefault(k, Counter())
+                counter.update(values if isinstance(values, list) else [values])
+        results = {key: dict(counts) for key, counts in results.items()}
+        return results
 
     def _calculate_distance(self, vec1, vec2, metric):
         if metric == 'l2':
