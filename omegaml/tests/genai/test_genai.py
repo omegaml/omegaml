@@ -82,21 +82,35 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         result = self.om.runtime.model('mymodel').complete('X').get()
         self.assertEqual(result, ('complete', 'hello'))  # method, prompt
 
+    def test_prompts_base_model(self):
+        om = self.om
+
+        # test save and restore
+        class MyModel(GenAIModelHandler):
+            def complete(self, prompt, messages=None, conversation_id=None,
+                         data=None, **kwargs):
+                return prompt
+
+        om.models.put(MyModel, 'llms/mymodel')
+        om.models.put('omegaml://models;model=llms/mymodel', 'prompts/myprompt')
+        model = om.models.get('prompts/myprompt')
+        self.assertIsInstance(model, GenAIModelHandler)
+
     def test_openai_put_get_default(self):
         # test save and restore
-        meta = self.om.models.put('openai://localhost/mymodel', 'mymodel')
+        meta = self.om.models.put('openai+https://localhost/mymodel', 'mymodel')
         self.assertEqual(meta.kind, TextModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         model = self.om.models.get('mymodel')
         self.assertIsInstance(model, TextModel)
         # replace
-        meta = self.om.models.put('openai://localhost;model=mymodel', 'mymodel', replace=True)
+        meta = self.om.models.put('openai+https://localhost;model=mymodel', 'mymodel', replace=True)
         self.assertEqual(meta.kind, TextModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         # replace
-        meta = self.om.models.put('openai://localhost/v1;model=mymodel', 'mymodel', replace=True)
+        meta = self.om.models.put('openai+https://localhost/v1;model=mymodel', 'mymodel', replace=True)
         self.assertEqual(meta.kind, TextModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443/v1')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
@@ -249,7 +263,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.provider = OpenAIProvider
         model.provider.embed.return_value = openai_responses
         # check call to openai returns a generator to stream
-        result = model.embed('the quick brown fox jumps')
+        result = model.embed('the quick brown fox jumps', raw=True)
         self.assertEqual(result, openai_responses)
 
     def test_tool_function(self):

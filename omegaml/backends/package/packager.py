@@ -19,6 +19,7 @@ def build_sdist(src, distdir):
 
 
 def install_package(src, dst):
+    logger.debug(f'Installing package from {src} to {dst}')
     cpip.main('install',
               src,
               '--force-reinstall',
@@ -29,6 +30,7 @@ def install_package(src, dst):
 
 def load_from_path(name, path, keep=False):
     import importlib
+    logger.debug(f'Loading module {name} from path {path} using keep={keep}')
     sys.path.insert(0, path)
     try:
         if name in sys.modules:

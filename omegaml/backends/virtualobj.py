@@ -223,6 +223,9 @@ class VirtualObjectHandler(object):
             'run': self.run,
         }
 
+    def load(self):
+        pass
+
     def get(self, data=None, meta=None, store=None, **kwargs):
         raise NotImplementedError
 
@@ -241,6 +244,7 @@ class VirtualObjectHandler(object):
     def __call__(self, data=None, method=None, meta=None, store=None, tracking=None, **kwargs):
         MAP = self._vobj_call_map()
         methodfn = MAP[method]
+        self.load()  # ensure loading of imports and other dependencies
         return methodfn(data=data, meta=meta, store=store, tracking=tracking, **kwargs)
 
 

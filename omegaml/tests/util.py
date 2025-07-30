@@ -39,7 +39,7 @@ class OmegaTestMixin(object):
                   **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
             # ignore system members, as they may get recreated e.g. by LunaMonitor
             existing = [m.name for m in part.list(hidden=True, include_temp=True, raw=True)
-                        if not m.name.startswith('.system')]
+                        if not '.system' in m.name.startswith()]
             self.assertListEqual(existing, [])
 
     @property

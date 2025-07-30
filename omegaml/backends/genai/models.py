@@ -1,5 +1,6 @@
-from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 from types import FunctionType
+
+from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 
 
 class GenAIBaseBackend(VirtualObjectBackend):
@@ -39,6 +40,19 @@ class GenAIBaseBackend(VirtualObjectBackend):
             })
         return data
 
+    def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
+        # TODO this should not be necessary, the data should be resolved by super()
+        #      we need this only due to VirtualObjectBackend not being a ModelBackend
+        if pure_python:
+            result = result.tolist()
+        if rName:
+            meta = self.data_store.put(result, rName)
+            result = meta
+        if self.tracking and getattr(self.tracking, 'autotrack', False):
+            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
+                                   event=method)
+        return result
+
     def complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
         # Xname is the input given by the user
         model: GenAIModel
@@ -75,7 +89,22 @@ class GenAIBaseBackend(VirtualObjectBackend):
         model = self.get(modelname)
         model.load('embed')
         data = self._resolve_input_data('embed', Xname, **kwargs)
-        return model.embed(data)
+        if isinstance(data, str):
+            # a single document
+            documents = [data]
+            dimensions = None  # default to None, let the model decide
+        elif isinstance(data, list):
+            # a list of documents
+            data = data[0] if isinstance(data, list) and len(data) == 1 else data
+            documents = data.get('documents', data) if isinstance(data, dict) else data
+            dimensions = data.get('dimensions', None) if isinstance(data, dict) else None
+        elif isinstance(data, dict):
+            # a dict with documents, e.g. {'documents': ['doc1', 'doc2']}
+            # -- 'input' is the openai format
+            # -- 'documents' is the omegaml format
+            documents = data.get('documents', []) or data.get('input', [])
+            dimensions = data.get('dimensions', None)
+        return model.embed(documents, dimensions=dimensions)
 
     def predict(self, *args, **kwargs):
         raise NotImplementedError('A GenAIModel does not support prediction, use complete or generate')
@@ -141,7 +170,7 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
     _omega_virtual_genai = True
 
     handler_methods = ['template', 'prepare', 'chat', 'complete', 'generate', 'embed', 'toolcall', 'toolresult',
-                       'process']
+                       'process', 'retrieve']
 
     def __init__(self, *args, fn=None, **kwargs):
         if callable(fn):
@@ -159,10 +188,6 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
         return {
             m: getattr(self, m, self._genai_method) for m in self.handler_methods
         } | super()._vobj_call_map()
-
-    @classmethod
-    def wrap(cls, fn):
-        return GenAIModel(fn=fn)
 
 
 def virtual_genai(fn):

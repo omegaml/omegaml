@@ -1,14 +1,14 @@
 from __future__ import absolute_import
 
+from zipfile import ZipFile, ZIP_DEFLATED
+
 import datetime
 import glob
+import joblib
 import os
 import tempfile
 import types
 from shutil import rmtree
-from zipfile import ZipFile, ZIP_DEFLATED
-
-import joblib
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
 
@@ -132,7 +132,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         return super().put_model(obj, name, attributes=attributes)
 
     def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         model = self.model_store.get(modelname)
 
@@ -146,7 +146,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         return result
 
     def predict_proba(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         model = self.model_store.get(modelname)
 
@@ -168,7 +168,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         return meta
 
     def partial_fit(
-          self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+            self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None
@@ -182,8 +182,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         return meta
 
     def score(
-          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
+            **kwargs):
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
@@ -202,8 +202,8 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         return result
 
     def fit_transform(
-          self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
+            **kwargs):
         model = self.model_store.get(modelname)
         X, metaX = self.data_store.get(Xname), self.data_store.metadata(Xname)
         Y, metaY = None, None
@@ -313,7 +313,7 @@ def process(it, fn=None, keep=False, keep_last=False):
     for result in it:
         result = fn(result) if fn else result
         results.append(result) if keep else None
-    return result if keep_last else None
+    return result if keep_last else results
 
 
 def maybe_chunked(meth, argfn, *args, **kwargs):

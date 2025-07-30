@@ -429,14 +429,17 @@ def add_api_endpoints(api):
 
     @api.route('/api/v2/ai/<path:model_id>/<string:action>', methods=['POST', 'PUT'])
     @api.route('/api/v2/ai/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
-    @api.route('/api/v2/openai/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
-               methods=['PUT', 'POST'])
+    @api.route('/api/openai/v1/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
+               methods=['PUT', 'POST'], endpoint='openai_chat_completions')
+    @api.route('/api/openai/v1/embeddings', defaults={'action': 'embed', 'model_id': '_query_'},
+               methods=['PUT', 'POST'], endpoint='openai_embeddings')
     class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         def get(self, model_id, action=None):
             return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
 
+        @api.marshal_with(ServiceOutput)
         def put(self, model_id, action=None):
             api.payload.update(raw=True)  # force OpenAI-like response
             return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
