@@ -5,13 +5,14 @@ from contextlib import contextmanager
 from sklearn.exceptions import NotFittedError
 from unittest.mock import MagicMock
 
+from omegaml.backends.genai.dbmigrate import DatabaseMigrator
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.pgvector import PGVectorBackend
 from omegaml.tests.util import OmegaTestMixin
 
 
-class GenAIModelTests(OmegaTestMixin, TestCase):
+class PGVectorTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml import Omega
         self.om = Omega()
@@ -19,9 +20,11 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.clean()
         self._mocked_store = []
 
+    @mock.patch.object(DatabaseMigrator, 'run_migrations')
     @mock.patch.object(PGVectorBackend, '_get_connection')
-    def test_put_get_mocked(self, _get_connection):
+    def test_put_get_mocked(self, _get_connection, run_migrations):
         _get_connection.side_effect = self._mocked_get_connection
+        run_migrations.side_effect = lambda *args, **kwargs: None
         self._test_put_get()
 
     @skipUnless(os.environ.get('TEST_PGVECTOR'), "skipping real pgvector test, set TEST_PGVECTOR=1 to run")

@@ -170,6 +170,30 @@ class GenAIView(BaseView):
             } for msg in messages
         ]}
 
+    @fv.route('/{self.segment}/docs/new', methods=['POST'])
+    def api_create_index(self):
+        """Create a new index for documents"""
+        om = self.om
+        index_name = self.request.json.get('name')
+        description = self.request.json.get('description', '')
+        if not index_name:
+            abort(400, 'Index name is required')
+        # TODO use om.defaults.variables for the connection string
+        cnxstring = 'pgvector://postgres:test@localhost:5432/postgres'
+        attributes = {
+            'docs': description,
+        }
+        index = om.datasets.put(cnxstring, index_name, kind='pgvector.conx', attributes=attributes)
+        return jsonify({
+            'success': True,
+            'message': f'Index >{index_name}< created successfully!',
+            'index': {
+                'name': index.name,
+                'kind': index.kind,
+                'created_at': utcnow().isoformat()
+            }
+        }), 201
+
 
 def create_view(bp):
     view = GenAIView('index')

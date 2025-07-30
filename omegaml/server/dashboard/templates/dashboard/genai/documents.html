@@ -114,6 +114,14 @@
                       RAG Document Management
                     </h5>
                     {% block segmentheader %}
+                    <div class="card-tools">
+                      <a href=""
+                        class="btn btn-sml btn-primary px-4 py-0 d-flex align-items-center justify-content-center"
+                        type="button" data-toggle="modal" data-target="#createIndexModal" data-toggle="tooltip"
+                        title="Create New Index">
+                        <i class="fa-solid fa-plus" style="margin: auto; color:white"></i>
+                      </a>
+                    </div>
                     {% endblock segmentheader %}
                   </div>
                 </div>
@@ -136,22 +144,14 @@
                               <div class="input-group">
                                 <select class="form-control" id="indexSelect">
                                   {% for meta in indices %}
-                                  <option value="{{ meta.name }}">{{ meta.name }}</option>
+                                  <option value="{{ meta.name }}">{{ meta.name }} ({{ meta.attributes.get('docs',
+                                    '') | default(meta.name, true) | truncate(30, true) }})</option>
+                                  </option>
                                   {% endfor %}
                                 </select>
-                                <!--
-                                <div class="input-group-append">
-                                  <button class="btn btn-outline-primary btn-create-index" type="button"
-                                    data-toggle="modal" data-target="#createIndexModal" data-toggle="tooltip"
-                                    title="Create New Index">
-                                    <i class="fas fa-plus"></i>
-                                  </button>
-                                </div>
-                                -->
                               </div>
                             </div>
                           </div>
-
                           <!-- Upload Zone -->
                           <div class="col-md-6">
                             <div class="form-group">
@@ -576,18 +576,32 @@
         return;
       }
 
-      const displayName = description ? `${name} (${description})` : name;
-      const option = new Option(displayName, name);
-      $('#indexSelect').append(option);
-      $('#indexSelect').val(name);
+      $.ajax({
+        url: url_for(".index_api_create_index"),
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ name: name, description: description }),
+        success: function () {
+          const displayName = description ? `${name} (${description})` : name;
+          const option = new Option(displayName, name);
+          $('#indexSelect').append(option);
+          $('#indexSelect').val(name);
 
-      sampleDocuments[name] = [];
+          sampleDocuments[name] = [];
 
-      $('#createIndexModal').modal('hide');
-      $('#createIndexForm')[0].reset();
+          $('#createIndexModal').modal('hide');
+          $('#createIndexForm')[0].reset();
 
-      loadDocuments();
-      showAlert(`Index "${name}" created successfully`, 'success');
+          loadDocuments();
+          showAlert(`Index "${name}" created successfully`, 'success');
+        },
+        error: function (xhr) {
+          const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to create index. Please try again.';
+          showAlert(errorMessage, 'danger');
+        }
+      });
+
+
     }
 
     function showAlert(message, type) {

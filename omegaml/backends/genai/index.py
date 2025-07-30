@@ -126,9 +126,9 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         meta.attributes.update(attributes) if attributes else None
         return meta.save()
 
-    def drop(self, name, obj=None, filter=None, force=True, **kwargs):
+    def drop(self, name, obj=None, filter=None, force=False, **kwargs):
         try:
-            self.delete(name, obj=obj, filter=filter, **kwargs)
+            self.delete(name, obj=obj, filter=filter, drop=force, **kwargs)
         except Exception as e:
             text = f'Could not delete vector store for {name} due to {e}'
             if not force:
