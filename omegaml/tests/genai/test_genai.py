@@ -5,7 +5,6 @@ from types import FunctionType
 
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
-from omegaml.backends.genai.mongovector import MongoDBVectorStore
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
@@ -25,7 +24,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.clean()
         # self.om.models.register_backend(GenAIBaseBackend.KIND, GenAIBaseBackend)
         self.om.models.register_backend(TextModelBackend.KIND, TextModelBackend)
-        self.om.models.register_backend(MongoDBVectorStore.KIND, MongoDBVectorStore)
+        # self.om.models.register_backend(MongoDBVectorStore.KIND, MongoDBVectorStore)
 
     def test_put_get_model_handler(self):
         # test save and restore

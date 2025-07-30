@@ -102,6 +102,13 @@ class DatabaseMigrator:
         new_columns = [column for column in self.model.__table__.columns if column.name not in columns_to_drop]
 
         # Create new table
+        # check if there are foreign key constraints
+        foreign_keys = [fk for fk in self.model.__table__.foreign_keys]
+        if foreign_keys:
+            print(
+                f"Warning: Foreign key constraints detected for columns {columns_to_drop}. Cannot drop/recreate the table.")
+            return
+            # Handle foreign keys as needed, e.g., by dropping them or adjusting the migration logic
         self.session.execute(
             text(
                 f'CREATE TABLE {new_table_name} ({", ".join([f"{col.name} {col.type.compile()}" for col in new_columns])})'))
@@ -112,10 +119,13 @@ class DatabaseMigrator:
             text(f'INSERT INTO {new_table_name} ({columns_to_copy}) SELECT {columns_to_copy} FROM {table_name}'))
 
         # Drop the old table
-        self.session.execute(text(f'DROP TABLE {table_name}'))
-
-        # Rename the new table to the original table name
-        self.session.execute(text(f'ALTER TABLE {new_table_name} RENAME TO {table_name}'))
+        try:
+            self.session.execute(text(f'DROP TABLE {table_name}'))
+            # Rename the new table to the original table name
+            self.session.execute(text(f'ALTER TABLE {new_table_name} RENAME TO {table_name}'))
+        except Exception as e:
+            print(f"Failed to drop table {table_name}: {e}. Stopped migration to drop column {columns_to_drop}.")
+            self.session.rollback()
 
     def apply_migration(self):
         """Apply migration based on the model."""
@@ -127,17 +137,19 @@ class DatabaseMigrator:
         try:
             # Determine columns to add or modify
             for column_name, column_type in model_columns.items():
-                current_column_type_str = current_columns[column_name].compile(dialect)
                 column_type_str = column_type.compile(dialect)
                 if column_name not in current_columns:
                     self.add_column(table_name, column_name, column_type)
-                elif current_column_type_str != column_type_str:
+                    current_column_type_str = column_type_str
+                else:
+                    current_column_type_str = current_columns[column_name].compile(dialect)
+                if current_column_type_str != column_type_str:
                     print(
                         f"Altering column: {column_name} in {table_name} from {current_column_type_str} to {column_type_str}")
                     # Note: Altering column types can be complex and may require additional handling
                     self.session.execute(
                         text(
-                            f'ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {column_type_str}'))
+                            f'ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {column_type_str} USING {column_name}::{column_type_str}'))
 
             # Determine columns to drop
             columns_to_drop = [column_name for column_name in current_columns if column_name not in model_columns]
