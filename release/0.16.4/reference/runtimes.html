@@ -725,6 +725,25 @@ dataset if rName was given</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.embed" title="Link to this definition">¶</a></dt>
+<dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.embed(X)</span></code>. If rName is given the result is
+stored as object rName</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Xname</strong> – name of the X dataset</p></li>
+<li><p><strong>rName</strong> – name of the resulting dataset (optional)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the data returned by .embed, or the metadata of the rName
+dataset if rName was given</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.fit" title="Link to this definition">¶</a></dt>
 <dd><p>fit the model</p>

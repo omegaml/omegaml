@@ -1,0 +1,846 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.runtime.experiment &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Support" href="../support.html" />
+    <link rel="prev" title="omegaml.mdataframe" href="mdataframe.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">om.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jobs.html">om.jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html">om.scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">om.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html">omegaml.mdataframe</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">omegaml.runtime.experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#concepts">Concepts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backends">Backends</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.ExperimentBackend"><code class="docutils literal notranslate"><span class="pre">ExperimentBackend</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#metrics-logging">Metrics Logging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.TrackingProvider"><code class="docutils literal notranslate"><span class="pre">TrackingProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.OmegaSimpleTracker"><code class="docutils literal notranslate"><span class="pre">OmegaSimpleTracker</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.OmegaProfilingTracker"><code class="docutils literal notranslate"><span class="pre">OmegaProfilingTracker</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.NoTrackTracker"><code class="docutils literal notranslate"><span class="pre">NoTrackTracker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#runtime-integration">Runtime Integration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../release/0.17.0/reference/tracking.html">release/0.17.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">omegaml.runtime.experiment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/tracking.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="omegaml-runtime-experiment">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">omegaml.runtime.experiment</a><a class="headerlink" href="#omegaml-runtime-experiment" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#omegaml-runtime-experiment" id="id1">omegaml.runtime.experiment</a></p>
+<ul>
+<li><p><a class="reference internal" href="#concepts" id="id2">Concepts</a></p></li>
+<li><p><a class="reference internal" href="#backends" id="id3">Backends</a></p></li>
+<li><p><a class="reference internal" href="#metrics-logging" id="id4">Metrics Logging</a></p></li>
+<li><p><a class="reference internal" href="#runtime-integration" id="id5">Runtime Integration</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="concepts">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Concepts</a><a class="headerlink" href="#concepts" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ExperimentBackend</span></code> provides the storage layer (backend to <code class="docutils literal notranslate"><span class="pre">om.models</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TrackingProvider</span></code> provides the metrics logging API</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TrackingProxy</span></code> provides live metrics tracking in runtime tasks</p></li>
+</ul>
+</section>
+<section id="backends">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Backends</a><a class="headerlink" href="#backends" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">ExperimentBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend" title="Link to this definition">¶</a></dt>
+<dd><p>ExperimentBackend provides storage of tracker configurations</p>
+<p>Usage:</p>
+<blockquote>
+<div><p>To log metrics and other data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> <span class="c1"># automatically log score result</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;mymetric&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;myparam&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">),</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To log data and automatically profile system data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s1">&#39;profiling&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> <span class="c1"># automatically log score result</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;mymetric&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;myparam&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">),</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># profiling data contains metrics for cpu, memory and disk use</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;profile&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To get back experiment data without running an experiment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># recommended way</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">use</span><span class="p">()</span>
+<span class="n">exp_df</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+
+<span class="c1"># experiments exist in the models store</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments/myexp&#39;</span><span class="p">)</span>
+<span class="n">exp_df</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tracking.OmegaSimpleTracker</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tracking.OmegaProfilingTracker</span></code></p></li>
+</ul>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'experiment.tracker'</span></em><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>retrieve a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the object</p></li>
+<li><p><strong>version</strong> – the version of the object (not supported)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>store a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – the model object to be stored</p></li>
+<li><p><strong>name</strong> – the name of the object</p></li>
+<li><p><strong>attributes</strong> – attributes for meta data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="metrics-logging">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Metrics Logging</a><a class="headerlink" href="#metrics-logging" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.TrackingProvider">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">TrackingProvider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autotrack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/base.html#TrackingProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.TrackingProvider" title="Link to this definition">¶</a></dt>
+<dd><p>TrackingProvider implements an abstract interface to experiment tracking</p>
+<p>Concrete implementations like MLFlow, Sacred or Neptune.ai can be implemented
+based on TrackingProvider. In combination with the runtime’s OmegaTrackingProxy
+this provides a powerful tracking interface that scales with your needs.</p>
+<p>How it works:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>Experiments created using <code class="docutils literal notranslate"><span class="pre">om.runtime.experiment()</span></code> are stored as
+instances of a TrackingProvider concrete implementation</p></li>
+<li><p>Upon retrieval of an experiment, any call to its API is proxied to the
+actual implementation, e.g. MLFlow</p></li>
+<li><p>On calling a model method via the runtime, e.g. <code class="docutils literal notranslate"><span class="pre">om.runtime.model().fit()</span></code>,
+the TrackingProvider information is passed on to the runtime worker,
+and made available as the backend.tracking property. Thus within a
+model backend, you can always log to the tracker by using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracking</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">()</span> <span class="c1"># call any TrackingProvider method</span>
+</pre></div>
+</div>
+</li>
+<li><p>omega-ml provides the OmegaSimpleTracker, which implements a tracking
+interface similar to packages like MLFlow, Sacred. See ExperimentBackend
+for an example.</p></li>
+</ol>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.TrackingProvider.as_monitor">
+<span class="sig-name descname"><span class="pre">as_monitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alerts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/base.html#TrackingProvider.as_monitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.TrackingProvider.as_monitor" title="Link to this definition">¶</a></dt>
+<dd><p>Return and attach a drift monitor to this experiment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>str</em>) – the name of the model</p></li>
+<li><p><strong>alerts</strong> (<em>list</em>) – a list of alert definitions. Each alert definition is a dict
+with keys ‘event’, ‘recipients’. ‘event’ is the event to get from the
+tracking log, ‘recipients’ is a list of recipients (e.g. email address,
+notification channel)</p></li>
+<li><p><strong>schedule</strong> (<em>str</em>) – the job scheduling interval for the monitoring job, as used
+in om.jobs.schedule() when the job is created</p></li>
+<li><p><strong>store</strong> (<a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><em>OmegaStore</em></a>) – the store to use, defaults to self._model_store</p></li>
+<li><p><strong>provider</strong> (<em>str</em>) – the name of the monitoring provider, defaults to store.prefix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a drift monitor for the object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>monitor (DriftMonitor)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.TrackingProvider.track">
+<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/base.html#TrackingProvider.track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.TrackingProvider.track" title="Link to this definition">¶</a></dt>
+<dd><p>attach this experiment to the named object</p>
+<p>Usage:</p>
+<blockquote>
+<div><p># use in experiment context
+with om.runtime.experiment(‘myexp’) as exp:</p>
+<blockquote>
+<div><p>exp.track(‘mymodel’)</p>
+</div></blockquote>
+<p># use on experiment directly
+exp = om.runtime.experiment(‘myexp’)
+exp.track(‘mymodel’)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>str</em>) – the name of the object</p></li>
+<li><p><strong>store</strong> (<a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><em>OmegaStore</em></a>) – optional, om.models, om.scripts, om.jobs.
+If not provided will use om.models</p></li>
+<li><p><strong>label</strong> (<em>str</em>) – optional, the label of the worker, default is
+‘default’</p></li>
+<li><p><strong>monitor</strong> (<em>bool</em><em>|</em><em>str</em>) – optional, truthy sets up a monitor to track
+drift in the object, if a string is provided it is used as
+the monitoring provider</p></li>
+<li><p><strong>monitor_kwargs</strong> (<em>dict</em>) – optional, additional keyword arguments
+to pass to the monitor</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This modifies the object’s metadata.attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s1">&#39;tracking&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="n">label</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_experiment</span> <span class="p">}</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>If monitor is set, a monitor definition is added to the object’s metadata:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s1">&#39;tracking&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;monitors&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="s1">&#39;experiment&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_experiment</span><span class="p">,</span>
+                   <span class="s1">&#39;provider&#39;</span><span class="p">:</span> <span class="n">monitor</span> <span class="p">}</span> <span class="p">]</span> <span class="p">}</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">OmegaSimpleTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker" title="Link to this definition">¶</a></dt>
+<dd><p>A tracking provider that logs to an omegaml dataset</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="mf">.78</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17: </span>any extra</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.active_run">
+<span class="sig-name descname"><span class="pre">active_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.active_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.active_run" title="Link to this definition">¶</a></dt>
+<dd><p>set the lastest run as the active run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run</strong> (<em>int</em><em>|</em><em>str</em>) – optional or unique task id, if None the
+latest active run will be set, or a new run is created if
+no active run exists.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>current run (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.clear" title="Link to this definition">¶</a></dt>
+<dd><p>clear all data</p>
+<p>All data is removed from the experiment’s dataset. This is not recoverable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force</strong> (<em>bool</em>) – if True, clears all data, otherwise raises an error</p>
+</dd>
+</dl>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<ul class="simple">
+<li><p>this will clear all data and is not recoverable</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – if force is not True</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 0.16.2.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.data" title="Link to this definition">¶</a></dt>
+<dd><p>build a dataframe of all stored data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment</strong> (<em>str</em><em>|</em><em>list</em>) – the name of the experiment, defaults to its current value</p></li>
+<li><p><strong>run</strong> (<em>int</em><em>|</em><em>list</em><em>|</em><em>str</em><em>|</em><em>slice</em>) – the run(s) to get data back, defaults to current run, use ‘all’ for all,
+1-indexed since first run, or -1 indexed from latest run, can combine both. If run &lt; 0
+would go before the first run, run 1 will be returned. A slice(start, stop) can be used
+to specify a range of runs.</p></li>
+<li><p><strong>event</strong> (<em>str</em><em>|</em><em>list</em>) – the event(s) to include</p></li>
+<li><p><strong>step</strong> (<em>int</em><em>|</em><em>list</em>) – the step(s) to include</p></li>
+<li><p><strong>key</strong> (<em>str</em><em>|</em><em>list</em>) – the key(s) to include</p></li>
+<li><p><strong>raw</strong> (<em>bool</em>) – if True returns the raw data instead of a DataFrame</p></li>
+<li><p><strong>lazy</strong> (<em>bool</em>) – if True returns the Cursor instead of data, ignores raw</p></li>
+<li><p><strong>since</strong> (<em>datetime</em><em>|</em><em>timedelta</em><em>|</em><em>str</em>) – only return data since this date. If both since and run are specified,
+only matches since the given date are returned. If since is a string it must be parseable
+by pd.to_datime, or be given in the format ‘&lt;n&gt;&lt;unit:[smhdwMqy]&gt;’ for relative times, or a timedelta object. See
+dtrelative() for details on relative times.</p></li>
+<li><p><strong>end</strong> (<em>datetime</em>) – only return data until this date</p></li>
+<li><p><strong>batchsize</strong> (<em>int</em>) – if specified, returns a generator yielding data in batches of batchsize,
+note that raw is respected, i.e. raw=False yields a DataFrame for every batch, raw=True
+yields a list of dicts</p></li>
+<li><p><strong>slice</strong> (<em>tuple</em>) – if specified, returns a slice of the data, e.g. slice=(10, 25) returns rows 10-25,
+the slice is applied after all other filters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>data (DataFrame) if raw == False</p></li>
+<li><p>data (list of dicts) if raw == True</p></li>
+<li><p>None if no data exists</p></li>
+</ul>
+<dl class="simple">
+<dt>For lazy == True, no batchsize, regardless of raw:</dt><dd><ul class="simple">
+<li><p>data (Cursor) for any value of raw</p></li>
+</ul>
+</dd>
+</dl>
+<p>For lazy == True, with batchsize:
+* data(generator of list[dict]) if raw = True
+* data(generator of DataFrame) if raw = False</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>For lazy == False</p>
+</dd>
+</dl>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.16.2: </span>run supports negative indexing</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17.</span></p>
+</div>
+<p>added batchsize</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17: </span>enabled the use of run=’*’ to retrieve all runs, equivalent of run=’all’</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17: </span>enabled data(run=, start=, end=, since=), accepting range queries on run, dt and event#</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_artifact">
+<span class="sig-name descname"><span class="pre">log_artifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_artifact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_artifact" title="Link to this definition">¶</a></dt>
+<dd><p>log any object to the current run</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># log an artifact</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">mydict</span><span class="p">,</span> <span class="s1">&#39;somedata&#39;</span><span class="p">)</span>
+
+<span class="c1"># retrieve back</span>
+<span class="n">mydict_</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">restore_artifact</span><span class="p">(</span><span class="s1">&#39;somedata&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>obj</em>) – any object to log</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – the name of artifact</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step, if any</p></li>
+<li><p><strong>**extra</strong> – any extra data to log</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>bool, str, int, float, list, dict are stored as <code class="docutils literal notranslate"><span class="pre">format=type</span></code></p></li>
+<li><p>Metadata is stored as <code class="docutils literal notranslate"><span class="pre">format=metadata</span></code></p></li>
+<li><p>objects supported by <code class="docutils literal notranslate"><span class="pre">om.models</span></code> are stored as <code class="docutils literal notranslate"><span class="pre">format=model</span></code></p></li>
+<li><p>objects supported by <code class="docutils literal notranslate"><span class="pre">om.datasets</span></code> are stored as <code class="docutils literal notranslate"><span class="pre">format=dataset</span></code></p></li>
+<li><p>all other objects are pickled and stored as <code class="docutils literal notranslate"><span class="pre">format=pickle</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_data">
+<span class="sig-name descname"><span class="pre">log_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_data" title="Link to this definition">¶</a></dt>
+<dd><p>log x/y data for model predictions</p>
+<p>This is semantic sugar for log_artifact() using the ‘data’ event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the name of the artifact</p></li>
+<li><p><strong>value</strong> (<em>any</em>) – the x/y data</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step</p></li>
+<li><p><strong>dt</strong> (<em>datetime</em>) – the datetime</p></li>
+<li><p><strong>event</strong> (<em>str</em>) – the event, defaults to ‘data’</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_events">
+<span class="sig-name descname"><span class="pre">log_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_events" title="Link to this definition">¶</a></dt>
+<dd><p>log a series of events</p>
+<p>This is a convenience method to log multiple values for the same event.
+All values will be logged with the same commong log data, i.e. the same
+datetime, step, and any extra values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<em>str</em>) – the event name</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – the key for the event</p></li>
+<li><p><strong>values</strong> (<em>list</em>) – a list of values to log</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step, if any</p></li>
+<li><p><strong>dt</strong> (<em>datetime</em>) – the datetime, defaults to now</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version NEXT.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_extra">
+<span class="sig-name descname"><span class="pre">log_extra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remove</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_extra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_extra" title="Link to this definition">¶</a></dt>
+<dd><p>add additional log information for every subsequent logging call</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>remove</strong> (<em>bool</em>) – if True, removes the extra log information</p></li>
+<li><p><strong>kwargs</strong> – any key-value pairs to log</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_metric">
+<span class="sig-name descname"><span class="pre">log_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_metric" title="Link to this definition">¶</a></dt>
+<dd><p>log a metric value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the metric name</p></li>
+<li><p><strong>value</strong> (<em>str</em><em>|</em><em>float</em><em>|</em><em>int</em><em>|</em><em>bool</em><em>|</em><em>dict</em>) – the metric value</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>logged as <code class="docutils literal notranslate"><span class="pre">event=metric</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_param">
+<span class="sig-name descname"><span class="pre">log_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_param"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_param" title="Link to this definition">¶</a></dt>
+<dd><p>log an experiment parameter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the parameter name</p></li>
+<li><p><strong>value</strong> (<em>str</em><em>|</em><em>float</em><em>|</em><em>int</em><em>|</em><em>bool</em><em>|</em><em>dict</em>) – the parameter value</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>logged as <code class="docutils literal notranslate"><span class="pre">event=param</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.log_system">
+<span class="sig-name descname"><span class="pre">log_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.log_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.log_system" title="Link to this definition">¶</a></dt>
+<dd><p>log system data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the key to use, defaults to ‘system’</p></li>
+<li><p><strong>value</strong> (<em>str</em><em>|</em><em>float</em><em>|</em><em>int</em><em>|</em><em>bool</em><em>|</em><em>dict</em>) – the parameter value</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>logged as <code class="docutils literal notranslate"><span class="pre">event=system</span></code></p></li>
+<li><p>logs platform, python version and list of installed packages</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.restore_artifact">
+<span class="sig-name descname"><span class="pre">restore_artifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.restore_artifact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.restore_artifact" title="Link to this definition">¶</a></dt>
+<dd><p>restore a specific logged artifact</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.17: </span>deprecated, use exp.restore_artifacts() instead</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.restore_artifacts">
+<span class="sig-name descname"><span class="pre">restore_artifacts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.restore_artifacts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.restore_artifacts" title="Link to this definition">¶</a></dt>
+<dd><p>restore logged artifacts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the name of the artifact as provided in log_artifact</p></li>
+<li><p><strong>run</strong> (<em>int</em>) – the run for which to query, defaults to current run</p></li>
+<li><p><strong>since</strong> (<em>datetime</em>) – only return data since this date</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – the step for which to query, defaults to all steps in run</p></li>
+<li><p><strong>value</strong> (<em>dict</em><em>|</em><em>list</em>) – dict or list of dict, this value is used instead of
+querying data, use to retrieve an artifact from contents of <code class="docutils literal notranslate"><span class="pre">.data()</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of restored objects</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>this will restore the artifact according to its type assigned
+by <code class="docutils literal notranslate"><span class="pre">.log_artifact()</span></code>. If the type cannot be determined, the
+actual data is returned</p></li>
+</ul>
+<dl class="simple">
+<dt>Updates:</dt><dd><ul class="simple">
+<li><p>since 0.17: return list of objects instead of last object</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.restore_data">
+<span class="sig-name descname"><span class="pre">restore_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.restore_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.restore_data" title="Link to this definition">¶</a></dt>
+<dd><p>restore x/y data for model predictions</p>
+<p>This is semantic sugar for restore_artifacts() using the event=’data’ event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – the name of the artifact</p></li>
+<li><p><strong>run</strong> (<em>int</em>) – the run for which to query, defaults to current run</p></li>
+<li><p><strong>event</strong> (<em>str</em>) – the event, defaults to ‘data’</p></li>
+<li><p><strong>since</strong> (<em>datetime</em>) – only return data since this date</p></li>
+<li><p><strong>concat</strong> (<em>bool</em>) – if True, concatenates the data into a single object,
+in this case all data must be of the same type. Defaults to True.</p></li>
+<li><p><strong>**extra</strong> – any other values to store with event</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of restored objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">immediate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.start" title="Link to this definition">¶</a></dt>
+<dd><p>start a new run</p>
+<p>This starts a new run and logs the start event</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.status" title="Link to this definition">¶</a></dt>
+<dd><p>status of a run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run</strong> (<em>int</em>) – the run number, defaults to the currently active run</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>status in ‘STARTED’, ‘STOPPED’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flush</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.stop" title="Link to this definition">¶</a></dt>
+<dd><p>stop the current run</p>
+<p>This stops the current run and records the stop event</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaSimpleTracker.use">
+<span class="sig-name descname"><span class="pre">use</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#OmegaSimpleTracker.use"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaSimpleTracker.use" title="Link to this definition">¶</a></dt>
+<dd><p>reuse the latest run instead of starting a new one</p>
+<p>semantic sugar for self.active_run()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaProfilingTracker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">OmegaProfilingTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/profiling.html#OmegaProfilingTracker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaProfilingTracker" title="Link to this definition">¶</a></dt>
+<dd><p>A metric tracker that runs a system profiler while the experiment is active</p>
+<p>Will record <code class="docutils literal notranslate"><span class="pre">profile</span></code> events that contain cpu, memory and disk profilings.
+See BackgroundProfiler.profile() for details of the profiling metrics collected.</p>
+<p>Usage:</p>
+<blockquote>
+<div><p>To log metrics and system performance data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s1">&#39;profiling&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="o">...</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;profile&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Properties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">m</span> <span class="c1"># interval of n.m seconds to profile, defaults to 3 seconds</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;memory&#39;</span><span class="p">,</span> <span class="s1">&#39;disk&#39;</span><span class="p">]</span> <span class="c1"># all or subset of metrics to collect</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">max_buffer</span> <span class="o">=</span> <span class="n">n</span> <span class="c1"># number of items in buffer before tracking</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>the profiling data is buffered to reduce the number of database writes, by
+default the data is written on every 6 profiling events (default: 6 * 10 = every 60 seconds)</p></li>
+<li><p>the step reported in the tracker counts the profiling event since the start, it is not
+related to the step (epoch) reported by e.g. tensorflow</p></li>
+<li><p>For every step there is a <code class="docutils literal notranslate"><span class="pre">event=profile</span></code>, <code class="docutils literal notranslate"><span class="pre">key=profile_dt</span></code> entry which you can use
+to relate profiling events to a specific wall-clock time.</p></li>
+<li><p>It usually sufficient to report system metrics in intervals &gt; 10 seconds since machine
+learning algorithms tend to use CPU and memory over longer periods of time.</p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.OmegaProfilingTracker.log_profile">
+<span class="sig-name descname"><span class="pre">log_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/profiling.html#OmegaProfilingTracker.log_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.OmegaProfilingTracker.log_profile" title="Link to this definition">¶</a></dt>
+<dd><p>the callback for BackgroundProfiler</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.NoTrackTracker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">NoTrackTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autotrack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/simple.html#NoTrackTracker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.NoTrackTracker" title="Link to this definition">¶</a></dt>
+<dd><p>A default tracker that does not record anything</p>
+</dd></dl>
+
+<p><em>for tensorflow</em></p>
+</section>
+<section id="runtime-integration">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Runtime Integration</a><a class="headerlink" href="#runtime-integration" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdataframe.html" class="btn btn-neutral float-left" title="omegaml.mdataframe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../support.html" class="btn btn-neutral float-right" title="Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../0.15.2/reference/tracking.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../latest/reference/tracking.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../release/0.15.3/reference/tracking.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../release/0.15.5/reference/tracking.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../release/0.16.0/reference/tracking.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../release/0.16.1/reference/tracking.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../release/0.16.2/reference/tracking.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../release/0.16.3/reference/tracking.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/reference/tracking.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../release/0.17.0/reference/tracking.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../stable/reference/tracking.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="tracking.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
