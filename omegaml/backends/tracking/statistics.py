@@ -1,6 +1,7 @@
 import math
-
 import pandas as pd
+
+from omegaml.util import tryOr
 
 
 class ExperimentStatistics:
@@ -65,7 +66,7 @@ class ExperimentStatistics:
         tp_unit = tp_unit or self.options.tp_unit  # throughput units in seconds (3600 = 1 hour)
         percentiles = percentiles or self.options.percentiles
         kwargs.setdefault('run', 'all')
-        metrics = self.metrics(percentiles=percentiles, groupby='', **kwargs)
+        metrics = tryOr(lambda: self.metrics(percentiles=percentiles, groupby='', **kwargs), pd.DataFrame())
         duration = self.latency(time_key=time_key, time_events=time_events, groupby=groupby,
                                 percentiles=percentiles, **kwargs)
         if not perf_stats:
@@ -112,7 +113,7 @@ class ExperimentStatistics:
         return pd.concat(aggstats, copy=False)
 
     def latency(self, time_key=None, time_events=None, percentiles=None,
-                groupby=None, **kwargs):
+                groupby=None, delta=None, **kwargs):
         """ calculate latency for each group of events
 
         This queries exp.data(event=time_events, **kwargs) and calculates the duration for each
@@ -125,6 +126,10 @@ class ExperimentStatistics:
             time_events (list): the events to use for duration, defaults to ['start', 'stop']
             percentiles (bool|list): the percentiles to pass to pandas.DataFrame.describe()
             groupby (str): the column to group by for duration calculation, defaults to 'run'
+            delta (bool): if True, calculate cumulative latency, defaults to False.
+                By default, the latency for each group of events is calculated as the difference between
+                the first and last event of each group. If True, the latency is calculated as the
+                difference between the relative start times of each group.
             **kwargs:  any filter arguments to pass to exp.data(), by default sets run='all'
 
         Returns:
@@ -143,12 +148,15 @@ class ExperimentStatistics:
         percentiles = None if not percentiles else (percentiles or self.options.percentiles)
 
         def stats(time_data):
-            duration = (time_data
-                        .groupby(groupby)
-                        .apply(lambda v: ((v['dt'].max() - v['dt'].min())
-                                          .total_seconds())
-                               )
-                        )
+            if delta:
+                duration = 0
+            else:
+                duration = (time_data
+                            .groupby(groupby)
+                            .apply(lambda v: ((v['dt'].max() - v['dt'].min())
+                                              .total_seconds())
+                                   )
+                            )
             if percentiles:
                 duration = (duration
                             .describe(percentiles=None if percentiles is True else percentiles)
@@ -285,7 +293,7 @@ class ExperimentStatistics:
         bins = pd.cut(time_data['dt'], bins=time_slots)
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
         throughput_eff = (time_data
-                          .groupby(bins)
+                          .groupby(bins, observed=False)
                           .apply(lambda v: ((len(v) // 2) / max((v['dt'].max() - v['dt'].min())
                                                                 .total_seconds() * tp_unit, 1))
                                  )

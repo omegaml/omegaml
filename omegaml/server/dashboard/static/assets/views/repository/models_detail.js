@@ -1,6 +1,6 @@
 import DateRangeView from "../../widgets/sincepick.js";
 import PaginatedRunGridView from "../../widgets/pagedcards.js";
-import ExperimentView from "./experimentsview.js";
+import ExperimentView from "../runtime/experimentsview.js";
 
 $(function () {
   $("#experiments-tab").on("shown.bs.tab", function (e) {
