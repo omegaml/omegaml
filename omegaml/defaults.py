@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
-from os.path import basename
-
 import logging
 import os
 import shutil
 import sys
+from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
@@ -481,6 +480,10 @@ if not is_cli_run and is_test_run:
     logging.getLogger().setLevel(logging.ERROR)
 else:
     # overrides in actual operations
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('omegaml')
+    logger.setLevel(logging.DEBUG)
+    logger.promote = True
     load_config_file()
 
 # load extensions, always last step to ensure we have user configs loaded

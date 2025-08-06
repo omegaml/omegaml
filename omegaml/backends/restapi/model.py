@@ -119,6 +119,9 @@ class GenericModelResource(object):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
+            return '', 302, {'Location': 'http://localhost:8080/events/chat/completions'}, {
+                'session_id': str(promise.id)}
+
             def stream_result(promise):
                 class Sink(list):
                     def put(self, chunks):
@@ -131,7 +134,6 @@ class GenericModelResource(object):
                 logger.debug("complete:stream_result getting stream")
                 streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
                                                  executor=LocalExecutor(),
-                                                 interval=0.01,
                                                  sink=buffer)
                 emitter = streaming.make(lambda window: window.data)
                 has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
@@ -142,6 +144,7 @@ class GenericModelResource(object):
                     for chunk in buffer:
                         logger.debug("complete:stream_result chunk received: %s", chunk)
                         yield self.prepare_result(chunk, model_id=model_id, raw=raw)
+                        logger.debug("sent:stream_result chunk sent: %s", chunk)
                     buffer.clear()
                     sleep(0.01)
                 # get the final result, this is to clean up celery
