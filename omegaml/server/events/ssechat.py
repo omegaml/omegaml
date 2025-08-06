@@ -4,22 +4,14 @@ import logging
 import threading
 from time import sleep
 
-from flask import Flask, Response, request, abort
-
-from minibatch.tests.util import LocalExecutor
-
-app = Flask(__name__)
-logger = app.logger
-
-# disable dump of watchdog DEBUG messages on startup with debug=True
-watchdog_logger = logging.getLogger('watchdog')
-watchdog_logger.setLevel(logging.INFO)
-
-# Sample words to send in the SSE stream
-words = [f"word{i}" for i in range(1, 10)]
+from flask import Response, request, abort, Blueprint, current_app
 
 import omegaml as om
+from minibatch.tests.util import LocalExecutor
 
+logger = logging.getLogger(__name__)
+
+bp = Blueprint('ssechat', __name__)
 context = threading.local()
 
 
@@ -38,7 +30,7 @@ def authorized(fn):
 
     def inner(*args, **kwargs):
         context.session_id = session_id = request.cookies.get('session_id')
-        app.logger.info('session: %s', session_id)
+        current_app.logger.info('session: %s', session_id)
         if not session_id:
             abort(401)
         return fn(*args, **kwargs)
@@ -105,13 +97,13 @@ def stream_result(key):
     logger.debug("done:stream_result closing response")
 
 
-@app.route('/events/chat/completions')
+@bp.route('/events/chat/completions')
 @authorized
 def events_chat_completions():
     return Response(stream_result(context.session_id), content_type='text/event-stream')
 
 
-@app.route('/test')
+@bp.route('/test')
 def perftest():
     # use this to test performance of threaded v.s. unthreaded
     # -- threaded=False will increase p50 latency per request
@@ -123,7 +115,3 @@ def perftest():
     # this will send 50 requests/second
     sleep(1.0)
     return 'OK'
-
-
-if __name__ == '__main__':
-    app.run(port=5001, threaded=True, debug=True)
