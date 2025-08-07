@@ -1,12 +1,16 @@
+import json
 import logging
+from hashlib import pbkdf2_hmac
 from time import sleep
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 from celery.states import UNREADY_STATES, FAILURE
+from jose import jwe
 
 from minibatch.tests.util import LocalExecutor
-from omegaml.util import ensure_json_serializable
+from omegaml.util import ensure_json_serializable, utcnow, tryOr
 
 logger = logging.getLogger(__name__)
 
@@ -119,8 +123,21 @@ class GenericModelResource(object):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            return '', 302, {'Location': 'http://localhost:8080/events/chat/completions'}, {
-                'session_id': str(promise.id)}
+            session_id = uuid4().hex
+            payload = {
+                'stream': str(promise.id),
+                'userid': tryOr(lambda: self.om.runtime.auth.userid, None),
+                'created': utcnow().isoformat(),
+            }
+            key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
+            token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
+            logger.debug(f'key {key}')
+            logger.debug(f'token {token}')
+            cookies = {
+                'session_id': session_id,
+                'token': token.decode('utf-8'),
+            }
+            return '', 302, {'Location': 'http://localhost:8080/events/chat/completions'}, cookies
 
             def stream_result(promise):
                 class Sink(list):

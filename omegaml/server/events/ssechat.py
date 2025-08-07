@@ -1,18 +1,26 @@
-# app2.py
+# consider alternative using pushpin
 import json
 import logging
 import threading
+from datetime import timedelta, datetime
+from hashlib import pbkdf2_hmac
 from time import sleep
 
 from flask import Response, request, abort, Blueprint, current_app
+from jose import jwe
 
-import omegaml as om
 from minibatch.tests.util import LocalExecutor
+from omegaml.client.auth import AuthenticationEnv
+from omegaml.util import utcnow
+
+TIMEOUT = 100  # timeout in seconds
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('ssechat', __name__)
 context = threading.local()
+
+auth_env = AuthenticationEnv.active()
 
 
 def authorized(fn):
@@ -28,10 +36,44 @@ def authorized(fn):
             return ...
     """
 
-    def inner(*args, **kwargs):
+    def decode_payload():
         context.session_id = session_id = request.cookies.get('session_id')
-        current_app.logger.info('session: %s', session_id)
-        if not session_id:
+        key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
+        token = request.cookies.get('token')
+        logger.debug(f'key {key}')
+        logger.debug(f'token {token}')
+        context.payload = payload = json.loads(jwe.decrypt(token, key))
+        return session_id, payload
+
+    def verify(session_id, payload):
+        context.request_initiated = datetime.fromisoformat(payload.get('created', utcnow().isoformat()))
+        context.request_timeout = context.request_initiated + timedelta(seconds=TIMEOUT)
+        context.message_valid = context.request_timeout >= utcnow()
+        context.authenticated = bool(session_id)
+        return context.message_valid and context.authenticated
+
+    def inner(*args, **kwargs):
+        # api backend:
+        # --  must set a salt (e.g. random 16 byte id is the salt)
+        # -- derive a key from a shared password + salt, env.OMEGA_EVENTS_KEY
+        # -- encode the session_id (= task id) using a JWE payload
+        # -- the payload should contain the creation datetime + timeout
+        # sse server:
+        # -- get the salt
+        # -- derive key from shared password + salt
+        # -- decode the JWE payload and get the session_id
+        # -- check on creation datetime + timeout < current time
+        # this way we have a secure transfer from the backend to the sse server
+        # -- even if the encrypted payload gets stolen, it can't be decoded without the shared password
+        # -- using a salt means every payload results in a different cipher text, even if the payload is the same
+        # -- the JWE can't be modified because it is signed
+        # -- token becomes useless after timeout
+        context.auth = None  # get real auth
+        context.om = auth_env.get_omega_from_apikey(auth=context.auth)
+        session_id, payload = decode_payload()
+        verified = verify(session_id, payload)
+        current_app.logger.info('session: %s is verified %s', session_id, verified)
+        if not verified:
             abort(401)
         return fn(*args, **kwargs)
 
@@ -72,6 +114,7 @@ def stream_result(key):
         def __bool__(self):
             return True  # required to make work with minibatch
 
+    om = context.om
     buffer = Sink()
     logger.debug("complete:stream_result getting stream")
     streaming = om.streams.getl(f'.system/complete/{key}',
@@ -100,7 +143,9 @@ def stream_result(key):
 @bp.route('/events/chat/completions')
 @authorized
 def events_chat_completions():
-    return Response(stream_result(context.session_id), content_type='text/event-stream')
+    payload = context.payload
+    stream = payload.get('stream')
+    return Response(stream_result(stream), content_type='text/event-stream')
 
 
 @bp.route('/test')

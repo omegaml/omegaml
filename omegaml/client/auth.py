@@ -1,4 +1,5 @@
 import os
+
 from requests.auth import AuthBase
 
 from omegaml import session_cache
@@ -105,7 +106,7 @@ class AuthenticationEnv(object):
 
     @classmethod
     @session_cache  # PERFTUNED
-    def get_omega_from_apikey(cls, auth=None):
+    def get_omega_from_apikey(cls, *args, auth=None, **kwargs):
         # return the omega instance for the given task authentication
         from omegaml import setup
         om = setup()
@@ -122,6 +123,14 @@ class AuthenticationEnv(object):
 
     @classmethod
     def active(cls):
+        """ return the active authentication env
+
+        If no instance is active, it will be instantiated according to the class specified in
+        defaults.OMEGA_AUTH_ENV. Defaults to omegaml.client.auth.AuthenticationEnv
+
+        Returns:
+            AuthenticationEnv: active instance
+        """
         # load the currently active auth env
         if cls.auth_env is None:
             from omegaml import _base_config
