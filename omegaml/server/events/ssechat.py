@@ -36,6 +36,22 @@ def authorized(fn):
             return ...
     """
 
+    # api backend:
+    # -- must set a salt (e.g. random 16 byte id is the salt)
+    # -- derive a key from a shared password + salt, env.OMEGA_EVENTS_KEY
+    # -- encode the session_id (= task id) using a JWE payload
+    # -- the payload should contain the creation datetime + timeout
+    # sse server:
+    # -- get the salt
+    # -- derive key from shared password + salt
+    # -- decode the JWE payload and get the session_id
+    # -- check on creation datetime + timeout < current time
+    # this way we have a secure transfer from the backend to the sse server
+    # -- even if the encrypted payload gets stolen, it can't be decoded without the shared password
+    # -- using a salt means every payload results in a different cipher text, even if the payload is the same
+    # -- the JWE can't be modified because it is signed
+    # -- token becomes useless after timeout
+
     def decode_payload():
         context.session_id = session_id = request.cookies.get('session_id')
         key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
@@ -53,21 +69,6 @@ def authorized(fn):
         return context.message_valid and context.authenticated
 
     def inner(*args, **kwargs):
-        # api backend:
-        # --  must set a salt (e.g. random 16 byte id is the salt)
-        # -- derive a key from a shared password + salt, env.OMEGA_EVENTS_KEY
-        # -- encode the session_id (= task id) using a JWE payload
-        # -- the payload should contain the creation datetime + timeout
-        # sse server:
-        # -- get the salt
-        # -- derive key from shared password + salt
-        # -- decode the JWE payload and get the session_id
-        # -- check on creation datetime + timeout < current time
-        # this way we have a secure transfer from the backend to the sse server
-        # -- even if the encrypted payload gets stolen, it can't be decoded without the shared password
-        # -- using a salt means every payload results in a different cipher text, even if the payload is the same
-        # -- the JWE can't be modified because it is signed
-        # -- token becomes useless after timeout
         context.auth = None  # get real auth
         context.om = auth_env.get_omega_from_apikey(auth=context.auth)
         session_id, payload = decode_payload()

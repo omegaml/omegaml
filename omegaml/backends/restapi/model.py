@@ -123,21 +123,29 @@ class GenericModelResource(object):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            session_id = uuid4().hex
+            def encrypt_payload(payload):
+                session_id = uuid4().hex
+                key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
+                token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
+                logger.debug(f'key {key}')
+                logger.debug(f'token {token}')
+                return session_id, token.decode('utf-8')
+
+            def make_secure_cookies(payload):
+                session_id, token = encrypt_payload(payload)
+                cookies = {
+                    'session_id': session_id,
+                    'token': token,
+                }
+                return cookies
+
             payload = {
                 'stream': str(promise.id),
                 'userid': tryOr(lambda: self.om.runtime.auth.userid, None),
                 'created': utcnow().isoformat(),
             }
-            key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
-            token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
-            logger.debug(f'key {key}')
-            logger.debug(f'token {token}')
-            cookies = {
-                'session_id': session_id,
-                'token': token.decode('utf-8'),
-            }
-            return '', 302, {'Location': 'http://localhost:8080/events/chat/completions'}, cookies
+            cookies = make_secure_cookies(payload)
+            return '', 302, {'Location': '/events/chat/completions'}, cookies
 
             def stream_result(promise):
                 class Sink(list):
