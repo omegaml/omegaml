@@ -242,7 +242,7 @@ OMEGA_ALLOW_ENV_CONFIG = truefalse(os.environ.get('OMEGA_ALLOW_ENV_CONFIG', '1')
 #: dashboard cards
 OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 #: events streaming (inline, ssechat)
-OMEGA_EVENTS_STREAMER = 'inline'
+OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 
 
 # =========================================

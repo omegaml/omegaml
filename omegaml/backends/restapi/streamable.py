@@ -14,6 +14,31 @@ logger = logging.getLogger(__name__)
 
 
 class StreamableResourceMixin:
+    """ resource mixin to handle streaming results in line of by handing-off to a streaming server
+
+    Depending on om.defaults.OMEGA_EVENTS_STREAMER:
+
+    * 'inline' => will respond with server-sent events (SSE) stream
+    * 'ssechat' => will respond with a redirect to a event server which then serves the event stream
+
+    Rationale:
+        * inline is a blocking generator, that is it will occupy a wsgi process until done, thus
+          limiting capacity
+        * ssechat redirects to a threaded event server, which then processes the event stream;
+          because ssechat is threaded it can handle many more concurrent requests
+
+    Alternatives:
+        * for higher scalability, consider pushpin, a GRIP proxy that handles streams concurrently;
+          in this case needs an additional STREAMER implementation that responds with GRIP headers
+
+    See Also:
+        * https://pushpin.org/ for a GRIP proxy
+        * ssechat.py for our implementation that does not have additional dependencies
+
+    Testing:
+        * use honcho start to run all required servers from the Procfile
+    """
+
     def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
         """ prepare result for event streaming
 
@@ -44,6 +69,7 @@ class StreamableResourceMixin:
         return dict(chunk)
 
     def _inline_streaming(self, stream, raw=None, resource_name=None):
+        # implement event streaming as a blocking inline generator
         class Sink(list):
             def put(self, chunks):
                 self.extend(chunks)
@@ -79,9 +105,7 @@ class StreamableResourceMixin:
         logger.debug("done:stream_result closing response")
 
     def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):
-        # implement sse event streaming by handing off to streaming endpoint
-        # TODO refactor into a StreamableResult so that we can have multiple implementations
-        #      (e.g. direct response, redirect to sse endpoint, GRIP proxy etc.)
+        # implement sse event streaming by 302 redirect, handing off to streaming endpoint
         def encrypt_payload(payload):
             session_id = uuid4().hex
             key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
