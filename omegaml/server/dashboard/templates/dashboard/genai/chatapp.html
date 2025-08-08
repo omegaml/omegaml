@@ -1,0 +1,509 @@
+{% extends "dashboard/genai/conversations.html" %}
+
+{% block stylesheets %}
+{% block chatstyle %}
+{{ super() }}
+{% endblock chatstyle %}
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8f9fa;
+  }
+
+  .sidebar {
+    width: 280px;
+    height: 100vh;
+    background: #1e3a8a;
+    color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  .scrollable-section {
+    overflow-y: auto;
+  }
+
+  .scrollable-section::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollable-section::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .scrollable-section::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo i {
+    margin-right: 10px;
+    color: #60a5fa;
+  }
+
+  .new-chat-btn {
+    background: #1e40af;
+    border: 1px solid #3b82f6;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    width: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .new-chat-btn:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .assistant-selector {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 300px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    opacity: 0.8;
+  }
+
+  .assistant-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+  }
+
+  .assistant-item:hover {
+    background: #1e40af;
+    transform: translateX(4px);
+  }
+
+  .assistant-item.active {
+    background: #3b82f6;
+    border-color: #60a5fa;
+  }
+
+  .assistant-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .assistant-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .assistant-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+
+  .assistant-description {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conversations-section {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+  }
+
+  .conversation-item:hover {
+    background: #1e40af;
+    opacity: 1;
+  }
+
+  .conversation-icon {
+    margin-right: 12px;
+    opacity: 0.7;
+    font-size: 0.9rem;
+  }
+
+  .conversation-text {
+    flex: 1;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conversation-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-left: 8px;
+  }
+
+  .sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .user-profile:hover {
+    background: #1e40af;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #3b82f6;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  .user-info {
+    flex: 1;
+  }
+
+  .user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .user-status {
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .settings-btn {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
+
+  .settings-btn:hover {
+    color: white;
+    transform: rotate(90deg);
+  }
+
+  /* Main content area for demo */
+  .main-content {
+    margin-left: 280px;
+    padding: 40px;
+    background: #f8f9fa;
+    min-height: 100vh;
+  }
+
+  .demo-text {
+    color: #6c757d;
+    text-align: center;
+    margin-top: 100px;
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block nav %}
+<div class="sidebar">
+  <!-- Header Section -->
+  <div class="sidebar-header">
+    <!-- reference to Delphi oracle https://en.wikipedia.org/wiki/Sibyl -->
+    <div class="logo">
+      <i class="fas fa-feather-alt"></i>
+      omega-ml sibyl
+    </div>
+    <button class="btn new-chat-btn">
+      <i class="fas fa-plus me-2"></i>
+      New Chat
+    </button>
+  </div>
+
+  <!-- Assistant Selector -->
+  <div class="assistant-selector">
+    <div class="section-title">Assistants</div>
+
+    {% for assistant in assistants %}
+    <div class="assistant-item  {% if loop.index == 1 %}active{% endif %}" data-assistant="claude">
+      <div class="assistant-avatar" style="background: #1e40af;">
+        <i class="fas fa-brain"></i>
+      </div>
+      <div class="assistant-info">
+        <div class="assistant-name" data-name="{{ assistant.name }}">{{
+          assistant.name | replace('prompts/', '') }}
+        </div>
+        <div class="assistant-description">{{ assistant.title }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Recent Conversations -->
+  <div class="conversations-section">
+    <div class="section-title">Conversations</div>
+    <div id="conversationsList">
+      <!-- Example conversation items. real items are rendered by ChatApp.loadConversations()
+            <div class="conversation-item">
+              <i class="fas fa-message conversation-icon"></i>
+              <div class="conversation-text">How to implement OAuth in React</div>
+              <div class="conversation-time">2h</div>
+            </div>
+            -->
+    </div>
+  </div>
+
+  <!-- Footer/User Profile -->
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar">
+        JD
+      </div>
+      <div class="user-info">
+        <div class="user-name">John Doe</div>
+        <div class="user-status">Pro Plan</div>
+      </div>
+      <i class="fas fa-cog settings-btn"></i>
+    </div>
+  </div>
+</div>
+{% endblock nav %}
+
+{% block content %}
+<!-- Main Content Area (for demo) -->
+<div class="main-content">
+  <div class="demo-text">
+    <!-- Main Chat Area -->
+    <div class="col-md-8 col-lg-9">
+      <iframe src="/no/model" id="deepchat" scrolling="no"></iframe>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+{{ super() }}
+<script>
+  $(document).ready(function () {
+    class ChatApp extends SimpleConversationList {
+      init() {
+        console.log('ChatApp initialized');
+        this.bindStaticEvents();
+        this.bindEvents();
+      }
+
+      bindStaticEvents() {
+        // bind events to static elements
+        $('.user-profile').on('click', this.openUserProfile);
+        $('.settings-btn').on('click', this.openSettings);
+        $('.assistant-item').on('click', this.selectAssistant);
+        $('.new-chat-btn').on('click', (e) => {
+          e.preventDefault();
+          this.createNewConversation();
+          this.render();
+        });
+      }
+
+      bindEvents() {
+        // bind click events for dynamically rendered events
+        $('.conversation-item').on('click', (e) => {
+          console.debug('Conversation item clicked');
+          const activeConversation = $(e.target).closest('.conversation-item').data('id');
+          this.selectConversation(activeConversation);
+        });
+      }
+
+      currentAssistant() {
+        return $('.assistant-item.active').find('.assistant-name').data('name') || context.name;
+      }
+
+      selectAssistant() {
+        $('.assistant-item').removeClass('active');
+        $(this).addClass('active');
+        const app = window.chatApp;
+        const assistantName = app.currentAssistant();
+        console.log('Selected assistant:', assistantName);
+        app.loadConversations(assistantName);
+        app.createNewConversation();
+      }
+
+      selectConversation(activeConversation) {
+        const app = window.chatApp;
+        const assistantName = app.currentAssistant();;
+        app.render();
+        $('#deepchat').attr('src', url_for('.index_modelchat', {
+          name: assistantName,
+          conversation_id: activeConversation,
+        }));
+        console.log('Selected conversation:', activeConversation);
+        // Integrate with your DeepChat here
+      }
+
+      loadConversation() {
+        const conversationText = $(this).find('.conversation-text').text();
+        console.log('Loading conversation:', conversationText);
+      }
+
+      openUserProfile() {
+        console.log('Opening user profile/settings');
+      }
+
+      openSettings(e) {
+        e.stopPropagation();
+        console.log('Opening settings');
+      }
+
+      conversationItemTemplate(isActive, conv, timeAgo, tagsHtml) {
+        return `
+              <div class="conversation-item ${isActive ? 'active' : ''}" data-id="${conv.id}">
+                  <i class="fas fa-message conversation-icon"></i>
+                  <div class="conversation-text">${conv.title}</div >
+                  <div class="conversation-time">${timeAgo}</div>
+              </div >`;
+      }
+
+      refreshConversations() {
+        const assistantName = this.currentAssistant();
+        if (!assistantName) return;
+        this.loadConversations(assistantName);
+      }
+    }
+
+
+    // User profile click
+    $('.user-profile').click(function () {
+      console.log('Opening user profile/settings');
+    });
+
+    // Settings button
+    $('.settings-btn').click(function (e) {
+      e.stopPropagation();
+      console.log('Opening settings');
+    });
+
+    // Add smooth scrolling
+    $('.sidebar').on('scroll', function () {
+      const scrollTop = $(this).scrollTop();
+      $('.sidebar-header').css('box-shadow',
+        scrollTop > 0 ? '0 2px 10px rgba(0,0,0,0.1)' : 'none'
+      );
+    });
+
+    // Keyboard navigation
+    $(document).keydown(function (e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.which) {
+          case 78: // Ctrl+N for new chat
+            e.preventDefault();
+            $('.new-chat-btn').click();
+            break;
+          case 49: // Ctrl+1 for first assistant
+          case 50: // Ctrl+2 for second assistant
+          case 51: // Ctrl+3 for third assistant
+          case 52: // Ctrl+4 for fourth assistant
+          case 53: // Ctrl+5 for fifth assistant
+            e.preventDefault();
+            const index = e.which - 49;
+            $('.assistant-item').eq(index).click();
+            break;
+        }
+      }
+    });
+
+
+    // Responsive behavior
+    function checkResponsive() {
+      if ($(window).width() < 768) {
+        $('.sidebar').addClass('mobile-hidden');
+        $('.main-content').css('margin-left', '0');
+      } else {
+        $('.sidebar').removeClass('mobile-hidden');
+        $('.main-content').css('margin-left', '280px');
+      }
+    }
+
+    $(window).resize(checkResponsive);
+    checkResponsive();
+
+    console.debug('ChatApp initializing...');
+    window.chatApp = new ChatApp();
+    window.chatApp.createNewConversation();
+    window.chatApp.refreshConversations();
+    setInterval(() => {
+      const app = window.chatApp;
+      app.refreshConversations();
+    }, 5000);
+  });
+</script>
+{% endblock javascripts %}

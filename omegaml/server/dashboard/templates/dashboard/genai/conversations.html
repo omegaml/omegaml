@@ -102,14 +102,7 @@
     font-size: 10px;
   }
 
-  .chat-main {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    color: #6c757d;
-  }
+
 
   .filter-tags {
     margin-bottom: 15px;
@@ -154,6 +147,17 @@
     padding-right: 0;
     overflow-x: hidden;
   }
+</style>
+{% block chatstyle %}
+<style>
+  .chat-main {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #6c757d;
+  }
 
   #deepchat {
     width: 100%;
@@ -164,7 +168,9 @@
     ;
   }
 </style>
+{% endblock %}
 {% endblock stylesheets %}
+
 
 {% block content %}
 <!-- [ Main Content ] start -->
@@ -263,10 +269,10 @@
       this.loadConversations();
     }
 
-    loadConversations() {
+    loadConversations(assistantName) {
       $.ajax({
         url: url_for('.index_api_conversations', {
-          name: context.model,
+          name: assistantName || context.model,
         }),
         method: 'GET',
         dataType: 'json',
@@ -391,6 +397,26 @@
     render() {
       this.renderConversations();
       this.renderTagFilters();
+      this.bindEvents();
+    }
+
+    conversationItemTemplate(isActive, conv, timeAgo, tagsHtml) {
+      return `
+        <div class="conversation-item ${isActive ? 'active' : ''}" data-id="${conv.id}">
+            <div class="conversation-title">${conv.title}</div>
+            <!--
+            <div class="conversation-tags">
+                ${tagsHtml}
+                <button class="add-tag-btn" title="Add tag">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div class="tag-input">
+                <input type="text" class="form-control form-control-sm" placeholder="Add tag...">
+            </div>
+            -->
+            <div class="conversation-time">${timeAgo}</div>
+        </div>`;
     }
 
     renderConversations() {
@@ -406,23 +432,7 @@
           `<span class="tag">${tag} <span class="remove-tag" data-tag="${tag}">×</span></span>`
         ).join('');
 
-        return `
-                        <div class="conversation-item ${isActive ? 'active' : ''}" data-id="${conv.id}">
-                            <div class="conversation-title">${conv.title}</div>
-                            <!--
-                            <div class="conversation-tags">
-                                ${tagsHtml}
-                                <button class="add-tag-btn" title="Add tag">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                            <div class="tag-input">
-                                <input type="text" class="form-control form-control-sm" placeholder="Add tag...">
-                            </div>
-                            -->
-                            <div class="conversation-time">${timeAgo}</div>
-                        </div>
-                    `;
+        return this.conversationItemTemplate(isActive, conv, timeAgo, tagsHtml);
       }).join('');
 
       $('#conversationsList').html(html);
@@ -516,11 +526,15 @@
 
   // Initialize
   $(document).ready(() => {
-    window.conversationList = new SimpleConversationList();
-    window.conversationList.createNewConversation();
-    setInterval(() => {
-      window.conversationList.loadConversations();
-    }, 5000);
+    if (window.context.segment != 'app') {
+      console.log('Initializing SimpleConversationList');
+      // only render if we are in workbench. app renders its own chat view 
+      window.conversationList = new SimpleConversationList();
+      window.conversationList.createNewConversation();
+      setInterval(() => {
+        window.conversationList.loadConversations();
+      }, 5000);
+    }
   });
 </script>
 {% endblock javascripts %}

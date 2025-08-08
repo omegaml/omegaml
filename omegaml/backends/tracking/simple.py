@@ -186,7 +186,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._store.drop(self._data_name, force=True)
         self._initialize_dataset(force=True)
 
-    def _common_log_data(self, event, key, value, step=None, dt=None, **extra):
+    def _common_log_data(self, event, key, value, step=None, dt=None, run=None, **extra):
         if isinstance(value, dict):
             # shortcut to resolve PassthroughDataset actual values
             # -- enables storing the actual values of a dataset passed as a PassthroughDataset
@@ -199,7 +199,7 @@ class OmegaSimpleTracker(TrackingProvider):
                 }
         data = {
             'experiment': self._experiment,
-            'run': self._ensure_active(self._run),
+            'run': run or self._ensure_active(self._run),
             'step': step,
             'event': event,
             'key': key or event,
