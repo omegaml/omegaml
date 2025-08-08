@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class StreamableResourceMixin:
-    def prepare_streaming_result(self, promise=None, stream=None, streamer=None):
+    def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
         """ prepare result for event streaming
 
         Args:
             promise (celery.AsyncResult): a celery result to be resolved
+            resource_name (str): the name of the resource being served
             stream (str): optional, defaults to promise.id, precedes promise.id if specified
             streamer (str): the streamer name, 'inline' for inline streaming (blocking), or
                 'ssechat' for handing off to async ssechat server
@@ -34,12 +35,15 @@ class StreamableResourceMixin:
             'inline': self._inline_streaming,
             'ssechat': self._handoff_to_ssechat,
             'default': self._inline_streaming,
-        }  # type: Dict[str, Callable[[str], Any]]
+        }  # type: Dict[str, Callable[..., Any]]
         _default_streamer = STREAMERS.get('default')
         streaming_method = STREAMERS.get(streamer, _default_streamer)
-        return streaming_method(stream)
+        return streaming_method(stream, resource_name=resource_name, raw=raw)
 
-    def de_inline_streaming(self, stream):
+    def prepare_result(self, chunk, **kwargs):
+        return dict(chunk)
+
+    def _inline_streaming(self, stream, raw=None, resource_name=None):
         class Sink(list):
             def put(self, chunks):
                 self.extend(chunks)
@@ -63,16 +67,18 @@ class StreamableResourceMixin:
             emitter.run(blocking=False)
             for chunk in buffer:
                 logger.debug("complete:stream_result chunk received: %s", chunk)
-                data = chunk.get('result', chunk)
-                yield data
+                data = self.prepare_result(chunk, resource_name=resource_name)
+                data.update(data.pop('result', {})) if raw else None
                 # TODO use a sentinel that is not tied to openai message format
                 if data.get('finish_reason', '').startswith('stop'):
                     timeout = 0
+                    break
+                yield data
             buffer.clear()
             sleep(0.01)
         logger.debug("done:stream_result closing response")
 
-    def _handoff_to_ssechat(self, stream):
+    def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):
         # implement sse event streaming by handing off to streaming endpoint
         # TODO refactor into a StreamableResult so that we can have multiple implementations
         #      (e.g. direct response, redirect to sse endpoint, GRIP proxy etc.)

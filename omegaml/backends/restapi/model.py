@@ -63,7 +63,7 @@ class GenericModelResource(StreamableResourceMixin):
         result = self.prepare_result(promise.get(), resource_name=model_id) if not self.is_async else promise
         return result
 
-    def prepare_result(self, result, resource_name=None, model_id=None, raw=False, stream=False, **kwargs):
+    def prepare_result(self, result, resource_name=None, model_id=None, raw=False, **kwargs):
         resource_name = resource_name or model_id
         result = {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name}
         if raw:
@@ -117,7 +117,7 @@ class GenericModelResource(StreamableResourceMixin):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            result = self.prepare_streaming_result(promise)
+            result = self.prepare_streaming_result(promise, resource_name=model_id)
         else:
             result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result

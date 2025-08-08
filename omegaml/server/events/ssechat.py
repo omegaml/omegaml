@@ -113,7 +113,7 @@ def stream_result(key):
             self.om = om
 
     streamable = Streamable(context.om)
-    for chunk in streamable.prepare_streaming_result(stream=key, streamer='inline'):
+    for chunk in streamable.prepare_streaming_result(stream=key, raw=True, streamer='inline'):
         yield chunk
 
 
