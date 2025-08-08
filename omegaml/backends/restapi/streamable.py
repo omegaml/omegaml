@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from hashlib import pbkdf2_hmac
 from time import sleep
 from typing import Callable, Any, Dict
@@ -38,6 +39,8 @@ class StreamableResourceMixin:
     Testing:
         * use honcho start to run all required servers from the Procfile
     """
+    SECRET_KEY = os.getenv('SECRET_KEY', 'ec3d75c6f5b3965f24f148969b1c82d57246a8aab46393b55ba18d712fa1a0ad')
+    PBKDF_ITER = int(os.getenv('PBKDF_ITER', 500000))
 
     def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
         """ prepare result for event streaming
@@ -86,19 +89,20 @@ class StreamableResourceMixin:
         emitter = streaming.make(lambda window: window.data)
         has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
         logger.debug("complete:stream_result waiting for status ")
-        timeout = 1e6
+        interval = 0.01
+        timeout = 10 // interval  # timeout in seconds, max
         while timeout or has_chunks():
             timeout -= 1
             logger.debug("complete:stream_result waiting for chunks")
             emitter.run(blocking=False)
             for chunk in buffer:
                 logger.debug("complete:stream_result chunk received: %s", chunk)
-                data = self.prepare_result(chunk, resource_name=resource_name)
-                data.update(data.pop('result', {})) if raw else None
                 # TODO use a sentinel that is not tied to openai message format
-                if data.get('finish_reason', '').startswith('stop'):
+                if chunk.get('finish_reason', '').startswith('stop'):
                     timeout = 0
                     break
+                data = self.prepare_result(chunk, resource_name=resource_name)
+                data.update(data.pop('result', {})) if raw else None
                 yield data
             buffer.clear()
             sleep(0.01)
@@ -108,7 +112,8 @@ class StreamableResourceMixin:
         # implement sse event streaming by 302 redirect, handing off to streaming endpoint
         def encrypt_payload(payload):
             session_id = uuid4().hex
-            key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
+            key = pbkdf2_hmac('sha256', self.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'),
+                              self.PBKDF_ITER)
             token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
             logger.debug(f'key {key}')
             logger.debug(f'token {token}')
@@ -126,6 +131,7 @@ class StreamableResourceMixin:
             'stream': str(stream),
             'userid': tryOr(lambda: self.om.runtime.auth.userid, None),
             'created': utcnow().isoformat(),
+            'auth': tryOr(lambda: self.om.runtime.auth, None),
         }
         cookies = make_secure_cookies(payload)
         return '', 302, {'Location': '/events/chat/completions'}, cookies

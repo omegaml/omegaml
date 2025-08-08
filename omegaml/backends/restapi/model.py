@@ -117,7 +117,7 @@ class GenericModelResource(StreamableResourceMixin):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            result = self.prepare_streaming_result(promise, resource_name=model_id)
+            result = self.prepare_streaming_result(promise, resource_name=model_id, raw=raw)
         else:
             result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result

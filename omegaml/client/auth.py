@@ -94,7 +94,7 @@ class AuthenticationEnv(object):
     # subprocess env keys to keep, see .prepare_env()
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_MONGO_URL', 'OMEGA_BROKER', 'OMEGA_CARDS_ENABLED',
                 'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_STATUS_CHECK', 'OMEGA_TEST_MODE', 'OMEGA_LOCAL_RUNTIME',
-                'OMEGA_RESTAPI_URL']
+                'OMEGA_RESTAPI_URL', 'OMEGA_EVENTS_STREAMER']
 
     @classmethod
     @session_cache  # PERFTUNED
@@ -191,7 +191,7 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
                 'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER', 'OMEGA_CARDS_ENABLED',
-                'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER']
+                'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER', 'OMEGA_EVENTS_STREAMER']
 
     @classmethod
     @session_cache

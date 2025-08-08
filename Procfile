@@ -1,5 +1,5 @@
 web: .local/bin/caddy run
-omegaml: PORT=8000 python -m omegaml.server
+omegaml: OMEGA_EVENTS_STREAMER=ssechat PORT=8000 python -m omegaml.server
 base: PORT=5002 python app1.py
 #sse: PORT=5001 python app2.py
 sse-test: FLASK_DEBUG=1 FLASK_RUN_PORT=5001 flask -A omegaml.server.events:create_app run

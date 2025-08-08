@@ -5,6 +5,7 @@ import threading
 from datetime import timedelta, datetime
 from hashlib import pbkdf2_hmac
 from time import sleep
+from uuid import uuid4
 
 from flask import Response, request, abort, Blueprint, current_app
 from jose import jwe
@@ -21,6 +22,11 @@ bp = Blueprint('ssechat', __name__)
 context = threading.local()
 
 auth_env = AuthenticationEnv.active()
+
+
+class Streamable(StreamableResourceMixin):
+    def __init__(self, om):
+        self.om = om
 
 
 def authorized(fn):
@@ -54,7 +60,8 @@ def authorized(fn):
 
     def decode_payload():
         context.session_id = session_id = request.cookies.get('session_id')
-        key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
+        key = pbkdf2_hmac('sha256', Streamable.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'),
+                          Streamable.PBKDF_ITER)
         token = request.cookies.get('token')
         logger.debug(f'key {key}')
         logger.debug(f'token {token}')
@@ -69,14 +76,22 @@ def authorized(fn):
         return context.message_valid and context.authenticated
 
     def inner(*args, **kwargs):
-        context.auth = None  # get real auth
-        context.om = auth_env.get_omega_from_apikey(auth=context.auth)
         session_id, payload = decode_payload()
         verified = verify(session_id, payload)
+        context.auth = payload.get('auth')
+        context.om = auth_env.get_omega_for_task(_task(), auth=context.auth)
         current_app.logger.info('session: %s is verified %s', session_id, verified)
         if not verified:
             abort(401)
         return fn(*args, **kwargs)
+
+    def _task():
+        class DummyTask:
+            def __init__(self):
+                self.system_kwargs = {}
+                self.id = uuid4().hex
+
+        return DummyTask()
 
     return inner
 
@@ -108,10 +123,6 @@ def sse_json(fn):
 
 @sse_json
 def stream_result(key):
-    class Streamable(StreamableResourceMixin):
-        def __init__(self, om):
-            self.om = om
-
     streamable = Streamable(context.om)
     for chunk in streamable.prepare_streaming_result(stream=key, raw=True, streamer='inline'):
         yield chunk
