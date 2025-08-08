@@ -9,7 +9,7 @@ from time import sleep
 from flask import Response, request, abort, Blueprint, current_app
 from jose import jwe
 
-from minibatch.tests.util import LocalExecutor
+from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.client.auth import AuthenticationEnv
 from omegaml.util import utcnow
 
@@ -108,37 +108,13 @@ def sse_json(fn):
 
 @sse_json
 def stream_result(key):
-    class Sink(list):
-        def put(self, chunks):
-            self.extend(chunks)
+    class Streamable(StreamableResourceMixin):
+        def __init__(self, om):
+            self.om = om
 
-        def __bool__(self):
-            return True  # required to make work with minibatch
-
-    om = context.om
-    buffer = Sink()
-    logger.debug("complete:stream_result getting stream")
-    streaming = om.streams.getl(f'.system/complete/{key}',
-                                executor=LocalExecutor(),
-                                sink=buffer)
-    emitter = streaming.make(lambda window: window.data)
-    has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
-    logger.debug("complete:stream_result waiting for status ")
-    timeout = 1e6
-    while timeout or has_chunks():
-        timeout -= 1
-        logger.debug("complete:stream_result waiting for chunks")
-        emitter.run(blocking=False)
-        for chunk in buffer:
-            logger.debug("complete:stream_result chunk received: %s", chunk)
-            data = chunk.get('result', chunk)
-            yield data
-            # TODO use a sentinel that is not tied to openai message format
-            if data.get('finish_reason', '').startswith('stop'):
-                timeout = 0
-        buffer.clear()
-        sleep(0.01)
-    logger.debug("done:stream_result closing response")
+    streamable = Streamable(context.om)
+    for chunk in streamable.prepare_streaming_result(stream=key, streamer='inline'):
+        yield chunk
 
 
 @bp.route('/events/chat/completions')

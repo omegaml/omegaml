@@ -1,21 +1,15 @@
-import json
 import logging
-from hashlib import pbkdf2_hmac
-from time import sleep
-from uuid import uuid4
 
 import numpy as np
 import pandas as pd
-from celery.states import UNREADY_STATES, FAILURE
-from jose import jwe
 
-from minibatch.tests.util import LocalExecutor
-from omegaml.util import ensure_json_serializable, utcnow, tryOr
+from omegaml.backends.restapi.streamable import StreamableResourceMixin
+from omegaml.util import ensure_json_serializable
 
 logger = logging.getLogger(__name__)
 
 
-class GenericModelResource(object):
+class GenericModelResource(StreamableResourceMixin):
     def __init__(self, om, is_async=False):
         self.om = om
         self.is_async = is_async
@@ -69,7 +63,7 @@ class GenericModelResource(object):
         result = self.prepare_result(promise.get(), resource_name=model_id) if not self.is_async else promise
         return result
 
-    def prepare_result(self, result, resource_name=None, model_id=None, raw=False, **kwargs):
+    def prepare_result(self, result, resource_name=None, model_id=None, raw=False, stream=False, **kwargs):
         resource_name = resource_name or model_id
         result = {'model': resource_name, 'result': ensure_json_serializable(result), 'resource_uri': resource_name}
         if raw:
@@ -123,61 +117,7 @@ class GenericModelResource(object):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            def encrypt_payload(payload):
-                session_id = uuid4().hex
-                key = pbkdf2_hmac('sha256', b'password', str(session_id).encode('utf-8'), 500000)
-                token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
-                logger.debug(f'key {key}')
-                logger.debug(f'token {token}')
-                return session_id, token.decode('utf-8')
-
-            def make_secure_cookies(payload):
-                session_id, token = encrypt_payload(payload)
-                cookies = {
-                    'session_id': session_id,
-                    'token': token,
-                }
-                return cookies
-
-            payload = {
-                'stream': str(promise.id),
-                'userid': tryOr(lambda: self.om.runtime.auth.userid, None),
-                'created': utcnow().isoformat(),
-            }
-            cookies = make_secure_cookies(payload)
-            return '', 302, {'Location': '/events/chat/completions'}, cookies
-
-            def stream_result(promise):
-                class Sink(list):
-                    def put(self, chunks):
-                        self.extend(chunks)
-
-                    def __bool__(self):
-                        return True  # required to make work with minibatch
-
-                buffer = Sink()
-                logger.debug("complete:stream_result getting stream")
-                streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
-                                                 executor=LocalExecutor(),
-                                                 sink=buffer)
-                emitter = streaming.make(lambda window: window.data)
-                has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
-                logger.debug("complete:stream_result waiting for status ")
-                while promise.state in UNREADY_STATES or has_chunks():
-                    logger.debug("complete:stream_result waiting for chunks")
-                    emitter.run(blocking=False)
-                    for chunk in buffer:
-                        logger.debug("complete:stream_result chunk received: %s", chunk)
-                        yield self.prepare_result(chunk, model_id=model_id, raw=raw)
-                        logger.debug("sent:stream_result chunk sent: %s", chunk)
-                    buffer.clear()
-                    sleep(0.01)
-                # get the final result, this is to clean up celery
-                if promise.state == FAILURE:
-                    value = promise.get()
-                    raise RuntimeError(value)
-
-            return stream_result(promise)
+            result = self.prepare_streaming_result(promise)
         else:
             result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
