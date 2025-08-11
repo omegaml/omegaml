@@ -1267,6 +1267,7 @@ def batched(iterable, batch_size):
 
 
 ensure_list = lambda v: v if isinstance(v, (list, tuple)) else list(v) if isinstance(v, range) else [v]
+ensure_dict = lambda v: v if isinstance(v, dict) else tryOr(lambda v: v.to_dict(), tryOr(lambda v: dict(v), v))
 
 
 def tqdm_if_interactive():
