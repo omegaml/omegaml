@@ -1,7 +1,9 @@
 import json
+import os
 import re
 from collections import namedtuple
 from copy import deepcopy
+from getpass import getuser
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
 
@@ -13,7 +15,7 @@ from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr
+from omegaml.util import ensure_list, tryOr, KeepMissing
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -108,8 +110,9 @@ class TextModelBackend(GenAIBaseBackend):
         return meta.save()
 
     def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, strategy=None,
-            tracking=None, **kwargs):
+            tracking=None, secrets=None, **kwargs):
         meta = self.model_store.metadata(name)
+        secrets = secrets or {}
         # setup from connection string
         kind_meta = meta.kind_meta
         base_url = kind_meta['base_url']
@@ -131,6 +134,8 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
         tools = self._load_tools(tools)
+        base_url = self._resolve_placeholders(base_url, secrets)
+        creds = self._resolve_placeholders(creds, secrets)
         self.tracking = tracking or self.tracking or self._ensure_tracking(meta)
         # infer model provider
         if base_url.startswith(self.STORED_MODEL_URL) and self.model_store.exists(model):
@@ -165,6 +170,14 @@ class TextModelBackend(GenAIBaseBackend):
         pipeline = pipeline if callable(pipeline) else (
             self.model_store.get(pipeline) if isinstance(pipeline, str) else None)
         return pipeline
+
+    def _resolve_placeholders(self, creds, secrets):
+        values = ({k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
+                  if self.model_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict())
+        values.update(**self.model_store.defaults)
+        values.update(secrets)
+        user = getattr(self.model_store.defaults, 'OMEGA_USERID', getuser())
+        return creds.format_map(KeepMissing({**values, "userid": user}))
 
     def _infer_provider(self, url):
         for provider, cls in PROVIDERS.items():
