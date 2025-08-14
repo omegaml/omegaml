@@ -1,19 +1,19 @@
-from collections import namedtuple
-
 import json
-import pandas as pd
 import re
-import requests
+from collections import namedtuple
 from copy import deepcopy
-from openai import OpenAI
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
+
+import pandas as pd
+import requests
+from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr
+from omegaml.util import ensure_list, tryOr, ensure_dict
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -288,15 +288,37 @@ class TextModel(GenAIModel):
     def load(self, method):
         pass
 
-    def embed(self, documents, dimensions=None, raw=False, **kwargs):
+    def embed(self, documents, dimensions=None, raw=False, conversation_id=None, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
         response = self.provider.embed(documents, dimensions=dimensions, model=self.model,
                                        **kwargs)
+        conversation_id = conversation_id or uuid4().hex
+        self._track_usage(response, conversation_id=conversation_id)
         transformed = (d['embedding'] for d in response['data'])
         return response if raw else list(transformed)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
                  chat=False, stream=False, use_tools=True, **kwargs):
+        """ complete a prompt
+
+        Will call the provider's chat.completion endpoint. Can be called in two modes:
+        1) completion without conversation tracking (no conversation id, chat=False),
+        2) chat completion with conversation tracking (chat=True, or conversation id).
+
+        Args:
+            prompt (str):
+            messages (list[dict]):
+            conversation_id (str):
+            raw (bool):
+            data:
+            chat:
+            stream:
+            use_tools:
+            **kwargs:
+
+        Returns:
+
+        """
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
@@ -529,6 +551,7 @@ class TextModel(GenAIModel):
                     model=self.model,
                     **kkwargs,
                 )
+                self._track_usage(response, conversation_id)
                 tooled_response, tooled_prompt_message, tooled_response_message, raw_response = resolve_response(
                     response,
                     prompt_message,
@@ -581,6 +604,7 @@ class TextModel(GenAIModel):
                                              template=template,
                                              conversation_id=conversation_id,
                                              **kwargs) or response_message
+            self._track_usage(response, conversation_id)
             return response, prompt_message, response_message, raw_response
 
         def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
@@ -605,32 +629,36 @@ class TextModel(GenAIModel):
 
             """
             raw_response = chunk.to_dict()
-            content = ''.join(c['choices'][0]['delta']['content'] for c in chunks) + str(
-                chunk.choices[0].delta.content or '')
-            if raw:
-                response_message = chunk.choices[0].delta.to_dict()
+            if chunk.choices:
+                content = ''.join(c['choices'][0]['delta']['content'] for c in chunks) + str(
+                    chunk.choices[0].delta.content or '')
+                if raw:
+                    response_message = chunk.choices[0].delta.to_dict()
+                else:
+                    # consolidate content
+                    response_message = {
+                        "role": chunk.choices[0].delta.role,
+                        "delta": chunk.choices[0].delta.content,
+                        "content": content,
+                        "conversation_id": conversation_id,
+                        "finish_reason": chunk.choices[0].finish_reason,
+                    }
+                response, prompt_message, response_message = maybe_call_tools(chunk, prompt_message,
+                                                                              response_message, use_tools=use_tools,
+                                                                              as_delta=True)
+                response_message = self.pipeline(method='process', response_message=response_message,
+                                                 prompt_message=prompt_message,
+                                                 messages=messages,
+                                                 template=template,
+                                                 conversation_id=conversation_id,
+                                                 **kwargs) or response_message
+                # consolidate response
+                consolidated_response.update(response_message) if not consolidated_response else None
+                consolidated_response['content'] = content
             else:
-                # consolidate content
-                response_message = {
-                    "role": chunk.choices[0].delta.role,
-                    "delta": chunk.choices[0].delta.content,
-                    "content": content,
-                    "conversation_id": conversation_id,
-                    "finish_reason": chunk.choices[0].finish_reason,
-                }
-            response, prompt_message, response_message = maybe_call_tools(chunk, prompt_message,
-                                                                          response_message, use_tools=use_tools,
-                                                                          as_delta=True)
-            response_message = self.pipeline(method='process', response_message=response_message,
-                                             prompt_message=prompt_message,
-                                             messages=messages,
-                                             template=template,
-                                             conversation_id=conversation_id,
-                                             **kwargs) or response_message
-            # consolidate response
+                response_message = {}
             chunks.append(raw_response)
-            consolidated_response.update(response_message) if not consolidated_response else None
-            consolidated_response['content'] = content
+            self._track_usage(chunk, conversation_id)
             return response, prompt_message, response_message, raw_response
 
         if stream:
@@ -728,6 +756,12 @@ class TextModel(GenAIModel):
         if self.tracking:
             self.tracking.log_events(event, conversation_id, ensure_list(data))
             self.tracking.flush()
+
+    def _track_usage(self, response, conversation_id):
+        data = ensure_dict(response)
+        if self.tracking:
+            for metric, value in data.get('usage', {}).items():
+                self.tracking.log_event('usage', metric, value, conversation_id=conversation_id)
 
 
 class Provider:
