@@ -1,6 +1,7 @@
-from omegaml.util import ensure_list
 from sklearn.base import BaseEstimator
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+from omegaml.util import ensure_list
 
 
 class SimpleEmbeddingModel(BaseEstimator):
@@ -45,3 +46,13 @@ class SimpleEmbeddingModel(BaseEstimator):
         X = self.vectorizer.transform(documents)
         embedding_vectors = X.toarray()
         return embedding_vectors
+
+    @property
+    def dimensions(self):
+        """
+        Get the number of dimensions of the embedding vectors.
+
+        Returns:
+            int: The number of features in the embedding vectors.
+        """
+        return len(self.vectorizer.vocabulary_)

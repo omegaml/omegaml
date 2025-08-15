@@ -59,7 +59,8 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
     PROMOTE = 'metadata'
 
     def get(self, name, query=None, document=None, collection=None, vector_size=None, embedding_model=None,
-            raw=False, top=1, distance=None, **kwargs):
+            raw=False, top=1, distance=None, max_distance=None, filter=None, **kwargs):
+        filter = filter or kwargs
         meta = self.data_store.metadata(name)
         document = query or document
         if meta is None:
@@ -72,7 +73,8 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         self.vector_store: VectorStore = self.load(name, store=self, vector_size=vector_size,
                                                    embedding_model=real_embedding_model)
         if document is not None:
-            data = self.vector_store.index.retrieve(document, top=top, distance=distance)
+            data = self.vector_store.index.retrieve(document, top=top, distance=distance, max_distance=max_distance,
+                                                    filter=filter)
             return data
         return self.vector_store.index
 
@@ -213,12 +215,12 @@ class DocumentIndex:
     def insert(self, document, loader=None, chunker=None):
         self._insert_document(document, chunker=chunker, loader=loader)
 
-    def retrieve(self, document, top=1, filter=None, distance=None, **kwargs):
+    def retrieve(self, document, top=1, filter=None, distance=None, max_distance=None, **kwargs):
         if isinstance(document, str):
             assert self.model is not None, "require embedding model to query by text"
             document = self.model.embed(document)[0]
         return self.store.find_similar(self.name, document,
-                                       top=top, filter=filter, distance=distance, **kwargs)
+                                       top=top, filter=filter, distance=distance, max_distance=max_distance, **kwargs)
 
     def clear(self, filter=None, **kwargs):
         self.store.delete(self.name, filter=filter, **kwargs)
@@ -232,6 +234,9 @@ class DocumentIndex:
 
     def embeddings(self):
         return self.store.embeddings(self.name)
+
+    def attributes(self, key=None):
+        return self.store.attributes(self.name, key=key)
 
     def _type_of_obj(self, obj):
         if isinstance(obj, GeneratorType):
@@ -274,6 +279,7 @@ class DocumentIndex:
             # (chunks, embeddings [, attributes]) # multiple document chunks for each tuple
             # (chunk, embedding, [, attributes]) # single document for each tuple
             chunks, embeddings, *attributes = document
+            attributes = attributes[0] if attributes and isinstance(attributes[0], dict) else {'tags': attributes}
             if isinstance(chunks, str):
                 chunks = [chunks]
                 embeddings = [embeddings]

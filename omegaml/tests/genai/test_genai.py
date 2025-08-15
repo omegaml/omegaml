@@ -1,11 +1,10 @@
-from unittest import TestCase, mock
-
 import inspect
 from types import FunctionType
+from unittest import TestCase, mock
+from unittest.mock import patch
 
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
-from omegaml.backends.genai.mongovector import MongoDBVectorStore
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
@@ -23,9 +22,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         from omegaml import Omega
         self.om = Omega()
         self.clean()
-        # self.om.models.register_backend(GenAIBaseBackend.KIND, GenAIBaseBackend)
         self.om.models.register_backend(TextModelBackend.KIND, TextModelBackend)
-        self.om.models.register_backend(MongoDBVectorStore.KIND, MongoDBVectorStore)
 
     def test_put_get_model_handler(self):
         # test save and restore
@@ -104,10 +101,10 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         model = self.om.models.get('mymodel')
         self.assertIsInstance(model, TextModel)
-        # replace
-        meta = self.om.models.put('openai+https://localhost;model=mymodel', 'mymodel', replace=True)
+        # default to http
+        meta = self.om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
         self.assertEqual(meta.kind, TextModelBackend.KIND)
-        self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
+        self.assertEqual(meta.kind_meta['base_url'], 'http://localhost:80')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         # replace
         meta = self.om.models.put('openai+https://localhost/v1;model=mymodel', 'mymodel', replace=True)

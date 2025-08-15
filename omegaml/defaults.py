@@ -1,17 +1,16 @@
 from __future__ import absolute_import
 
-from os.path import basename
-
 import logging
 import os
 import shutil
 import sys
+from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
-test_runners = {'test', 'nosetest', 'pytest', '_jb_unittest_runner.py'}
+test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
 cmd_args = (basename(v) for v in sys.argv)
 truefalse = lambda v: (v if isinstance(v, bool) else
                        any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
