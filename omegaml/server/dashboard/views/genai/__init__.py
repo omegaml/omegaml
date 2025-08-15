@@ -2,8 +2,9 @@ import mimetypes
 import os
 import time
 from datetime import timezone
-from flask import render_template, jsonify, abort
 from pathlib import Path
+
+from flask import render_template, jsonify, abort
 from werkzeug.utils import secure_filename
 
 from omegaml.server import flaskview as fv
@@ -146,13 +147,13 @@ class GenAIView(BaseView):
         om = self.om
         model = om.models.get(name, data_store=om.datasets)
         model.tracking = om.runtime.model(name).experiment()
-        messages = model.conversation(run='*')
+        messages = model.conversation(run='*', userid=self.userid)
         messages.drop_duplicates(['key'], inplace=True, keep='first')
         return {'conversations': [
             {
                 'id': msg.get('key'),
                 'timestamp': msg.get('dt').replace(tzinfo=timezone.utc).isoformat() if msg.get('dt') else None,
-                'title': msg.get('title', msg.get('content')),
+                'title': msg.get('title', msg.get('content')[:25]),
                 'tags': msg.get('tags', []),
             } for msg in messages.to_dict(orient='records')
         ]}
@@ -163,7 +164,7 @@ class GenAIView(BaseView):
         om = self.om
         exp = om.runtime.model(name).experiment()
         model = om.models.get(name, data_store=om.datasets, tracking=exp)
-        messages = model.conversation(conversation_id=conversation_id, raw=True)
+        messages = model.conversation(conversation_id=conversation_id, userid=self.userid, raw=True)
         return {'messages': [
             {
                 'role': msg.get('role'),

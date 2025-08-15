@@ -13,6 +13,7 @@
     </div>
     <div class="navbar-content scroll-div">
       <ul class="nav pcoded-inner-navbar">
+        <!-- lab -->
         <li class="nav-item pcoded-menu-caption">
           <label>AI Lab</label>
         </li>
@@ -39,6 +40,16 @@
           <a href="{{url_for('.index_chat', name='demo')}}" class="nav-link ">
             <span class="pcoded-micon"><i class="fas fa-file-code"></i></span><span
               class="pcoded-mtext">Workbench</span></a>
+        </li>
+        <!-- deployment -->
+        <li class="nav-item pcoded-menu-caption">
+          <label>AI Apps</label>
+        </li>
+        <li data-username="form elements advance componant validation masking wizard picker select"
+          class="nav-item {% if 'form_elements' in segment %}active{% endif %}">
+          <a href="{{url_for('.app_chat', name='sibyl')}}" target=_blank class="nav-link ">
+            <span class="pcoded-micon"><i class="fas fa-feather-alt"></i></span><span
+              class="pcoded-mtext">Sibyl</span></a>
         </li>
       </ul>
       <ul class="nav pcoded-inner-navbar mt-auto" style="position: absolute; bottom: 0; width: 100%;">

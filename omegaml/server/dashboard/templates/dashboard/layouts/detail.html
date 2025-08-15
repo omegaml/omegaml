@@ -140,7 +140,7 @@
       attributes: json,
     };
     $.ajax({
-      url: url_for('omega-server.index').joinUri('/{{segment}}/{{meta.name}}/update'),
+      url: url_for('.prompts_api_handle_update', { 'name': '{{ meta.name}}' }),
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',

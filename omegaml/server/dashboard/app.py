@@ -19,7 +19,7 @@ omega_ai_bp = Blueprint('omega-ai', __name__,
 
 from omegaml.server.dashboard.views.respository import scripts, datasets, jobs, models, dashboard
 from omegaml.server.dashboard.views.runtime import summary, streams, tracking
-from omegaml.server.dashboard.views.genai import prompts
+from omegaml.server.dashboard.views.genai import prompts, chatapps
 
 
 def add_common_routes(bp):
@@ -126,3 +126,4 @@ plotcards.create_view(omega_bp)
 # -- ai
 genai.create_view(omega_ai_bp)
 prompts.create_view(omega_ai_bp)
+chatapps.create_view(omega_ai_bp)

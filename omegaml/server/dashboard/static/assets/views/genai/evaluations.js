@@ -1,4 +1,4 @@
-import ExperimentView from "../../views/repository/experimentsview.js";
+import ExperimentView from "../../views/runtime/experimentsview.js";
 
 const experimentsview = new ExperimentView({
   el: "#evaluationsView",

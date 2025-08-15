@@ -1,7 +1,11 @@
+from omegaml.util import ignorewarnings
+
+
 def protected(kw):
     return '__' + kw
 
 
+@ignorewarnings
 def get_omega(args, require_config=False):
     from omegaml import setup, _base_config
     from omegaml.client.cloud import setup_from_config
