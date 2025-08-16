@@ -2,7 +2,7 @@ import flask
 from flask_restx import Model, fields
 from werkzeug.exceptions import BadRequest, HTTPException
 
-from omegaml.util import MongoEncoder
+from omegaml.util import MongoEncoder, tryOr
 
 
 class StrictModel(Model):
@@ -66,7 +66,7 @@ class OmegaResourceMixin(object):
     def get_query_payload(self):
         from omegaml.server.restapi.resources import omega_api
         query = flask.request.args.to_dict()
-        payload = omega_api.payload or {}
+        payload = tryOr(lambda: omega_api.payload, None) or {}
         return query, payload
 
     def check_object_authorization(self, pattern):
