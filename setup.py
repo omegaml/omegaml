@@ -1,6 +1,6 @@
 import glob
-
 import os
+
 from setuptools import setup, find_namespace_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
@@ -42,6 +42,7 @@ ai_deps = [
     'markitdown',
     'pgvector',
     'psycopg2-binary',  # required for pgvector
+    'python-jose',  # require for json encyption in async events server
 ]
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
 client_deps = (tables + dashserve_deps)
