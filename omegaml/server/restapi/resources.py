@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import pandas as pd
 import re
-from flask import Blueprint, render_template, url_for
+from flask import Blueprint, render_template, url_for, Response
 from flask_restx import Resource, fields, Api, marshal_with
 from flask_restx.apidoc import apidoc
 from functools import wraps
@@ -43,6 +43,8 @@ class marshal_with_streaming:
             elif isinstance(resp, tuple) and len(resp) == 2:
                 data, status = resp
                 headers = {}
+            elif isinstance(resp, Response):
+                return resp
             else:
                 data = resp
                 status = 200
