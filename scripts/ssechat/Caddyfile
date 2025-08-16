@@ -1,0 +1,6 @@
+:8080
+
+route {
+    reverse_proxy /events/* localhost:5001
+	reverse_proxy /* localhost:8000
+}
