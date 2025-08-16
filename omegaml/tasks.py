@@ -8,6 +8,7 @@ import inspect
 import os
 from celery import shared_task
 from celery.signals import worker_process_init
+from pathlib import Path
 
 from omegaml.celery_util import OmegamlTask, sanitized
 
@@ -36,6 +37,52 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
 def omega_embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('embed', *self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)
+
+
+@shared_task(base=OmegamlTask, bind=True)
+def omega_housekeep_indexembeddings(self):
+    """ insert uploaded documents pending to be embedded
+    """
+    om = self.om
+
+    def files_to_index():
+        for meta in om.datasets.list('documents/*', raw=True):
+            if not meta.attributes.get('indexed'):
+                yield meta
+
+    def index_file(meta):
+        index_name = meta.attributes.get('index')
+        index = om.datasets.get(index_name, model_store=om.models)
+        file_path = Path(self.om.defaults.OMEGA_TMP) / '.uploads' / meta.name
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, mode='wb') as fout:
+            filelike = om.datasets.get(meta.name)
+            fout.write(filelike.read())
+        index.insert(file_path)
+        meta.attributes['indexed'] = True
+        meta.save()
+
+    for meta in files_to_index():
+        index_file(meta)
+
+    # Get file information
+    timestamp = str(int(datetime.time.time()))
+    # Create document record
+    document = {
+        'id': timestamp,
+        'original_name': filename,
+        'stored_name': unique_filename,
+        'file_path': file_path,
+        'size': file_size,
+        'size_formatted': format_file_size(file_size),
+        'type': file_type,
+        'index_name': index_name,
+        'upload_date': utcnow().isoformat(),
+        'status': 'uploaded'
+    }
+    # add document to index
+    index = om.datasets.get(index_name, model_store=om.models)
+    index.insert(file_path)
 
 
 @shared_task(base=OmegamlTask, bind=True)
