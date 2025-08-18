@@ -60,13 +60,17 @@ def omega_housekeep_indexembeddings(self):
             fout.write(filelike.read())
         index.insert(file_path)
         meta.attributes['indexed'] = True
-        meta.save()
+        return meta.save()
 
+    indexed = []
     for meta in files_to_index():
-        index_file(meta)
+        indexed_meta = index_file(meta)
+        indexed.append(indexed_meta.name)
+
+    return indexed
 
     # Get file information
-    timestamp = str(int(datetime.time.time()))
+    timestamp = str(int(datetime.time()))
     # Create document record
     document = {
         'id': timestamp,
