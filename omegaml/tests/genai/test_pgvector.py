@@ -10,7 +10,7 @@ from omegaml.backends.genai.embedding import SimpleEmbeddingModel
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.pgvector import PGVectorBackend
 from omegaml.client.util import subdict
-from omegaml.tasks import omega_housekeep_indexembeddings
+from omegaml.tasks import omega_indexdocuments
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -238,14 +238,40 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         # -- upload
         meta = simulate_upload_file('documents/mydocument', 'myindex')
         # -- run housekeeping, expect pending files to be indexed
-        indexed = omega_housekeep_indexembeddings()
+        indexed = omega_indexdocuments()
         self.assertEqual(len(indexed), 1)
         # -- run housekeeping again, expect no file to be indexed
-        indexed = omega_housekeep_indexembeddings()
+        indexed = omega_indexdocuments()
         self.assertEqual(len(indexed), 0)
         # -- check file has been marked indexed
         meta = om.datasets.metadata(meta.name)
         self.assertEqual(meta.attributes.get('indexed'), True)
+        # try with multiple files to be indexed
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments()
+        self.assertEqual(len(indexed), 2)
+        # try with specific files to be indexed
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments(documents=['documents/mydocument'])
+        self.assertEqual(len(indexed), 1)
+        # try without specific index on document meta data
+        simulate_upload_file('documents/mydocument', '')
+        with self.assertRaises(AssertionError):
+            omega_indexdocuments(documents=['documents/mydocument'])
+        indexed = omega_indexdocuments(documents=['documents/mydocument'], index='myindex')
+        self.assertEqual(len(indexed), 1)
+        meta = om.datasets.metadata('documents/mydocument')
+        self.assertTrue(meta.attributes.get('indexed'))
+        # check otherdocument has not been indexed
+        meta = om.datasets.metadata('documents/otherdocument')
+        self.assertFalse(meta.attributes.get('indexed'))
+        # check we can use a pattern to index multiple documents at once
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments(documents='documents/*', index='myindex')
+        self.assertEqual(len(indexed), 2)
 
     def _mocked_get_connection(self, name, session=False):
         store = self._mocked_store

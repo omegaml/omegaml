@@ -8,9 +8,11 @@ import inspect
 import os
 from celery import shared_task
 from celery.signals import worker_process_init
+from itertools import chain
 from pathlib import Path
 
 from omegaml.celery_util import OmegamlTask, sanitized
+from omegaml.util import ensure_list
 
 
 @shared_task(base=OmegamlTask, bind=True)
@@ -40,19 +42,35 @@ def omega_embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_housekeep_indexembeddings(self):
-    """ insert uploaded documents pending to be embedded
+def omega_indexdocuments(self, documents=None, index=None, force=False):
+    """ index pending documents in a document index
+
+    Args:
+        self (OmegamlTask): the celery task instance
+        documents (list): optional, the list of document names, or patterns of, (files) in om.datasets to be indexed.
+           defaults to the list of documents in om.datasets.list('documents/*') where meta.attributes['indexed'] is
+           not true
+        index (str): optional, the name of the index to use
+        force (bool): if True will force indexing the document regardless of meta.attributes['indexed']
+
+    Returns:
+        indexed (list): the list of document names in om.datasets that were indexed
     """
     om = self.om
 
-    def files_to_index():
-        for meta in om.datasets.list('documents/*', raw=True):
-            if not meta.attributes.get('indexed'):
+    documents = ensure_list(documents or 'documents/*')
+
+    def files_matching_specs(documents, force=False):
+        matching = list(chain.from_iterable(om.datasets.list(p, raw=True)
+                                            for p in documents))
+        for meta in matching:
+            if force or not meta.attributes.get('indexed'):
                 yield meta
 
-    def index_file(meta):
-        index_name = meta.attributes.get('index')
+    def index_file(meta, index=None):
+        index_name = index or meta.attributes.get('index')
         index = om.datasets.get(index_name, model_store=om.models)
+        assert index is not None, f"Document index >{index_name}< does not exist"
         file_path = Path(self.om.defaults.OMEGA_TMP) / '.uploads' / meta.name
         file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(file_path, mode='wb') as fout:
@@ -60,33 +78,15 @@ def omega_housekeep_indexembeddings(self):
             fout.write(filelike.read())
         index.insert(file_path)
         meta.attributes['indexed'] = True
+        meta.attributes['index'] = index_name
         return meta.save()
 
     indexed = []
-    for meta in files_to_index():
-        indexed_meta = index_file(meta)
+    for meta in files_matching_specs(documents, force=force):
+        indexed_meta = index_file(meta, index=index)
         indexed.append(indexed_meta.name)
 
     return indexed
-
-    # Get file information
-    timestamp = str(int(datetime.time()))
-    # Create document record
-    document = {
-        'id': timestamp,
-        'original_name': filename,
-        'stored_name': unique_filename,
-        'file_path': file_path,
-        'size': file_size,
-        'size_formatted': format_file_size(file_size),
-        'type': file_type,
-        'index_name': index_name,
-        'upload_date': utcnow().isoformat(),
-        'status': 'uploaded'
-    }
-    # add document to index
-    index = om.datasets.get(index_name, model_store=om.models)
-    index.insert(file_path)
 
 
 @shared_task(base=OmegamlTask, bind=True)
