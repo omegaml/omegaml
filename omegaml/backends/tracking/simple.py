@@ -38,6 +38,9 @@ class NoTrackTracker(TrackingProvider):
     def log_event(self, event, key, value, step=None, **extra):
         pass
 
+    def log_events(self, event, key, values, step=None, **extra):
+        pass
+
     def log_extra(self, **kwargs):
         pass
 
