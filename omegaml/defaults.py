@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
+from os.path import basename
+
 import logging
 import os
 import shutil
 import sys
-from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
@@ -149,6 +150,9 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'genai.text': 'omegaml.backends.genai.textmodel.TextModelBackend',
     'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
+}
+OMEGA_STORE_BACKENDS_TRANSFORMERS = {
+    'hf.pipeline': 'omegaml.backends.transformers.TransformerModelBackend',
 }
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
@@ -456,6 +460,9 @@ def load_framework_support(vars=globals()):
     #: r environment
     if shutil.which('R') is not None:
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_R'])
+    #: hugginface backends
+    if module_available('transformers'):
+        vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TRANSFORMERS'])
     #: mlflow backends
     if mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])

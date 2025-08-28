@@ -210,6 +210,10 @@ def flatten_columns(col, sep='_'):
 CLASS_CACHE = {}
 
 
+def infer_qualclass(obj):
+    return f'{obj.__class__.__module__}.{obj.__class__.__qualname__}'
+
+
 def load_class(requested_class):
     """
     Check if requested_class is a string, if so attempt to load
@@ -1267,7 +1271,7 @@ def batched(iterable, batch_size):
 
 
 ensure_list = lambda v: v if isinstance(v, (list, tuple)) else list(v) if isinstance(v, range) else [v]
-ensure_dict = lambda v: v if isinstance(v, dict) else tryOr(lambda v: v.to_dict(), tryOr(lambda v: dict(v), v))
+ensure_dict = lambda v: v if isinstance(v, dict) else tryOr(lambda: v.to_dict(), tryOr(lambda: dict(v), v))
 
 
 def tqdm_if_interactive():

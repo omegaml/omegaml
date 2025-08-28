@@ -1,8 +1,9 @@
 import joblib
 import shutil
+from pathlib import Path
+
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
-from pathlib import Path
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -49,7 +50,7 @@ class BaseModelBackend(BackendBaseCommon):
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
-    
+
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
@@ -151,7 +152,8 @@ class BaseModelBackend(BackendBaseCommon):
         meta = self.model_store.metadata(name)
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
         model = self._extract_model(meta.gridfile, storekey,
-                                    self._tmp_packagefn(self.model_store, storekey), **kwargs)
+                                    self._tmp_packagefn(self.model_store, storekey),
+                                    meta=meta, **kwargs)
         return model
 
     def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
