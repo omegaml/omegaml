@@ -129,6 +129,7 @@ OMEGA_STORE_BACKENDS = {
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
     'script.ipynb': 'omegaml.notebook.jobs.NotebookBackend',
+    'oci.registry': 'omegaml.backends.repository.OCIRegistryBackend',
     'python.model': 'omegaml.backends.genericmodel.GenericModelBackend',
     # must be last backend listed as a catch-call
     'core.object': 'omegaml.backends.coreobjects.CoreObjectsBackend',
@@ -188,6 +189,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.objinfo.ObjectInformationMixin',
     'omegaml.notebook.jobs.NotebookMixin',
     'omegaml.mixins.store.objhelper.ObjectHelperMixin',
+    'omegaml.mixins.store.repository.RepositoryStorageMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -506,13 +508,16 @@ def setup_logging():
         # -- the default pymongo logger is set according to the root logger
         # -- sometimes resultins in large amounts of inadverted pymongo log output
         # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
-        'root': 'INFO',
+        'root': OMEGA_LOGLEVEL,
         'pymongo': 'ERROR',
         'pymongo.command': 'WARNING',
         'pymongo.connection': 'ERROR',
         'pymongo.serverSelection': 'ERROR',
-        # kombu tends to be quite verbose
+        # kombu, celery tend to be too verbose
         'kombu': 'ERROR',
+        'celery.utils.functional': 'ERROR',
+        # omgea store is too verbose
+        'omegaml.store.base': 'ERROR',
     }
     for name, level in default_loglevels.items():
         pymongo_logger = logging.getLogger(name)

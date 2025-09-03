@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from shutil import rmtree
 from types import ModuleType
 from unittest.mock import patch
 
@@ -24,6 +25,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         self.clean(bucket='restore')
         with OmegaExportArchive('/tmp/test', None) as arc:
             arc.clear()
+        rmtree('./mlops-export', ignore_errors=True)
 
     def _apply_store_mixin(self, omx):
         for store in (omx.datasets, omx.models, omx.jobs, omx.scripts, omx.streams):
@@ -285,6 +287,31 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
             # ensure models were not touched
             # -- expect @latest, @version1, @version2 + base version
             self.assertEqual(len(om_restore.models.revisions('mymodel')), 4)
+
+    def test_runtime_export_import_oci(self):
+        om = self.om
+        om_restore = self.om_restore
+        model = LinearRegression()
+        model.coef_ = 1
+        ociurl = 'ocidir:///tmp/registry/xmyimage:latest'
+        om.models.put(model, 'mymodel')
+        # this does not work yet due to store.to_archive() not calling compress()
+        # -- (how?) it's semantically different from put(..., repo=...)
+        # -- what if we want to store.to_archive(..., 'myexport.tgz')? it should compress()?
+        # -- then we can just as well call compress() in store.to_archive(), as we do in Exporter.to_archive()
+        # om.models.to_archive('mymodel', ociurl)
+        OmegaExporter(om).to_archive(ociurl, ['models/mymodel'])
+        om.models.drop('mymodel', force=True)
+        rmtree('.ocidir')
+        # not working yet
+        # om.models.from_archive(ociurl, 'mymodel')
+        OmegaExporter(om).from_archive(ociurl)
+        mdl = om.models.get('mymodel')
+        self.assertIsInstance(mdl, LinearRegression)
+        om_restore.models.from_archive(ociurl, 'mymodel')
+        mdl = om_restore.models.get('mymodel')
+        self.assertIsInstance(mdl, LinearRegression)
+        self.assertEqual(mdl.coef_, 1)
 
 
 if __name__ == '__main__':

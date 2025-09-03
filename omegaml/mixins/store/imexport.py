@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import tarfile
-from bson.json_util import dumps as bson_dumps, loads as bson_loads
 from datetime import datetime
+from pathlib import Path
+from shutil import rmtree
+
+from bson.json_util import dumps as bson_dumps, loads as bson_loads
+
+from omegaml.backends.repository.basereg import chdir
+from omegaml.backends.repository.orasreg import OrasOciRegistry
 from omegaml.client.util import AttrDict
 from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
 from omegaml.util import IterableJsonDump, load_class, SystemPosixPath, tarfile_safe_extractall
-from pathlib import Path
-from shutil import rmtree
 
 
 class ObjectImportExportMixin:
@@ -22,7 +27,7 @@ class ObjectImportExportMixin:
     def supports(cls, store, **kwargs):
         return store.prefix in ('data/', 'jobs/', 'models/', 'scripts/', 'streams/')
 
-    def to_archive(self, name, local, fmt='omega', **kwargs):
+    def to_archive(self, name, local, fmt='auto', **kwargs):
         backend = self.get_backend(name)
         if hasattr(backend, 'export'):
             return backend.export(name)
@@ -45,7 +50,7 @@ class ObjectImportExportMixin:
                 arc.add(meta, asname=asname, store=self)
         return arc
 
-    def from_archive(self, local, name, fmt='omega', **kwargs):
+    def from_archive(self, local, name, fmt='auto', **kwargs):
         if not isinstance(local, OmegaExportArchive):
             archive = OmegaExporter.archive(local, store=self, fmt=fmt)
         else:
@@ -83,6 +88,14 @@ class OmegaExportArchive:
         self.store = store
         self.manifest = self._read_manifest()
         self._with_arc = None
+
+    @classmethod
+    def supports(cls, path, store=None):
+        pathlike = lambda s: pathlib.Path(s).exists() or pathlib.Path(s).parent.exists()
+        return pathlike(path) and not '://' in str(path)  # we don't support urls
+
+    def exists(self):
+        return Path(self.path).exists()
 
     def __enter__(self, compress=False):
         self._with_arc = arc = self.decompress()
@@ -204,6 +217,9 @@ class OmegaExportArchive:
             meta.name = asname
         return meta.save()
 
+    def should_compress(self):
+        return False
+
     def _manifest_key(self, name, store):
         return f'{store.prefix}{name}'
 
@@ -245,16 +261,60 @@ class OmegaExportArchive:
             json.dump(self.manifest, fout)
 
 
+class OciArtifactExport(OmegaExportArchive):
+    def __init__(self, path, store=None):
+        self.registry = OrasOciRegistry(path)
+        # create a temp path inside current dear to avoid
+        self.path = path = Path('.ocidir') / 'mlops-export'
+        self.path.mkdir(parents=True, exist_ok=True)
+        super().__init__(path, store=store)
+
+    @classmethod
+    def supports(cls, path, store=None):
+        return str(path).startswith('oci://') or str(path).startswith('ocidir://')
+
+    def exists(self):
+        return self.registry.exists()
+
+    def should_compress(self):
+        return True
+
+    def compress(self, mode='oci'):
+        reg = self.registry
+        # oras requires relative paths to its root
+        with chdir(self.path.parent):
+            reg.add(self.path.relative_to(self.path.parent))
+        return self.path
+
+    def decompress(self, mode=None):
+        reg = self.registry
+        # the repository added self.path as a relative to self.path.parent
+        # example
+        # .ocidir              # <= this is the root of the image (self.path.parent)
+        # + mlops-export       # <= this was added to image (self.path)
+        #   + manifest.json
+        #   + models
+        #     + ...
+        #   + data
+        #     + ...
+        # hence, we extract to the root of the image
+        # -- getting back the same directory layout as stored
+        if self.registry.exists():
+            reg.extract(self.path.parent)
+        return self
+
+
 class OmegaExporter:
     ARCHIVERS = {
         'omega': 'omegaml.mixins.store.imexport.OmegaExportArchive',
+        'oci': 'omegaml.mixins.store.imexport.OciArtifactExport',
     }
     _temp_bucket = '__exporter'  # used as the import target and source for promotion
 
     def __init__(self, omega):
         self.omega = omega
 
-    def to_archive(self, path, objects=None, fmt='omega', compress=False, progressfn=None):
+    def to_archive(self, path, objects=None, fmt='auto', compress=False, progressfn=None):
         """ write export archive
 
         Export archives can be either uncompressed or compressed. Uncompressed archives
@@ -301,6 +361,7 @@ class OmegaExporter:
                     objects = store.list(pattern=pattern) or [pattern]
                     for objname in objects:
                         store.to_archive(objname, arc)
+        compress = compress or arc.should_compress()
         if compress:
             mode = '' if compress == 'tar' else 'gz'
             archive_path = arc.compress(mode=mode)
@@ -308,7 +369,7 @@ class OmegaExporter:
             archive_path = path
         return archive_path
 
-    def from_archive(self, path, pattern=None, fmt='omega', promote=False,
+    def from_archive(self, path, pattern=None, fmt='auto', promote=False,
                      promote_to: Omega = None, progressfn=None):
         # for promotion, use a temp bucket for import and promotion source
         promote = promote or (promote_to is not None)
@@ -317,9 +378,9 @@ class OmegaExporter:
         store: ObjectImportExportMixin
         imported = []
         pattern = pattern.replace('datasets/', 'data/') if pattern else pattern
-        if not Path(path).exists():
-            raise FileNotFoundError(path)
         with OmegaExporter.archive(path, fmt=fmt) as arc:
+            if not arc.exists():
+                raise FileNotFoundError(path)
             for member in arc.members:
                 progressfn(member) if progressfn else None
                 if pattern and not re.match(pattern, member):
@@ -335,7 +396,15 @@ class OmegaExporter:
         return imported
 
     @classmethod
-    def archive(cls, path, store=None, fmt='omega') -> OmegaExportArchive:
-        archiver = load_class(cls.ARCHIVERS[fmt])
+    def archive(cls, path, store=None, fmt='auto') -> OmegaExportArchive:
+        if fmt == 'auto':
+            for fmt in cls.ARCHIVERS:
+                archiver = load_class(cls.ARCHIVERS[fmt])
+                if archiver.supports(path, store=store):
+                    break
+            else:
+                raise ValueError(f"no archiver found for {path=} and {fmt=}")
+        else:
+            archiver = load_class(cls.ARCHIVERS[fmt])
         archive = archiver(path, store)
         return archive

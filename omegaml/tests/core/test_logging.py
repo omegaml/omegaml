@@ -15,8 +15,8 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.previous_loglevel = self.pylogger.getEffectiveLevel()
 
     def tearDown(self):
-        self.assertTrue(all(m.name is not None for m in self.om.datasets.list(raw=True)))
         self.pylogger.setLevel(self.previous_loglevel)
+        self.assertTrue(all(m.name is not None for m in self.om.datasets.list(raw=True)))
 
     def _reset_log(self):
         self.om.datasets.drop('.omega/logs', force=True)
