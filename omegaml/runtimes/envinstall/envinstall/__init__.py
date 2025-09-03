@@ -26,7 +26,7 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
         with open(lockfile, 'x') as flock:
             # only run if we can get an exclusive lock
             reqfn = '/tmp/envreq.txt'
-            if reqfile:
+            if not package and reqfile:
                 with open(reqfn, 'wb') as fout:
                     reqs = om.scripts.get(reqfile).read()
                     fout.write(reqs)
@@ -43,7 +43,7 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
                                      encoding='utf-8')
-    except IOError as e :
+    except IOError as e:
         result = f'another envinstall process is running on this node: {e}'
     else:
         result = str(process.stdout)

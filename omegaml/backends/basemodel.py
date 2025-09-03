@@ -1,8 +1,10 @@
 import joblib
 import shutil
+import smart_open
+from pathlib import Path
+
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
-from pathlib import Path
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -49,7 +51,7 @@ class BaseModelBackend(BackendBaseCommon):
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
-    
+
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
@@ -69,26 +71,36 @@ class BaseModelBackend(BackendBaseCommon):
         # the model store handles _pre and _post methods in self.perform()
         return self.model_store
 
-    def get(self, name, **kwargs):
+    def get(self, name, uri=None, **kwargs):
         """
         retrieve a model
 
         :param name: the name of the object
+        :param uri: optional, /path/to/file, defaults to meta.gridfile, may use /path/{key} as placeholder
+           for the file's name
         :param version: the version of the object (not supported)
+
+        .. versionadded: NEXT
+            uri specifies a target filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
-        return self.get_model(name, **kwargs)
+        return self.get_model(name, uri=uri, **kwargs)
 
-    def put(self, obj, name, **kwargs):
+    def put(self, obj, name, uri=None, **kwargs):
         """
         store a model
 
         :param obj: the model object to be stored
         :param name: the name of the object
+        :param uri: optional, /path/to/file, defaults to meta.gridfile, may use /path/{key} as placeholder
+           for the file's name
         :param attributes: attributes for meta data
+
+        .. versionadded: NEXT
+            local specifies a local filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
-        return self.put_model(obj, name, **kwargs)
+        return self.put_model(obj, name, uri=uri, **kwargs)
 
     def drop(self, name, force=False, version=-1, **kwargs):
         return self.model_store._drop(name, force=force, version=version)
@@ -144,24 +156,38 @@ class BaseModelBackend(BackendBaseCommon):
         else:
             Path(path).unlink(missing_ok=True)
 
-    def get_model(self, name, version=-1, **kwargs):
+    def get_model(self, name, version=-1, uri=None, **kwargs):
         """
         Retrieves a pre-stored model
         """
         meta = self.model_store.metadata(name)
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
-        model = self._extract_model(meta.gridfile, storekey,
+        uri = uri or meta.uri
+        if uri is None:
+            infile = meta.gridfile
+        else:
+            uri = str(uri).format(key=storekey)
+            infile = smart_open.open(uri, 'rb')
+        model = self._extract_model(infile, storekey,
                                     self._tmp_packagefn(self.model_store, storekey), **kwargs)
+        infile.close()
         return model
 
-    def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
+    def put_model(self, obj, name, attributes=None, _kind_version=None, uri=None, **kwargs):
         """
         Packages a model using joblib and stores in GridFS
         """
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
         tmpfn = self._tmp_packagefn(self.model_store, storekey)
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
-        gridfile = self._store_to_file(self.model_store, packagefname, storekey)
+        if uri is None:
+            gridfile = self._store_to_file(self.model_store, packagefname, storekey)
+        else:
+            gridfile = None
+            uri = str(uri).format(key=storekey)
+            with (smart_open.open(packagefname, 'rb') as infile,
+                  smart_open.open(uri, 'wb') as outfile):
+                outfile.write(infile.read())
         self._remove_path(packagefname)
         kind_meta = {
             self._backend_version_tag: self._backend_version,
@@ -173,6 +199,7 @@ class BaseModelBackend(BackendBaseCommon):
             kind=self.KIND,
             kind_meta=kind_meta,
             attributes=attributes,
+            uri=uri,
             gridfile=gridfile).save()
 
     def predict(
