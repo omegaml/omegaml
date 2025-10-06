@@ -33,7 +33,8 @@ dist: sanity
 	rm -rf ./dist/*
 	rm -rf ./build/*
 	# set DISTTAGS to specify eg --python-tag for bdist
-	python -m build --sdist --wheel --config-setting "--build-option=${DISTTAGS}"
+	# --config-setting "--build-option=${DISTTAGS}"
+	python -m build --sdist --wheel
 	twine check dist/*.whl
 
 livetest: dist
