@@ -280,7 +280,9 @@ def update_from_env(vars=globals()):
     # -- OMEGA_CELERY_CONFIG updates
     for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
-        vars['OMEGA_CELERY_CONFIG'][celery_k] = os.environ[k]
+        celery_v = str(os.environ[k]).strip()
+        celery_v = int(celery_v) if celery_v.isnumeric() else celery_v
+        vars['OMEGA_CELERY_CONFIG'][celery_k] = celery_v
     # -- debug if required
     if '--print-omega-defaults' in sys.argv:
         from pprint import pprint
