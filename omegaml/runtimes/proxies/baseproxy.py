@@ -75,6 +75,7 @@ class RuntimeProxyBase:
             * if always is False, the require kwargs are only set on runtime and override
               the runtime's require kwargs
         """
+        always = drop or always
         if label:
             kwargs.update(label=label)
         if always:
