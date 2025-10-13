@@ -1,18 +1,16 @@
-from hashlib import sha256
-
+import os
 import warnings
-
 from getpass import getuser
+from hashlib import sha256
 from unittest import TestCase
 
-import os
 import pandas as pd
-from omegaml import Omega
-from omegaml.backends.sqlalchemy import SQLAlchemyBackend
-from omegaml.tests.util import OmegaTestMixin
 from pandas.testing import assert_frame_equal
 from sqlalchemy.engine import Connection, create_engine, ResultProxy
 
+from omegaml import Omega
+from omegaml.backends.sqlalchemy import SQLAlchemyBackend
+from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import signature
 
 
@@ -87,11 +85,11 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om = self.om
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
-        cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
-        df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        with engine.connect() as cnx:
+            df = pd.DataFrame({
+                'x': range(10)
+            })
+            df.to_sql('foobar', cnx, if_exists='replace', index=False)
         om.datasets.put(cnx_str, 'foobar',
                         sql='select * from foobar',
                         kind=SQLAlchemyBackend.KIND)
@@ -384,13 +382,35 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
                 dfx = om.datasets.get('foobar', sqlvars=sqlvars, trusted=trusted)
                 self.assertEqual(len(dfx), 10)
                 warnlog = str(list(w.message for w in wrn))
-                self.assertIn('Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.', warnlog)
+                self.assertIn(
+                    'Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.',
+                    warnlog)
         # we trust the sqlvars -- no warning will be issued
         with warnings.catch_warnings(record=True) as wrn:
             dfx = om.datasets.get('foobar', sqlvars=sqlvars, trusted=signature(sqlvars))
             self.assertEqual(len(dfx), 10)
             warnlog = str(list(w.message for w in wrn))
-            self.assertNotIn('Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.', warnlog)
+            self.assertNotIn(
+                'Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.',
+                warnlog)
 
-
-
+    def test_postgres(self):
+        om = self.om
+        cnx_str = 'postgresql://postgres:test@localhost:5432/postgres'
+        engine = create_engine(cnx_str)
+        cnx = engine.connect()
+        df = pd.DataFrame({
+            'x': range(10)
+        })
+        df.to_sql('foobar', cnx, if_exists='replace', index=False)
+        om.datasets.put(cnx_str, 'foobar',
+                        sql='select * from foobar where x in {x} or x in {y}',
+                        kind=SQLAlchemyBackend.KIND)
+        df_db = om.datasets.get('foobar', sqlvars={
+            'x': [1, 2, 3],
+            'y': [5, 6, 7]
+        })
+        fltx = df['x'].isin([1, 2, 3])
+        flty = df['x'].isin([5, 6, 7])
+        df_filtered = df[fltx | flty].reset_index(drop=True)
+        assert_frame_equal(df_db, df_filtered)

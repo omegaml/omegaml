@@ -1,6 +1,6 @@
 import glob
-
 import os
+
 from setuptools import setup, find_namespace_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
@@ -15,7 +15,7 @@ jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
 mlflow_deps = ['mlflow-skinny>=1.2']
 tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
-            'pytest-instafail']
+            'pytest-instafail', 'tox']
 # required to avoid backtracking (falling below some versions)
 backtracking_deps = [
     'json5>0.9',
@@ -51,7 +51,7 @@ install_deps = [
     'jupyter-client>=4.1.1',
     'ipython>=8.0',  # required for cli shell
     'mongoengine>=0.29',
-    'pandas>=2.0.0,<2.2',  # due to https://github.com/pandas-dev/pandas/issues/57049
+    'pandas>2',
     'numpy>=1.16.4',
     'scipy>=0.17.0',
     'scikit-learn>=1.2',
@@ -78,7 +78,7 @@ install_deps = [
     'cachetools>=5.0.0',  # required for session caching
     'apispec>=5.2.2',  # required for openapi generation
     'marshmallow>=3.17.0',  # required for openapi generation
-    'sqlalchemy<2',  # currently no support for sqlalchemy 2
+    'sqlalchemy',  # due to https://github.com/pandas-dev/pandas/issues/57049
     'minibatch[omegaml]',  # required for streaming
     'validators',  # required for sec validations
     'build',  # required to build packages

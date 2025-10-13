@@ -73,8 +73,6 @@ as follows:
 """
 from __future__ import absolute_import
 
-import bson
-import gridfs
 import logging
 import os
 import shutil
@@ -82,12 +80,15 @@ import tempfile
 import warnings
 import weakref
 from datetime import datetime
+from uuid import uuid4
+
+import bson
+import gridfs
 from mongoengine.connection import disconnect, \
     connect, _connections, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.fields import GridFSProxy
 from mongoengine.queryset.visitor import Q
-from uuid import uuid4
 
 from omegaml.store.fastinsert import fast_insert, default_chunksize
 from omegaml.util import unravel_index, restore_index, make_tuple, jsonescape, \
@@ -694,16 +695,15 @@ class OmegaStore(object):
         for name in objs:
             try:
                 backend = self.get_backend(name)
-                if backend is not None:
-                    result = backend.drop(name, force=force, version=version, **kwargs)
-                else:
-                    result = self._drop(name, force=force, version=version)
+                drop = backend.drop if backend else self._drop
+                result = drop(name, force=force, version=version, **kwargs)
             except Exception as e:
-                results.append((name, False))
-                if not is_pattern:
+                result = False
+                if not force and not is_pattern:
                     raise
-            else:
-                results.append((name, result))
+                if force:
+                    result = self._drop(name, force=force, version=version)
+            results.append((name, result))
         if not objs:
             result = self._drop(name, force=force, version=version)
             results.append((name, result))
