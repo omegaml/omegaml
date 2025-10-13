@@ -1,16 +1,15 @@
-from logging import warning
-
 import logging
 import os
-import pandas as pd
-import sqlalchemy
 import string
-import threading
 import warnings
 from getpass import getuser
 from hashlib import sha256
-from sqlalchemy.exc import StatementError
+from logging import warning
 from urllib.parse import quote_plus
+
+import sqlalchemy
+from packaging.version import Version
+from sqlalchemy.exc import StatementError
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive, signature
@@ -20,6 +19,24 @@ try:
 
     sql_logger = logging.getLogger('snowflake')
     sql_logger.setLevel('CRITICAL')
+except:
+    pass
+
+try:
+    # enable pandas >= 2.2 compatibility with sqlalchemy 1.4
+    # -- workaround to due to https://github.com/pandas-dev/pandas/issues/57049
+    # -- this forces the use of pd.SQLDatabase instead of pd.SQLiteDatabase
+    # -- see https://github.com/pandas-dev/pandas/issues/57049#issuecomment-3398561199
+    import pandas as pd
+    import sqlalchemy as sqa
+
+    if (Version(pd.__version__) >= Version("2.2") and
+            Version(sqa.__version__) < Version("2.2")):
+        from pandas.compat._optional import VERSIONS
+
+        VERSIONS['sqlalchemy'] = '1.4'
+        warnings.warn(
+            "Patching pandas > 2.2 to support sqlalchemy >=1.4,<2 due to https://github.com/pandas-dev/pandas/issues/57049. To avoid this warning upgrade to sqlalchemy 2.x")
 except:
     pass
 
@@ -157,6 +174,9 @@ class SQLAlchemyBackend(BaseDataBackend):
     #    the cache will be cleared in child processes, forcing the engine to be
     #    recreated automatically in _get_connection
 
+    def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
+        super().__init__(model_store=model_store, data_store=data_store, tracking=tracking, **kwargs)
+
     @classmethod
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, *args, **kwargs):
         valid = cls._is_valid_url(cls, obj)
@@ -263,7 +283,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             else:
                 # lazy returns a cursor
                 logger.debug(f'preparing a cursor for sql {sql} with parameters {sqlvars}')
-                result = connection.execute(stmt, **sqlvars)
+                result = connection.execute(stmt, sqlvars)
                 keep = True
             if not keep:
                 connection.close()
@@ -397,7 +417,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         return metadata.save()
 
     def _get_connection(self, name, connection_str, secrets=None, keep=False):
-        from sqlalchemy import create_engine
+        import sqlalchemy as sqa
         # passwords should be encoded
         # https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
         encoded = lambda d: {
@@ -414,7 +434,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             enc_secrets = encoded(secrets or {})
             connection_str = connection_str.format(**enc_secrets)
             cache_key = sha256(f'{name}:{connection_str}'.encode('utf8')).hexdigest()
-            engine = self.__CNX_CACHE.get(cache_key) or create_engine(connection_str, **ENGINE_KWARGS)
+            engine = self.__CNX_CACHE.get(cache_key) or sqa.create_engine(connection_str, **ENGINE_KWARGS)
             connection = engine.connect()
         except KeyError as e:
             msg = ('{e}, ensure secrets are specified for connection '
@@ -492,7 +512,7 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_secrets(self, meta, secrets):
         secrets_specs = meta.kind_meta.get('secrets')
-        values = ({k:v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
+        values = ({k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
                   if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict())
         values.update(**self.data_store.defaults)
         if not secrets and secrets_specs:
@@ -653,7 +673,7 @@ def load_sql(om=None, kind=SQLAlchemyBackend.KIND):
     from unittest.mock import MagicMock
     from IPython import get_ipython
     import omegaml as om
-    from sql.connection import Connection # noqa
+    from sql.connection import Connection  # noqa
 
     class ConnectionShim:
         # this is required to trick sql magic into accepting existing connection objects
