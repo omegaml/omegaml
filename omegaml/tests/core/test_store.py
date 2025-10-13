@@ -1,34 +1,35 @@
 from __future__ import absolute_import
 
-from unittest import skip
-
 import gc
-import gridfs
-import joblib
-import pandas as pd
-import pymongo
 import unittest
 import uuid
 import warnings
 from datetime import timedelta, datetime
 from io import BytesIO
+from pathlib import Path
+from unittest import skip
+
+import gridfs
+import joblib
+import pandas as pd
+import pymongo
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
+from pandas.testing import assert_frame_equal, assert_series_equal
+from pymongo.errors import OperationFailure
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression, LinearRegression
+
+from omegaml.backends.coreobjects import CoreObjectsBackend
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
 from omegaml.documents import MDREGISTRY, Metadata
 from omegaml.mdataframe import MDataFrame
-from omegaml.notebook.jobs import OmegaJobs
 from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
-from pandas.testing import assert_frame_equal, assert_series_equal
-from pathlib import Path
-from pymongo.errors import OperationFailure
-from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
 
 
 class StoreTests(unittest.TestCase):
@@ -36,15 +37,23 @@ class StoreTests(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         delete_database()
+        self.store = self._make_store()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         delete_database()
         disconnect('omega')
 
+    def _make_store(self, **kwargs):
+        store = OmegaStore(**kwargs)
+        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
+        store.register_backend(CoreObjectsBackend.KIND, CoreObjectsBackend)
+        return store
+
     def test_package_model(self):
         # create a test model
-        store = OmegaStore()
+        store = self._make_store()
         iris = load_iris()
         X = iris.data
         Y = iris.target
@@ -72,7 +81,7 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
-        store = OmegaStore()
+        store = self._make_store()
         store.put(lr, 'models/foo')
         # get it back, try predicting
         lr2 = store.get('models/foo')
@@ -88,8 +97,8 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        datasets = OmegaStore(prefix='teststore')
-        models = OmegaStore(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
+        datasets = self._make_store(prefix='teststore')
+        models = self._make_store(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
         datasets.put(df, 'test')
         self.assertEqual(len(datasets.list()), 1)
         self.assertEqual(len(models.list()), 0)
@@ -102,8 +111,8 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        datasets = OmegaStore(prefix='data')
-        models = OmegaStore(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
+        datasets = self._make_store(prefix='data')
+        models = self._make_store(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
         # directory-like levels
         datasets.put(df, 'data/is/mypath/test')
         datasets.put(df, 'data/is/mypath/test2')
@@ -124,7 +133,7 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
-        store = OmegaStore(prefix='models/')
+        store = self._make_store(prefix='models/')
         store.put(lr, 'foo')
         # get it back, try predicting
         lr2 = store.get('foo')
@@ -138,7 +147,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
@@ -149,7 +158,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
@@ -165,7 +174,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(0, int(1e4 + 1))),
             'b': list(range(0, int(1e4 + 1)))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
@@ -177,7 +186,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         # -- check default timestamp
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp=True)
@@ -215,7 +224,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
         df2 = store.get('mydata', filter=dict(a__gt=1, a__lt=10))
@@ -229,7 +238,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
         df2 = store.get('mydata', columns=['a'])
@@ -244,7 +253,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10)),
             'c': list(range(1, 10)),
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
         specs = ['a', ':b', ':', 'b:', '^c']
@@ -273,7 +282,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10)),
             'c': list(range(1, 10)),
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # check # op returns iterchunks by default
         value = store.get('mydata#')
@@ -310,7 +319,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10)),
             'c': list(range(1, 10)),
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # check we can specify [] and # qualifiers
         value = store.get('mydata[a]#')
@@ -337,7 +346,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         })
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata', index=['a', '-b'])
         idxs = store.collection('mydata').index_information()
         idx_names = humanize_index(idxs)
@@ -350,7 +359,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(0, len(tsidx))),
             'b': list(range(0, len(tsidx)))
         }, index=tsidx)
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(df, 'mydata')
         dfx = store.get('mydata')
         assert_frame_equal(df, dfx)
@@ -360,7 +369,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe_multiindex(self):
         # create some dataframe
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
                                      [u'one', u'two']],
                              codes=[
@@ -377,7 +386,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe_multiindex_columns(self):
         # create some dataframe
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         columns = pd.MultiIndex.from_tuples([('A', 'X'), ('A', 'Y'), ('B', 'X'), ('B', 'Y')])
         # Create a DataFrame with the MultiIndex columns
         df = pd.DataFrame([[1, 2, 3, 4], [5, 6, 7, 8]], columns=columns)
@@ -391,7 +400,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         }
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(data, 'mydata')
         data2 = store.get('mydata')
         self.assertEqual([data], data2)
@@ -407,7 +416,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         }
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(data, 'mydata', index=['a'])
         coll = store.collection('mydata')
         # SON(..., 'keys': { key: order, ...}) => ['key', ...]
@@ -421,7 +430,7 @@ class StoreTests(unittest.TestCase):
             'a': list(range(1, 10)),
             'b': list(range(1, 10))
         }
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         store.put(data, 'mydata')
         store.put(data, 'mydata')
         data2 = store.get('mydata')
@@ -436,7 +445,7 @@ class StoreTests(unittest.TestCase):
         the purpose is to test the basic mode of OmegaStore in
         case pandas and scikit learn are not available
         """
-        store = OmegaStore(prefix='')
+        store = self._make_store(prefix='')
         # pure data
         data = {
             'a': list(range(1, 10)),
@@ -538,7 +547,7 @@ class StoreTests(unittest.TestCase):
         }
         df = pd.DataFrame(data)
         result_df = pd.DataFrame(result_data)
-        store = OmegaStore()
+        store = self._make_store()
         groupby_columns = ['b']
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
         self.assertEqual(meta.kind, 'pandas.dfgroup')
@@ -547,11 +556,15 @@ class StoreTests(unittest.TestCase):
             meta.collection, store.mongodb.list_collection_names())
         # note column order can differ due to insertion order since pandas 0.25.1
         # hence using [] to ensure same column order for both expected, result
-        df2 = store.get('dfgroup', kwargs={'b': 1})
+        # old kwargs= syntax
+        df1 = store.get('dfgroup', kwargs={'b': 1})
+        self.assertTrue(df1.equals(result_df[df1.columns]))
+        # new **kwargs filter spec
+        df2 = store.get('dfgroup', **{'b': 1})
         self.assertTrue(df2.equals(result_df[df2.columns]))
         df3 = store.get('dfgroup')
         self.assertTrue(df3.equals(df[df3.columns]))
-        df4 = store.get('dfgroup', kwargs={'a': 1})
+        df4 = store.get('dfgroup', **{'a': 1})
         self.assertTrue(df4.equals(result_df[df4.columns]))
 
     def test_store_dataframe_as_dfgroup_injected(self):
@@ -565,7 +578,7 @@ class StoreTests(unittest.TestCase):
         }
         df = pd.DataFrame(data)
         result_df = pd.DataFrame(result_data)
-        store = OmegaStore()
+        store = self._make_store()
         groupby_columns = ['b']
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
         injected = {
@@ -588,7 +601,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         meta = store.put(df, 'foo', as_hdf=True)
         self.assertEqual(meta.kind, 'pandas.hdf')
         # make sure the hdf file is actually there
@@ -615,7 +628,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         # store the object
         meta = store.put(df, 'foo')
         # store it again
@@ -638,7 +651,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         # store the object
         unique_name = uuid.uuid4().hex
         meta = store.put(df, unique_name, append=False)
@@ -650,7 +663,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         # store the object, no attributes
         store.put(df, 'foo', append=False)
         meta = store.metadata('foo')
@@ -667,7 +680,7 @@ class StoreTests(unittest.TestCase):
                                            'foobar': 'barbar'})
 
     def test_replace(self):
-        store = OmegaStore()
+        store = self._make_store()
         store.put({'foo': 'bar'}, 'foobar')
         store.put({'fox': 'bax'}, 'foobar', replace=True)
         data = store.get('foobar')
@@ -679,7 +692,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         meta = store.put(df, 'hdfdf', as_hdf=True)
         self.assertTrue(store.drop('hdfdf'))
         meta = store.put(df, 'datadf')
@@ -701,7 +714,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'foo', as_hdf=True)
         store.put(df, 'fox')
         # drop multiple objects
@@ -731,7 +744,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         meta = store.put(df, 'hdfdf', as_hdf=True)
         # list with pattern
         entries = store.list(pattern='hdf*', raw=True)
@@ -761,7 +774,7 @@ class StoreTests(unittest.TestCase):
             'b': list(range(1, 10))
         }
         df = pd.DataFrame(data)
-        store = OmegaStore()
+        store = self._make_store()
         meta = store.put(df, 'foo', append=False)
         val = store.get('foo', lazy=True).a.unique().value
         self.assertListEqual(data['a'], list(val))
@@ -770,7 +783,7 @@ class StoreTests(unittest.TestCase):
         """ test storing a pandas series with it's own index """
         from string import ascii_lowercase
         series = pd.Series(range(10), index=(c for c in ascii_lowercase[0:10]))
-        store = OmegaStore()
+        store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
@@ -781,7 +794,7 @@ class StoreTests(unittest.TestCase):
         series = pd.Series(range(10),
                            name='foo',
                            index=(c for c in ascii_lowercase[0:10]))
-        store = OmegaStore()
+        store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
@@ -792,7 +805,7 @@ class StoreTests(unittest.TestCase):
                            name='foo',
                            index=pd.date_range(datetime(2016, 1, 1),
                                                datetime(2016, 1, 10)))
-        store = OmegaStore()
+        store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
@@ -800,7 +813,7 @@ class StoreTests(unittest.TestCase):
     def test_store_irregular_column_names(self):
         """ test storing irregular column names """
         df = pd.DataFrame({'x_1': range(10)})
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'foo', append=False)
         df2 = store.get('foo')
         self.assertEqual(df.columns, df2.columns)
@@ -811,7 +824,7 @@ class StoreTests(unittest.TestCase):
             'x': pd.date_range(datetime(2016, 1, 1),
                                datetime(2016, 1, 10))
         })
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         assert_frame_equal(df, df2)
@@ -821,7 +834,7 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame({
             'y': pd.date_range('2019-10-01', periods=5, tz='US/Eastern', normalize=True)
         })
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         assert_frame_equal(df, df2)
@@ -838,7 +851,7 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame({
             'y': pd.date_range('2019-11-01', periods=5, tz='US/Eastern', normalize=True)
         })
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         # currently this fails, see @skip reason
@@ -848,7 +861,7 @@ class StoreTests(unittest.TestCase):
         df = pd.DataFrame({
             'x': [{'foo': 'bar '}],
         })
-        store = OmegaStore()
+        store = self._make_store()
         store.put(df, 'test-dict', append=False)
         df2 = store.get('test-dict')
         assert_frame_equal(df, df2)
@@ -856,8 +869,7 @@ class StoreTests(unittest.TestCase):
     def test_existing_arbitrary_collection_flat(self):
         data = {'foo': 'bar',
                 'bax': 'fox'}
-        store = OmegaStore()
-        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
@@ -876,8 +888,7 @@ class StoreTests(unittest.TestCase):
                 'bax': {
                     'fox': 'fax',
                 }}
-        store = OmegaStore()
-        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
@@ -896,8 +907,7 @@ class StoreTests(unittest.TestCase):
                 'bax': {
                     'fox': 'fax',
                 }}
-        store = OmegaStore()
-        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
         store.make_metadata('myfoo', collection='foo', kind='pandas.rawdict').save()
@@ -919,8 +929,7 @@ class StoreTests(unittest.TestCase):
     def test_arbitrary_collection_new(self):
         data = {'foo': 'bar',
                 'bax': 'fox'}
-        store = OmegaStore()
-        store.register_backend(PandasRawDictBackend.KIND, PandasRawDictBackend)
+        store = self._make_store()
         # create the collection
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
@@ -940,8 +949,8 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(data_df[cols], json_normalize(data_raw)[cols])
 
     def test_raw_files(self):
-        store = OmegaStore()
-        store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
+        store = self._make_store()
+
         # test we can write from a file-like object
         data = "some data"
         file_like = BytesIO(data.encode('utf-8'))
@@ -958,10 +967,8 @@ class StoreTests(unittest.TestCase):
     def test_bucket(self):
         # test different buckets actually separate objects by the same name
         # -- data
-        foo_store = OmegaStore(bucket='foo')
-        bar_store = OmegaStore(bucket='bar')
-        foo_store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
-        bar_store.register_backend(PythonRawFileBackend.KIND, PythonRawFileBackend)
+        foo_store = self._make_store(bucket='foo')
+        bar_store = self._make_store(bucket='bar')
         foo_data = {'foo': 'bar',
                     'bax': 'fox'}
         bar_data = {'foo': 'bax',
@@ -980,7 +987,7 @@ class StoreTests(unittest.TestCase):
         self.assertNotEqual(foo_store.get('myfile').read(), bar_store.get('myfile').read())
 
     def test_hidden_temp_handling(self):
-        foo_store = OmegaStore(bucket='foo')
+        foo_store = self._make_store(bucket='foo')
         foo_store.put({}, '_temp')
         self.assertNotIn('_temp', foo_store.list(include_temp=False))
         self.assertIn('_temp', foo_store.list(include_temp=True))
@@ -989,14 +996,14 @@ class StoreTests(unittest.TestCase):
         self.assertIn('.hidden', foo_store.list(hidden=True))
 
     def test_help(self):
-        foo_store = OmegaStore(bucket='foo')
+        foo_store = self._make_store(bucket='foo')
         obj = {}
         foo_store.put(obj, '_temp')
         # get backend for different signatures
         backend_name = foo_store._resolve_help_backend('_temp')
         backend_obj = foo_store._resolve_help_backend(obj)
-        self.assertEqual(backend_name, backend_obj)
-        self.assertIsInstance(backend_obj, OmegaStore)
+        self.assertEqual(backend_name.__class__, backend_obj.__class__)
+        self.assertIsInstance(backend_obj, CoreObjectsBackend)
         # get backend for scikit model
         reg = LinearRegression()
         foo_store.put(reg, 'regmodel')
@@ -1006,7 +1013,7 @@ class StoreTests(unittest.TestCase):
         self.assertIsInstance(backend_obj, ScikitLearnBackend)
 
     def test_help_docs(self):
-        foo_store = OmegaStore(bucket='foo')
+        foo_store = self._make_store(bucket='foo')
         reg = LinearRegression()
         foo_store.put(reg, 'regmodel', attributes={
             'docs': 'this is some text'
@@ -1018,9 +1025,9 @@ class StoreTests(unittest.TestCase):
         self.assertIsInstance(backend, ScikitLearnBackend)
 
     def test_combined_store(self):
-        foo_store = OmegaStore(bucket='foo', prefix='foo/')
-        bar_store = OmegaStore(bucket='bar', prefix='bar/')
-        job_store = OmegaJobs(bucket='bar', prefix='jobs/')
+        foo_store = self._make_store(bucket='foo', prefix='foo/')
+        bar_store = self._make_store(bucket='bar', prefix='bar/')
+        job_store = self._make_store(bucket='bar', prefix='jobs/')
         obj = {}
         foo_store.put(obj, 'obj')
         obj = {}
@@ -1039,7 +1046,7 @@ class StoreTests(unittest.TestCase):
             self.assertEqual(meta.name, member.split('/', 1)[1])
 
     def test_long_index_name(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         store.defaults.OMEGA_STORE_HASHEDNAMES = True
         df = pd.DataFrame({'xyz' * 100: range(100), 'yyz' * 300: range(100)})
         df = df.set_index('yyz' * 300)
@@ -1056,7 +1063,7 @@ class StoreTests(unittest.TestCase):
         self.assertFalse(raised, error)
 
     def test_long_dataset_name(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         df = pd.DataFrame({'xyz' * 100: range(100)})
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
@@ -1078,7 +1085,7 @@ class StoreTests(unittest.TestCase):
             store.put(df, long_name, append=False)
 
     def test_long_dataset_name_hdf(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         df = pd.DataFrame({'xyz' * 100: range(100)})
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
@@ -1099,7 +1106,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta.gridfile.name, store._get_obj_store_key(long_name, '.hdf'))
 
     def test_migrate_unhashed_name(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         df = pd.DataFrame({'x': range(100)})
         long_name = 'a' * 10
         raised = False
@@ -1126,7 +1133,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta_migrated.collection, meta_hashed.collection)
 
     def test_migrate_unhashed_name_hdf(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         df = pd.DataFrame({'x': range(100)})
         long_name = 'a' * 10
         raised = False
@@ -1150,7 +1157,7 @@ class StoreTests(unittest.TestCase):
         self.assertNotEqual(name_unhashed, name_hashed)
 
     def test_cleanup_on_gc(self):
-        store = OmegaStore(bucket='foo', prefix='foo/')
+        store = self._make_store(bucket='foo', prefix='foo/')
         store.put({}, 'foo')
         tmppath = Path(store.tmppath)
         self.assertTrue(tmppath.exists())

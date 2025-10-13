@@ -1,10 +1,9 @@
 from __future__ import absolute_import
 
-from unittest import TestCase, skip
-
-import gridfs
 import os
 from datetime import timedelta
+from unittest import TestCase, skip
+
 from nbformat import v4
 
 from omegaml import Omega
@@ -249,7 +248,7 @@ class JobTests(TestCase):
     def test_run_nonexistent_job(self):
         om = self.om
         self.assertRaises(
-            gridfs.errors.NoFile, om.jobs.run_notebook, 'dummys.ipynb')
+            AssertionError, om.jobs.run_notebook, 'dummys.ipynb')
 
     def test_scheduled_job_with_omegaml_block(self):
         om = self.om

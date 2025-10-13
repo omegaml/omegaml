@@ -60,32 +60,12 @@ def is_series(obj):
         return False
 
 
-def is_estimator(obj):
-    try:
-        from sklearn.base import BaseEstimator
-        from sklearn.pipeline import Pipeline
-        return isinstance(obj, (BaseEstimator, Pipeline))
-    except:
-        False
-
-
 def is_ndarray(obj):
     try:
         import numpy as np
         return isinstance(obj, np.ndarray)
     except:
         False
-
-
-def is_spark_mllib(obj):
-    """
-    # unlike scikit learn obj is not the actual model, but a specification of
-    # the model for the spark server to create. so obj is the name of the
-    # python class, e.g. obj=pyspark.mllib.clustering.KMeans
-    """
-    if isinstance(obj, str):
-        return 'pyspark.mllib' in obj
-    return False
 
 
 def settings(reload=False):

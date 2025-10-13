@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import datetime
+
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
 from mongoengine.fields import (
@@ -26,10 +27,7 @@ class MDREGISTRY:
     MINIBATCH_STREAM = 'stream.minibatch'
 
     #: the list of accepted data types. extend using OmegaStore.register_backend
-    KINDS = [
-        PANDAS_DFROWS, PANDAS_SEROWS, PANDAS_HDF, PYTHON_DATA, SKLEARN_JOBLIB,
-        PANDAS_DFGROUP, OMEGAML_JOBS, OMEGAML_RUNNING_JOBS, SPARK_MLLIB, MINIBATCH_STREAM,
-    ]
+    KINDS = []
 
 
 class Metadata:
@@ -81,6 +79,7 @@ def make_Metadata(db_alias='omega', collection=None):
     # database from the given alias at the time of use
     from omegaml.documents import Metadata as Metadata_base
     collection = collection or settings().OMEGA_MONGO_COLLECTION
+
     class Metadata(Metadata_base, Document):
         # override db_alias in gridfile
         gridfile = FileField(

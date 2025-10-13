@@ -1,7 +1,7 @@
 import warnings
 from hashlib import md5
-from mongoengine import DoesNotExist
 
+from omegaml.documents import MDREGISTRY
 from omegaml.store import OmegaStore
 
 
@@ -43,6 +43,8 @@ class StreamsProxy(OmegaStore):
         minibatch package for details
     """
 
+    KIND = 'stream.minibatch'
+
     # TODO move this implementation to a proper OmegaStore backend or mixin
     # this is a OmegaStore so we can have Metadata support
     # it is called the StreamsProxy because it behaves more like a Mixin
@@ -63,7 +65,8 @@ class StreamsProxy(OmegaStore):
     def register_backends(self):
         # TODO enable custom backends
         # disabled to avoid interference with custom get(), put()
-        pass
+        if self.KIND not in MDREGISTRY.KINDS:
+            MDREGISTRY.KINDS.append(self.KIND)
 
     def _qualified_stream(self, name, *args, **kwargs):
         return f'{self.bucket}.{self.prefix}.{name}.stream'
@@ -141,7 +144,7 @@ class StreamsProxy(OmegaStore):
             }
         }
         meta = self.make_metadata(name,
-                                  'stream.minibatch',
+                                  self.KIND,
                                   prefix=self.prefix,
                                   bucket=self.bucket,
                                   kind_meta=kind_meta).save()

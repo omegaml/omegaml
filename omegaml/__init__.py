@@ -40,7 +40,7 @@ _omega.OmegaDeferredInstance = getattr(_omega, 'OmegaDeferredInstance', OmegaDef
 datasets = _omega.OmegaDeferredInstance(_omega._om, 'datasets')
 #: the :class:`omegaml.store.base.OmegaStore` store for models
 models = _omega.OmegaDeferredInstance(_omega._om, 'models')
-#: the :class:`omegaml.notebook.jobs.OmegaJobs` store for jobs
+#: the :class:`omegaml.store.base.OmegaStore` store for jobs
 jobs = _omega.OmegaDeferredInstance(_omega._om, 'jobs')
 #: the :class:`omegaml.store.base.OmegaStore` store for scripts
 scripts = _omega.OmegaDeferredInstance(_omega._om, 'scripts')

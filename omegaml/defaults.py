@@ -121,6 +121,9 @@ OMEGA_STORE_BACKENDS = {
     'python.package': 'omegaml.backends.package.PythonPackageData',
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
+    'script.ipynb': 'omegaml.notebook.jobs.NotebookBackend',
+    # must be last backend listed as a catch-call
+    'core.object': 'omegaml.backends.coreobjects.CoreObjectsBackend',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
@@ -175,6 +178,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.tracking.TrackableMetadataMixin',
     'omegaml.mixins.store.tracking.UntrackableMetadataMixin',
     'omegaml.mixins.store.objinfo.ObjectInformationMixin',
+    'omegaml.notebook.jobs.NotebookMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))

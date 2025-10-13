@@ -1,45 +1,39 @@
 from __future__ import absolute_import
 
 import datetime
-import gridfs
 import re
+from io import StringIO, BytesIO
+from uuid import uuid4
+
+import gridfs
 import yaml
 from croniter import croniter
-from io import StringIO, BytesIO
 from jupyter_client import AsyncKernelManager
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.preprocessors.execute import ExecutePreprocessor
-from nbformat import read as nbread, write as nbwrite, v4 as nbv4
-from uuid import uuid4
+from nbformat import read as nbread, write as nbwrite, v4 as nbv4, NotebookNode
 
-from omegaml.backends.basecommon import BackendBaseCommon
+from omegaml.backends.basedata import BaseDataBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.notebook.jobschedule import JobSchedule
-from omegaml.store import OmegaStore
-from omegaml.util import settings as omega_settings
 
 
-class OmegaJobs(BackendBaseCommon):
+class NotebookBackend(BaseDataBackend):
     """
     Omega Jobs API
     """
 
     # TODO this class should be a proper backend class with a mixin for ipynb
 
-    _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
-    _dir_placeholder = '_placeholder.ipynb'
+    KIND = MDREGISTRY.OMEGAML_JOBS
 
-    def __init__(self, bucket=None, prefix=None, store=None, defaults=None):
-        self.defaults = defaults or omega_settings()
-        self.prefix = prefix or (store.prefix if store else None) or 'jobs'
-        self.store = store or OmegaStore(prefix=prefix, bucket=bucket, defaults=defaults)
-        self.kind = MDREGISTRY.OMEGAML_JOBS
-        self._include_dir_placeholder = True
-        # convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))
-        self.Schedule = JobSchedule
+    @classmethod
+    def supports(cls, obj, name, data_store=None, **kwargs):
+        return data_store.prefix == 'jobs/' and (isinstance(obj, (str, NotebookNode)) or name.endswith('.ipynb'))
 
-    def __repr__(self):
-        return 'OmegaJobs(store={})'.format(self.store.__repr__())
+    @property
+    def store(self):
+        return self.data_store
 
     @property
     def _db(self):
@@ -49,56 +43,7 @@ class OmegaJobs(BackendBaseCommon):
     def _fs(self):
         return self.store.fs
 
-    def collection(self, name):
-        if not name.endswith('.ipynb'):
-            name += '.ipynb'
-        return self.store.collection(name)
-
-    def drop(self, name, force=False):
-        """ remove the notebook
-
-        Args:
-            name (str): the name of the notebook
-            force (bool): if True does not raise
-
-        Returns:
-            True if object was deleted, False if not.
-            If force is True and the object does not exist it will still return True
-
-        Raises:
-            DoesNotExist if the notebook does not exist and ```force=False```
-        """
-        meta = self.metadata(name)
-        name = meta.name if meta is not None else name
-        return self.store.drop(name, force=force)
-
-    def metadata(self, name, **kwargs):
-        """ retrieve metadata of a notebook
-
-        Args:
-            name (str): the name of the notebook
-
-        Returns:
-            Metadata
-        """
-        meta = self.store.metadata(name, **kwargs)
-        if meta is None and not name.endswith('.ipynb'):
-            name += '.ipynb'
-            meta = self.store.metadata(name)
-        return meta
-
-    def exists(self, name):
-        """ check if the notebook exists
-
-        Args:
-            name (str): the name of the notebook
-
-        Returns:
-            Metadata
-        """
-        return len(self.store.list(name)) + len(self.store.list(name + '.ipynb')) > 0
-
-    def put(self, obj, name, attributes=None):
+    def put(self, obj, name, attributes=None, **kwargs):
         """ store a notebook job
 
         Args:
@@ -128,7 +73,7 @@ class OmegaJobs(BackendBaseCommon):
             meta = self.store._make_metadata(name=name,
                                              prefix=self.store.prefix,
                                              bucket=self.store.bucket,
-                                             kind=self.kind,
+                                             kind=self.KIND,
                                              attributes=attributes,
                                              gridfile=fileid)
             meta = meta.save()
@@ -137,17 +82,17 @@ class OmegaJobs(BackendBaseCommon):
             meta.gridfile = self._store_to_file(self.store, bbuf, filename)
             meta = meta.save()
         # set config
-        nb_config = self.get_notebook_config(name)
+        nb_config = self.store.get_notebook_config(name)
         meta_config = meta.attributes.get('config', {})
         if nb_config:
             meta_config.update(dict(**nb_config))
             meta.attributes['config'] = meta_config
         meta = meta.save()
         if not name.startswith('results') and ('run-at' in meta_config):
-            meta = self.schedule(name)
+            meta = self.store.schedule(name)
         return meta
 
-    def get(self, name):
+    def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         """
         Retrieve a notebook and return a NotebookNode
         """
@@ -174,6 +119,71 @@ class OmegaJobs(BackendBaseCommon):
                 ">{0}< does not exist in jobs bucket '{1}'".format(
                     name, self.store.bucket))
 
+
+class NotebookMixin:
+    """ om.jobs storage methods
+
+    Mixin to OmegaStore to provide om.jobs-specific methods
+
+    Usage:
+        # create a new notebook from code
+        code = \"""
+        print('hello')
+        \"""
+        om.jobs.create(code, 'name')
+
+        # schedule a notebook
+        om.jobs.schedule('name', run_at='<cron spec>')
+
+        # run a notebook immediately
+        om.jobs.run('name')
+    """
+    _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
+    _dir_placeholder = '_placeholder.ipynb'
+
+    def _init_mixin(self, *args, **kwargs):
+        self._include_dir_placeholder = True
+        # convenience so you can do om.jobs.schedule(..., run_at=om.jobs.Schedule(....))
+        self.Schedule = JobSchedule
+
+    @classmethod
+    def supports(cls, store, *args, **kwargs):
+        return store.prefix == 'jobs/'
+
+    def __repr__(self):
+        return 'OmegaJobs(store={})'.format(super().__repr__())
+
+    def collection(self, name):
+        if not name.endswith('.ipynb'):
+            name += '.ipynb'
+        return super().collection(name)
+
+    def metadata(self, name, **kwargs):
+        """ retrieve metadata of a notebook
+
+        Args:
+            name (str): the name of the notebook
+
+        Returns:
+            Metadata
+        """
+        meta = super().metadata(name, **kwargs)
+        if meta is None and not name.endswith('.ipynb'):
+            name += '.ipynb'
+            meta = super().metadata(name)
+        return meta
+
+    def exists(self, name):
+        """ check if the notebook exists
+
+        Args:
+            name (str): the name of the notebook
+
+        Returns:
+            Metadata
+        """
+        return len(super().list(name)) + len(super().list(name + '.ipynb')) > 0
+
     def create(self, code, name):
         """
         create a notebook from code
@@ -198,7 +208,7 @@ class OmegaJobs(BackendBaseCommon):
         returns the collection object
         """
         # FIXME this should use store.collection
-        return getattr(self.store.mongodb, collection)
+        return getattr(self.mongodb, collection)
 
     def list(self, pattern=None, regexp=None, raw=False, **kwargs):
         """
@@ -206,7 +216,7 @@ class OmegaJobs(BackendBaseCommon):
         filter is a regex on the name of the ipynb entry.
         The default is all, i.e. `.*`
         """
-        job_list = self.store.list(pattern=pattern, regexp=regexp, raw=raw, **kwargs)
+        job_list = super().list(pattern=pattern, regexp=regexp, raw=raw, **kwargs)
         name = lambda v: v.name if raw else v
         if not self._include_dir_placeholder:
             job_list = [v for v in job_list if not name(v).endswith(self._dir_placeholder)]
@@ -339,6 +349,7 @@ class OmegaJobs(BackendBaseCommon):
         """
         notebook = self.get(name)
         meta_job = self.metadata(name)
+        assert meta_job is not None, f"Cannot run non-existent jobs {name}"
         ts = datetime.datetime.now()
         # execute kwargs
         # -- see ExecuteProcessor class
@@ -598,24 +609,26 @@ class OmegaJobs(BackendBaseCommon):
             * help(obj) if python is in interactive mode
             * text(str) if python is in not interactive mode
         """
-        return self.store.help(name_or_obj, kind=kind, raw=raw)
+        return super().help(name_or_obj, kind=kind, raw=raw)
 
     def to_archive(self, name, path, **kwargs):
-        # TODO remove, pending #218
         if not name.endswith('.ipynb'):
             name += '.ipynb'
-        return self.store.to_archive(name, path, **kwargs)
+        return super().to_archive(name, path, **kwargs)
 
     def from_archive(self, path, name, **kwargs):
-        # TODO remove, pending #218
         if not name.endswith('.ipynb'):
             name += '.ipynb'
-        return self.store.from_archive(path, name, **kwargs)
+        return super().from_archive(path, name, **kwargs)
 
     def promote(self, name, other, **kwargs):
-        # TODO remove, pending #218
         nb = self.get(name)
         return other.put(nb, name)
 
     def summary(self, *args, **kwargs):
-        return self.store.summary(*args, **kwargs)
+        return super().summary(*args, **kwargs)
+
+
+# sphinx docs compatibility
+class OmegaJobs(NotebookMixin, NotebookBackend):
+    pass

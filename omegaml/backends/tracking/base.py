@@ -156,7 +156,7 @@ class TrackingProvider:
         Args:
             obj (str): the name of the model
             model_store (OmegaStore): the store to use, defaults to self._model_store
-            jobs_store (OmegaJobs): the jobs store to use, defaults to om.jobs
+            jobs_store (OmegaStore): the jobs store to use, defaults to om.jobs
 
         Returns:
             list of jobs created as [Metadata, ...]

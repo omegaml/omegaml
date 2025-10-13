@@ -1,19 +1,24 @@
 from unittest.case import TestCase
 
 import omegaml as om
+from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.documents import MDREGISTRY
-from omegaml.backends.basedata import BaseDataBackend
+from omegaml.tests.util import OmegaTestMixin
 
 
-class CustomBackendTests(TestCase):
-
+class CustomBackendTests(OmegaTestMixin, TestCase):
     """
     Test custom backends with new kinds
 
     Note we are not implemented actually working backends. What we're
     interested here is that the backend API and Metadata storage work.
     """
+
+    def setUp(self):
+        self.om = om.Omega()
+        self.clean()
+
     def tearDown(self):
         # remove custom backend from implementation not to disturb other tests
         try:
@@ -28,7 +33,7 @@ class CustomBackendTests(TestCase):
         """
         test custom model type
         """
-        om.models.register_backend('custom.foo', CustomModelBackend)
+        om.models.register_backend(CustomModelBackend.KIND, CustomModelBackend, index=0)
         foo = dict(foo='bar')
         meta = om.models.put(foo, 'footest')
         self.assertIsInstance(meta, om.models._Metadata)
@@ -43,7 +48,7 @@ class CustomBackendTests(TestCase):
         """
         test custom dataset type
         """
-        om.datasets.register_backend('custom.bar', CustomDataBackend)
+        om.datasets.register_backend(CustomDataBackend.KIND, CustomDataBackend, index=0)
         foo = dict(bar='foo')
         meta = om.datasets.put(foo, 'bartest')
         self.assertIsInstance(meta, om.datasets._Metadata)
@@ -56,7 +61,6 @@ class CustomBackendTests(TestCase):
 
 
 class CustomModelBackend(BaseModelBackend):
-
     """
     Minimalist model backend
     """
@@ -66,11 +70,12 @@ class CustomModelBackend(BaseModelBackend):
     def supports(self, obj, name, **kwargs):
         return isinstance(obj, dict) and 'foo' in obj
 
-class CustomDataBackend(BaseDataBackend):
 
+class CustomDataBackend(BaseDataBackend):
     """
     Minimalist dataset backend
     """
+    KIND = 'custom.bar'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
