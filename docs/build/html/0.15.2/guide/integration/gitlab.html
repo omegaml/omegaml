@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrate with Gitlab CI/CD &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Administration" href="../../admin/index.html" />
+    <link rel="prev" title="Integration" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Integration</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Integrate with Gitlab CI/CD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#update-deployment">Update deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-the-same-image-tag-for-testing">Using the same image tag for testing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configure-kubectl">Configure kubectl</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../release/0.17.0/index.html">release/0.17.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Integration</a></li>
+      <li class="breadcrumb-item active">Integrate with Gitlab CI/CD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/integration/gitlab.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="integrate-with-gitlab-ci-cd">
+<h1>Integrate with Gitlab CI/CD<a class="headerlink" href="#integrate-with-gitlab-ci-cd" title="Link to this heading">¶</a></h1>
+<section id="update-deployment">
+<h2>Update deployment<a class="headerlink" href="#update-deployment" title="Link to this heading">¶</a></h2>
+<p>Once the image is ready it can be deployed to kubernetes using kubectl
+(this is as with any kubernetes cluster, i.e. not specific to omega-ml):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span><span class="nb">set</span><span class="w"> </span>image<span class="w"> </span>deployment/&lt;deployment<span class="w"> </span>name&gt;<span class="w"> </span>&lt;container<span class="w"> </span>name&gt;<span class="o">=</span>&lt;repo/image:version&gt;<span class="w"> </span>--record
+</pre></div>
+</div>
+<p>As an alternative you could also update your deployment.yml, setting the
+image version there. Then you can run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>deployment.yaml
+</pre></div>
+</div>
+</section>
+<section id="using-the-same-image-tag-for-testing">
+<h2>Using the same image tag for testing<a class="headerlink" href="#using-the-same-image-tag-for-testing" title="Link to this heading">¶</a></h2>
+<p>Note the above only works if every newly built image is tagged with a new version.
+Otherwise kubernetes will not update the image as it thinks it already has the latest
+version. For testing it is more convenient to use the <code class="code docutils literal notranslate"><span class="pre">:latest</span></code> image tag, and set
+the <code class="code docutils literal notranslate"><span class="pre">pullPolicy:</span> <span class="pre">Always</span></code> as described in <a class="reference external" href="https://kubernetes.io/docs/concepts/containers/images/#updating-images">gitlab_k8s</a>. Then you can simply delete
+the pod(s). Since the deployment requires at least one pod, kubernetes will create
+a new pod and pull the image again (that’s what Always means):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">name</span><span class="o">=</span>&lt;label&gt;
+</pre></div>
+</div>
+</section>
+<section id="configure-kubectl">
+<h2>Configure kubectl<a class="headerlink" href="#configure-kubectl" title="Link to this heading">¶</a></h2>
+<p>Note to make this work inside the gitlab pipeline, kubectl needs to be configured
+to access the omegaml kubernetes instance, using the cloudmgr-provided kube config
+file. The kubectl configuration (kube config) is available from the cloudmgr:</p>
+<ol class="arabic simple">
+<li><p>login to cloudmgr</p></li>
+<li><p>select the Cluster</p></li>
+<li><p>Click <code class="code docutils literal notranslate"><span class="pre">Kubeconfig</span> <span class="pre">File</span></code> and download or copy/paste the kube config file</p></li>
+</ol>
+<p>The easiest is to put the contents of the kube config into a gitlab variable e.g.
+copy/paste the output of the following command to the <code class="code docutils literal notranslate"><span class="pre">kube_config</span></code> variable
+(I’m following this <a class="reference external" href="https://about.gitlab.com/blog/2017/09/21/how-to-create-ci-cd-pipeline-with-autodeploy-to-kubernetes-using-gitlab-and-helm/">gitlab_cicd</a> example).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run locally, copy paste output to kube_config variable</span>
+$<span class="w"> </span>cat<span class="w"> </span>~/.kube/config<span class="w"> </span><span class="p">|</span><span class="w"> </span>base64
+In<span class="w"> </span>your<span class="w"> </span>gitlab<span class="w"> </span>pipeline,<span class="w"> </span>before<span class="w"> </span>running<span class="w"> </span>kubectl<span class="w"> </span><span class="k">do</span><span class="w"> </span>the<span class="w"> </span>following
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kube_config</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span>&gt;<span class="w"> </span><span class="nv">$HOME</span>/.kube
+</pre></div>
+</div>
+<p>To check whether kubectl is configured correctly run the following command as part of the pipeline. If the configuration works as expected, it will print something like this (or an error message otherwise).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>cluster-info
+Kubernetes<span class="w"> </span>control<span class="w"> </span>plane<span class="w"> </span>is<span class="w"> </span>running<span class="w"> </span>at<span class="w"> </span>https://cloudmgr.omegaml.io/k8s/clusters/c-jgnm5
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../admin/index.html" class="btn btn-neutral float-right" title="Administration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: 0.15.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="gitlab.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/guide/integration/gitlab.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/guide/integration/gitlab.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/guide/integration/gitlab.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/guide/integration/gitlab.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/guide/integration/gitlab.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/guide/integration/gitlab.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/integration/gitlab.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

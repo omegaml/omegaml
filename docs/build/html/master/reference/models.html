@@ -1,0 +1,851 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>om.models &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="om.jobs" href="jobs.html" />
+    <link rel="prev" title="om.datasets" href="datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">om.models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#omegaml.models"><code class="docutils literal notranslate"><span class="pre">models</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backends">Backends</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.scikitlearn.ScikitLearnBackend"><code class="docutils literal notranslate"><span class="pre">ScikitLearnBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.experiment.ExperimentBackend"><code class="docutils literal notranslate"><span class="pre">ExperimentBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowKerasBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowKerasSavedModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="docutils literal notranslate"><span class="pre">TensorflowSavedModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="docutils literal notranslate"><span class="pre">TFEstimatorModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelBackend"><code class="docutils literal notranslate"><span class="pre">RModelBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.genai.textmodel.TextModelBackend"><code class="docutils literal notranslate"><span class="pre">TextModelBackend</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mixins">Mixins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.mixins.store.virtualobj.VirtualObjectMixin"><code class="docutils literal notranslate"><span class="pre">VirtualObjectMixin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.mixins.store.promotion.PromotionMixin"><code class="docutils literal notranslate"><span class="pre">PromotionMixin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.mixins.store.extdmeta.ModelSignatureMixin"><code class="docutils literal notranslate"><span class="pre">ModelSignatureMixin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelProxy"><code class="docutils literal notranslate"><span class="pre">RModelProxy</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="jobs.html">om.jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts.html">om.scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">om.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html">omegaml.mdataframe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../release/0.17.0/reference/models.html">release/0.17.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">om.models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="om-models">
+<h1><a class="toc-backref" href="#id7" role="doc-backlink">om.models</a><a class="headerlink" href="#om-models" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#om-models" id="id7">om.models</a></p>
+<ul>
+<li><p><a class="reference internal" href="#backends" id="id8">Backends</a></p></li>
+<li><p><a class="reference internal" href="#mixins" id="id9">Mixins</a></p></li>
+<li><p><a class="reference internal" href="#helpers" id="id10">Helpers</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<dl class="py data">
+<dt class="sig sig-object py" id="omegaml.models">
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">models</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaStore(bucket=omegaml,</span> <span class="pre">prefix=models/)</span></em><a class="headerlink" href="#omegaml.models" title="Link to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for models</p>
+<p>Methods:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.list" title="omegaml.store.base.OmegaStore.list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.list()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.get" title="omegaml.store.base.OmegaStore.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.get()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.getl" title="omegaml.store.base.OmegaStore.getl"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.getl()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.put" title="omegaml.store.base.OmegaStore.put"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.put()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.drop" title="omegaml.store.base.OmegaStore.drop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.drop()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.exists" title="omegaml.store.base.OmegaStore.exists"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.exists()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.metadata" title="omegaml.store.base.OmegaStore.metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.metadata()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.help" title="omegaml.store.base.OmegaStore.help"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.help()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>Mixins:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.mixins.store.virtualobj.VirtualObjectMixin" title="omegaml.mixins.store.virtualobj.VirtualObjectMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.mixins.store.virtualobj.VirtualObjectMixin</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.mixins.store.promotion.PromotionMixin" title="omegaml.mixins.store.promotion.PromotionMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.mixins.store.promotion.PromotionMixin</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.mixins.store.extdmeta.ExtendedMetadataMixin</span></code></p></li>
+<li><p><a class="reference internal" href="#omegaml.mixins.store.extdmeta.ModelSignatureMixin" title="omegaml.mixins.store.extdmeta.ModelSignatureMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.mixins.store.extdmeta.ModelSignatureMixin</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>Backends:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="tracking.html#omegaml.backends.experiment.ExperimentBackend" title="omegaml.backends.experiment.ExperimentBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.experiment.ExperimentBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.scikitlearn.ScikitLearnBackend" title="omegaml.backends.scikitlearn.ScikitLearnBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.scikitlearn.ScikitLearnBackend</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code> (loaded only if installed):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasBackend" title="omegaml.backends.tensorflow.TensorflowKerasBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend" title="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend" title="omegaml.backends.tensorflow.TensorflowSavedModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TensorflowSavedModelBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend" title="omegaml.backends.tensorflow.TFEstimatorModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tensorflow.TFEstimatorModelBackend</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">keras</span></code> (loaded only if installed):</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.keras.KerasBackend</span></code></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">mlflow</span></code> (loaded only if installed)</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.mlflow.models.MLFlowModelBackend</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.mlflow.registrymodels.MLFlowRegistryBackend</span></code></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">R</span></code> (loaded if installed)</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.backends.rsystem.rmodels.RModelBackend" title="omegaml.backends.rsystem.rmodels.RModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rsystem.rmodels.RModelBackend</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">openai</span></code> (loaded if installed)</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 0.17.0.</span></p>
+</div>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.GenAIBaseBackend</span></code></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.genai.textmodel.TextModelBackend" title="omegaml.backends.genai.textmodel.TextModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.genai.textmodel.TextModelBackend</span></code></a></p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<section id="backends">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Backends</a><a class="headerlink" href="#backends" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.scikitlearn.ScikitLearnBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.scikitlearn.</span></span><span class="sig-name descname"><span class="pre">ScikitLearnBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/scikitlearn.html#ScikitLearnBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.scikitlearn.ScikitLearnBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.scikitlearn.ScikitLearnBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sklearn.joblib'</span></em><a class="headerlink" href="#omegaml.backends.scikitlearn.ScikitLearnBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.experiment.</span></span><span class="sig-name descname"><span class="pre">ExperimentBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend" title="Link to this definition">¶</a></dt>
+<dd><p>ExperimentBackend provides storage of tracker configurations</p>
+<p>Usage:</p>
+<blockquote>
+<div><p>To log metrics and other data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> <span class="c1"># automatically log score result</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;mymetric&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;myparam&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">),</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To log data and automatically profile system data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s1">&#39;profiling&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> <span class="c1"># automatically log score result</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;mymetric&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;myparam&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">),</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># profiling data contains metrics for cpu, memory and disk use</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;profile&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To get back experiment data without running an experiment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># recommended way</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">use</span><span class="p">()</span>
+<span class="n">exp_df</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+
+<span class="c1"># experiments exist in the models store</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments/myexp&#39;</span><span class="p">)</span>
+<span class="n">exp_df</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tracking.OmegaSimpleTracker</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.tracking.OmegaProfilingTracker</span></code></p></li>
+</ul>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'experiment.tracker'</span></em><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>retrieve a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the object</p></li>
+<li><p><strong>version</strong> – the version of the object (not supported)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>store a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – the model object to be stored</p></li>
+<li><p><strong>name</strong> – the name of the object</p></li>
+<li><p><strong>attributes</strong> – attributes for meta data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.experiment.ExperimentBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tracking/experiment.html#ExperimentBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.experiment.ExperimentBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkeras.html#TensorflowKerasBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.h5'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkeras.html#TensorflowKerasBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Fit a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model</p></li>
+<li><p><strong>Xname</strong> – the name of the X dataset</p></li>
+<li><p><strong>Yname</strong> – the name of the Y dataset</p></li>
+<li><p><strong>pure_python</strong> – deprecated</p></li>
+<li><p><strong>kwargs</strong> – any additional kwargs are passed on to model.fit()</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkeras.html#TensorflowKerasBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasSavedModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkerassavedmodel.html#TensorflowKerasSavedModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.savedmodel'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkerassavedmodel.html#TensorflowKerasSavedModelBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkerassavedmodel.html#TensorflowKerasSavedModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowSavedModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfsavedmodel.html#TensorflowSavedModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tf.savedmodel'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfsavedmodel.html#TensorflowSavedModelBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfsavedmodel.html#TensorflowSavedModelBackend.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>Predict from a SavedModel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong></p></li>
+<li><p><strong>Xname</strong></p></li>
+<li><p><strong>rName</strong></p></li>
+<li><p><strong>pure_python</strong></p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowSavedModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfsavedmodel.html#TensorflowSavedModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowSavedModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TFEstimatorModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfestimatormodel.html#TFEstimatorModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfestimator.model'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfestimatormodel.html#TFEstimatorModelBackend.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.fit" title="Link to this definition">¶</a></dt>
+<dd><p>fit the model with data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the meta data object of the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfestimatormodel.html#TFEstimatorModelBackend.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>predict using data stored in Xname</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>rName</strong> – the name of the result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the predicted outcome</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfestimatormodel.html#TFEstimatorModelBackend.score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.score" title="Link to this definition">¶</a></dt>
+<dd><p>score using data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>Yname</strong> – the name of the Y data set</p></li>
+<li><p><strong>rName</strong> – the name of the transforms’s result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the score result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.tensorflow.TFEstimatorModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfestimatormodel.html#TFEstimatorModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TFEstimatorModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.rsystem.rmodels.</span></span><span class="sig-name descname"><span class="pre">RModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelBackend" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'model.r'</span></em><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelBackend.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelBackend.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelBackend.predict" title="Link to this definition">¶</a></dt>
+<dd><p>predict using data stored in Xname</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modelname</strong> – the name of the model object</p></li>
+<li><p><strong>Xname</strong> – the name of the X data set</p></li>
+<li><p><strong>rName</strong> – the name of the result data object or None</p></li>
+<li><p><strong>pure_python</strong> – if True return a python object. If False return
+a dataframe. Defaults to True to support any client.</p></li>
+<li><p><strong>kwargs</strong> – kwargs passed to the model’s predict method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return the predicted outcome</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.genai.textmodel.</span></span><span class="sig-name descname"><span class="pre">TextModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend" title="Link to this definition">¶</a></dt>
+<dd><p>Backend for OpenAI models</p>
+<p>Enables creating an OpenAI model via a connection string, e.g.
+om.models.put(‘openai://&lt;base_url&gt;;model=&lt;model&gt;’, ‘mymodel’). The connection
+string must be in the format openai://&lt;base_url&gt;;model=&lt;model&gt; where &lt;base_url&gt;
+is the base URL of the OpenAI-compatible model server’s REST API, and &lt;model&gt;
+is the model name as known to the model server. The connection string may also
+include an apikey, e.g. ‘openai://&lt;apikey&gt;&#64;&lt;base_url&gt;;model=&lt;model&gt;’.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p># create a model
+om.models.put(‘openai://localhost:8000/mymodel’, ‘mymodel’)
+# get the model
+model = om.models.get(‘mymodel’)
+# use the model
+result = model.complete(‘hello, how are you?’)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>the actual implementation of the model handling logic is in OpenAIModel,
+this only provides the model store interface and acts as any VirtualObjectHandler</p></li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'genai.text'</span></em><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>get an obj</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – the name of the object (str)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object as it was originally stored</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>put an obj</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – the object to store (object)</p></li>
+<li><p><strong>name</strong> – the name of the object (str)</p></li>
+<li><p><strong>attributes</strong> – the attributes dict (dict, optional)</p></li>
+<li><p><strong>kwargs</strong> – other kwargs to be passed to the Metadata object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.genai.textmodel.TextModelBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/genai/textmodel.html#TextModelBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.genai.textmodel.TextModelBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mixins">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Mixins</a><a class="headerlink" href="#mixins" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.mixins.store.virtualobj.VirtualObjectMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.store.virtualobj.</span></span><span class="sig-name descname"><span class="pre">VirtualObjectMixin</span></span><a class="reference internal" href="../_modules/omegaml/mixins/store/virtualobj.html#VirtualObjectMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.virtualobj.VirtualObjectMixin" title="Link to this definition">¶</a></dt>
+<dd><p>process virtual objects</p>
+<p>This checks if an object is a VirtualObject and if so
+retrieves the handler and processes it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.mixins.store.promotion.PromotionMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.store.promotion.</span></span><span class="sig-name descname"><span class="pre">PromotionMixin</span></span><a class="reference internal" href="../_modules/omegaml/mixins/store/promotion.html#PromotionMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.promotion.PromotionMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Promote objects from one bucket to another</p>
+<dl>
+<dt>Promotion Methods:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><cite>getput</cite> - performs target.put(source.get()) and copies metadata</dt><dd><p>attributes by merging target.metadata’s .attributes and .kind_meta</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>metadata</cite> - creates a new metadata data entry in target, copying</dt><dd><p>metadata attributes and kind_meta. Does not get/put the object itself
+(i.e. no associated data is promoted).</p>
+</dd>
+</dl>
+</li>
+<li><p><cite>data</cite> - like <cite>getput</cite>, but does not merge metadata</p></li>
+<li><dl class="simple">
+<dt><cite>export</cite> - performs .to_archive() and .from_archive(), effectively</dt><dd><p>copying metadata, the associated gridfile (if available) and collection
+data (if available). This is equivalent to <cite>om runtime export</cite>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The default promotion method is getput(), or the object’s backend.PROMOTE
+method, if specified.</p>
+</dd>
+</dl>
+<p>Some object backends provide a default promotion other than getput:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>sqlalchemy.conx - uses the <cite>metadata</cite> promotion, effectively copying only</dt><dd><p>metadata. Use promote(…, method=’metadata,data’) to also promote data</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>virtualobj.dill - uses the <cite>export</cite> promotion, effectively copying all</dt><dd><p>metadata and the associated &#64;virtualobj function. If the source object
+is a versioned model, this copies the current version and metadata. To
+copy a specific version, use promote(<a class="reference external" href="mailto:'model&#37;&#52;&#48;version">‘model<span>&#64;</span>version</a>’). To create a
+new version in the target bucket use promote(…, method=’getput’).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.mixins.store.promotion.PromotionMixin.promote">
+<span class="sig-name descname"><span class="pre">promote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">put</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mixins/store/promotion.html#PromotionMixin.promote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.promotion.PromotionMixin.promote" title="Link to this definition">¶</a></dt>
+<dd><p>Promote object to another store.</p>
+<p>This effectively copies the object. If the objects exists in the
+target it will be replaced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the object</p></li>
+<li><p><strong>other</strong> – the OmegaStore instance to promote to</p></li>
+<li><p><strong>asname</strong> – the name to use in other, defaults to .metadata(name).name</p></li>
+<li><p><strong>drop</strong> (<em>bool</em>) – if True calls other.drop(force=True) before promoting, defaults to False</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>|</em><em>list</em>) – specify the method or multiple methods in sequence, available methods
+are ‘default’, ‘getput’, ‘metadata’, ‘data’. For ‘default’, the object backend’s
+.PROMOTE property is used, defaulting to ‘getput’</p></li>
+<li><p><strong>get</strong> (<em>dict</em>) – optional, specifies the store.get(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</p></li>
+<li><p><strong>put</strong> (<em>dict</em>) – optional, specifies the other.put(<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</p></li>
+<li><p><strong>kwargs</strong> – additional kwargs are passed to the initial other.put(), for metadata promotion</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The Metadata of the new object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.mixins.store.extdmeta.ModelSignatureMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.store.extdmeta.</span></span><span class="sig-name descname"><span class="pre">ModelSignatureMixin</span></span><a class="reference internal" href="../_modules/omegaml/mixins/store/extdmeta.html#ModelSignatureMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.extdmeta.ModelSignatureMixin" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="omegaml.mixins.store.extdmeta.ModelSignatureMixin.link_dataset">
+<span class="sig-name descname"><span class="pre">link_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Xmeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ymeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mixins/store/extdmeta.html#ModelSignatureMixin.link_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.extdmeta.ModelSignatureMixin.link_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>link dataset information to this model</p>
+<p>This sets the ‘dataset’ entry in metadata.attributes of a model. By default
+this method is called by any .fit() call initiated from the runtime. The ‘dataset’
+entry is a dict that records the following information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;Xname&#39;</span><span class="p">:</span> <span class="n">Xname</span><span class="p">,</span>  <span class="c1"># the X dataset</span>
+    <span class="s1">&#39;Yname&#39;</span><span class="p">:</span> <span class="n">Yname</span><span class="p">,</span>  <span class="c1"># the Y dataset</span>
+    <span class="s1">&#39;features&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span> <span class="c1"># features for this model</span>
+    <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span> <span class="c1"># labels for this model</span>
+    <span class="s1">&#39;Xmeta&#39;</span><span class="p">:</span> <span class="n">Xmeta</span><span class="p">,</span> <span class="c1"># Metadata for this model (at time of fit)</span>
+    <span class="s1">&#39;Ymeta&#39;</span><span class="p">:</span> <span class="n">Ymeta</span><span class="p">,</span> <span class="c1"># Metadata for this model (at time of fit)</span>
+    <span class="s1">&#39;rName&#39;</span><span class="p">:</span> <span class="n">rName</span><span class="p">,</span> <span class="c1"># the result dataset</span>
+    <span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">,</span> <span class="c1"># other kwargs used for fitting</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – the name of the model or script</p></li>
+<li><p><strong>Xname</strong> (<em>str</em>) – the name of dataset, may include modifiers</p></li>
+<li><p><strong>Yname</strong> (<em>str</em>) – the name of dataset, may include modifiers</p></li>
+<li><p><strong>rName</strong> (<em>str</em>) – the result dataset</p></li>
+<li><p><strong>Xmeta</strong> (<a class="reference internal" href="core.html#omegaml.documents.Metadata" title="omegaml.documents.Metadata"><em>Metadata</em></a>) – the Metadata for X (features), defaults to data_store.metadata(Xname)</p></li>
+<li><p><strong>Ymeta</strong> (<a class="reference internal" href="core.html#omegaml.documents.Metadata" title="omegaml.documents.Metadata"><em>Metadata</em></a>) – the Metadata for Y (features), defaults to data_store.metadata(Yname)</p></li>
+<li><p><strong>features</strong> (<em>list</em><em>|</em><em>dict</em>) – a list of feature names or dict(name=info), where info is a
+dict with further information for each features</p></li>
+<li><p><strong>labels</strong> (<em>list</em><em>|</em><em>dict</em>) – a list of label names or dict(label=info), where info is a
+dict with futher information for each label</p></li>
+<li><p><strong>signature</strong> (<em>bool</em>) – if True the object’s signature will also be updated, defaults to True</p></li>
+<li><p><strong>meta</strong> (<a class="reference internal" href="core.html#omegaml.documents.Metadata" title="omegaml.documents.Metadata"><em>Metadata</em></a>) – the metadata object, if provided .metadata() is not called again</p></li>
+<li><p><strong>data_store</strong> (<a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><em>OmegaStore</em></a>) – the data store to retrieve Xmeta, Ymeta if not provided</p></li>
+<li><p><strong>**kwargs</strong> – passed to self.metadata(name, <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs) to retrieve the model metadata</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="helpers">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Helpers</a><a class="headerlink" href="#helpers" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelProxy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.rsystem.rmodels.</span></span><span class="sig-name descname"><span class="pre">RModelProxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelProxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelProxy" title="Link to this definition">¶</a></dt>
+<dd><p>a Python proxy to the R process that runs a model</p>
+<p>This provides the <code class="docutils literal notranslate"><span class="pre">model.predict()</span></code> interface for R models so that
+we can use the same semantics for R and python scripts.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rmodels.RModelProxy.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_or_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rmodels.html#RModelProxy.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rmodels.RModelProxy.predict" title="Link to this definition">¶</a></dt>
+<dd><p>call $model.predict()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X_or_name</strong> (<em>str</em>) – the X object or name of the dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="datasets.html" class="btn btn-neutral float-left" title="om.datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="jobs.html" class="btn btn-neutral float-right" title="om.jobs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../0.15.2/reference/models.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../latest/reference/models.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../release/0.15.3/reference/models.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../release/0.15.5/reference/models.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../release/0.16.0/reference/models.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../release/0.16.1/reference/models.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../release/0.16.2/reference/models.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../release/0.16.3/reference/models.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../release/0.16.4/reference/models.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../release/0.17.0/reference/models.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../stable/reference/models.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="models.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
