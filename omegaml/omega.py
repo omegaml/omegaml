@@ -38,8 +38,6 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         :param celeryconf: the celery configuration dictionary
         """
         from omegaml.util import settings
-        # avoid circular imports
-        from omegaml.notebook.jobs import OmegaJobs
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
@@ -48,13 +46,12 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         self._dbalias = self._make_dbalias()
         self.models = self._make_store(prefix='models/')
         self.datasets = self._make_store(prefix='data/')
-        self._jobdata = self._make_store(prefix='jobs/')
+        self.jobs = self._make_store(prefix='jobs/')
         self.scripts = self._make_store(prefix='scripts/')
         # minibatch integration
         self.streams = self._make_streams(prefix='streams/')
         # runtimes environments
         self.runtime = self._make_runtime(celeryconf)
-        self.jobs = OmegaJobs(store=self._jobdata, defaults=self.defaults)
         # logger
         self.logger = OmegaSimpleLogger(store=self.datasets, defaults=self.defaults)
         # stores

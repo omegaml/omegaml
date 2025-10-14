@@ -1,15 +1,14 @@
 from __future__ import absolute_import
 
-from zipfile import ZipFile, ZIP_DEFLATED
-
 import datetime
 import glob
-import joblib
 import os
 import tempfile
 import types
 from shutil import rmtree
-from sklearn.base import BaseEstimator
+from zipfile import ZipFile, ZIP_DEFLATED
+
+import joblib
 from sklearn.model_selection import GridSearchCV
 
 from omegaml.backends.basemodel import BaseModelBackend
@@ -25,7 +24,9 @@ class ScikitLearnBackendV1(BaseModelBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return isinstance(obj, BaseEstimator)
+        from sklearn.base import BaseEstimator
+        from sklearn.pipeline import Pipeline
+        return isinstance(obj, (BaseEstimator, Pipeline))
 
     # kept to support legacy scikit learn model serializations prior to ~scikit learn v0.18
     def _v1_package_model(self, model, filename):

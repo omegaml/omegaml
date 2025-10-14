@@ -1,12 +1,13 @@
 import os
-import pandas as pd
 import sys
 import unittest
-from pandas._testing import assert_frame_equal
 from pathlib import Path
-from sklearn.linear_model import LinearRegression
 from types import ModuleType
 from unittest.mock import patch
+
+import pandas as pd
+from pandas._testing import assert_frame_equal
+from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
 from omegaml.mixins.store.imexport import ObjectImportExportMixin, OmegaExportArchive, OmegaExporter
@@ -25,7 +26,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
             arc.clear()
 
     def _apply_store_mixin(self, omx):
-        for store in (omx.datasets, omx.models, omx.jobs.store, omx.scripts, omx.streams):
+        for store in (omx.datasets, omx.models, omx.jobs, omx.scripts, omx.streams):
             store.register_mixin(ObjectImportExportMixin)
 
     def test_dataframe_export(self):
@@ -278,7 +279,6 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
             # check jobs were not restored yet
             self.assertEqual(om_restore.jobs.list(), [])
             # restore jobs explicitly
-            # -- note jobs promotion is not supported (pending #218)
             OmegaExporter(om_restore).from_archive('/tmp/test',
                                                    pattern='jobs/.*')
             self.assertEqual(om_restore.jobs.list(), ['myjob.ipynb'])

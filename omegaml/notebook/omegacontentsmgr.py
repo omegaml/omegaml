@@ -1,15 +1,15 @@
-import mimetypes
-from base64 import encodebytes, decodebytes
-
 import json
-import nbformat
+import mimetypes
 import os
+from base64 import encodebytes, decodebytes
 from datetime import datetime
 from io import BytesIO
+from urllib.parse import unquote
+
+import nbformat
 from jupyter_server.services.contents.manager import ContentsManager
 from tornado import web
 from traitlets import default
-from urllib.parse import unquote
 
 from omegaml.notebook.checkpoints import NoOpCheckpoints
 
@@ -48,7 +48,7 @@ class OmegaStoreContentsManager(ContentsManager):
         """
         return the OmageStore for jobs (notebooks)
         """
-        return self.omega.jobs.store
+        return self.omega.jobs
 
     @property
     def _dir_placeholder(self):

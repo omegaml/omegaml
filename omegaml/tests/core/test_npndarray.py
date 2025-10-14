@@ -1,13 +1,15 @@
 from unittest import TestCase
 
-from omegaml import Omega
-from omegaml.backends.npndarray import NumpyNDArrayBackend
-
 import numpy as np
 
+from omegaml import Omega
+from omegaml.backends.npndarray import NumpyNDArrayBackend
+from omegaml.tests.util import OmegaTestMixin
 
-class NumpyNDArrayBackendTests(TestCase):
+
+class NumpyNDArrayBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
+        super().setUp()
         om = self.om = Omega()
         om.datasets.register_backend(NumpyNDArrayBackend.KIND, NumpyNDArrayBackend)
 

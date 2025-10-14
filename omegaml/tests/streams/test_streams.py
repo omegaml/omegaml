@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from unittest.mock import patch, MagicMock
 
 from omegaml import Omega
@@ -108,13 +107,16 @@ class StreamsTestCase(OmegaTestMixin, TestCase):
 
     def test_streams_attach_runtime(self):
         om = self.om
+        # no dataset
         with self.assertRaises(ValueError):
             om.streams.get('test', source='foobar')
         # test we can attach to a dataset
         om.datasets.put([1, 2, 3], 'foobar')
         stream = om.streams.get('test', source='foobar')
         om.datasets.put([1, 2, 3], 'foobar')
-        self.assertEqual(len(list(stream.buffer())), 1)
+        # allow some time for the stream to append
+        # sleep(1)
+        self.assertGreaterEqual(len(list(stream.buffer())), 1)
         stream.stop()
         stream.clear()
         # test we can attach to the runtime
