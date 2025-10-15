@@ -55,6 +55,7 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
     def test_simple_logger_quiet(self):
         logger = self.om.logger
         self.assertIsInstance(logger, OmegaSimpleLogger)
+        logger.setLevel('INFO')
         logger.info('initialize')  # need this to initialize
         logger.setLevel('QUIET')
         logger.error('info message')
@@ -98,11 +99,13 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(logger, OmegaSimpleLogger)
         self.assertNotEqual(logger, self.om.logger)
         self.assertNotEqual(logger.name, self.om.logger.name)
+        logger.setLevel('info')
         logger.info('foo')
         df = logger.dataset.get(level='INFO')
         self.assertTrue(len(df) == 1)
         self.assertEqual(df.iloc[0]['logger'], 'foo')
         # change logger name of the default logger
+        self.om.logger.setLevel('info')
         self.om.logger.name = 'myname'
         self.om.logger.info('foo')
         df = self.om.logger.dataset.get(filter=dict(level='INFO', logger='myname'))

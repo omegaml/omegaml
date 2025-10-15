@@ -1,16 +1,16 @@
 """
 A parser/processor to simplify modular docopt cli
 """
-from getpass import getpass
-
 import inspect
 import logging
 import os
 import re
 import sys
-from docopt import docopt
+from getpass import getpass
 from pprint import pprint
 from textwrap import dedent
+
+from docopt import docopt
 
 
 class CommandParser:
@@ -565,7 +565,7 @@ class CommandParser:
                 if not select:
                     assert value.lower() in options.lower()
                 else:
-                    assert value.isnumeric() and int(value) in range(1, len(options)+1)
+                    assert value.isnumeric() and int(value) in range(1, len(options) + 1)
                     value = options[int(value) - 1]
         return value
 
@@ -908,7 +908,7 @@ def setup_console_logger():
     """
     logger = logging.getLogger()
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter('%(levelname)s %(name)s %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger

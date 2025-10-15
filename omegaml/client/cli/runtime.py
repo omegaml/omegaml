@@ -1,11 +1,12 @@
 import logging
 import os
-import requests
 import subprocess
 from pathlib import Path
 from pprint import pprint
 from subprocess import call
 from time import sleep
+
+import requests
 
 from omegaml.client.cli import deploy
 from omegaml.client.docoptparser import CommandBase

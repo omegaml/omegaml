@@ -1,27 +1,14 @@
 import atexit
-
 import logging
 import warnings
-from mongoengine import disconnect_all
-from omegaml.util import find_instances
-from pymongo import MongoClient as RealMongoClient
-from pymongo.errors import AutoReconnect, ConnectionFailure
 from time import sleep
 from urllib.parse import urlencode
 
-# set sensible defaults for pymongo loggers
-# -- the default pymongo logger is set according to the root logger
-# -- sometimes resultins in large amounts of inadverted pymongo log output
-# -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
-pymongo_default_loglevels = {
-    'pymongo': 'ERROR',
-    'pymongo.command': 'WARNING',
-    'pymongo.connection': 'ERROR',
-    'pymongo.serverSelection': 'ERROR'
-}
-for name, level in pymongo_default_loglevels.items():
-    pymongo_logger = logging.getLogger(name)
-    pymongo_logger.setLevel(level)
+from mongoengine import disconnect_all
+from pymongo import MongoClient as RealMongoClient
+from pymongo.errors import AutoReconnect, ConnectionFailure
+
+from omegaml.util import find_instances
 
 
 def MongoClient(*args, **kwargs):

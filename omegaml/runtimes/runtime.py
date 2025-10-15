@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
 import logging
-from celery import Celery
-from celery.events import EventReceiver
 from copy import deepcopy
 from socket import gethostname
+
+from celery import Celery
+from celery.events import EventReceiver
 
 from omegaml.mongoshim import mongo_url
 from omegaml.util import dict_merge
