@@ -179,6 +179,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.tracking.UntrackableMetadataMixin',
     'omegaml.mixins.store.objinfo.ObjectInformationMixin',
     'omegaml.notebook.jobs.NotebookMixin',
+    'omegaml.mixins.store.objhelper.ObjectHelperMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))
@@ -493,7 +494,7 @@ def setup_logging():
         # -- the default pymongo logger is set according to the root logger
         # -- sometimes resultins in large amounts of inadverted pymongo log output
         # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
-        'root': 'INFO',
+        'root': OMEGA_LOGLEVEL,
         'pymongo': 'ERROR',
         'pymongo.command': 'WARNING',
         'pymongo.connection': 'ERROR',
