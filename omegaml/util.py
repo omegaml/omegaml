@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from importlib import import_module
-
 import json
 import logging
 import os
@@ -9,17 +7,19 @@ import sys
 import tempfile
 import threading
 import uuid
-import validators
 import warnings
 from base64 import b64encode
-from bson import ObjectId
 from copy import deepcopy
 from datetime import datetime, date, timezone
 from hashlib import sha256
+from importlib import import_module
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
 from typing import Iterator, Any
+
+import validators
+from bson import ObjectId
 
 try:
     import urlparse
@@ -1247,7 +1247,7 @@ def batched(iterable, batch_size):
 
 
 ensure_list = lambda v: v if isinstance(v, (list, tuple)) else list(v) if isinstance(v, range) else [v]
-ensure_dict = lambda v: v if isinstance(v, dict) else tryOr(lambda v: v.to_dict(), tryOr(lambda v: dict(v), v))
+ensure_dict = lambda v: v if isinstance(v, dict) else tryOr(lambda: v.to_dict(), tryOr(lambda: dict(v), v))
 
 
 def tqdm_if_interactive():

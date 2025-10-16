@@ -817,6 +817,9 @@ class OpenAIProvider(Provider):
         return response
 
     def complete(self, messages, stream=False, model=None, **kwargs):
+        if stream:
+            # https://community.openai.com/t/usage-stats-now-available-when-using-streaming-with-the-chat-completions-api-or-completions-api/738156
+            kwargs.setdefault('stream_options', {"include_usage": True})
         response = self.client.chat.completions.create(
             model=model or self.model,
             messages=messages,
