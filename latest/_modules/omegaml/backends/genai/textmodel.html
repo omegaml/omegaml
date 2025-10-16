@@ -916,128 +916,131 @@
 <span class="linenos">817</span>        <span class="k">return</span> <span class="n">response</span>
 <span class="linenos">818</span>
 <span class="linenos">819</span>    <span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">820</span>        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<span class="linenos">821</span>            <span class="n">model</span><span class="o">=</span><span class="n">model</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<span class="linenos">822</span>            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
-<span class="linenos">823</span>            <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
-<span class="linenos">824</span>            <span class="o">**</span><span class="n">kwargs</span>
-<span class="linenos">825</span>        <span class="p">)</span>
-<span class="linenos">826</span>        <span class="k">return</span> <span class="n">response</span>
-<span class="linenos">827</span>
-<span class="linenos">828</span>
-<span class="linenos">829</span><span class="k">class</span><span class="w"> </span><span class="nc">JinaEmbeddingsProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
-<span class="linenos">830</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.jina\.ai)(:\d+)?/.*&#39;</span>
+<span class="linenos">820</span>        <span class="k">if</span> <span class="n">stream</span><span class="p">:</span>
+<span class="linenos">821</span>            <span class="c1"># https://community.openai.com/t/usage-stats-now-available-when-using-streaming-with-the-chat-completions-api-or-completions-api/738156</span>
+<span class="linenos">822</span>            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;stream_options&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;include_usage&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<span class="linenos">823</span>        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<span class="linenos">824</span>            <span class="n">model</span><span class="o">=</span><span class="n">model</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<span class="linenos">825</span>            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+<span class="linenos">826</span>            <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
+<span class="linenos">827</span>            <span class="o">**</span><span class="n">kwargs</span>
+<span class="linenos">828</span>        <span class="p">)</span>
+<span class="linenos">829</span>        <span class="k">return</span> <span class="n">response</span>
+<span class="linenos">830</span>
 <span class="linenos">831</span>
-<span class="linenos">832</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">833</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents using Jina AI&#39;s embedding service.</span>
+<span class="linenos">832</span><span class="k">class</span><span class="w"> </span><span class="nc">JinaEmbeddingsProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
+<span class="linenos">833</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.jina\.ai)(:\d+)?/.*&#39;</span>
 <span class="linenos">834</span>
-<span class="linenos">835</span><span class="sd">        Args:</span>
-<span class="linenos">836</span><span class="sd">            documents (list): List of documents to embed.</span>
-<span class="linenos">837</span><span class="sd">            dimensions (int): Number of dimensions to embed to.</span>
-<span class="linenos">838</span><span class="sd">            model (str): Model name to use for embedding.</span>
-<span class="linenos">839</span>
-<span class="linenos">840</span><span class="sd">        Returns:</span>
-<span class="linenos">841</span><span class="sd">            list: List of embeddings as list[list[float, ...]].</span>
-<span class="linenos">842</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos">843</span>        <span class="c1"># see https://jina.ai/embeddings</span>
-<span class="linenos">844</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
-<span class="linenos">845</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-<span class="linenos">846</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="linenos">847</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="linenos">848</span>        <span class="p">}</span>
-<span class="linenos">849</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
-<span class="linenos">850</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
-<span class="linenos">851</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-<span class="linenos">852</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<span class="linenos">853</span>                                   <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="p">[{</span>
-<span class="linenos">854</span>                                       <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">doc</span>
-<span class="linenos">855</span>                                   <span class="p">}</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]})</span>
-<span class="linenos">856</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="linenos">857</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="linenos">858</span>        <span class="k">return</span> <span class="n">response</span>
-<span class="linenos">859</span>
-<span class="linenos">860</span>
-<span class="linenos">861</span><span class="k">class</span><span class="w"> </span><span class="nc">AnythingLLMProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
-<span class="linenos">862</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.anythingllm\.com|localhost:(3001)+|anythingllm\.com)/.*&#39;</span>
+<span class="linenos">835</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">836</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents using Jina AI&#39;s embedding service.</span>
+<span class="linenos">837</span>
+<span class="linenos">838</span><span class="sd">        Args:</span>
+<span class="linenos">839</span><span class="sd">            documents (list): List of documents to embed.</span>
+<span class="linenos">840</span><span class="sd">            dimensions (int): Number of dimensions to embed to.</span>
+<span class="linenos">841</span><span class="sd">            model (str): Model name to use for embedding.</span>
+<span class="linenos">842</span>
+<span class="linenos">843</span><span class="sd">        Returns:</span>
+<span class="linenos">844</span><span class="sd">            list: List of embeddings as list[list[float, ...]].</span>
+<span class="linenos">845</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">846</span>        <span class="c1"># see https://jina.ai/embeddings</span>
+<span class="linenos">847</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
+<span class="linenos">848</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">849</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="linenos">850</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">851</span>        <span class="p">}</span>
+<span class="linenos">852</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
+<span class="linenos">853</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+<span class="linenos">854</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+<span class="linenos">855</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<span class="linenos">856</span>                                   <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="p">[{</span>
+<span class="linenos">857</span>                                       <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">doc</span>
+<span class="linenos">858</span>                                   <span class="p">}</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]})</span>
+<span class="linenos">859</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">860</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="linenos">861</span>        <span class="k">return</span> <span class="n">response</span>
+<span class="linenos">862</span>
 <span class="linenos">863</span>
-<span class="linenos">864</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">865</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents</span>
+<span class="linenos">864</span><span class="k">class</span><span class="w"> </span><span class="nc">AnythingLLMProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
+<span class="linenos">865</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.anythingllm\.com|localhost:(3001)+|anythingllm\.com)/.*&#39;</span>
 <span class="linenos">866</span>
-<span class="linenos">867</span><span class="sd">        Args:</span>
-<span class="linenos">868</span><span class="sd">            documents (list): list of documents to embed</span>
-<span class="linenos">869</span><span class="sd">            dimensions (int): number of dimensions to embed to</span>
-<span class="linenos">870</span>
-<span class="linenos">871</span><span class="sd">        Returns:</span>
-<span class="linenos">872</span><span class="sd">            list: list of embeddings as list[list[float, ...]]</span>
-<span class="linenos">873</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos">874</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-<span class="linenos">875</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="linenos">876</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-<span class="linenos">877</span>        <span class="p">}</span>
-<span class="linenos">878</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
-<span class="linenos">879</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
-<span class="linenos">880</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
-<span class="linenos">881</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-<span class="linenos">882</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;inputs&#39;</span><span class="p">:</span> <span class="n">documents</span><span class="p">,</span>
-<span class="linenos">883</span>                                   <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">})</span>
-<span class="linenos">884</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="linenos">885</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="linenos">886</span>        <span class="k">return</span> <span class="n">response</span>
-<span class="linenos">887</span>
-<span class="linenos">888</span>    <span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">889</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-<span class="linenos">890</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="linenos">891</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-<span class="linenos">892</span>        <span class="p">}</span>
-<span class="linenos">893</span>        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s1">/chat/completions&#39;</span>
-<span class="linenos">894</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
-<span class="linenos">895</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-<span class="linenos">896</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;messages&#39;</span><span class="p">:</span> <span class="n">messages</span><span class="p">,</span>
-<span class="linenos">897</span>                                   <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<span class="linenos">898</span>                                   <span class="s1">&#39;stream&#39;</span><span class="p">:</span> <span class="n">stream</span><span class="p">})</span>
-<span class="linenos">899</span>        <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="linenos">900</span>
-<span class="linenos">901</span>
-<span class="linenos">902</span><span class="k">class</span><span class="w"> </span><span class="nc">OllamaProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
-<span class="linenos">903</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.ollama\.com|localhost)(:\d+)?/.*&#39;</span>
+<span class="linenos">867</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">868</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents</span>
+<span class="linenos">869</span>
+<span class="linenos">870</span><span class="sd">        Args:</span>
+<span class="linenos">871</span><span class="sd">            documents (list): list of documents to embed</span>
+<span class="linenos">872</span><span class="sd">            dimensions (int): number of dimensions to embed to</span>
+<span class="linenos">873</span>
+<span class="linenos">874</span><span class="sd">        Returns:</span>
+<span class="linenos">875</span><span class="sd">            list: list of embeddings as list[list[float, ...]]</span>
+<span class="linenos">876</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">877</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">878</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="linenos">879</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+<span class="linenos">880</span>        <span class="p">}</span>
+<span class="linenos">881</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
+<span class="linenos">882</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
+<span class="linenos">883</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+<span class="linenos">884</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+<span class="linenos">885</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;inputs&#39;</span><span class="p">:</span> <span class="n">documents</span><span class="p">,</span>
+<span class="linenos">886</span>                                   <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">})</span>
+<span class="linenos">887</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">888</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="linenos">889</span>        <span class="k">return</span> <span class="n">response</span>
+<span class="linenos">890</span>
+<span class="linenos">891</span>    <span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">892</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">893</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="linenos">894</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+<span class="linenos">895</span>        <span class="p">}</span>
+<span class="linenos">896</span>        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s1">/chat/completions&#39;</span>
+<span class="linenos">897</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+<span class="linenos">898</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+<span class="linenos">899</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;messages&#39;</span><span class="p">:</span> <span class="n">messages</span><span class="p">,</span>
+<span class="linenos">900</span>                                   <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<span class="linenos">901</span>                                   <span class="s1">&#39;stream&#39;</span><span class="p">:</span> <span class="n">stream</span><span class="p">})</span>
+<span class="linenos">902</span>        <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="linenos">903</span>
 <span class="linenos">904</span>
-<span class="linenos">905</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">906</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents using Ollama&#39;s embedding service.</span>
+<span class="linenos">905</span><span class="k">class</span><span class="w"> </span><span class="nc">OllamaProvider</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
+<span class="linenos">906</span>    <span class="n">URL_REGEX</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;https?://(api\.ollama\.com|localhost)(:\d+)?/.*&#39;</span>
 <span class="linenos">907</span>
-<span class="linenos">908</span><span class="sd">        Args:</span>
-<span class="linenos">909</span><span class="sd">            documents (list): List of documents to embed.</span>
-<span class="linenos">910</span><span class="sd">            dimensions (int): Number of dimensions to embed to.</span>
-<span class="linenos">911</span>
-<span class="linenos">912</span><span class="sd">        Returns:</span>
-<span class="linenos">913</span><span class="sd">            list: List of embeddings as list[list[float, ...]].</span>
-<span class="linenos">914</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos">915</span>        <span class="c1"># see https://ollama.com/docs/api/embeddings</span>
-<span class="linenos">916</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
-<span class="linenos">917</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-<span class="linenos">918</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="linenos">919</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="linenos">920</span>        <span class="p">}</span>
-<span class="linenos">921</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
-<span class="linenos">922</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
-<span class="linenos">923</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-<span class="linenos">924</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-<span class="linenos">925</span>                                   <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">documents</span><span class="p">})</span>
-<span class="linenos">926</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
-<span class="linenos">927</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="linenos">928</span>        <span class="k">return</span> <span class="n">response</span>
-<span class="linenos">929</span>
-<span class="linenos">930</span>
-<span class="linenos">931</span><span class="n">PROVIDERS</span> <span class="o">=</span> <span class="p">{</span>
-<span class="linenos">932</span>    <span class="s1">&#39;openai&#39;</span><span class="p">:</span> <span class="n">OpenAIProvider</span><span class="p">,</span>
-<span class="linenos">933</span>    <span class="s1">&#39;anythingllm&#39;</span><span class="p">:</span> <span class="n">AnythingLLMProvider</span><span class="p">,</span>
-<span class="linenos">934</span>    <span class="s1">&#39;jina&#39;</span><span class="p">:</span> <span class="n">JinaEmbeddingsProvider</span><span class="p">,</span>
-<span class="linenos">935</span>    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="n">OpenAIProvider</span><span class="p">,</span>
-<span class="linenos">936</span><span class="p">}</span>
-<span class="linenos">937</span>
-<span class="linenos">938</span>
-<span class="linenos">939</span><span class="k">class</span><span class="w"> </span><span class="nc">safeformat</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
-<span class="linenos">940</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__missing__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-<span class="linenos">941</span>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span>  <span class="c1"># return &quot;{&lt;key&gt;}&quot;</span>
+<span class="linenos">908</span>    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">909</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; Embed documents using Ollama&#39;s embedding service.</span>
+<span class="linenos">910</span>
+<span class="linenos">911</span><span class="sd">        Args:</span>
+<span class="linenos">912</span><span class="sd">            documents (list): List of documents to embed.</span>
+<span class="linenos">913</span><span class="sd">            dimensions (int): Number of dimensions to embed to.</span>
+<span class="linenos">914</span>
+<span class="linenos">915</span><span class="sd">        Returns:</span>
+<span class="linenos">916</span><span class="sd">            list: List of embeddings as list[list[float, ...]].</span>
+<span class="linenos">917</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">918</span>        <span class="c1"># see https://ollama.com/docs/api/embeddings</span>
+<span class="linenos">919</span>        <span class="n">documents</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
+<span class="linenos">920</span>        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">921</span>            <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="linenos">922</span>            <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">923</span>        <span class="p">}</span>
+<span class="linenos">924</span>        <span class="n">url</span> <span class="o">=</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
+<span class="linenos">925</span>        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+<span class="linenos">926</span>                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+<span class="linenos">927</span>                             <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+<span class="linenos">928</span>                                   <span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">documents</span><span class="p">})</span>
+<span class="linenos">929</span>        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1"> calling </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="linenos">930</span>        <span class="n">response</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="linenos">931</span>        <span class="k">return</span> <span class="n">response</span>
+<span class="linenos">932</span>
+<span class="linenos">933</span>
+<span class="linenos">934</span><span class="n">PROVIDERS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos">935</span>    <span class="s1">&#39;openai&#39;</span><span class="p">:</span> <span class="n">OpenAIProvider</span><span class="p">,</span>
+<span class="linenos">936</span>    <span class="s1">&#39;anythingllm&#39;</span><span class="p">:</span> <span class="n">AnythingLLMProvider</span><span class="p">,</span>
+<span class="linenos">937</span>    <span class="s1">&#39;jina&#39;</span><span class="p">:</span> <span class="n">JinaEmbeddingsProvider</span><span class="p">,</span>
+<span class="linenos">938</span>    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="n">OpenAIProvider</span><span class="p">,</span>
+<span class="linenos">939</span><span class="p">}</span>
+<span class="linenos">940</span>
+<span class="linenos">941</span>
+<span class="linenos">942</span><span class="k">class</span><span class="w"> </span><span class="nc">safeformat</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="linenos">943</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__missing__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="linenos">944</span>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span>  <span class="c1"># return &quot;{&lt;key&gt;}&quot;</span>
 </pre></div>
 
            </div>
