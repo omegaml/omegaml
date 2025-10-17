@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import datetime
 import inspect
 import os
+
 from celery import shared_task
 from celery.signals import worker_process_init
 
@@ -20,12 +21,16 @@ def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
+    task_logger = self.app.log.get_default_logger()
     result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
     if inspect.isgenerator(result):
         chunk = {'result': None}
         stream = self.om.streams.get(f'.system/complete/{self.request.id}')
         for chunk in result:
+            task_logger.debug('streaming chunk %s', chunk)
             stream.append(chunk)
+        # TODO use sentinel value that is not tied to openai format
+        stream.append({'finish_reason': 'stop'})
         result = {
             'result': chunk,
         }

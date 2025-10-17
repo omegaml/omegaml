@@ -93,7 +93,7 @@ class AuthenticationEnv(object):
     # subprocess env keys to keep, see .prepare_env()
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_MONGO_URL', 'OMEGA_BROKER', 'OMEGA_CARDS_ENABLED',
                 'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_STATUS_CHECK', 'OMEGA_TEST_MODE', 'OMEGA_LOCAL_RUNTIME',
-                'OMEGA_RESTAPI_URL']
+                'OMEGA_RESTAPI_URL', 'OMEGA_EVENTS_STREAMER', 'OMEGA_EVENTS_STREAMER_URL']
 
     @classmethod
     @session_cache  # PERFTUNED
@@ -105,11 +105,21 @@ class AuthenticationEnv(object):
 
     @classmethod
     @session_cache  # PERFTUNED
-    def get_omega_from_apikey(cls, auth=None):
+    def get_omega_from_apikey(cls, *args, auth=None, **kwargs):
         # return the omega instance for the given task authentication
         from omegaml import setup
         om = setup()
         return om
+
+    @classmethod
+    @session_cache  # PERFTUNED
+    def get_omega_on_behalf(cls, userid, qualifier, **kwargs):
+        # return the omega instance on behalf of a user, assuming base user is authorized
+        from omegaml import setup
+        om = setup()
+        return cls.get_omega_from_apikey(getattr(om.defaults, 'OMEGA_USERID', userid),
+                                         getattr(om.defaults, 'OMEGA_APIKEY', ''),
+                                         requested_userid=userid, qualifier=qualifier)
 
     @classmethod
     def get_restapi_auth(cls, defaults=None, om=None,
@@ -122,6 +132,14 @@ class AuthenticationEnv(object):
 
     @classmethod
     def active(cls):
+        """ return the active authentication env
+
+        If no instance is active, it will be instantiated according to the class specified in
+        defaults.OMEGA_AUTH_ENV. Defaults to omegaml.client.auth.AuthenticationEnv
+
+        Returns:
+            AuthenticationEnv: active instance
+        """
         # load the currently active auth env
         if cls.auth_env is None:
             from omegaml import _base_config
@@ -182,7 +200,8 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
     env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
                 'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER', 'OMEGA_CARDS_ENABLED',
-                'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER']
+                'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER',
+                'OMEGA_EVENTS_STREAMER', 'OMEGA_EVENTS_STREAMER_URL']
 
     @classmethod
     @session_cache

@@ -216,7 +216,8 @@ class OmegaRuntime(object):
             always (bool): if True requirements will persist across task calls. defaults to False
             label (str): the label required by the worker to have a runtime task dispatched to it.
                'local' is equivalent to calling self.mode(local=True).
-            task (dict): if specified applied to the task kwargs
+            task (dict): if specified applied to the task's kwargs, i.e. passed to the task function
+            routing (dict): if specified applied to the task's routing, i.e.
             logging (str|tuple): if specified, same as runtime.mode(logging=...)
             override (bool): if True overrides previously set .require(), defaults to True
             kwargs: requirements specification that the runtime understands
