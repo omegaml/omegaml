@@ -1,3 +1,0 @@
-docs
-omegaml
-scripts

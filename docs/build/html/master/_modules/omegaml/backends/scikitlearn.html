@@ -1,0 +1,569 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.backends.scikitlearn &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../../release/0.17.0/index.html">release/0.17.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.backends.scikitlearn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.backends.scikitlearn</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="linenos">  4</span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="linenos">  5</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos">  6</span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="linenos">  7</span><span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
+<span class="linenos">  8</span><span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
+<span class="linenos">  9</span><span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span>
+<span class="linenos"> 10</span>
+<span class="linenos"> 11</span><span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>
+<span class="linenos"> 12</span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSearchCV</span>
+<span class="linenos"> 13</span>
+<span class="linenos"> 14</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.basemodel</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModelBackend</span>
+<span class="linenos"> 15</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDREGISTRY</span>
+<span class="linenos"> 16</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshaped</span><span class="p">,</span> <span class="n">gsreshaped</span>
+<span class="linenos"> 17</span>
+<span class="linenos"> 18</span><span class="c1"># byte string</span>
+<span class="linenos"> 19</span><span class="n">_u8</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">,</span> <span class="s1">&#39;replace&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">t</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span>
+<span class="linenos"> 22</span><span class="k">class</span><span class="w"> </span><span class="nc">ScikitLearnBackendV1</span><span class="p">(</span><span class="n">BaseModelBackend</span><span class="p">):</span>
+<span class="linenos"> 23</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="n">MDREGISTRY</span><span class="o">.</span><span class="n">SKLEARN_JOBLIB</span>
+<span class="linenos"> 24</span>
+<span class="linenos"> 25</span>    <span class="nd">@classmethod</span>
+<span class="linenos"> 26</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 27</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span>
+<span class="linenos"> 28</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="linenos"> 29</span>        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">))</span>
+<span class="linenos"> 30</span>
+<span class="linenos"> 31</span>    <span class="c1"># kept to support legacy scikit learn model serializations prior to ~scikit learn v0.18</span>
+<span class="linenos"> 32</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_v1_package_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="linenos"> 33</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 34</span><span class="sd">        Dumps a model using joblib and packages all of joblib files into a zip</span>
+<span class="linenos"> 35</span><span class="sd">        file</span>
+<span class="linenos"> 36</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 37</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>
+<span class="linenos"> 38</span>        <span class="n">lpath</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="linenos"> 39</span>        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="linenos"> 40</span>        <span class="n">mklfname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+<span class="linenos"> 41</span>        <span class="n">zipfname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">tmppath</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+<span class="linenos"> 42</span>        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mklfname</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="linenos"> 43</span>        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">zipfname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zipf</span><span class="p">:</span>
+<span class="linenos"> 44</span>            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)):</span>
+<span class="linenos"> 45</span>                <span class="n">zipf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">part</span><span class="p">))</span>
+<span class="linenos"> 46</span>        <span class="n">rmtree</span><span class="p">(</span><span class="n">lpath</span><span class="p">)</span>
+<span class="linenos"> 47</span>        <span class="k">return</span> <span class="n">zipfname</span>
+<span class="linenos"> 48</span>
+<span class="linenos"> 49</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_v1_extract_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packagefname</span><span class="p">):</span>
+<span class="linenos"> 50</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 51</span><span class="sd">        Loads a model using joblib from a zip file created with _package_model</span>
+<span class="linenos"> 52</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 53</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>
+<span class="linenos"> 54</span>        <span class="n">lpath</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="linenos"> 55</span>        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">packagefname</span><span class="p">)</span>
+<span class="linenos"> 56</span>        <span class="n">mklfname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+<span class="linenos"> 57</span>        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">packagefname</span><span class="p">)</span> <span class="k">as</span> <span class="n">zipf</span><span class="p">:</span>
+<span class="linenos"> 58</span>            <span class="n">zipf</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">lpath</span><span class="p">)</span>
+<span class="linenos"> 59</span>        <span class="n">model</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mklfname</span><span class="p">)</span>
+<span class="linenos"> 60</span>        <span class="n">rmtree</span><span class="p">(</span><span class="n">lpath</span><span class="p">)</span>
+<span class="linenos"> 61</span>        <span class="k">return</span> <span class="n">model</span>
+<span class="linenos"> 62</span>
+<span class="linenos"> 63</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_v1_get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+<span class="linenos"> 64</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 65</span><span class="sd">        Retrieves a pre-stored model</span>
+<span class="linenos"> 66</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 67</span>        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">_get_obj_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;.omm&#39;</span><span class="p">)</span>
+<span class="linenos"> 68</span>        <span class="n">packagefname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">tmppath</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 69</span>        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">packagefname</span><span class="p">)</span>
+<span class="linenos"> 70</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 71</span>            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+<span class="linenos"> 72</span>        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+<span class="linenos"> 73</span>            <span class="c1"># OSError is raised if path exists already</span>
+<span class="linenos"> 74</span>            <span class="k">pass</span>
+<span class="linenos"> 75</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+<span class="linenos"> 76</span>        <span class="n">outf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+<span class="linenos"> 77</span>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">packagefname</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zipf</span><span class="p">:</span>
+<span class="linenos"> 78</span>            <span class="n">zipf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">gridfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos"> 79</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v1_extract_model</span><span class="p">(</span><span class="n">packagefname</span><span class="p">)</span>
+<span class="linenos"> 80</span>        <span class="k">return</span> <span class="n">model</span>
+<span class="linenos"> 81</span>
+<span class="linenos"> 82</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_v1_put_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 83</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 84</span><span class="sd">        Packages a model using joblib and stores in GridFS</span>
+<span class="linenos"> 85</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 86</span>        <span class="n">zipfname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v1_package_model</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<span class="linenos"> 87</span>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">zipfname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fzip</span><span class="p">:</span>
+<span class="linenos"> 88</span>            <span class="n">gridfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+<span class="linenos"> 89</span>                <span class="n">fzip</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">_get_obj_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;omm&#39;</span><span class="p">))</span>
+<span class="linenos"> 90</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">_make_metadata</span><span class="p">(</span>
+<span class="linenos"> 91</span>            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+<span class="linenos"> 92</span>            <span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span>
+<span class="linenos"> 93</span>            <span class="n">bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">bucket</span><span class="p">,</span>
+<span class="linenos"> 94</span>            <span class="n">kind</span><span class="o">=</span><span class="n">MDREGISTRY</span><span class="o">.</span><span class="n">SKLEARN_JOBLIB</span><span class="p">,</span>
+<span class="linenos"> 95</span>            <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span>
+<span class="linenos"> 96</span>            <span class="n">gridfile</span><span class="o">=</span><span class="n">gridfile</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos"> 97</span>
+<span class="linenos"> 98</span>
+<span class="linenos"> 99</span><span class="k">class</span><span class="w"> </span><span class="nc">ScikitLearnBackendV2</span><span class="p">(</span><span class="n">ScikitLearnBackendV1</span><span class="p">):</span>
+<span class="linenos">100</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">101</span><span class="sd">    OmegaML backend to use with ScikitLearn</span>
+<span class="linenos">102</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_package_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">tmpfn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">105</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">106</span><span class="sd">        Dumps a model using joblib and packages all of joblib files into a zip</span>
+<span class="linenos">107</span><span class="sd">        file</span>
+<span class="linenos">108</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">109</span>        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tmpfn</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">110</span>        <span class="k">return</span> <span class="n">tmpfn</span>
+<span class="linenos">111</span>
+<span class="linenos">112</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">tmpfn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">113</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">114</span><span class="sd">        Loads a model using joblib from a zip file created with _package_model</span>
+<span class="linenos">115</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">116</span>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmpfn</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pkgf</span><span class="p">:</span>
+<span class="linenos">117</span>            <span class="n">pkgf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">118</span>        <span class="n">model</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">tmpfn</span><span class="p">)</span>
+<span class="linenos">119</span>        <span class="k">return</span> <span class="n">model</span>
+<span class="linenos">120</span>
+<span class="linenos">121</span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">122</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">123</span><span class="sd">        Retrieves a pre-stored model</span>
+<span class="linenos">124</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">125</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">126</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_version</span> <span class="o">!=</span> <span class="n">meta</span><span class="o">.</span><span class="n">kind_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_version_tag</span><span class="p">):</span>
+<span class="linenos">127</span>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_v1_get_model</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+<span class="linenos">128</span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">129</span>
+<span class="linenos">130</span>    <span class="k">def</span><span class="w"> </span><span class="nf">put_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_kind_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">131</span>        <span class="k">if</span> <span class="n">_kind_version</span> <span class="ow">and</span> <span class="n">_kind_version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_version</span><span class="p">:</span>
+<span class="linenos">132</span>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_v1_put_model</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">133</span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">put_model</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">)</span>
+<span class="linenos">134</span>
+<span class="linenos">135</span>    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+<span class="linenos">136</span>            <span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">137</span>        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_input_data</span><span class="p">(</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">138</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">139</span>
+<span class="linenos">140</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">141</span>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_result</span><span class="p">(</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="n">rName</span><span class="p">,</span>
+<span class="linenos">142</span>                                        <span class="n">pure_python</span><span class="o">=</span><span class="n">pure_python</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">143</span>
+<span class="linenos">144</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">,</span>
+<span class="linenos">145</span>                                       <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">data</span><span class="p">)),</span>
+<span class="linenos">146</span>                                       <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">147</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">148</span>
+<span class="linenos">149</span>    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span>
+<span class="linenos">150</span>            <span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">151</span>        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_input_data</span><span class="p">(</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">152</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">153</span>
+<span class="linenos">154</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">155</span>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_result</span><span class="p">(</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="n">rName</span><span class="p">,</span>
+<span class="linenos">156</span>                                        <span class="n">pure_python</span><span class="o">=</span><span class="n">pure_python</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">157</span>
+<span class="linenos">158</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">,</span>
+<span class="linenos">159</span>                                       <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">data</span><span class="p">)),</span>
+<span class="linenos">160</span>                                       <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">161</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">162</span>
+<span class="linenos">163</span>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">164</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">165</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_input_data</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+<span class="linenos">166</span>        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_input_data</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">,</span> <span class="n">Yname</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">Yname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">167</span>        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">reshaped</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">168</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">169</span>        <span class="k">return</span> <span class="n">meta</span>
+<span class="linenos">170</span>
+<span class="linenos">171</span>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_fit</span><span class="p">(</span>
+<span class="linenos">172</span>            <span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">173</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">174</span>        <span class="n">X</span><span class="p">,</span> <span class="n">metaX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">175</span>        <span class="n">Y</span><span class="p">,</span> <span class="n">metaY</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+<span class="linenos">176</span>        <span class="k">if</span> <span class="n">Yname</span><span class="p">:</span>
+<span class="linenos">177</span>            <span class="n">Y</span><span class="p">,</span> <span class="n">metaY</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Yname</span><span class="p">),</span>
+<span class="linenos">178</span>                        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">Yname</span><span class="p">))</span>
+<span class="linenos">179</span>        <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">partial_fit</span><span class="p">,</span>
+<span class="linenos">180</span>                              <span class="k">lambda</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">reshaped</span><span class="p">(</span><span class="n">Y</span><span class="p">)),</span>
+<span class="linenos">181</span>                              <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+<span class="linenos">182</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">183</span>        <span class="k">return</span> <span class="n">meta</span>
+<span class="linenos">184</span>
+<span class="linenos">185</span>    <span class="k">def</span><span class="w"> </span><span class="nf">score</span><span class="p">(</span>
+<span class="linenos">186</span>            <span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="linenos">187</span>            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">188</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">189</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">190</span>        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Yname</span><span class="p">)</span>
+<span class="linenos">191</span>
+<span class="linenos">192</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">193</span>            <span class="k">if</span> <span class="n">rName</span><span class="p">:</span>
+<span class="linenos">194</span>                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="p">)</span>
+<span class="linenos">195</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">meta</span>
+<span class="linenos">196</span>            <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">197</span>
+<span class="linenos">198</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">,</span>
+<span class="linenos">199</span>                                       <span class="k">lambda</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">reshaped</span><span class="p">(</span><span class="n">Y</span><span class="p">)),</span>
+<span class="linenos">200</span>                                       <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">201</span>
+<span class="linenos">202</span>        <span class="bp">self</span><span class="o">.</span><span class="n">tracking</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;score&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="linenos">203</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">204</span>
+<span class="linenos">205</span>    <span class="k">def</span><span class="w"> </span><span class="nf">fit_transform</span><span class="p">(</span>
+<span class="linenos">206</span>            <span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="linenos">207</span>            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">208</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">209</span>        <span class="n">X</span><span class="p">,</span> <span class="n">metaX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">210</span>        <span class="n">Y</span><span class="p">,</span> <span class="n">metaY</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+<span class="linenos">211</span>        <span class="k">if</span> <span class="n">Yname</span><span class="p">:</span>
+<span class="linenos">212</span>            <span class="n">Y</span><span class="p">,</span> <span class="n">metaY</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Yname</span><span class="p">),</span>
+<span class="linenos">213</span>                        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">Yname</span><span class="p">))</span>
+<span class="linenos">214</span>
+<span class="linenos">215</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">216</span>            <span class="k">if</span> <span class="n">pure_python</span><span class="p">:</span>
+<span class="linenos">217</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="linenos">218</span>            <span class="k">if</span> <span class="n">rName</span><span class="p">:</span>
+<span class="linenos">219</span>                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="p">)</span>
+<span class="linenos">220</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">meta</span>
+<span class="linenos">221</span>            <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">222</span>
+<span class="linenos">223</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">,</span>
+<span class="linenos">224</span>                                       <span class="k">lambda</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">reshaped</span><span class="p">(</span><span class="n">Y</span><span class="p">)),</span>
+<span class="linenos">225</span>                                       <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">226</span>
+<span class="linenos">227</span>        <span class="n">model_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">228</span>        <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">rName</span> <span class="k">else</span> <span class="n">model_meta</span>
+<span class="linenos">229</span>
+<span class="linenos">230</span>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">231</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">232</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">233</span>
+<span class="linenos">234</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">235</span>            <span class="k">if</span> <span class="n">pure_python</span><span class="p">:</span>
+<span class="linenos">236</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="linenos">237</span>            <span class="k">if</span> <span class="n">rName</span><span class="p">:</span>
+<span class="linenos">238</span>                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="p">)</span>
+<span class="linenos">239</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">meta</span>
+<span class="linenos">240</span>            <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">241</span>
+<span class="linenos">242</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
+<span class="linenos">243</span>                                       <span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">)),</span>
+<span class="linenos">244</span>                                       <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">245</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">246</span>
+<span class="linenos">247</span>    <span class="k">def</span><span class="w"> </span><span class="nf">decision_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">248</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">249</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">250</span>
+<span class="linenos">251</span>        <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="linenos">252</span>            <span class="k">if</span> <span class="n">pure_python</span><span class="p">:</span>
+<span class="linenos">253</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="linenos">254</span>            <span class="k">if</span> <span class="n">rName</span><span class="p">:</span>
+<span class="linenos">255</span>                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rName</span><span class="p">)</span>
+<span class="linenos">256</span>                <span class="n">result</span> <span class="o">=</span> <span class="n">meta</span>
+<span class="linenos">257</span>            <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">258</span>
+<span class="linenos">259</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">maybe_chunked</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">decision_function</span><span class="p">,</span>
+<span class="linenos">260</span>                                       <span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="n">as_args</span><span class="p">(</span><span class="n">reshaped</span><span class="p">(</span><span class="n">X</span><span class="p">)),</span>
+<span class="linenos">261</span>                                       <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">fn</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">262</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">263</span>
+<span class="linenos">264</span>    <span class="k">def</span><span class="w"> </span><span class="nf">gridsearch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">265</span>                   <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">266</span>        <span class="n">model</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">modelname</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">267</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">268</span>        <span class="k">if</span> <span class="n">Yname</span><span class="p">:</span>
+<span class="linenos">269</span>            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Yname</span><span class="p">)</span>
+<span class="linenos">270</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">271</span>            <span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">272</span>        <span class="n">gs_model</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">273</span>        <span class="n">gs_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">gsreshaped</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="linenos">274</span>        <span class="n">nowdt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="linenos">275</span>        <span class="k">if</span> <span class="n">rName</span><span class="p">:</span>
+<span class="linenos">276</span>            <span class="n">gs_modelname</span> <span class="o">=</span> <span class="n">rName</span>
+<span class="linenos">277</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">278</span>            <span class="n">gs_modelname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">.gs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span> <span class="n">nowdt</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+<span class="linenos">279</span>        <span class="n">gs_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">gs_model</span><span class="p">,</span> <span class="n">gs_modelname</span><span class="p">)</span>
+<span class="linenos">280</span>        <span class="n">attributes</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span>
+<span class="linenos">281</span>        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;gridsearch&#39;</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">:</span>
+<span class="linenos">282</span>            <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;gridsearch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos">283</span>        <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;gridsearch&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+<span class="linenos">284</span>            <span class="s1">&#39;datetime&#39;</span><span class="p">:</span> <span class="n">nowdt</span><span class="p">,</span>
+<span class="linenos">285</span>            <span class="s1">&#39;Xname&#39;</span><span class="p">:</span> <span class="n">Xname</span><span class="p">,</span>
+<span class="linenos">286</span>            <span class="s1">&#39;Yname&#39;</span><span class="p">:</span> <span class="n">Yname</span><span class="p">,</span>
+<span class="linenos">287</span>            <span class="s1">&#39;gsModel&#39;</span><span class="p">:</span> <span class="n">gs_modelname</span><span class="p">,</span>
+<span class="linenos">288</span>        <span class="p">})</span>
+<span class="linenos">289</span>        <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="linenos">290</span>        <span class="k">return</span> <span class="n">meta</span>
+<span class="linenos">291</span>
+<span class="linenos">292</span>
+<div class="viewcode-block" id="ScikitLearnBackend">
+<a class="viewcode-back" href="../../../reference/models.html#omegaml.backends.scikitlearn.ScikitLearnBackend">[docs]</a>
+<span class="linenos">293</span><span class="k">class</span><span class="w"> </span><span class="nc">ScikitLearnBackend</span><span class="p">(</span><span class="n">ScikitLearnBackendV2</span><span class="p">):</span>
+<span class="linenos">294</span>    <span class="k">pass</span></div>
+
+<span class="linenos">295</span>
+<span class="linenos">296</span>
+<span class="linenos">297</span><span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keep_last</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos">298</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">299</span><span class="sd">    consume iterator, optionally keeping results and calling a function</span>
+<span class="linenos">300</span>
+<span class="linenos">301</span><span class="sd">    Args:</span>
+<span class="linenos">302</span><span class="sd">        it: iterator to consume</span>
+<span class="linenos">303</span><span class="sd">        fn: optional, a function to call on result as result = fn(result)</span>
+<span class="linenos">304</span><span class="sd">        keep: optional, if True returns all results, False by default</span>
+<span class="linenos">305</span><span class="sd">        keep_last: optional, if True returns last result, False by default</span>
+<span class="linenos">306</span>
+<span class="linenos">307</span><span class="sd">    Returns:</span>
+<span class="linenos">308</span><span class="sd">        list of results if keep is True</span>
+<span class="linenos">309</span><span class="sd">        last result if keep_last is True</span>
+<span class="linenos">310</span><span class="sd">        None if keep and keep_last are False</span>
+<span class="linenos">311</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">312</span>    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">keep</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">313</span>    <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">314</span>    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+<span class="linenos">315</span>        <span class="n">result</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="k">if</span> <span class="n">fn</span> <span class="k">else</span> <span class="n">result</span>
+<span class="linenos">316</span>        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos">317</span>    <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">keep_last</span> <span class="k">else</span> <span class="n">results</span>
+<span class="linenos">318</span>
+<span class="linenos">319</span>
+<span class="linenos">320</span><span class="k">def</span><span class="w"> </span><span class="nf">maybe_chunked</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="n">argfn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">321</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;call a function with given args, kwargs, perhaps iterating over args</span>
+<span class="linenos">322</span>
+<span class="linenos">323</span><span class="sd">    Calls meth(*args, **kwargs) by the following rules:</span>
+<span class="linenos">324</span>
+<span class="linenos">325</span><span class="sd">    * if all values in *args are generators call meth() until generators exhausted</span>
+<span class="linenos">326</span><span class="sd">    * else run meth() once using *args as a single chunk</span>
+<span class="linenos">327</span><span class="sd">    * before each meth() call, argfn(*chunks) is called</span>
+<span class="linenos">328</span>
+<span class="linenos">329</span><span class="sd">    If all values in *args are generators this is equivalent to</span>
+<span class="linenos">330</span>
+<span class="linenos">331</span><span class="sd">        for values in zip(*args):</span>
+<span class="linenos">332</span><span class="sd">            yield meth(*values, **kwargs)</span>
+<span class="linenos">333</span>
+<span class="linenos">334</span><span class="sd">    If values in *args are not generators this is equivalent to</span>
+<span class="linenos">335</span>
+<span class="linenos">336</span><span class="sd">        yield meth(*args, **kwargs)</span>
+<span class="linenos">337</span>
+<span class="linenos">338</span><span class="sd">    Usage:</span>
+<span class="linenos">339</span><span class="sd">        X = get(...)</span>
+<span class="linenos">340</span><span class="sd">        Y = get(...)</span>
+<span class="linenos">341</span>
+<span class="linenos">342</span><span class="sd">        # original call</span>
+<span class="linenos">343</span><span class="sd">        model.partial_fit(X, Y, **kwargs)</span>
+<span class="linenos">344</span>
+<span class="linenos">345</span><span class="sd">        # transformed call, assuming X, Y can be generators over partial data</span>
+<span class="linenos">346</span><span class="sd">        # this will work whether X, Y are generators or not.</span>
+<span class="linenos">347</span><span class="sd">        for result in maybe_chunked(model.partial_fit,</span>
+<span class="linenos">348</span><span class="sd">                                    lambda *args: as_args(*args),</span>
+<span class="linenos">349</span><span class="sd">                                    X, Y, **kwargs):</span>
+<span class="linenos">350</span><span class="sd">            ... # process results as needed</span>
+<span class="linenos">351</span>
+<span class="linenos">352</span><span class="sd">        Note the (lambda ...), which is called on the X, Y args for each call</span>
+<span class="linenos">353</span><span class="sd">        on model.partial_fit. Use this to apply functions to each chunk, e.g.:</span>
+<span class="linenos">354</span>
+<span class="linenos">355</span><span class="sd">            # here the lambda receives the values of X, Y in each iteration</span>
+<span class="linenos">356</span><span class="sd">            maybe_chunked(...,</span>
+<span class="linenos">357</span><span class="sd">                          lambda X, Y: as_args(reshaped(X), reshaped(Y)),</span>
+<span class="linenos">358</span><span class="sd">                          ...)</span>
+<span class="linenos">359</span>
+<span class="linenos">360</span><span class="sd">        # combine with process() to simplify processing</span>
+<span class="linenos">361</span><span class="sd">        # essentiall this implements a for loop around maybe_chunked()</span>
+<span class="linenos">362</span><span class="sd">        resultl = process(maybe_chuncked(...), keep_last=True)</span>
+<span class="linenos">363</span>
+<span class="linenos">364</span><span class="sd">    Rationale:</span>
+<span class="linenos">365</span>
+<span class="linenos">366</span><span class="sd">        Avoid repeated code of the form</span>
+<span class="linenos">367</span>
+<span class="linenos">368</span><span class="sd">            X, Y = generators or actual values</span>
+<span class="linenos">369</span><span class="sd">            if isgenerator(X) and isgenerator(Y):</span>
+<span class="linenos">370</span><span class="sd">                for Xc, Yc in zip(X, Y):</span>
+<span class="linenos">371</span><span class="sd">                    chunk_result = meth(reshape(Xc), reshape(Yc), **kwargs)</span>
+<span class="linenos">372</span><span class="sd">                    # add logic to process chunk_result if needed</span>
+<span class="linenos">373</span><span class="sd">                    ...</span>
+<span class="linenos">374</span><span class="sd">                result = combine chunk_results, or keep only last</span>
+<span class="linenos">375</span><span class="sd">            else:</span>
+<span class="linenos">376</span><span class="sd">                result = meth(reshape(X), reshape(Y), **kwargs)</span>
+<span class="linenos">377</span>
+<span class="linenos">378</span><span class="sd">        Instead this can be written as</span>
+<span class="linenos">379</span>
+<span class="linenos">380</span><span class="sd">            result = process(maybe_chunked(meth,</span>
+<span class="linenos">381</span><span class="sd">                                           lambda X, Y: as_args(reshape(X), reshape(Y)),</span>
+<span class="linenos">382</span><span class="sd">                                           X, Y, **kwargs),</span>
+<span class="linenos">383</span><span class="sd">                             keep_last=True)</span>
+<span class="linenos">384</span>
+<span class="linenos">385</span><span class="sd">    Args:</span>
+<span class="linenos">386</span><span class="sd">        meth: function to call</span>
+<span class="linenos">387</span><span class="sd">        argfn: function to call on values for each iteration</span>
+<span class="linenos">388</span><span class="sd">        *args: arguments to meth</span>
+<span class="linenos">389</span><span class="sd">        **kwargs: kwargs to meth</span>
+<span class="linenos">390</span>
+<span class="linenos">391</span><span class="sd">    Returns:</span>
+<span class="linenos">392</span><span class="sd">        generator of meth() results</span>
+<span class="linenos">393</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">394</span>    <span class="n">isgenerator</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">)</span>
+<span class="linenos">395</span>    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">isgenerator</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+<span class="linenos">396</span>        <span class="k">for</span> <span class="n">chunks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="linenos">397</span>            <span class="k">yield</span> <span class="n">meth</span><span class="p">(</span><span class="o">*</span><span class="n">argfn</span><span class="p">(</span><span class="o">*</span><span class="n">chunks</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">398</span>    <span class="k">else</span><span class="p">:</span>
+<span class="linenos">399</span>        <span class="k">yield</span> <span class="n">meth</span><span class="p">(</span><span class="o">*</span><span class="n">argfn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">400</span>
+<span class="linenos">401</span>
+<span class="linenos">402</span><span class="k">def</span><span class="w"> </span><span class="nf">as_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="linenos">403</span>    <span class="c1"># return the arguments as passed in</span>
+<span class="linenos">404</span>    <span class="c1"># this is to enable e.g. lambda X: as_args(X), where X is an iterable</span>
+<span class="linenos">405</span>    <span class="c1"># notice if we did not use as_args a subsequent fn(*(lambda X: X)) would</span>
+<span class="linenos">406</span>    <span class="c1"># not be the same as fn(X), however fn(*(lambda X: as_args(X)) is equiv.</span>
+<span class="linenos">407</span>    <span class="k">return</span> <span class="n">args</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../release/0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="scikitlearn.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

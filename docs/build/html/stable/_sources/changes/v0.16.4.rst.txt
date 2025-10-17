@@ -1,0 +1,227 @@
+Release notes release/0.16.4
+============================
+
+Released 2025-01-29
+
+New Features
+------------
+
+Model Drift Monitoring
+
+* add automatic drift monitoring by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/387
+* enable drift stats mixins by @miraculixx
+  in https://github.com/omegaml/omegaml/pull/451
+* feat: add more drift statistics by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/459
+
+Model Tracking
+
+* chore: improve tracking, monitoring api stability by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/447
+* Experiment tracking data() datetime range query by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/439
+* feat: enable since=queries using relative timespecs by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/441
+* feat: enable sliced query of tracking data, improve stats by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/460
+
+Web UI
+
+* enable basic server dashboard by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/450
+* feat: om.status(), om.runtime.status() improved monitoring by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/442
+* add background monitor of services by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/431
+* chore: faster lunamon checks by @miraculixx in
+  https://github.com/omegaml/omegaml/pull/457
+
+Other changes
+-------------
+
+Documentation
+~~~~~~~~~~~~~
+
+-  docs: update documentation by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/361
+-  docs: build origin/master instead of local master by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/433
+
+Various improvements and fixes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  fix: enable cli runtime deploy task selection by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/455
+-  chore: various updates by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/462
+-  fix: replace datasets when requested by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/437
+-  Add store objinfo by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/448
+-  chore: cleanup tmp files upon exit and gc by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/456
+-  chore: improve job scheduling semantics by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/444
+-  fix: ensure subpath in experiment name is preserved in dataset by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/458
+
+Dependencies
+~~~~~~~~~~~~
+
+-  chore: upgrade mongodb, rabbitmq by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/435
+-  Fix mongodump by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/434
+-  chore: remove pkg_resources dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/440
+-  chore: ensure all mongo references are on 7.x by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/446
+-  chore: fix mongodb connection timeout by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/445
+-  improve minibatch compat by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/449
+   https://github.com/omegaml/omegaml/pull/442
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.16.3…release/0.16.4
+
+Changes
+~~~~~~~
+
+-  Merge pull request #465 from omegaml/release-build-0.16.4
+   `843afeb <https://github.com/omegaml/omegaml/commit/843afeb>`__
+-  Merge pull request #463 from
+   omegaml/dependabot/pip/omegaml/server/gunicorn-22.0.0
+   `c5597f8 <https://github.com/omegaml/omegaml/commit/c5597f8>`__
+-  build(deps): bump gunicorn from 20.1.0 to 22.0.0 in /omegaml/server
+   `cd59414 <https://github.com/omegaml/omegaml/commit/cd59414>`__
+-  Merge pull request #450 from omegaml/add-server-dashboard
+   `13e334a <https://github.com/omegaml/omegaml/commit/13e334a>`__
+-  add web ui dashboard
+   `295514f <https://github.com/omegaml/omegaml/commit/295514f>`__
+-  Merge pull request #462 from omegaml/various
+   `dca0ae1 <https://github.com/omegaml/omegaml/commit/dca0ae1>`__
+-  Merge pull request #455 from omegaml/fix-cli-runtime-deploy
+   `95f2a45 <https://github.com/omegaml/omegaml/commit/95f2a45>`__
+-  Merge pull request #459 from omegaml/monitoring-stability
+   `1e02541 <https://github.com/omegaml/omegaml/commit/1e02541>`__
+-  Merge pull request #460 from omegaml/tracking-stability
+   `5796b8d <https://github.com/omegaml/omegaml/commit/5796b8d>`__
+-  Merge pull request #456 from omegaml/remove-temp-files-on-exit
+   `abc45ae <https://github.com/omegaml/omegaml/commit/abc45ae>`__
+-  Merge pull request #457 from omegaml/faster-lunamon-checks
+   `1c72d7f <https://github.com/omegaml/omegaml/commit/1c72d7f>`__
+-  Merge pull request #458 from omegaml/fix-452
+   `811569e <https://github.com/omegaml/omegaml/commit/811569e>`__
+-  Merge pull request #451 from omegaml/enable-monitoring-mixins
+   `7f99f17 <https://github.com/omegaml/omegaml/commit/7f99f17>`__
+-  enable drift stats mixins
+   `66b13e4 <https://github.com/omegaml/omegaml/commit/66b13e4>`__
+-  Merge pull request #449 from omegaml/improve-minibatch-compat
+   `69d3df7 <https://github.com/omegaml/omegaml/commit/69d3df7>`__
+-  improve minibatch compat
+   `82403b5 <https://github.com/omegaml/omegaml/commit/82403b5>`__
+-  Merge pull request #448 from omegaml/add-store-objinfo
+   `aafaf8d <https://github.com/omegaml/omegaml/commit/aafaf8d>`__
+-  add store object info, improve om top-level ux
+   `ce8d574 <https://github.com/omegaml/omegaml/commit/ce8d574>`__
+-  Merge pull request #447 from omegaml/improve-tracking
+   `32b55f9 <https://github.com/omegaml/omegaml/commit/32b55f9>`__
+-  Merge pull request #444 from omegaml/updates-job-scheduling
+   `64be919 <https://github.com/omegaml/omegaml/commit/64be919>`__
+-  Merge pull request #441 from omegaml/enable-relative-tracking-queries
+   `9445bf0 <https://github.com/omegaml/omegaml/commit/9445bf0>`__
+-  Merge pull request #442 from omegaml/lunamon-status-monitoring
+   `e673075 <https://github.com/omegaml/omegaml/commit/e673075>`__
+-  Merge pull request #445 from omegaml/fix-mongodb-connection-timeout
+   `07f1d2f <https://github.com/omegaml/omegaml/commit/07f1d2f>`__
+-  Merge pull request #446 from omegaml/upgrade-mongodb-7.x
+   `7a9f56d <https://github.com/omegaml/omegaml/commit/7a9f56d>`__
+-  Merge pull request #440 from omegaml/update-dependencies
+   `788dc2e <https://github.com/omegaml/omegaml/commit/788dc2e>`__
+-  Merge pull request #439 from omegaml/tracking-range-query
+   `c4cda9a <https://github.com/omegaml/omegaml/commit/c4cda9a>`__
+-  Merge pull request #434 from omegaml/fix-mongodump
+   `a728dbc <https://github.com/omegaml/omegaml/commit/a728dbc>`__
+-  Merge pull request #437 from omegaml/replace-datasets
+   `e9488da <https://github.com/omegaml/omegaml/commit/e9488da>`__
+-  Merge pull request #435 from omegaml/update-dependencies
+   `c546ee9 <https://github.com/omegaml/omegaml/commit/c546ee9>`__
+-  Merge pull request #433 from omegaml/further-docs
+   `9f69d96 <https://github.com/omegaml/omegaml/commit/9f69d96>`__
+-  Merge pull request #432 from omegaml/add-background-monitor
+   `34cf5a0 <https://github.com/omegaml/omegaml/commit/34cf5a0>`__
+-  Merge pull request #361 from omegaml/further-docs
+   `28bba15 <https://github.com/omegaml/omegaml/commit/28bba15>`__
+-  Merge pull request #431 from omegaml/add-background-monitor
+   `d999670 <https://github.com/omegaml/omegaml/commit/d999670>`__
+-  add om.status() to report instant status of services
+   `990b855 <https://github.com/omegaml/omegaml/commit/990b855>`__
+-  Merge pull request #387 from omegaml/add-auto-drift-monitoring
+   `2247210 <https://github.com/omegaml/omegaml/commit/2247210>`__
+-  enable auto tracking, drift monitoring and alerts
+   `dfedf31 <https://github.com/omegaml/omegaml/commit/dfedf31>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix: enable cli runtime deploy task selection
+   `8c7cc5e <https://github.com/omegaml/omegaml/commit/8c7cc5e>`__
+-  fix: ensure subpath in experiment name is preserved in dataset
+   `dbb11bc <https://github.com/omegaml/omegaml/commit/dbb11bc>`__
+-  fix: experiment date range query
+   `fb52ec9 <https://github.com/omegaml/omegaml/commit/fb52ec9>`__
+-  fix: om cloud database export work with current
+   mongodump/mongorestore
+   `47490d4 <https://github.com/omegaml/omegaml/commit/47490d4>`__
+-  fix: om.datasets.drop() ignores replace=True
+   `b8597a1 <https://github.com/omegaml/omegaml/commit/b8597a1>`__
+
+Features
+~~~~~~~~
+
+-  feat: add more drift statistics
+   [a6a4fdb][a6a4fdb](https://github.com/omegaml/omegaml/commit/a6a4fdb)
+-  feat: enable sliced query of tracking data, improve stats
+   [dc33f42][dc33f42](https://github.com/omegaml/omegaml/commit/dc33f42)
+-  feat: enable since= queries using relative timespecs
+   [61d6ec4][61d6ec4](https://github.com/omegaml/omegaml/commit/61d6ec4)
+-  feat: om.status(), om.runtime.status() improved monitoring
+   [5c00bc1][5c00bc1](https://github.com/omegaml/omegaml/commit/5c00bc1)
+-  feat: add background monitor
+   [b624ad7][b624ad7](https://github.com/omegaml/omegaml/commit/b624ad7)
+
+Chores
+~~~~~~
+
+-  chore: update test images
+   `6658057 <https://github.com/omegaml/omegaml/commit/6658057>`__
+-  chore: various updates
+   `15f2503 <https://github.com/omegaml/omegaml/commit/15f2503>`__
+-  chore: cleanup tmp files upon exit and gc
+   `bc90a07 <https://github.com/omegaml/omegaml/commit/bc90a07>`__
+-  chore: faster lunamon checks
+   `720391c <https://github.com/omegaml/omegaml/commit/720391c>`__
+-  chore: improve tracking, monitoring api stability
+   `a3951fa <https://github.com/omegaml/omegaml/commit/a3951fa>`__
+-  chore: improve job scheduling semantics
+   `98b7c5d <https://github.com/omegaml/omegaml/commit/98b7c5d>`__
+-  chore: fix mongodb connection timeout
+   `cceb0e9 <https://github.com/omegaml/omegaml/commit/cceb0e9>`__
+-  chore: ensure all mongo references are on 7.x
+   `ee75ef9 <https://github.com/omegaml/omegaml/commit/ee75ef9>`__
+-  chore: remove pkg_resources dependencies
+   `600389b <https://github.com/omegaml/omegaml/commit/600389b>`__
+-  chore: upgrade mongodb, rabbitmq
+   `20f649e <https://github.com/omegaml/omegaml/commit/20f649e>`__
+
+.. _documentation-1:
+
+Documentation
+~~~~~~~~~~~~~
+
+-  docs: build origin/master instead of local master
+   `5b85e95 <https://github.com/omegaml/omegaml/commit/5b85e95>`__
+-  docs: improve documentation
+   `d96067e <https://github.com/omegaml/omegaml/commit/d96067e>`__

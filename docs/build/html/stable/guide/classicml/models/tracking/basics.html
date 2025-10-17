@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding the Tracking and Monitoring System &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="The omegam-ml REST API" href="../../../clusters/restapi.html" />
+    <link rel="prev" title="Automated Drift Monitoring" href="automonitoring.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">Classic ML</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../tutorial.html">Tutorial for classic ML</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../datasets/index.html"> Loading datasets for training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../index.html"> Training models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../metrics.html"> Evaluating models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modelstore.html"> Deploying models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../businessmodels/index.html"> Adding business logic to models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../clusters/restapi.html"> Serving models for real-time predictions</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html"> Tracking and monitoring models</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../datasets/index.html">Working with datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../../tutorial.html">Tutorial for classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Working with models</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Monitoring model and data drift</a></li>
+      <li class="breadcrumb-item active">Understanding the Tracking and Monitoring System</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/guide/classicml/models/tracking/basics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="understanding-the-tracking-and-monitoring-system">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Understanding the Tracking and Monitoring System</a><a class="headerlink" href="#understanding-the-tracking-and-monitoring-system" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#understanding-the-tracking-and-monitoring-system" id="id1">Understanding the Tracking and Monitoring System</a></p>
+<ul>
+<li><p><a class="reference internal" href="#experiments" id="id2">Experiments</a></p>
+<ul>
+<li><p><a class="reference internal" href="#working-with-large-amounts-of-log-data" id="id3">Working with large amounts of log data</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tracking-providers" id="id4">Tracking Providers</a></p></li>
+<li><p><a class="reference internal" href="#drift-monitors" id="id5">Drift Monitors</a></p></li>
+<li><p><a class="reference internal" href="#monitoring-jobs" id="id6">Monitoring Jobs</a></p>
+<ul>
+<li><p><a class="reference internal" href="#clearing-experiments-and-monitors" id="id7">Clearing experiments and monitors</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>omega-ml provides experiment and model tracking for development, testing and
+production use. The tracking system is designed to be simple and flexible, and
+can be used to track experiments, models, and other artifacts. Any data can be
+logged to the tracking system, including metrics, parameters, artifacts, system
+statistics and in general any data that can be serialized.</p>
+<p>The tracking system has three distinct components</p>
+<ol class="arabic simple">
+<li><p><em>Experiments</em>: An experiment is a named context, or log, in which data can be
+logged. Experiments are created using the <cite>om.runtime.experiment</cite> context
+manager. This experiment object can be used to log data to the experiment,
+and to retrieve data from the experiment.</p></li>
+<li><p><em>TrackingProviders</em>: A provider implements the backend storage systems that store the
+tracking data. The default tracking provider logs all data to <cite>om.datasets</cite>.
+Other tracking providers can be added by as a plugin, by subclassing
+<cite>TrackingProvider</cite>.</p></li>
+<li><p><em>DriftMonitors</em>: The drift monitor builds on the tracking system to provide
+drift detection and monitoring, using the data logged to the tracking system.</p></li>
+</ol>
+<p>Experiments and DriftMonitors can be set up to be automatically attached to
+the omega-ml runtime’s context (om.runtime), enabling all fit and predict calls
+to be automatically logged. The data logged includes the input features, output
+preditions, as well as operational data such as number of calls, latencies and
+other system statistics.</p>
+<section id="experiments">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Experiments</a><a class="headerlink" href="#experiments" title="Link to this heading">¶</a></h2>
+<p>An experiment is a named containers, or logs, in which data can be logged in sequence.
+Experiments are created using the <cite>om.runtime.experiment</cite> context manager.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;batchsize&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_data</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="n">X</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="n">Y</span><span class="p">})</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;model.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The data logged to an experiment is organized in <em>runs</em>, which are numbered sequentially, starting with run 1.
+Each run is the collection of data logged to the experiment, and it has a start and an end time. The data logged
+to the experiment can be retrieved using the <cite>exp.data()</cite> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/exp_data_0.png" src="../../../../_images/exp_data_0.png" />
+<p>The data logged to the experiment can be filtered by run number, or by event type. The data can be
+retrieved as a pandas DataFrame, or as a list of dictionaries.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">run</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;predict&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To retrieve the data as a dictionary, use the <cite>raw=True</cite> parameter.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">run</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/exp_data_1.png" src="../../../../_images/exp_data_1.png" />
+<p>To restore an arifact, use the <cite>exp.restore_artifact()</cite> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">restore_artifact</span><span class="p">(</span><span class="s1">&#39;mydata.pkl&#39;</span><span class="p">)</span>
+<span class="o">=&gt;</span> <span class="s1">&#39;some other object&#39;</span>
+</pre></div>
+</div>
+<section id="working-with-large-amounts-of-log-data">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Working with large amounts of log data</a><a class="headerlink" href="#working-with-large-amounts-of-log-data" title="Link to this heading">¶</a></h3>
+<p>The tracking system is designed to work with large amounts of data. The data is stored in the <cite>om.datasets</cite>
+storage system. Each call to one of the <cite>exp.log_*()</cite> methods stores the data as a single event object. If
+the data is too large to be retrieved as a single dataframe, use the <cite>exp.data(batchsize=N)</cite> method to
+return the data in batches of size N.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">batchsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;batch </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is a dataframe of size </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> with columns </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="n">batch</span> <span class="mi">0</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">DataFrame</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">columns</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">1</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">DataFrame</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">columns</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">2</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">DataFrame</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">columns</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">3</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">DataFrame</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">columns</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">4</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">DataFrame</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">columns</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To retrieve the data as a lists of dictionaries instead of DataFrame objects, add the <cite>raw=True</cite> parameter.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">batchsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;batch </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is a list of dicts of size </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="si">}</span><span class="s2"> with keys </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="n">batch</span> <span class="mi">0</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">dicts</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">1</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">dicts</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">2</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">dicts</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">3</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">dicts</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">4</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">dicts</span> <span class="n">of</span> <span class="n">size</span> <span class="mi">1</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;userid&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To retrieve the data in raw storage format, use the <cite>exp.data(lazy=True, raw=True)</cite> method, which returns a Cursor
+object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cursor</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cursor</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;batch </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is a dict with keys </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="n">batch</span> <span class="mi">0</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;_id&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">1</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;_id&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">2</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;_id&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">3</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;_id&#39;</span><span class="p">}</span>
+<span class="n">batch</span> <span class="mi">4</span> <span class="ow">is</span> <span class="n">a</span> <span class="nb">dict</span> <span class="k">with</span> <span class="n">keys</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;_id&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tracking-providers">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Tracking Providers</a><a class="headerlink" href="#tracking-providers" title="Link to this heading">¶</a></h2>
+<p>The tracking system is designed to be flexible and extensible. The default tracking provider logs all data to
+<cite>om.datasets</cite>. Other tracking providers can be added by subclassing <cite>TrackingProvider</cite>, and adding them to the
+<cite>defaults.TRACKING_PROVIDERS</cite> setting. omega-ml provides several tracking providers out of the box:</p>
+<ul class="simple">
+<li><p><cite>default</cite>: Logs all data to <cite>om.datasets</cite> and collects task inputs and outputs and basic statistics</p></li>
+<li><p><cite>profiling</cite>: Logs all data to <cite>om.datasets</cite> and collects detailed system statistics such as cpu and memory usage</p></li>
+<li><p><cite>notrack</cite>: Disables all tracking</p></li>
+</ul>
+<p>The <cite>default</cite> tracking provider is used by default. To use a different tracking provider, specify the provider
+name in the <cite>om.runtime.experiment</cite> context manager.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;profiled&#39;</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s1">&#39;profiling&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <cite>profiling</cite> tracking provider logs detailed system statistics such as cpu and memory usage. The data can be
+retrieved using the <cite>exp.data()</cite> method.</p>
+<img alt="../../../../_images/exp_profiling_data.png" src="../../../../_images/exp_profiling_data.png" />
+<p>All tracking providers support the same API. They main methods are:</p>
+<ul class="simple">
+<li><p><cite>start()</cite>: Start a new run</p></li>
+<li><p><cite>stop()</cite>: Stop the current run</p></li>
+<li><p><cite>log_metric(name, value)</cite>: Log a metric</p></li>
+<li><p><cite>log_param(name, value)</cite>: Log a parameter</p></li>
+<li><p><cite>log_data(name, value)</cite>: Log data</p></li>
+<li><p><cite>log_artifact(name, value)</cite>: Log an artifact</p></li>
+<li><p><cite>data()</cite>: Retrieve the data logged to the tracking provider</p></li>
+</ul>
+</section>
+<section id="drift-monitors">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Drift Monitors</a><a class="headerlink" href="#drift-monitors" title="Link to this heading">¶</a></h2>
+<p>The drift monitor builds on the tracking system to provide drift detection and monitoring. There are two
+types of drifts that can be monitored:</p>
+<ul class="simple">
+<li><p>Data drift: Changes in the distribution of input features. We’re interested in P(X) changing over time.
+This is implemented as the <cite>DataDriftMonitor</cite> class.</p></li>
+<li><p>Model or concept drift: Changes in the distribution of target features. We’re interested in P(Y|X) changing
+over time. This is implemented as the <cite>ModelDriftMonitor</cite> class.</p></li>
+</ul>
+<p>The API for the drift monitors is the same for both types of drift. The main methods are:</p>
+<ul class="simple">
+<li><p><cite>snapshot()</cite>: Take a snapshot of the input and target features</p></li>
+<li><p><cite>compare()</cite>: Compare two snapshots</p></li>
+<li><p><cite>plot()</cite>: Plot the results of the comparison</p></li>
+</ul>
+</section>
+<section id="monitoring-jobs">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Monitoring Jobs</a><a class="headerlink" href="#monitoring-jobs" title="Link to this heading">¶</a></h2>
+<p>The drift monitor can be attached to a model, and scheduled to run at regular intervals. The monitor will take
+snapshots of the input and target features of the model, and compare them to a baseline snapshot. If the
+distribution of the features has changed significantly, the monitor will raise an alert.</p>
+<p>To attach a drift monitor to a model, use the <cite>exp.track()</cite> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="s1">&#39;daily&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create a new job in om.jobs, as <cite>monitors/&lt;experiment&gt;/&lt;model&gt;</cite>, that will run the monitor at the
+specified interval. The monitor has the following format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># configure</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+<span class="c1"># -- the name of the experiment</span>
+<span class="n">experiment</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{experiment}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the name of the model</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{meta.name}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the name of the monitoring provider</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{provider}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the alert rules</span>
+<span class="n">alerts</span> <span class="o">=</span> <span class="p">{</span><span class="n">alerts</span><span class="p">}</span>
+<span class="c1"># snapshot recent state and capture drift</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">alerts</span><span class="o">=</span><span class="n">alerts</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This does the following:</p>
+<ol class="arabic simple">
+<li><p>For the given model, access the DriftMonitor</p></li>
+<li><p>Take a snapshot of all the input features (X) and output predictions (Y), since the last snapshot</p></li>
+<li><p>Capture any drift and log an alert if the distribution of the features has changed significantly</p></li>
+</ol>
+<p>The monitor job may be scheduled to run at regular intervals, such as daily, weekly, or monthly. The job
+can be customized to include additional processing, e.g. to send an email or slack message, to update a
+dashboard or an external database.</p>
+<section id="clearing-experiments-and-monitors">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Clearing experiments and monitors</a><a class="headerlink" href="#clearing-experiments-and-monitors" title="Link to this heading">¶</a></h3>
+<p>Experiments and monitors both keep their data in the <cite>om.datasets</cite> storage system. For every experiment,
+the data is stored in a seperate dataset. The monitoring system’s snapshots are stored in the same dataset,
+as monitors are always linked to an experiment. In general, the tracking system is designed to be immutable,
+short of manipulating the underlying storage system directly. That is to say, once data is logged, it cannot be
+deleted or modified. However, experiments and monitors can be cleared, which will remove all data associated with
+the experiment or monitor.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>To clear an experiment or monitor, use the <cite>exp.clear(force=True)</cite> method. This will remove all data associated
+with the experiment or monitor, including all underlying events. This action is not reversible.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="automonitoring.html" class="btn btn-neutral float-left" title="Automated Drift Monitoring" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../clusters/restapi.html" class="btn btn-neutral float-right" title="The omegam-ml REST API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: stable
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../latest/guide/classicml/models/tracking/basics.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../../release/0.17.0/guide/classicml/models/tracking/basics.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="basics.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../master/guide/classicml/models/tracking/basics.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
