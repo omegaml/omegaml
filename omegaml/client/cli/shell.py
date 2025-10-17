@@ -1,5 +1,7 @@
 import os
+import shlex
 from pathlib import Path
+
 from traitlets.config import Config
 
 from omegaml.client.docoptparser import CommandBase
@@ -46,7 +48,7 @@ class ShellCommandBase(CommandBase):
                 'print("omegaml is available as the om variable")',
             ]
             c.TerminalIPythonApp.display_banner = False
-            argv = f'-c {command}'.split(' ') if command else []
+            argv = shlex.split(f'-c "import omegaml as om; {command}"') if command else []
             IPython.start_ipython(argv,
                                   config=c, user_ns=dict(shell_args=self.args))
             return

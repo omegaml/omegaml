@@ -219,6 +219,10 @@ OMEGA_LOG_PYTHON = False
 OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+#: default log level
+#: .. versionchanged:: NEXT
+#:     set default loglevel
+OMEGA_LOGLEVEL = os.environ.get('OMEGA_LOGLEVEL') or 'INFO'
 #: tracking providers
 OMEGA_TRACKING_PROVIDERS = {
     'simple': 'omegaml.backends.tracking.OmegaSimpleTracker',
@@ -475,16 +479,45 @@ def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
         warnings.filterwarnings("ignore", category=FutureWarning)
 
 
+def setup_logging():
+    """ set logging options according to OMEGA_LOGLEVEL
+
+    .. versionchanged:: NEXT
+        pymongo, kombu loggers are set to ERROR to reduce verbosity, root loger to OMEGA_LOGLEVEL
+
+    """
+    if OMEGA_LOGLEVEL == 'NOTSET':
+        return
+    # set sensible defaults for common loggers
+    default_loglevels = {
+        # -- the default pymongo logger is set according to the root logger
+        # -- sometimes resultins in large amounts of inadverted pymongo log output
+        # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
+        'root': 'INFO',
+        'pymongo': 'ERROR',
+        'pymongo.command': 'WARNING',
+        'pymongo.connection': 'ERROR',
+        'pymongo.serverSelection': 'ERROR',
+        # kombu tends to be quite verbose
+        'kombu': 'ERROR',
+    }
+    for name, level in default_loglevels.items():
+        pymongo_logger = logging.getLogger(name)
+        pymongo_logger.setLevel(level)
+    logging.getLogger().setLevel(OMEGA_LOGLEVEL)
+
+
 # -- test support
 if not is_cli_run and is_test_run:
     # this is to avoid using production settings during test
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = 'local'
-    logging.getLogger().setLevel(logging.ERROR)
+    OMEGA_LOGLEVEL = 'WARNING'
 else:
     # overrides in actual operations
     load_config_file()
 
+setup_logging()
 # load extensions, always last step to ensure we have user configs loaded
 update_from_env()

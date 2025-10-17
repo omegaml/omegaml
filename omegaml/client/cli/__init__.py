@@ -17,7 +17,7 @@ Usage: om <command> [<action>] [<args>...] [options]
 Options:
   -h, --help         Show this screen
   --version          Show version.
-  --loglevel=LEVEL   INFO,ERROR,DEBUG [default: INFO]
+  --loglevel=LEVEL   INFO,WARNING,ERROR,DEBUG [default: INFO]
   --copyright        Show copyright
   --config=CONFIG    configuration file
   --bucket=BUCKET    the bucket to use

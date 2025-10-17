@@ -3,9 +3,10 @@ import getpass
 import logging
 import os
 import platform
-import pymongo
 import signal
 from contextlib import contextmanager
+
+import pymongo
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
@@ -91,11 +92,11 @@ class OmegaLoggingHandler(logging.Handler):
         """
         import omegaml as om
         import logging
-        effective_level = logger.getEffectiveLevel() if logger else logging.INFO
-        logger_name = name or 'omegaml'
-        level = level or effective_level
         store = store or om.setup().datasets
         defaults = defaults or store.defaults
+        effective_level = logger.getEffectiveLevel() if logger else defaults.OMEGA_LOGLEVEL
+        logger_name = name or 'omegaml'
+        level = level or effective_level
         dataset = dataset or defaults.OMEGA_LOG_DATASET
         fmt = fmt or defaults.OMEGA_LOG_FORMAT
         # setup handler and logger
@@ -169,7 +170,7 @@ class OmegaSimpleLogger:
     """
     levels = 'QUIET,CRITICAL,ERROR,WARNING,INFO,DEBUG'.split(',')
 
-    def __init__(self, store=None, dataset=None, collection=None, level='INFO',
+    def __init__(self, store=None, dataset=None, collection=None, level=None,
                  size=1 * 1024 * 1024, defaults=None, name='simple'):
         import omegaml as om
 
@@ -178,7 +179,7 @@ class OmegaSimpleLogger:
         self.dsname = dataset or self.defaults.OMEGA_LOG_DATASET
         self._dataset = None
         self._level = None
-        self.setLevel(level)
+        self.setLevel(level or self.defaults.OMEGA_LOGLEVEL)
         self._is_setup = False
         self._collection = collection
         self.size = size
@@ -227,7 +228,7 @@ class OmegaSimpleLogger:
         Returns:
             None
         """
-        self._level = self.levels.index(level)
+        self._level = self.levels.index(level.upper())
 
     @property
     def level(self):
