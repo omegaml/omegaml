@@ -36,9 +36,8 @@ class OmegaTestMixin(object):
             if element == 'streams':
                 drop_kwargs = {'keep_data': False}
             # drop all members
-            [drop(m.name,
-                  force=True,
-                  **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
+            [drop(m.name, force=True, **drop_kwargs)
+             for m in part.list(hidden=True, include_temp=True, raw=True)]
             # ignore system members, as they may get recreated e.g. by LunaMonitor
             existing = [m.name for m in part.list(hidden=True, include_temp=True, raw=True)
                         if not '.system' in m.name]

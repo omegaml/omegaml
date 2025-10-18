@@ -620,14 +620,15 @@ class OmegaStore(object):
             return None
         if not force_python:
             backend = (self.get_backend(name, model_store=model_store,
-                                        data_store=data_store)
-                       if not kind else self.get_backend_bykind(kind, model_store=model_store, data_store=data_store))
+                                        data_store=data_store, **kwargs)
+                       if not kind else self.get_backend_bykind(kind, model_store=model_store,
+                                                                data_store=data_store, **kwargs))
             if backend is not None:
                 # FIXME: some backends need to get model_store, data_store, but fails tests
                 return backend.get(name, **kwargs)  # model_store=model_store, data_store=data_store, **kwargs)
         # catch-call to CoreObjectsBackend or force python
         # -- keeping the same behavior until version 0.17, handling all other KINDs
-        core_backend = self.get_backend_bykind('core.object', model_store=model_store, data_store=data_store)
+        core_backend = self.get_backend_bykind('core.object', model_store=model_store, data_store=data_store, **kwargs)
         if force_python:
             return core_backend.get_object_as_python(meta, version=version)
         return core_backend.get(name, version=version, force_python=force_python, **kwargs)
