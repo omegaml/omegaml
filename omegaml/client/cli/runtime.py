@@ -372,13 +372,11 @@ class RuntimeCommandBase(CommandBase):
                       .run(action=action, package=package, file=reqfile,
                            __format='python'))
             results.append((label, result))
-        all_results = om.runtime.celeryapp.ResultSet([r[1] for r in results])
         from tqdm import tqdm
         with tqdm() as progress:
-            while all_results.waiting():
+            while any(not r[1].ready() for r in results):
                 progress.update(1)
                 sleep(1)
-            all_results.get()
         for label, result in results:
             if label:
                 print(f'** result of worker require={label}:')

@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
+from os.path import basename
+
 import logging
 import os
 import shutil
 import sys
-from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
@@ -83,6 +84,7 @@ OMEGA_CELERY_CONFIG = {
     # TODO replace result backend with redis or mongodb
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
+    'CELERY_TRACK_STARTED': True,
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',
