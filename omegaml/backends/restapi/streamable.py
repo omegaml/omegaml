@@ -2,10 +2,11 @@ import json
 import logging
 import os
 from hashlib import pbkdf2_hmac
-from jose import jwe
 from time import sleep
 from typing import Callable, Any, Dict
 from uuid import uuid4
+
+from jose import jwe
 
 from minibatch.tests.util import LocalExecutor
 from omegaml.util import tryOr, utcnow
@@ -92,6 +93,7 @@ class StreamableResourceMixin:
         timeout = 10 // interval  # timeout in seconds, max
         while timeout or has_chunks():
             timeout -= 1
+            print(timeout, has_chunks())
             logger.debug("complete:stream_result waiting for chunks")
             emitter.run(blocking=False)
             for chunk in buffer:
@@ -104,7 +106,7 @@ class StreamableResourceMixin:
                 data.update(data.pop('result', {})) if raw else None
                 yield data
             buffer.clear()
-            sleep(0.01)
+            sleep(interval)
         logger.debug("done:stream_result closing response")
 
     def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):

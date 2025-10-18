@@ -503,7 +503,7 @@ class TextModel(GenAIModel):
             prompt_message = messages[-1]
         else:
             # raw input, assume messages contains the user prompt
-            prompts = '\n\n'.join(m.get('content', '') for m in messages)
+            prompts = '\n\n'.join(m.get('content', '') for m in messages if m.get('type') == 'text')
             messages = ([self._system_message(prompts,
                                               conversation_id=conversation_id)] +
                         [self._augment_message(m, self.documents) for m in messages])
