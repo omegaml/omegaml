@@ -1,17 +1,15 @@
 import logging
-from time import sleep
 
 import numpy as np
 import pandas as pd
-from celery.states import UNREADY_STATES, FAILURE
 
-from minibatch.tests.util import LocalExecutor
+from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.util import ensure_json_serializable
 
 logger = logging.getLogger(__name__)
 
 
-class GenericModelResource(object):
+class GenericModelResource(StreamableResourceMixin):
     def __init__(self, om, is_async=False):
         self.om = om
         self.is_async = is_async
@@ -119,37 +117,7 @@ class GenericModelResource(object):
         stream = True if query.get('stream') in [True, 'true', '1'] else payload.get('stream', False)
         promise = self.om.runtime.model(model_id).complete(datax, stream=stream, raw=raw)
         if stream:
-            def stream_result(promise):
-                class Sink(list):
-                    def put(self, chunks):
-                        self.extend(chunks)
-
-                    def __bool__(self):
-                        return True  # required to make work with minibatch
-
-                buffer = Sink()
-                logger.debug("complete:stream_result getting stream")
-                streaming = self.om.streams.getl(f'.system/complete/{promise.id}',
-                                                 executor=LocalExecutor(),
-                                                 interval=0.01,
-                                                 sink=buffer)
-                emitter = streaming.make(lambda window: window.data)
-                has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
-                logger.debug("complete:stream_result waiting for status ")
-                while promise.state in UNREADY_STATES or has_chunks():
-                    logger.debug("complete:stream_result waiting for chunks")
-                    emitter.run(blocking=False)
-                    for chunk in buffer:
-                        logger.debug("complete:stream_result chunk received: %s", chunk)
-                        yield self.prepare_result(chunk, model_id=model_id, raw=raw)
-                    buffer.clear()
-                    sleep(0.01)
-                # get the final result, this is to clean up celery
-                if promise.state == FAILURE:
-                    value = promise.get()
-                    raise RuntimeError(value)
-
-            return stream_result(promise)
+            result = self.prepare_streaming_result(promise, resource_name=model_id, raw=raw)
         else:
             result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
@@ -161,6 +129,26 @@ class GenericModelResource(object):
         promise = self.om.runtime.model(model_id).embed(datax, raw=raw)
         result = self.prepare_result(promise.get(), model_id=model_id, raw=raw) if not self.is_async else promise
         return result
+
+    def models(self, model_id, query, payload):
+        # endpoint according to https://platform.openai.com/docs/api-reference/models/
+        # same code as AIPromptsView.members
+        excludes = (
+            lambda m: m.name.startswith('_'),
+            lambda m: m.name.startswith('experiments/')
+        )
+        kind = ['genai.text', 'genai.llm']
+        items = (m for m in self.om.models.list('prompts/*',
+                                                kind=kind, raw=True) if not any(e(m) for e in excludes))
+        models = {
+            "object": "list",
+            "data": [{
+                "id": m.name,
+                "object": "model",
+                "created": int(m.created.timestamp()),
+                "owned_by": "omegaml"
+            } for m in items]}
+        return models
 
     def _resolve_model_id(self, model_id, payload):
         if model_id == '_query_':

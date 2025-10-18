@@ -1,18 +1,19 @@
 import builtins
 import datetime
-import flask
 import inspect
 import json
 import logging
+import re
+from functools import wraps
+from urllib.parse import unquote, urljoin
+
+import flask
 import numpy as np
 import pandas as pd
-import re
-from flask import Blueprint, render_template, url_for
+from flask import Blueprint, render_template, url_for, Response
 from flask_restx import Resource, fields, Api, marshal_with
 from flask_restx.apidoc import apidoc
-from functools import wraps
 from mongoengine import DoesNotExist
-from urllib.parse import unquote, urljoin
 from werkzeug.exceptions import NotFound
 
 from omegaml import _base_config
@@ -43,6 +44,8 @@ class marshal_with_streaming:
             elif isinstance(resp, tuple) and len(resp) == 2:
                 data, status = resp
                 headers = {}
+            elif isinstance(resp, Response):
+                return resp
             else:
                 data = resp
                 status = 200
@@ -121,7 +124,8 @@ def create_app(url_prefix=None):
                          url_prefix=url_prefix)
     omega_api = api = RemoteableSwaggerApi(omega_bp, doc='/api/doc', version='1.0',
                                            default='omegaml-restapi',
-                                           default_label='omega-ml REST API')
+                                           default_label='omega-ml REST API',
+                                           default_mediatype='application/json')
     apidoc.url_prefix = url_prefix
     # set up swagger ui, if not local
     # -- swagger.json is provided by the hub
@@ -433,9 +437,12 @@ def add_api_endpoints(api):
                methods=['PUT', 'POST'], endpoint='openai_chat_completions')
     @api.route('/api/openai/v1/embeddings', defaults={'action': 'embed', 'model_id': '_query_'},
                methods=['PUT', 'POST'], endpoint='openai_embeddings')
+    @api.route('/api/openai/v1/models', defaults={'action': 'models', 'model_id': '_blank_'},
+               methods=['GET'], endpoint='openai_models')
     class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
+        @api.marshal_with(ServiceOutput)
         def get(self, model_id, action=None):
             return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
 
