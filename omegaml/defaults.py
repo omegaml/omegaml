@@ -122,6 +122,7 @@ OMEGA_STORE_BACKENDS = {
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
     'script.ipynb': 'omegaml.notebook.jobs.NotebookBackend',
+    'python.model': 'omegaml.backends.genericmodel.GenericModelBackend',
     # must be last backend listed as a catch-call
     'core.object': 'omegaml.backends.coreobjects.CoreObjectsBackend',
 }
