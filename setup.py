@@ -72,7 +72,7 @@ install_deps = [
     'yaspin',
     'honcho>=1.0.1',  # not strictly required, but used in docker compose
     'tabulate>=0.8.2',  # required in cli
-    'smart_open',  # required in cli
+    'smart_open',  # required to handle remote uri storage
     'imageio>=2.3.0',  # require to store images
     'psutil>=5.8',  # required for profiling tracker
     'cachetools>=5.0.0',  # required for session caching

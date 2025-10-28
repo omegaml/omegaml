@@ -14,6 +14,7 @@ import gridfs
 import joblib
 import pandas as pd
 import pymongo
+import smart_open
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -90,6 +91,22 @@ class StoreTests(unittest.TestCase):
         self.assertIsInstance(lr2, LogisticRegression)
         result2 = lr2.predict(X)
         self.assertTrue((result == result2).all())
+
+    def test_put_model_uri(self):
+        # create a test model
+        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        store = self._make_store()
+        meta = store.put(lr, 'models/foo', uri='/tmp/remotefile.pkl')
+        self.assertTrue(Path('/tmp/remotefile.pkl').exists())
+        self.assertEqual(meta.gridfile.get(), None)
+        self.assertEqual(meta.uri, '/tmp/remotefile.pkl')
+        # -- test loading
+        lr_ = store.get('models/foo')
+        self.assertIsInstance(lr_, LogisticRegression)
+        # -- test loading without remote existing
+        Path(meta.uri).unlink()
+        with self.assertRaises(FileNotFoundError):
+            store.get('models/foo')
 
     def test_prefix_store(self):
         """
@@ -952,19 +969,47 @@ class StoreTests(unittest.TestCase):
 
     def test_raw_files(self):
         store = self._make_store()
-
         # test we can write from a file-like object
         data = "some data"
         file_like = BytesIO(data.encode('utf-8'))
-        store.put(file_like, 'myfile')
+        meta = store.put(file_like, 'myfile')
         self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
         # test we can write from an actual file
         data = "some other data"
         file_like = BytesIO(data.encode('utf-8'))
         with open('/tmp/testfile.txt', 'wb') as fout:
             fout.write(file_like.read())
-        store.put('/tmp/testfile.txt', 'myfile')
+        meta = store.put('/tmp/testfile.txt', 'myfile')
         self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
+
+    def test_raw_files_uri(self):
+        store = self._make_store()
+        # test we can write from a file-like object to uri
+        data = "some data"
+        file_like = BytesIO(data.encode('utf-8'))
+        meta = store.put(file_like, 'myfile', uri='/tmp/remotefile.txt')
+        self.assertEqual(meta.uri, '/tmp/remotefile.txt')
+        self.assertEqual(meta.gridfile.get(), None)
+        self.assertTrue(Path('/tmp/remotefile.txt').exists())
+        self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        # test we can write from an actual file to uri
+        data = "some other data"
+        file_like = BytesIO(data.encode('utf-8'))
+        with open('/tmp/testfile.txt', 'wb') as fout:
+            fout.write(file_like.read())
+        meta = store.put('/tmp/testfile.txt', 'myfile', uri='/tmp/remotefile.txt')
+        self.assertEqual(meta.uri, '/tmp/remotefile.txt')
+        self.assertEqual(meta.gridfile.get(), None)
+        self.assertTrue(Path('/tmp/remotefile.txt').exists())
+        # remove local file and restore from remote as in meta.uri
+        Path('/tmp/testfile.txt').unlink()
+        self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        # -- test loading without remote existing
+        Path(meta.uri).unlink()
+        with self.assertRaises(FileNotFoundError):
+            store.get('myfile')
 
     def test_bucket(self):
         # test different buckets actually separate objects by the same name
@@ -1195,3 +1240,32 @@ class StoreTests(unittest.TestCase):
         # load model
         model_ = store.get('mymodel', loader=loader)
         self.assertEqual(model_.predict(), 42)
+
+    def test_generic_model_serializing_uri(self):
+        class FooModel:
+            def predict(self, *args, **kwargs):
+                return 42
+
+        # enable custom serializers
+        store = self._make_store(bucket='foo', prefix='models/')
+        store.register_backend(GenericModelBackend.KIND, GenericModelBackend)
+
+        # define serializer and loader callables
+        def serializer(store, model, filename, **kwargs):
+            with smart_open.open(filename, 'wb') as fout:
+                dill.dump(model, fout)
+
+        loader = lambda store, infile, **kwargs: dill.load(infile)
+        # -- use generic backend by specifying kind='python.model'
+        model = FooModel()
+        meta = store.put(model, 'mymodel', kind='python.model', serializer=serializer, uri='/tmp/remotefile.pkl')
+        self.assertEqual(meta.kind, GenericModelBackend.KIND)
+        self.assertEqual(meta.uri, '/tmp/remotefile.pkl')
+        self.assertEqual(meta.gridfile.get(), None)
+        # load model
+        model_ = store.get('mymodel', loader=loader)
+        self.assertEqual(model_.predict(), 42)
+        # -- test loading without remote existing
+        Path(meta.uri).unlink()
+        with self.assertRaises(FileNotFoundError):
+            store.get('mymodel', loader=loader)

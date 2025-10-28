@@ -130,7 +130,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
     def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
         if _kind_version and _kind_version != self._backend_version:
             return super()._v1_put_model(obj, name, attributes=attributes, **kwargs)
-        return super().put_model(obj, name, attributes=attributes)
+        return super().put_model(obj, name, attributes=attributes, **kwargs)
 
     def predict(
             self, modelname, Xname, rName=None, pure_python=True, **kwargs):

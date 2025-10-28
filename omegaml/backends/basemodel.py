@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import joblib
+import smart_open
 
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
@@ -74,26 +75,36 @@ class BaseModelBackend(BackendBaseCommon):
         # the model store handles _pre and _post methods in self.perform()
         return self.model_store
 
-    def get(self, name, **kwargs):
+    def get(self, name, uri=None, **kwargs):
         """
         retrieve a model
 
         :param name: the name of the object
+        :param uri: optional, /path/to/file, defaults to meta.gridfile, may use /path/{key} as placeholder
+           for the file's name
         :param version: the version of the object (not supported)
+
+        .. versionadded: NEXT
+            uri specifies a target filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
-        return self.get_model(name, **kwargs)
+        return self.get_model(name, uri=uri, **kwargs)
 
-    def put(self, obj, name, **kwargs):
+    def put(self, obj, name, uri=None, **kwargs):
         """
         store a model
 
         :param obj: the model object to be stored
         :param name: the name of the object
+        :param uri: optional, /path/to/file, defaults to meta.gridfile, may use /path/{key} as placeholder
+           for the file's name
         :param attributes: attributes for meta data
+
+        .. versionadded: NEXT
+            local specifies a local filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
-        return self.put_model(obj, name, **kwargs)
+        return self.put_model(obj, name, uri=uri, **kwargs)
 
     def drop(self, name, force=False, version=-1, **kwargs):
         return self.model_store._drop(name, force=force, version=version)
@@ -163,24 +174,32 @@ class BaseModelBackend(BackendBaseCommon):
         else:
             Path(path).unlink(missing_ok=True)
 
-    def get_model(self, name, version=-1, loader=None, **kwargs):
+    def get_model(self, name, version=-1, uri=None, loader=None, **kwargs):
         """
         Retrieves a pre-stored model
         """
         meta = self.model_store.metadata(name)
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
-        model = self._extract_model(meta.gridfile, storekey,
-                                    self._tmp_packagefn(self.model_store, storekey), **kwargs)
+        uri = uri or meta.uri
+        if uri:
+            uri = str(uri).format(key=storekey)
+            infile = smart_open.open(uri, 'rb')
+        else:
+            infile = meta.gridfile
+        model = self._extract_model(infile, storekey,
+                                    self._tmp_packagefn(self.model_store, storekey),
+                                    loader=loader, **kwargs)
+        infile.close()
         return model
 
-    def put_model(self, obj, name, attributes=None, _kind_version=None, **kwargs):
+    def put_model(self, obj, name, attributes=None, _kind_version=None, uri=None, **kwargs):
         """
         Packages a model using joblib and stores in GridFS
         """
         storekey = self.model_store.object_store_key(name, 'omm', hashed=True)
         tmpfn = self._tmp_packagefn(self.model_store, storekey)
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
-        gridfile = self._store_to_file(self.model_store, packagefname, storekey)
+        gridfile = self._store_to_file(self.model_store, packagefname, storekey, uri=uri)
         self._remove_path(packagefname)
         kind_meta = {
             self._backend_version_tag: self._backend_version,
@@ -192,6 +211,7 @@ class BaseModelBackend(BackendBaseCommon):
             kind=self.KIND,
             kind_meta=kind_meta,
             attributes=attributes,
+            uri=str(uri or ''),
             gridfile=gridfile).save()
 
     def predict(
