@@ -675,7 +675,7 @@ who are authorized to write data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.rawfiles.PythonRawFileBackend.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rawfiles.html#PythonRawFileBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rawfiles.PythonRawFileBackend.get" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rawfiles.html#PythonRawFileBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rawfiles.PythonRawFileBackend.get" title="Link to this definition">¶</a></dt>
 <dd><p>get a stored file as a file-like object with binary contents or a local file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -686,6 +686,7 @@ stored there. If local does not have an extension it is assumed
 to be a directory name, in which case the file is stored as the
 same name.</p></li>
 <li><p><strong>mode</strong> (<em>str</em>) – the mode to use on .open() for the local file</p></li>
+<li><p><strong>chunksize</strong> (<em>int</em>) – optional, the size of chunks to be read, as in</p></li>
 <li><p><strong>open_kwargs</strong> (<em>dict</em>) – the kwargs to use .open() for the local file</p></li>
 <li><p><strong>**kwargs</strong> – any kwargs passed to datasets.metadata()</p></li>
 </ul>
@@ -704,19 +705,21 @@ the path to the local file (local is given)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.backends.rawfiles.PythonRawFileBackend.put">
-<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rawfiles.html#PythonRawFileBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rawfiles.PythonRawFileBackend.put" title="Link to this definition">¶</a></dt>
-<dd><p>put an obj</p>
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rawfiles.html#PythonRawFileBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rawfiles.PythonRawFileBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>store the binary contents of a file-like object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> – the object to store (object)</p></li>
-<li><p><strong>name</strong> – the name of the object (str)</p></li>
-<li><p><strong>attributes</strong> – the attributes dict (dict, optional)</p></li>
-<li><p><strong>kwargs</strong> – other kwargs to be passed to the Metadata object</p></li>
+<li><p><strong>obj</strong> (<em>str</em><em>|</em><em>Path</em><em>|</em><em>filelike</em>) – the object to be stored</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – the name for the object’s metadata</p></li>
+<li><p><strong>attributes</strong> (<em>dict</em>) – optional, metadata attributes</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – optional, a valid encoding, such as utf8</p></li>
+<li><p><strong>uri</strong> (<em>str</em>) – optional, the local or remote file url compatible with smart_open</p></li>
+<li><p><strong>**kwargs</strong></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the Metadata object</p>
+<dd class="field-even"><p>Metadata</p>
 </dd>
 </dl>
 </dd></dl>
