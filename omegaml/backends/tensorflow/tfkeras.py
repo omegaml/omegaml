@@ -34,7 +34,7 @@ class TensorflowKerasBackend(KerasBackend):
             except NotImplementedError:
                 pass
 
-    def _extract_model(self, infile, key, tmpfn):
+    def _extract_model(self, infile, key, tmpfn, **kwargs):
         # override to implement model loading
         from tensorflow import keras
         with open(tmpfn, 'wb') as pkgfn:

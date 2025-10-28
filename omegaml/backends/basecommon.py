@@ -1,12 +1,16 @@
 import os
-from mongoengine import GridFSProxy
+from pathlib import Path
 from warnings import warn
+
+import smart_open
+from mongoengine import GridFSProxy
 
 
 class BackendBaseCommon:
     """
     common base for storage backends
     """
+
     def _tmp_packagefn(self, store, name):
         """
         use this to to get a temporary local filename for serialization/deserialization
@@ -30,11 +34,12 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, str) and os.path.exists(obj)
+        return isinstance(obj, (str, Path)) and os.path.exists(obj)
 
-    def _store_to_file(self, store, obj, filename, encoding=None, replace=False):
+    def _store_to_file(self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None,
+                       open_kwargs=None, **kwargs):
         """
-        Use this method to store file-like objects to the store's gridfs
+        Use this method to store file-like objects to the store's gridfs, or a remote uri
 
         Args:
             store (OmegaStore): the store whose .fs filesystem access will be used
@@ -44,9 +49,12 @@ class BackendBaseCommon:
             encoding (str): a valid encoding such as utf8, optional
             replace (bool): if True the existing file(s) of the same name are deleted to avoid automated versioning
                by gridfs. defaults to False
+            uri (str): if True a local or remote file url compatible with smart_open
+            chunksize (int): optional, if uri is specified this is used to read in chunks, as obj.read(chunksize)
+            open_kwargs (dict): optional, if uri is specified, this is used to open uri, as in smart_open.open(uri, **open_kwargs)
 
         Returns:
-            gridfile (GridFSProxy), assignable to Metadata.gridfile
+            gridfile (GridFSProxy|None): assignable to Metadata.gridfile, None if uri= was specified for compatibility
         """
         if replace:
             for fileobj in store.fs.find({'filename': filename}):
@@ -55,15 +63,30 @@ class BackendBaseCommon:
                 except Exception as e:
                     warn('deleting {filename} resulted in {e}'.format(**locals()))
                     pass
-        if self._is_path(obj):
-            with open(obj, 'rb') as fin:
-                fileid = store.fs.put(fin, filename=filename, encoding=encoding)
+        if uri:
+            open_kwargs = open_kwargs or {}
+            chunksize = chunksize or 1024 * 1024 * 4  # 4MB default
+            gridfile = None
+            if self._is_path(obj):
+                uri = str(uri).format(key=filename, filename=filename)
+                with (smart_open.open(obj, 'rb') as infile,
+                      smart_open.open(uri, 'wb', **open_kwargs) as outfile):
+                    while data := infile.read(chunksize):
+                        outfile.write(data)
+            else:
+                with smart_open.open(uri, 'wb', **open_kwargs) as outfile:
+                    while data := obj.read(chunksize):
+                        outfile.write(data)
         else:
-            fileid = store.fs.put(obj, filename=filename, encoding=encoding)
-        gridfile = GridFSProxy(grid_id=fileid,
-                               db_alias=store._dbalias,
-                               key=filename,
-                               collection_name=store._fs_collection)
+            if self._is_path(obj):
+                with open(obj, 'rb') as fin:
+                    fileid = store.fs.put(fin, filename=filename, encoding=encoding)
+            else:
+                fileid = store.fs.put(obj, filename=filename, encoding=encoding)
+            gridfile = GridFSProxy(grid_id=fileid,
+                                   db_alias=store._dbalias,
+                                   key=filename,
+                                   collection_name=store._fs_collection)
         return gridfile
 
     def perform(self, method, *args, **kwargs):
@@ -138,5 +161,3 @@ class BackendBaseCommon:
     def _call_handler(self):
         # by default the data store handles _pre and _post methods in self.perform()
         return self.data_store
-
-
