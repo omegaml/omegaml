@@ -9,6 +9,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest import skip
 
+import dill
 import gridfs
 import joblib
 import pandas as pd
@@ -21,6 +22,7 @@ from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from omegaml.backends.coreobjects import CoreObjectsBackend
+from omegaml.backends.genericmodel import GenericModelBackend
 from omegaml.backends.rawdict import PandasRawDictBackend
 from omegaml.backends.rawfiles import PythonRawFileBackend
 from omegaml.backends.scikitlearn import ScikitLearnBackend
@@ -1164,3 +1166,32 @@ class StoreTests(unittest.TestCase):
         del store
         gc.collect()
         self.assertFalse(tmppath.exists())
+
+    def test_generic_model_serializing(self):
+        class FooModel:
+            def predict(self, *args, **kwargs):
+                return 42
+
+        # test model works
+        model = FooModel()
+        self.assertEqual(model.predict(), 42)
+        # enable custom serializers
+        store = self._make_store(bucket='foo', prefix='models/')
+        store.register_backend(GenericModelBackend.KIND, GenericModelBackend)
+
+        # define serializer and loader callables
+        def serializer(store, model, filename, **kwargs):
+            with open(filename, 'wb') as fout:
+                dill.dump(model, fout)
+
+        loader = lambda store, infile, **kwargs: dill.load(infile)
+        # save model
+        # -- don't use generic backend
+        with self.assertRaises(TypeError):
+            store.put(model, 'mymodel')
+        # -- use generic backend by specifying kind='python.model'
+        meta = store.put(model, 'mymodel', kind='python.model', serializer=serializer)
+        self.assertEqual(meta.kind, GenericModelBackend.KIND)
+        # load model
+        model_ = store.get('mymodel', loader=loader)
+        self.assertEqual(model_.predict(), 42)

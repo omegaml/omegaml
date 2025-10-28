@@ -1,8 +1,10 @@
-import joblib
 import shutil
+from pathlib import Path
+
+import joblib
+
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
-from pathlib import Path
 
 
 class BaseModelBackend(BackendBaseCommon):
@@ -49,7 +51,10 @@ class BaseModelBackend(BackendBaseCommon):
     """
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
-    
+
+    serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
+    loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile)
+
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
         assert data_store, "Need a data store"
@@ -93,38 +98,52 @@ class BaseModelBackend(BackendBaseCommon):
     def drop(self, name, force=False, version=-1, **kwargs):
         return self.model_store._drop(name, force=force, version=version)
 
-    def _package_model(self, model, key, tmpfn, **kwargs):
+    def _package_model(self, model, key, tmpfn, serializer=None, **kwargs):
         """
         implement this method to serialize a model to the given tmpfn
 
         Args:
-            model:
-            key:
-            tmpfn:
-            **kwargs:
+            model (object): the model object to serialize to a file
+            key (str): the object store's key for this object
+            tmpfn (str): the filename to store the serialized object to
+            serializer (callable): optional, a callable as serializer(store, model, filename, **kwargs),
+               defaults to self.serializer, using joblib.dump()
+            **kwargs (dict): optional, keyword arguments passed to the serializer
 
         Returns:
             tmpfn or absolute path of serialized file
+
+        .. versionchanged:: NEXT
+            enable custom serializer
         """
-        with open(tmpfn, 'wb') as outf:
-            joblib.dump(model, outf)
+        serializer = serializer or getattr(self.serializer, '__func__')  # __func__ is the unbound method
+        kwargs.setdefault('key', key)
+        tmpfn = serializer(self, model, tmpfn) or tmpfn
         return tmpfn
 
-    def _extract_model(self, infile, key, tmpfn, **kwargs):
+    def _extract_model(self, infile, key, tmpfn, loader=None, **kwargs):
         """
         implement this method to deserialize a model from the given infile
 
         Args:
-            infile: this is a file-like object supporting read() and seek(). if
+            infile (filelike): this is a file-like object supporting read() and seek(). if
                 deserializing from this does not work directly, use tmpfn
-            key:
-            tmpfn:
-            **kwargs:
+            key (str): the object store's key for this object
+            tmpfn (str): the filename from which to extract the object
+            loader (callable): optional, a callable as loader(store, filename, **kwargs),
+               defaults to self.loader, using joblib.load()
+            **kwargs (dict): optional, keyword arguments passed to the loader
 
         Returns:
             model instance
+
+        .. versionchanged:: NEXT
+            enable custom loader
         """
-        obj = joblib.load(infile)
+        loader = loader or getattr(self.loader, '__func__')  # __func__ is the unbound method
+        kwargs.setdefault('filename', tmpfn)
+        kwargs.setdefault('key', key)
+        obj = loader(self, infile, **kwargs)
         return obj
 
     def _remove_path(self, path):
@@ -144,7 +163,7 @@ class BaseModelBackend(BackendBaseCommon):
         else:
             Path(path).unlink(missing_ok=True)
 
-    def get_model(self, name, version=-1, **kwargs):
+    def get_model(self, name, version=-1, loader=None, **kwargs):
         """
         Retrieves a pre-stored model
         """
