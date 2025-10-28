@@ -180,6 +180,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.tracking.UntrackableMetadataMixin',
     'omegaml.mixins.store.objinfo.ObjectInformationMixin',
     'omegaml.notebook.jobs.NotebookMixin',
+    'omegaml.mixins.store.objhelper.ObjectHelperMixin',
 ]
 #: set hashed or clear names
 OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', True))

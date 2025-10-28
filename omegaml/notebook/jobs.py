@@ -184,7 +184,7 @@ class NotebookMixin:
         """
         return len(super().list(name)) + len(super().list(name + '.ipynb')) > 0
 
-    def create(self, code, name):
+    def create(self, code, name, **kwargs):
         """
         create a notebook from code
 
@@ -196,7 +196,7 @@ class NotebookMixin:
         cells.append(nbv4.new_code_cell(source=code))
         notebook = nbv4.new_notebook(cells=cells)
         # put the notebook
-        meta = self.put(notebook, name)
+        meta = self.put(notebook, name, **kwargs)
         return meta
 
     def get_fs(self, collection=None):
