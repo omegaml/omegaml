@@ -83,6 +83,12 @@ OMEGA_CELERY_CONFIG = {
     # TODO replace result backend with redis or mongodb
     'CELERY_RESULT_BACKEND': OMEGA_RESULT_BACKEND,
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
+    #: required for task execution visibility
+    'CELERY_TRACK_STARTED': True,
+    """
+    .. versionchanged:: NEXT
+        The default value is now True to enable task status visibility for STARTED vs PENDING
+    """
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',

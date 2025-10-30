@@ -1,10 +1,10 @@
+import os
 import string
+import sys
 from collections import defaultdict
 
 import numpy as np
-import os
 import pandas as pd
-import sys
 from nbformat import v4
 from sklearn.linear_model import LinearRegression
 
@@ -17,6 +17,7 @@ class CliTestScenarios:
     def setUp(self):
         super().setUp()
         self.pretend_logger = None
+        self.cli_logger = self.get_test_logger()
 
     def get_test_logger(self):
         """
@@ -77,7 +78,7 @@ class CliTestScenarios:
         return logger.data[level]
 
     def get_log(self, level, as_text=False):
-        entries =  self.cli_logger.data[level.lower()]
+        entries = self.cli_logger.data[level.lower()]
         return list(' '.join(args) for args in entries) if as_text else entries
 
     def assertLogSize(self, level, size):
@@ -122,14 +123,14 @@ class CliTestScenarios:
         if not match:
             raise AssertionError(f'{expected} is not in {data} compared as {compare_as}')
 
-    def cli(self, argv, new_start=False, **kwargs):
+    def cli(self, argv, new_start=False, debug=True, **kwargs):
         self.cli_logger = self.get_test_logger()
         if new_start:
             self.cli_logger.clear()
             self.pretend_logger.clear() if self.pretend_logger else None
         if isinstance(argv, str):
             argv = argv.split(' ')
-        self.cli_parser = cli.main(argv=argv, logger=self.cli_logger, **kwargs)
+        self.cli_parser = cli.main(argv=argv, logger=self.cli_logger, debug=debug, **kwargs)
         return self.cli_parser
 
     def make_model(self, name):
@@ -201,4 +202,3 @@ class CliTestScenarios:
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         return pkgpath
-

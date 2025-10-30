@@ -1,8 +1,8 @@
 import getpass
-
 import sys
-from celery import Task
 from contextlib import contextmanager
+
+from celery import Task
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -108,7 +108,8 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         exp = self.tracking.experiment
         meta = delegate_provider.metadata(name)
         exp.log_artifact(meta, 'related')
-        meta = delegate_provider.link_experiment(name, exp._experiment)
+        if delegate_provider.is_trackable(name):
+            meta = delegate_provider.link_experiment(name, exp._experiment)
         return meta
 
     @property

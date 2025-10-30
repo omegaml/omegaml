@@ -227,7 +227,9 @@ class OmegaRuntime(object):
         Returns:
             self
         """
-        if label is not None:
+        if label:
+            # avoid overriding a previous local() call by an erronous label
+            assert isinstance(label, str), "label must be valid, run om.runtime.labels() to list of active workers"
             if label == 'local':
                 self.mode(local=True)
             elif override:

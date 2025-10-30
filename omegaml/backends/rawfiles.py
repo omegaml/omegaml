@@ -1,3 +1,4 @@
+import io
 import os
 from os.path import dirname, basename
 
@@ -22,12 +23,15 @@ class PythonRawFileBackend(BaseDataBackend):
         is_filelike = hasattr(obj, 'read')
         open_kwargs = dict(open_kwargs or {})
         if kwargs.get('kind') == self.KIND:
-            is_filelike = self._is_openable(self, obj, **open_kwargs)
+            is_filelike |= self._is_openable(self, obj, **open_kwargs)
         return is_filelike or self._is_path(self, obj)
 
     def _is_openable(self, obj, **kwargs):
         if 'mode' not in 'kwargs':
             kwargs['mode'] = 'rb'
+        # already opened file
+        if isinstance(obj, io.IOBase):
+            return not obj.closed
         try:
             with open(obj, **kwargs) as fin:
                 fin.read(1)

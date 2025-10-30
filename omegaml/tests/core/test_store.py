@@ -971,8 +971,16 @@ class StoreTests(unittest.TestCase):
         store = self._make_store()
         # test we can write from a file-like object
         data = "some data"
+        # saving an open file implicitely
         file_like = BytesIO(data.encode('utf-8'))
         meta = store.put(file_like, 'myfile')
+        self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
+        self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
+        # saving an open file explicitely
+        with warnings.catch_warnings(record=True) as w:
+            file_like = BytesIO(data.encode('utf-8'))
+            meta = store.put(file_like, 'myfile', kind=PythonRawFileBackend.KIND)
+        self.assertEqual(len(w), 0)
         self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
         self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
         # test we can write from an actual file

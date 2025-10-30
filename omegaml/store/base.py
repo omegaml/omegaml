@@ -769,7 +769,11 @@ class OmegaStore(object):
         # cleanup any temporary files on exit
         # -- this is called as a finalizer (weakref.finalize)
         try:
-            logger.debug(f'finalizing {objrepr}: cleaning up temporary files in {tmppath}')
             shutil.rmtree(tmppath, ignore_errors=True)
         except Exception as e:
             logger.error(f'finalizing {objrepr}: error occured as {e}')
+            return
+        try:
+            logger.debug(f'finalizing {objrepr}: cleaning up temporary files in {tmppath}')
+        except Exception:
+            pass
