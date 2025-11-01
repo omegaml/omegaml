@@ -220,4 +220,6 @@ class StreamsProxy(OmegaStore):
         return self.get(name)
 
     def put(self, data, name, append=True, **kwargs):
-        (self._cached_get(name) if append else self._recreate(name)).append(data)
+        stream = self._cached_get(name) if append else self._recreate(name)
+        stream.append(data)
+        return self.metadata(name)  # store.put() always returns Metadata
