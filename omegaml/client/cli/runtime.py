@@ -22,7 +22,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime job <name> [<job-action>] [<args...>] [--async] [options]
       om runtime result <taskid> [options]
       om runtime ping [options]
-      om runtime env <action> [<package>] [--file <requirements.txt>] [--every] [options]
+      om runtime env <action> [<package>...] [--file <requirements.txt>] [--every] [options]
       om runtime log [-f] [options]
       om runtime status [workers|labels|stats] [options]
       om runtime restart app <name> [--insecure] [--apphub-url=<url>] [options]
@@ -353,37 +353,47 @@ class RuntimeCommandBase(CommandBase):
         package = self.args.get('<package>')
         reqfile = self.args.get('--file')
         every = self.args.get('--every')
-        require = self.args.get('--require') or ''
+        require = self.args.get('--require')
+        # upload requirements file, if specified
         if reqfile:
             with open(reqfile, 'rb') as fin:
                 om.scripts.put(fin, '.system/requirements.txt')
+                reqfile = '.system/requirements.txt'
         if not om.scripts.exists('.system/envinstall', hidden=True):
             import omegaml as om_module
             envinstall_path = os.path.join(os.path.dirname(om_module.__file__), 'runtimes', 'envinstall')
             om.scripts.put(f'pkg://{envinstall_path}', '.system/envinstall')
+        # determine runtime workers to execute envinstall
         if every:
             labels = om.runtime.enable_hostqueues()
-        else:
+        elif require:
             labels = require.split(',')
+        elif om.runtime.is_local:
+            labels = ['local']
+        else:
+            labels = [om.defaults.OMEGA_WORKER_LABEL]
+        if not labels:
+            self.print('no active workers found, specify --local to install locally')
+            return
+        # run installation
         results = []
         for label in labels:
             result = (om.runtime.require(label)
                       .script('.system/envinstall')
-                      .run(action=action, package=package, file=reqfile,
+                      .run(action=action, package=package, requirements=reqfile,
                            __format='python'))
             results.append((label, result))
-        all_results = om.runtime.celeryapp.ResultSet([r[1] for r in results])
+        # process results
         from tqdm import tqdm
         with tqdm() as progress:
-            while all_results.waiting():
+            while any(not r[1].ready() for r in results):
                 progress.update(1)
                 sleep(1)
-            all_results.get()
         for label, result in results:
             if label:
-                print(f'** result of worker require={label}:')
+                self.print(f'** result of worker require={label}:')
             data = result.get()  # resolve AsyncResult => dict
-            print(str(data.get('result', data)))  # get actual result object, pip stdout
+            self.print(str(data.get('result', data)))  # get actual result object, pip stdout
 
     def status(self):
         om = get_omega(self.args)

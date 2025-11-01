@@ -9,6 +9,9 @@ class TrackableMetadataMixin:
     def supports(cls, store, **kwargs):
         return store.prefix in ('models/')
 
+    def is_trackable(self, name, **kwargs):
+        return TrackableMetadataMixin.supports(self, name=name, **kwargs)
+
     def link_experiment(self, name, experiment, label=None):
         """
         This links a model to an experiment by adding the experiment name to the
@@ -83,14 +86,21 @@ class TrackableMetadataMixin:
         return meta.save()
 
 
-class UntrackableMetadataMixin:
+class UntrackableMetadataMixin(TrackableMetadataMixin):
     """ placeholder for objects other than models (future use)
+
+    Issues a warning on calling .link_experiment(), .link_monitor() for
+    objects outside the models store
     """
 
     # this enables simplified code in OmegaTask.enable_delegate_tracking
     @classmethod
     def supports(cls, store, **kwargs):
-        return not store.prefix in ('models/')
+        return store.prefix not in ('models/',)
+
+    def is_trackable(self, name, **kwargs):
+        # override is_trackable to avoid accidental change of functionality
+        return False
 
     def link_experiment(self, name, experiment, **kwargs):
         warnings.warn(f'link_experiment is not supported for {self.prefix} store')

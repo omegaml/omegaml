@@ -5,6 +5,7 @@ import inspect
 import logging
 import os
 import re
+import shlex
 import sys
 from getpass import getpass
 from pprint import pprint
@@ -298,7 +299,7 @@ class CommandParser:
     """
 
     def __init__(self, docs, commands, argv=None, version=None, logger=None,
-                 command_tag=None, catchall='catchall', askfn=None):
+                 command_tag=None, catchall='catchall', askfn=None, debug=False):
         self.docs = docs
         self.commands = commands  # available command implementations
         self.command = None  # chosen command implementation, see parse_command
@@ -309,6 +310,7 @@ class CommandParser:
         self.catchall = catchall
         self._logger = logger
         self._askfn = askfn
+        self._debug = debug
         self.apply_command_usage()
 
     @property
@@ -328,7 +330,7 @@ class CommandParser:
 
     @property
     def should_debug(self):
-        return os.environ.get('DOCOPT_DEBUG')
+        return self._debug or os.environ.get('DOCOPT_DEBUG')
 
     @property
     def silent(self):
@@ -736,8 +738,9 @@ class CommandBase:
         """
         get the method to call, by default return command itself
 
-        for <action> style arguments will use the value to lookup the method
-        to call. If the method does not exist, it will also try the do_<action>
+        for <action> style arguments will use the value to lookup the method of the same
+        name to call. If the method does not exist, it will also try the do_<action>
+
         The action tag used for the method lookup is self.action_tag.
         Alternatively specify the action_map (dict), mapping the <action> value to
         the method to be called.
@@ -874,6 +877,17 @@ class CommandBase:
     def print(self, *args):
         msg = '\n'.join(str(s) for s in args)
         self.logger.info(msg)
+
+    def unquote(self, v):
+        """ remove quotes from value
+
+        Args:
+            v (str): possibly quoted value, e.g. '"foo"' or "'foo'"
+
+        Returns:
+            str: unquoted value, e.g. '"foo"' => 'foo', "'foo'" => 'foo'
+        """
+        return shlex.split(v)[0]
 
 
 def safe_docopt(doc, argv=None, help=True, version=None, options_first=False):

@@ -1,17 +1,19 @@
+import pickle
+from io import BytesIO
+from pathlib import Path
 from unittest import TestCase
+from unittest.mock import patch, MagicMock
 
 import numpy as np
-import pickle
 from numpy.testing import assert_almost_equal
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+
 from omegaml import Omega
 from omegaml.tests.core.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import PickableCollection
-from pathlib import Path
-from sklearn.datasets import make_classification
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
-from unittest.mock import patch, MagicMock
 
 
 class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
@@ -203,3 +205,50 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
             requests.get.assert_called()
             self.assertEqual(requests.get.call_args_list[0][0], ('http://myapphub.com/apps/api/stop/testuser/test',))
             self.assertEqual(requests.get.call_args_list[1][0], ('http://myapphub.com/apps/api/start/testuser/test',))
+
+    def test_cli_env_install(self):
+        om = self.om
+        # create a requirements file, store in canonical location
+        s = BytesIO("pip".encode('utf8'))
+        om.scripts.put(s, '.system/requirements.txt', replace=True)
+        # test envinstall as a pure in-process function
+        from omegaml.runtimes.envinstall import envinstall
+        for kwargs in (dict(package='pip', requirements=None),
+                       dict(package='pip', requirements='.system/requirements.txt'),
+                       dict(package=None, requirements='.system/requirements.txt'),
+                       dict(package=None, requirements=None),
+                       dict(package=['pip', 'build'], requirements=None),
+                       dict(package=['pip', 'build'], requirements='./system/requirements.txt')):
+            result = envinstall.run(om, **kwargs)
+            expected = 'Requirement already satisfied: pip in'
+            self.assertIn(expected, result + f'(using {kwargs=})')
+        # test cli
+        # -- no arguments, use default .system/requirements.txt
+        self.cli('runtime env install')
+        expected = self.pretend_log('Requirement already satisfied: pip in')
+        self.assertLogContains('info', expected)
+        # -- use a package
+        self.cli('runtime env install pip')
+        expected = self.pretend_log('Requirement already satisfied: pip in')
+        self.assertLogContains('info', expected)
+        # -- use multiple packages
+        self.cli('runtime env install pip build')
+        expected = self.pretend_log('Requirement already satisfied: pip in')
+        self.assertLogContains('info', expected)
+        expected = self.pretend_log('Requirement already satisfied: build in')
+        self.assertLogContains('info', expected)
+        # -- use both a package and a requirements file
+        reqfn = Path(om.datasets.tmppath) / 'requirements.txt'
+        with open(reqfn, 'w') as fout:
+            fout.write('build')
+        self.cli(f'runtime env install pip --file {reqfn}')
+        expected = self.pretend_log('Requirement already satisfied: pip in')
+        self.assertLogContains('info', expected)
+        expected = self.pretend_log('Requirement already satisfied: build in')
+        self.assertLogContains('info', expected)
+        # -- attempt to run without a default .system/requirements.txt
+        om.scripts.drop('.system/requirements.txt', force=True)
+        with self.assertRaises(ValueError):
+            envinstall.run(om)
+        with self.assertRaises(RuntimeError):
+            self.cli(f'runtime env install')
