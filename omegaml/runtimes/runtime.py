@@ -49,8 +49,8 @@ class CeleryTask(object):
 
         Args:
             args (tuple): the task args
-            kwargs (dict): the task kwargs
-            celery_kwargs (dict): apply_async kwargs, e.g. routing
+            kwargs (dict): the task kwargs, passed as task.apply_async(kwargs=kwargs)
+            celery_kwargs (dict): apply_async kwargs, passed as task.apply_async(..., **celery_kwargs)
 
         Returns:
             AsyncResult
@@ -216,13 +216,18 @@ class OmegaRuntime(object):
             always (bool): if True requirements will persist across task calls. defaults to False
             label (str): the label required by the worker to have a runtime task dispatched to it.
                'local' is equivalent to calling self.mode(local=True).
-            task (dict): if specified applied to the task kwargs
+            task (dict): if specified applied to the task's kwargs, passed as task.apply_async(..., kwargs=task)
+            routing (dict): if specified applied to the task's routing, passed as task.apply_async(..., **routing)
             logging (str|tuple): if specified, same as runtime.mode(logging=...)
             override (bool): if True overrides previously set .require(), defaults to True
             kwargs: requirements specification that the runtime understands
 
         Usage:
             om.runtime.require(label='gpu').model('foo').fit(...)
+
+        See Also:
+            - CeleryTask.apply_async
+            - celery.app.task.Task.apply_async, specifically the kwargs= and **options  
 
         Returns:
             self

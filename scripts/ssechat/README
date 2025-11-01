@@ -1,0 +1,54 @@
+SSE /chat/completions server
+----------------------------
+
+This provides an example configuration to provide a horizontally scalable model completion service using
+a SSE chat server in combination with the standard omega-ml API server, a omega-ml runtime celery worker,
+omega-ml minibatch streams. SSE = Server Sent Event, meaning streaming HTTP responses.
+
+Why?
+----
+
+The omega-ml API server is a standard, synchronous Flask API and is thus limited in concurrency by the
+number of worker processes. While the API server could be run as a threaded server, this implies a change
+of the execution model for all of the server, introducing complexity across the code base.
+
+The SSE chat server (ssechat) allows for a more fine-grained approach, keeping the standard server and service APIs in
+their current model. The SSE chat server is a threaded Flask API that is IO-bound (essentially waiting most of the
+time for new streamed events) and is thus well suited for high-concurrency.
+
+Pre-requisites
+------------
+
+Install Caddy https://caddyserver.com/docs/install
+
+Setup
+-----
+
+Start the Procfile
+
+```
+$ honcho start
+```
+
+This will
+
+1. start the Caddy reverse proxy, the omegaml server, a worker runtime and the sse chat server (ssechat).
+2. Requests to /api/chat/completions will start the omega_complete task on the worker, and return HTTP 302 to redirect
+   to the sse chat server.
+3. The omega_complete task will produce messages and send them to a omegaml-minibatch stream for processing by ssechat.
+4. ssechat will serve SSE responses until completion.
+
+
+Architecture
+------------
+
+The architecture of this takes inspiration from GRIP, the Generic Realtime Intermediary Protocol.
+https://pushpin.org/docs/protocols/grip/
+
+While GRIP assumes a transparent reverse proxy that handles the hand-off from a synchronous backend server to
+a streaming service, hiding the redirect from the client, our implementation requires the client to comply
+with the redirect. The rationale for this decision is a simplified set of technologies and thus to lower complexity
+when deploying AI with omega-ml.
+
+References:
+    * https://github.com/omegaml/omegaml/issues/518

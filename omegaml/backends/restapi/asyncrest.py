@@ -9,7 +9,7 @@ from http import HTTPStatus
 import celery
 import flask
 from celery.result import AsyncResult, EagerResult
-from flask import request
+from flask import request, make_response
 from werkzeug.exceptions import NotFound
 
 EAGER_RESULTS = {}
@@ -103,7 +103,7 @@ class AsyncResponseMixin:
     def resource_uri(self):
         return flask.request.path
 
-    def prep_response(self, result, status=None, headers=None, async_body=None, **kwargs):
+    def create_maybe_async_response(self, result, status=None, headers=None, async_body=None, cookies=None, **kwargs):
         if isinstance(result, AsyncResult):
             if isinstance(result, EagerResult):
                 EAGER_RESULTS[result.id] = result
@@ -122,12 +122,19 @@ class AsyncResponseMixin:
             headers = headers or {}
         elif isinstance(result, tuple) and len(result) == 3 and isinstance(result[1], int):
             body, status, headers = result
+        elif isinstance(result, tuple) and len(result) == 4 and isinstance(result[1], int):
+            body, status, headers, cookies = result
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
-        return body, int(status), headers
+        return self.response(body, int(status), headers, cookies)
 
-    maybe_async = prep_response
-    create_maybe_async_response = prep_response
+    def response(self, body, status, headers, cookies):
+        if not cookies:
+            return body, status, headers
+        resp = make_response((body, status, headers))
+        for k, v in (cookies or {}).items():
+            resp.set_cookie(k, str(v))
+        return resp
 
 
 class AsyncResponseMixinTastypie(AsyncResponseMixin):
@@ -166,12 +173,12 @@ class AsyncResponseMixinTastypie(AsyncResponseMixin):
         self._resource_uri = request.path
         return super().dispatch(request_type, request, **kwargs)
 
-    def create_maybe_async_response(self, request, result, status=None, async_body=None):
-        # tastypie.create_response drop-in to match AsyncResponseMixin.maybe_async compatibility
-        body, status, headers = self.maybe_async(result, status=status, async_body=async_body)
+    def response(self, body, status, headers, cookies):
         resp = self.create_response(request, body, status=int(status))
         for k, v in headers.items():
             resp[k] = v
+        for k, v in (cookies or {}).items():
+            resp.set_cookie(k, str(v))
         return resp
 
     @property
