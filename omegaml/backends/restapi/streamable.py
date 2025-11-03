@@ -104,7 +104,7 @@ class StreamableResourceMixin:
                 data.update(data.pop('result', {})) if raw else None
                 yield data
             buffer.clear()
-            sleep(0.01)
+            sleep(interval)
         logger.debug("done:stream_result closing response")
 
     def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):
