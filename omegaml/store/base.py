@@ -234,7 +234,7 @@ class OmegaStore(object):
         bucket = bucket or self.bucket
         # Meta is to silence lint on import error
         Meta = self._Metadata
-        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().first()
+        return Meta.objects(name=str(name), prefix=prefix, bucket=bucket).no_cache().limit(1).first()
 
     def make_metadata(self, name, kind, bucket=None, prefix=None, **kwargs):
         """
