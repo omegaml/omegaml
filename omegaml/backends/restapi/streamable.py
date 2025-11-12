@@ -2,10 +2,11 @@ import json
 import logging
 import os
 from hashlib import pbkdf2_hmac
-from jose import jwe
 from time import sleep
 from typing import Callable, Any, Dict
 from uuid import uuid4
+
+from jose import jwe
 
 from minibatch.tests.util import LocalExecutor
 from omegaml.util import tryOr, utcnow
@@ -90,7 +91,7 @@ class StreamableResourceMixin:
         logger.debug("complete:stream_result waiting for status ")
         interval = 0.01
         timeout = 10 // interval  # timeout in seconds, max
-        while timeout or has_chunks():
+        while timeout > 0 or has_chunks():
             timeout -= 1
             logger.debug("complete:stream_result waiting for chunks")
             emitter.run(blocking=False)
