@@ -157,6 +157,9 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
 }
+OMEGA_STORE_BACKENDS_OPTIONAL = {
+    'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'},
+}
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
@@ -477,6 +480,10 @@ def load_framework_support(vars=globals()):
     #: mlflow backends
     if mlflow_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_MLFLOW'])
+    # other backends
+    for mod, backends in vars['OMEGA_STORE_BACKENDS_OPTIONAL'].items():
+        if module_available(mod):
+            vars['OMEGA_STORE_BACKENDS'].update(backends)
 
 
 @inprogress(text='loading configuration...')

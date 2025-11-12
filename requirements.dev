@@ -1,2 +1,5 @@
+# cpu-only pytorch
+--extra-index-url https://download.pytorch.org/whl/cpu
+-e .[all,dev]
 -e ../minibatch[all]
 

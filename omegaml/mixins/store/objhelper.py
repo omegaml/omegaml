@@ -84,7 +84,7 @@ class ObjectHelperMixin:
         add dynamic backends implemented as virtualobjects
     """
 
-    def put(self, obj, name, supports=None, **kwargs):
+    def put(self, obj, name, supports=None, helper=None, **kwargs):
         """ store a virtualobj as a helper for other objects
 
         Args:
@@ -96,11 +96,26 @@ class ObjectHelperMixin:
         Returns:
             Metadata
         """
+        has_helper = helper is not None
+        has_helper_fn = callable(helper) and hasattr(helper, '_omega_virtual')
+        if has_helper_fn:
+            # save implied helper passed as a callable
+            # -- effectively the same as store.put(fn, 'somehelper'), store.put(obj, helper='myhelper')
+            helper_name = f'.helpers/{name}'
+            self.put(helper, helper_name)
+            kwargs.update(helper=helper_name)
+        elif has_helper:
+            helper_name = helper
+            kwargs.update(helper=helper)
+        else:
+            helper_name = name
+        # save obj as usual
         meta = super().put(obj, name, **kwargs)
+        # add supports to helper only
         if supports:
             meta_helpers = self.put({}, '.helpers')
             all_supports = meta_helpers.attributes.setdefault('supports', {})
-            all_supports[name] = supports
+            all_supports[helper_name] = supports
             meta_helpers.save()
         return meta
 

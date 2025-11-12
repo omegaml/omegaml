@@ -55,6 +55,9 @@ class BaseModelBackend(BackendBaseCommon):
 
     serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
     loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile)
+    infer = lambda obj, **kwargs: getattr(obj, 'predict')
+    reshape = lambda data, **kwargs: reshaped(data)
+    types = None
 
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
@@ -68,7 +71,7 @@ class BaseModelBackend(BackendBaseCommon):
         """
         test if this backend supports this obj
         """
-        return False
+        return isinstance(obj, self.types) if self.types else False
 
     @property
     def _call_handler(self):
@@ -229,9 +232,9 @@ class BaseModelBackend(BackendBaseCommon):
         """
         model = self.model_store.get(modelname)
         data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
-        if not hasattr(model, 'predict'):
-            raise NotImplementedError
-        result = model.predict(reshaped(data))
+        infer = getattr(self.infer, '__func__')  # __func__ is the unbound method
+        reshape = getattr(self.reshape, '__func__')
+        result = infer(model)(reshape(data))
         return self._prepare_result('predict', result, rName=rName,
                                     pure_python=pure_python, **kwargs)
 
