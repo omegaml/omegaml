@@ -920,9 +920,10 @@ def setup_console_logger():
     Returns:
         the logger instance
     """
-    logger = logging.getLogger()
+    logger = logging.getLogger('omegaml.client')
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(levelname)s %(name)s %(message)s')
+    formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    logger.propagate = False
     return logger
