@@ -1,14 +1,16 @@
-from contextlib import contextmanager
 from unittest import TestCase, mock
-from unittest.mock import MagicMock
 
+from contextlib import contextmanager
+from io import BytesIO
 from sklearn.exceptions import NotFittedError
+from unittest.mock import MagicMock
 
 from omegaml.backends.genai.dbmigrate import DatabaseMigrator
 from omegaml.backends.genai.embedding import SimpleEmbeddingModel
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.pgvector import PGVectorBackend
 from omegaml.client.util import subdict
+from omegaml.tasks import omega_indexdocuments
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -205,8 +207,71 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         labels = index.attributes(key='labels')
         self.assertEqual(labels, {'labels': {'lazy': 1}})
 
-    def test_index(self):
+    def test_background_indexing(self):
         om = self.om
+        # create a document index
+        embedding_model = SimpleEmbeddingModel()
+        documents = [
+            'The quick brown fox jumps over the lazy dog',
+        ]
+        embedding_model.fit(documents)
+        om.models.put(embedding_model, 'embedding')
+        om.datasets.put(self._cnx_str, 'myindex',
+                        embedding_model='embedding',
+                        replace=True,
+                        collection='test',
+                        vector_size=embedding_model.dimensions)
+
+        # simulate upload and background indexing
+        def simulate_upload_file(fn, index):
+            with BytesIO() as fout:
+                text = """
+                Hello world
+                """
+                fout.write(text.encode('utf-8'))
+                fout.seek(0)
+                meta = om.datasets.put(fout, fn, attributes={
+                    'index': index
+                })
+            return meta
+
+        # -- upload
+        meta = simulate_upload_file('documents/mydocument', 'myindex')
+        # -- run housekeeping, expect pending files to be indexed
+        indexed = omega_indexdocuments()
+        self.assertEqual(len(indexed), 1)
+        # -- run housekeeping again, expect no file to be indexed
+        indexed = omega_indexdocuments()
+        self.assertEqual(len(indexed), 0)
+        # -- check file has been marked indexed
+        meta = om.datasets.metadata(meta.name)
+        self.assertEqual(meta.attributes.get('indexed'), True)
+        # try with multiple files to be indexed
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments()
+        self.assertEqual(len(indexed), 2)
+        # try with specific files to be indexed
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments(documents=['documents/mydocument'])
+        self.assertEqual(len(indexed), 1)
+        # try without specific index on document meta data
+        simulate_upload_file('documents/mydocument', '')
+        with self.assertRaises(AssertionError):
+            omega_indexdocuments(documents=['documents/mydocument'])
+        indexed = omega_indexdocuments(documents=['documents/mydocument'], index='myindex')
+        self.assertEqual(len(indexed), 1)
+        meta = om.datasets.metadata('documents/mydocument')
+        self.assertTrue(meta.attributes.get('indexed'))
+        # check otherdocument has not been indexed
+        meta = om.datasets.metadata('documents/otherdocument')
+        self.assertFalse(meta.attributes.get('indexed'))
+        # check we can use a pattern to index multiple documents at once
+        simulate_upload_file('documents/mydocument', 'myindex')
+        simulate_upload_file('documents/otherdocument', 'myindex')
+        indexed = omega_indexdocuments(documents='documents/*', index='myindex')
+        self.assertEqual(len(indexed), 2)
 
     def _mocked_get_connection(self, name, session=False):
         store = self._mocked_store
