@@ -51,6 +51,10 @@ def create_testdata(om):
         [omx.logger.info(f'{prefix}{bx}-test {i}') for i in range(100)]
 
 
+def create_ai_testdata(om):
+    om.models.put('openai+http://localhost:11434/v1;model=tinyllama:latest', 'llms/mymodel')
+
+
 if __name__ == '__main__':
     import omegaml as om
 
@@ -58,4 +62,5 @@ if __name__ == '__main__':
     settings(reload=True)
     om = om.setup()
     clear_om(om)
-    create_testdata(om)
+    # create_testdata(om)
+    create_ai_testdata(om)

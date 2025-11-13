@@ -101,8 +101,8 @@
   </div>
 </div>
 {% endblock tabcontents %}
-{% block javascripts %} {{
-super() }}
+{% block javascripts %}
+{{ super() }}
 <script type="text/javascript" src="{{ config.ASSETS_ROOT }}/plugins/datatables/datatables.min.js"></script>
 <script src="{{ url_for('static', filename='assets/plugins/plotly/plotly.min.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='assets/views/repository/models_detail.js') }}"></script>

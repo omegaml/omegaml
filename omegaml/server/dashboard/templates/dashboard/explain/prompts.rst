@@ -19,6 +19,9 @@ Store and access models
 
 .. code-block:: curl
 
-    $ curl -X POST $OMEGA_RESTAPI_URL/api/v2/openai/chat/completions/models/{{ metadata.name }} \
-           -H "Content-Type: application/json"
-           -d {{'{{"messages": ... }}'}}
+    $ curl -X POST $OMEGA_RESTAPI_URL/api/openai/v1/chat/completions \
+           -H "Content-Type: application/json" 
+           -d '{
+                 "model": "{{ metadata.name }}",
+                 "messages": [{"role": "user", "content": "Hello!"}]
+               }'
