@@ -184,8 +184,8 @@ jobs:
             # make docs
             cd docs
             pip install -r requirements.txt
-            make multihtml
-            make publish
+            [ "$CIRCLE_BRANCH" = "master" ] && make stable || make latest 
+            make multihtml publish
             git push --force --tags origin gh-pages
 workflows:
   version: 2

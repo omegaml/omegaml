@@ -1,5 +1,5 @@
-worker: celery --app omegaml.celeryapp worker -E --loglevel=INFO --max-tasks-per-child 1
-scheduler:  celery --app omegaml.celeryapp beat --loglevel=debug
+worker: celery --app omegaml.celeryapp worker -E --loglevel=error
+scheduler:  celery --app omegaml.celeryapp beat --loglevel=error
 notebook: om shell jupyter
 jupyterhub: jupyterhub --ip 0.0.0.0 --config /etc/jupyterhub/jupyterhub_config.py
 restapi: python -m omegaml.server.restapi

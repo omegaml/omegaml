@@ -238,10 +238,17 @@ fix:
 	find . -name "*rst" | xargs sed -i 's/import omega.ml as om/import omegaml as om/'
 	find . -name "*rst" | xargs sed -i "s/from omega.ml import /from omegaml import /"
 
-multihtml:
+marknext:
+	./scripts/marknext.sh; git add .; git commit -m "update multiversion"
+
+latest:
 	git tag -d latest; git tag latest
+
+stable:
 	cat ../omegaml/VERSION | xargs | xargs -I {} bash -c 'git tag release/{} || echo "tag release/{} already exists"'
 	git tag -d stable; cat ../omegaml/VERSION | xargs | xargs -I {} git tag stable release/{}
+
+multihtml:
 	sphinx-multiversion source build/html
 	cp -r source/_templates/fixed/. build/html
 

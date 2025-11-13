@@ -123,7 +123,7 @@ def authorized(fn):
             abort(401, description=message)
         context.session_id = session_id
         context.payload = payload
-        current_app.logger.info('session: %s is verified %s', session_id, verified)
+        current_app.logger.info('session: %s is verified %s for user %s', session_id, verified, context.userid)
         # -- process view
         return fn(*args, **kwargs)
 
@@ -170,7 +170,7 @@ def stream_result(key):
         yield chunk
 
 
-@bp.route('/events/chat/completions')
+@bp.route('/events/chat/completions', methods=['GET', 'POST'])
 @authorized
 def events_chat_completions():
     payload = context.payload
