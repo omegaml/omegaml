@@ -507,7 +507,7 @@ class DatasetIndexesMixin:
     and consistent recreation.
 
     Metadata:
-        * ``.attributes['indexes']`` → ``{'<key>': <sort order>}``
+        * ``.attributes['indexes']`` => ``{'<key>': <sort order>}``
 
     .. versionadded:: NEXT
         Enable consistent indexes specification in metadata.

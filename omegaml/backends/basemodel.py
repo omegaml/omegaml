@@ -188,8 +188,8 @@ class BaseModelBackend(BackendBaseCommon):
                         raise ValueError(f'no {self._magictgz} file found')
             except (tarfile.TarError, ValueError):
                 return False
-            infile.open()
-            infile.seek(0)
+            infile.open() if hasattr(infile, 'open') else None
+            infile.seek(0) if hasattr(infile, 'seek') else None
             return True
 
         if is_omegaml_tgz(infile):

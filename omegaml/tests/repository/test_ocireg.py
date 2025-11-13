@@ -237,6 +237,79 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         self.assertEqual(reg.url, 'oci://ghcr.io')
         self.assertEqual(reg.auth, ('myuser', 'myapikey'))
 
+    def test_putget_model_versions(self):
+        om = self.om
+        # create an empty oci registry
+        rmtree('/tmp/registry', ignore_errors=True)
+        om.models.put('ocidir:///tmp/registry', 'ocireg')
+        model = LinearRegression()
+        meta1 = om.models.put(model, 'regmodel', repo='ocireg')
+        meta2 = om.models.put(model, 'regmodel', repo='ocireg')
+        # check gridfile is empty, model is stored in registry
+        reg = om.models.get('ocireg')
+        self.assertEqual(meta1.gridfile.read(), None)
+        self.assertEqual(len(reg.artifacts(repo='regmodel:latest')), 1)
+        # check metadata
+        self.assertIn('sync', meta1.attributes)
+        self.assertEqual(meta2.attributes['sync']['repo'], 'ocireg/regmodel:latest')
+        # get model back from oci registry
+        model = om.models.get('regmodel')
+        self.assertIsInstance(model, LinearRegression)
+
+    def test_transformer_repo(self):
+        import torch
+        from sentence_transformers import CrossEncoder
+        model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2", activation_fn=torch.nn.Sigmoid())
+
+        from omegaml.backends.virtualobj import virtualobj
+
+        @virtualobj
+        def transformers(obj=None, name=None, meta=None, method=None, store=None, uri=None, **kwargs):
+            print("transformers helper", method, store, kwargs)
+
+            if method == 'put':
+                def serializer(store, model, filename, **kwargs):
+                    print('serializer', kwargs)
+                    model.save_pretrained(str(filename))
+
+                # -- uri is for repo support
+                # -- helper=False avoids recursion
+                return store.put(obj, name, kind='python.model', serializer=serializer, uri=uri, helper=False)
+
+            if method == 'get':
+                def loader(store, infile, filename=None, **kwargs):
+                    print('loader', infile, filename, kwargs)
+                    from sentence_transformers import CrossEncoder
+                    model = CrossEncoder(str(filename))
+                    return model
+
+                # -- helper=False avoids recursion
+                return store.get(name, kind='python.model', loader=loader, helper=False)
+
+        om = self.om
+        om.models.put(transformers, 'helpers/transformers', replace=True)
+        om.models.put('ocidir:///tmp/myrepo', 'myrepo', replace=True)
+        # first time there is no meta for mymodel
+        # 1. helper virtualobj gets called
+        # 2. calls VirtualObjHelper.put()
+        # 3. from within virtualobj calls RepositoryMixin.put() again
+        # 4. there is no meta, and hence no repo => calls GenericModelBackend (due to model=python.model)
+        meta = om.models.put(model, 'mymodel', helper='helpers/transformers', replace=True, repo='myrepo')
+        self.assertEqual(meta.kind, 'python.model')
+        model_ = om.models.get('mymodel')
+        self.assertIsInstance(model_, CrossEncoder)
+        # second time, there *is* a meta for mymodel
+        # -- (replace does not get handled)
+        # -- steps 1 to 3 are the same (correct)
+        # -- step 4 since there is a meta, it will use the explicit backend of the object, not the mixin hierarchy
+        #    => thus we have to drop the model first (FIXME replace=True should do the trick, but is not processed)
+        #    => if we don't drop first, we'll end up with an endless recursion due to super().put() keeps ending up in helper
+        om.models.drop('mymodel', force=True)
+        meta = om.models.put(model, 'mymodel', helper='helpers/transformers', repo='myrepo')
+        self.assertEqual(meta.kind, 'python.model')
+        model_ = om.models.get('mymodel')
+        self.assertIsInstance(model_, CrossEncoder)
+
 
 if __name__ == '__main__':
     unittest.main()

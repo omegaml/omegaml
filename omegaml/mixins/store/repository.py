@@ -43,16 +43,21 @@ class RepositoryStorageMixin:
             reg: ArtifactRepository = self.get(repo, image=image)
             assert reg is not None, f"repository {repo} not found in {self.prefix}"
             # create directory to export to
-            repo_uri = Path(f'{self.tmppath}/{self.prefix}')  # repo files
-            obj_uri = Path(f'{self.tmppath}/{self.prefix}') / 'modelfile.rps'  # serialized model
+            key = self.object_store_key(name, 'serialized')
+            repo_uri = Path(f'{self.tmppath}/{key}')  # repo files
+            obj_uri = repo_uri / 'modelfile.rps'  # serialized model
             rmtree(repo_uri, ignore_errors=True)
-            obj_uri.parent.mkdir(parents=True, exist_ok=True)
+            repo_uri.mkdir(parents=True, exist_ok=True)
             # serialize obj to a local file, using original backend
             # -- uri= stores file to path obj_uri, instead of gridfile
             # -- repo=False ensures we're not getting called twice accidentally
             kwargs.update(uri=obj_uri, repo=False)
-            backend = self.get_backend_byobj(obj, **kwargs)  # type: BaseModelBackend
-            # target_repo = reg.tag(repo, next=True)  # get next tag (v1, v2, ...)
+            if not meta:
+                backend = self.get_backend_byobj(obj, **kwargs)  # type: BaseModelBackend
+            else:
+                backend = self.get_backend(name, **kwargs)  # type: BaseModelBackend
+            # TODO get next tag (v1, v2, ...)
+            # target_repo = reg.tag(repo, next=True)
             meta = backend.put(obj, name, **kwargs)
             meta.uri = ''  # uri is only for temporary storage
             sync = meta.attributes.setdefault('sync', sync)
@@ -61,9 +66,9 @@ class RepositoryStorageMixin:
             image, tag = image.split(':') if ':' in image else (image, 'latest')
             target_repo = f'{image}:{tag}'
             sync['repo'] = f'{repo}/{target_repo}'
-            with chdir(obj_uri.parent):
+            with chdir(repo_uri):
                 reg.add(obj_repo_uri, repo=target_repo)  # add to repo
-            rmtree(obj_uri.parent, ignore_errors=True)
+            rmtree(repo_uri, ignore_errors=True)
         else:
             meta = super().put(obj, name, *args, **kwargs)
         return meta.save()
@@ -79,9 +84,10 @@ class RepositoryStorageMixin:
             repo, image = repo.rsplit('/', 1) if '/' in repo else (repo, name)
             reg: ArtifactRepository = self.get(repo)
             # TODO repo_uri / obj_uri come from ArtifactRepository to use its cache
-            repo_uri = Path(f'{self.tmppath}/{self.prefix}')  # repo files
-            obj_uri = Path(f'{self.tmppath}/{self.prefix}') / 'modelfile.rps'  # serialized model
-            rmtree(obj_uri.parent, ignore_errors=True)
+            key = self.object_store_key(name, 'serialized')
+            repo_uri = Path(f'{self.tmppath}/{key}')  # repo files
+            obj_uri = repo_uri / 'modelfile.rps'  # serialized model
+            rmtree(repo_uri, ignore_errors=True)
             # source_repo = reg.tag(repo)  # get latest tag, if not specified
             reg.extract(repo_uri, repo=image)  # pull repo and extract to it
             backend = self.get_backend(name, **kwargs)  # type: BaseModelBackend
