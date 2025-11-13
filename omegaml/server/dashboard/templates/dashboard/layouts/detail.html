@@ -112,9 +112,9 @@
     </div>
   </div>
 </div>
-{% endblock content %}
 {% block extension %}
 {% endblock extension %}
+{% endblock content %}
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <script src="{{ config.ASSETS_ROOT }}/plugins/jsoneditor/jsoneditor.min.js"></script>
@@ -140,7 +140,7 @@
       attributes: json,
     };
     $.ajax({
-      url: url_for('.prompts_api_handle_update', { 'name': '{{ meta.name}}' }),
+      url: url_for(".{{ segment }}_api_handle_update", { 'name': '{{ meta.name}}' }),
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',
@@ -223,7 +223,7 @@
       }
     };
     $.ajax({
-      url: url_for('.index').joinUri('/{{segment}}/{{meta.name}}/update'),
+      url: url_for(".{{ segment }}_api_handle_update", { 'name': '{{ meta.name}}' }),
       type: 'POST',
       contentType: 'application/json',
       dataType: 'json',
