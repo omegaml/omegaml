@@ -4,6 +4,7 @@ recursive-include omegaml/notebook/jupyterhub *.jpg
 recursive-include omegaml/runtimes/rsystem *.R
 recursive-include omegaml/server/dashboard/static *
 recursive-include omegaml/server/dashboard/templates *
+recursive-include omegaml/server logging.yaml
 include scripts
 include LICENSE
 include NOTICE

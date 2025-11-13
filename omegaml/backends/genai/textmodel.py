@@ -22,8 +22,6 @@ from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow, r
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 
 class TextModelBackend(GenAIBaseBackend):
     """ Backend for OpenAI models
@@ -78,6 +76,29 @@ class TextModelBackend(GenAIBaseBackend):
 
     def put(self, obj, name, template=None, prompt=None, pipeline=None, provider=None, tools=None, documents=None,
             strategy=None, apikey=None, **kwargs):
+        """ save a conversational LLM model served by an OpenAI-compatible /chat/completions or /embeddings endpoints
+
+        Args:
+            obj (str): the URL in the form 'openai+http(s)://<credentials>@<server:port>/api/v1;model=<modelname>'.
+               The URL may use {PLACHOLDER} referencing om.defaults or env variables to resolve at runtime. The
+               URL may also refer to another model previously stored by using the 'omegaml://models?model=<modelname>'
+               format, overriding all of its specified parameters. Use this to store custom model configurations for the
+               same base model.
+            name (str): the name of the object in om.models
+            template (str): optional, the Jinja template string to be applied to prompts
+            prompt (str): optional, the system prompt, defaults to 'You are a helpful assisstant'
+            pipeline (str): optional, the name of a @virtualobj function stored in om.models
+            provider (str): optional, the client to access the <server:port> provider API, defaults to 'openai' (see
+               omegaml.genai.textmodel.PROVIDERS)
+            tools (list): optional, the list of tool names stored in om.models
+            documents (str): optional, the name of a document store stored in om.datasets
+            strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete')
+            apikey (str): optional, the api key to use, if <credentials> is not part of the URL
+            **kwargs:
+
+        Returns:
+            metadata (Metadata): the TextModel's metadata object
+        """
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
         params = parse_qs(parsed.params)
@@ -119,8 +140,27 @@ class TextModelBackend(GenAIBaseBackend):
         return meta.save()
 
     def get(self, name, prompt=None, template=None, data_store=None, pipeline=None, tools=None, documents=None,
-            strategy=None,
-            tracking=None, secrets=None, **kwargs):
+            strategy=None, tracking=None, secrets=None, **kwargs):
+        """ get a TextModel
+
+        Args:
+            name (str): the name of the model, as stored using om.models.put()
+            prompt (str): optional, the system prompt to use, defaults to metadata.attributes.prompt
+            template (str): optional, the template to use for input prompts, defaults ot metadata.attributes.template
+            data_store (OmegaStore): optional, the datastore to use for tracking and document stores
+            pipeline (str): optional, the name of the @virtualobj pipeline stored in om.models, defaults to
+               metadata.attributes.pipeline
+            tools (list): optional, the list of tool names stored in om.models
+            documents (str): optional, the list of document stores in om.datasets, if specified requires passing
+               of data_store=, defaults to metadata.attributes.tools
+            strategy (dict): optional, see .put()
+            tracking (TrackingProvider): optional, a tracking provider
+            secrets (dict): optional, used to resolve {PLACEHOLDERS} in the model's url
+            **kwargs:
+
+        Returns:
+            model (TextModel): the instance of TextModel
+        """
         meta = self.model_store.metadata(name)
         secrets = secrets or {}
         # setup from connection string
@@ -364,18 +404,28 @@ class TextModel(GenAIModel):
         2) chat completion with conversation tracking (chat=True, or conversation id).
 
         Args:
-            prompt (str):
-            messages (list[dict]):
-            conversation_id (str):
-            raw (bool):
-            data:
-            chat:
-            stream:
-            use_tools:
+            prompt (str|dict|list): the input prompt to pass to the model. A string will
+               be converted to an input message; a dict as appended as the last message to all
+               messages, a list is assumed to be a list of fully formed messages as required by the
+               openai /chat/completions endpoint
+            messages (list[dict]): optional, a list of previous messages. If a conversation_id is
+               specified and if tracking is enabled, the messages are retrieved from the tracking provider
+            conversation_id (str): optional, a unique id for the conversation, defaults to uuid4().hex
+            raw (bool): optional, defaults to False. If True returns messages in the original format of the
+               provider API. If False returns just the latest response in a simplified format.
+            data (dict): optional, if specified will be used to replace {placeholders} in the model's template,
+               using template.format_map(data)
+            chat (bool): optional, defaults to False. If True will use TextModel.chat() to complete the call. requires a tracking
+               provider and a data_store to track all 'conversation' events (input + output messages)
+            stream (bool): optional, defaults to False. If True a generator is returned to consume response messages
+            use_tools (bool): optional, defaults to True. If True, and tools have been specified for the model, the
+               model is asked to choose a tool for execution, and any chosen tool will be executed by TextModel as
+               part of the completion. If False, no tools will be provided to the model.
             **kwargs:
 
         Returns:
-
+            response (dict|iterator): if stream==False, returns a dict of all model responses, if stream==True
+              returns an iterator of streamed responses.
         """
         self.trace(trace) if locals().get('trace') else None
 
@@ -407,6 +457,27 @@ class TextModel(GenAIModel):
         return response_gen if stream else [response for response in response_gen][-1]
 
     def chat(self, prompt, conversation_id=None, raw=False, stream=False, use_tools=True, **kwargs):
+        """ chat completions
+
+        This is the same as TextModel.complete() however ensures a tracking provider and a data_store
+        have been made active in order to store and retrieve previous messages.
+
+        Args:
+            prompt (str|list|dict): the prompt to use, see Text.complete() for details
+            conversation_id (str): the conversation id, used to retrieve previous messages from the
+              tracking provider, defaults to uuid4().hex for new conversations
+            raw (bool): optional, defaults to False. If True returns messages in the original format of the
+               provider API. If False returns just the latest response in a simplified format.
+            stream (bool): optional, defaults to False. If True a generator is returned to consume response messages
+            use_tools (bool): optional, defaults to True. If True, and tools have been specified for the model, the
+               model is asked to choose a tool for execution, and any chosen tool will be executed by TextModel as
+               part of the completion. If False, no tools will be provided to the model.
+            **kwargs: optional, passed to TextModel.complete()
+
+        Returns:
+           response (dict|iterator): if stream==False, returns a dict of all model responses, if stream==True
+              returns an iterator of streamed responses.
+        """
         responses = self._do_chat(prompt,
                                   conversation_id=conversation_id,
                                   stream=stream,
