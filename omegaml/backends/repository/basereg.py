@@ -34,7 +34,7 @@ class ArtifactRepository:
 
 
 class f:
-    """ pipeline to call arbitrary function
+    """pipeline to call arbitrary function
 
     Usage:
 
