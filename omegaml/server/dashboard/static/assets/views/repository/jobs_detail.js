@@ -28,7 +28,7 @@ $(function () {
           data: "results",
           render: function (data, type, row, meta) {
             const result_url = url_for("omega-server.jobs_api_get_results", {
-              name: data ? data.replace("results/", "") : "<no results>",
+              name: (data || "") ? data.replace("results/", "") : "<no results>",
             });
             return `<a class="job-result" result-url="${result_url}" href="${result_url}">${data}</a>`;
           },
@@ -46,6 +46,7 @@ $(function () {
           if (e.shiftKey) {
             window.open(result_url, "_blank");
           } else {
+            console.debug("showing job results modal", result_url);
             $("#jobview-modal").attr("result-url", result_url);
             $("#jobview-modal").modal("show");
           }

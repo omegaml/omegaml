@@ -62,11 +62,11 @@ def explain(segment):
     template_string = ""
     defaults = {}
     segments_to_store = {
-        'models': 'model',
+        'models': 'models',
         'datasets': 'dataset',
-        'jobs': 'job',
-        'scripts': 'script',
-        'streams': 'stream',
+        'jobs': 'jobs',
+        'scripts': 'scripts',
+        'streams': 'streams',
         'tracking': 'models',
         'prompts': 'models',
     }

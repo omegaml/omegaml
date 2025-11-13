@@ -21,6 +21,9 @@ class FlaskView:
             self._add_route(bp, route, view, options)
 
     def _add_route(self, bp, route, view, options):
+        # add a bp.rule for any @fv.route decorated member fn
+        # -- generates the endpoint as "{self.segment}_{fn.__name__}", unless specified as @fv.route(..., endpoint=...)
+        # -- to reference a specific view fn, use url_for('<blueprint>.<endpoint>') as usual
         kwargs = dict(options)
         kwargs.pop('order', None)  # drop order, it's not a valid kwarg to bp.add_url_rule()
         kwargs.update(
