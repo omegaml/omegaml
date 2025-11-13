@@ -1,24 +1,23 @@
+from collections import namedtuple
+
 import json
 import logging
 import os
+import pandas as pd
 import re
-from collections import namedtuple
+import requests
 from copy import deepcopy
 from getpass import getuser
-from pprint import pformat
-from urllib.parse import parse_qs, urljoin, urlsplit
-from uuid import uuid4
-
-import pandas as pd
-import requests
 from jinja2.sandbox import SandboxedEnvironment
-from openai import OpenAI
-
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
 from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow, raise_
+from openai import OpenAI
+from pprint import pformat
+from urllib.parse import parse_qs, urljoin, urlsplit
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +208,7 @@ class TextModelBackend(GenAIBaseBackend):
         return self.model_store._drop(name, force=force, **kwargs)
 
     def _load_tools(self, tools):
+        # TODO load tool docs from metadata docs and add to function __doc__
         barename = lambda v: 'tools/{v}'.format(v=str(v).replace('tools/', ''))  # works with or without tools/ prefix
         verify = lambda t, fn: callable(fn) or raise_(ValueError(f'tool >{t}< is not a callable, got {fn}'))
         tool_fns = [tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools]
@@ -537,6 +537,8 @@ class TextModel(GenAIModel):
                 tool, tool_func = tool[0]
                 tool_kwargs = json.loads(tool_call['function']['arguments'])
                 try:
+                    # TODO provide useful self references
+                    # TODO security/protect
                     tool_result = tool_func(**tool_kwargs)
                 except Exception as e:
                     tool_result = str(e)
