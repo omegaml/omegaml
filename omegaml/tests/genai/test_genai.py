@@ -9,6 +9,8 @@ from unittest.mock import patch
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
+from omegaml.backends.guardrails import GuardrailPolicy
+from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
 
@@ -687,3 +689,145 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                 print('response', content.replace('\n', '; '), flush=True)
 
         print("done")
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_guardrails(self, OpenAIProvider):
+        om = self.om
+
+        @virtualobj
+        class GuardrailPolicy:
+            def __init__(self, model):
+                self.model = model
+                self.validated_steps = []
+
+            def eval(self, messages, step=None, model=None, **kwargs):
+                self.validated_steps.append(step)
+                if messages and 'attack' in str(messages[-1].get('content')):
+                    raise ValueError('not a nice message')
+                return True
+
+        # save a model with guardrails
+        om.models.put(GuardrailPolicy, 'policy/myrails')
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel', guardrails='myrails')
+        # load model, check guardrails have been instantiated
+        model = om.models.get('mymodel')
+        self.assertEqual(model.guardrails[0].__class__.__name__, 'GuardrailPolicy')
+        self.assertEqual(model.guardrails[0].eval([]), True)
+        # test guardrails are called as required
+        # -- no tools
+        # -- reload to model to get a fresh guardrail
+        model = om.models.get('mymodel')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'attack surface'}}]}
+        )
+        resp = model.complete('hello')
+        self.assertIn('error', resp)
+        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'output'])
+
+        # test guardrails are called as required
+        # -- with tools
+        # -- reload to model to get a fresh guardrail
+        def sometool(*args, **kwargs):
+            return
+
+        om.models.put(sometool, 'tools/sometool')
+        model = om.models.get('mymodel', tools='sometool')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "tool_calls",
+                        "message": {"role": "assistant", "content": None, 'tool_calls': [{"name": "sometool"}]},
+                    }
+                ]
+            }
+        )
+        # -- we don't actually call the tools, guardrails still run because model requests running
+        resp = model.complete('hello', use_tools=False)
+        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'action', 'output'])
+
+        # test guardrails are called for documents
+        # -- reload to model to get a fresh guardrail
+        @virtualobj
+        def pipeline(*args, method=None, **kwargs):
+            if method == 'retrieve':
+                return ['the foobar document in foxbax format']
+
+        om.models.put(pipeline, 'pipeline')
+        om.models.put(sometool, 'tools/sometool')
+        model = om.models.get('mymodel', tools='sometool', pipeline='retrieve')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "tool_calls",
+                        "message": {"role": "assistant", "content": None, 'tool_calls': [{"name": "sometool"}]},
+                    }
+                ]
+            }
+        )
+        # -- we don't actually call the tools, guardrails still run because model requests running
+        resp = model.complete('hello', use_tools=False)
+        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'action', 'output'])
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_guardrails_policy(self, OpenAIProvider):
+        om = self.om
+
+        def filter(messages, policy=None, step=None, model=None):
+            for message in messages:
+                message['content'] = message['content'].replace('bad', 'good')
+            return True
+
+        rails = GuardrailPolicy('myrails')
+        rails.add_guardrail('converse', 'all', 'filter')
+
+        # save a model with guardrails
+        om.models.put(rails, 'policy/myrails')
+        om.models.put(filter, 'policy/scanners/filter')
+        del rails
+        del filter
+        self.om.models.put('openai+http://localhost/mymodel', 'mymodel', guardrails='myrails')
+        # load model, check guardrails have been instantiated
+        model = om.models.get('mymodel')
+        rails = model.guardrails[0]
+        self.assertEqual(rails.name, 'myrails')
+        self.assertEqual(len(rails.scanners), 1)
+        # test
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "hello bad world"}}]}
+        )
+        # -- we don't actually call the tools, guardrails still run because model requests running
+        resp = model.complete('hello', use_tools=False)
+        validated_steps = list(v[0] for v in rails.context['intents'])
+        self.assertEqual(validated_steps, ['prompt', 'input', 'response', 'output'])
+        self.assertEqual(resp.get('content'), 'hello good world')
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_guardrails_function(self, OpenAIProvider):
+        om = self.om
+
+        def myfilter(messages, step=None, **kwargs):
+            for message in messages:
+                message['content'] = message['content'].replace('bad', 'good')
+            return True
+
+        # save a model with guardrails
+        om.models.put(myfilter, 'policy/filter')
+        del myfilter
+        self.om.models.put('openai+http://localhost/mymodel', 'mymodel', guardrails='filter')
+        # load model, check guardrails have been instantiated
+        model = om.models.get('mymodel')
+        rails = model.guardrails[0]
+        self.assertEqual(rails.__name__, 'myfilter')
+        # test myfilter is called
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "hello bad world"}}]}
+        )
+        resp = model.complete('hello')
+        self.assertEqual(resp.get('content'), 'hello good world')

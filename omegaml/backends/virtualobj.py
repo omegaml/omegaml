@@ -1,9 +1,8 @@
 import builtins
+import dill
 import sys
 import types
 import warnings
-
-import dill
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import tryOr
@@ -77,16 +76,22 @@ class VirtualObjectBackend(BaseDataBackend):
         context, respectively - virtual objects can be injected by anyone
         who are authorized to write data.
     """
+
     # TODO split VirtualObjectBackend into VirtualModelBackend and VirtualDataBackend
     #      to avoid confusion between the two (currently the same class is used for both)
     KIND = 'virtualobj.dill'
     PROMOTE = 'export'
+    TOOLS_PATHS = 'tools/', 'policy/'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_virtual = callable(obj) and getattr(obj, '_omega_virtual', False)
-        is_tool = isinstance(obj, types.FunctionType) and name.startswith('tools/')
+        is_tool = self._is_tool_virtualobj(obj, name, **kwargs)
         return is_virtual or is_tool
+
+    @classmethod
+    def _is_tool_virtualobj(self, obj, name, **kwargs):
+        return isinstance(obj, types.FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
 
     @property
     def _call_handler(self):
@@ -111,7 +116,8 @@ class VirtualObjectBackend(BaseDataBackend):
             bucket=self.model_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         meta = self.model_store.metadata(name)
@@ -130,8 +136,9 @@ class VirtualObjectBackend(BaseDataBackend):
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
-        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='predict', data=X, meta=meta, store=self.model_store, rName=rName, tracking=self.tracking, **kwargs
+        )
 
     def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -139,8 +146,9 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName, tracking=self.tracking, **kwargs
+        )
 
     def score(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -148,8 +156,15 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='score',
+            data=(X, y),
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def run(self, scriptname, *args, **kwargs):
         # run as a script
@@ -179,8 +194,15 @@ class VirtualObjectBackend(BaseDataBackend):
         """
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
-        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='reduce',
+            data=results,
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
 
 def virtualobj(fn):
@@ -302,7 +324,8 @@ class _DillDip:
         freevars = [n for n in set(freevars) if n not in dir(builtins)]
         if len(freevars):
             warnings.warn(
-                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope')
+                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope'
+            )
 
     def _dill_dill(self, obj, **dill_kwargs):
         # fallback to standard dill
@@ -326,10 +349,12 @@ class _DillDip:
         try:
             # FIXME: include python version
             source = dill.source.getsource(obj, lstrip=True)
-            source_obj = {'__dipped__': self.__calories,
-                          'source': ''.join(source),
-                          'name': getattr(obj, '__name__'),
-                          '__dict__': getattr(obj, '__dict__', {})}
+            source_obj = {
+                '__dipped__': self.__calories,
+                'source': ''.join(source),
+                'name': getattr(obj, '__name__'),
+                '__dict__': getattr(obj, '__dict__', {}),
+            }
         except:
             source_obj = {}
         else:
@@ -368,11 +393,15 @@ class _DillDip:
                     return obj
             source, data = obj.get('source'), obj.get('__dict__', {})
             mod = types.ModuleType(module)
-            mod.__dict__.update({'__compiling__': True,
-                                 'virtualobj': virtualobj,
-                                 'virtual_genai': virtual_genai,
-                                 'VirtualObjectHandler': VirtualObjectHandler,
-                                 'GenAIModelHandler': GenAIModelHandler})
+            mod.__dict__.update(
+                {
+                    '__compiling__': True,
+                    'virtualobj': virtualobj,
+                    'virtual_genai': virtual_genai,
+                    'VirtualObjectHandler': VirtualObjectHandler,
+                    'GenAIModelHandler': GenAIModelHandler,
+                }
+            )
             sys.modules[module] = mod
             code = compile(source, '<string>', 'exec')
             exec(code, mod.__dict__)
