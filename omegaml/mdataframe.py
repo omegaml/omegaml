@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
+from uuid import uuid4
+
 import numpy as np
 import pandas as pd
 from bson import Code
 from numpy import isscalar
 from pymongo.collection import Collection
-from uuid import uuid4
 
 from omegaml.store import qops
 from omegaml.store.filtered import FilteredCollection
@@ -663,7 +664,7 @@ class MDataFrame(object):
         if self.force_columns:
             missing = set(self.force_columns) - set(self.columns)
             for col in missing:
-                df[col] = np.NaN
+                df[col] = np.nan
         return df
 
     def _get_cursor(self):

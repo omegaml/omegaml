@@ -80,6 +80,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: foobar
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 64000
 
 volumes:
   pythonlib:

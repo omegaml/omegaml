@@ -1,6 +1,11 @@
 services:
   mongo:
     image: mongo:7.0
+    # https://www.mongodb.com/docs/manual/reference/ulimit/
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 64000
     ports:
       - "27017:27017"
       - "28017:28017"
