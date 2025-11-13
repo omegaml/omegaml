@@ -55,7 +55,8 @@ def make_input_fn():
 
     return input_fn
 
-@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
+
+@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
 class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModelBackend
