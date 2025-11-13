@@ -152,13 +152,15 @@ class AuthenticationEnv(object):
     def secure(cls):
         # load a server-backed authentication env
         from omegaml import _base_config
-        if not hasattr(_base_config, 'OMEGA_AUTH_ENV'):
+        # ensure loading of a secure env by default
+        if not getattr(_base_config, 'OMEGA_AUTH_ENV', None):
             _base_config.OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
-            cls.auth_env = None
-        auth_env = cls.active()
-        if not auth_env.is_secure:
-            raise SystemError(f'A secure authentication environment was requested, however {auth_env} is not secure.')
-        return auth_env
+        # check it's secure
+        cls.active()
+        if not cls.auth_env.is_secure:
+            raise SystemError(
+                f'A secure authentication environment was requested, however {cls.auth_env} is not secure.')
+        return cls.auth_env
 
     @classmethod
     def taskauth(cls, args, kwargs, celery_kwargs):
