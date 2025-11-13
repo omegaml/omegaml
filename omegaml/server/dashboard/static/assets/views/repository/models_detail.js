@@ -1,8 +1,15 @@
 import DateRangeView from "../../widgets/sincepick.js";
-import PaginatedRunGridView from "../../widgets/pagedcards.js";
 import ExperimentView from "../runtime/experimentsview.js";
+import SessionsView from "../runtime/sessionsview.js";
 
 $(function () {
+  $("#sessions-tab").on("shown.bs.tab", function (e) {
+    const sessionsView = new SessionsView({
+      el: "#sessionsView",
+      experiments: context.data.sessions,
+    });
+    sessionsView.render();
+  });
   $("#experiments-tab").on("shown.bs.tab", function (e) {
     const experimentsview = new ExperimentView({
       el: "#experimentsView",

@@ -1,4 +1,4 @@
-""" Native storage for OmegaML using mongodb as the storage layer
+"""Native storage for OmegaML using mongodb as the storage layer
 
 An OmegaStore instance is a MongoDB database. It has at least the
 metadata collection which lists all objects stored in it. A metadata
@@ -70,6 +70,7 @@ as follows:
     object's type and metadata.kind, respectively. In the future
     a plugin system will enable extension to other types.
 """
+
 from __future__ import absolute_import
 
 import bson
@@ -93,7 +94,7 @@ logger = logging.getLogger(__name__)
 
 
 class OmegaStore(object):
-    """ The storage backend for models and data
+    """The storage backend for models and data
 
     .. versionchanged:: 0.18.0
         refactored all methods handling Python and Pandas datatypes to omegaml.backends.coreobjects.CoreObjectsBackend
@@ -181,18 +182,21 @@ class OmegaStore(object):
         self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
         # local import of _connections ensure we get the actual object, not an earlier version
         from mongoengine.connection import _connections
+
         if alias not in _connections:
             # always disconnect before registering a new connection because
             # mongoengine.connect() forgets all connection settings upon disconnect
             disconnect(alias)
-            connection = connect(alias=alias, db=self.database_name,
-                                 host=f'{scheme}://{host}',
-                                 username=username,
-                                 password=password,
-                                 connect=False,
-                                 authentication_source='admin',
-                                 **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
-                                 )
+            connection = connect(
+                alias=alias,
+                db=self.database_name,
+                host=f'{scheme}://{host}',
+                username=username,
+                password=password,
+                connect=False,
+                authentication_source='admin',
+                **sanitize_mongo_kwargs(self.defaults.OMEGA_MONGO_SSL_KWARGS),
+            )
             # since PyMongo 4, connect() no longer waits for connection
             waitForConnection(connection)
         self._db = get_db(alias)
@@ -203,8 +207,7 @@ class OmegaStore(object):
         if self._Metadata_cls is None:
             # hack to localize metadata
             db = self.mongodb
-            self._Metadata_cls = make_Metadata(db_alias=self._dbalias,
-                                               collection=self._fs_collection)
+            self._Metadata_cls = make_Metadata(db_alias=self._dbalias, collection=self._fs_collection)
         return self._Metadata_cls
 
     @property
@@ -260,8 +263,7 @@ class OmegaStore(object):
 
         """
         # TODO kept _make_metadata for backwards compatibility.
-        return self._make_metadata(name, bucket=bucket, prefix=prefix,
-                                   kind=kind, **kwargs)
+        return self._make_metadata(name, bucket=bucket, prefix=prefix, kind=kind, **kwargs)
 
     def _make_metadata(self, name=None, bucket=None, prefix=None, **kwargs):
         """
@@ -286,9 +288,7 @@ class OmegaStore(object):
         """
         bucket = bucket or self.bucket
         prefix = prefix or self.prefix
-        meta = self.metadata(name=name,
-                             prefix=prefix,
-                             bucket=bucket)
+        meta = self.metadata(name=name, prefix=prefix, bucket=bucket)
         if meta:
             dict_fields = 'attributes', 'kind_meta'
             for k, v in kwargs.items():
@@ -305,8 +305,7 @@ class OmegaStore(object):
                     # by default set whatever attribute is provided
                     setattr(meta, k, v)
         else:
-            meta = self._Metadata(name=name, bucket=bucket, prefix=prefix,
-                                  **kwargs)
+            meta = self._Metadata(name=name, bucket=bucket, prefix=prefix, **kwargs)
         return meta
 
     def _drop_metadata(self, name=None, **kwargs):
@@ -346,8 +345,7 @@ class OmegaStore(object):
         """
         for mixin in self.defaults.OMEGA_STORE_MIXINS:
             conditional = self._mixins_conditional
-            extend_instance(self, mixin,
-                            conditional=conditional)
+            extend_instance(self, mixin, conditional=conditional)
 
     def _mixins_conditional(self, cls, obj):
         return cls.supports(obj) if hasattr(cls, 'supports') else True
@@ -395,17 +393,16 @@ class OmegaStore(object):
         extend_instance(self, mixincls)
         return self
 
-    def put(self, obj, name, attributes=None, kind=None, replace=False, model_store=None,
-            data_store=None, **kwargs):
+    def put(self, obj, name, attributes=None, kind=None, replace=False, model_store=None, data_store=None, **kwargs):
         """
         Stores an object, store estimators, pipelines, numpy arrays or
         pandas dataframes
         """
         if replace:
             self.drop(name, force=True)
-        backend = self.get_backend_byobj(obj, name, attributes=attributes, kind=kind,
-                                         model_store=model_store, data_store=data_store,
-                                         **kwargs)
+        backend = self.get_backend_byobj(
+            obj, name, attributes=attributes, kind=kind, model_store=model_store, data_store=data_store, **kwargs
+        )
         if backend:
             return backend.put(obj, name, attributes=attributes, **kwargs)
         raise TypeError('type %s not supported' % type(obj))
@@ -433,7 +430,7 @@ class OmegaStore(object):
                 backend = self.get_backend(name)
                 drop = backend.drop if hasattr(backend, 'drop') else self._drop
                 result = drop(name, force=force, version=version, **kwargs)
-            except Exception as e:
+            except Exception:
                 result = False
                 if not force and not is_pattern:
                     raise
@@ -461,8 +458,7 @@ class OmegaStore(object):
             return True
         return False
 
-    def get_backend_bykind(self, kind, model_store=None, data_store=None,
-                           **kwargs):
+    def get_backend_bykind(self, kind, model_store=None, data_store=None, **kwargs):
         """
         return the backend by a given object kind
 
@@ -474,12 +470,11 @@ class OmegaStore(object):
         """
         try:
             backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
-        except KeyError as e:
+        except KeyError:
             raise ValueError('backend {kind} does not exist'.format(**locals()))
         model_store = model_store or self
         data_store = data_store or self
-        backend = backend_cls(model_store=model_store,
-                              data_store=data_store, **kwargs)
+        backend = backend_cls(model_store=model_store, data_store=data_store, **kwargs)
         return backend
 
     def get_backend(self, name, model_store=None, data_store=None, kind=None, **kwargs):
@@ -495,14 +490,11 @@ class OmegaStore(object):
         meta = self.metadata(name)
         kind = kind or meta.kind if meta is not None else None
         if kind in self.defaults.OMEGA_STORE_BACKENDS:
-            return self.get_backend_bykind(kind,
-                                           model_store=model_store,
-                                           data_store=data_store,
-                                           **kwargs)
+            return self.get_backend_bykind(kind, model_store=model_store, data_store=data_store, **kwargs)
         return None
 
     def help(self, name_or_obj=None, kind=None, raw=False, display=None, renderer=None):
-        """ get help for an object by looking up its backend and calling help() on it
+        """get help for an object by looking up its backend and calling help() on it
 
         Retrieves the object's metadata and looks up its corresponding backend. If the
         metadata.attributes['docs'] is a string it will display this as the help() contents.
@@ -525,6 +517,7 @@ class OmegaStore(object):
         """
         import sys
         import pydoc
+
         interactive = bool(display) if display is not None else sys.flags.interactive
         display = display or help
         renderer = renderer or pydoc.plaintext
@@ -533,6 +526,7 @@ class OmegaStore(object):
             obj = obj.__doc__
             if interactive and display is help:
                 import webbrowser
+
                 display = webbrowser.open
         return display(obj) if interactive else pydoc.render_doc(obj, renderer=renderer)
 
@@ -546,17 +540,18 @@ class OmegaStore(object):
         if backend is None:
             backend = self.get_backend_bykind('core.object', model_store=self, data_store=self)
         if not raw and meta is not None and 'docs' in meta.attributes:
+
             def UserDocumentation():
                 pass
 
             basedoc = backend.__doc__ or ''
-            UserDocumentation.__doc__ = (basedoc +
-                                         meta.attributes['docs'])
+            UserDocumentation.__doc__ = basedoc + meta.attributes['docs']
             backend = UserDocumentation
         return backend
 
-    def get_backend_byobj(self, obj, name=None, kind=None, attributes=None,
-                          model_store=None, data_store=None, **kwargs):
+    def get_backend_byobj(
+        self, obj, name=None, kind=None, attributes=None, model_store=None, data_store=None, **kwargs
+    ):
         """
         return the matching backend for the given obj
 
@@ -574,11 +569,16 @@ class OmegaStore(object):
         if kind:
             if kind in self.defaults.OMEGA_STORE_BACKENDS:
                 backend = self.get_backend_bykind(kind, data_store=data_store, model_store=model_store)
-                if not backend.supports(obj, name, attributes=attributes,
-                                        data_store=data_store,
-                                        model_store=model_store,
-                                        meta=meta,
-                                        kind=kind, **kwargs):
+                if not backend.supports(
+                    obj,
+                    name,
+                    attributes=attributes,
+                    data_store=data_store,
+                    model_store=model_store,
+                    meta=meta,
+                    kind=kind,
+                    **kwargs,
+                ):
                     objtype = str(type(obj))
                     warnings.warn('Backend {kind} does not support {objtype}'.format(**locals()))
             else:
@@ -589,24 +589,23 @@ class OmegaStore(object):
             sorted_backends = (k for k in MDREGISTRY.KINDS if k in self.defaults.OMEGA_STORE_BACKENDS)
             for backend_kind in sorted_backends:
                 backend = self.get_backend_bykind(backend_kind, data_store=data_store, model_store=model_store)
-                if backend.supports(obj, name, attributes=attributes,
-                                    data_store=data_store, model_store=model_store,
-                                    **kwargs):
+                if backend.supports(
+                    obj, name, attributes=attributes, data_store=data_store, model_store=model_store, **kwargs
+                ):
                     break
             else:
                 backend = None
         return backend
 
     def getl(self, *args, **kwargs):
-        """ return a lazy MDataFrame for a given object
+        """return a lazy MDataFrame for a given object
 
         Same as .get, but returns a MDataFrame
 
         """
         return self.get(*args, lazy=True, **kwargs)
 
-    def get(self, name, version=-1, force_python=False,
-            kind=None, model_store=None, data_store=None, **kwargs):
+    def get(self, name, version=-1, force_python=False, kind=None, model_store=None, data_store=None, **kwargs):
         """
         Retrieve an object
 
@@ -621,10 +620,11 @@ class OmegaStore(object):
         if meta is None:
             return None
         if not force_python:
-            backend = (self.get_backend(name, model_store=model_store,
-                                        data_store=data_store, **kwargs)
-                       if not kind else self.get_backend_bykind(kind, model_store=model_store,
-                                                                data_store=data_store, **kwargs))
+            backend = (
+                self.get_backend(name, model_store=model_store, data_store=data_store, **kwargs)
+                if not kind
+                else self.get_backend_bykind(kind, model_store=model_store, data_store=data_store, **kwargs)
+            )
             if backend is not None:
                 # FIXME: some backends need to get model_store, data_store, but fails tests
                 return backend.get(name, **kwargs)  # model_store=model_store, data_store=data_store, **kwargs)
@@ -639,13 +639,41 @@ class OmegaStore(object):
         for f in self.list(include_temp=True):
             yield f
 
+    def __contains__(self, item):
+        """
+
+        Args:
+            item (str|Metadata): the item to be found using OmegaStore.list(pattern=item, include_hidden=True).
+               If the item is a Metadata instance, will use the item.name and item.kind
+
+        Returns:
+            bool: True if item can be found in this store
+        """
+        if isinstance(item, self._Metadata):
+            pattern, kind = item.name, item.kind
+        else:
+            pattern, kind = item, None
+        return item in self.list(pattern, kind=kind, hidden=True, include_temp=True)
+
     @property
     def buckets(self):
-        return ['default' if b == self.defaults.OMEGA_MONGO_COLLECTION else b
-                for b in self._Metadata.objects.distinct('bucket')]
+        return [
+            'default' if b == self.defaults.OMEGA_MONGO_COLLECTION else b
+            for b in self._Metadata.objects.distinct('bucket')
+        ]
 
-    def list(self, pattern=None, regexp=None, kind=None, raw=False, hidden=None,
-             include_temp=False, bucket=None, prefix=None, filter=None):
+    def list(
+        self,
+        pattern=None,
+        regexp=None,
+        kind=None,
+        raw=False,
+        hidden=None,
+        include_temp=False,
+        bucket=None,
+        prefix=None,
+        filter=None,
+    ):
         """
         List all files in store
 
@@ -661,8 +689,7 @@ class OmegaStore(object):
         """
         regex = lambda pattern: bson.regex.Regex(f'{pattern}')
         db = self.mongodb
-        searchkeys = dict(bucket=bucket or self.bucket,
-                          prefix=prefix or self.prefix)
+        searchkeys = dict(bucket=bucket or self.bucket, prefix=prefix or self.prefix)
         q_excludes = Q()
         if regexp:
             searchkeys['name'] = regex(regexp)
@@ -687,7 +714,7 @@ class OmegaStore(object):
         return [f if raw else str(f.name).replace('.omm', '') for f in files]
 
     def exists(self, name, hidden=False):
-        """ check if object exists
+        """check if object exists
 
         Args:
             name (str): name of object
@@ -722,6 +749,7 @@ class OmegaStore(object):
         hashed = hashed if hashed is not None else self.defaults.OMEGA_STORE_HASHEDNAMES
         if hashed:
             from hashlib import sha1
+
             # SEC: CWE-916
             # - status: wontfix
             # - reason: hashcode is used purely for name resolution, not a security function
@@ -733,11 +761,12 @@ class OmegaStore(object):
     def _get_obj_store_key(self, name, ext, prefix=None, bucket=None):
         # backwards compatilibity implementation of object_store_key()
         name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
-        filename = '{bucket}.{prefix}.{name}'.format(
-            bucket=bucket or self.bucket,
-            prefix=prefix or self.prefix,
-            name=name,
-            ext=ext).replace('/', '_').replace('..', '.')
+        filename = (
+            '{bucket}.{prefix}.{name}'
+            .format(bucket=bucket or self.bucket, prefix=prefix or self.prefix, name=name)
+            .replace('/', '_')
+            .replace('..', '.')
+        )
         return filename
 
     def _ensure_fs_collection(self):

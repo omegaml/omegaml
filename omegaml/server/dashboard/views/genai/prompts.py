@@ -10,6 +10,8 @@ class AIRepositoryView(RepositoryBaseView):
 
 
 class AIPromptsView(AIRepositoryView):
+    list_prefix = 'prompts'
+
     def detail_data(self, name, data=None, meta=None):
         # ensure we always have a tracking attribute
         data['meta']['attributes'].setdefault('tracking', {})
@@ -37,30 +39,26 @@ class AIPromptsView(AIRepositoryView):
         return context
 
     def members(self, excludes=None):
-        excludes = (
-            lambda m: m.name.startswith('_'),
-            lambda m: m.name.startswith('experiments/')
-        )
+        excludes = (lambda m: m.name.startswith('_'), lambda m: m.name.startswith('experiments/'))
         kind = ['genai.text', 'genai.llm']
-        items = [m for m in self.store.list('prompts/*',
-                                            kind=kind, raw=True) if not any(e(m) for e in excludes)]
+        items = [
+            m for m in self.store.list(f'{self.list_prefix}/*', kind=kind, raw=True) if not any(e(m) for e in excludes)
+        ]
         return items
 
     @fv.route('/{self.segment}/new')
     def new(self):
         """Create a new prompt"""
         template = self.detail_template.format(self=self)
-        name = 'prompts/_new_'
+        name = f'{self.list_prefix}/_new_'
         meta = self.store._make_metadata(name=name, kind='genai.text')
         meta.attributes['docs'] = meta.attributes.get('docs', '').strip() or self._default_markdown(meta)
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
         context = self.context_data(isNew=True)
-        return render_template(f"dashboard/{template}",
-                               segment=self.segment,
-                               buckets=self.buckets,
-                               context=context,
-                               data=data, **data)
+        return render_template(
+            f"dashboard/{template}", segment=self.segment, buckets=self.buckets, context=context, data=data, **data
+        )
 
     @fv.route('/{self.segment}/<path:name>/save', methods=['POST'])
     def api_save_prompt(self, name):
@@ -68,26 +66,28 @@ class AIPromptsView(AIRepositoryView):
         om = self.om
         data = self.request.json
         model = data['model']
-        name = f'prompts/{name}' if not name.startswith('prompts/') else name
+        name = f'{self.list_prefix}/{name}' if not name.startswith(f'{self.list_prefix}/') else name
         meta = om.models.metadata(name)
         if meta is None:
             # create a new instance
             from omegaml.backends.genai.textmodel import TextModelBackend
+
             model_meta = om.models.metadata(model, data_store=om.datasets)
             model_meta.kind_meta['base_url'] = TextModelBackend.STORED_MODEL_URL
-            meta = om.models._make_metadata(name=name, kind=model_meta.kind,
-                                            bucket=self.bucket,
-                                            attributes=model_meta.attributes,
-                                            kind_meta=model_meta.kind_meta)
+            meta = om.models._make_metadata(
+                name=name,
+                kind=model_meta.kind,
+                bucket=self.bucket,
+                attributes=model_meta.attributes,
+                kind_meta=model_meta.kind_meta,
+            )
             meta.save()
             meta = om.models.link_experiment(name, name, label=om.runtime._default_label)
         meta.attributes.update(data)
         # set default permissions
         # -- groups matches the /ai/app/chat/<group> endpoint
         # -- by default it is included in the 'sibyl' group
-        meta.attributes.setdefault('permissions', {
-            'groups': data.get('permissions', {}).get('groups', ['sibyl']),
-        })
+        meta.attributes.setdefault('permissions', {'groups': data.get('permissions', {}).get('groups', ['sibyl'])})
         meta.save(version=True)
         return {'message': 'Prompt saved successfully', 'name': name}, 200
 

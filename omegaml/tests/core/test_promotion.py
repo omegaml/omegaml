@@ -1,10 +1,11 @@
-from unittest import TestCase, skip
+from unittest import TestCase
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
 from omegaml.mixins.store.promotion import PromotionMixin
+from omegaml.mixins.store.sessionize import SessionizeMixin
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -12,7 +13,9 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
     def setUp(self):
         om = self.om = Omega()
         om.datasets.register_mixin(PromotionMixin)
+        om.datasets.register_mixin(SessionizeMixin)
         om.models.register_mixin(PromotionMixin)
+        om.models.register_mixin(SessionizeMixin)
         self.clean()
         self.clean('prod')
 
@@ -100,6 +103,7 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
     def test_promotion_deferred(self):
         # ensure we always import injected deferred
         from omegaml import _omega
+
         om = _omega.OmegaDeferredInstance()
         prod = om['prod']
         reg = LinearRegression()
@@ -172,3 +176,57 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
         om.datasets.put(['foo'], 'foo', append=True)
         self.assertNotEqual(om.datasets.get('foo'), other.datasets.get('foo'))
         # try models too
+
+    def test_sessionized_explicit(self):
+        # test explicit per-userid or per-session promotion
+        # -- sessionization is specified in .get()
+        # -- works for any object supporting promotion
+        om = self.om
+        reg = LinearRegression()
+        # explicitly sessionized on get
+        om.models.put(reg, 'mymodel')
+        om.models.get('mymodel/:userid/:sessionid', userid='foo', sessionid='12345')
+        self.assertIn('mymodel/foo/12345', om.models)
+        user_reg = om.models.get('mymodel/foo/12345')
+        self.assertIsInstance(user_reg, LinearRegression)
+
+    def test_sessionized_explicit_byname(self):
+        # test explicit per-userid or per-session promotion
+        # -- sessionization is specified in .get()
+        # -- works for any object supporting promotion
+        om = self.om
+        reg = LinearRegression()
+        # explicitly sessionized on get
+        om.models.put(reg, 'mymodel/:userid/:sessionid')
+        om.models.get('mymodel/:userid/:sessionid', userid='foo', sessionid='12345')
+        self.assertIn('mymodel/foo/12345', om.models)
+        user_reg = om.models.get('mymodel/foo/12345')
+        self.assertIsInstance(user_reg, LinearRegression)
+
+    def test_sessionized_implicit(self):
+        # test implicit per-userid or per-session promotion
+        # -- sessionization is specified in attributes['sessionized'] = 'pattern'
+        # -- works only on objects sessionized in Metadata.attributes
+        om = self.om
+        reg = LinearRegression()
+        for variant in (
+            'mymodel/:userid',
+            'mymodel/:sessionid',
+            'mymodel/:userid/:sessionid',
+            'mymodel/:sessionid/:userid',
+        ):
+            om.models.put(reg, 'mymodel', replace=True)
+            om.models.sessionize('mymodel', variant)  # specify the pattern
+            meta = om.models.metadata('mymodel')
+            self.assertIn('sessionized', meta.attributes)
+            # get the object
+            # -- expect a sessionized object to be returned
+            om.models.get('mymodel', userid='foo', sessionid='12345')
+            sessionized_name = variant.replace(':userid', 'foo').replace(':sessionid', '12345')
+            self.assertIn(sessionized_name, om.models)
+            user_reg = om.models.get(sessionized_name)
+            self.assertIsInstance(user_reg, LinearRegression)
+            meta = om.models.metadata(sessionized_name)
+            self.assertNotIn('sessionized', meta.attributes)
+            om.models.drop('mymodel', force=True)
+            om.models.drop(sessionized_name, force=True)

@@ -4,7 +4,7 @@ from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandl
 
 
 class GenAIBaseBackend(VirtualObjectBackend):
-    """ Generic backend to store user-implemented AI model handlers
+    """Generic backend to store user-implemented AI model handlers
 
     This handles storage and retrieval for GenAIModelHandler subclasses
     and instances, and provides bindings for the runtime to call using
@@ -12,12 +12,13 @@ class GenAIBaseBackend(VirtualObjectBackend):
     as VirtualObjectBackend, but with a different KIND and supports
     other methods.
     """
+
     KIND = 'genai.llm'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_aimodel = isinstance(obj, GenAIModel) or hasattr(obj, '_omega_virtual_genai')
-        is_tool = isinstance(obj, FunctionType) and name.startswith('tools/')
+        is_tool = isinstance(obj, FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
         return is_aimodel or is_tool
 
     def _ensure_handler_instance(self, obj):
@@ -33,11 +34,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
         data = self.data_store.get(Xname)
         meta = self.data_store.metadata(Xname)
         if self.tracking:
-            self.tracking.log_event(method, 'X', {
-                'Xname': Xname,
-                'data': data,
-                'kind': meta.kind,
-            })
+            self.tracking.log_event(method, 'X', {'Xname': Xname, 'data': data, 'kind': meta.kind})
         return data
 
     def _prepare_result(self, method, result, rName=None, pure_python=False, **kwargs):
@@ -49,8 +46,9 @@ class GenAIBaseBackend(VirtualObjectBackend):
             meta = self.data_store.put(result, rName)
             result = meta
         if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
-                                   event=method)
+            self.tracking.log_data(
+                'Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind, event=method
+            )
         return result
 
     def complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
@@ -76,8 +74,15 @@ class GenAIBaseBackend(VirtualObjectBackend):
             user_data = None
         else:
             raise ValueError(f'Invalid input data, expected dict or str, got {type(data)}')
-        return model.complete(prompt, messages=messages, conversation_id=conversation_id,
-                              data=user_data, chat=chat, stream=stream, **kwargs)
+        return model.complete(
+            prompt,
+            messages=messages,
+            conversation_id=conversation_id,
+            data=user_data,
+            chat=chat,
+            stream=stream,
+            **kwargs,
+        )
 
     def generate(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)
@@ -115,8 +120,7 @@ class GenAIModel:
     def load(self):
         pass
 
-    def complete(self, prompt, messages=None, conversation_id=None,
-                 data=None, stream=False, **kwargs):
+    def complete(self, prompt, messages=None, conversation_id=None, data=None, stream=False, **kwargs):
         raise NotImplementedError
 
     def generate(self, *args, **kwargs):
@@ -165,11 +169,22 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
           actual method, subsequent calls will re-instantiate the handler and thus
           call .load() again (i.e. do not assume caching across calls)
     """
+
     _omega_virtual = False
     _omega_virtual_genai = True
 
-    handler_methods = ['template', 'prepare', 'chat', 'complete', 'generate', 'embed', 'toolcall', 'toolresult',
-                       'process', 'retrieve']
+    handler_methods = [
+        'template',
+        'prepare',
+        'chat',
+        'complete',
+        'generate',
+        'embed',
+        'toolcall',
+        'toolresult',
+        'process',
+        'retrieve',
+    ]
 
     def __init__(self, *args, fn=None, **kwargs):
         if callable(fn):
@@ -184,9 +199,7 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
         raise NotImplementedError
 
     def _vobj_call_map(self):
-        return {
-            m: getattr(self, m, self._genai_method) for m in self.handler_methods
-        } | super()._vobj_call_map()
+        return {m: getattr(self, m, self._genai_method) for m in self.handler_methods} | super()._vobj_call_map()
 
 
 def virtual_genai(fn):

@@ -18,9 +18,10 @@ class LiveConfig(FlaskConfig):
 
 class DevConfig(FlaskConfig):
     DEBUG = True
+    TEMPLATES_AUTO_RELOAD = True  # force template reload
 
 
-CONFIG_MAP = {
+CONFIG_MAP = {  # fmt:asis
     'live': LiveConfig,
     'dev': DevConfig,
 }

@@ -331,7 +331,7 @@ class OrasOciRegistry(ArtifactRepository):
         return [m['digest'] for m in artifacts]
 
     def list(self):
-        """ list repos in registry """
+        """list repos in registry"""
         url = self.url
         self._validate('list', **x(locals()))
         self._ensure_login()
