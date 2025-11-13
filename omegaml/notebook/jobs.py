@@ -372,12 +372,12 @@ class NotebookMixin:
         See Also:
             * nbconvert https://nbconvert.readthedocs.io/en/latest/execute_api.html
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             `job_runs[].results` lists the name of the respective `job_results` item
             regardless of status. In prior versions `job_runs[].results` was null for
             failed jobs.
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             `job_runs[].message` is truncated to contain the first and last 80
             characters of an exception. The actual exception is preserved in the
             job_results notebook, stored as a separate object.

@@ -87,7 +87,7 @@ class BaseModelBackend(BackendBaseCommon):
            for the file's name
         :param version: the version of the object (not supported)
 
-        .. versionadded: NEXT
+        .. versionadded: 0.18.0
             uri specifies a target filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
@@ -103,7 +103,7 @@ class BaseModelBackend(BackendBaseCommon):
            for the file's name
         :param attributes: attributes for meta data
 
-        .. versionadded: NEXT
+        .. versionadded: 0.18.0
             local specifies a local filename to store the serialized model
         """
         # support new backend architecture while keeping back compatibility
@@ -127,7 +127,7 @@ class BaseModelBackend(BackendBaseCommon):
         Returns:
             tmpfn or absolute path of serialized file
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             enable custom serializer
         """
         serializer = serializer or getattr(self.serializer, '__func__')  # __func__ is the unbound method
@@ -151,7 +151,7 @@ class BaseModelBackend(BackendBaseCommon):
         Returns:
             model instance
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             enable custom loader
         """
         loader = loader or getattr(self.loader, '__func__')  # __func__ is the unbound method

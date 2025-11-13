@@ -233,7 +233,7 @@ OMEGA_LOG_DATASET = '.omega/logs'
 #: OmegaLoggingHandler log format
 OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 #: default log level
-#: .. versionchanged:: NEXT
+#: .. versionchanged:: 0.18.0
 #:     set default loglevel
 OMEGA_LOGLEVEL = os.environ.get('OMEGA_LOGLEVEL') or 'INFO'
 #: tracking providers
@@ -505,7 +505,7 @@ def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
 def setup_logging():
     """ set logging options according to OMEGA_LOGLEVEL
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.0
         pymongo, kombu loggers are set to ERROR to reduce verbosity, root loger to OMEGA_LOGLEVEL
 
     """
@@ -558,7 +558,7 @@ update_from_env()
     This is used to configure the omegaml.runtime's celery.App instance. It is a mapping
     of Celery settings. 
   
-.. versionchanged:: NEXT
+.. versionchanged:: 0.18.0
     CELERY_TRACK_STARTED=True to enable task status visibility for STARTED vs PENDING 
 
 .. py:data:: OMEGA_VECTORDB_URL
@@ -567,10 +567,10 @@ update_from_env()
     The URL to the vector db, used for document indexing. Supports mongodb:// for
     mongodb, and pgvector:// for PostgreSQL+pgvector 
     
-.. versionadded:: NEXT
+.. versionadded:: 0.18.0
     OMEGA_VECTORDB_URL
     
-.. versionadded:: NEXT
+.. versionadded:: 0.18.0
     OMEGA_TASK_TIMEOUT sets Celery's soft time limit and hard time limit + 30 seconds,
     defaults to 60 seconds 
 """

@@ -83,7 +83,7 @@ class ModelVersionMixin(object):
         Returns:
             meta (Metadata): the metadata object of the versioned object
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             use metadata.save(version=True, tag=..., commit=...) for a versioned object to add a commit
         """
         if not self._model_version_applies(name):

@@ -96,7 +96,7 @@ logger = logging.getLogger(__name__)
 class OmegaStore(object):
     """ The storage backend for models and data
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.0
         refactored all methods handling Python and Pandas datatypes to omegaml.backends.coreobjects.CoreObjectsBackend
     """
 
@@ -372,10 +372,10 @@ class OmegaStore(object):
         :param index: (int) the insert position, defaults to -1, which means
           to append
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             added index to have more control over backend evaluation by .get_backend_byobj()
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             backends can specify cls.KIND_EXT to register additional kinds
         """
         backend_cls = load_class(backend)
@@ -563,7 +563,7 @@ class OmegaStore(object):
         Returns:
             the first backend that supports the given parameters or None
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             backends are tested in order of MDREGISTRY.KINDS, see .register_backend()
         """
         model_store = model_store or self

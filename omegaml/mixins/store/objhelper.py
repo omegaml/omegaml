@@ -80,7 +80,7 @@ class ObjectHelperMixin:
             model = sklearn.linear_model.LinearRegression()
             om.models.put(model, 'mymodel')
 
-    .. versionadded:: NEXT
+    .. versionadded:: 0.18.0
         add dynamic backends implemented as virtualobjects
     """
 

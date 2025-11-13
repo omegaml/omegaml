@@ -318,7 +318,7 @@ class TextModel(GenAIModel):
             model = om.models.get('mymodel')
             messages = model.conversation(conversation_id)
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.0
         the ./openai/messages dataset has been replaced by standard experiment tracking
         (use om.datasets to access prior conversations)
     """
