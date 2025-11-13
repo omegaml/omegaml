@@ -1,7 +1,10 @@
 import CodeExplain from "../widgets/codeexplain.js";
 
-$("#explain-tab").on("shown.bs.tab", function (e) {
-  new CodeExplain({
-    el: "#explain",
+$(function () {
+  $("#explain-tab").on("shown.bs.tab", function (e) {
+    console.debug("loading code explain widget");
+    new CodeExplain({
+      el: "#explain",
+    });
   });
 });
