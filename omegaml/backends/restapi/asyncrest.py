@@ -103,7 +103,9 @@ class AsyncResponseMixin:
     def resource_uri(self):
         return flask.request.path
 
-    def create_maybe_async_response(self, result, status=None, headers=None, async_body=None, cookies=None, **kwargs):
+    def create_maybe_async_response(self, result, status=None, headers=None, async_body=None, cookies=None,
+                                    request=None, **kwargs):
+        # request is forwarded to self.response(, request=request) for subclassing purpose, see self.response()
         if isinstance(result, AsyncResult):
             if isinstance(result, EagerResult):
                 EAGER_RESULTS[result.id] = result
@@ -126,68 +128,16 @@ class AsyncResponseMixin:
             body, status, headers, cookies = result
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
-        return self.response(body, int(status), headers, cookies)
+        return self.response(body, int(status), headers, cookies, request=request)
 
-    def response(self, body, status, headers, cookies):
+    def response(self, body, status, headers, cookies, request=None):
+        # request may be required in subclasses of AsyncResponseMixin, e.g. Django tastypie Resource.create_response
         if not cookies:
             return body, status, headers
         resp = make_response((body, status, headers))
         for k, v in (cookies or {}).items():
             resp.set_cookie(k, str(v))
         return resp
-
-
-class AsyncResponseMixinTastypie(AsyncResponseMixin):
-    """
-    AsyncResourceMixin for Django Tastypie Resources
-
-    Usage:
-
-        class SomeResource(AsyncResponseMixinTastypie, tastypie.Resource):
-            class Meta:
-                ...
-                result_uri = '/api/task/{id}/result'
-
-            def get_detail(self, request, **kwargs):
-                result = ... # dict or AsyncResult
-                async_body = { ... } # dict of data to include if result is AsyncResult
-                # would usually return create_response(...)
-                return self.create_maybe_async_response(request, result, async_body={...})
-
-        class TaskResource(AsyncTaskResourceMixin, tastypie.Resource):
-            ...
-            def get_detail(self, request, **kwargs):
-                taskid = kwargs.get('pk') # <pk> is specified in uri by default
-                action = kwargs.get('action') # assumes <action> is specified in uri, see Resource.prepend_url
-                value, status = self.process_task_action(taskid, action, request=request)
-                resp = self.create_response(request, value, status=status)
-                return resp
-    """
-
-    def dispatch(self, request_type, request, *args, **kwargs):
-        # inline with we do not use x-async https://tools.ietf.org/html/rfc6648
-        # note in Django request headers are always prefixed with HTTP, uppercase
-        # see https://docs.djangoproject.com/en/3.0/ref/request-response/#django.http.QueryDict
-        self.is_async = (truefalse(request.GET.get('async', False)) or
-                         truefalse(request.META.get('HTTP_ASYNC', False)))
-        self._resource_uri = request.path
-        return super().dispatch(request_type, request, **kwargs)
-
-    def response(self, body, status, headers, cookies):
-        resp = self.create_response(request, body, status=int(status))
-        for k, v in headers.items():
-            resp[k] = v
-        for k, v in (cookies or {}).items():
-            resp.set_cookie(k, str(v))
-        return resp
-
-    @property
-    def result_uri(self):
-        return self._meta.result_uri
-
-    @property
-    def resource_uri(self):
-        return self._resource_uri
 
 
 class AsyncTaskResourceMixin:
