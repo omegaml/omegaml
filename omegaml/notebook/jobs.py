@@ -344,8 +344,37 @@ class NotebookMixin:
         Returns:
             Metadata of results
 
+        Notes:
+            The job's metadata is updated to reflect all job runs and their results
+            as follows::
+
+                {
+                    'job_runs': [{
+                        'status': '<execution status>',
+                        'ts': <datetime>,
+                        'message': '<blank | exception>,
+                        'results': 'results/<name>_<datetime>.ipynb',
+                    } ...],
+                    'job_results': [
+                        'results/<name>_<datetime>.ipynb',
+                    ]
+                }
+
+            `job_runs` is a list representing result status of each time the job was
+            executed by the runtime, either by `om.runtime.job('<name>').run()`, or
+            as a scheduled execution.
+
+            `job_results` is a list of members in `om.jobs` representing the result
+            each job execution. Each result is equivalent of an interactive execution
+            in jupyter.
+
         See Also:
             * nbconvert https://nbconvert.readthedocs.io/en/latest/execute_api.html
+
+        .. versionchanged:: NEXT
+            `job_runs[].results` lists the name of the respective `job_results` item
+            regardless of status. In prior versions `job_runs[].results` was null for
+            failed jobs.
         """
         notebook = self.get(name)
         meta_job = self.metadata(name)
@@ -389,6 +418,7 @@ class NotebookMixin:
             status = 'OK'
             message = ''
         finally:
+            message = f'{message[0:80]}...{message[-80:]}'
             del ep
         # record results
         meta_results = self.put(notebook,
@@ -404,7 +434,7 @@ class NotebookMixin:
             'status': status,
             'ts': ts,
             'message': message,
-            'results': meta_results.name if status == 'OK' else None
+            'results': meta_results.name
         }
         job_runs.append(runstate)
         meta_job.attributes['job_runs'] = job_runs
