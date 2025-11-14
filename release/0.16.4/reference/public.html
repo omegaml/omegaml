@@ -335,11 +335,45 @@ the result’s Metadata is returned.</p>
 <dd class="field-even"><p>Metadata of results</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The notebook is run using nbconvert.</p>
+<p>The job’s metadata is updated to reflect all job runs and their results
+as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;execution status&gt;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;ts&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">datetime</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;blank | exception&gt;,</span>
+        <span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="s1">&#39;results/&lt;name&gt;_&lt;datetime&gt;.ipynb&#39;</span><span class="p">,</span>
+    <span class="p">}</span> <span class="o">...</span><span class="p">],</span>
+    <span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">&#39;results/&lt;name&gt;_&lt;datetime&gt;.ipynb&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><cite>job_runs</cite> is a list representing result status of each time the job was
+executed by the runtime, either by <cite>om.runtime.job(‘&lt;name&gt;’).run()</cite>, or
+as a scheduled execution. In case of an exception, the message is truncated
+to contain an excerpt of str(exception).</p>
+<p><cite>job_results</cite> is a list of members in <cite>om.jobs</cite> representing the result
+each job execution. Each result is equivalent of an interactive execution
+in jupyter.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
 <li><p>nbconvert <a class="reference external" href="https://nbconvert.readthedocs.io/en/latest/execute_api.html">https://nbconvert.readthedocs.io/en/latest/execute_api.html</a></p></li>
 </ul>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version NEXT: </span><cite>job_runs[].results</cite> lists the name of the respective <cite>job_results</cite> item
+regardless of status. In prior versions <cite>job_runs[].results</cite> was null for
+failed jobs.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version NEXT: </span><cite>job_runs[].message</cite> is truncated to contain the first and last 80
+characters of an exception. The actual exception is preserved in the
+job_results notebook, stored as a separate object.</p>
 </div>
 </dd></dl>
 
