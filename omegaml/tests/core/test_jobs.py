@@ -155,7 +155,7 @@ class JobTests(TestCase):
         runs = meta.attributes['job_runs']
         this_run = runs[0]
         self.assertEqual(this_run['status'], 'ERROR')
-        self.assertIn('execution timed out', this_run['message'])
+        self.assertIn('timed out', this_run['message'])
         self.assertEqual(len(runs), 1)
         # -- retry with no timeout
         om.jobs.drop('testjob', force=True)
@@ -207,7 +207,7 @@ class JobTests(TestCase):
         runs = meta.attributes['job_runs']
         this_run = runs[0]
         self.assertEqual(this_run['status'], 'ERROR')
-        self.assertIn('execution timed out', this_run['message'])
+        self.assertIn('timed out', this_run['message'])
         self.assertEqual(len(runs), 1)
         # -- retry with no timeout
         om.jobs.drop('testjob', force=True)
@@ -244,6 +244,10 @@ class JobTests(TestCase):
         runs = meta.attributes['job_runs']
         self.assertEqual(len(runs), 1)
         self.assertEqual('ERROR', runs[0]['status'])
+        # ensure job_results are recorded for bad state #468
+        resultnb = meta.attributes['job_results'][-1]
+        self.assertEqual(runs[-1]['results'], resultnb)
+        self.assertTrue(om.jobs.exists(resultnb))
 
     def test_run_nonexistent_job(self):
         om = self.om
