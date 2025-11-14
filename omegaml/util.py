@@ -821,7 +821,7 @@ def base_loader(_base_config):
             logger.debug(f'failed to load omegaml from {loader}, {e}')
         else:
             logger.debug(f'succeeded to load omegaml from {loader}')
-            logger.info(f'loaded omegaml from {source}')
+            logger.debug(f'loaded omegaml from {source}')
             break
 
     return _omega

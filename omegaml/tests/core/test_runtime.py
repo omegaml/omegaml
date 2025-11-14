@@ -1,10 +1,11 @@
-from unittest import TestCase
-
-import numpy as np
 import os
-import pandas as pd
 import sys
 import unittest
+from unittest import TestCase
+from unittest.mock import patch
+
+import numpy as np
+import pandas as pd
 from numpy.testing import assert_array_almost_equal
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
@@ -15,7 +16,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import DataConversionWarning
-from unittest.mock import patch
 
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj

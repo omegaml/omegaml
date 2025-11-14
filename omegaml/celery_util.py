@@ -158,14 +158,14 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 logname = 'root'
         elif isinstance(logging, str):
             if logging.lower() in ('info', 'warn', 'fatal', 'error', 'debug', 'critical'):
-                logname, level = 'root', logging.upper()
+                logname, level = 'root', logging
             else:
                 logname, level = logging, 'INFO'
         elif logging is True:
             logname, level = 'root', 'INFO'
         else:
             logname, level = None, 'NOTSET'
-        return logname, level
+        return logname, level.upper()
 
     def __call__(self, *args, **kwargs):
         import logging

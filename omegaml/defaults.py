@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
-from os.path import basename
-
 import logging
 import os
 import shutil
 import sys
+from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
@@ -86,10 +85,6 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_ALWAYS_EAGER': True if OMEGA_LOCAL_RUNTIME else False,
     #: required for task execution visibility
     'CELERY_TRACK_STARTED': True,
-    """
-    .. versionchanged:: NEXT
-        The default value is now True to enable task status visibility for STARTED vs PENDING
-    """
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
             'task': 'omegaml.notebook.tasks.execute_scripts',
@@ -522,7 +517,9 @@ def setup_logging():
     for name, level in default_loglevels.items():
         pymongo_logger = logging.getLogger(name)
         pymongo_logger.setLevel(level)
-    logging.getLogger().setLevel(OMEGA_LOGLEVEL)
+    logging.basicConfig(level=OMEGA_LOGLEVEL)
+    logger = logging.getLogger('omegaml')
+    logger.setLevel(OMEGA_LOGLEVEL)
 
 
 # -- test support
@@ -531,15 +528,23 @@ if not is_cli_run and is_test_run:
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = 'local'
-    OMEGA_LOGLEVEL = 'WARNING'
+    OMEGA_LOGLEVEL = 'INFO'
 else:
     # overrides in actual operations
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger('omegaml')
-    logger.setLevel(logging.DEBUG)
-    logger.promote = True
     load_config_file()
 
 setup_logging()
 # load extensions, always last step to ensure we have user configs loaded
 update_from_env()
+
+# module documentation
+"""
+.. py:data:: OMEGA_CELERY_CONFIG
+    :type: dict[str, Any]
+
+    This is used to configure the omegaml.runtime's celery.App instance. It is a mapping
+    of Celery settings. 
+
+.. versionchanged:: NEXT
+    CELERY_TRACK_STARTED=True to enable task status visibility for STARTED vs PENDING
+"""
