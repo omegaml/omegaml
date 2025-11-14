@@ -200,7 +200,7 @@ class ModelVersionMixin(object):
         version_name = self._model_version_store_key(meta.name, version_hash)
         version_meta = self.put(obj, version_name, noversion=True, **kwargs)
         version_meta.attributes = deepcopy(meta.attributes)
-        version_meta.attributes.update(kwargs.get('attributes', {}))
+        version_meta.attributes.update(kwargs.get('attributes') or {})  # kwargs attributes can be None
         if 'versions' in version_meta.attributes:
             del version_meta.attributes['versions']
         version_meta.save()

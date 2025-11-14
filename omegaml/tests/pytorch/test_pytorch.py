@@ -3,6 +3,7 @@ from unittest import TestCase, skipUnless
 import dill
 
 from omegaml.backends.genericmodel import GenericModelBackend
+from omegaml.backends.pytorch import PytorchModelBackend
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
@@ -20,7 +21,8 @@ else:
             super().setUp()
             self.clean()
             om = self.om
-            om.models.register_backend(GenericModelBackend.KIND, GenericModelBackend, -1)
+            om.models.register_backend(GenericModelBackend.KIND, GenericModelBackend)
+            om.models.register_backend(PytorchModelBackend.KIND, PytorchModelBackend)
 
         def test_pytorch_model_genericmodel(self):
             om = self.om
@@ -208,6 +210,61 @@ else:
             self.assertEqual(output.shape, torch.Size([5, 1]))
             # 2) test prediction via runtime
             data = torch.randn(5, 10)
+            result = om.runtime.model('torchmodel').predict(data.tolist())
+            output = torch.tensor(result.get(), dtype=torch.float)
+            self.assertEqual(output.shape, torch.Size([5, 1]))
+
+        def test_pytorch_model_implied_helper(self):
+            import torch.nn as nn
+            om = self.om
+
+            # create a helper for model saving, loading and prediction
+            @virtualobj
+            def torchmodel(obj=None, name=None, method=None, meta=None, store=None, data=None, **kwargs):
+                import dill
+                import torch
+
+                load = lambda: torch.load(store.get(name, helper=False), pickle_module=dill)
+
+                if method == 'predict':
+                    model = load()
+                    data = torch.tensor(data, dtype=torch.float)
+                    return model(data)
+                if method == 'get':
+                    model = load()
+                    return model
+                if method == 'put':
+                    torch.save(obj, '/tmp/torchmodel.pth', pickle_module=dill)
+                    meta = store.put('/tmp/torchmodel.pth', name, helper=False)
+                    return meta
+
+            # -- create the model, serialize using torch
+            model = self._create_torch_model()
+            om.models.put(model, 'torchmodel', helper=torchmodel)
+            # see we can get it back, and it is a new object
+            model_ = om.models.get('torchmodel')
+            self.assertIsInstance(model_, nn.Module)
+            self.assertFalse(model_.__class__ is model.__class__)
+            # use it to predict
+            data = torch.randn(5, 10)
+            result = model_(data)
+            output = torch.tensor(result, dtype=torch.float)
+            self.assertEqual(output.shape, torch.Size([5, 1]))
+            # 2) test prediction via runtime
+            data = torch.randn(5, 10)
+            result = om.runtime.model('torchmodel').predict(data.tolist())
+            output = torch.tensor(result.get(), dtype=torch.float)
+            self.assertEqual(output.shape, torch.Size([5, 1]))
+
+        def test_pytorch_model_backend(self):
+            om = self.om
+            model = self._create_torch_model()
+            om.models.put(model, 'torchmodel')
+            model_ = om.models.get('torchmodel')
+            data = torch.randn(5, 10)
+            result = model_(data)
+            output = torch.tensor(result, dtype=torch.float)
+            self.assertEqual(output.shape, torch.Size([5, 1]))
             result = om.runtime.model('torchmodel').predict(data.tolist())
             output = torch.tensor(result.get(), dtype=torch.float)
             self.assertEqual(output.shape, torch.Size([5, 1]))

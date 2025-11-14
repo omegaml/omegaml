@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+import numpy as np
+from numpy.testing import assert_allclose
 from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
@@ -60,8 +62,8 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
             return 42
 
         # test helper is called
-        om.models.put(myhelper, 'myhelper', force=True)
-        om.models.put(mymodel, 'mymodel', helper='myhelper', force=True)
+        om.models.put(myhelper, 'myhelper', replace=True)
+        om.models.put(mymodel, 'mymodel', helper='myhelper', replace=True)
         model = om.models.get('mymodel')
         self.assertEqual(model.predict(), 42)
         # test versioning
@@ -132,3 +134,42 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         om.models.put(reg, 'myreg')
         result = om.models.get('myreg')
         self.assertEqual(result, 42)
+
+    def test_implied_helper(self):
+        om = self.om
+
+        @virtualobj
+        def mymodel(*args, obj=None, name=None, method=None, data=None, store=None, meta=None, **kwargs):
+            class SomeModel:
+                def load(self):
+                    return store.get(meta.name, raw=True, helper=False)
+
+                def predict(self, *args):
+                    actual_model = self.load()
+                    return actual_model.predict(*args) + 42
+
+            if method == 'get':
+                return SomeModel()
+            elif method == 'put':
+                store.put(obj, name, helper=False)
+            elif method == 'predict':
+                return SomeModel().predict(data)
+            return None
+
+        # define some model
+        lr = LinearRegression()
+        X = np.arange(10)
+        y = X * 5 + 10
+        lr.fit(X.reshape(-1, 1), y)
+        # store model with an implied helper
+        meta = om.models.put((lr, mymodel), 'mymodel', replace=True)
+        self.assertEqual(meta.kind, 'sklearn.joblib')
+        self.assertEqual(meta.kind_meta['helper'], ".helpers/mymodel")
+        # explicit get returns SomeModel
+        model = om.models.get('mymodel')
+        self.assertTrue('SomeModel' in str(model))
+        assert_allclose(model.predict([[1]]), np.array([1. * 5 + 10 + 42]))
+        # implicit predict returns just the result
+        model = om.runtime.model('mymodel')
+        result = model.predict([[1]])
+        assert_allclose(result.get(), np.array([1. * 5 + 10 + 42]))

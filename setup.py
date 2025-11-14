@@ -40,6 +40,7 @@ sec_deps = [
 ai_deps = [
     'openai',
     'markitdown',
+    'torch',
     'pgvector',
     'psycopg2-binary',  # required for pgvector
     'python-jose[cryptography]',  # require for json encyption in async events server

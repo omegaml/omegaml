@@ -11,7 +11,7 @@ install:
 	pip install --ignore-installed -U pip
 	pip install -U pytest tox tox-conda tox-run-before
 	[ -z "${RUNTESTS}" ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "env:RUNTESTS set, using packages from pypi only"
-	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}"
+	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}" --extra-index-url https://download.pytorch.org/whl/cpu
 	(which R && scripts/runtime/setup-r.sh) || echo "R is not installed"
 	scripts/install-oras.sh || echo "oras is not installed"
 
