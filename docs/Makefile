@@ -242,6 +242,7 @@ multihtml:
 	git tag -d latest; git tag latest
 	cat ../omegaml/VERSION | xargs | xargs -I {} bash -c 'git tag release/{} || echo "tag release/{} already exists"'
 	git tag -d stable; cat ../omegaml/VERSION | xargs | xargs -I {} git tag stable release/{}
+	docs/scripts/marknext.sh
 	sphinx-multiversion source build/html
 	cp -r source/_templates/fixed/. build/html
 
