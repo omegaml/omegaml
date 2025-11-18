@@ -18,8 +18,8 @@ class AIPromptsView(AIRepositoryView):
             'name': meta.name,
             'model': meta.attributes.get('model', ''),
             'template': meta.attributes.get('template', ''),
-            'systemPrompt': meta.attributes.get('systemPrompt', ''),
-            'pipeline': meta.attributes.get('pipeline', 'default'),
+            'prompt': meta.attributes.get('prompt', ''),
+            'pipeline': meta.attributes.get('pipeline', ''),
             'tools': meta.attributes.get('tools', []),
             'documents': meta.attributes.get('documents', []),
         })
@@ -31,6 +31,7 @@ class AIPromptsView(AIRepositoryView):
             'availableModels': self.om.models.list('llms/*', kind=['genai.text', 'genai.llm']),
             'availableDocuments': self.om.datasets.list(kind='pgvector.conx'),
             'availableTools': self.om.models.list('tools/*'),
+            'availablePipelines': self.om.models.list('pipelines/*'),
         })
         context.update(kwargs)
         return context
