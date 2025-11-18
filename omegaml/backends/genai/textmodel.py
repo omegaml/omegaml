@@ -9,13 +9,14 @@ from uuid import uuid4
 
 import pandas as pd
 import requests
+from jinja2.sandbox import SandboxedEnvironment
 from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict
+from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -69,8 +70,8 @@ class TextModelBackend(GenAIBaseBackend):
         return ParseResult(vendor, scheme, path, params, netloc, hostname, port, parsed.username,
                            parsed.password, parsed.query)
 
-    def put(self, obj, name, template=None, pipeline=None, provider=None, tools=None, documents=None, strategy=None,
-            **kwargs):
+    def put(self, obj, name, template=None, prompt=None, pipeline=None, provider=None, tools=None, documents=None,
+            strategy=None, apikey=None, **kwargs):
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
         params = parse_qs(parsed.params)
@@ -81,8 +82,9 @@ class TextModelBackend(GenAIBaseBackend):
             path, model = parsed.path.split('/', 1) if '/' in parsed.path else (parsed.path, None)
         assert model, f'no model specified in {obj}, use openai://<base_url>;model=<model> or openai+<scheme>://<base_url>;model=<model>'
         base_url = f'{parsed.scheme}://{parsed.hostname}:{parsed.port}{path}'
-        creds = f'{parsed.username}:{parsed.password}' if parsed.username and parsed.password else ''
-        creds = creds or f'{parsed.username}' if parsed.username else ''
+        uri_creds = f'{parsed.username}:{parsed.password}' if parsed.username and parsed.password else ''
+        uri_creds = uri_creds or f'{parsed.username}' if parsed.username else ''
+        creds = apikey or uri_creds
         query = parse_qs(parsed.query)
         params = params or {}
         query = query or {}
@@ -96,11 +98,12 @@ class TextModelBackend(GenAIBaseBackend):
             'provider': provider,
         }
         attributes = {
+            'prompt': prompt or query.get('prompt'),
             'template': template or query.get('template'),
             'pipeline': pipeline or None,
             'tools': tools or [],
             'documents': documents or [],
-            'strategy': strategy or None,
+            'strategy': strategy or {},
         }
         kwargs.update(attributes=attributes)
         meta = self.model_store.make_metadata(name,
@@ -109,7 +112,8 @@ class TextModelBackend(GenAIBaseBackend):
                                               **kwargs)
         return meta.save()
 
-    def get(self, name, template=None, data_store=None, pipeline=None, tools=None, documents=None, strategy=None,
+    def get(self, name, prompt=None, template=None, data_store=None, pipeline=None, tools=None, documents=None,
+            strategy=None,
             tracking=None, secrets=None, **kwargs):
         meta = self.model_store.metadata(name)
         secrets = secrets or {}
@@ -128,6 +132,7 @@ class TextModelBackend(GenAIBaseBackend):
         tools = tools or meta.attributes.get('tools') or []
         documents = documents or meta.attributes.get('documents')
         template = template or query.get('template') or meta.attributes.get('template')
+        prompt = prompt or query.get('prompt') or meta.attributes.get('prompt')
         strategy = {**(meta.attributes.get('strategy') or {}), **(strategy or {})}
         # load dependencies
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
@@ -140,12 +145,12 @@ class TextModelBackend(GenAIBaseBackend):
         # infer model provider
         if base_url.startswith(self.STORED_MODEL_URL) and self.model_store.exists(model):
             # model is a stored model, load it
-            model = self.model_store.get(model, template=template, data_store=data_store,
+            model = self.model_store.get(model, prompt=prompt, template=template, data_store=data_store,
                                          pipeline=pipeline, tools=tools, documents=documents, strategy=strategy,
                                          tracking=self.tracking, **kwargs)
 
         else:
-            model = TextModel(base_url, model, api_key=creds, template=template,
+            model = TextModel(base_url, model, api_key=creds, prompt=prompt, template=template,
                               data_store=data_store, pipeline=pipeline, tools=tools,
                               tracking=self.tracking, provider=provider, documents=documents,
                               strategy=strategy,
@@ -269,7 +274,7 @@ class TextModel(GenAIModel):
         (use om.datasets to access prior conversations)
     """
 
-    def __init__(self, base_url, model, api_key=None, template=None, data_store=None,
+    def __init__(self, base_url, model, api_key=None, template=None, prompt=None, data_store=None,
                  tracking=None, pipeline=None, provider='openai', tools=None, documents=None,
                  strategy=None, **kwargs):
         super().__init__()
@@ -277,7 +282,8 @@ class TextModel(GenAIModel):
         self.model = model
         self.api_key = api_key
         self.kwargs = kwargs
-        self.template = template or 'You are a helpful assistant.'
+        self.template = (template or self._default_template).strip()
+        self.prompt = prompt or 'You are a helpful assistant.'
         self.data_store = data_store
         self.tracking = tracking
         self.provider = PROVIDERS[provider](
@@ -297,6 +303,15 @@ class TextModel(GenAIModel):
 
     def __repr__(self):
         return f'TextModel(base_url={self.base_url}, model={self.model})'
+
+    @property
+    def _default_template(self):
+        return """
+        {% if documents -%} 
+            documents found: {{ documents }} 
+        {%- endif %} 
+        {{ prompt }}
+        """
 
     def load(self, method):
         pass
@@ -380,9 +395,11 @@ class TextModel(GenAIModel):
         # if the client sends in messages, don't recall past conversations (they are already in messages)
         messages = messages or self.conversation(conversation_id, raw=True)
         system_message_missing = not any(m.get('role') == 'system' for m in messages)
-        if not messages or system_message_missing:
+        empty = lambda d: d.empty if isinstance(d, pd.DataFrame) else not d
+        if empty(messages) or system_message_missing:
             # no message history, insert the system message to start off the conversation)
-            messages = [self._system_message(prompt, conversation_id=conversation_id)] + (messages if messages else [])
+            messages = [self._system_message(self.prompt, conversation_id=conversation_id)] + (
+                messages if messages else [])
             self._log_events('conversation', conversation_id, messages)
         responses = self._do_complete(prompt, messages=messages, conversation_id=conversation_id, data=data,
                                       use_tools=use_tools, raw=raw, stream=stream, **kwargs)
@@ -465,7 +482,7 @@ class TextModel(GenAIModel):
     def _system_message(self, prompt, conversation_id=None):
         return {
             "role": "system",
-            "content": self._augment_prompt(self.template, self.documents, query=prompt),
+            "content": prompt,
             "conversation_id": conversation_id or uuid4().hex,
         }
 
@@ -473,59 +490,65 @@ class TextModel(GenAIModel):
                      use_tools=False, raw=False, **kwargs):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or []
-        # FIXME: system messages should only be included in first request
+        kwargs.update(self.strategy.get('complete', {}))
+        # prepare template
+        _template = self._prepare_template(self.template,
+                                           data=data)
+        template = self.pipeline(method='template',
+                                 prompt_message=prompt,
+                                 messages=messages,
+                                 template=self.template,
+                                 conversation_id=conversation_id, **kwargs) or _template
         if prompt and isinstance(prompt, str):
             # support direct text input
             prompt_message = {
                 "role": "user",
-                "content": self._augment_prompt(prompt, self.documents),
+                "content": prompt,
                 "conversation_id": conversation_id,
             }
-            messages = ([self._system_message(prompt, conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
+            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
+            messages += [self._augment_message(prompt_message, documents=self.documents, template=template)]
         elif isinstance(prompt, dict):
             # support structured input
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
             #    https://platform.openai.com/docs/api-reference/chat
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
-            messages = ([self._system_message(prompt.get('content', ''), conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
-            prompt_message = prompt[-1]
+            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
+            messages += [self._augment_message(prompt, documents=self.documents, template=template)]
+            prompt_message = messages[-1]
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
             #    https://platform.openai.com/docs/api-reference/chat
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
-            prompts = '\n\n'.join(m.get('content', '') for m in prompt)
-            messages = ([self._system_message(prompts,
-                                              conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in prompt])
+            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
+            # augment last message only
+            messages += prompt[:-1] if len(prompt) > 1 else []
+            messages += [self._augment_message(prompt[-1], documents=self.documents, template=template)]
             prompt_message = messages[-1]
         else:
             # raw input, assume messages contains the user prompt
-            prompts = '\n\n'.join(m.get('content', '') for m in messages if m.get('type') == 'text')
-            messages = ([self._system_message(prompts,
-                                              conversation_id=conversation_id)] +
-                        [self._augment_message(m, self.documents) for m in messages])
+            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
+            # augment last message only
+            messages += [self._augment_message(messages[-1], documents=self.documents, template=template)]
             prompt_message = messages[-1]
+        # prepare tools
         if self.tools:
             kwargs.update(tools=self.tools_specs,
                           tool_choice='auto')
-        _template = self._prepare_template(self.template,
-                                           data=data)
-        template = self.pipeline(method='template',
-                                 prompt_message=prompt_message,
-                                 messages=messages,
-                                 template=self.template,
-                                 conversation_id=conversation_id,
-                                 **kwargs) or _template
-        _default_messages = (messages + [prompt_message]) if prompt_message else messages
+        # prepare messages
+        _default_messages = messages
         messages = self.pipeline(method='prepare',
                                  prompt_message=prompt_message,
                                  messages=messages,
                                  template=template,
                                  conversation_id=conversation_id, **kwargs) or _default_messages
-        response = self.provider.complete(
+        # produce a response by calling the pipeline or the model
+        response = self.pipeline(method='complete',
+                                 prompt_message=prompt_message,
+                                 messages=messages,
+                                 template=template,
+                                 conversation_id=conversation_id, **kwargs) or self.provider.complete(
             messages=messages,
             stream=stream,
             model=self.model,
@@ -748,20 +771,29 @@ class TextModel(GenAIModel):
 
         return function_dict
 
-    def _augment_prompt(self, prompt, documents: DocumentIndex, query=None):
+    def _augment_prompt(self, prompt, documents: DocumentIndex = None, query=None, template=None):
         query = query or prompt
-        if documents is None or '{context}' not in prompt:
-            return prompt
+        template = template or self.template
+        if not documents:
+            context = dict(prompt=prompt, query=query, documents=None, datetime=utcnow())
+            return self._resolve_template(template, **context)
         retrieve_kwargs = self.strategy.get('retrieve', {})
         docs = documents.retrieve(query, **retrieve_kwargs)
         if docs:
-            context = '\n\n'.join(d.get('text') for d in docs)
+            documents = '\n\n'.join(d.get('text') for d in docs)
         else:
-            context = '(no documents found)'
-        return prompt.format_map(safeformat(context=context))
+            documents = '(no documents found)'
+        context = dict(prompt=prompt, query=query, documents=documents, datetime=utcnow())
+        return self._resolve_template(template, **context)
 
-    def _augment_message(self, message, documents: DocumentIndex, query=None):
-        augmented = self._augment_prompt(message.get('content', ''), documents=documents, query=query)
+    def _resolve_template(self, template, **context):
+        env = SandboxedEnvironment()
+        template = env.from_string(template)
+        return template.render(**context).strip()
+
+    def _augment_message(self, message, documents: DocumentIndex = None, query=None, template=None):
+        augmented = self._augment_prompt(message.get('content', ''), documents=documents, query=query,
+                                         template=template)
         message['content'] = augmented if augmented else message.get('content')
         return message
 

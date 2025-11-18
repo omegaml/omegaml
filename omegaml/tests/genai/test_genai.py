@@ -430,7 +430,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         om.datasets.put(documents, 'documents', model_store=om.models)
         # prepare llm that uses documents
         meta = om.models.put('openai+http://localhost/mymodel', 'mymodel',
-                             documents='documents', template='system documents: {context}')
+                             documents='documents', template='user documents: {{ documents}} prompt: {{ prompt }}')
         model = om.models.get('mymodel', data_store=om.datasets)
         # mock model provider response
         # -- we test our TextModel(GenAIModel), not the provider
@@ -447,28 +447,111 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             ]
         })
         # check mocked provider responses
-        # using direct input
-        # -- message is in system template
-        result = model.complete('{context}')
-        self.assertEqual(subdict(result.get('content').messages[0], ['role', 'content']),
-                         {'role': 'system', 'content': 'system documents: the quick brown fox jumps over the lazy dog'})
-        # -- message in prompt template
-        result = model.complete('user documents: {context}')
+        result = model.complete('hello')
         self.assertEqual(subdict(result.get('content').messages[1], ['role', 'content']),
-                         {'role': 'user', 'content': 'user documents: the quick brown fox jumps over the lazy dog'})
-        # check
-        # using raw input
+                         {'role': 'user',
+                          'content': 'user documents: the quick brown fox jumps over the lazy dog prompt: hello'})
+        # using a single message as input
+        # -- message is in system template
+        result = model.complete({'role': 'user',
+                                 'content': 'hello'})
+        self.assertEqual(subdict(result.get('content').messages[1], ['role', 'content']),
+                         {'role': 'user',
+                          'content': 'user documents: the quick brown fox jumps over the lazy dog prompt: hello'})
+        # using messages raw input
         # -- message is in system template
         result = model.complete([
             {'role': 'user',
-             'content': ''}
-        ])
-        self.assertEqual(subdict(result.get('content').messages[0], ['role', 'content']),
-                         {'role': 'system', 'content': 'system documents: the quick brown fox jumps over the lazy dog'})
-        # -- message in prompt template
-        result = model.complete([
-            {'role': 'user',
-             'content': 'user documents: {context}'}
+             'content': 'hello'}
         ])
         self.assertEqual(subdict(result.get('content').messages[1], ['role', 'content']),
-                         {'role': 'user', 'content': 'user documents: the quick brown fox jumps over the lazy dog'})
+                         {'role': 'user',
+                          'content': 'user documents: the quick brown fox jumps over the lazy dog prompt: hello'})
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_system_prompt(self, OpenAIProvider):
+        om = self.om
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel', prompt='you are a test assistant')
+        self.assertEqual(meta.attributes.get('prompt'), 'you are a test assistant')
+        model = self.om.models.get('mymodel')
+        self.assertEqual(model.prompt, 'you are a test assistant')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello',
+                    }
+                }
+            ]
+        })
+        model.complete('hello')
+        model.provider.complete.assert_called()
+        messages = model.provider.complete.call_args.kwargs.get('messages')
+        self.assertEqual(messages[0]['role'], 'system')
+        self.assertEqual(messages[0]['content'], 'you are a test assistant')
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_system_complete_strategy(self, OpenAIProvider):
+        # test completion strategy is passed to provider as kwargs
+        om = self.om
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel', strategy={
+            'complete': {
+                'extra_body': {
+                    'reasoning': False,
+                }
+            }
+        })
+        self.assertEqual(meta.attributes.get('strategy'), {
+            'complete': {
+                'extra_body': {
+                    'reasoning': False,
+                }
+            }
+        })
+        model = self.om.models.get('mymodel')
+        self.assertIn('extra_body', model.strategy['complete'])
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello',
+                    }
+                }
+            ]
+        })
+        model.complete('hello')
+        model.provider.complete.assert_called()
+        provider_kwargs = model.provider.complete.call_args.kwargs
+        self.assertIn('extra_body', provider_kwargs)
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_system_template_render(self, OpenAIProvider):
+        # test completion strategy is passed to provider as kwargs
+        om = self.om
+        template = "Today is {{ datetime }}. {{ prompt }}"
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel', template=template)
+        self.assertEqual(meta.attributes.get('template'), template)
+        model = self.om.models.get('mymodel')
+        self.assertEqual(model.template, template)
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello',
+                    }
+                }
+            ]
+        })
+        model.complete('hello')
+        model.provider.complete.assert_called()
+        messages = model.provider.complete.call_args.kwargs.get('messages')
+        print(messages)
