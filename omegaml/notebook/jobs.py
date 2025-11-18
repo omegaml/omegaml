@@ -57,7 +57,7 @@ class NotebookBackend(BaseDataBackend):
         if not name.endswith('.ipynb'):
             name += '.ipynb'
         if isinstance(obj, str):
-            return self.create(obj, name)
+            return self.store.create(obj, name)
         sbuf = StringIO()
         bbuf = BytesIO()
         # nbwrite expects string, fs.put expects bytes
