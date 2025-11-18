@@ -62,13 +62,17 @@
       </select>
     </div>
   </div>
-  <!-- Pipeline Selection -->
-  <!-- 
   <div class="form-group">
     <label>Pipeline</label>
-    <select class="form-control" id="pipelineSelect">
-      <option value="">Select a pipeline (optional)</option>
-    </select>
+    <div class="tools-container" id="pipelinesContainer">
+      <select class="form-control" id="pipelineSelect" single>
+        <option value="">Select a pipeline (optional)</option>
+        <% availablePipelines.forEach(function(name) { %>
+          <option value="<%= name %>">
+            <%= name %>
+          </option>
+          <% }); %>
+      </select>
+    </div>
   </div>
-  -->
 </form>
