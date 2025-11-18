@@ -8,7 +8,7 @@ from nbformat import v4
 
 from omegaml import Omega
 from omegaml.documents import Metadata
-from omegaml.notebook.jobs import JobSchedule
+from omegaml.notebook.jobs import JobSchedule, NotebookBackend
 from omegaml.util import settings as omegaml_settings, settings
 
 
@@ -308,6 +308,16 @@ class JobTests(TestCase):
         meta = om.jobs.schedule('testjob', run_at='00 08 * * 1,2,3')
         self._check_scheduled_job()
         self.assertEqual(meta.attributes['config']['run-at'], '00 08 * * 1,2,3')
+
+    def test_create_jobs_from_code(self):
+        om = self.om
+        code = """
+        print('hello')
+        """
+        meta = om.jobs.create(code, 'testjob')
+        self.assertEqual(meta.kind, NotebookBackend.KIND)
+        meta = om.jobs.put(code, 'testjob2')
+        self.assertEqual(meta.kind, NotebookBackend.KIND)
 
     def test_scheduled_job_with_nlp_schedule(self):
         om = self.om
