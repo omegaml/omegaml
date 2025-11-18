@@ -65,6 +65,8 @@ OMEGA_WORKER_LABEL = os.environ.get('OMEGA_WORKER_LABEL') or os.environ.get('CEL
 #: the omega worker concurrency setting, defaults to 4
 WORKER_CONCURRENCY = int(os.environ.get('OMEGA_WORKER_CONCURRENCY', 4))
 WORKER_CONCURRENCY = WORKER_CONCURRENCY if WORKER_CONCURRENCY > 0 else os.cpu_count()
+#: the task timeout
+OMEGA_TASK_TIMEOUT = int(os.environ.get('OMEGA_TASK_TIMEOUT', 60 * 20))  # seconds
 
 #: the celery configurations
 OMEGA_CELERY_CONFIG = {
@@ -91,6 +93,8 @@ OMEGA_CELERY_CONFIG = {
             'schedule': 60,
         }
     },
+    'CELERYD_TASK_SOFT_TIME_LIMIT': OMEGA_TASK_TIMEOUT,  # seconds
+    'CELERYD_TASK_TIME_LIMIT': OMEGA_TASK_TIMEOUT + 30,  # seconds
     'BROKER_USE_SSL': OMEGA_USESSL,
     # keep behavior of retrying broker connections on startup
     'BROKER_CONNECTION_RETRY_ON_STARTUP': True,
