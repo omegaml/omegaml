@@ -348,12 +348,16 @@ class OmegaRuntime(object):
         Returns:
             CeleryTask
         """
-        taskfn = self.celeryapp.tasks.get(name)
+        taskfn = self.celeryapp.tasks.get(name) or self.celeryapp.tasks.get(f'omega_{name}')
         assert taskfn is not None, "cannot find task {name} in Celery runtime".format(**locals())
         kwargs = dict_merge(self._common_kwargs, dict(routing=kwargs))
         task = CeleryTask(taskfn, kwargs)
         self._require_kwargs = dict(routing={}, task={})
         return task
+
+    @property
+    def tasks(self):
+        return list(self.celeryapp.tasks.keys())
 
     def result(self, task_id, wait=True):
         from celery.result import AsyncResult
