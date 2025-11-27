@@ -43,7 +43,6 @@ ai_deps = [
     'torch',
     'pgvector',
     'psycopg2-binary',  # required for pgvector
-    'python-jose[cryptography]',  # require for json encyption in async events server
 ]
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
 client_deps = (tables + dashserve_deps)
@@ -84,6 +83,7 @@ install_deps = [
     'minibatch[omegaml]',  # required for streaming
     'validators',  # required for sec validations
     'build',  # required to build packages
+    'python-jose[cryptography]',  # require for json encyption in async events server
 ]
 setup(
     name='omegaml',
