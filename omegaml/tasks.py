@@ -23,7 +23,7 @@ def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs
 def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
     task_logger = self.app.log.get_default_logger()
     result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
-    if inspect.isgenerator(result):
+    if stream and (inspect.isgenerator(result) or isinstance(result, list)):
         chunk = {'result': None}
         stream = self.om.streams.get(f'.system/complete/{self.request.id}')
         for chunk in result:
