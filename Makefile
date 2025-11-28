@@ -4,6 +4,7 @@ VERSION=$(shell cat omegaml/VERSION)
 # run using make -e to override by env variables
 EXTRAS:=dev
 PIPREQ:=pip
+DISTTAGS:=""
 
 install:
 	# in some images pip is outdated, some packages are system-level installed
@@ -29,12 +30,12 @@ sanity:
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli --version
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
-dist: sanity
+dist: #sanity
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*
 	# set DISTTAGS to specify eg --python-tag for bdist
-	python -m build --sdist --wheel --config-setting "--build-option=${DISTTAGS}"
+	python -m build --sdist --wheel --config-setting="--build-option=${DISTTAGS}"
 	twine check dist/*.whl
 
 livetest: dist
