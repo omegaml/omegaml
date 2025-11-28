@@ -39,7 +39,7 @@ sec_deps = [
 # dependencies for generative ai support
 ai_deps = [
     'openai',
-    'markitdown',
+    'markitdown[pdf]',
     'torch',
     'pgvector',
     'psycopg2-binary',  # required for pgvector
@@ -80,7 +80,7 @@ install_deps = [
     'apispec>=5.2.2',  # required for openapi generation
     'marshmallow>=3.17.0',  # required for openapi generation
     'sqlalchemy',  # due to https://github.com/pandas-dev/pandas/issues/57049
-    'minibatch[omegaml]',  # required for streaming
+    'minibatch[omegaml]>=0.6',  # required for streaming sse chat responses
     'validators',  # required for sec validations
     'build',  # required to build packages
     'python-jose[cryptography]',  # require for json encyption in async events server

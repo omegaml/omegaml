@@ -181,12 +181,11 @@ class GenAIView(BaseView):
         description = self.request.json.get('description', '')
         if not index_name:
             abort(400, 'Index name is required')
-        # TODO use om.defaults.variables for the connection string
-        cnxstring = 'pgvector://postgres:test@localhost:5432/postgres'
+        cnxstring = om.defaults.OMEGA_VECTORDB_URL
         attributes = {
             'docs': description,
         }
-        index = om.datasets.put(cnxstring, index_name, kind='pgvector.conx', attributes=attributes)
+        index = om.datasets.put(cnxstring, index_name, attributes=attributes)
         return jsonify({
             'success': True,
             'message': f'Index >{index_name}< created successfully!',
