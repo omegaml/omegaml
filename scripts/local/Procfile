@@ -3,4 +3,4 @@ scheduler:  celery --app omegaml.celeryapp beat --loglevel=debug
 notebook: om shell jupyter
 jupyterhub: jupyterhub --ip 0.0.0.0 --config /etc/jupyterhub/jupyterhub_config.py
 restapi: python -m omegaml.server.restapi
-server:  python -m omegaml.server.server
+server:  python -m omegaml.server

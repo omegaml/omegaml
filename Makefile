@@ -30,7 +30,7 @@ sanity:
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli --version
 	unset DJANGO_SETTINGS_MODULE && python -m omegaml.client.cli cloud config
 
-dist: #sanity
+dist: sanity
 	: "run setup.py sdist bdist_wheel"
 	rm -rf ./dist/*
 	rm -rf ./build/*

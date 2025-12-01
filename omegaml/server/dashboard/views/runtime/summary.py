@@ -1,6 +1,7 @@
+from datetime import datetime
+
 import cachetools
 import numpy as np
-from datetime import datetime
 from flask import render_template, request
 
 from omegaml.server import flaskview as fv
@@ -148,7 +149,7 @@ class RuntimeView(BaseView):
         om = self.om
         dbstats = om.datasets.dbstats(scale='gb')
         dfx = dbstats.loc[['fsAvailableSize', 'fsUsedSize']]
-        fig = px.pie(dbstats, names=dfx.index, values=dfx['db'])
+        fig = px.pie(dfx, names=dfx.index, values=dfx['db'])
         return json.to_json(fig)
 
     @fv.route('/runtime/database/repostats/plot')
