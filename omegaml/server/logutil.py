@@ -55,15 +55,21 @@ import os
 import socket
 import threading
 import uuid
-import yaml
 from pathlib import Path
+
+import yaml
 
 #: list of os env keys that are logged, if available
 LOGUTIL_ENV_KEYS = ['APP', 'APP_VERSION', 'APP_ENV', 'HOSTNAME']
 #: optional additional env keys to be logged, if available
 LOGUTIL_ENV_KEYS += os.environ.get('LOGUTIL_ENV_KEYS', '').split(',')
-#: the logger.yaml location, defaults to the location of logutil.py
-LOGUTIL_CONFIG_FILE = Path(__file__).parent / 'logging.yaml'
+#: the logger.yaml location, defaults to the "config" module
+try:
+    import config
+except:
+    LOGUTIL_CONFIG_FILE = Path(__file__).parent / 'logging.yaml'
+else:
+    LOGUTIL_CONFIG_FILE = Path(config.__file__).parent / 'logging.yaml'
 
 
 def configure_logging(logging_config=None, settings=None):
