@@ -530,7 +530,6 @@ class TextModel(GenAIModel):
             # raw input, assume messages contains the user prompt
             messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
             # augment last message only
-            messages += messages[:-1] if len(messages) > 1 else []
             messages += [self._augment_message(messages[-1], documents=self.documents, template=template)]
             prompt_message = messages[-1]
         # prepare tools
@@ -544,8 +543,12 @@ class TextModel(GenAIModel):
                                  messages=messages,
                                  template=template,
                                  conversation_id=conversation_id, **kwargs) or _default_messages
-        # call provider
-        response = self.provider.complete(
+        # produce a response by calling the pipeline or the model
+        response = self.pipeline(method='complete',
+                                 prompt_message=prompt_message,
+                                 messages=messages,
+                                 template=template,
+                                 conversation_id=conversation_id, **kwargs) or self.provider.complete(
             messages=messages,
             stream=stream,
             model=self.model,
