@@ -1,15 +1,17 @@
 import json
 import unittest
-from flask import Flask
 from hashlib import pbkdf2_hmac
-from jose import jwe
-from jose.exceptions import JWEError
 from unittest.mock import patch
 from uuid import uuid4
 
+from flask import Flask
+from jose import jwe
+from jose.exceptions import JWEError
+
 from omegaml import Omega
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
-from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.auth import OmegaRestApiAuth, OmegaRuntimeAuthentication
+from omegaml.client.cloud import OmegaCloud
 from omegaml.server.events.ssechat import bp as ssechat_bp
 from omegaml.tests.util import OmegaTestMixin
 
@@ -72,11 +74,11 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         self.assertTrue(set(contents.keys()) >= {'stream', 'userid', 'created'})
         self.assertEqual(contents.get('stream'), 'messages')
 
-    def _create_cookies(self):
+    def _create_cookies(self, om=None):
         # simulate a streaming result using 'ssechat' streamer
         # -- we only do this to get a valid cookie, as if produced the /chat/completions api
         resource = StreamableResourceMixin()
-        resource.om = self.om
+        resource.om = om or self.om
         result = resource.prepare_streaming_result(stream='messages', streamer='ssechat')
         self.assertIsInstance(result, (list, tuple))
         body, status_code, headers, cookies = result
@@ -136,6 +138,30 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
 
             events = list(parse_events(response))
             self.assertEqual(events, [{'message': 'hello world'}])
+
+    def test_ssechat_valid_authorization(self):
+        auth = OmegaRuntimeAuthentication('testuser', 'sometoken', 'developer')
+        om = OmegaCloud(auth=auth)
+        cookies = self._create_cookies(om=om)
+        for auth_kind in ('Bearer', 'ApiKey'):
+            with (self.app.test_client() as client,
+                  patch('omegaml.server.events.ssechat.stream_result') as stream_result,
+                  patch('omegaml.server.events.ssechat.auth_env') as auth_env):
+                auth_env.get_omega_from_apikey.side_effect = om
+                for k, v in cookies.items():
+                    client.set_cookie(k, v)
+                if auth_kind == 'ApiKey':
+                    request_token = f'{om.runtime.auth.userid}:{om.runtime.auth.apikey}'
+                else:
+                    request_token = f'{om.runtime.auth.apikey}'
+                response = client.get('/events/chat/completions', headers={
+                    'Authorization': f'{auth_kind} {request_token}',
+                })
+                self.assertTrue(response.status_code, 201)
+                self.assertTrue(response.mimetype, 'text/event-stream')
+                stream_result.assert_called_once_with('messages')
+                auth_env.get_omega_from_apikey.assert_called_once_with(om.runtime.auth.userid, om.runtime.auth.apikey,
+                                                                       qualifier=om.runtime.auth.qualifier)
 
 
 if __name__ == '__main__':

@@ -3,11 +3,12 @@ import json
 import logging
 import threading
 from datetime import timedelta, datetime
-from flask import Response, request, abort, Blueprint, current_app
 from hashlib import pbkdf2_hmac
-from jose import jwe
 from time import sleep
 from uuid import uuid4
+
+from flask import Response, request, abort, Blueprint, current_app
+from jose import jwe
 
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.client.auth import AuthenticationEnv
@@ -77,26 +78,54 @@ def authorized(fn):
         context.authenticated = bool(session_id)
         return context.message_valid and context.authenticated
 
+    def get_authorization():
+        # TODO adopt AuthenticationEnv to process headers
+        auth_header = request.headers.get('Authorization')
+        kind, token = auth_header.split(' ') if auth_header else ('', '')
+        if kind.lower() not in ('bearer', 'apikey'):
+            token = ''
+        elif kind.lower() == 'apikey':
+            token = token.split(':')[-1]
+        return token
+
     def inner(*args, **kwargs):
+        # -- authorize request, decode payload
         try:
+            auth_token = get_authorization()
             session_id, payload = decode_payload()
             verified = verify(session_id, payload)
         except Exception as e:
             verified = False
             session_id = None
-            payload = None
             message = str(e)
+            auth_token = None
+            userid = None
+            payload = None
         else:
             message = f'token verified {verified}'
+            userid = payload.get('userid')
+            # -- userid and qualifier included in redirection
+            # -- apikey in authorization header
+            # -- session id from cookie
+            # -- payload decoded from JWE token
         if not verified:
             abort(401, description=message)
-        # use userid and qualifier included in redirection
+        # -- establish omega session
+        try:
+            context.userid = userid
+            context.apikey = auth_token
+            context.qualifier = payload.get('qualifier')
+            context.om = auth_env.get_omega_from_apikey(context.userid, context.apikey, qualifier=context.qualifier)
+        except Exception as e:
+            verified = False
+            message = str(e)
+            payload = None
+        if not verified:
+            abort(401, description=message)
         context.session_id = session_id
         context.payload = payload
-        context.userid = payload.get('userid')
-        context.qualifier = payload.get('qualifier')
-        context.om = auth_env.get_omega_on_behalf(context.userid, context.qualifier)
         current_app.logger.info('session: %s is verified %s', session_id, verified)
+        # -- process view
         return fn(*args, **kwargs)
 
     def _task(session_id):
