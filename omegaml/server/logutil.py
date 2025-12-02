@@ -63,13 +63,13 @@ import yaml
 LOGUTIL_ENV_KEYS = ['APP', 'APP_VERSION', 'APP_ENV', 'HOSTNAME']
 #: optional additional env keys to be logged, if available
 LOGUTIL_ENV_KEYS += os.environ.get('LOGUTIL_ENV_KEYS', '').split(',')
-#: the logger.yaml location, defaults to the "config" module
-try:
-    import config
-except:
-    LOGUTIL_CONFIG_FILE = Path(__file__).parent / 'logging.yaml'
-else:
-    LOGUTIL_CONFIG_FILE = Path(config.__file__).parent / 'logging.yaml'
+#: the logger.yaml location, defaults to the "config" module, fallback cwd
+_config_paths = [
+    (Path.cwd() / 'config' / 'logging.yaml'),
+    (Path.cwd() / 'logging.yaml'),
+    (Path(__file__).parent / 'logging.yaml'),
+]
+LOGUTIL_CONFIG_FILE = [p for p in _config_paths if p.exists()][-1]
 
 
 def configure_logging(logging_config=None, settings=None):
@@ -89,6 +89,8 @@ def configure_logging(logging_config=None, settings=None):
 
     config_file = (logging_config or getattr(settings, 'LOGGING_CONFIG_FILE', None)
                    or os.environ.get('LOGGING_CONFIG_FILE') or LOGUTIL_CONFIG_FILE)
+    logging.info(f'loading logger config from {config_file}')
+    
     try:
         with open(config_file, 'r') as fin:
             loggingConfig = yaml.safe_load(fin)
