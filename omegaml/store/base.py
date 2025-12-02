@@ -81,7 +81,7 @@ from uuid import uuid4
 
 import bson
 import gridfs
-from mongoengine.connection import disconnect, connect, _connections, get_db
+from mongoengine.connection import disconnect, connect, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.queryset.visitor import Q
 
@@ -182,6 +182,7 @@ class OmegaStore(object):
         self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
         # always disconnect before registering a new connection because
         # mongoengine.connect() forgets all connection settings upon disconnect
+        from mongoengine.connection import _connections
         if alias not in _connections:
             disconnect(alias)
             connection = connect(alias=alias, db=self.database_name,
@@ -195,6 +196,7 @@ class OmegaStore(object):
             # since PyMongo 4, connect() no longer waits for connection
             waitForConnection(connection)
         self._db = get_db(alias)
+        # self._db.client.close = lambda: (_ for _ in ()).throw(ValueError("invalid value"))
         return self._db
 
     @property
