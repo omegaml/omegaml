@@ -142,5 +142,8 @@ server-debug:
 	export OMEGA_LOCAL_RUNTIME=1; python -m omegaml.server
 
 server:
-	OMEGA_LOGLEVEL=DEBUG honcho -f scripts/local/Procfile start server worker
+	honcho -f scripts/local/Procfile start server worker
+
+server-sse:
+	honcho -f scripts/ssechat/Procfile start web server worker sse
 

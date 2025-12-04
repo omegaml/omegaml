@@ -24,13 +24,19 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
     task_logger = self.app.log.get_default_logger()
     result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
     if stream and (inspect.isgenerator(result) or isinstance(result, list)):
-        chunk = {'result': None}
         stream = self.om.streams.get(f'.system/complete/{self.request.id}')
-        for chunk in result:
-            task_logger.debug('streaming chunk %s', chunk)
+        chunk = None
+        try:
+            for chunk in result:
+                task_logger.debug('streaming chunk %s in %s', chunk, self.request.id)
+                stream.append(chunk)
+        except Exception as e:
+            task_logger.error('error streaming %s due to %s', self.request.id, str(e))
+            chunk = {'message': str(e), 'stream_complete': 'error'}
             stream.append(chunk)
-        # TODO use sentinel value that is not tied to openai format
-        stream.append({'finish_reason': 'stop'})
+        else:
+            task_logger.debug('finalized streaming %s', self.request.id)
+            stream.append({'stream_complete': 'stop'})
         result = {
             'result': chunk,
         }

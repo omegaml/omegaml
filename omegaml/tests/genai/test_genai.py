@@ -554,4 +554,35 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.complete('hello')
         model.provider.complete.assert_called()
         messages = model.provider.complete.call_args.kwargs.get('messages')
-        print(messages)
+        self.assertIn('Today is', messages[-1].get('content'))
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_messages_raw(self, OpenAIProvider):
+        # test prompts/messages passed in from chat client handled correctly
+        om = self.om
+        om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = om.models.get('mymodel')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello',
+                    }
+                }
+            ]
+        })
+        messages = [{
+            "role": "user",
+            "content": "test"
+        }]
+        model.complete('', messages=messages, raw=True)
+        model.provider.complete.assert_called()
+        provider_messages = model.provider.complete.call_args.kwargs.get('messages')
+        print(provider_messages)
+        self.assertIsInstance(provider_messages, list)
+        self.assertEqual(len(provider_messages), 2)
+        self.assertEqual(provider_messages[0]['role'], 'system')
+        self.assertEqual(provider_messages[1]['role'], 'user')

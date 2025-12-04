@@ -9,8 +9,6 @@ import gridfs
 import yaml
 from croniter import croniter
 from jupyter_client import AsyncKernelManager
-from nbconvert.preprocessors import ClearOutputPreprocessor
-from nbconvert.preprocessors.execute import ExecutePreprocessor
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4, NotebookNode
 
 from omegaml.backends.basedata import BaseDataBackend
@@ -384,6 +382,9 @@ class NotebookMixin:
             characters of an exception. The actual exception is preserved in the
             job_results notebook, stored as a separate object.
         """
+        from nbconvert.preprocessors import ClearOutputPreprocessor
+        from nbconvert.preprocessors.execute import ExecutePreprocessor
+
         notebook = self.get(name)
         meta_job = self.metadata(name)
         assert meta_job is not None, f"Cannot run non-existent jobs {name}"

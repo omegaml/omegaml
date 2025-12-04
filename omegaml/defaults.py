@@ -530,7 +530,7 @@ def setup_logging():
     for name, level in default_loglevels.items():
         pymongo_logger = logging.getLogger(name)
         pymongo_logger.setLevel(level)
-    logging.basicConfig(level=OMEGA_LOGLEVEL)
+    logging.basicConfig(level=OMEGA_LOGLEVEL, format=OMEGA_LOG_FORMAT)
     logger = logging.getLogger('omegaml')
     logger.setLevel(OMEGA_LOGLEVEL)
 

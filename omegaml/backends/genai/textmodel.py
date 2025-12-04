@@ -530,7 +530,7 @@ class TextModel(GenAIModel):
             # raw input, assume messages contains the user prompt
             messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
             # augment last message only
-            messages += [self._augment_message(messages[-1], documents=self.documents, template=template)]
+            messages[-1] = self._augment_message(messages[-1], documents=self.documents, template=template)
             prompt_message = messages[-1]
         # prepare tools
         if self.tools:
