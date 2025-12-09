@@ -16,7 +16,7 @@ from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow
+from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow, raise_
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -163,7 +163,10 @@ class TextModelBackend(GenAIBaseBackend):
         return self.model_store._drop(name, force=force, **kwargs)
 
     def _load_tools(self, tools):
-        tool_fns = [tool if callable(tool) else self.model_store.get(f'tools/{tool}') for tool in tools]
+        barename = lambda v: 'tools/{v}'.format(v=str(v).replace('tools/', ''))  # works with or without tools/ prefix
+        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'tool >{t}< is not a callable, got {fn}'))
+        tool_fns = [tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools]
+        tool_fns = [fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn)]
         return tool_fns
 
     def _load_documents(self, documents):

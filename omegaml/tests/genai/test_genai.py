@@ -298,7 +298,10 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_tool_use_notrack(self, OpenAIProvider):
-        self._test_tool_use(OpenAIProvider, tracking=False)
+        # use tools/ prefix in attribute['tools']
+        self._test_tool_use(OpenAIProvider, tracking=False, prefix='tools/')
+        # don't use a prefix in attribute['tools']
+        self._test_tool_use(OpenAIProvider, tracking=False, prefix='')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_tool_use_tracked(self, OpenAIProvider):
@@ -309,18 +312,18 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 2)  # not streamed, streamed
 
-    def _test_tool_use(self, OpenAIProvider, tracking=False):
+    def _test_tool_use(self, OpenAIProvider, tracking=False, prefix='tools/'):
         om = self.om
 
         # define a tool
         def weather():
             return 'sunny'
 
-        om.models.put(weather, 'tools/weather')
+        om.models.put(weather, f'tools/weather')
         # check model definition includes tools
         meta = om.models.put('openai+http://localhost/mymodel', 'mymodel',
-                             tools=['weather'])
-        self.assertEqual(meta.attributes['tools'], ['weather'])
+                             tools=[f'{prefix}weather'])
+        self.assertEqual(meta.attributes['tools'], [f'{prefix}weather'])
         # check model triggers tools
         if not tracking:
             model = om.models.get('mymodel')
@@ -586,3 +589,41 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(provider_messages), 2)
         self.assertEqual(provider_messages[0]['role'], 'system')
         self.assertEqual(provider_messages[1]['role'], 'user')
+
+    def test_metadata_update(self):
+        """ test metadata updates to strategy, systemprompt and tools work
+        """
+        om = self.om
+        # try non-existing tool
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', tools=['xweather'])
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['xweather'])
+        with self.assertRaises(ValueError) as cm:
+            om.models.get('mymodel')
+            self.assertIn('not a callable', cm.exception.args[0])
+
+        # try existing tool
+        # -- define a tool
+        def weather():
+            return 'sunny'
+
+        om.models.put(weather, f'tools/weather')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', tools=['weather'])
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['weather'])
+        model = om.models.get('mymodel')
+        self.assertTrue(callable(model.tools[0]))
+        self.assertTrue(model.tools[0].__name__ == 'weather')
+        # -- create model without tools
+        om.models.put(weather, f'tools/weather')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        # -- modify tools in metadata
+        meta = om.models.metadata('mymodel')
+        meta.attributes['tools'] = ['weather']
+        meta.save(version=True)
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['weather'])
+        # -- check tool works
+        model = om.models.get('mymodel')
+        self.assertTrue(callable(model.tools[0]))
+        self.assertTrue(model.tools[0].__name__ == 'weather')

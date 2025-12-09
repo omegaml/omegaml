@@ -154,6 +154,7 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
             if not data:
                 raise ValueError(f'expected data, got {data}')
             return {'data': data, 'method': method}
+
         # store virtual obj as a versioned model (the default for models)
         mymodel.version_ = 1
         meta1 = store.put(mymodel, 'mymodel')
@@ -209,4 +210,17 @@ class ModelVersionMixinTests(OmegaTestMixin, TestCase):
         revisions = store.revisions('regmodel', raw=True)
         self.assertIsInstance(revisions[-1], store._Metadata)
 
-
+    def test_versioned_meta_save(self):
+        store = self.om.models
+        store.register_mixin(ModelVersionMixin)
+        clf = LinearRegression()
+        # store model and check revisions
+        # -- initial version adds a new commit
+        meta = store.put(clf, 'regmodel')
+        self.assertEqual(len(meta.attributes['versions']['commits']), 1)
+        # -- updating metadata adds a commit
+        meta.attributes['foo'] = True
+        meta.save(version=True)
+        self.assertEqual(len(meta.attributes['versions']['commits']), 2)
+        meta = store.metadata('regmodel@latest')
+        self.assertEqual(meta.attributes.get('foo'), True)

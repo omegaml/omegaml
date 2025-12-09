@@ -1411,3 +1411,7 @@ def find_instances(cls):
             # ignore weakref or other issues
             pass
     return instances
+
+
+def raise_(e):
+    raise e
