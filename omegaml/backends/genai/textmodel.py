@@ -4,6 +4,7 @@ import re
 from collections import namedtuple
 from copy import deepcopy
 from getpass import getuser
+from pprint import pformat
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
 
@@ -279,7 +280,7 @@ class TextModel(GenAIModel):
 
     def __init__(self, base_url, model, api_key=None, template=None, prompt=None, data_store=None,
                  tracking=None, pipeline=None, provider='openai', tools=None, documents=None,
-                 strategy=None, **kwargs):
+                 strategy=None, trace=None, **kwargs):
         super().__init__()
         self.base_url = base_url
         self.model = model
@@ -293,7 +294,8 @@ class TextModel(GenAIModel):
             api_key=api_key,
             base_url=base_url,
             model=model)
-        self.pipeline = pipeline or (lambda *args, **kwargs: None)
+        self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
+        self.trace_fn = trace
         self.tools = tools
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
@@ -319,6 +321,26 @@ class TextModel(GenAIModel):
     def load(self, method):
         pass
 
+    def trace(self, fn=None, methods=None):
+        """ trace pipeline calls
+
+        Args:
+            fn (callable): a callable, accepting the same arguments as a pipeline function
+            methods (list): optional, specify the pipeline methods to trace, e.g. prepare, complete,
+               toolprepare, toolcall, toolresult, process
+
+        Returns:
+            self
+        """
+        methods = methods or []
+
+        def tracefn(*args, method=None, **kwargs):
+            if not methods or method in methods:
+                print(f"tracing method={method}", pformat(kwargs))
+
+        self.trace_fn = fn or tracefn
+        return self
+
     def embed(self, documents, dimensions=None, raw=False, conversation_id=None, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
         response = self.provider.embed(documents, dimensions=dimensions, model=self.model,
@@ -329,7 +351,7 @@ class TextModel(GenAIModel):
         return response if raw else list(transformed)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
-                 chat=False, stream=False, use_tools=True, **kwargs):
+                 chat=False, stream=False, use_tools=True, trace=None, **kwargs):
         """ complete a prompt
 
         Will call the provider's chat.completion endpoint. Can be called in two modes:
@@ -350,14 +372,15 @@ class TextModel(GenAIModel):
         Returns:
 
         """
+        self.trace(trace) if locals().get('trace') else None
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return response_message if not raw else response.to_dict()
 
         def parse_chat_response(r):
             conversation_id, response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return response_message if not raw else response.to_dict()
 
         if not chat and conversation_id is None:
             responses = self._do_complete(prompt, messages=messages, data=data,
@@ -482,6 +505,10 @@ class TextModel(GenAIModel):
             return messages[columns] if not raw else messages.to_dict('records')
         return pd.DataFrame() if not raw else []
 
+    def pipeline(self, *args, **kwargs):
+        self.trace_fn(*args, **kwargs) if callable(self.trace_fn) else None
+        return self.pipeline_fn(*args, **kwargs)
+
     def _system_message(self, prompt, conversation_id=None):
         return {
             "role": "system",
@@ -571,6 +598,11 @@ class TextModel(GenAIModel):
             else:
                 tool_calls = None
             if use_tools and tool_calls:
+                tool_calls = self.pipeline(method='toolprepare',
+                                           prompt_message=prompt_message,
+                                           tool_calls=tool_calls,
+                                           template=template,
+                                           conversation_id=conversation_id, **kwargs) or tool_calls
                 results, tool_prompts = self._call_tools(tool_calls, conversation_id)
                 # ask llm to respond to tool results
                 # -- avoid recursive tool calls
@@ -579,10 +611,12 @@ class TextModel(GenAIModel):
                 kkwargs.pop('stream', None)
                 kkwargs.pop('tools', None)
                 kkwargs.pop('tool_choice', None)
-                toolcall_messages = messages + [prompt_message] + [message] + tool_prompts
+                toolcall_messages = messages + [response_message] + tool_prompts
                 toolcall_messages = self.pipeline(method='toolcall',
                                                   prompt_message=prompt_message,
                                                   messages=toolcall_messages,
+                                                  tool_prompts=tool_prompts,
+                                                  tool_results=results,
                                                   template=template,
                                                   conversation_id=conversation_id, **kwargs) or toolcall_messages
                 response = self.provider.complete(
