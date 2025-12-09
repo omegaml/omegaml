@@ -106,6 +106,7 @@ class StreamableResourceMixin:
             logger.debug("complete:stream_result waiting for chunks")
             emitter.run(blocking=False)
             for chunk in buffer:
+                logger.debug("complete:stream_result chunk received: %s", chunk)
                 # determine if we should stop
                 finish_reason = chunk.get('stream_complete', '')
                 should_stop = finish_reason.startswith('stop')
@@ -115,7 +116,6 @@ class StreamableResourceMixin:
                     message = chunk.get('message', '')
                     break
                 # process chunk by forwarding to Sink buffer
-                logger.debug("complete:stream_result chunk received: %s", chunk)
                 data = self.prepare_result(chunk, resource_name=resource_name)
                 data.update(data.pop('result', {})) if raw else None
                 yield data

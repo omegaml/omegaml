@@ -5,6 +5,7 @@ import re
 from collections import namedtuple
 from copy import deepcopy
 from getpass import getuser
+from pprint import pformat
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
 
@@ -17,7 +18,9 @@ from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow
+from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow, raise_
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +169,10 @@ class TextModelBackend(GenAIBaseBackend):
         return self.model_store._drop(name, force=force, **kwargs)
 
     def _load_tools(self, tools):
-        tool_fns = [tool if callable(tool) else self.model_store.get(f'tools/{tool}') for tool in tools]
+        barename = lambda v: 'tools/{v}'.format(v=str(v).replace('tools/', ''))  # works with or without tools/ prefix
+        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'tool >{t}< is not a callable, got {fn}'))
+        tool_fns = [tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools]
+        tool_fns = [fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn)]
         return tool_fns
 
     def _load_documents(self, documents):
@@ -279,7 +285,7 @@ class TextModel(GenAIModel):
 
     def __init__(self, base_url, model, api_key=None, template=None, prompt=None, data_store=None,
                  tracking=None, pipeline=None, provider='openai', tools=None, documents=None,
-                 strategy=None, **kwargs):
+                 strategy=None, trace=None, **kwargs):
         super().__init__()
         self.base_url = base_url
         self.model = model
@@ -293,7 +299,8 @@ class TextModel(GenAIModel):
             api_key=api_key,
             base_url=base_url,
             model=model)
-        self.pipeline = pipeline or (lambda *args, **kwargs: None)
+        self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
+        self.trace_fn = trace
         self.tools = tools
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
@@ -316,8 +323,28 @@ class TextModel(GenAIModel):
         {{ prompt }}
         """
 
-    def load(self, method):
+    def load(self):
         pass
+
+    def trace(self, fn=None, methods=None):
+        """ trace pipeline calls
+
+        Args:
+            fn (callable): a callable, accepting the same arguments as a pipeline function
+            methods (list): optional, specify the pipeline methods to trace, e.g. prepare, complete,
+               toolprepare, toolcall, toolresult, process
+
+        Returns:
+            self
+        """
+        methods = methods or []
+
+        def tracefn(*args, method=None, **kwargs):
+            if not methods or method in methods:
+                print(f"tracing method={method}", pformat(kwargs))
+
+        self.trace_fn = fn or tracefn
+        return self
 
     def embed(self, documents, dimensions=None, raw=False, conversation_id=None, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
@@ -325,11 +352,11 @@ class TextModel(GenAIModel):
                                        **kwargs)
         conversation_id = conversation_id or uuid4().hex
         self._track_usage(response, conversation_id=conversation_id)
-        transformed = (d['embedding'] for d in response['data'])
+        transformed = (d.get('embedding', d) for d in response.get('data', response))
         return response if raw else list(transformed)
 
     def complete(self, prompt, messages=None, conversation_id=None, raw=False, data=None,
-                 chat=False, stream=False, use_tools=True, **kwargs):
+                 chat=False, stream=False, use_tools=True, trace=None, **kwargs):
         """ complete a prompt
 
         Will call the provider's chat.completion endpoint. Can be called in two modes:
@@ -350,14 +377,15 @@ class TextModel(GenAIModel):
         Returns:
 
         """
+        self.trace(trace) if locals().get('trace') else None
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return response_message if not raw else response
 
         def parse_chat_response(r):
             conversation_id, response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return response_message if not raw else response
 
         if not chat and conversation_id is None:
             responses = self._do_complete(prompt, messages=messages, data=data,
@@ -373,7 +401,9 @@ class TextModel(GenAIModel):
                                       **kwargs)
             response_parser = parse_chat_response
         # return response(s)
-        response_gen = (response_parser(response) for response in responses)
+        # -- parse, then check if parsed is a valid object (avoid passing on a generator)
+        parsed_gen = (response_parser(response) for response in responses)
+        response_gen = (parsed for parsed in parsed_gen if isinstance(parsed, (list, dict, tuple)))
         return response_gen if stream else [response for response in response_gen][-1]
 
     def chat(self, prompt, conversation_id=None, raw=False, stream=False, use_tools=True, **kwargs):
@@ -387,7 +417,7 @@ class TextModel(GenAIModel):
             conversation_id, response, prompt_response, response_message, raw_response = r
             return conversation_id, (response if raw else response_message)
 
-        response_gen = (response_parser(response) for response in responses)
+        response_gen = (response_parser(response) for response in responses if response)
         return response_gen if stream else [response for response in response_gen][-1]
 
     def _do_chat(self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False,
@@ -482,6 +512,10 @@ class TextModel(GenAIModel):
             return messages[columns] if not raw else messages.to_dict('records')
         return pd.DataFrame() if not raw else []
 
+    def pipeline(self, *args, **kwargs):
+        self.trace_fn(*args, **kwargs) if callable(self.trace_fn) else None
+        return self.pipeline_fn(*args, **kwargs)
+
     def _system_message(self, prompt, conversation_id=None):
         return {
             "role": "system",
@@ -533,7 +567,7 @@ class TextModel(GenAIModel):
             # raw input, assume messages contains the user prompt
             messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
             # augment last message only
-            messages += [self._augment_message(messages[-1], documents=self.documents, template=template)]
+            messages[-1] = self._augment_message(messages[-1], documents=self.documents, template=template)
             prompt_message = messages[-1]
         # prepare tools
         if self.tools:
@@ -560,17 +594,22 @@ class TextModel(GenAIModel):
 
         def maybe_call_tools(response, prompt_message, response_message, use_tools=False, as_delta=False):
             """ prepare calling tools, optionally actually call the selected tool """
-            if hasattr(response.choices[0], 'delta'):
-                message = response.choices[0].delta
+            if 'delta' in response['choices'][0]:
+                message = response['choices'][0]['delta']
             else:
-                message = response.choices[0].message
-            if self.tools and getattr(message, 'tool_calls', None):
+                message = response['choices'][0]['message']
+            if self.tools and 'tool_calls' in message:
                 # call tools
-                response_message['tool_calls'] = message.to_dict()['tool_calls']
-                tool_calls = [tool.to_dict() for tool in message.tool_calls]
+                response_message['tool_calls'] = message['tool_calls']
+                tool_calls = [tool for tool in message['tool_calls']]
             else:
                 tool_calls = None
             if use_tools and tool_calls:
+                tool_calls = self.pipeline(method='toolprepare',
+                                           prompt_message=prompt_message,
+                                           tool_calls=tool_calls,
+                                           template=template,
+                                           conversation_id=conversation_id, **kwargs) or tool_calls
                 results, tool_prompts = self._call_tools(tool_calls, conversation_id)
                 # ask llm to respond to tool results
                 # -- avoid recursive tool calls
@@ -579,10 +618,12 @@ class TextModel(GenAIModel):
                 kkwargs.pop('stream', None)
                 kkwargs.pop('tools', None)
                 kkwargs.pop('tool_choice', None)
-                toolcall_messages = messages + [prompt_message] + [message] + tool_prompts
+                toolcall_messages = messages + [response_message] + tool_prompts
                 toolcall_messages = self.pipeline(method='toolcall',
                                                   prompt_message=prompt_message,
                                                   messages=toolcall_messages,
+                                                  tool_prompts=tool_prompts,
+                                                  tool_results=results,
                                                   template=template,
                                                   conversation_id=conversation_id, **kwargs) or toolcall_messages
                 response = self.provider.complete(
@@ -608,31 +649,31 @@ class TextModel(GenAIModel):
                                                         **kwargs) or tooled_response_message
                 if as_delta:
                     # ensure the tool response is shown as a delta chunk
+                    message = tooled_response_message.get('message') or tooled_response_message
                     if raw:
-                        tooled_response_message['choices'][0]['delta'] = tooled_response_message['choices'][0].pop(
-                            'message', None)
+                        tooled_response['choices'][0]['delta'] = message
                     else:
-                        tooled_response_message['delta'] = response_message['content']
+                        tooled_response['delta'] = message
                 return tooled_response, prompt_message, tooled_response_message
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
-            raw_response = response.to_dict()
+            raw_response = response.to_dict() if hasattr(response, 'to_dict') else response
             if raw:
                 # native response message
                 # Ref: https://platform.openai.com/docs/api-reference/chat/get
-                response_message = response.choices[0].message.to_dict()
-            elif getattr(response, 'error', None):
+                response_message = response['choices'][0]['message']
+            elif 'error' in response:
                 return response, prompt_message, {
                     "role": "system",
-                    "content": response.error.get('message', str(response.error)),
+                    "content": response['error'].get('message', str(response['error'])),
                     "conversation_id": conversation_id,
-                    "error": response.error,
+                    "error": response['error'],
                 }
             else:
                 response_message = {
-                    "role": response.choices[0].message.role,
-                    "content": tryOr(lambda: response.choices[0].message.content, None),
+                    "role": response['choices'][0]['message'].get('role'),
+                    "content": tryOr(lambda: response['choices'][0]['message'].get('content'), None),
                     "conversation_id": conversation_id,
                 }
             response, prompt_message, response_message = maybe_call_tools(response, prompt_message,
@@ -643,7 +684,6 @@ class TextModel(GenAIModel):
                                              template=template,
                                              conversation_id=conversation_id,
                                              **kwargs) or response_message
-            self._track_usage(response, conversation_id)
             return response, prompt_message, response_message, raw_response
 
         def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
@@ -667,20 +707,20 @@ class TextModel(GenAIModel):
                     raw_response: the raw response chunk as a dictionary
 
             """
-            raw_response = chunk.to_dict()
-            if chunk.choices:
-                content = ''.join(c['choices'][0]['delta']['content'] for c in chunks) + str(
-                    chunk.choices[0].delta.content or '')
+            raw_response = chunk.to_dict() if hasattr(chunk, 'to_dict') else chunk
+            if chunk['choices']:
+                content = (''.join(c['choices'][0]['delta'].get('content') or '' for c in chunks)
+                           + str(chunk['choices'][0]['delta'].get('content') or ''))
                 if raw:
-                    response_message = chunk.choices[0].delta.to_dict()
+                    response_message = chunk['choices'][0]['delta']
                 else:
                     # consolidate content
                     response_message = {
-                        "role": chunk.choices[0].delta.role,
-                        "delta": chunk.choices[0].delta.content,
+                        "role": chunk['choices'][0]['delta'].get('role'),
+                        "delta": chunk['choices'][0]['delta'].get('content'),
                         "content": content,
                         "conversation_id": conversation_id,
-                        "finish_reason": chunk.choices[0].finish_reason,
+                        "finish_reason": chunk['choices'][0]['finish_reason'],
                     }
                 response, prompt_message, response_message = maybe_call_tools(chunk, prompt_message,
                                                                               response_message, use_tools=use_tools,
@@ -692,12 +732,11 @@ class TextModel(GenAIModel):
                                                  conversation_id=conversation_id,
                                                  **kwargs) or response_message
                 # consolidate response
-                consolidated_response.update(response_message) if not consolidated_response else None
+                consolidated_response.update(response_message)
                 consolidated_response['content'] = content
             else:
                 response_message = {}
             chunks.append(raw_response)
-            self._track_usage(chunk, conversation_id)
             return response, prompt_message, response_message, raw_response
 
         if stream:
@@ -727,7 +766,7 @@ class TextModel(GenAIModel):
                 self._log_events('error', conversation_id, [response])
 
     def _parsed_completion(self, response):
-        return response.choices[0].message.content
+        return response['choices'][0]['message'].get('content')
 
     def _prepare_template(self, template, data=None):
         _template = (template or '').format_map(safeformat(data or {}))
@@ -864,7 +903,7 @@ class OpenAIProvider(Provider):
             dimensions=dimensions,
             encoding_format="float"
         )
-        return response
+        return response.to_dict()
 
     def complete(self, messages, stream=False, model=None, **kwargs):
         if stream:
@@ -876,7 +915,7 @@ class OpenAIProvider(Provider):
             stream=stream,
             **kwargs
         )
-        return response
+        return response.to_dict() if not stream else (chunk.to_dict() for chunk in response)
 
 
 class JinaEmbeddingsProvider(Provider):

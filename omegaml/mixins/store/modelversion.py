@@ -43,6 +43,7 @@ class ModelVersionMixin(object):
             meta = super().put(obj, base_name, **kwargs)
             self._ensure_versioned(meta)
             meta = self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, **kwargs)
+            ModelVersionMixin._versioned_meta(meta, self)
         else:
             meta = super().put(obj, name, **kwargs)
         return meta
@@ -67,6 +68,24 @@ class ModelVersionMixin(object):
         return super().drop(name, force=force, **kwargs)
 
     def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False, **kwargs):
+        """ returns a version's Metadata
+
+        Args:
+            name (str): the name of the objecst
+            bucket (str): optional, the name of the bucket, defaults to self.bucket
+            prefix (str): optional, the name of the prefix, defaults to self.prefix
+            version (bool|int): the version specified, defaults to -1 (latest)
+            commit (str): the version's commit id
+            tag (str): the version's tag
+            raw (bool): if True returns the version's metadata, else the base object metadata, defaults to False
+            **kwargs: passed on to calls on super().metadata()
+
+        Returns:
+            meta (Metadata): the metadata object of the versioned object
+
+        .. versionchanged:: NEXT
+            use metadata.save(version=True, tag=..., commit=...) for a versioned object to add a commit
+        """
         if not self._model_version_applies(name):
             return super().metadata(name)
         base_meta, base_commit, base_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
@@ -80,9 +99,11 @@ class ModelVersionMixin(object):
                                                           bucket=bucket,
                                                           prefix=prefix)
             meta = super().metadata(actual_name, bucket=bucket, prefix=prefix)
+            ModelVersionMixin._versioned_meta(meta, self)
         elif base_meta:
             # there is a versioned entry, return the base
             meta = base_meta
+            ModelVersionMixin._versioned_meta(meta, self)
         else:
             # no version found, return the actual object
             meta = super().metadata(name)
@@ -194,13 +215,24 @@ class ModelVersionMixin(object):
             meta.attributes['versions']['commits'] = []
             meta.attributes['versions']['tree'] = {}
 
-    def _put_version(self, obj, meta, tag=None, commit=None, previous=None, **kwargs):
+    def _put_version(self, obj, meta, tag=None, commit=None, previous=None, _from_meta_save=False, **kwargs):
         version_hash = commit or self._model_version_hash(meta)
         previous = meta.attributes['versions']['tags'].get(previous) or None
         version_name = self._model_version_store_key(meta.name, version_hash)
-        version_meta = self.put(obj, version_name, noversion=True, **kwargs)
+        if _from_meta_save:
+            # Metadata.save(version=True) => add a commit based on previous metadata
+            version_meta = self.make_metadata(version_name, meta.kind, collection=meta.collection, uri=meta.uri)
+            # -- copy gridfile and kind_meta to have an exact copy of the previuos version
+            version_meta.gridfile = deepcopy(meta.gridfile)
+            version_meta.kind_meta = deepcopy(meta.kind_meta)
+            version_meta.kind_meta.update(kwargs.get('kind_meta') or {})
+        else:
+            # Metadata.save(version=False) => add a commit from an actual object
+            # -- kind_meta is created by backend on .put()
+            version_meta = self.put(obj, version_name, noversion=True, **kwargs)
+        # -- copy attributes for least surprise (user expects similar attributes for new versions)
         version_meta.attributes = deepcopy(meta.attributes)
-        version_meta.attributes.update(kwargs.get('attributes') or {})  # kwargs attributes can be None
+        version_meta.attributes.update(kwargs.get('attributes') or {})
         if 'versions' in version_meta.attributes:
             del version_meta.attributes['versions']
         version_meta.save()
@@ -210,3 +242,28 @@ class ModelVersionMixin(object):
         if tag:
             meta.attributes['versions']['tags'][tag] = version_hash
         return meta.save()
+
+    def _save_version_metadata(self, meta, tag=None, commit=None, previous=None, **kwargs):
+        # create a new version from a metadata update
+        obj = None
+        return self._put_version(obj, meta, tag=tag, commit=commit, previous=previous, _from_meta_save=True, **kwargs)
+
+    @staticmethod
+    def _versioned_meta(meta, mixin):
+        # override this instance's Metadata.save() method to create a new version
+        actual_save = meta.save
+
+        def _versioned_save(*args, version=False, tag=None, commit=None, **kwargs):
+            #
+            meta.save = actual_save
+            # -- start using actual Metadata.save()
+            if bool(version or tag or commit):
+                # -- if requested, create a new metadata version
+                mixin._save_version_metadata(meta, tag=tag, commit=commit, **kwargs)
+            meta.save(*args, **kwargs)
+            # -- revert to _versioned_save so we get called next time
+            meta.save = _versioned_save
+            return meta
+
+        meta.save = _versioned_save
+        return meta
