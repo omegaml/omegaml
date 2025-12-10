@@ -1,16 +1,17 @@
-import dill
 import importlib
-import numpy as np
 import os
-import pandas as pd
 import platform
-import pymongo
 import warnings
 from base64 import b64encode, b64decode
 from datetime import date
 from itertools import chain
 from typing import Iterable
 from uuid import uuid4
+
+import dill
+import numpy as np
+import pandas as pd
+import pymongo
 
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
@@ -36,6 +37,9 @@ class NoTrackTracker(TrackingProvider):
         pass
 
     def log_event(self, event, key, value, step=None, **extra):
+        pass
+
+    def log_events(self, event, key, values, step=None, dt=None, **extra):
         pass
 
     def log_extra(self, **kwargs):

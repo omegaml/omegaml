@@ -139,7 +139,7 @@ scan: freeze pipsync
 
 server-debug:
 	# start omegaml server
-	export OMEGA_LOCAL_RUNTIME=1; python -m omegaml.server
+	export OMEGA_LOCAL_RUNTIME=1; export DEBUG=1; python -m omegaml.server
 
 server:
 	honcho -f scripts/local/Procfile start server worker

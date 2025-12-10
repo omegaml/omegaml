@@ -1,4 +1,5 @@
 import inspect
+import warnings
 from types import FunctionType
 from unittest import TestCase, mock
 from unittest.mock import patch
@@ -257,6 +258,29 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertIn('messages', kwargs)
         model = kwargs['model']
         self.assertEqual(model, 'mymodel')
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_openai_stream_erronous(self, OpenAIProvider):
+        meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = self.om.models.get('mymodel')
+        # mock openai call
+        # -- simulate tokenized responses, one character at a time
+        assistant_response = 'hello how are you'
+        openai_responses = [AttrDict({
+            'choices': [AttrDict({
+                'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
+                'delta': []  # invalid delta object (wrong type, should be {'content': ...} )
+            })]
+        }) for i, c in enumerate(assistant_response)]
+        model.provider = OpenAIProvider
+        model.provider.complete.return_value = openai_responses
+        # check call raises errors
+        with self.assertLogs(logger='omegaml') as log:
+            warnings.simplefilter('always')
+            result = list(model.complete('hello', stream=True))
+            self.assertIn('could not process', ' '.join(log.output))
+        # check stream completes ok
+        self.assertEqual(result[-1].get('finish_reason'), 'stop.consolidated')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_openai_embedding(self, OpenAIProvider):

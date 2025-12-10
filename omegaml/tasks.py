@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import datetime
 import inspect
 import os
+from traceback import format_exc
 
 from celery import shared_task
 from celery.signals import worker_process_init
@@ -31,8 +32,8 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
                 task_logger.debug('streaming chunk %s in %s', chunk, self.request.id)
                 stream.append(chunk)
         except Exception as e:
-            task_logger.error('error streaming %s due to %s', self.request.id, str(e))
-            chunk = {'message': str(e), 'stream_complete': 'error'}
+            task_logger.error('error streaming %s due to %s', self.request.id, format_exc())
+            chunk = {'message': repr(e), 'stream_complete': 'error'}
             stream.append(chunk)
         else:
             task_logger.debug('finalized streaming %s', self.request.id)

@@ -249,6 +249,9 @@ class TrackingProvider:
     def log_event(self, event, key, value, step=None, **extra):
         raise NotImplementedError
 
+    def log_events(self, event, key, values, step=None, dt=None, **extra):
+        raise NotImplementedError
+
     def log_metric(self, key, value, step=None, **extra):
         raise NotImplementedError
 
