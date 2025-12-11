@@ -45,7 +45,7 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
 
     def test_cli_runtime_model_gridsearch(self):
         X, y = make_classification()
-        logreg = LogisticRegression(solver='liblinear')
+        logreg = LogisticRegression()
         self.om.models.put(logreg, 'logreg')
         # perform gridsearch on runtime
         self.om.datasets.put(X, 'testX')

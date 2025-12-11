@@ -1,12 +1,13 @@
 import datetime
-import pandas as pd
 import platform
-import pymongo
 import unittest
+from time import sleep
+
+import pandas as pd
+import pymongo
 from numpy.testing import assert_almost_equal
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from time import sleep
 
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
@@ -79,7 +80,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         # run a local experiment and track its result
         with om.runtime.experiment('myexp') as exp:
@@ -138,7 +139,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel')
         # no tracking
@@ -164,7 +165,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel', attributes={
             'tracking': {
@@ -184,7 +185,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel')
         tracker = om.runtime.experiment('expfoo', autotrack=True)
@@ -229,7 +230,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         om.models.put(lr, 'mymodel')
         tracker = om.runtime.experiment('expfoo', autotrack=True)
@@ -292,7 +293,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         # use runtime to fit model without tracking
         om.models.put(lr, 'mymodel')
@@ -308,7 +309,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         om.models.put(lr, 'foo')
         with om.runtime.experiment('experiments/foo') as exp:
             exp.log_metric(5, 'accuracy')
@@ -374,7 +375,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # test experiments are stopped afterwards
         om = self.om
         # create a model and get its default experiment
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         om.models.put(lr, 'foo')
         # get default experiment, expect it to be tracking the model
         exp = om.runtime.model('foo').experiment()
