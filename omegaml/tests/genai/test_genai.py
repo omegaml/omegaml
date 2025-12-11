@@ -7,6 +7,7 @@ from unittest.mock import patch
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
+from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
 
@@ -608,7 +609,6 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.complete('', messages=messages, raw=True)
         model.provider.complete.assert_called()
         provider_messages = model.provider.complete.call_args.kwargs.get('messages')
-        print(provider_messages)
         self.assertIsInstance(provider_messages, list)
         self.assertEqual(len(provider_messages), 2)
         self.assertEqual(provider_messages[0]['role'], 'system')
@@ -651,3 +651,48 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model = om.models.get('mymodel')
         self.assertTrue(callable(model.tools[0]))
         self.assertTrue(model.tools[0].__name__ == 'weather')
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_pipeline_basic_steps(self, OpenAIProvider):
+        om = self.om
+
+        @virtualobj
+        def pipeline(method=None, **kwargs):
+            import omegaml as om
+            with om.runtime.experiment('test') as exp:
+                exp.log_event('pipeline', method, kwargs)
+            if method == 'prepare':
+                prompt = kwargs.get('prompt_message')
+                prompt['content'] = '**modified message**'
+                return kwargs.get('messages')
+            if method == 'process':
+                response = kwargs['response_message']
+                response['content'] += ' **modified response**'
+                return response
+
+        om.models.put(pipeline, 'pipeline')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', pipeline='pipeline')
+        model = om.models.get('mymodel')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello ' + kwargs['messages'][-1]['content'],
+                    }
+                }
+            ]
+        })
+        # call completion
+        result = model.complete('hello')
+        # check input and outputs have actually been processed by the pipeline
+        # -- all pipeline steps are logged
+        exp = om.runtime.experiment('test')
+        steps = exp.data(event='pipeline')['key'].unique()
+        self.assertEqual(set(steps), {'template', 'prepare', 'complete', 'process'})
+        # -- result reflects input (prepare)
+        self.assertIn('**modified message**', result['content'])
+        # -- pipeline reflects output (process)
+        self.assertIn('**modified response**', result['content'])
