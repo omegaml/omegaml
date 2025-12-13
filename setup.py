@@ -39,7 +39,7 @@ sec_deps = [
 # dependencies for generative ai support
 ai_deps = [
     'openai',
-    'markitdown',
+    'markitdown[pdf]',
     'torch',
     'pgvector',
     'psycopg2-binary',  # required for pgvector
@@ -56,7 +56,7 @@ install_deps = [
     'pandas>2',
     'numpy>=1.16.4',
     'scipy>=0.17.0',
-    'scikit-learn>=1.2',
+    'scikit-learn>=1.5',
     'PyYAML>=3.12',
     'flask-restx>=1.1.0',
     'Flask>3.0',  # due to https://github.com/python-restx/flask-restx/issues/566
@@ -81,7 +81,7 @@ install_deps = [
     'apispec>=5.2.2',  # required for openapi generation
     'marshmallow>=3.17.0',  # required for openapi generation
     'sqlalchemy',  # due to https://github.com/pandas-dev/pandas/issues/57049
-    'minibatch[omegaml]',  # required for streaming
+    'minibatch[omegaml]>=0.6',  # required for streaming sse chat responses
     'validators',  # required for sec validations
     'build',  # required to build packages
 ]

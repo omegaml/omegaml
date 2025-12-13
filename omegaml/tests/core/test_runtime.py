@@ -335,7 +335,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_gridsearch(self):
         X, y = make_classification()
-        logreg = LogisticRegression(solver='liblinear')
+        logreg = LogisticRegression()
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
         om = Omega()
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True

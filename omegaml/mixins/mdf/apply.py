@@ -1,8 +1,9 @@
 import hashlib
 import json
-import pandas as pd
 from itertools import product
 from uuid import uuid4
+
+import pandas as pd
 
 from omegaml.documents import make_QueryCache
 from omegaml.mdataframe import MDataFrame, MSeries
@@ -38,6 +39,7 @@ class ApplyMixin(object):
         self.cache = kwargs.get('cache', ApplyCache(self._db_alias))
 
     def _ensure_db_connection(self):
+        # must import _dbs, _connections locally to ensure mongoshim has been applied
         from mongoengine.connection import _dbs, _connections
 
         seek_db = self.collection.database
@@ -219,7 +221,8 @@ class ApplyMixin(object):
             cursor = self._get_cached_cursor(pipeline=pipeline, use_cache=use_cache)
             if cursor is None:
                 filter_criteria = self._get_filter_criteria()
-                cursor = FilteredCollection(self.collection).aggregate(pipeline, filter=filter_criteria, allowDiskUse=True)
+                cursor = FilteredCollection(self.collection).aggregate(pipeline, filter=filter_criteria,
+                                                                       allowDiskUse=True)
         else:
             cursor = super(ApplyMixin, self)._get_cursor()
         return cursor
@@ -502,12 +505,14 @@ class ApplyArithmetics(object):
                 if isinstance(term, str):
                     term = '$' + term
                 terms.append(term)
+
             def wrap(expr):
                 if wrap_op is not None:
                     expr = {
                         wrap_op: expr
                     }
                 return expr
+
             mapping = {
                 col: wrap({
                     op: ['$' + col] + terms,
@@ -753,10 +758,10 @@ class ApplyAccumulators(object):
             stage = self._getGroupBy(by='$$last')
             groupby = stage['$group']
             groupby.update({
-                               '{}_{}'.format(col, opname): {
-                                   op: '$' + col
-                               } for col in columns
-                               })
+                '{}_{}'.format(col, opname): {
+                    op: '$' + col
+                } for col in columns
+            })
             self.computed.extend(groupby.keys())
             self.project_keeper_columns()
             return self
@@ -775,6 +780,7 @@ class ApplyCache(object):
     """
     A Cache that works on collections and pipelines
     """
+
     def __init__(self, db_alias):
         self._db_alias = db_alias
 
@@ -797,6 +803,7 @@ class ApplyStatistics(object):
     def quantile(self, q=.5):
         def preparefn(val):
             return val.pivot(columns='var', index='percentile', values='value')
+
         return self.apply(self._percentile(q), preparefn=preparefn)
 
     def cov(self):
@@ -805,6 +812,7 @@ class ApplyStatistics(object):
             val.index.name = None
             val.columns.name = None
             return val
+
         return self.apply(self._covariance, preparefn=preparefn)
 
     def corr(self):
@@ -813,6 +821,7 @@ class ApplyStatistics(object):
             val.index.name = None
             val.columns.name = None
             return val
+
         return self.apply(self._pearson, preparefn=preparefn)
 
     def _covariance(self, ctx):
@@ -946,7 +955,7 @@ class ApplyStatistics(object):
         """
         pctls = pctls or [.25, .5, .75]
         if not isinstance(pctls, (list, tuple)):
-                pctls = [pctls]
+            pctls = [pctls]
 
         def calc(col, p, outcol):
             # sort values
@@ -969,10 +978,10 @@ class ApplyStatistics(object):
                 '$arrayElemAt': [
                     '$values', {
                         '$floor': {
-                        '$multiply': [{
-                            '$size': '$values'
-                        }, p]
-                    }}
+                            '$multiply': [{
+                                '$size': '$values'
+                            }, p]
+                        }}
                 ]
             }
             # map percentile value to output column
@@ -997,7 +1006,7 @@ class ApplyStatistics(object):
                     # e.g. outcol for perc .25 of column abc => abcp25
                     outcol = '{}_p{}'.format(col, p).replace('0.', '')
                     facets[outcol] = calc(col, p, outcol)
-                    unwind.append({'$unwind': '$'+ outcol})
+                    unwind.append({'$unwind': '$' + outcol})
             # process per-column pipelines in parallel, resulting in one
             # document for each variable + percentile combination
             facet = {
@@ -1022,5 +1031,3 @@ class ApplyStatistics(object):
             return pipeline
 
         return inner
-
-

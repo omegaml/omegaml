@@ -1,7 +1,8 @@
 from multiprocessing import Process, Queue
+from time import sleep
 from unittest import TestCase
 
-from time import sleep
+from mongoengine import disconnect
 
 from omegaml import Omega
 from omegaml.util import delete_database
@@ -18,7 +19,9 @@ else:
             self.om = Omega()
             db = self.om.datasets.mongodb
             self.url = self.om.mongo_url + '?authSource=admin'
-            connectdb(url=self.url)
+            
+        def tearDown(self):
+            disconnect(alias='minibatch')
 
         def test_stream(self):
             """
