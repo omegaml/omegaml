@@ -4,6 +4,8 @@ import sys
 import warnings
 from http import HTTPStatus
 
+from mongoengine import disconnect
+
 from omegaml import Omega
 from omegaml.client.lunamon import LunaMonitor
 
@@ -42,6 +44,8 @@ class OmegaTestMixin(object):
             existing = [m.name for m in part.list(hidden=True, include_temp=True, raw=True)
                         if not '.system' in m.name]
             self.assertListEqual(existing, [])
+        # stop using minibatch
+        disconnect(alias='minibatch')
 
     @property
     def _async_headers(self):

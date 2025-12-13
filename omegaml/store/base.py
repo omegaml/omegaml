@@ -81,7 +81,7 @@ from uuid import uuid4
 
 import bson
 import gridfs
-from mongoengine.connection import disconnect, connect, _connections, get_db
+from mongoengine.connection import disconnect, connect, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.queryset.visitor import Q
 
@@ -180,9 +180,11 @@ class OmegaStore(object):
         # use an instance specific alias, note that access to Metadata and
         # QueryCache must pass the very same alias
         self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
-        # always disconnect before registering a new connection because
-        # mongoengine.connect() forgets all connection settings upon disconnect
+        # local import of _connections ensure we get the actual object, not an earlier version
+        from mongoengine.connection import _connections
         if alias not in _connections:
+            # always disconnect before registering a new connection because
+            # mongoengine.connect() forgets all connection settings upon disconnect
             disconnect(alias)
             connection = connect(alias=alias, db=self.database_name,
                                  host=f'{scheme}://{host}',

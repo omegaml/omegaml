@@ -4,11 +4,10 @@ import warnings
 from time import sleep
 from urllib.parse import urlencode
 
-from mongoengine import disconnect_all
 from pymongo import MongoClient as RealMongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 
-from omegaml.util import find_instances
+from omegaml.util import find_instances, ProcessLocal
 
 
 def MongoClient(*args, **kwargs):
@@ -24,7 +23,28 @@ def MongoClient(*args, **kwargs):
     return client
 
 
+def patch_mongoengine():
+    # this is to avoid mongoengine's MongoClient instances in subprocesses
+    # resulting in "MongoClient opened before fork" warning
+    # the source of the problem is that mongoengine stores MongoClients in
+    # a module-global dictionary. here we replace these module-globals with
+    # process-global dictionaries, ProcessLocal
+    from mongoengine import connection
+    # There is a fix in mongoengine 18.0 that is supposed to introduce the same
+    # behavior using disconnection_all(), however in some cases this is the
+    # actual source of the warning due to calling connection.close()
+    # see https://github.com/MongoEngine/mongoengine/pull/2038
+    # -- the implemented solution simply ensures MongoClients get recreated
+    #    whenever needed
+    if not isinstance(connection._connection_settings, ProcessLocal):
+        setattr(connection, '_connection_settings', ProcessLocal(connection._connection_settings))
+        setattr(connection, '_connections', ProcessLocal(connection._connections))
+        setattr(connection, '_dbs', ProcessLocal(connection._dbs))
+    return
+
+
 def close_all_clients():
+    from mongoengine import disconnect_all
     # close mongoengine clients
     try:
         disconnect_all()
@@ -98,6 +118,8 @@ def waitForConnection(client):
         raise _exc
 
 
+# -- patch mongoengine's global connection dictionaries to be ProcessLocal()s
+patch_mongoengine()
 # -- register closing all mongo clients at exit
 atexit.register(close_all_clients)
 # -- filter pymongo's resourcewarnings, as we close all clients at exit

@@ -60,7 +60,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
@@ -80,7 +80,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
@@ -94,7 +94,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_model_uri(self):
         # create a test model
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         store = self._make_store()
         meta = store.put(lr, 'models/foo', uri='/tmp/remotefile.pkl')
         self.assertTrue(Path('/tmp/remotefile.pkl').exists())
@@ -148,7 +148,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         result = lr.predict(X)
         # store it remote
@@ -492,7 +492,7 @@ class StoreTests(unittest.TestCase):
         iris = load_iris()
         X = iris.data
         Y = iris.target
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         lr.fit(X, Y)
         # store it remote
         store.put(lr, 'foox', _kind_version='1')
@@ -522,7 +522,7 @@ class StoreTests(unittest.TestCase):
         df2 = om.get('datadf')
         assert_frame_equal(df, df2)
         # model
-        lr = LogisticRegression(solver='liblinear', multi_class='auto')
+        lr = LogisticRegression()
         meta = om.put(lr, 'mymodel', attributes=attributes)
         self.assertEqual(meta.kind, 'sklearn.joblib')
         self.assertEqual(meta.attributes, attributes)

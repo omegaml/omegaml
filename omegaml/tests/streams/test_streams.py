@@ -1,6 +1,8 @@
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
+from mongoengine import disconnect
+
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin
 
@@ -10,6 +12,10 @@ class StreamsTestCase(OmegaTestMixin, TestCase):
     def setUp(self):
         self.om = Omega()
         self.clean()
+
+    def tearDown(self):
+        # stop using minibatch
+        disconnect(alias='minibatch')
 
     @classmethod
     def tearDownClass(cls):
