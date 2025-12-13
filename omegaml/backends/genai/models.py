@@ -57,7 +57,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
         # Xname is the input given by the user
         model: GenAIModel
         model = self.get(modelname)
-        model.load('complete')
+        model.load()
         data = self._resolve_input_data('complete', Xname, **kwargs)
         data = data[0] if isinstance(data, list) else data
         if isinstance(data, dict):
@@ -81,13 +81,13 @@ class GenAIBaseBackend(VirtualObjectBackend):
 
     def generate(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)
-        model.load('generate')
+        model.load()
         data = self._resolve_input_data('generate', Xname, **kwargs)
         return model.generate(data)
 
     def embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)
-        model.load('embed')
+        model.load()
         data = self._resolve_input_data('embed', Xname, **kwargs)
         if isinstance(data, str):
             # a single document
@@ -112,7 +112,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
 
 class GenAIModel:
     # model interface for GenAIModelHandler, should not be used directly
-    def load(self, method):
+    def load(self):
         pass
 
     def complete(self, prompt, messages=None, conversation_id=None,
@@ -135,9 +135,8 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
 
     Usage:
         class MyModelHandler(GenAIModelHandler):
-            def load(self, method):
-                # code to load the model or pipeline for a given method
-                # method is one of 'complete', 'generate', 'finetune', 'embed'
+            def load(self):
+                # code to load the model or pipeline
                 self.model = ...
 
             def complete(self, ):

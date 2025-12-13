@@ -321,7 +321,7 @@ class TextModel(GenAIModel):
         {{ prompt }}
         """
 
-    def load(self, method):
+    def load(self):
         pass
 
     def trace(self, fn=None, methods=None):

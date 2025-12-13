@@ -7,7 +7,6 @@ from unittest.mock import patch
 from omegaml.backends.genai import SimpleEmbeddingModel
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
 from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
-from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
 
@@ -656,7 +655,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
     def test_pipeline_basic_steps(self, OpenAIProvider):
         om = self.om
 
-        @virtualobj
+        @virtual_genai
         def pipeline(method=None, **kwargs):
             import omegaml as om
             with om.runtime.experiment('test') as exp:
