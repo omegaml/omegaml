@@ -6,6 +6,8 @@ $(function () {
     el: "#assistantForm",
     data: window.context.data,
     availableModels: window.context.availableModels || [],
+    availablePipelines: window.context.availablePipelines || [],
+    availableDocuments: window.context.availableDocuments || [],
     isNew: window.context.isNew || false,
   });
   assistantFormView.render();

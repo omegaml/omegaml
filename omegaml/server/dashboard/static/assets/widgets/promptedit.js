@@ -49,7 +49,7 @@ class AssistantFormView extends BaseView {
     this.fieldMap = {
       assistantName: "name",
       modelSelect: "model",
-      systemPrompt: "systemPrompt",
+      systemPrompt: "prompt",
       promptTemplate: "template",
       documentSelect: "documents",
       pipelineSelect: "pipeline",
