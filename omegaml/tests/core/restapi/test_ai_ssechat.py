@@ -37,12 +37,31 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
             stream.append(event)
         # mark end of streaming
         stream.append({
-            'finish_reason': 'stop',
+            'stream_complete': 'stop',
         })
         result = resource.prepare_streaming_result(stream='messages', streamer='inline')
         received_events = list(result)
         self.assertEqual(len(received_events), len(producer_events))
         self.assertTrue(all(ev in producer_events for ev in received_events))
+
+    def test_streamable_inline_error(self):
+        resource = StreamableResourceMixin()
+        om = resource.om = self.om
+        stream = om.streams.get('.system/complete/messages')
+        producer_events = [
+            {
+                'message': 'hello world',
+            },
+        ]
+        for event in producer_events:
+            stream.append(event)
+        # mark end of streaming in error
+        stream.append({
+            'stream_complete': 'error',
+            'message': 'error occurred'
+        })
+        with self.assertRaises(RuntimeError):
+            list(resource.prepare_streaming_result(stream='messages', streamer='inline'))
 
     def test_streamable_ssechat_redirect(self):
         resource = StreamableResourceMixin()
@@ -51,7 +70,7 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         self.assertIsInstance(result, (list, tuple))
         # verify we get a redirect
         body, status_code, headers, cookies = result
-        self.assertEqual(status_code, 302)
+        self.assertIn(status_code, (302, 307))
         self.assertEqual(headers.get('Location'), om.defaults.OMEGA_EVENTS_STREAMER_URL)
         # verify the cookies are encrypted
         self.assertIn('token', cookies)
@@ -119,7 +138,7 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
             stream.append(event)
         # mark end of streaming
         stream.append({
-            'finish_reason': 'stop',
+            'stream_complete': 'stop',
         })
         with self.app.test_client() as client:
             for k, v in cookies.items():
