@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from collections import namedtuple
@@ -17,6 +18,8 @@ from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
 from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
 from omegaml.store import OmegaStore
 from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow
+
+logger = logging.getLogger(__name__)
 
 
 class TextModelBackend(GenAIBaseBackend):
@@ -700,13 +703,28 @@ class TextModel(GenAIModel):
         if stream:
             chunks = []
             consolidated_response = {}
+            finalized = False
             for chunk in response:
-                yield resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response,
-                                    use_tools=use_tools)
+                try:
+                    self._track_usage(chunk, conversation_id)
+                    resolved = resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response,
+                                             use_tools=use_tools)
+                except Exception as e:
+                    logger.warning(f"could not process chunk {chunk.get('id')} due to {e}")
+                    self._log_events('error', conversation_id, [chunk])
+                else:
+                    if not finalized:
+                        yield resolved
+                finalized = consolidated_response.get('intermediate_results') is not None
             consolidated_response['finish_reason'] = 'stop.consolidated'
             yield response, prompt_message, consolidated_response, chunks[-1] if chunks else {}
         else:
-            yield resolve_response(response, prompt_message, use_tools=use_tools)
+            try:
+                self._track_usage(response, conversation_id)
+                yield resolve_response(response, prompt_message, use_tools=use_tools)
+            except Exception as e:
+                logger.warning(f"Could not process chunk {response.get('id')} due to {e}")
+                self._log_events('error', conversation_id, [response])
 
     def _parsed_completion(self, response):
         return response.choices[0].message.content

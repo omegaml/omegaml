@@ -83,30 +83,52 @@ class StreamableResourceMixin:
         om = self.om
         buffer = Sink()
         logger.debug("complete:stream_result getting stream")
-        streaming = om.streams.getl(f'.system/complete/{stream}',
+        stream_name = f'.system/complete/{stream}'
+        streaming = om.streams.getl(stream_name,
                                     executor=LocalExecutor(),
-                                    sink=buffer)
+                                    sink=buffer,
+                                    size=1, interval=0.01)
+        # process stream, one message at a time
+        # -- emitter to sink buffer
         emitter = streaming.make(lambda window: window.data)
+        # -- check for new messages
         has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
         logger.debug("complete:stream_result waiting for status ")
-        interval = 0.01
+        # -- interval => frequency of stream checks, keep resource friendly (CPU, DB)
+        # -- timeout => maximum time (in interval steps) without new messages
+        interval = 0.0001  # sleep
         timeout = 10 // interval  # timeout in seconds, max
+        has_error = False  # error flag, as indicated by chunks
+        message = None  # final error message, used on has_error = True
+        # -- process messages
         while timeout > 0 or has_chunks():
             timeout -= 1
             logger.debug("complete:stream_result waiting for chunks")
             emitter.run(blocking=False)
             for chunk in buffer:
-                logger.debug("complete:stream_result chunk received: %s", chunk)
-                # TODO use a sentinel that is not tied to openai message format
-                if chunk.get('finish_reason', '').startswith('stop'):
+                # determine if we should stop
+                finish_reason = chunk.get('stream_complete', '')
+                should_stop = finish_reason.startswith('stop')
+                has_error = finish_reason.startswith('error')
+                if should_stop or has_error:
                     timeout = 0
+                    message = chunk.get('message', '')
                     break
+                # process chunk by forwarding to Sink buffer
+                logger.debug("complete:stream_result chunk received: %s", chunk)
                 data = self.prepare_result(chunk, resource_name=resource_name)
                 data.update(data.pop('result', {})) if raw else None
                 yield data
             buffer.clear()
             sleep(interval)
+        # -- done by timeout or end of messages, clear the stream
+        emitter.stream.clear()
+        om.streams.drop(stream_name, force=True)
         logger.debug("done:stream_result closing response")
+        # propagate errors as RuntimeExceptions
+        # -- allow failure to propagate to http service endpoint
+        if has_error:
+            raise RuntimeError(message)
 
     def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):
         # implement sse event streaming by 302 redirect, handing off to streaming endpoint
@@ -137,4 +159,10 @@ class StreamableResourceMixin:
         }
         cookies = make_secure_cookies(payload)
         location = self.om.defaults.OMEGA_EVENTS_STREAMER_URL
-        return '', 302, {'Location': location}, cookies
+        # redirect client, preserving the headers and http method
+        # -- rfc9110 on 302/307: a user agent MAY change the request method from POST to GET
+        #    for the subsequent request. If this behavior is undesired, the 307 (Temporary Redirect)
+        #    status code can be used instead.
+        # -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/307
+        # -- https://www.rfc-editor.org/rfc/rfc9110#status.307
+        return '', 307, {'Location': location, 'Content-Type': 'text/event-stream'}, cookies
