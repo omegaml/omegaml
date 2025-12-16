@@ -88,7 +88,7 @@ class AIPromptsView(AIRepositoryView):
         meta.attributes.setdefault('permissions', {
             'groups': data.get('permissions', {}).get('groups', ['sibyl']),
         })
-        meta.save()
+        meta.save(version=True)
         return {'message': 'Prompt saved successfully', 'name': name}, 200
 
 

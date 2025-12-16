@@ -4,6 +4,7 @@ VERSION=$(shell cat omegaml/VERSION)
 # run using make -e to override by env variables
 EXTRAS:=dev
 PIPREQ:=pip
+DISTTAGS:=""
 
 install:
 	# in some images pip is outdated, some packages are system-level installed
@@ -34,7 +35,7 @@ dist: sanity
 	rm -rf ./dist/*
 	rm -rf ./build/*
 	# set DISTTAGS to specify eg --python-tag for bdist
-	python -m build --sdist --wheel --config-setting "--build-option=${DISTTAGS}"
+	python -m build --sdist --wheel --config-setting="--build-option=${DISTTAGS}"
 	twine check dist/*.whl
 
 livetest: dist
@@ -138,8 +139,11 @@ scan: freeze pipsync
 
 server-debug:
 	# start omegaml server
-	export OMEGA_LOCAL_RUNTIME=1; python -m omegaml.server
+	export OMEGA_LOCAL_RUNTIME=1; export OMEGA_LOGLEVE_DEBUG=1; export DEBUG=1; python -m omegaml.server
 
 server:
-	OMEGA_LOGLEVEL=DEBUG honcho -f scripts/local/Procfile start server worker
+	honcho -f scripts/local/Procfile start server worker
+
+server-sse:
+	honcho -f scripts/ssechat/Procfile start web server worker sse
 

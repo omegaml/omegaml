@@ -322,7 +322,10 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_tool_use_notrack(self, OpenAIProvider):
-        self._test_tool_use(OpenAIProvider, tracking=False)
+        # use tools/ prefix in attribute['tools']
+        self._test_tool_use(OpenAIProvider, tracking=False, prefix='tools/')
+        # don't use a prefix in attribute['tools']
+        self._test_tool_use(OpenAIProvider, tracking=False, prefix='')
 
     @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
     def test_tool_use_tracked(self, OpenAIProvider):
@@ -333,18 +336,18 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(len(data), 2)  # not streamed, streamed
 
-    def _test_tool_use(self, OpenAIProvider, tracking=False):
+    def _test_tool_use(self, OpenAIProvider, tracking=False, prefix='tools/'):
         om = self.om
 
         # define a tool
         def weather():
             return 'sunny'
 
-        om.models.put(weather, 'tools/weather')
+        om.models.put(weather, f'tools/weather')
         # check model definition includes tools
         meta = om.models.put('openai+http://localhost/mymodel', 'mymodel',
-                             tools=['weather'])
-        self.assertEqual(meta.attributes['tools'], ['weather'])
+                             tools=[f'{prefix}weather'])
+        self.assertEqual(meta.attributes['tools'], [f'{prefix}weather'])
         # check model triggers tools
         if not tracking:
             model = om.models.get('mymodel')
@@ -578,3 +581,117 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model.complete('hello')
         model.provider.complete.assert_called()
         messages = model.provider.complete.call_args.kwargs.get('messages')
+        self.assertIn('Today is', messages[-1].get('content'))
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_messages_raw(self, OpenAIProvider):
+        # test prompts/messages passed in from chat client handled correctly
+        om = self.om
+        om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = om.models.get('mymodel')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello',
+                    }
+                }
+            ]
+        })
+        messages = [{
+            "role": "user",
+            "content": "test"
+        }]
+        model.complete('', messages=messages, raw=True)
+        model.provider.complete.assert_called()
+        provider_messages = model.provider.complete.call_args.kwargs.get('messages')
+        self.assertIsInstance(provider_messages, list)
+        self.assertEqual(len(provider_messages), 2)
+        self.assertEqual(provider_messages[0]['role'], 'system')
+        self.assertEqual(provider_messages[1]['role'], 'user')
+
+    def test_metadata_update(self):
+        """ test metadata updates to strategy, systemprompt and tools work
+        """
+        om = self.om
+        # try non-existing tool
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', tools=['xweather'])
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['xweather'])
+        with self.assertRaises(ValueError) as cm:
+            om.models.get('mymodel')
+            self.assertIn('not a callable', cm.exception.args[0])
+
+        # try existing tool
+        # -- define a tool
+        def weather():
+            return 'sunny'
+
+        om.models.put(weather, f'tools/weather')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', tools=['weather'])
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['weather'])
+        model = om.models.get('mymodel')
+        self.assertTrue(callable(model.tools[0]))
+        self.assertTrue(model.tools[0].__name__ == 'weather')
+        # -- create model without tools
+        om.models.put(weather, f'tools/weather')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        # -- modify tools in metadata
+        meta = om.models.metadata('mymodel')
+        meta.attributes['tools'] = ['weather']
+        meta.save(version=True)
+        meta = om.models.metadata('mymodel')
+        self.assertEqual(meta.attributes['tools'], ['weather'])
+        # -- check tool works
+        model = om.models.get('mymodel')
+        self.assertTrue(callable(model.tools[0]))
+        self.assertTrue(model.tools[0].__name__ == 'weather')
+
+    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    def test_pipeline_basic_steps(self, OpenAIProvider):
+        om = self.om
+
+        @virtual_genai
+        def pipeline(method=None, **kwargs):
+            import omegaml as om
+            with om.runtime.experiment('test') as exp:
+                exp.log_event('pipeline', method, kwargs)
+            if method == 'prepare':
+                prompt = kwargs.get('prompt_message')
+                prompt['content'] = '**modified message**'
+                return kwargs.get('messages')
+            if method == 'process':
+                response = kwargs['response_message']
+                response['content'] += ' **modified response**'
+                return response
+
+        om.models.put(pipeline, 'pipeline')
+        om.models.put('openai+http://localhost/mymodel', 'mymodel', pipeline='pipeline')
+        model = om.models.get('mymodel')
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": 'hello ' + kwargs['messages'][-1]['content'],
+                    }
+                }
+            ]
+        })
+        # call completion
+        result = model.complete('hello')
+        # check input and outputs have actually been processed by the pipeline
+        # -- all pipeline steps are logged
+        exp = om.runtime.experiment('test')
+        steps = exp.data(event='pipeline')['key'].unique()
+        self.assertEqual(set(steps), {'template', 'prepare', 'complete', 'process'})
+        # -- result reflects input (prepare)
+        self.assertIn('**modified message**', result['content'])
+        # -- pipeline reflects output (process)
+        self.assertIn('**modified response**', result['content'])

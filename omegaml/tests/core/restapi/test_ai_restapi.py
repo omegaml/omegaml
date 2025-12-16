@@ -120,11 +120,11 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
         data = list(map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d,
                         resp.iter_encoded()))
-        self.assertEqual(len(data), len('hello'))
-        # FIXME the 'result' should really be 'content' (for consistency with OpenAI?)
+        self.assertEqual(len(data[-1]['content']), len('hello'))
         self.assertEqual(data[-1], {
             'model': 'mymodel',
-            'content': 'hello', 'delta': 'o',
+            'content': 'hello',
+            'delta': 'o',
             'resource_uri': 'mymodel',
         })
 

@@ -96,7 +96,7 @@ class ObjectHelperMixin:
         Returns:
             Metadata
         """
-        has_helper = helper is not None
+        has_helper = bool(helper)
         has_helper_fn = callable(helper) and hasattr(helper, '_omega_virtual')
         if has_helper_fn:
             # save implied helper passed as a callable
