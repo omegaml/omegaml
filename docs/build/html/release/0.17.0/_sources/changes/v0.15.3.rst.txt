@@ -1,0 +1,563 @@
+Release notes release/0.15.3
+============================
+
+Released 2022-10-27
+
+Update of dependencies, enhancements to REST APIs and when running
+``job.map()`` in a cloud setup
+
+What’s Changed
+--------------
+
+-  Enable nbtasks auth env by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/283
+-  Enable swagger array objects by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/281
+-  upgrade dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/295
+-  Release 0.15.3 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/288
+-  build 0.15.3 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/298
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/0.15.2…release/0.15.3
+
+Changes
+~~~~~~~
+
+-  Merge pull request #298 from omegaml/release-build-0.15.3
+   `87d3d34 <https://github.com/omegaml/omegaml/commit/87d3d34>`__
+-  build 0.15.3
+   `f6bb158 <https://github.com/omegaml/omegaml/commit/f6bb158>`__
+-  Merge pull request #288 from omegaml/release-0.15.3
+   `b1f1bd8 <https://github.com/omegaml/omegaml/commit/b1f1bd8>`__
+-  Bump version: 0.15.3-rc1 → 0.15.3
+   `fdf1288 <https://github.com/omegaml/omegaml/commit/fdf1288>`__
+-  upgrade dependencies
+   `7698873 <https://github.com/omegaml/omegaml/commit/7698873>`__
+-  Bump version: 0.15.3-dev1 → 0.15.3-rc1
+   `536a63e <https://github.com/omegaml/omegaml/commit/536a63e>`__
+-  Merge pull request #295 from omegaml/upgrade-dependencies
+   `cc5682d <https://github.com/omegaml/omegaml/commit/cc5682d>`__
+-  Bump version: 0.15.2 → 0.16.0-dev1
+   `053a87f <https://github.com/omegaml/omegaml/commit/053a87f>`__
+-  Merge pull request #281 from omegaml/enable-swagger-array-objects
+   `43e53c6 <https://github.com/omegaml/omegaml/commit/43e53c6>`__
+-  enable swagger responses as list of objects
+   `96e97ce <https://github.com/omegaml/omegaml/commit/96e97ce>`__
+-  Merge pull request #283 from omegaml/enable-nbtasks-auth-env
+   `6a48446 <https://github.com/omegaml/omegaml/commit/6a48446>`__
+-  nbtasks: uses task authentication env
+   `7e4b6da <https://github.com/omegaml/omegaml/commit/7e4b6da>`__
+-  Merge pull request #247 from omegaml/release-build
+   `ed01fb1 <https://github.com/omegaml/omegaml/commit/ed01fb1>`__
+-  change to pytest
+   `76168aa <https://github.com/omegaml/omegaml/commit/76168aa>`__
+-  Merge pull request #286 from omegaml/update-dependencies
+   `3bf7c0a <https://github.com/omegaml/omegaml/commit/3bf7c0a>`__
+-  dependencies
+   `69b3f03 <https://github.com/omegaml/omegaml/commit/69b3f03>`__
+-  Merge pull request #280 from omegaml/runtime-export-override-action
+   `c6c4dbd <https://github.com/omegaml/omegaml/commit/c6c4dbd>`__
+-  runtime export: allow override action
+   `ff13016 <https://github.com/omegaml/omegaml/commit/ff13016>`__
+-  Merge pull request #279 from omegaml/allow-dedicated-apphub-url
+   `f6d0c9c <https://github.com/omegaml/omegaml/commit/f6d0c9c>`__
+-  allow dedicated apphub url
+   `ac32ca6 <https://github.com/omegaml/omegaml/commit/ac32ca6>`__
+-  Merge pull request #282 from omegaml/allow-readonly-mongodb-user
+   `736d488 <https://github.com/omegaml/omegaml/commit/736d488>`__
+-  allow read-only mongodb user
+   `c67e0be <https://github.com/omegaml/omegaml/commit/c67e0be>`__
+-  Merge pull request #278 from omegaml/enable-versionined-virtualmodels
+   `81dd6d1 <https://github.com/omegaml/omegaml/commit/81dd6d1>`__
+-  model-virtualobj can be versioned
+   `d429a00 <https://github.com/omegaml/omegaml/commit/d429a00>`__
+-  Merge pull request #274 from omegaml/enable-celery-monitoring-hook
+   `7445953 <https://github.com/omegaml/omegaml/commit/7445953>`__
+-  authentication env monitoring hook
+   `4653cab <https://github.com/omegaml/omegaml/commit/4653cab>`__
+-  Merge pull request #273 from
+   omegaml/snyk-fix-0cf5677a880c98e30987d885c9c76e4b
+   `7b9c52a <https://github.com/omegaml/omegaml/commit/7b9c52a>`__
+-  Merge pull request #272 from omegaml/fix-271
+   `1cc01bd <https://github.com/omegaml/omegaml/commit/1cc01bd>`__
+-  ensure om.runtime default tracking is applied
+   `bd556c8 <https://github.com/omegaml/omegaml/commit/bd556c8>`__
+-  Merge pull request #243 from omegaml/fix-local-worker-config
+   `43640d8 <https://github.com/omegaml/omegaml/commit/43640d8>`__
+-  load config file for local in-memory worker
+   `ddf3e50 <https://github.com/omegaml/omegaml/commit/ddf3e50>`__
+-  Merge pull request #248 from
+   omegaml/snyk-fix-eaababdecb37a011c3270228478b7cb7
+   `d891d53 <https://github.com/omegaml/omegaml/commit/d891d53>`__
+-  Merge pull request #267 from
+   omegaml/snyk-fix-02082b151e1af71146d78faa124dc332
+   `0dc1879 <https://github.com/omegaml/omegaml/commit/0dc1879>`__
+-  Merge pull request #263 from
+   omegaml/snyk-fix-d5d0d40d262b0f27cb5ba291fff56e87
+   `176fb95 <https://github.com/omegaml/omegaml/commit/176fb95>`__
+-  Merge pull request #259 from
+   omegaml/snyk-fix-9233fb96e982f91dcfcf6f42fd9ed961
+   `a469ec8 <https://github.com/omegaml/omegaml/commit/a469ec8>`__
+-  Merge pull request #270 from omegaml/windows-compatibility
+   `49db68d <https://github.com/omegaml/omegaml/commit/49db68d>`__
+-  improve windows compatibility
+   `e438fb8 <https://github.com/omegaml/omegaml/commit/e438fb8>`__
+-  Merge pull request #268 from omegaml/enable-link-swagger
+   `b73295a <https://github.com/omegaml/omegaml/commit/b73295a>`__
+-  Merge pull request #262 from omegaml/experiments-log-userid
+   `37110b6 <https://github.com/omegaml/omegaml/commit/37110b6>`__
+-  log task and userid on experiment and logging records
+   `97d109b <https://github.com/omegaml/omegaml/commit/97d109b>`__
+-  Merge pull request #265 from omegaml/simplify-logger
+   `df9c3d2 <https://github.com/omegaml/omegaml/commit/df9c3d2>`__
+-  Merge branch ‘master’ into simplify-logger
+   `dcc6742 <https://github.com/omegaml/omegaml/commit/dcc6742>`__
+-  Merge pull request #266 from omegaml/remove-apikey-from-log
+   `93fd75c <https://github.com/omegaml/omegaml/commit/93fd75c>`__
+-  remove apikey from log output
+   `f3e75d2 <https://github.com/omegaml/omegaml/commit/f3e75d2>`__
+-  simplify logger access
+   `e6619f1 <https://github.com/omegaml/omegaml/commit/e6619f1>`__
+-  Merge pull request #264 from omegaml/simplify-logger
+   `77ae2f0 <https://github.com/omegaml/omegaml/commit/77ae2f0>`__
+-  simplify logger access
+   `914dc6e <https://github.com/omegaml/omegaml/commit/914dc6e>`__
+-  Merge pull request #261 from omegaml/enable-om-deploy
+   `53c2bd1 <https://github.com/omegaml/omegaml/commit/53c2bd1>`__
+-  integate omdeploy utility as om runtime deploy
+   `ca71f02 <https://github.com/omegaml/omegaml/commit/ca71f02>`__
+-  Merge pull request #260 from omegaml/update-dependencies
+   `151c002 <https://github.com/omegaml/omegaml/commit/151c002>`__
+-  python 3.10 build support
+   `f768c8d <https://github.com/omegaml/omegaml/commit/f768c8d>`__
+-  Merge pull request #255 from omegaml/windows-compatibility
+   `1a3248c <https://github.com/omegaml/omegaml/commit/1a3248c>`__
+-  Merge pull request #256 from omegaml/pandas-dtypes-api-spec
+   `709d280 <https://github.com/omegaml/omegaml/commit/709d280>`__
+-  win10.x compatibility
+   `6664310 <https://github.com/omegaml/omegaml/commit/6664310>`__
+-  datatype compatibility for service api signature
+   `addabbd <https://github.com/omegaml/omegaml/commit/addabbd>`__
+-  Merge pull request #257 from omegaml/fix-mlflow-gitissue
+   `8fc4b97 <https://github.com/omegaml/omegaml/commit/8fc4b97>`__
+-  disable remote mlflow project testing due to issue with conda envs
+   `fbb7335 <https://github.com/omegaml/omegaml/commit/fbb7335>`__
+-  Merge pull request #244 from omegaml/enable-swagger-api
+   `de46391 <https://github.com/omegaml/omegaml/commit/de46391>`__
+-  enable service api to
+   `ecdc3b8 <https://github.com/omegaml/omegaml/commit/ecdc3b8>`__
+-  Merge pull request #251 from omegaml/py38-stability
+   `c7abf78 <https://github.com/omegaml/omegaml/commit/c7abf78>`__
+-  increase py38 stability
+   `f9d131a <https://github.com/omegaml/omegaml/commit/f9d131a>`__
+-  Merge pull request #249 from omegaml/refactor-tracking-dataset
+   `062fdb0 <https://github.com/omegaml/omegaml/commit/062fdb0>`__
+-  Merge pull request #250 from omegaml/refactor-pkg-build
+   `ecc8ba3 <https://github.com/omegaml/omegaml/commit/ecc8ba3>`__
+-  add pre-/post task hooks using common .perform() backend method
+   (#246)
+   `8da573f <https://github.com/omegaml/omegaml/commit/8da573f>`__
+-  Improve token auth (#242)
+   `4ab1d78 <https://github.com/omegaml/omegaml/commit/4ab1d78>`__
+-  runtime.scripts/tasks uses delegate pattern to call the backend
+   (#240)
+   `0749aa7 <https://github.com/omegaml/omegaml/commit/0749aa7>`__
+-  various bug fixes (#236)
+   `9382db1 <https://github.com/omegaml/omegaml/commit/9382db1>`__
+-  enable client-provided jwt authentication (#233)
+   `e140935 <https://github.com/omegaml/omegaml/commit/e140935>`__
+-  fup to auth env refactorign, upgrades of pymongo, performance tuning
+   (#230)
+   `a5eefdb <https://github.com/omegaml/omegaml/commit/a5eefdb>`__
+-  upgrade pymongo 4.1 (#225)
+   `6f59bde <https://github.com/omegaml/omegaml/commit/6f59bde>`__
+-  upgrade rabbitmq (#229)
+   `847649a <https://github.com/omegaml/omegaml/commit/847649a>`__
+-  fup auth refactor updates (#228)
+   `4c012cb <https://github.com/omegaml/omegaml/commit/4c012cb>`__
+-  auth refactoring to simplify alternative auth schemes (#226)
+   `8c22cec <https://github.com/omegaml/omegaml/commit/8c22cec>`__
+-  runtime performance improvement (#223)
+   `82cb8d8 <https://github.com/omegaml/omegaml/commit/82cb8d8>`__
+-  upgrade pymongo, mongodb, pandas, celery dependencies (#220)
+   `2e7b3d3 <https://github.com/omegaml/omegaml/commit/2e7b3d3>`__
+-  remove no longer useful six lib dependency (#224)
+   `bd7de96 <https://github.com/omegaml/omegaml/commit/bd7de96>`__
+-  cli: add om runtime serve (#210)
+   `e02820a <https://github.com/omegaml/omegaml/commit/e02820a>`__
+-  various updates (#222)
+   `ab27ad5 <https://github.com/omegaml/omegaml/commit/ab27ad5>`__
+-  Further docs (#214)
+   `2ddb698 <https://github.com/omegaml/omegaml/commit/2ddb698>`__
+-  enable qualifer selection on login (#219)
+   `5738151 <https://github.com/omegaml/omegaml/commit/5738151>`__
+-  add generic exporter/importer for all type of objects (#217)
+   `fa5ddc2 <https://github.com/omegaml/omegaml/commit/fa5ddc2>`__
+-  MDataFrame.persist().transform() re-reads columns from actual data
+   (#212)
+   `8ff0e56 <https://github.com/omegaml/omegaml/commit/8ff0e56>`__
+-  upgrade dependencies (#215)
+   `3475692 <https://github.com/omegaml/omegaml/commit/3475692>`__
+-  update documentation (#209)
+   `52e8699 <https://github.com/omegaml/omegaml/commit/52e8699>`__
+-  combined updates across all release base builds (#208) (#213)
+   `51dddd5 <https://github.com/omegaml/omegaml/commit/51dddd5>`__
+-  enable r integration in oss release (#205)
+   `fbc1a4e <https://github.com/omegaml/omegaml/commit/fbc1a4e>`__
+-  upgrade to docker stacks datascience-notebook (#207)
+   `afc6978 <https://github.com/omegaml/omegaml/commit/afc6978>`__
+-  cli: runtime env install properly processes –file option (#204)
+   `1dee325 <https://github.com/omegaml/omegaml/commit/1dee325>`__
+-  use miniforge3 as a base environment (#206)
+   `d422fd9 <https://github.com/omegaml/omegaml/commit/d422fd9>`__
+-  enable running MLFlow models from tracking uri (#202)
+   `3e64d18 <https://github.com/omegaml/omegaml/commit/3e64d18>`__
+-  cloud login shall request in-cluster services if running in cluster
+   (#201)
+   `302e329 <https://github.com/omegaml/omegaml/commit/302e329>`__
+-  various updates (#200)
+   `beb12b6 <https://github.com/omegaml/omegaml/commit/beb12b6>`__
+-  enable mlflow integration (#197)
+   `eaba8a1 <https://github.com/omegaml/omegaml/commit/eaba8a1>`__
+-  updating logging semantics (#198)
+   `1cfb414 <https://github.com/omegaml/omegaml/commit/1cfb414>`__
+-  add a profiling experiment tracker that records cpu, memory, disk
+   data (#196)
+   `e249b85 <https://github.com/omegaml/omegaml/commit/e249b85>`__
+-  enable tracking link to model metadata (#193)
+   `4e666b7 <https://github.com/omegaml/omegaml/commit/4e666b7>`__
+-  improve tracking (#195)
+   `b467920 <https://github.com/omegaml/omegaml/commit/b467920>`__
+-  add generic runtime call tracking and experiment store (#189)
+   `81cf5ce <https://github.com/omegaml/omegaml/commit/81cf5ce>`__
+-  enable implicit url support in OmegaStore.help() (#191)
+   `39ca30e <https://github.com/omegaml/omegaml/commit/39ca30e>`__
+-  enable om shell jupyter (#188)
+   `182f901 <https://github.com/omegaml/omegaml/commit/182f901>`__
+-  update dependencies to better match compatible packages (#190)
+   `c512cc0 <https://github.com/omegaml/omegaml/commit/c512cc0>`__
+-  minor maintenance items (#187)
+   `093f9f2 <https://github.com/omegaml/omegaml/commit/093f9f2>`__
+-  enable multi-cloud provider access to k8s status (#179)
+   `989c2ca <https://github.com/omegaml/omegaml/commit/989c2ca>`__
+-  ensure pickable collection recreates mongoclient with ssl flag, even
+   if not in om.defaults (#178)
+   `2ddd03f <https://github.com/omegaml/omegaml/commit/2ddd03f>`__
+-  enable dns uris in mongodb+srv format (#182)
+   `772eda1 <https://github.com/omegaml/omegaml/commit/772eda1>`__
+-  several updates (#180)
+   `b841248 <https://github.com/omegaml/omegaml/commit/b841248>`__
+-  release support for tenant deployment in commercial edition (#173)
+   `faf6f31 <https://github.com/omegaml/omegaml/commit/faf6f31>`__
+-  Wip (#166)
+   `fcb7102 <https://github.com/omegaml/omegaml/commit/fcb7102>`__
+-  enable apphub remote cluster at different url from restapi (#170)
+   `062593f <https://github.com/omegaml/omegaml/commit/062593f>`__
+-  replace flaskrestplus, enable better cli support for csv, image and
+   binary files (#172)
+   `f0bfd55 <https://github.com/omegaml/omegaml/commit/f0bfd55>`__
+-  enable automated data revisions for dataframes (#171)
+   `5440ad2 <https://github.com/omegaml/omegaml/commit/5440ad2>`__
+-  enable task callbacks (#157)
+   `94902a4 <https://github.com/omegaml/omegaml/commit/94902a4>`__
+-  add improvements for job.map() (#162)
+   `98b204a <https://github.com/omegaml/omegaml/commit/98b204a>`__
+-  document release process (#161)
+   `59eb185 <https://github.com/omegaml/omegaml/commit/59eb185>`__
+-  Python39 (#167)
+   `02cd1ba <https://github.com/omegaml/omegaml/commit/02cd1ba>`__
+-  restrict license to No Sell, Consulting Yes clause (#165)
+   `d7a6301 <https://github.com/omegaml/omegaml/commit/d7a6301>`__
+-  Rename NOSELLCLAUSE to LICENSE-NOSELLCLAUSE (#164)
+   `d824359 <https://github.com/omegaml/omegaml/commit/d824359>`__
+-  Create NOSELLCLAUSE (#163)
+   `03962ea <https://github.com/omegaml/omegaml/commit/03962ea>`__
+-  Improve docs (#158)
+   `567f15f <https://github.com/omegaml/omegaml/commit/567f15f>`__
+-  Release 0.13.7 (#160)
+   `f18d841 <https://github.com/omegaml/omegaml/commit/f18d841>`__
+-  enable dataset names of arbitrary length (#154)
+   `845d99e <https://github.com/omegaml/omegaml/commit/845d99e>`__
+-  simplify access to celery commands via om runtime (#155)
+   `6eb811f <https://github.com/omegaml/omegaml/commit/6eb811f>`__
+-  Enhance base loading (#152)
+   `50e2966 <https://github.com/omegaml/omegaml/commit/50e2966>`__
+-  ensure compatibility with omegaee (#151)
+   `8c3a39c <https://github.com/omegaml/omegaml/commit/8c3a39c>`__
+-  Revert “Upgrade dependencies (#148)” (#149)
+   `d02b618 <https://github.com/omegaml/omegaml/commit/d02b618>`__
+-  Upgrade dependencies (#148)
+   `1788afc <https://github.com/omegaml/omegaml/commit/1788afc>`__
+-  enable parallel notebook tasks (#146)
+   `f6e967b <https://github.com/omegaml/omegaml/commit/f6e967b>`__
+-  Refactor cli (#144)
+   `72495e9 <https://github.com/omegaml/omegaml/commit/72495e9>`__
+-  update docs (#118)
+   `5149735 <https://github.com/omegaml/omegaml/commit/5149735>`__
+-  add task chaining (#143)
+   `9b9dca5 <https://github.com/omegaml/omegaml/commit/9b9dca5>`__
+-  enable worker utilities (#142)
+   `b4c780a <https://github.com/omegaml/omegaml/commit/b4c780a>`__
+-  enable cli cloud status report and pod log access (#136)
+   `ddb7974 <https://github.com/omegaml/omegaml/commit/ddb7974>`__
+-  return the users value instead if valid (#138)
+   `7e3cc87 <https://github.com/omegaml/omegaml/commit/7e3cc87>`__
+-  various improvements (#132)
+   `2e81c32 <https://github.com/omegaml/omegaml/commit/2e81c32>`__
+-  various improvements (#131)
+   `0fec919 <https://github.com/omegaml/omegaml/commit/0fec919>`__
+-  several stability updates and bug fixes (#126)
+   `a37eebe <https://github.com/omegaml/omegaml/commit/a37eebe>`__
+-  Release build (#124)
+   `fea89c2 <https://github.com/omegaml/omegaml/commit/fea89c2>`__
+-  enable combined stores (#120)
+   `841e19c <https://github.com/omegaml/omegaml/commit/841e19c>`__
+-  add streams as a first-class object type (#121)
+   `b7b732e <https://github.com/omegaml/omegaml/commit/b7b732e>`__
+-  various improvements (#119)
+   `da5675f <https://github.com/omegaml/omegaml/commit/da5675f>`__
+-  Simplify releases (#122)
+   `0a2db44 <https://github.com/omegaml/omegaml/commit/0a2db44>`__
+-  enable bucket namespacing for sql datasources (#116)
+   `9da78b5 <https://github.com/omegaml/omegaml/commit/9da78b5>`__
+-  support omegamlee-1.4.1 (#115)
+   `7a03043 <https://github.com/omegaml/omegaml/commit/7a03043>`__
+-  enable remote source packages (#113)
+   `5c6d56d <https://github.com/omegaml/omegaml/commit/5c6d56d>`__
+-  updates for stability and increased performance (#111)
+   `22ffcb2 <https://github.com/omegaml/omegaml/commit/22ffcb2>`__
+-  enable tensorflow 2.3.0 (unit testing) (#110)
+   `c3e9e5e <https://github.com/omegaml/omegaml/commit/c3e9e5e>`__
+-  enable promotion of versioned models to work as expected (#109)
+   `b20e8c6 <https://github.com/omegaml/omegaml/commit/b20e8c6>`__
+-  various updates, stability improvements (#105)
+   `89bdb96 <https://github.com/omegaml/omegaml/commit/89bdb96>`__
+-  apply several fixes, bump version (#104)
+   `30a487c <https://github.com/omegaml/omegaml/commit/30a487c>`__
+-  enable implicit chunking by yielding an iterable from dataset name
+   (#102)
+   `4942a9f <https://github.com/omegaml/omegaml/commit/4942a9f>`__
+-  enable kwargs for smartopen, supporting az blob storage (#99)
+   `c708114 <https://github.com/omegaml/omegaml/commit/c708114>`__
+-  enable async rest api (#98)
+   `6566911 <https://github.com/omegaml/omegaml/commit/6566911>`__
+-  add externaldata backend, make jobs run return metadata repr,
+   rawfiles enhancement (#97)
+   `c646673 <https://github.com/omegaml/omegaml/commit/c646673>`__
+-  improve tensorflow 2.x compatibility (#100)
+   `c6d8d5d <https://github.com/omegaml/omegaml/commit/c6d8d5d>`__
+-  version bump (#96)
+   `2a0aa21 <https://github.com/omegaml/omegaml/commit/2a0aa21>`__
+-  ensure rname works the same everywhere (#91)
+   `aa243ce <https://github.com/omegaml/omegaml/commit/aa243ce>`__
+-  various stability improvements, tensorflow 2.0 support (#76)
+   `fad7054 <https://github.com/omegaml/omegaml/commit/fad7054>`__
+-  enable storing dash apps (#89)
+   `808b53b <https://github.com/omegaml/omegaml/commit/808b53b>`__
+-  bump version (#88)
+   `1866abc <https://github.com/omegaml/omegaml/commit/1866abc>`__
+-  enable automated model versioning (#65)
+   `d55638e <https://github.com/omegaml/omegaml/commit/d55638e>`__
+-  Integrate omxiotools (#86)
+   `85fa1ef <https://github.com/omegaml/omegaml/commit/85fa1ef>`__
+-  add mdataframe native pandas parallel transform (#85)
+   `8e0693f <https://github.com/omegaml/omegaml/commit/8e0693f>`__
+-  bump version, fix formatted log messages (#83)
+   `7a4fd2e <https://github.com/omegaml/omegaml/commit/7a4fd2e>`__
+-  bump version (#82)
+   `6457c57 <https://github.com/omegaml/omegaml/commit/6457c57>`__
+-  enable storing sqlalchemy connections (#80)
+   `0005c95 <https://github.com/omegaml/omegaml/commit/0005c95>`__
+-  add straight forward logger as well as python logging handler (#81)
+   `1160b02 <https://github.com/omegaml/omegaml/commit/1160b02>`__
+-  Enable custom cell timeout 77 (#78)
+   `98c55ef <https://github.com/omegaml/omegaml/commit/98c55ef>`__
+-  apply various fixes (#74)
+   `ae8daf4 <https://github.com/omegaml/omegaml/commit/ae8daf4>`__
+-  Multi pyversion build 70 (#75)
+   `94a743f <https://github.com/omegaml/omegaml/commit/94a743f>`__
+-  enable python3.7 cli compatibility (#71)
+   `b2b2153 <https://github.com/omegaml/omegaml/commit/b2b2153>`__
+-  documentation updates (#64)
+   `7ebef49 <https://github.com/omegaml/omegaml/commit/7ebef49>`__
+-  build release (#62)
+   `b88869c <https://github.com/omegaml/omegaml/commit/b88869c>`__
+-  enable user configuration and extensions inside docker-compose (#61)
+   `048f99d <https://github.com/omegaml/omegaml/commit/048f99d>`__
+-  enable jupyterhub, jupyterlab, dashserve (#60)
+   `8f9801a <https://github.com/omegaml/omegaml/commit/8f9801a>`__
+-  bump version (#59)
+   `3558495 <https://github.com/omegaml/omegaml/commit/3558495>`__
+-  resolve several dependencies (#57)
+   `f2e3914 <https://github.com/omegaml/omegaml/commit/f2e3914>`__
+-  resolve deprecated scipy dependency (#55)
+   `2f892ba <https://github.com/omegaml/omegaml/commit/2f892ba>`__
+-  resolve deprecated scipy dependency (#54)
+   `c99afed <https://github.com/omegaml/omegaml/commit/c99afed>`__
+-  resolve deprecated scipy dependency (#53)
+   `d75baa6 <https://github.com/omegaml/omegaml/commit/d75baa6>`__
+-  enable run script to use custom serializers (#52)
+   `9891710 <https://github.com/omegaml/omegaml/commit/9891710>`__
+-  cli updates (#51)
+   `26c4b5b <https://github.com/omegaml/omegaml/commit/26c4b5b>`__
+-  various updates, performance, flexibility, stability improvements
+   (#50) `880f727 <https://github.com/omegaml/omegaml/commit/880f727>`__
+-  add cli (#40)
+   `b411016 <https://github.com/omegaml/omegaml/commit/b411016>`__
+-  Create mongoshim that updates MongoClient with additional SSL kwargs
+   (#49) `c954bc3 <https://github.com/omegaml/omegaml/commit/c954bc3>`__
+-  Build PRs against current master on CI (#45)
+   `61ce070 <https://github.com/omegaml/omegaml/commit/61ce070>`__
+-  upgrade tensorflow to 1.15.0 (#46)
+   `fc8acfd <https://github.com/omegaml/omegaml/commit/fc8acfd>`__
+-  make tz testing static in time, remark on limitted tz dst support
+   (#44) `70c2630 <https://github.com/omegaml/omegaml/commit/70c2630>`__
+-  update dependencies consistent with pandas 0.25.1 (#43)
+   `1264fdc <https://github.com/omegaml/omegaml/commit/1264fdc>`__
+-  enable project, user and global config file (#42)
+   `8d0c0b7 <https://github.com/omegaml/omegaml/commit/8d0c0b7>`__
+-  Merge pull request #41 from omegaml/enable-buckets-on-deferred
+   `ee6d6cf <https://github.com/omegaml/omegaml/commit/ee6d6cf>`__
+-  Merge branch ‘master’ of github.com:omegaml/omegaml
+   `3ba350f <https://github.com/omegaml/omegaml/commit/3ba350f>`__
+-  enable client api, fix test with sklearn dependencies sklearn (#39)
+   `7d6a6c3 <https://github.com/omegaml/omegaml/commit/7d6a6c3>`__
+-  enable scripts runtime (#38)
+   `963559a <https://github.com/omegaml/omegaml/commit/963559a>`__
+-  enable context/context, bucket/bucket promotion (#35)
+   `ba31e92 <https://github.com/omegaml/omegaml/commit/ba31e92>`__
+-  Add Livetest step to CircleCI configuration. (#37)
+   `10b0ff4 <https://github.com/omegaml/omegaml/commit/10b0ff4>`__
+-  Merge branch ‘master’ of github.com:omegaml/omegaml
+   `5db192a <https://github.com/omegaml/omegaml/commit/5db192a>`__
+-  enable client api, fix test with sklearn dependencies sklearn removed
+   the n_iter argument from SDGRegressor in 0.21.3 (#32)
+   `fb735ab <https://github.com/omegaml/omegaml/commit/fb735ab>`__
+-  Add CircleCI configuration for unit tests (#33)
+   `598cb71 <https://github.com/omegaml/omegaml/commit/598cb71>`__
+-  Release 0.11.2 (#30)
+   `7ee94f6 <https://github.com/omegaml/omegaml/commit/7ee94f6>`__
+-  enable arbitrary collections to be used as dataframe source (#21)
+   `f4dcae9 <https://github.com/omegaml/omegaml/commit/f4dcae9>`__
+-  updates (#28)
+   `aac1685 <https://github.com/omegaml/omegaml/commit/aac1685>`__
+-  Update README.rst
+   `5e1d0e9 <https://github.com/omegaml/omegaml/commit/5e1d0e9>`__
+-  Update README.rst
+   `f74ebc2 <https://github.com/omegaml/omegaml/commit/f74ebc2>`__
+-  updates
+   `3c6f78a <https://github.com/omegaml/omegaml/commit/3c6f78a>`__
+-  enable keras models, including tpu support (#15)
+   `bacd5df <https://github.com/omegaml/omegaml/commit/bacd5df>`__
+-  Merge pull request #24 from omegaml/23-context-initialize-metadata
+   `f76dc91 <https://github.com/omegaml/omegaml/commit/f76dc91>`__
+-  make mongoengine Metadata bound to instance context
+   `224f668 <https://github.com/omegaml/omegaml/commit/224f668>`__
+-  Merge pull request #20 from omegaml/19-omegaruntime-common-kwargs
+   `0042e14 <https://github.com/omegaml/omegaml/commit/0042e14>`__
+-  Merge pull request #22 from omegaml/fix-shippable-miniconda
+   `eea4363 <https://github.com/omegaml/omegaml/commit/eea4363>`__
+-  ensure specific miniconda version
+   `1c6b14b <https://github.com/omegaml/omegaml/commit/1c6b14b>`__
+-  bump version
+   `69ac8f6 <https://github.com/omegaml/omegaml/commit/69ac8f6>`__
+-  Merge pull request #18 from
+   omegaml/enable-jupyternb-subdirectories-files
+   `5a51c96 <https://github.com/omegaml/omegaml/commit/5a51c96>`__
+-  update livetest to work with headless chromedriver
+   `36cde47 <https://github.com/omegaml/omegaml/commit/36cde47>`__
+-  bump version
+   `a9703a3 <https://github.com/omegaml/omegaml/commit/a9703a3>`__
+-  enable notebook directories, sub directories (basic implementation &
+   tests)
+   `e9f535e <https://github.com/omegaml/omegaml/commit/e9f535e>`__
+-  update headlines
+   `0246830 <https://github.com/omegaml/omegaml/commit/0246830>`__
+-  Merge pull request #13 from omegaml/add-package-testing
+   `94ce14c <https://github.com/omegaml/omegaml/commit/94ce14c>`__
+-  bump version
+   `9511983 <https://github.com/omegaml/omegaml/commit/9511983>`__
+-  added livetest installation using docker
+   `4d53d92 <https://github.com/omegaml/omegaml/commit/4d53d92>`__
+-  Merge pull request #12 from omegaml/update-readme
+   `3ff1527 <https://github.com/omegaml/omegaml/commit/3ff1527>`__
+-  update README, tag line, bump version
+   `121cdb4 <https://github.com/omegaml/omegaml/commit/121cdb4>`__
+-  remove warnings, fix unit tests
+   `829e95d <https://github.com/omegaml/omegaml/commit/829e95d>`__
+-  Merge pull request #11 from omegaml/10-update-dependencies
+   `41dc132 <https://github.com/omegaml/omegaml/commit/41dc132>`__
+-  updated to latest versions
+   `b6fbbf8 <https://github.com/omegaml/omegaml/commit/b6fbbf8>`__
+-  Merge pull request #3 from omegaml/ready-to-publish
+   `74b4175 <https://github.com/omegaml/omegaml/commit/74b4175>`__
+-  quality assurance
+   `000ce65 <https://github.com/omegaml/omegaml/commit/000ce65>`__
+-  Merge pull request #2 from omegaml/ready-to-publish
+   `787564d <https://github.com/omegaml/omegaml/commit/787564d>`__
+-  quality assurance
+   `915f5e3 <https://github.com/omegaml/omegaml/commit/915f5e3>`__
+-  Merge pull request #1 from omegaml/ready-to-publish
+   `5dde910 <https://github.com/omegaml/omegaml/commit/5dde910>`__
+-  automate release
+   `ed8b390 <https://github.com/omegaml/omegaml/commit/ed8b390>`__
+-  update license data
+   `e5813d7 <https://github.com/omegaml/omegaml/commit/e5813d7>`__
+-  ready to publish
+   `ada3773 <https://github.com/omegaml/omegaml/commit/ada3773>`__
+-  commit to publish
+   `fa4a826 <https://github.com/omegaml/omegaml/commit/fa4a826>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix: pip-requirements.txt to reduce vulnerabilities
+   `51d0f9e <https://github.com/omegaml/omegaml/commit/51d0f9e>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `5543bb7 <https://github.com/omegaml/omegaml/commit/5543bb7>`__
+-  fix: pip-requirements.txt to reduce vulnerabilities
+   `de81317 <https://github.com/omegaml/omegaml/commit/de81317>`__
+-  fix: pip-requirements.txt to reduce vulnerabilities
+   `eb7faf0 <https://github.com/omegaml/omegaml/commit/eb7faf0>`__
+-  fix: pip-requirements.txt to reduce vulnerabilities
+   `ac94a4c <https://github.com/omegaml/omegaml/commit/ac94a4c>`__
+-  fix compressed export filename (#245)
+   `fae9e33 <https://github.com/omegaml/omegaml/commit/fae9e33>`__
+-  fix kwargs on rawfile get() (#192)
+   `8d430dc <https://github.com/omegaml/omegaml/commit/8d430dc>`__
+-  fix command line parsing, cloud config (#150)
+   `ed12d19 <https://github.com/omegaml/omegaml/commit/ed12d19>`__
+-  fix filterops lt, lte, gt, gte (#140)
+   `f7dd35a <https://github.com/omegaml/omegaml/commit/f7dd35a>`__
+-  fixing several bugs (#123)
+   `684f83d <https://github.com/omegaml/omegaml/commit/684f83d>`__
+-  fix mdataframe.merge duplicate keys error on 1:n merges (#117)
+   `b322a11 <https://github.com/omegaml/omegaml/commit/b322a11>`__
+-  fix wrong argument passing in maybe_chunked (#103)
+   `cbd2ab6 <https://github.com/omegaml/omegaml/commit/cbd2ab6>`__
+-  fix windows ctrl-c sighup handling (#84)
+   `8a67bee <https://github.com/omegaml/omegaml/commit/8a67bee>`__
+-  fix issue with bucket access on deferred instance (#66)
+   `1f02a39 <https://github.com/omegaml/omegaml/commit/1f02a39>`__
+-  fix issue with bucket access on deferred instance
+   `c278f8d <https://github.com/omegaml/omegaml/commit/c278f8d>`__
+-  fix local install via pip
+   `f7b2d6d <https://github.com/omegaml/omegaml/commit/f7b2d6d>`__
+
+Refactor
+~~~~~~~~
+
+-  refactor swagger linking
+   `c8783ae <https://github.com/omegaml/omegaml/commit/c8783ae>`__
+-  refactor tracking dataset metadata
+   `79b11dd <https://github.com/omegaml/omegaml/commit/79b11dd>`__
+-  refactor package build
+   `4305271 <https://github.com/omegaml/omegaml/commit/4305271>`__
+-  refactor file storage (#87)
+   `2d159da <https://github.com/omegaml/omegaml/commit/2d159da>`__
+-  refactor \_common_kwargs to OmegaRuntime
+   `5f60ca1 <https://github.com/omegaml/omegaml/commit/5f60ca1>`__
