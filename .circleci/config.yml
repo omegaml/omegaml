@@ -174,8 +174,8 @@ jobs:
             conda activate docs
             # install sources, start env
             cd omegaml-ce
-            pip install -e .[all,dev]
-            pip uninstall -y yaspin || echo "yaspin not installed (good)"            
+            make install
+            pip uninstall -y yaspin || echo "yaspin removed (good)"            
             cp scripts/mongoinit.js.example scripts/mongoinit.js
             docker-compose -f docker-compose-dev.yml up -d
             echo "Waiting..."
