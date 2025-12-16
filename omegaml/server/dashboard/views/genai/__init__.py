@@ -4,7 +4,7 @@ import time
 from datetime import timezone
 from pathlib import Path
 
-from flask import render_template, jsonify, abort
+from flask import render_template, jsonify, abort, redirect, url_for
 from werkzeug.utils import secure_filename
 
 from omegaml.server import flaskview as fv
@@ -16,6 +16,7 @@ from omegaml.util import utcnow
 class GenAIView(BaseView):
     @fv.route('/index')
     def index(self):
+        return redirect(url_for('.prompts_view_list'))
         om = self.om
         models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)

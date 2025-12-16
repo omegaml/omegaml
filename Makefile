@@ -136,6 +136,10 @@ scan: freeze pipsync
 	mv requirements.txt scripts/secdev/scanned-pipreqs.txt
 	cat $(find scripts/secdev/ -name *report)
 
-server:
+server-debug:
 	# start omegaml server
 	export OMEGA_LOCAL_RUNTIME=1; python -m omegaml.server
+
+server:
+	OMEGA_LOGLEVEL=DEBUG honcho -f scripts/local/Procfile start server worker
+
