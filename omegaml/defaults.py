@@ -262,6 +262,8 @@ OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 #: events streaming ssechat server
 OMEGA_EVENTS_STREAMER_URL = os.environ.get('OMEGA_EVENTS_STREAMER_URL', '/events/chat/completions')
+#: vector db
+OMEGA_VECTORDB_URL = os.environ.get('OMEGA_VECTORDB_URL', 'vector+mongodb://')
 
 
 # =========================================
@@ -551,7 +553,16 @@ update_from_env()
 
     This is used to configure the omegaml.runtime's celery.App instance. It is a mapping
     of Celery settings. 
-
+  
 .. versionchanged:: NEXT
-    CELERY_TRACK_STARTED=True to enable task status visibility for STARTED vs PENDING
+    CELERY_TRACK_STARTED=True to enable task status visibility for STARTED vs PENDING 
+
+.. py:data:: OMEGA_VECTORDB_URL
+    :type: str
+    
+    The URL to the vector db, used for document indexing. Supports mongodb:// for
+    mongodb, and pgvector:// for PostgreSQL+pgvector 
+    
+.. versionadded:: NEXT
+    OMEGA_VECTORDB_URL 
 """
