@@ -311,5 +311,5 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         om.datasets.put(df_a, 'revtest', append=False)
         with self.assertRaises(ValueError) as cm:
             om.datasets.put(df_a, 'revtest', revisions=True)
-        self.assertEquals(str(cm.exception),
+        self.assertEqual(str(cm.exception),
                           "adding revisions to existing dataset revtest is not supported")

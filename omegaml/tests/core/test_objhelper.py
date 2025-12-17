@@ -112,7 +112,7 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         om.jobs.create(code, 'myjob', helper='myhelper')
         nb = om.jobs.get('myjob')
         self.assertEqual(len(nb.cells), 2)
-        self.assertRegexpMatches(nb.cells[-1]['source'], r'\d{4}-\d{2}-\d{2}.*')
+        self.assertRegex(nb.cells[-1]['source'], r'\d{4}-\d{2}-\d{2}.*')
 
     def test_supports(self):
         """ test using helper selection by supports= conditions """

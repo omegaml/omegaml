@@ -3,6 +3,13 @@ from omegaml.backends.basedata import BaseDataBackend
 
 
 class ProtobufDataBackend(BaseDataBackend):
+    """
+    .. versionchanged:: NEXT
+        Only supported for tensorflow <= 2.15 and Python <= 3.11
+
+    .. deprecated:: NEXT
+        Use an object helper or a serializer/loader combination instead.
+    """
     KIND = 'protobuf.pbf'
 
     @classmethod
@@ -36,4 +43,3 @@ class ProtobufDataBackend(BaseDataBackend):
         message = load_class(pbtype)()
         message.ParseFromString(data)
         return message
-
