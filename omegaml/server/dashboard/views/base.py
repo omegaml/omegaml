@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
+from typing import TypeVar
+
 import flask
 from flask import session
-from typing import TypeVar, Type
 
 from omegaml.server.flaskview import route, FlaskView
 
@@ -71,7 +72,7 @@ class BaseView(OmegaViewMixin, FlaskView):
 T = TypeVar('T')
 
 
-def mixin_for(baseclass: Type[T]) -> Type[T]:
+def mixin_for(baseclass: type[T]) -> type[T]:
     """ use this to decorate a mixin class for typehints, keeping the mixin class a subclass of object """
     # https://github.com/python/typing/issues/246
     return object
