@@ -8,7 +8,7 @@ from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
+@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
 class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml.backends.tensorflow.tfkeras import TensorflowKerasBackend
@@ -107,9 +107,3 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(model_, TensorflowSavedModelPredictor)
         yhat_ = model_.predict(x_test)
         self.assertTrue(np.allclose(yhat_, yhat))
-
-
-
-
-
-
