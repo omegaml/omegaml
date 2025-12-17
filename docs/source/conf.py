@@ -37,9 +37,9 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    #'sphinx.ext.viewcode',
+    # 'sphinx.ext.viewcode',
     'nbsphinx',
-    #'sphinx.ext.githubpages',
+    # 'sphinx.ext.githubpages',
     'sphinx_multiversion',
     "sphinxcontrib.jquery",
     'sphinx_toolbox.collapse',
@@ -53,6 +53,7 @@ viewcode_line_numbers = True
 
 # https://github.com/snide/sphinx_rtd_theme
 import sphinx_rtd_theme
+
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -141,13 +142,12 @@ pygments_style = 'default'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -209,7 +209,7 @@ html_css_files = [
 # Custom sidebar templates, maps document names to template names.
 #
 # html_sidebars = {}
-# https://holzhaus.github.io/sphinx-multiversion/master/quickstart.htmls
+# https://sphinx-contrib.github.io/multiversion/main/index.html
 html_sidebars = {
     '**': [
         'versioning.html',
@@ -231,7 +231,6 @@ smv_outputdir_format = '{ref.name}'
 smv_prefer_remote_refs = True
 # latest version
 smv_latest_version = f'release/{version}'
-
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -295,21 +294,21 @@ htmlhelp_basename = 'omegamldoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-     # The paper size ('letterpaper' or 'a4paper').
-     #
-     # 'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
 
-     # The font size ('10pt', '11pt' or '12pt').
-     #
-     # 'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
 
-     # Additional stuff for the LaTeX preamble.
-     #
-     # 'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
 
-     # Latex figure (float) alignment
-     #
-     # 'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -398,6 +397,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
 
 def setup(app):
     from omegaml import settings
