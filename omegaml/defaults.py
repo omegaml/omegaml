@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import sys
+from os.path import basename
 from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
@@ -126,6 +127,11 @@ OMEGA_STORE_BACKENDS = {
     'python.package': 'omegaml.backends.package.PythonPackageData',
     'pipsrc.package': 'omegaml.backends.package.PythonPipSourcedPackageData',
     'pandas.csv': 'omegaml.backends.externaldata.PandasExternalData',
+    'script.ipynb': 'omegaml.notebook.jobs.NotebookBackend',
+    'oci.registry': 'omegaml.backends.repository.OCIRegistryBackend',
+    'python.model': 'omegaml.backends.genericmodel.GenericModelBackend',
+    # must be last backend listed as a catch-call
+    'core.object': 'omegaml.backends.coreobjects.CoreObjectsBackend',
 }
 OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tfkeras.h5': 'omegaml.backends.tensorflow.TensorflowKerasBackend',
@@ -154,6 +160,9 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'genai.text': 'omegaml.backends.genai.textmodel.TextModelBackend',
     'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
+}
+OMEGA_STORE_BACKENDS_OPTIONAL = {
+    'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'},
 }
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')

@@ -243,6 +243,8 @@ marknext:
 
 latest:
 	git tag -d latest; git tag latest
+
+stable:
 	cat ../omegaml/VERSION | xargs | xargs -I {} bash -c 'git tag release/{} || echo "tag release/{} already exists"'
 	git tag -d stable; cat ../omegaml/VERSION | xargs | xargs -I {} git tag stable release/{}
 
@@ -263,3 +265,4 @@ publish: pre-publish
 
 changes:
 	scripts/mkchanges.sh
+	git add .; git commit -m "add changes files"
