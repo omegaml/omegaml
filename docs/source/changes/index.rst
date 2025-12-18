@@ -1,6 +1,6 @@
-.. include all releases
+Changes
+=======
 
 .. toctree::
-    :reversed:
 
     .. include:: sorted_index.rst

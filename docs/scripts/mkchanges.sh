@@ -27,6 +27,7 @@ function generate_changes()
     changefn_md=$changefn_base.md
     changefn_rst=$changefn_base.rst
     release_dt=$(git show -s --format="%ci" "$release" | cut -d ' ' -f 1)
+    # write index
     echo "$changefn_rst" >> $sorted_index_rst
     if [ -f $changefn_rst ] && [ -z "$rewrite" ]; then
       echo "INFO Skipping $changefn_base ($release)"
@@ -76,7 +77,7 @@ sort_semver() {
     for tag in "${versions[@]}"; do
         version=$(extract_version "$tag")
         echo "$(version_to_int "$version") $tag"
-    done | sort -n | awk '{print $2}'
+    done | sort -rn | awk '{print $2}'
 }
 
 generate_changes

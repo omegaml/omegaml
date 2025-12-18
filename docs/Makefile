@@ -265,4 +265,4 @@ publish: pre-publish
 
 changes:
 	scripts/mkchanges.sh
-	git add .; git commit -m "add changes files"
+	git add .; git commit -m "add changes files" || echo "nothing to commit"
