@@ -7,4 +7,4 @@ This sections lists all the changes in the library, including new features, bug 
     :glob:
     :reversed:
 
-    v*.rst
+    v*
