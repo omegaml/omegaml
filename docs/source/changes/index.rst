@@ -1,4 +1,4 @@
 Changes
 =======
 
-.. include:: sorted_index.txt
+.. include:: sorted_index.rst
