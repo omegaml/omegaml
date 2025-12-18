@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheduling notebooks &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Working with the cloud" href="../clusters/index.html" />
+    <link rel="prev" title="Parallel Execution" href="parallel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Working with notebooks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="working.html">Working with notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="working.html#running-notebooks-on-the-cloud">Running notebooks on the cloud</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel.html">Parallel Execution</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Scheduling notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Working with the cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Working with notebooks</a></li>
+      <li class="breadcrumb-item active">Scheduling notebooks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/jobs/scheduling.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scheduling-notebooks">
+<h1>Scheduling notebooks<a class="headerlink" href="#scheduling-notebooks" title="Link to this heading">¶</a></h1>
+<p><em>This explores using the command line to work with notebooks. The same also
+works with the integrated Jupyter notebook</em></p>
+<p>Jupyter Notebooks are great tools for exploratory and ad-hoc work. But how do you
+run a notebook on a schedule? Say you have a notebook that produces a nice report,
+and it should run every Friday morning.</p>
+<p>With omega|ml, scheduling a notebook to run in the cloud is straight forward:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># make it run every Friday morning</span>
+$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>schedule<span class="w"> </span>mynotebook<span class="w"> </span><span class="s2">&quot;Fridays, at 06:00&quot;</span>
+</pre></div>
+</div>
+<p>We can verify the next times this notebook will be run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>schedule<span class="w"> </span>mynotebook<span class="w"> </span>show<span class="w"> </span>--next<span class="w"> </span><span class="m">10</span>
+Currently<span class="w"> </span>mynotebook<span class="w"> </span>is<span class="w"> </span>scheduled<span class="w"> </span>at<span class="w"> </span>Every<span class="w"> </span>minute,<span class="w"> </span>only<span class="w"> </span>on<span class="w"> </span>Friday
+Given<span class="w"> </span>this<span class="w"> </span>existing<span class="w"> </span>interval,<span class="w"> </span>next<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="nb">times</span><span class="w"> </span>would<span class="w"> </span>be:
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:35:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:36:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:37:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:38:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:39:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:40:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:41:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:42:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:43:00
+<span class="w">  </span><span class="m">2020</span>-09-18<span class="w"> </span><span class="m">13</span>:44:00
+mynotebook<span class="w"> </span>is<span class="w"> </span>scheduled<span class="w"> </span>to<span class="w"> </span>run<span class="w"> </span>next<span class="w"> </span>at<span class="w"> </span><span class="m">2020</span>-09-18T13:35:00
+</pre></div>
+</div>
+<p>For each run the notebook, including all output, will be stored in <cite>jobs/results</cite>, and
+we can get it back:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>list<span class="w"> </span>results
+<span class="o">[</span><span class="s1">&#39;mynotebook.ipynb&#39;</span>,<span class="w"> </span><span class="s1">&#39;mynotebook2.ipynb&#39;</span>,<span class="w"> </span><span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span><span class="o">]</span>
+
+$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>get<span class="w"> </span><span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span><span class="w"> </span>mynotebook_results.ipynb
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="parallel.html" class="btn btn-neutral float-left" title="Parallel Execution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../clusters/index.html" class="btn btn-neutral float-right" title="Working with the cloud" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: 0.13.7
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="scheduling.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/guide/jobs/scheduling.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/guide/jobs/scheduling.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/guide/jobs/scheduling.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/guide/jobs/scheduling.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/guide/jobs/scheduling.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/guide/jobs/scheduling.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/guide/jobs/scheduling.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/guide/jobs/scheduling.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/guide/jobs/scheduling.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/jobs/scheduling.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

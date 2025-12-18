@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capturing model metrics &mdash; omega-ml 0.18.0-rc2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Adding business logic to models" href="businessmodels/index.html" />
+    <link rel="prev" title="Introduction to models" href="modelstore.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Classic ML</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../tutorial.html">Tutorial for classic ML</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../datasets/index.html"> Loading datasets for training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html"> Training models</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"> Evaluating models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modelstore.html"> Deploying models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="businessmodels/index.html"> Adding business logic to models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../clusters/restapi.html"> Serving models for real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracking/index.html"> Tracking and monitoring models</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../tutorial.html">Tutorial for classic ML</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Working with models</a></li>
+      <li class="breadcrumb-item active">Capturing model metrics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/guide/classicml/models/metrics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="capturing-model-metrics">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Capturing model metrics</a><a class="headerlink" href="#capturing-model-metrics" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#capturing-model-metrics" id="id1">Capturing model metrics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#running-an-experiment" id="id2">Running an experiment</a></p></li>
+<li><p><a class="reference internal" href="#tracking-experiments-with-multiple-steps" id="id3">Tracking experiments with multiple steps</a></p></li>
+<li><p><a class="reference internal" href="#tracking-model-execution-at-runtime" id="id4">Tracking model execution at runtime</a></p></li>
+<li><p><a class="reference internal" href="#customizing-tracking-behavior" id="id5">Customizing tracking behavior</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>omega-ml provides experiment and model tracking for all models using its
+built-in metrics store.</p>
+<section id="running-an-experiment">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Running an experiment</a><a class="headerlink" href="#running-an-experiment" title="Link to this heading">¶</a></h2>
+<p>Collecting metrics as part of an experiment is straight forward:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;penalty&#39;</span><span class="p">,</span> <span class="s1">&#39;L2&#39;</span><span class="p">)</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can get back the data collected in an experiment using <code class="code docutils literal notranslate"><span class="pre">exp.data()</span></code>,
+as a DataFrame:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+      <span class="n">experiment</span>  <span class="n">run</span>     <span class="n">event</span>                          <span class="n">dt</span>   <span class="n">node</span>  <span class="n">step</span>       <span class="n">key</span>                                              <span class="n">value</span>
+<span class="mi">0</span>      <span class="n">myexp</span>    <span class="mi">1</span>     <span class="n">start</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.893920</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>       <span class="n">NaN</span>                                                <span class="n">NaN</span>
+<span class="mi">1</span>      <span class="n">myexp</span>    <span class="mi">1</span>    <span class="n">system</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.927902</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>    <span class="n">system</span>  <span class="p">{</span><span class="s1">&#39;platform&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;system&#39;</span><span class="p">:</span> <span class="s1">&#39;Linux&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="s1">&#39;eowy...</span>
+<span class="mi">2</span>      <span class="n">myexp</span>    <span class="mi">1</span>    <span class="n">metric</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.938601</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>  <span class="n">accuracy</span>                                                  <span class="mi">1</span>
+<span class="mi">3</span>      <span class="n">myexp</span>    <span class="mi">1</span>     <span class="n">param</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.950340</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>  <span class="n">penaltiy</span>                                                 <span class="n">L2</span>
+<span class="mi">4</span>      <span class="n">myexp</span>    <span class="mi">1</span>  <span class="n">artifact</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.984030</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>   <span class="n">mymodel</span>  <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;experiments/.arte...</span>
+<span class="mi">5</span>      <span class="n">myexp</span>    <span class="mi">1</span>      <span class="n">stop</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.994113</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>       <span class="n">NaN</span>                                                <span class="n">NaN</span>
+</pre></div>
+</div>
+<p>Note the <code class="code docutils literal notranslate"><span class="pre">run</span></code> column records the number of times the above <code class="code docutils literal notranslate"><span class="pre">with</span></code>
+block has been run. If you run it again, there is a second set of metrics. We can
+get back all the runs by filtering as <code class="code docutils literal notranslate"><span class="pre">exp.data(run='all')</span></code>, or a specific set
+of runs by giving a list or a tuple <code class="code docutils literal notranslate"><span class="pre">exp.data(run=(1,3))</span></code>. Additional
+filters are available for the <code class="code docutils literal notranslate"><span class="pre">event,</span> <span class="pre">node,</span> <span class="pre">step,</span> <span class="pre">key</span></code> fields</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">run</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
+  <span class="n">experiment</span>  <span class="n">run</span>  <span class="n">step</span>   <span class="n">event</span>       <span class="n">key</span>  <span class="n">value</span>                          <span class="n">dt</span>   <span class="n">node</span>
+<span class="mi">0</span>      <span class="n">myexp</span>    <span class="mi">1</span>  <span class="kc">None</span>  <span class="n">metric</span>  <span class="n">accuracy</span>      <span class="mi">1</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T15</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mf">51.938601</span>  <span class="n">eowyn</span>
+<span class="mi">1</span>      <span class="n">myexp</span>    <span class="mi">2</span>  <span class="kc">None</span>  <span class="n">metric</span>  <span class="n">accuracy</span>      <span class="mi">1</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">02</span><span class="p">:</span><span class="mf">08.579077</span>  <span class="n">eowyn</span>
+<span class="mi">2</span>      <span class="n">myexp</span>    <span class="mi">3</span>  <span class="kc">None</span>  <span class="n">metric</span>  <span class="n">accuracy</span>      <span class="mi">1</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">02</span><span class="p">:</span><span class="mf">13.048647</span>  <span class="n">eowyn</span>
+</pre></div>
+</div>
+</section>
+<section id="tracking-experiments-with-multiple-steps">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Tracking experiments with multiple steps</a><a class="headerlink" href="#tracking-experiments-with-multiple-steps" title="Link to this heading">¶</a></h2>
+<p>To run an experiment that uses a series of parameters or a k-fold of input data
+such as in cross-validation, we can track each step separately. In this case there
+the data will be recorded for one run (e.g. <code class="code docutils literal notranslate"><span class="pre">run=1</span></code>) and many steps.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">ShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">split</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shuffle</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+        <span class="n">Xs</span><span class="p">,</span> <span class="n">Ys</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">Y</span><span class="p">[</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Xs</span><span class="p">,</span> <span class="n">Ys</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="s1">&#39;penalty&#39;</span><span class="p">,</span> <span class="s1">&#39;L2&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the ML framework provides model callbacks, such as Tensorflow, the model can
+be fit using <code class="code docutils literal notranslate"><span class="pre">exp.tensorflow_callback()</span></code>. In this case, the model itself
+will provide model metrics via the callback:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span>
+              <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">exp</span><span class="o">.</span><span class="n">tensorflow_callback</span><span class="p">()])</span>
+</pre></div>
+</div>
+</section>
+<section id="tracking-model-execution-at-runtime">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Tracking model execution at runtime</a><a class="headerlink" href="#tracking-model-execution-at-runtime" title="Link to this heading">¶</a></h2>
+<p>Since experiments are a feature of the runtime, we can store a model
+and link it to an experiment. In this case the runtime will create an
+experiment context prior to performing the requested model action.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;tracking&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="s1">&#39;myexp&#39;</span><span class="p">,</span>
+    <span class="p">}})</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Thus the runtime worker will run the following code equivalent. This is
+true for all calls of the runtime (programmatic, cli or REST API).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># run time worker, in response to om.runtime.score(&#39;mymodel&#39;, X, Y)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">omega_score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+    <span class="n">exp_name</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;tracking&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="n">exp_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_event</span><span class="p">(</span><span class="s1">&#39;task_call&#39;</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="s1">&#39;score&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_artifcat</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s1">&#39;related&#39;</span><span class="p">)</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">log_event</span><span class="p">(</span><span class="s1">&#39;task_success&#39;</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="customizing-tracking-behavior">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Customizing tracking behavior</a><a class="headerlink" href="#customizing-tracking-behavior" title="Link to this heading">¶</a></h2>
+<p>Tracking behavior can be adjusted by using a different tracking provider,
+e.g. the <code class="code docutils literal notranslate"><span class="pre">SimpleTrackingProvider</span></code> logs model metrics, while the
+<code class="code docutils literal notranslate"><span class="pre">OmegaProfilingTracker</span></code> also logs system resource usage like
+CPU and RAM while running the experiment. Write your own tracking providers
+to forward metrics to a third-party metrics store, or to provide custom
+callbacks to your machine learning framework.</p>
+<p>The specific tracking provider used is specified as the <code class="code docutils literal notranslate"><span class="pre">provider=</span></code>
+argument when creating the experiment. For example, the ‘profiling’ provider
+will track system metrics during execution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;myexp2&#39;</span><span class="p">,</span>
+                                    <span class="n">provider</span><span class="o">=</span><span class="s1">&#39;profiling&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+             <span class="o">...</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+       <span class="n">experiment</span>  <span class="n">run</span>     <span class="n">event</span>                          <span class="n">dt</span>   <span class="n">node</span>  <span class="n">step</span>           <span class="n">key</span>                                              <span class="n">value</span>
+    <span class="mi">0</span>      <span class="n">myexp2</span>    <span class="mi">1</span>     <span class="n">start</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.534211</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>           <span class="n">NaN</span>                                                <span class="n">NaN</span>
+    <span class="mi">1</span>      <span class="n">myexp2</span>    <span class="mi">1</span>    <span class="n">system</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.579121</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>        <span class="n">system</span>  <span class="p">{</span><span class="s1">&#39;platform&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;system&#39;</span><span class="p">:</span> <span class="s1">&#39;Linux&#39;</span><span class="p">,</span> <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="s1">&#39;eowy...</span>
+    <span class="mi">2</span>      <span class="n">myexp2</span>    <span class="mi">1</span>    <span class="n">metric</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.592081</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>      <span class="n">accuracy</span>                                                  <span class="mi">1</span>
+    <span class="mi">3</span>      <span class="n">myexp2</span>    <span class="mi">1</span>     <span class="n">param</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.600690</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>      <span class="n">penaltiy</span>                                                 <span class="n">L2</span>
+    <span class="mi">4</span>      <span class="n">myexp2</span>    <span class="mi">1</span>  <span class="n">artifact</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.627970</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>       <span class="n">mymodel</span>  <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;experiments/.arte...</span>
+    <span class="mi">5</span>      <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.635717</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>    <span class="n">profile_dt</span>                         <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.531654</span>
+    <span class="mi">6</span>      <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.643665</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>   <span class="n">memory_load</span>                                               <span class="mf">22.4</span>
+    <span class="mi">7</span>      <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.651388</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>  <span class="n">memory_total</span>                                        <span class="mi">33542479872</span>
+    <span class="mi">8</span>      <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.658964</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>      <span class="n">cpu_load</span>                           <span class="p">[</span><span class="mf">25.9</span><span class="p">,</span> <span class="mf">27.1</span><span class="p">,</span> <span class="mf">27.6</span><span class="p">,</span> <span class="mf">28.6</span><span class="p">]</span>
+    <span class="mi">9</span>      <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.666597</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>     <span class="n">cpu_count</span>                                                  <span class="mi">4</span>
+    <span class="mi">10</span>     <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.673986</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>      <span class="n">cpu_freq</span>                       <span class="p">[</span><span class="mf">0.833</span><span class="p">,</span> <span class="mf">1.728</span><span class="p">,</span> <span class="mf">2.228</span><span class="p">,</span> <span class="mf">1.736</span><span class="p">]</span>
+    <span class="mi">11</span>     <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.681591</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>       <span class="n">cpu_avg</span>                            <span class="p">[</span><span class="mf">0.215</span><span class="p">,</span> <span class="mf">0.6825</span><span class="p">,</span> <span class="mf">0.6925</span><span class="p">]</span>
+    <span class="mi">12</span>     <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.688981</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>      <span class="n">disk_use</span>                                               <span class="mf">95.6</span>
+    <span class="mi">13</span>     <span class="n">myexp2</span>    <span class="mi">1</span>   <span class="n">profile</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.697768</span>  <span class="n">eowyn</span>   <span class="mf">0.0</span>    <span class="n">disk_total</span>                                       <span class="mi">502468108288</span>
+    <span class="mi">14</span>     <span class="n">myexp2</span>    <span class="mi">1</span>      <span class="n">stop</span>  <span class="mi">2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">22</span><span class="n">T16</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mf">28.705661</span>  <span class="n">eowyn</span>   <span class="n">NaN</span>           <span class="n">NaN</span>                                                <span class="n">NaN</span>
+</pre></div>
+</div>
+<p>The following tracking providers are available:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">default</span></code> - the default tracker, <code class="code docutils literal notranslate"><span class="pre">OmegaSimpleTracker</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">profiling</span></code> - the profiling tracker, <code class="code docutils literal notranslate"><span class="pre">OmegaProfilingTracker</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">notrack</span></code> - the no-operation tracker, <code class="code docutils literal notranslate"><span class="pre">NoTrackTracker</span></code>. Use
+this to disable tracking.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modelstore.html" class="btn btn-neutral float-left" title="Introduction to models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="businessmodels/index.html" class="btn btn-neutral float-right" title="Adding business logic to models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: latest
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="metrics.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../release/0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../release/0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../release/0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../release/0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../release/0.17.0/guide/classicml/models/metrics.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../stable/guide/classicml/models/metrics.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../master/guide/classicml/models/metrics.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

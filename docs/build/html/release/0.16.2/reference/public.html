@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Public API &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Public API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/public.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="public-api">
+<h1>Public API<a class="headerlink" href="#public-api" title="Link to this heading">¶</a></h1>
+<section id="python-api-overview">
+<h2>Python API (overview)<a class="headerlink" href="#python-api-overview" title="Link to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="datasets.html#omegaml.datasets" title="omegaml.datasets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.datasets</span></code></a></p></td>
+<td><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for datasets</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#omegaml.models" title="omegaml.models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.models</span></code></a></p></td>
+<td><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for models</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#omegaml.runtimes" title="omegaml.runtimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="jobs.html#omegaml.jobs" title="omegaml.jobs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.jobs</span></code></a></p></td>
+<td><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for jobs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="scripts.html#omegaml.scripts" title="omegaml.scripts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.scripts</span></code></a></p></td>
+<td><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for scripts</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.streams</span></code></p></td>
+<td><p>stream helper</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.logger</span></code></p></td>
+<td><p>the OmegaSimpleLogger for easy log access</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a>([mongo_url, ...])</p></td>
+<td><p>The storage backend for models and data</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="runtimes.html#omegaml.runtimes.OmegaRuntime" title="omegaml.runtimes.OmegaRuntime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaRuntime</span></code></a>(omega[, ...])</p></td>
+<td><p>omegaml compute cluster gateway</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaModelProxy</span></code>(modelname)</p></td>
+<td><p>proxy to a remote model in a celery worker</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.runtimes.OmegaJobProxy</span></code>(jobname[, ...])</p></td>
+<td><p>proxy to a remote job in a celery worker</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#omegaml.notebook.jobs.OmegaJobs" title="omegaml.notebook.jobs.OmegaJobs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.notebook.jobs.OmegaJobs</span></code></a>([...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="mdataframe.html#omegaml.mdataframe.MDataFrame" title="omegaml.mdataframe.MDataFrame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MDataFrame</span></code></a>(collection[, ...])</p></td>
+<td><p>A DataFrame for mongodb</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="mdataframe.html#omegaml.mdataframe.MGrouper" title="omegaml.mdataframe.MGrouper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MGrouper</span></code></a>(mdataframe, ...)</p></td>
+<td><p>a Grouper for MDataFrames</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="mdataframe.html#omegaml.mdataframe.MLocIndexer" title="omegaml.mdataframe.MLocIndexer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MLocIndexer</span></code></a>(mdataframe[, ...])</p></td>
+<td><p>implements the LocIndexer for MDataFrames</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="mdataframe.html#omegaml.mdataframe.MPosIndexer" title="omegaml.mdataframe.MPosIndexer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.mdataframe.MPosIndexer</span></code></a>(mdataframe)</p></td>
+<td><p>implements the position-based indexer for MDataFrames</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend" title="omegaml.backends.sqlalchemy.SQLAlchemyBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">omegaml.backends.sqlalchemy.SQLAlchemyBackend</span></code></a>([...])</p></td>
+<td><p>sqlalchemy plugin for omegaml</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="python-api">
+<h2>Python API<a class="headerlink" href="#python-api" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="omegaml.models">
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">models</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaStore(bucket=omegaml,</span> <span class="pre">prefix=models/)</span></em><a class="headerlink" href="#omegaml.models" title="Link to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for models</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="omegaml.runtimes">
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">runtimes</span></span><em class="property"><span class="w"> </span><span class="pre">-</span> <span class="pre">the</span> <span class="pre">cluster</span> <span class="pre">runtime</span> <span class="pre">API</span></em><a class="headerlink" href="#omegaml.runtimes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="omegaml.notebook.jobs">
+<span class="sig-prename descclassname"><span class="pre">omegaml.notebook.</span></span><span class="sig-name descname"><span class="pre">jobs</span></span><em class="property"><span class="w"> </span><span class="pre">-</span> <span class="pre">the</span> <span class="pre">lambda</span> <span class="pre">compute</span> <span class="pre">service</span></em><a class="headerlink" href="#omegaml.notebook.jobs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<section id="omegaml-store">
+<h3>omegaml.store<a class="headerlink" href="#omegaml-store" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.store.base.</span></span><span class="sig-name descname"><span class="pre">OmegaStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbalias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>The storage backend for models and data</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version NEXT: </span>refactored all methods handling Python and Pandas datatypes to omegaml.backends.coreobjects.CoreObjectsBackend</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore.drop"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Drop the object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the object. If the name is a pattern it will
+be expanded using .list(), and call .drop() on every obj found.</p></li>
+<li><p><strong>force</strong> – If True ignores DoesNotExist exception, defaults to False
+meaning this raises a DoesNotExist exception if the name does not
+exist</p></li>
+<li><p><strong>report</strong> – if True returns a dict name=&gt;status, where status is True
+if deleted, False if not deleted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if object was deleted, False if not.
+If force is True and the object does not exist it will still return True</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DoesNotExist if the object does not exist and <code class="docutils literal notranslate"><span class="pre">`force=False`</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Retrieve an object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the object</p></li>
+<li><p><strong>version</strong> – Version of the stored object (not supported)</p></li>
+<li><p><strong>force_python</strong> – Return as a python object</p></li>
+<li><p><strong>kwargs</strong> – kwargs depending on object kind</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an object, estimator, pipelines, data array or pandas dataframe
+previously stored with put()</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore.getl"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>return a lazy MDataFrame for a given object</p>
+<p>Same as .get, but returns a MDataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regexp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore.list"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>List all files in store</p>
+<p>specify pattern as a unix pattern (e.g. <code class="code docutils literal notranslate"><span class="pre">models/*</span></code>,
+or specify regexp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> – the unix file pattern or None for all</p></li>
+<li><p><strong>regexp</strong> – the regexp. takes precedence over pattern</p></li>
+<li><p><strong>raw</strong> – if True return the meta data objects</p></li>
+<li><p><strong>filter</strong> – specify additional filter criteria, optional</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of files in store</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/store/base.html#OmegaStore.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Stores an object, store estimators, pipelines, numpy arrays or
+pandas dataframes</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="omegaml-jobs">
+<h3>omegaml.jobs<a class="headerlink" href="#omegaml-jobs" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.notebook.jobs.</span></span><span class="sig-name descname"><span class="pre">OmegaJobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/notebook/jobs.html#OmegaJobs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.run" title="Link to this definition">¶</a></dt>
+<dd><p>Run a job immediately</p>
+<p>The job is run and the results are stored in om.jobs(‘results/name &lt;timestamp&gt;’) and
+the result’s Metadata is returned.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Metadata.attributes</span></code> of the original job as given by name is updated:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">attributes['job_runs']</span></code> (list) - list of status of each run. Status is</dt><dd><p>a dict as below</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">attributes['job_results']</span></code> (list) - list of results job names in same</dt><dd><p>index-order as job_runs</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes['trigger']</span></code> (list) - list of triggers</p></li>
+</ul>
+<p>The status of each job run is a dict with keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code> (str): the status of the job run, OK or ERROR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ts</span></code> (datetime): time of execution</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code> (str): error mesasge in case of ERROR, else blank</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results</span></code> (str): name of results in case of OK, else blank</p></li>
+</ul>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># directly (sync)</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;mynb&#39;</span><span class="p">)</span>
+
+<span class="c1"># via runtime (async)</span>
+<span class="n">job</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;mynb&#39;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – the name of the jobfile</p></li>
+<li><p><strong>event</strong> (<em>str</em>) – an event name</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – timeout in seconds, None means no timeout</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Metadata of the results entry</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>OmegaJobs.run_notebook</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs.run_notebook">
+<span class="sig-name descname"><span class="pre">run_notebook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.run_notebook" title="Link to this definition">¶</a></dt>
+<dd><p>run a given notebook immediately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – the name of the jobfile</p></li>
+<li><p><strong>event</strong> (<em>str</em>) – an event name</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – timeout in seconds</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Metadata of results</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The notebook is run using nbconvert.</p>
+<p>The job’s metadata is updated to reflect all job runs and their results
+as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;execution status&gt;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;ts&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">datetime</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;blank | exception&gt;,</span>
+        <span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="s1">&#39;results/&lt;name&gt;_&lt;datetime&gt;.ipynb&#39;</span><span class="p">,</span>
+    <span class="p">}</span> <span class="o">...</span><span class="p">],</span>
+    <span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">&#39;results/&lt;name&gt;_&lt;datetime&gt;.ipynb&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><cite>job_runs</cite> is a list representing result status of each time the job was
+executed by the runtime, either by <cite>om.runtime.job(‘&lt;name&gt;’).run()</cite>, or
+as a scheduled execution. In case of an exception, the message is truncated
+to contain an excerpt of str(exception).</p>
+<p><cite>job_results</cite> is a list of members in <cite>om.jobs</cite> representing the result
+each job execution. Each result is equivalent of an interactive execution
+in jupyter.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>nbconvert <a class="reference external" href="https://nbconvert.readthedocs.io/en/latest/execute_api.html">https://nbconvert.readthedocs.io/en/latest/execute_api.html</a></p></li>
+</ul>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version NEXT: </span><cite>job_runs[].results</cite> lists the name of the respective <cite>job_results</cite> item
+regardless of status. In prior versions <cite>job_runs[].results</cite> was null for
+failed jobs.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version NEXT: </span><cite>job_runs[].message</cite> is truncated to contain the first and last 80
+characters of an exception. The actual exception is preserved in the
+job_results notebook, stored as a separate object.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.notebook.jobs.OmegaJobs.schedule">
+<span class="sig-name descname"><span class="pre">schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#omegaml.notebook.jobs.OmegaJobs.schedule" title="Link to this definition">¶</a></dt>
+<dd><p>Schedule a processing of a notebook as per the interval
+specified on the job script</p>
+<p class="rubric">Notes</p>
+<p>This updates the notebook’s Metadata entry by adding the
+next scheduled run in <code class="docutils literal notranslate"><span class="pre">attributes['triggers']`</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_file</strong> (<em>str</em>) – the name of the notebook</p></li>
+<li><p><strong>run_at</strong> (<em>str</em><em>|</em><em>dict</em><em>|</em><a class="reference internal" href="jobs.html#omegaml.notebook.jobschedule.JobSchedule" title="omegaml.notebook.jobschedule.JobSchedule"><em>JobSchedule</em></a>) – the schedule specified in a format
+suitable for JobSchedule. If not specified, this value is
+extracted from the first cell of the notebook</p></li>
+<li><p><strong>last_run</strong> (<em>datetime</em>) – the last time this job was run, use this to
+reschedule the job for the next run. Defaults to the last
+timestamp listed in <code class="docutils literal notranslate"><span class="pre">attributes['job_runs']</span></code>, or datetime.utcnow()
+if no previous run exists.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>croniter.get_next()</p></li>
+<li><p>JobSchedule</p></li>
+<li><p>OmegaJobs.get_notebook_config</p></li>
+<li><p>cron expression - <a class="reference external" href="https://en.wikipedia.org/wiki/Cron#CRON_expression">https://en.wikipedia.org/wiki/Cron#CRON_expression</a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/reference/public.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/reference/public.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/reference/public.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/reference/public.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/reference/public.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/reference/public.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/reference/public.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/reference/public.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/reference/public.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/reference/public.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/reference/public.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/reference/public.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/reference/public.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../0.15.3/reference/public.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../0.15.5/reference/public.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../0.16.0/reference/public.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../0.16.1/reference/public.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="public.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../0.16.3/reference/public.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/reference/public.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../0.17.0/reference/public.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../0.9/reference/public.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/reference/public.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/reference/public.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
