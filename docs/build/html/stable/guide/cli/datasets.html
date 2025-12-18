@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working with datasets &mdash; omega-ml 0.18.0-rc2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Working with scripts" href="scripts.html" />
+    <link rel="prev" title="Working with models" href="models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../classicml/index.html">Classic ML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Command-line interface</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="intro.html">Using the command-line interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="models.html">Working with models</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Working with datasets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#storing-a-dataset">Storing a dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#retrieving-a-dataset">Retrieving a dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#working-with-remote-files">Working with remote files</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scripts.html">Working with scripts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html">Working with notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Working with the runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Command-line interface</a></li>
+      <li class="breadcrumb-item active">Working with datasets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/cli/datasets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="working-with-datasets">
+<h1>Working with datasets<a class="headerlink" href="#working-with-datasets" title="Link to this heading">¶</a></h1>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>-h
+Usage:
+<span class="w">  </span>om<span class="w"> </span>datasets<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>&lt;pattern&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--raw<span class="o">]</span><span class="w"> </span><span class="o">[</span>-E<span class="p">|</span>--regexp<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w">  </span>om<span class="w"> </span>datasets<span class="w"> </span>put<span class="w"> </span>&lt;path&gt;<span class="w"> </span>&lt;name&gt;<span class="w"> </span><span class="o">[</span>--replace<span class="o">]</span><span class="w"> </span><span class="o">[</span>--csv<span class="o">=</span>&lt;<span class="nv">param</span><span class="o">=</span>value&gt;<span class="o">]</span>...<span class="w"> </span><span class="o">[</span>--format<span class="w"> </span>csv<span class="p">|</span>image<span class="p">|</span>binary<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w">  </span>om<span class="w"> </span>datasets<span class="w"> </span>get<span class="w"> </span>&lt;name&gt;<span class="w"> </span>&lt;path&gt;<span class="w"> </span><span class="o">[</span>--csv<span class="w"> </span>&lt;param&gt;<span class="o">=</span>&lt;value&gt;<span class="o">]</span>...<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w">  </span>om<span class="w"> </span>datasets<span class="w"> </span>drop<span class="w"> </span>&lt;name&gt;<span class="w"> </span><span class="o">[</span>--force<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w">  </span>om<span class="w"> </span>datasets<span class="w"> </span>metadata<span class="w"> </span>&lt;name&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+<section id="storing-a-dataset">
+<h2>Storing a dataset<a class="headerlink" href="#storing-a-dataset" title="Link to this heading">¶</a></h2>
+<p>The cli supports storing the following types of datasets:</p>
+<ul class="simple">
+<li><p>csv files</p></li>
+<li><p>image files</p></li>
+<li><p>binary files</p></li>
+</ul>
+<p>For csv files, the <code class="code docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> can be a local path, S3 URI, azure Blob
+Storage URI, http source, webhdfs, or scp path. See the smart_open library for
+details.</p>
+<p>To store a csv:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># -- python equivalent to om.datasets.read_csv(&#39;sample.csv&#39;, &#39;sample&#39;)</span>
+$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>put<span class="w"> </span>sample.csv<span class="w"> </span>sample
+Metadata<span class="o">(</span><span class="nv">name</span><span class="o">=</span>sample,bucket<span class="o">=</span>omegaml,prefix<span class="o">=</span>data/,kind<span class="o">=</span>pandas.dfrows,created<span class="o">=</span><span class="m">2021</span>-02-12<span class="w"> </span><span class="m">15</span>:34:38.633000<span class="o">)</span>
+</pre></div>
+</div>
+<p>To store images or binary files</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>put<span class="w"> </span>lenna.png<span class="w"> </span>lenna
+Metadata<span class="o">(</span><span class="nv">name</span><span class="o">=</span>lenna,bucket<span class="o">=</span>omegaml,prefix<span class="o">=</span>data/,kind<span class="o">=</span>ndarray.bin,created<span class="o">=</span><span class="m">2021</span>-02-20<span class="w"> </span><span class="m">09</span>:19:58.788435<span class="o">)</span>
+</pre></div>
+</div>
+<p>To store any other file as a file</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>put<span class="w"> </span>lenna.zip<span class="w"> </span>lenna.zip
+Metadata<span class="o">(</span><span class="nv">name</span><span class="o">=</span>lenna.zip,bucket<span class="o">=</span>omegaml,prefix<span class="o">=</span>data/,kind<span class="o">=</span>python.file,created<span class="o">=</span><span class="m">2021</span>-02-20<span class="w"> </span><span class="m">09</span>:21:30.882209<span class="o">)</span>
+</pre></div>
+</div>
+<p>To work with remote files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>put<span class="w"> </span>--format<span class="w"> </span>csv<span class="w"> </span>https://www.openml.org/data/get_csv/61/dataset_61_iris.arff<span class="w"> </span>iris
+</pre></div>
+</div>
+</section>
+<section id="retrieving-a-dataset">
+<h2>Retrieving a dataset<a class="headerlink" href="#retrieving-a-dataset" title="Link to this heading">¶</a></h2>
+<p>The cli supports retrieving the same types of datasets and store the contents to a local or remote
+path:</p>
+<ul class="simple">
+<li><p>csv files</p></li>
+<li><p>image files</p></li>
+<li><p>binary files</p></li>
+</ul>
+<p>For csv files, the <code class="code docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> can be a local path, S3 URI, azure Blob
+Storage URI, http source, webhdfs, or scp path. See the smart_open library for
+details.</p>
+<p>To retrieve a dataset</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>get<span class="w"> </span>iris<span class="w"> </span>iris.csv
+</pre></div>
+</div>
+<p>To transfer a dataset to a remote location</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>datasets<span class="w"> </span>get<span class="w"> </span>iris<span class="w"> </span>s3://mybucket/iris.csv
+</pre></div>
+</div>
+</section>
+<section id="working-with-remote-files">
+<h2>Working with remote files<a class="headerlink" href="#working-with-remote-files" title="Link to this heading">¶</a></h2>
+<p>Remote files are supported by providing a valid URL to a remote location. The cli uses
+the <a class="reference external" href="https://pypi.org/project/smart-open/">smart_open</a> library for reading from and writing to remote locations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="models.html" class="btn btn-neutral float-left" title="Working with models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scripts.html" class="btn btn-neutral float-right" title="Working with scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: stable
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/guide/cli/datasets.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/guide/cli/datasets.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/guide/cli/datasets.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.15.5/guide/cli/datasets.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../release/0.16.0/guide/cli/datasets.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../release/0.16.1/guide/cli/datasets.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../release/0.16.2/guide/cli/datasets.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../release/0.16.3/guide/cli/datasets.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.16.4/guide/cli/datasets.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../release/0.17.0/guide/cli/datasets.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="datasets.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/guide/cli/datasets.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
