@@ -19,6 +19,6 @@ VERSION=$(head -n1 $src_dir/omegaml/VERSION)
 VERSION=${VERSION%%-*} 
 # Replace only whole‑word occurrences of “ NEXT ” in every *.rst file
 echo "INFO changing > NEXT < to > $VERSION <... (may take a few minutes)"
-find $src_dir/omegaml/omegaml -type f -name '*.rst' -o -name '*.py' -print0 | xargs0 sed -i 's/\bNEXT\b/0.18/g'
-find $src_dir/docs/source -type f -name '*.rst' -o -name '*.py' -print0 | xargs -L1 sed -i "s/\bNEXT\b?/${VERSION}/g"
+find $src_dir/omegaml -type f -name '*.rst' -o -name '*.py' -print0 | xargs -L1 sed -i 's/\bNEXT\b/0.18/g'
+find $src_dir/docs/source -type f -name '*.rst' -o -name '*.py' -print0 | xargs -L1 sed -i 's/\bNEXT\b/0.18/g'
 echo "INFO Done."
