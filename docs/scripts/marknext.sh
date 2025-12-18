@@ -11,7 +11,7 @@
 ##
 script_dir=$(realpath "$(dirname "$0")")
 source $script_dir/easyoptions || exit
-src_dir=$script_dir/../..
+src_dir=$script_dir/../../omegaml
 # Read the version string once
 # -- read basic version, including any -modifiers, e.g. 1.2.3-rc1
 VERSION=$(head -n1 $src_dir/omegaml/VERSION)
