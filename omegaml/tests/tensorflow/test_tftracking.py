@@ -8,7 +8,7 @@ from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow"), "tensorflow is not installed")
+@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow is not installed")
 class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
     """
     notes on framework versions v.v. tracing

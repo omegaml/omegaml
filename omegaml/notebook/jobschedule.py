@@ -1,4 +1,5 @@
 import datetime
+
 from celery.schedules import crontab
 from croniter import croniter
 
@@ -116,8 +117,10 @@ class JobSchedule(object):
     @property
     def text(self):
         """ return the human readable representation of the schedule """
-        from cron_descriptor import get_description
-        return get_description(self.cron)
+        from cron_descriptor import get_description, Options
+        options = Options()
+        options.use_24hour_time_format = False
+        return get_description(self.cron, options)
 
     def next_times(self, n=None, last_run=None):
         """ return the n next times of this schedule, staring from the last run
