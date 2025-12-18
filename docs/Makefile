@@ -240,7 +240,7 @@ fix:
 
 marknext:
 	./scripts/marknext.sh
-	git add .; git commit -m "update multiversion" || echo "no NEXT updates to commit"
+	git add ..; git commit -m "update multiversion" || echo "no NEXT updates to commit"
 
 latest:
 	git tag -d latest; git tag latest

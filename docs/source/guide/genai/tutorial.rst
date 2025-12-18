@@ -162,7 +162,7 @@ A pipeline is a specific type of virtual function:
     om.models.put(pipeline, 'pipeline')
 
 
-.. versionchanged:: NEXT
+.. versionchanged:: 0.18
    Use @virtualobj instead of @virtual_genai to decorate the pipeline.
 
 
