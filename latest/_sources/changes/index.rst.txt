@@ -3,11 +3,16 @@ Changes
 
 This sections lists all the changes in the library, including new features, bug fixes, and other improvements.
 
+.. include all productive releases
+
 .. toctree::
     :glob:
     :reversed:
 
-    v0.[16-99].*
+    (v0.(1[6-9]).*)|(v[1-9].*)
+
+..
+    include early realeases
 
 .. toctree::
     :glob:
