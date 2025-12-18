@@ -14,7 +14,7 @@ source $script_dir/easyoptions || exit
 src_dir=$script_dir/../../omegaml
 # Read the version string once
 # -- read basic version, including any -modifiers, e.g. 1.2.3-rc1
-VERSION=$(head -n1 $src_dir/omegaml/VERSION)
+VERSION=$(head -n1 $src_dir/VERSION)
 # -- remove any modifiers, e.g. 1.2.3-rc1 => 1.2.3
 VERSION=${VERSION%%-*} 
 # Replace only whole‑word occurrences of “ NEXT ” in every *.rst file
