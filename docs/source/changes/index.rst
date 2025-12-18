@@ -1,7 +1,4 @@
 Changes
 =======
 
-.. toctree::
-    :glob:
-
-    .. literalinclude:: sorted_index.txt
+.. include:: sorted_index.txt
