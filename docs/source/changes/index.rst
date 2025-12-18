@@ -4,4 +4,4 @@ Changes
 .. toctree::
     :glob:
 
-    .. include:: sorted_index.rst
+    .. literalinclude:: sorted_index.txt
