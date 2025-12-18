@@ -28,7 +28,7 @@ function generate_changes()
     changefn_rst=$changefn_base.rst
     release_dt=$(git show -s --format="%ci" "$release" | cut -d ' ' -f 1)
     # write index
-    echo "$(basename ${changefn_rst%.*})" >> $sorted_index_rst
+    echo "$(basename $changefn_rst)" >> $sorted_index_rst
     if [ -f $changefn_rst ] && [ -z "$rewrite" ]; then
       echo "INFO Skipping $changefn_base ($release)"
       prev_release=$release
