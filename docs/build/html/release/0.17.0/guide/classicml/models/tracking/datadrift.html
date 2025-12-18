@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Drift &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Model Drift" href="modeldrift.html" />
+    <link rel="prev" title="Experiment Tracking" href="tracking.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">Classic ML</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../tutorial.html">Tutorial for classic ML</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../datasets/index.html"> Loading datasets for training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../index.html"> Training models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../metrics.html"> Evaluating models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modelstore.html"> Deploying models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../businessmodels/index.html"> Adding business logic to models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../clusters/restapi.html"> Serving models for real-time predictions</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html"> Tracking and monitoring models</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../datasets/index.html">Working with datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../../tutorial.html">Tutorial for classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Working with models</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Monitoring model and data drift</a></li>
+      <li class="breadcrumb-item active">Data Drift</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/guide/classicml/models/tracking/datadrift.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-drift">
+<h1>Data Drift<a class="headerlink" href="#data-drift" title="Link to this heading">¶</a></h1>
+<p>To illustrate data drift monitoring, consider the following example. First we create two datasets, <cite>d1</cite> and <cite>d2</cite>,
+both a random sample of 1000 points from a normal distribution. We then create a <cite>DataDriftMonitor</cite> instance and
+take snapshots of <cite>d1</cite> and <cite>d2</cite>. Finally, we compare the two snapshots and plot the results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">d1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataDriftMonitor</span>
+
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+ <span class="n">mon</span> <span class="o">=</span> <span class="n">DataDriftMonitor</span><span class="p">(</span><span class="n">tracking</span><span class="o">=</span><span class="n">exp</span><span class="p">)</span>
+ <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+ <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">()</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_0hist_drift.png" src="../../../../_images/mon_0hist_drift.png" />
+<p>We can see that the two datasets are similar, as expected, in that they both show a normal distribution. However
+the second dataset <cite>d2</cite> has a different mean and variance than the first dataset <cite>d1</cite>. This is reflected in the
+plot.</p>
+<section id="understanding-drift-statistics">
+<h2>Understanding drift statistics<a class="headerlink" href="#understanding-drift-statistics" title="Link to this heading">¶</a></h2>
+<p>We can show the data underlying the plot by showing the drift statistics dataframe.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">df</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_0hist_drift_df.png" src="../../../../_images/mon_0hist_drift_df.png" />
+<p>The dataframe shows the following information:</p>
+<ul class="simple">
+<li><p><cite>column</cite>: the column name in the dataset used for the snapshot</p></li>
+<li><p><cite>statistic</cite>: the statistic used to compare the two snapshots</p></li>
+<li><p><cite>value</cite>: the value of the statistic test</p></li>
+<li><p><cite>pvalue</cite>: the p-value of the test</p></li>
+<li><p><cite>score</cite>: the drift score, which is normalized to -1 .. +1 where 0 means no drift and 1 means maximum drift</p></li>
+<li><p><cite>seq_from</cite>: the sequence number of the first snapshot</p></li>
+<li><p><cite>seq_to</cite>: the sequence number of the second snapshot</p></li>
+<li><p><cite>dt_from</cite>: the timestamp of the first snapshot</p></li>
+<li><p><cite>dt_to</cite>: the timestamp of the second snapshot</p></li>
+<li><p><cite>baseline</cite>: the baseline snapshot used for comparison</p></li>
+<li><p><cite>target</cite>: the snapshot used for comparison</p></li>
+</ul>
+<p>The following statistics are computed automatically:</p>
+<ul class="simple">
+<li><p><cite>ks</cite>: The Kolmogorov-Smirnov statistic (for numeric data)</p></li>
+<li><p><cite>wasserstein</cite>: The Wasserstein distance (for numeric data)</p></li>
+<li><p><cite>chisq</cite>: The Chi-Square statistic (for categorical data)</p></li>
+<li><p><cite>mean</cite>: The mean difference (the mean drift score for all columns)</p></li>
+</ul>
+<p>The sequence number and timestamp are used to track the order of snapshots. Each new call to the
+<cite>monitor.snapshot()</cite> method adds a new snapshot, and thus increases the sequence by one. The first snapshot
+is assigned sequence 0.</p>
+</section>
+<section id="comparing-snapshots">
+<h2>Comparing snapshots<a class="headerlink" href="#comparing-snapshots" title="Link to this heading">¶</a></h2>
+<p>To compare snapshots, we can specify the specific sequence numbers to compare, either the absolute
+sequence <cite>(0 .. n)</cite>, where <cite>n</cite> is the number of snapshots available, or <cite>len(monitor)</cite>, or as a relative
+negative index. By default the last two snapshots are compared.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare the most recent snapshots</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">()</span> <span class="c1"># this is equivalent to calling mon.compare(seq=[-2, -1])</span>
+</pre></div>
+</div>
+<p>If there are more than two snapshots, we can compare any two snapshots by specifying their relative
+sequence numbers, e.g. to compare the first and last snapshots:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># add a new snapshot</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">d3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+<span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">d3</span><span class="p">)</span>
+
+<span class="c1"># compare the first and last snapshots</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_2hist_drift.png" src="../../../../_images/mon_2hist_drift.png" />
+<p>It is common to have a baseline snapshot that is used for comparison to multiple snapshots taken over time.
+We can get this comparison by specifying the baseline sequence number or the baseline name. The baseline
+snapshot is the first snapshot taken, i.e. the one with sequence number 0. We can also specify the baseline
+by sequence number, using the <cite>baseline=</cite> kwarg.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare all snapshots to the baseline</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">&#39;baseline&#39;</span><span class="p">)</span> <span class="c1"># compare all snapshots to the baseline</span>
+</pre></div>
+</div>
+<p>An alternative to comparing all snapshots to the baseline is to compare all snapshots to their immediate
+predecessor. This is useful to see how the data drifts over time, assuming that each snapshots represents
+a new baseline. We can do this by specifying <cite>seq=’series’</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare all snapshots to their immediate predecessor</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">&#39;series&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="plotting-drift-over-time">
+<h2>Plotting drift over time<a class="headerlink" href="#plotting-drift-over-time" title="Link to this heading">¶</a></h2>
+<p>To plot the drift score over time, we can use the <cite>plot()</cite> method with <cite>kind=’time’</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_0time_drift.png" src="../../../../_images/mon_0time_drift.png" />
+<p>This plot shows the drift score between the first snapshot and all subsequent snapshots. The drift score is
+normalized to -1 .. +1 where 0 means no drift and 1 means maximum drift.</p>
+<p>To analyze drift with respect to a specific statistic, specify <cite>statistic=&lt;metric&gt;</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;ks&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_0hist_drift_ks.png" src="../../../../_images/mon_0hist_drift_ks.png" />
+<p>To see the statistic’s specific values, we can directly filter the drift statistics dataframe:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;ks&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_0hist_drift_ks_df.png" src="../../../../_images/mon_0hist_drift_ks_df.png" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tracking.html" class="btn btn-neutral float-left" title="Experiment Tracking" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modeldrift.html" class="btn btn-neutral float-right" title="Model Drift" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.17.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../../latest/guide/classicml/models/tracking/datadrift.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../../0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="datadrift.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../../stable/guide/classicml/models/tracking/datadrift.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../../master/guide/classicml/models/tracking/datadrift.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
