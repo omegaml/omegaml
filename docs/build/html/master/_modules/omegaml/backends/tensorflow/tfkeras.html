@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.backends.tensorflow.tfkeras &mdash; omega-ml 0.18.0-rc2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.backends.tensorflow.tfkeras</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.backends.tensorflow.tfkeras</h1><div class="highlight"><pre>
+<span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">KerasBackend</span>
+<span class="linenos"> 4</span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">temp_filename</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span>
+<div class="viewcode-block" id="TensorflowKerasBackend">
+<a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend">[docs]</a>
+<span class="linenos"> 7</span><span class="k">class</span><span class="w"> </span><span class="nc">TensorflowKerasBackend</span><span class="p">(</span><span class="n">KerasBackend</span><span class="p">):</span>
+<span class="linenos"> 8</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;tfkeras.h5&#39;</span>
+<span class="linenos"> 9</span>
+<div class="viewcode-block" id="TensorflowKerasBackend.supports">
+<a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend.supports">[docs]</a>
+<span class="linenos">10</span>    <span class="nd">@classmethod</span>
+<span class="linenos">11</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">12</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="linenos">13</span>        <span class="n">tfSequential</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span>
+<span class="linenos">14</span>        <span class="n">tfModel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span>
+<span class="linenos">15</span>        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">tfSequential</span><span class="p">,</span> <span class="n">tfModel</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;as_savedmodel&#39;</span><span class="p">)</span></div>
+
+<span class="linenos">16</span>
+<span class="linenos">17</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+<span class="linenos">18</span>        <span class="c1"># override to implement model saving</span>
+<span class="linenos">19</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="linenos">20</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">keras</span>
+<span class="linenos">21</span>        <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+<span class="linenos">22</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_fix_model_for_saving</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="linenos">23</span>        <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_fix_model_for_saving</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+<span class="linenos">26</span>        <span class="c1"># see</span>
+<span class="linenos">27</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="linenos">28</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.python.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
+<span class="linenos">29</span>        <span class="k">with</span> <span class="n">K</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">):</span>
+<span class="linenos">30</span>            <span class="k">try</span><span class="p">:</span>
+<span class="linenos">31</span>                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">weights</span><span class="p">):</span>
+<span class="linenos">32</span>                    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;variable</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="linenos">33</span>                    <span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+<span class="linenos">34</span>            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+<span class="linenos">35</span>                <span class="k">pass</span>
+<span class="linenos">36</span>
+<span class="linenos">37</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">tmpfn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">38</span>        <span class="c1"># override to implement model loading</span>
+<span class="linenos">39</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">keras</span>
+<span class="linenos">40</span>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmpfn</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pkgfn</span><span class="p">:</span>
+<span class="linenos">41</span>            <span class="n">pkgfn</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">42</span>        <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">tmpfn</span><span class="p">)</span>
+<span class="linenos">43</span>
+<div class="viewcode-block" id="TensorflowKerasBackend.fit">
+<a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend.fit">[docs]</a>
+<span class="linenos">44</span>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tpu_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">45</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_store</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">46</span>        <span class="n">tpu_specs</span> <span class="o">=</span> <span class="n">tpu_specs</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tpu_specs&#39;</span><span class="p">)</span>
+<span class="linenos">47</span>        <span class="k">if</span> <span class="n">tpu_specs</span><span class="p">:</span>
+<span class="linenos">48</span>            <span class="k">try</span><span class="p">:</span>
+<span class="linenos">49</span>                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_tpu</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="n">Yname</span><span class="p">,</span> <span class="n">tpu_specs</span><span class="o">=</span><span class="n">tpu_specs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">50</span>            <span class="k">except</span><span class="p">:</span>
+<span class="linenos">51</span>                <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="linenos">52</span>                <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="linenos">53</span>                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Error in _fit_tpu, reverting to fit on CPU&#39;</span><span class="p">)</span>
+<span class="linenos">54</span>            <span class="k">else</span><span class="p">:</span>
+<span class="linenos">55</span>                <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">56</span>        <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TensorflowKerasBackend</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="n">Yname</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="n">pure_python</span><span class="p">,</span>
+<span class="linenos">57</span>                                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">58</span>        <span class="k">return</span> <span class="n">result</span></div>
+
+<span class="linenos">59</span>
+<span class="linenos">60</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_tpu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tpu_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">61</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="linenos">62</span>        <span class="c1"># adopted from https://www.dlology.com/blog/how-to-train-keras-model-x20-times-faster-with-tpu-for-free/</span>
+<span class="linenos">63</span>        <span class="c1"># This address identifies the TPU we&#39;ll use when configuring TensorFlow.</span>
+<span class="linenos">64</span>        <span class="c1"># FIXME this will fail in tf 2.0, see https://github.com/tensorflow/tensorflow/issues/24412#issuecomment-491980177</span>
+<span class="linenos">65</span>        <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;1.&#39;</span><span class="p">),</span> <span class="s2">&quot;TPU only supported on tf &lt; 2.0&quot;</span>
+<span class="linenos">66</span>        <span class="n">tpu_device</span> <span class="o">=</span> <span class="n">tpu_specs</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;COLAB_TPU_ADDR&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="linenos">67</span>        <span class="k">assert</span> <span class="n">tpu_device</span><span class="p">,</span> <span class="s2">&quot;there is no TPU device&quot;</span>
+<span class="linenos">68</span>        <span class="k">if</span> <span class="n">tpu_device</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;grpc://&#39;</span><span class="p">):</span>
+<span class="linenos">69</span>            <span class="n">tpu_worker</span> <span class="o">=</span> <span class="n">tpu_device</span>
+<span class="linenos">70</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos">71</span>            <span class="n">tpu_worker</span> <span class="o">=</span> <span class="s1">&#39;grpc://&#39;</span> <span class="o">+</span> <span class="n">tpu_device</span>
+<span class="linenos">72</span>        <span class="n">tf</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="linenos">73</span>        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">74</span>        <span class="n">tpu_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">keras_to_tpu_model</span><span class="p">(</span>
+<span class="linenos">75</span>            <span class="n">model</span><span class="p">,</span>
+<span class="linenos">76</span>            <span class="n">strategy</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">TPUDistributionStrategy</span><span class="p">(</span>
+<span class="linenos">77</span>                <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">cluster_resolver</span><span class="o">.</span><span class="n">TPUClusterResolver</span><span class="p">(</span><span class="n">tpu_worker</span><span class="p">)))</span>
+<span class="linenos">78</span>        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Xname</span><span class="p">)</span>
+<span class="linenos">79</span>        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Yname</span><span class="p">)</span>
+<span class="linenos">80</span>        <span class="n">tpu_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+<span class="linenos">81</span>        <span class="n">fn</span> <span class="o">=</span> <span class="n">temp_filename</span><span class="p">()</span>
+<span class="linenos">82</span>        <span class="n">tpu_model</span><span class="o">.</span><span class="n">save_weights</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">83</span>        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+<span class="linenos">84</span>        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">modelname</span><span class="p">)</span>
+<span class="linenos">85</span>        <span class="k">return</span> <span class="n">meta</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: master
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="tfkeras.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

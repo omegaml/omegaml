@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>omegaml.runtimes.mixins.taskcanvas &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">omegaml.runtimes.mixins.taskcanvas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for omegaml.runtimes.mixins.taskcanvas</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="kn">from</span><span class="w"> </span><span class="nn">celery</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">chord</span>
+<span class="linenos">  4</span>
+<span class="linenos">  5</span>
+<div class="viewcode-block" id="CanvasTask">
+<a class="viewcode-back" href="../../../../reference/runtimes.html#omegaml.runtimes.CanvasTask">[docs]</a>
+<span class="linenos">  6</span><span class="k">class</span><span class="w"> </span><span class="nc">CanvasTask</span><span class="p">:</span>
+<span class="linenos">  7</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">  8</span><span class="sd">    support for canvas tasks</span>
+<span class="linenos">  9</span>
+<span class="linenos"> 10</span><span class="sd">    See Also:</span>
+<span class="linenos"> 11</span><span class="sd">        * om.runtime.sequence</span>
+<span class="linenos"> 12</span><span class="sd">        * om.runtime.parallel</span>
+<span class="linenos"> 13</span><span class="sd">        * om.runtime.mapreduce</span>
+<span class="linenos"> 14</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 15</span>
+<span class="linenos"> 16</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">canvasfn</span><span class="p">):</span>
+<span class="linenos"> 17</span>        <span class="bp">self</span><span class="o">.</span><span class="n">sigs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos"> 18</span>        <span class="bp">self</span><span class="o">.</span><span class="n">canvasfn</span> <span class="o">=</span> <span class="n">canvasfn</span>
+<span class="linenos"> 19</span>        <span class="bp">self</span><span class="o">.</span><span class="n">runtime</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span>    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<span class="linenos"> 22</span>        <span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="linenos"> 23</span>
+<span class="linenos"> 24</span>    <span class="k">def</span><span class="w"> </span><span class="nf">delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 25</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos"> 26</span>
+<span class="linenos"> 27</span>    <span class="k">def</span><span class="w"> </span><span class="nf">apply_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">):</span>
+<span class="linenos"> 28</span>        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos"> 29</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvasfn</span> <span class="ow">is</span> <span class="n">chord</span><span class="p">:</span>
+<span class="linenos"> 30</span>            <span class="n">sig</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">,</span> <span class="n">immutable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="linenos"> 31</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos"> 32</span>            <span class="c1"># immutable means results are not passed on from task to task</span>
+<span class="linenos"> 33</span>            <span class="n">sig</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">celery_kwargs</span><span class="p">,</span> <span class="n">immutable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos"> 34</span>        <span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig</span>
+<span class="linenos"> 35</span>        <span class="k">return</span> <span class="n">sig</span>
+<span class="linenos"> 36</span>
+<span class="linenos"> 37</span>    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 38</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvasfn</span> <span class="ow">is</span> <span class="n">chord</span><span class="p">:</span>
+<span class="linenos"> 39</span>            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvasfn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="linenos"> 40</span>        <span class="k">else</span><span class="p">:</span>
+<span class="linenos"> 41</span>            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvasfn</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sigs</span><span class="p">)</span><span class="o">.</span><span class="n">apply_async</span><span class="p">()</span>
+<span class="linenos"> 42</span>        <span class="c1"># add easy result collection</span>
+<span class="linenos"> 43</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_easy_collect</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="linenos"> 44</span>        <span class="k">return</span> <span class="n">result</span>
+<span class="linenos"> 45</span>
+<span class="linenos"> 46</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_easy_collect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+<span class="linenos"> 47</span>        <span class="c1"># traverse graph of results and return a single list</span>
+<span class="linenos"> 48</span>        <span class="c1"># see https://docs.celeryproject.org/en/stable/userguide/canvas.html</span>
+<span class="linenos"> 49</span>        <span class="n">collect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="nb">set</span><span class="p">({</span><span class="n">r</span><span class="p">}</span> <span class="o">|</span> <span class="n">collect</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">parent</span> <span class="k">else</span> <span class="p">{</span><span class="n">r</span><span class="p">})</span>
+<span class="linenos"> 50</span>        <span class="n">flatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">l</span>
+<span class="linenos"> 51</span>        <span class="n">result</span><span class="o">.</span><span class="n">collect</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">collect</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="linenos"> 52</span>        <span class="n">result</span><span class="o">.</span><span class="n">getall</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">flatten</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">collect</span><span class="p">(</span><span class="n">result</span><span class="p">)])</span></div>
+
+<span class="linenos"> 53</span>
+<span class="linenos"> 54</span>
+<span class="linenos"> 55</span>
+<span class="linenos"> 56</span><span class="k">def</span><span class="w"> </span><span class="nf">make_canvased</span><span class="p">(</span><span class="n">canvasfn</span><span class="p">):</span>
+<span class="linenos"> 57</span>    <span class="nd">@contextmanager</span>
+<span class="linenos"> 58</span>    <span class="k">def</span><span class="w"> </span><span class="nf">canvased</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 59</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 60</span><span class="sd">        context manager to support sequenced, parallel and mapreduce tasks</span>
+<span class="linenos"> 61</span>
+<span class="linenos"> 62</span><span class="sd">        Usage::</span>
+<span class="linenos"> 63</span>
+<span class="linenos"> 64</span><span class="sd">            # run tasks async, in sequence</span>
+<span class="linenos"> 65</span><span class="sd">            with om.runtime.sequence() as crt:</span>
+<span class="linenos"> 66</span><span class="sd">                crt.model(&#39;mymodel&#39;).fit(...)</span>
+<span class="linenos"> 67</span><span class="sd">                crt.model(&#39;mymodel&#39;).predict(...)</span>
+<span class="linenos"> 68</span><span class="sd">                result = crt.run()</span>
+<span class="linenos"> 69</span>
+<span class="linenos"> 70</span><span class="sd">            # run tasks async, in parallel</span>
+<span class="linenos"> 71</span><span class="sd">            with om.runtime.parallel() as crt:</span>
+<span class="linenos"> 72</span><span class="sd">                crt.model(&#39;mymodel&#39;).predict(...)</span>
+<span class="linenos"> 73</span><span class="sd">                crt.model(&#39;mymodel&#39;).predict(...)</span>
+<span class="linenos"> 74</span><span class="sd">                result = crt.run()</span>
+<span class="linenos"> 75</span>
+<span class="linenos"> 76</span><span class="sd">            # run tasks async, in parallel with a final step</span>
+<span class="linenos"> 77</span><span class="sd">            with om.runtime.mapreduce() as crt:</span>
+<span class="linenos"> 78</span><span class="sd">                # map tasks</span>
+<span class="linenos"> 79</span><span class="sd">                crt.model(&#39;mymodel&#39;).predict(...)</span>
+<span class="linenos"> 80</span><span class="sd">                crt.model(&#39;mymodel&#39;).predict(...)</span>
+<span class="linenos"> 81</span><span class="sd">                # reduce results - combined is a virtualobj function</span>
+<span class="linenos"> 82</span><span class="sd">                crt.model(&#39;combined&#39;).reduce(...)</span>
+<span class="linenos"> 83</span><span class="sd">                result = crt.run()</span>
+<span class="linenos"> 84</span>
+<span class="linenos"> 85</span><span class="sd">            # combined is a virtual obj function, e.g.</span>
+<span class="linenos"> 86</span><span class="sd">            @virtualobj</span>
+<span class="linenos"> 87</span><span class="sd">            def combined(data=None, **kwargs):</span>
+<span class="linenos"> 88</span><span class="sd">                # data is the list of results from each map step</span>
+<span class="linenos"> 89</span><span class="sd">                return data</span>
+<span class="linenos"> 90</span>
+<span class="linenos"> 91</span><span class="sd">            Note that the statements inside the context are</span>
+<span class="linenos"> 92</span><span class="sd">            executed in sequence, as any normal python code. However,</span>
+<span class="linenos"> 93</span><span class="sd">            the actual tasks are only executed on calling crt.run()</span>
+<span class="linenos"> 94</span>
+<span class="linenos"> 95</span><span class="sd">        Args:</span>
+<span class="linenos"> 96</span><span class="sd">            self: the runtime</span>
+<span class="linenos"> 97</span>
+<span class="linenos"> 98</span><span class="sd">        Returns:</span>
+<span class="linenos"> 99</span><span class="sd">            OmegaRuntime, for use within context</span>
+<span class="linenos">100</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">101</span>        <span class="n">canvas</span> <span class="o">=</span> <span class="n">CanvasTask</span><span class="p">(</span><span class="n">canvasfn</span><span class="p">)</span>
+<span class="linenos">102</span>        <span class="n">_orig_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span>        <span class="k">def</span><span class="w"> </span><span class="nf">canvas_task</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">105</span>            <span class="n">task</span> <span class="o">=</span> <span class="n">_orig_task</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="linenos">106</span>            <span class="n">canvas</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="linenos">107</span>            <span class="k">return</span> <span class="n">canvas</span>
+<span class="linenos">108</span>
+<span class="linenos">109</span>        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">canvas_task</span>
+<span class="linenos">110</span>        <span class="n">canvas</span><span class="o">.</span><span class="n">runtime</span> <span class="o">=</span> <span class="bp">self</span>
+<span class="linenos">111</span>        <span class="n">canvas</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">run</span>
+<span class="linenos">112</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">113</span>            <span class="k">yield</span> <span class="n">canvas</span><span class="o">.</span><span class="n">runtime</span>
+<span class="linenos">114</span>        <span class="k">finally</span><span class="p">:</span>
+<span class="linenos">115</span>            <span class="n">canvas</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">_orig_task</span>
+<span class="linenos">116</span>            <span class="n">canvas</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">117</span>
+<span class="linenos">118</span>    <span class="k">return</span> <span class="n">canvased</span>
+<span class="linenos">119</span>
+<span class="linenos">120</span>
+<span class="linenos">121</span><span class="n">canvas_chain</span> <span class="o">=</span> <span class="n">make_canvased</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+<span class="linenos">122</span><span class="n">canvas_group</span> <span class="o">=</span> <span class="n">make_canvased</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+<span class="linenos">123</span><span class="n">canvas_chord</span> <span class="o">=</span> <span class="n">make_canvased</span><span class="p">(</span><span class="n">chord</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.15.3
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="taskcanvas.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

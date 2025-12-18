@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generative AI &mdash; omega-ml 0.18.0-rc2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Concepts in omega-ml Generative AI" href="concepts.html" />
+    <link rel="prev" title="Using the command line (cli)" href="../intro/cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Generative AI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="concepts.html">Concepts in omega-ml Generative AI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial.html">Tutorial for Generative AI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../classicml/index.html">Classic ML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+      <li class="breadcrumb-item active">Generative AI</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/genai/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="generative-ai">
+<h1>Generative AI<a class="headerlink" href="#generative-ai" title="Link to this heading">¶</a></h1>
+<p>omega-ml provides built-in capabilities for Generative AI workflows. This includes
+retrieval augmented generation (RAG), document embeddings, text generation and agentic workflows.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 0.17.0.</span></p>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts in omega-ml Generative AI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#generative-ai-model">Generative AI model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#model-provider">Model Provider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#pipelines-and-guardrails">Pipelines and Guardrails</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#documents-storage">Documents storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#conversation-history">Conversation history</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#tools">Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#generative-ai-runtime-and-rest-services">Generative AI runtime and REST services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#multi-model-repository">Multi-model Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#monitoring">Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial for Generative AI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#deploy-a-generative-ai-model">Deploy a generative AI model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#document-storage">Document storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#building-a-rag-pipeline">Building a RAG pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#adding-tools">Adding tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#adding-custom-pipeline-actions">Adding custom pipeline actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#serving-a-model">Serving a model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#tracking-model-interactions">Tracking model interactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#using-a-third-party-llm-framework">Using a third-party LLM framework</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../intro/cli.html" class="btn btn-neutral float-left" title="Using the command line (cli)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="concepts.html" class="btn btn-neutral float-right" title="Concepts in omega-ml Generative AI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: stable
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../latest/guide/genai/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../release/0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/guide/genai/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
