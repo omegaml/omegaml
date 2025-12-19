@@ -1,0 +1,48 @@
+Release notes release/0.8.5
+===========================
+
+Released 2018-10-21
+
+Changes
+~~~~~~~
+
+-  Merge pull request #73 from miraculixx/patrick/fix-release-v1.2
+   `e93f3f7 <https://github.com/omegaml/omegaml/commit/e93f3f7>`__
+-  Merge pull request #71 from miraculixx/patrick/add-apply-stats
+   `1410f68 <https://github.com/omegaml/omegaml/commit/1410f68>`__
+-  Merge pull request #70 from miraculixx/patrick/site-redeploy
+   `ebc0879 <https://github.com/omegaml/omegaml/commit/ebc0879>`__
+-  enable more statistics
+   `2a8b6aa <https://github.com/omegaml/omegaml/commit/2a8b6aa>`__
+-  update docker image release build
+   `cb12a39 <https://github.com/omegaml/omegaml/commit/cb12a39>`__
+-  add more documentation
+   `29b6412 <https://github.com/omegaml/omegaml/commit/29b6412>`__
+-  update gitignore
+   `01b8e9e <https://github.com/omegaml/omegaml/commit/01b8e9e>`__
+-  extend tests to check omegaml setup works
+   `20fc528 <https://github.com/omegaml/omegaml/commit/20fc528>`__
+-  Merge pull request #68 from miraculixx/patrick/extend-docs-tutorial
+   `5b3733c <https://github.com/omegaml/omegaml/commit/5b3733c>`__
+-  setup sign up behave test
+   `64e273e <https://github.com/omegaml/omegaml/commit/64e273e>`__
+-  Merge pull request #67 from miraculixx/patrick/enable-applyfn
+   `354b0e9 <https://github.com/omegaml/omegaml/commit/354b0e9>`__
+-  add documentation update docs
+   `310a847 <https://github.com/omegaml/omegaml/commit/310a847>`__
+-  Merge pull request #65 from miraculixx/patrick/add-visualizations
+   `08cbd41 <https://github.com/omegaml/omegaml/commit/08cbd41>`__
+-  enable apply-style functions enable caching support for apply
+   complete apply tests add documentation
+   `60465dd <https://github.com/omegaml/omegaml/commit/60465dd>`__
+-  variuos performance improvements add job slides viewer fix large
+   scale insertion timeout
+   `dc7bd3e <https://github.com/omegaml/omegaml/commit/dc7bd3e>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fixed to work with new pip and mongodb versions
+   `69e78b0 <https://github.com/omegaml/omegaml/commit/69e78b0>`__
+-  fix pip changes
+   `65c3c93 <https://github.com/omegaml/omegaml/commit/65c3c93>`__

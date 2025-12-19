@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working with scripts &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Working with notebooks" href="jobs.html" />
+    <link rel="prev" title="Working with datasets" href="datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/index.html">Working with datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/index.html">Working with models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jobs/index.html">Working with notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clusters/index.html">Deploying models and pipelines</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Command-line interface</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="intro.html">Using the command-line interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="models.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html">Working with datasets</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Working with scripts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#packaging-local-modules">Packaging local modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#packaging-pypi-hosted-modules">Packaging pypi-hosted modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#packaging-git-hosted-modules">Packaging git-hosted modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-modules">Installing modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-scripts-remotely">Running scripts remotely</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-scripts-locally">Running scripts locally</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html">Working with notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Working with the runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../integration/index.html">Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Command-line interface</a></li>
+      <li class="breadcrumb-item active">Working with scripts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/cli/scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="working-with-scripts">
+<h1>Working with scripts<a class="headerlink" href="#working-with-scripts" title="Link to this heading">¶</a></h1>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>-h
+Usage:
+<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>&lt;pattern&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--raw<span class="o">]</span><span class="w"> </span><span class="o">[</span>--hidden<span class="o">]</span><span class="w"> </span><span class="o">[</span>-E<span class="p">|</span>--regexp<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>put<span class="w"> </span>&lt;path&gt;<span class="w"> </span>&lt;name&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>get<span class="w"> </span>&lt;name&gt;
+<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>drop<span class="w"> </span>&lt;name&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>metadata<span class="w"> </span>&lt;name&gt;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>How scripts work</p>
+<p>omegaml scripts are simply pip-installable modules that expose a <code class="code docutils literal notranslate"><span class="pre">run()</span></code> function returning
+a pickle-serializable result. omegaml works like a thin wrapper around the Python standard tools
+setuptools and pip modules:</p>
+<ul class="simple">
+<li><p>Upon storing a script, omegaml creates a package and stores it its distributed filesystem.</p></li>
+<li><p>Upon retrieving a script, the package is installed. Packages are created using
+<code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">sdist</span></code>. Packages are installed using <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&lt;package&gt;</span></code>.</p></li>
+<li><p>In case of remotely hosted packages, omegaml stores the reference to the remote
+location. In this case <cite>python setup.py sdist</cite> is not run. If you have stored a local
+package and wish to replace it by a remote reference, drop the package first as
+local and remote packages result in different <code class="code docutils literal notranslate"><span class="pre">Metadata</span> <span class="pre">kind</span></code> types, respectively.</p></li>
+</ul>
+</div>
+<section id="packaging-local-modules">
+<h2>Packaging local modules<a class="headerlink" href="#packaging-local-modules" title="Link to this heading">¶</a></h2>
+<p>Scripts are pip-installable packages. To package-up a script and store it, specify the <code class="code docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code>
+to the <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>put<span class="w"> </span>process/setup.py<span class="w"> </span>process
+running<span class="w"> </span>sdist
+running<span class="w"> </span>check
+warning:<span class="w"> </span>sdist:<span class="w"> </span>manifest<span class="w"> </span>template<span class="w"> </span><span class="s1">&#39;MANIFEST.in&#39;</span><span class="w"> </span>does<span class="w"> </span>not<span class="w"> </span>exist<span class="w"> </span><span class="o">(</span>using<span class="w"> </span>default<span class="w"> </span>file<span class="w"> </span>list<span class="o">)</span>
+
+writing<span class="w"> </span>manifest<span class="w"> </span>file<span class="w"> </span><span class="s1">&#39;MANIFEST&#39;</span>
+creating<span class="w"> </span>process-1.3
+creating<span class="w"> </span>process-1.3/process
+making<span class="w"> </span>hard<span class="w"> </span>links<span class="w"> </span><span class="k">in</span><span class="w"> </span>process-1.3...
+hard<span class="w"> </span>linking<span class="w"> </span>README<span class="w"> </span>-&gt;<span class="w"> </span>process-1.3
+hard<span class="w"> </span>linking<span class="w"> </span>setup.py<span class="w"> </span>-&gt;<span class="w"> </span>process-1.3
+hard<span class="w"> </span>linking<span class="w"> </span>process/__init__.py<span class="w"> </span>-&gt;<span class="w"> </span>process-1.3/process
+Creating<span class="w"> </span>tar<span class="w"> </span>archive
+removing<span class="w"> </span><span class="s1">&#39;process-1.3&#39;</span><span class="w"> </span><span class="o">(</span>and<span class="w"> </span>everything<span class="w"> </span>under<span class="w"> </span>it<span class="o">)</span>
+Metadata<span class="o">(</span><span class="nv">name</span><span class="o">=</span>process,bucket<span class="o">=</span>omegaml,prefix<span class="o">=</span>scripts/,kind<span class="o">=</span>python.package,created<span class="o">=</span><span class="m">2020</span>-08-28<span class="w"> </span><span class="m">13</span>:58:32.407000<span class="o">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The name of the package created must be the importable module name</p></li>
+<li><p>The name of the package must contain alphanumeric characters only</p></li>
+<li><p>Scripts can import other modules by specifying dependencies. See <a class="reference external" href="https://packaging.python.org/guides/distributing-packages-using-setuptools/#install-requires">install_requires</a> in the
+Python packaging guide</p></li>
+</ul>
+</div>
+<p>In this example, the following directory structure, setup.py and code was used:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># structure</span>
+./setup.py
+./process/__init_.py
+
+<span class="c1"># setup.py</span>
+<span class="c1">#!/usr/bin/env python</span>
+from<span class="w"> </span>distutils.core<span class="w"> </span>import<span class="w"> </span>setup
+setup<span class="o">(</span><span class="nv">name</span><span class="o">=</span><span class="s1">&#39;process&#39;</span>,
+<span class="w">      </span><span class="nv">version</span><span class="o">=</span><span class="s1">&#39;1.3&#39;</span>,
+<span class="w">      </span><span class="nv">description</span><span class="o">=</span><span class="s1">&#39;simple omegaml hello world script&#39;</span>,
+<span class="w">      </span><span class="nv">author</span><span class="o">=</span><span class="s1">&#39;omegaml&#39;</span>,
+<span class="w">      </span><span class="nv">author_email</span><span class="o">=</span><span class="s1">&#39;info@omegaml.io&#39;</span>,
+<span class="w">      </span><span class="nv">url</span><span class="o">=</span><span class="s1">&#39;http://omegaml.io&#39;</span>,
+<span class="w">      </span><span class="nv">packages</span><span class="o">=[</span><span class="s1">&#39;process&#39;</span><span class="o">])</span>
+
+<span class="c1">#__init__.py</span>
+def<span class="w"> </span>run<span class="o">(</span>om,<span class="w"> </span>*args,<span class="w"> </span>**kwargs<span class="o">)</span>:
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;hello world&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="packaging-pypi-hosted-modules">
+<h2>Packaging pypi-hosted modules<a class="headerlink" href="#packaging-pypi-hosted-modules" title="Link to this heading">¶</a></h2>
+<p>Instead of building and packaging modules it is possible to store a reference to
+a specific Pypi-hosted module:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>put<span class="w"> </span><span class="s2">&quot;six==1.0&quot;</span><span class="w"> </span>six
+</pre></div>
+</div>
+<p>Upon installation, the script will be pulled from pypi and installed as usual:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>get<span class="w"> </span>six
+Collecting<span class="w"> </span><span class="nv">six</span><span class="o">==</span><span class="m">1</span>.0
+<span class="w">  </span>Downloading<span class="w"> </span>six-1.0.0.tar.gz<span class="w"> </span><span class="o">(</span><span class="m">11</span><span class="w"> </span>kB<span class="o">)</span>
+Building<span class="w"> </span>wheels<span class="w"> </span><span class="k">for</span><span class="w"> </span>collected<span class="w"> </span>packages:<span class="w"> </span>six
+<span class="w">  </span>Building<span class="w"> </span>wheel<span class="w"> </span><span class="k">for</span><span class="w"> </span>six<span class="w"> </span><span class="o">(</span>setup.py<span class="o">)</span><span class="w"> </span>...<span class="w"> </span><span class="k">done</span>
+<span class="w">  </span>Created<span class="w"> </span>wheel<span class="w"> </span><span class="k">for</span><span class="w"> </span>six:<span class="w"> </span><span class="nv">filename</span><span class="o">=</span>six-1.0.0-py3-none-any.whl<span class="w"> </span><span class="nv">size</span><span class="o">=</span><span class="m">4871</span><span class="w"> </span><span class="nv">sha256</span><span class="o">=</span>c966e8ada020a84af438ca7a1baf0e0597200d84f82f704425a4a00885b29e66
+<span class="w">  </span>Stored<span class="w"> </span><span class="k">in</span><span class="w"> </span>directory:<span class="w"> </span>/tmp/pip-ephem-wheel-cache-3f58ar72/wheels/c5/45/ed/be3d9e59c2233eb179a23b38d5a74b20b139c689fcf16f9ca5
+Successfully<span class="w"> </span>built<span class="w"> </span>six
+Installing<span class="w"> </span>collected<span class="w"> </span>packages:<span class="w"> </span>six
+Successfully<span class="w"> </span>installed<span class="w"> </span>six-1.0.0
+</pre></div>
+</div>
+</section>
+<section id="packaging-git-hosted-modules">
+<h2>Packaging git-hosted modules<a class="headerlink" href="#packaging-git-hosted-modules" title="Link to this heading">¶</a></h2>
+<p>Instead of building and packaging modules it is possible to store references to
+git-hosted modules, using the <a class="reference external" href="https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support">pip vcs support</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>put<span class="w"> </span><span class="s2">&quot;git+https://github.com/omegaml/apps.git#egg=helloworld&amp;subdirectory=helloworld&quot;</span><span class="w"> </span>helloworld
+</pre></div>
+</div>
+<p>Upon installation, the script will be cloned from the git repository and installed as usual:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scrpits<span class="w"> </span>get<span class="w"> </span>helloworld
+Collecting<span class="w"> </span>helloworld
+<span class="w">  </span>Cloning<span class="w"> </span>https://github.com/omegaml/apps.git<span class="w"> </span>to<span class="w"> </span>/tmp/pip-install-yn92_8a9/helloworld_20e05893ad1d4e92bafbc281eb121236
+<span class="w">  </span>Running<span class="w"> </span><span class="nb">command</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>-q<span class="w"> </span>https://github.com/omegaml/apps.git<span class="w"> </span>/tmp/pip-install-yn92_8a9/helloworld_20e05893ad1d4e92bafbc281eb121236
+Building<span class="w"> </span>wheels<span class="w"> </span><span class="k">for</span><span class="w"> </span>collected<span class="w"> </span>packages:<span class="w"> </span>helloworld
+<span class="w">  </span>Building<span class="w"> </span>wheel<span class="w"> </span><span class="k">for</span><span class="w"> </span>helloworld<span class="w"> </span><span class="o">(</span>setup.py<span class="o">)</span><span class="w"> </span>...<span class="w"> </span><span class="k">done</span>
+<span class="w">  </span>Created<span class="w"> </span>wheel<span class="w"> </span><span class="k">for</span><span class="w"> </span>helloworld:<span class="w"> </span><span class="nv">filename</span><span class="o">=</span>helloworld-1.0-py3-none-any.whl<span class="w"> </span><span class="nv">size</span><span class="o">=</span><span class="m">2192</span><span class="w"> </span><span class="nv">sha256</span><span class="o">=</span>d8b8cac1ad5e8a1c3f9dcc46cbf10634acb2f7e09e81ffc9ff0f6c38d0f08219
+<span class="w">  </span>Stored<span class="w"> </span><span class="k">in</span><span class="w"> </span>directory:<span class="w"> </span>/tmp/pip-ephem-wheel-cache-p9kxp493/wheels/3d/10/b9/be33eac8519a9ae4dd329947255f240b5ccde8d01554155f5e
+Successfully<span class="w"> </span>built<span class="w"> </span>helloworld
+Installing<span class="w"> </span>collected<span class="w"> </span>packages:<span class="w"> </span>helloworld
+Successfully<span class="w"> </span>installed<span class="w"> </span>helloworld-1.0
+</pre></div>
+</div>
+</section>
+<section id="installing-modules">
+<h2>Installing modules<a class="headerlink" href="#installing-modules" title="Link to this heading">¶</a></h2>
+<p>A module can be installed as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>get<span class="w"> </span>helloworld
+...
+Successfully<span class="w"> </span>installed<span class="w"> </span>helloworld-1.0
+</pre></div>
+</div>
+</section>
+<section id="running-scripts-remotely">
+<h2>Running scripts remotely<a class="headerlink" href="#running-scripts-remotely" title="Link to this heading">¶</a></h2>
+<p>Scripts are executed by the runtime as follows</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>script<span class="w"> </span>helloworld
+<span class="o">{</span><span class="s2">&quot;script&quot;</span>:<span class="w"> </span><span class="s2">&quot;helloworld&quot;</span>,<span class="w"> </span><span class="s2">&quot;kwargs&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="s2">&quot;pure_python&quot;</span>:<span class="w"> </span>false<span class="o">}</span>,<span class="w"> </span><span class="s2">&quot;result&quot;</span>:<span class="w"> </span><span class="s2">&quot;hello world&quot;</span>,<span class="w"> </span><span class="s2">&quot;runtimes&quot;</span>:<span class="w"> </span><span class="m">0</span>.090067,<span class="w"> </span><span class="s2">&quot;started&quot;</span>:<span class="w"> </span><span class="s2">&quot;2021-02-20T16:30:35.837488&quot;</span>,<span class="w"> </span><span class="s2">&quot;ended&quot;</span>:<span class="w"> </span><span class="s2">&quot;2021-02-20T16:30:35.927555&quot;</span><span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="running-scripts-locally">
+<h2>Running scripts locally<a class="headerlink" href="#running-scripts-locally" title="Link to this heading">¶</a></h2>
+<p>Scripts can be executed locally instead of the the runtime by specifying the <code class="code docutils literal notranslate"><span class="pre">--local</span></code> flag.
+Use this for debugging:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>script<span class="w"> </span>helloworld<span class="w"> </span>--local
+...
+Successfully<span class="w"> </span>installed<span class="w"> </span>helloworld-1.3
+Task<span class="w"> </span>omegaml.backends.package.tasks.run_omega_script<span class="o">[</span>329e6fb1-d2d6-4a24-881d-b17c9c917910<span class="o">]</span><span class="w"> </span>succeeded<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">4</span>.052356380969286s:<span class="w"> </span><span class="s1">&#39;{&quot;script&quot;: &quot;process&quot;, &quot;kwargs&quot;: {&quot;pure_python&quot;: false}, &quot;result&quot;: &quot;Metadata(name=model_results,bucket=omegaml,prefix=data/,kind=python.data,created=2021-02-11 08:40:38.655000)&quot;, &quot;runtimes&quot;: 0.308365, &quot;started&quot;: &quot;2021-02-20T17:34:33.057252&quot;, &quot;ended&quot;: &quot;2021-02-20T17:34:33.365617&quot;}&#39;</span>
+<span class="o">{</span><span class="s2">&quot;script&quot;</span>:<span class="w"> </span><span class="s2">&quot;helloworld&quot;</span>,<span class="w"> </span><span class="s2">&quot;kwargs&quot;</span>:<span class="w"> </span><span class="o">{</span><span class="s2">&quot;pure_python&quot;</span>:<span class="w"> </span>false<span class="o">}</span>,<span class="w"> </span><span class="s2">&quot;result&quot;</span>:<span class="w"> </span><span class="s2">&quot;hello world&quot;</span>,<span class="w"> </span><span class="s2">&quot;runtimes&quot;</span>:<span class="w"> </span><span class="m">0</span>.090067,<span class="w"> </span><span class="s2">&quot;started&quot;</span>:<span class="w"> </span><span class="s2">&quot;2021-02-20T16:30:35.837488&quot;</span>,<span class="w"> </span><span class="s2">&quot;ended&quot;</span>:<span class="w"> </span><span class="s2">&quot;2021-02-20T16:30:35.927555&quot;</span><span class="o">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>omegaml leverages Celery for local and remote executing of scripts:</p>
+<ol class="arabic simple">
+<li><p>Ask Celery to run a task (“execute the run_omega_script task for script “helloworld”)</p></li>
+<li><p>Celery receives the message, starts the corresponding task</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">om.scripts.get()</span></code> installs the script in the runtime’s environment (local or remote)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">import</span> <span class="pre">helloworlds</span></code> imports the module</p></li>
+<li><p>call <code class="code docutils literal notranslate"><span class="pre">helloworld.run(...)</span></code> and return its results</p></li>
+</ol>
+<p>To learn about Celery and its distributed task model see <a class="reference external" href="https://docs.celeryproject.org/en/stable/">Celery</a></p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="datasets.html" class="btn btn-neutral float-left" title="Working with datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="jobs.html" class="btn btn-neutral float-right" title="Working with notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../0.15.2/guide/cli/scripts.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../latest/guide/cli/scripts.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../0.15.3/guide/cli/scripts.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../0.15.5/guide/cli/scripts.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../0.16.0/guide/cli/scripts.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../0.16.1/guide/cli/scripts.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="scripts.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../0.16.3/guide/cli/scripts.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../0.16.4/guide/cli/scripts.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../0.17.0/guide/cli/scripts.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../stable/guide/cli/scripts.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../master/guide/cli/scripts.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
