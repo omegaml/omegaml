@@ -1,20 +1,20 @@
 from __future__ import absolute_import
 
-import gc
-import unittest
-import uuid
-import warnings
-from datetime import timedelta, datetime
-from io import BytesIO
 from pathlib import Path
 from unittest import skip
 
 import dill
+import gc
 import gridfs
 import joblib
 import pandas as pd
 import pymongo
 import smart_open
+import unittest
+import uuid
+import warnings
+from datetime import timedelta, datetime
+from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -1237,7 +1237,7 @@ class StoreTests(unittest.TestCase):
             with open(filename, 'wb') as fout:
                 dill.dump(model, fout)
 
-        loader = lambda store, infile, **kwargs: dill.load(infile)
+        loader = lambda store, infile, filename=None, **kwargs: dill.load(infile)
         # save model
         # -- don't use generic backend
         with self.assertRaises(TypeError):
@@ -1263,7 +1263,7 @@ class StoreTests(unittest.TestCase):
             with smart_open.open(filename, 'wb') as fout:
                 dill.dump(model, fout)
 
-        loader = lambda store, infile, **kwargs: dill.load(infile)
+        loader = lambda store, infile, filename=None, **kwargs: dill.load(infile)
         # -- use generic backend by specifying kind='python.model'
         model = FooModel()
         meta = store.put(model, 'mymodel', kind='python.model', serializer=serializer, uri='/tmp/remotefile.pkl')

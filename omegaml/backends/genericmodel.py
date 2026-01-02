@@ -32,7 +32,7 @@ class GenericModelBackend(BaseModelBackend):
     KIND = 'python.model'
 
     serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
-    loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile)
+    loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile or filename)
 
     @classmethod
     def supports(cls, obj, name, model_store=None, kind=None, **kwargs):

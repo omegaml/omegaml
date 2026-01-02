@@ -1,8 +1,9 @@
-import shutil
 from pathlib import Path
 
 import joblib
+import shutil
 import smart_open
+import tarfile
 
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
@@ -54,7 +55,7 @@ class BaseModelBackend(BackendBaseCommon):
     _backend_version = '1'
 
     serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
-    loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile)
+    loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile or filename)
     infer = lambda obj, **kwargs: getattr(obj, 'predict')
     reshape = lambda data, **kwargs: reshaped(data)
     types = None
@@ -132,8 +133,14 @@ class BaseModelBackend(BackendBaseCommon):
         """
         serializer = serializer or getattr(self.serializer, '__func__')  # __func__ is the unbound method
         kwargs.setdefault('key', key)
-        tmpfn = serializer(self, model, tmpfn) or tmpfn
-        return tmpfn
+        tmpfn = serializer(self, model, tmpfn, **kwargs) or tmpfn
+        tmpfn = Path(tmpfn)
+        fn_tgz = Path(tmpfn).parent / 's' / Path(tmpfn).name
+        shutil.rmtree(fn_tgz.parent, ignore_errors=True)
+        fn_tgz.parent.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(fn_tgz, 'w:') as fout:
+            fout.add(tmpfn, arcname=tmpfn.relative_to(tmpfn.parent))
+        return fn_tgz
 
     def _extract_model(self, infile, key, tmpfn, loader=None, **kwargs):
         """
@@ -155,9 +162,25 @@ class BaseModelBackend(BackendBaseCommon):
             enable custom loader
         """
         loader = loader or getattr(self.loader, '__func__')  # __func__ is the unbound method
-        kwargs.setdefault('filename', tmpfn)
+        fn_tgz = Path(tmpfn).parent / 's' / Path(tmpfn).name
+        fn_dir = Path(tmpfn).parent / 'x' / Path(tmpfn).name
+        shutil.rmtree(fn_tgz.parent, ignore_errors=True)
+        shutil.rmtree(fn_dir, ignore_errors=True)
+        fn_tgz.parent.mkdir(parents=True, exist_ok=True)
+        fn_dir.mkdir(parents=True, exist_ok=True)
+        # -- write the tgz created by _package_model to a temp tgz file
+        with open(fn_tgz, mode='wb') as fout:
+            fout.write(infile.read())
+        # -- extract contents, we get back what the serializer wrote
+        with tarfile.open(fn_tgz, mode='r') as fin:
+            fin.extractall(fn_dir)
+        # call the loader
+        files = list(fn_dir.glob('**/*'))
+        infile = open(files[-1], 'rb') if len(files) == 1 else None
         kwargs.setdefault('key', key)
+        kwargs.setdefault('filename', files[0])
         obj = loader(self, infile, **kwargs)
+        infile.close() if len(files) == 1 else None
         return obj
 
     def _remove_path(self, path):
