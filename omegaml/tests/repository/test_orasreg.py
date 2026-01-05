@@ -1,8 +1,9 @@
+from pathlib import Path
+from unittest import skipUnless
+
 import shutil
 import unittest
-from pathlib import Path
 from tempfile import mkdtemp
-from unittest import skipUnless
 
 from omegaml.backends.repository.basereg import chdir
 from omegaml.backends.repository.orasreg import OrasOciRegistry, parse_ociuri
@@ -35,15 +36,15 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertIsInstance(manifest, dict)
         # -- with repo.tag specified in url
         reg = OrasOciRegistry('oci://example.com/myimage:test')
-        self.assertEqual(reg.url, 'oci://example.com')
+        self.assertEqual(reg.url, 'example.com')
         self.assertEqual(reg.repo, 'myimage:test')
         # -- with namespace/repo:tag specified in url
         reg = OrasOciRegistry('oci://example.com/myspace/myimage:test')
-        self.assertEqual(reg.url, 'oci://example.com/myspace')
+        self.assertEqual(reg.url, 'example.com/myspace')
         self.assertEqual(reg.repo, 'myimage:test')
         # -- with namespace/repo:tag specified in url
         reg = OrasOciRegistry('oci://example.com/myspace/myimage')
-        self.assertEqual(reg.url, 'oci://example.com/myspace')
+        self.assertEqual(reg.url, 'example.com/myspace')
         self.assertEqual(reg.repo, 'myimage:latest')
 
     def test_parse_ociuri(self):

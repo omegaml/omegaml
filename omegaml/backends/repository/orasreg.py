@@ -1,9 +1,10 @@
+from pathlib import Path
+
 import json
 import logging
 import os
 import shutil
 import tarfile
-from pathlib import Path
 from urllib.parse import urlparse
 
 from omegaml.backends.repository.basereg import ArtifactRepository, c, f
@@ -42,6 +43,8 @@ class OrasOciRegistry(ArtifactRepository):
         if protocol == 'ocidir':
             url = Path(url.replace('ocidir://', ''))
             url.mkdir(parents=True, exist_ok=True)
+        else:
+            url = url.replace('oci://', '')
         super().__init__(url, repo=repo, namespace=namespace)
         self.cache = Path('/tmp') / '.oras' / 'cache'
         os.environ.setdefault('ORAS_CACHE', str(self.cache))
@@ -84,6 +87,9 @@ class OrasOciRegistry(ArtifactRepository):
 
         Returns:
             dict: the manifest for the repository, equivalenet of reg.manifest()
+
+        See Also:
+            - https://oras.land/docs/how_to_guides/manifest_config/
         """
         repo = repo or self.repo
         exists = self.exists()

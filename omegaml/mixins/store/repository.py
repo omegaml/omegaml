@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from shutil import rmtree
 
 from omegaml.backends.basemodel import BaseModelBackend
@@ -34,7 +35,7 @@ class RepositoryStorageMixin:
         self: OmegaStore
         meta = self.metadata(name)
         sync = {}
-        if meta:
+        if repo is not False and meta:
             sync = meta.attributes.get('sync', {})
             repo = repo or sync.get('repo')
         if repo:
@@ -48,9 +49,12 @@ class RepositoryStorageMixin:
             rmtree(repo_uri, ignore_errors=True)
             obj_uri.parent.mkdir(parents=True, exist_ok=True)
             # serialize obj to a local file, using original backend
+            # -- uri= stores file to path obj_uri, instead of gridfile
+            # -- repo=False ensures we're not getting called twice accidentally
+            kwargs.update(uri=obj_uri, repo=False)
             backend = self.get_backend_byobj(obj, **kwargs)  # type: BaseModelBackend
             # target_repo = reg.tag(repo, next=True)  # get next tag (v1, v2, ...)
-            meta = backend.put(obj, name, uri=obj_uri)  # uri= stores file to path obj_uri, instead of gridfile
+            meta = backend.put(obj, name, **kwargs)
             meta.uri = ''  # uri is only for temporary storage
             sync = meta.attributes.setdefault('sync', sync)
             # store serialized object in repo
@@ -81,7 +85,7 @@ class RepositoryStorageMixin:
             # source_repo = reg.tag(repo)  # get latest tag, if not specified
             reg.extract(repo_uri, repo=image)  # pull repo and extract to it
             backend = self.get_backend(name, **kwargs)  # type: BaseModelBackend
-            obj = backend.get(name, uri=obj_uri)
+            obj = backend.get(name, uri=obj_uri, **kwargs)
         else:
             obj = super().get(name, *args, **kwargs)
         return obj
