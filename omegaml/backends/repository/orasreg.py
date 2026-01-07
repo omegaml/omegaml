@@ -37,6 +37,7 @@ class OrasOciRegistry(ArtifactRepository):
 
     def __init__(self, url, repo=None, namespace=None):
         protocol, _url, _namespace, image, tag = parse_ociuri(url)
+        repo = repo or ''
         repo = repo or (f'{image}:{tag}' if image and tag else None)
         url = str(url)  # allow for url:Path
         url = url.replace(f'/{image}', '').replace(f':{tag}', '') if (image or tag) else url
@@ -298,6 +299,14 @@ class OrasOciRegistry(ArtifactRepository):
         artifacts = self.artifacts(repo)
         return [m['digest'] for m in artifacts]
 
+    def list(self):
+        """ list contents of repo url """
+        url = self.url
+        self._validate('list', **x(locals()))
+        cmd = f'repo list {url} --format json'
+        output = self._oras(cmd) | f(json.loads)
+        return output
+
     def _guess_type(self, p):
         """Return a reasonable media type for a file path based on extension.
 
@@ -327,11 +336,12 @@ class OrasOciRegistry(ArtifactRepository):
         repo = repo or self.repo
         url = url or self.url
         CHECKS = {
-            'repo': lambda: (repo is not None, "no repository (image), specify repo='name:tag'"),
+            'repo': lambda: (bool(repo), "no repository (image), specify repo='name:tag'"),
             'url': lambda: (url is not None, "no registry (url or ocidir), specify OCIOrasRegistry(url|path)")
         }
         OPERATIONS = {
             'push': ['repo'],
+            'list': ['url'],
         }
         checks_as_ops = {
             k: [k] for k, v in CHECKS.items()

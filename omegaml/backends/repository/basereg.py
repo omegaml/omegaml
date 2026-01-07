@@ -8,7 +8,7 @@ from omegaml.util import tryOr
 
 class ArtifactRepository:
     def __init__(self, url, repo=None, namespace=None):
-        self.url = url
+        self._url = url
         self.repo = repo
         self.namespace = namespace
 
@@ -21,6 +21,10 @@ class ArtifactRepository:
     @property
     def members(self):
         raise NotImplementedError
+
+    @property
+    def url(self):
+        return f'{self._url}' if not self.namespace else f'{self.url}/{self.namespace}'
 
     def artifact(self, digest, repo=None):
         raise NotImplementedError
