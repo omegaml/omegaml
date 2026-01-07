@@ -308,6 +308,15 @@ class OrasOciRegistry(ArtifactRepository):
         artifacts = self.artifacts(repo)
         return [m['digest'] for m in artifacts]
 
+    def list(self):
+        """ list repos in registry """
+        url = self.url
+        self._validate('list', **x(locals()))
+        self._ensure_login()
+        cmd = f'repo list {self.ociurl(self.url)} --format json'
+        output = self._oras(cmd) | f(json.loads)
+        return output
+
     def _guess_type(self, p):
         """Return a reasonable media type for a file path based on extension.
 
@@ -342,6 +351,7 @@ class OrasOciRegistry(ArtifactRepository):
         }
         OPERATIONS = {
             'push': ['repo'],
+            'list': ['url'],
         }
         checks_as_ops = {
             k: [k] for k, v in CHECKS.items()
