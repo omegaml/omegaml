@@ -8,7 +8,6 @@ import os
 import shutil
 import sys
 import warnings
-
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
@@ -468,10 +467,13 @@ def load_framework_support(vars=globals()):
     if OMEGA_DISABLE_FRAMEWORKS:
         return
     #: transformers
+    #  -- this must be run before tensorflow to avoid importing keras before setting TF_USE_LEGACY_KERAS=1
     if module_available('transformers', load=False):
         # ensure legacy keras using tf-keras module
         # -- https://github.com/huggingface/transformers/issues/34761
+        # -- # https://stackoverflow.com/a/38645250
         os.environ.setdefault('TF_USE_LEGACY_KERAS', "1")
+        os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', "3")
         if module_available('keras') and not os.environ.get("TF_USE_LEGACY_KERAS") == "1":
             warnings.warn('transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
                           ' https://github.com/huggingface/transformers/issues/34761 for details')
