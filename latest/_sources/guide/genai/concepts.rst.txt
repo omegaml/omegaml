@@ -109,9 +109,9 @@ to store and retrieve the history of a conversation with a model. This is useful
 maintaining context and providing a more coherent experience for the user.
 
 In omega-ml, conversation history is automatically stored in its database, and and can be
-retrieved and used to inform the model's responses. This is particularly useful for chatbots and other
-conversational agents, where maintaining context is crucial for providing relevant responses
-across a longer conversation.
+retrieved and used to inform the model's responses. This is particularly useful for chatbots
+and other conversational agents, where maintaining context is crucial for providing relevant
+responses across a longer conversation.
 
 Tools
 -----
@@ -148,6 +148,21 @@ provide guidances on human resources policies.
 In omega-ml we can define multiple models, templates and pipelines in a single repository,
 and then use these models in different workflows. This allows users to easily switch
 between different models and pipelines, and to reuse them in different workflows.
+
+OCI Repository Model Deployments
+------------------------------
+
+.. versionadded:: 0.18
+
+AI models tend to be several GB in size, requiring specialized storage. OCI repositories, also
+known as container/docker image repositories, are a perfect match. They have been built to
+support arbitrary storage sizes efficiently and serve as a backbone for deployment to clusters.
+
+omega-ml's model store provides transparent support for storing any model into a OCI repository.
+This enables AI teams to use the same simplified approach to deploying customized AI models that
+omega-ml provides for ML models, namely by saving the model to the omega-ml model store and using
+the omega-ml runtime for training and inference. omega-ml transparently handles the storage,
+distribution and runtime loading using a registered OCI repository.
 
 Monitoring
 ----------

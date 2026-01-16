@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>om.models &mdash; omega-ml 0.18.0-rc2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
 
   
@@ -304,7 +304,13 @@ for the file’s name</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkeras.html#TensorflowKerasBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend" title="Link to this definition">¶</a></dt>
-<dd><dl class="py attribute">
+<dd><div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.18: </span>Only supported for tensorflow &lt;= 2.15 and Python &lt;= 3.11</p>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 0.18: </span>Use an object helper or a serializer/loader combination instead.</p>
+</div>
+<dl class="py attribute">
 <dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasBackend.KIND">
 <span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.h5'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasBackend.KIND" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -340,7 +346,13 @@ for the file’s name</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.tensorflow.</span></span><span class="sig-name descname"><span class="pre">TensorflowKerasSavedModelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/tensorflow/tfkerassavedmodel.html#TensorflowKerasSavedModelBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend" title="Link to this definition">¶</a></dt>
-<dd><dl class="py attribute">
+<dd><div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.18: </span>Only supported for tensorflow &lt;= 2.15 and Python &lt;= 3.11</p>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 0.18: </span>Use an object helper or a serializer/loader combination instead.</p>
+</div>
+<dl class="py attribute">
 <dt class="sig sig-object py" id="omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND">
 <span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tfkeras.savedmodel'</span></em><a class="headerlink" href="#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>

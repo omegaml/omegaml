@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>omegaml.backends.tensorflow.tfkerassavedmodel &mdash; omega-ml 0.18.0-rc2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
 
   
@@ -86,30 +86,37 @@
 <div class="viewcode-block" id="TensorflowKerasSavedModelBackend">
 <a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend">[docs]</a>
 <span class="linenos"> 6</span><span class="k">class</span><span class="w"> </span><span class="nc">TensorflowKerasSavedModelBackend</span><span class="p">(</span><span class="n">TensorflowSavedModelBackend</span><span class="p">):</span>
-<span class="linenos"> 7</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;tfkeras.savedmodel&#39;</span>
-<span class="linenos"> 8</span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 8</span><span class="sd">    .. versionchanged:: 0.18</span>
+<span class="linenos"> 9</span><span class="sd">        Only supported for tensorflow &lt;= 2.15 and Python &lt;= 3.11</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="sd">    .. deprecated:: 0.18</span>
+<span class="linenos">12</span><span class="sd">        Use an object helper or a serializer/loader combination instead.</span>
+<span class="linenos">13</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">14</span>    <span class="n">KIND</span> <span class="o">=</span> <span class="s1">&#39;tfkeras.savedmodel&#39;</span>
+<span class="linenos">15</span>
 <div class="viewcode-block" id="TensorflowKerasSavedModelBackend.supports">
 <a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports">[docs]</a>
-<span class="linenos"> 9</span>    <span class="nd">@classmethod</span>
-<span class="linenos">10</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">11</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
-<span class="linenos">12</span>        <span class="n">tfSequential</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span>
-<span class="linenos">13</span>        <span class="n">tfModel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span>
-<span class="linenos">14</span>        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">tfSequential</span><span class="p">,</span> <span class="n">tfModel</span><span class="p">))</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;as_savedmodel&#39;</span><span class="p">)</span></div>
-
-<span class="linenos">15</span>
-<span class="linenos">16</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_make_savedmodel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">serving_input_receiver_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_default_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="linenos">17</span>        <span class="c1"># https://www.tensorflow.org/api_docs/python/tf/keras/experimental/export_saved_model</span>
+<span class="linenos">16</span>    <span class="nd">@classmethod</span>
+<span class="linenos">17</span>    <span class="k">def</span><span class="w"> </span><span class="nf">supports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="linenos">18</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
-<span class="linenos">19</span>        <span class="n">export_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
-<span class="linenos">20</span>        <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">export_dir</span><span class="p">,</span>
-<span class="linenos">21</span>                                   <span class="n">save_format</span><span class="o">=</span><span class="s1">&#39;tf&#39;</span><span class="p">)</span>
-<span class="linenos">22</span>        <span class="k">return</span> <span class="n">export_dir</span>
-<span class="linenos">23</span>
+<span class="linenos">19</span>        <span class="n">tfSequential</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span>
+<span class="linenos">20</span>        <span class="n">tfModel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span>
+<span class="linenos">21</span>        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">tfSequential</span><span class="p">,</span> <span class="n">tfModel</span><span class="p">))</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;as_savedmodel&#39;</span><span class="p">)</span></div>
+
+<span class="linenos">22</span>
+<span class="linenos">23</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_make_savedmodel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">serving_input_receiver_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_default_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="linenos">24</span>        <span class="c1"># https://www.tensorflow.org/api_docs/python/tf/keras/experimental/export_saved_model</span>
+<span class="linenos">25</span>        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="linenos">26</span>        <span class="n">export_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="linenos">27</span>        <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">export_dir</span><span class="p">,</span>
+<span class="linenos">28</span>                                   <span class="n">save_format</span><span class="o">=</span><span class="s1">&#39;tf&#39;</span><span class="p">)</span>
+<span class="linenos">29</span>        <span class="k">return</span> <span class="n">export_dir</span>
+<span class="linenos">30</span>
 <div class="viewcode-block" id="TensorflowKerasSavedModelBackend.fit">
 <a class="viewcode-back" href="../../../../reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit">[docs]</a>
-<span class="linenos">24</span>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tpu_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">25</span>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot fit a saved model&#39;</span><span class="p">)</span></div>
+<span class="linenos">31</span>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tpu_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">32</span>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot fit a saved model&#39;</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
