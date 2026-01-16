@@ -16,7 +16,8 @@ class PytorchModelBackend(BaseModelBackend):
     KIND = 'pytorch.pth'
 
     serializer = lambda store, model, filename, **kwargs: torch.save(model, filename, pickle_module=dill)
-    loader = lambda store, infile, filename=None, **kwargs: torch.load(infile, pickle_module=dill, weights_only=False)
+    loader = lambda store, infile=None, filename=None, **kwargs: torch.load(infile, pickle_module=dill,
+                                                                            weights_only=False)
     types = torch.nn.Module
     infer = lambda obj, **kwargs: obj
     reshape = lambda data, **kwargs: torch.tensor(data)

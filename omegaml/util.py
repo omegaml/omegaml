@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 
+from importlib import import_module
+from pathlib import Path
+
+import importlib
 import json
 import logging
 import os
@@ -7,19 +11,16 @@ import sys
 import tempfile
 import threading
 import uuid
+import validators
 import warnings
 from base64 import b64encode
+from bson import ObjectId
 from copy import deepcopy
 from datetime import datetime, date, timezone
 from hashlib import sha256
-from importlib import import_module
 from importlib.util import find_spec
-from pathlib import Path
 from shutil import rmtree
 from typing import Iterator, Any
-
-import validators
-from bson import ObjectId
 
 try:
     import urlparse
@@ -630,12 +631,15 @@ def ignorewarnings(fn):
 
 
 @ignorewarnings
-def module_available(modname, min=None, max=None):
+def module_available(modname, min=None, max=None, load=True):
     from importlib.metadata import version
     from packaging.version import Version
     try:
-        import_module(modname)
-    except:
+        if load:
+            import_module(modname)
+        elif importlib.util.find_spec(modname) is None:
+            raise ModuleNotFoundError(modname)
+    except (TypeError, ModuleNotFoundError) as e:
         return False
     if min or max:
         try:

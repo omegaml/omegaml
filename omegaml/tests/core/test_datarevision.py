@@ -1,6 +1,7 @@
-import pandas as pd
 import unittest
 from datetime import datetime
+
+import pandas as pd
 from pandas._testing import assert_frame_equal
 
 from omegaml import Omega
@@ -312,4 +313,4 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             om.datasets.put(df_a, 'revtest', revisions=True)
         self.assertEqual(str(cm.exception),
-                          "adding revisions to existing dataset revtest is not supported")
+                         "adding revisions to existing dataset revtest is not supported")

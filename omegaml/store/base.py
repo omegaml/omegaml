@@ -72,18 +72,17 @@ as follows:
 """
 from __future__ import absolute_import
 
+import bson
+import gridfs
 import logging
 import os
 import shutil
 import warnings
 import weakref
-from uuid import uuid4
-
-import bson
-import gridfs
 from mongoengine.connection import disconnect, connect, get_db
 from mongoengine.errors import DoesNotExist
 from mongoengine.queryset.visitor import Q
+from uuid import uuid4
 
 from omegaml.documents import make_Metadata, MDREGISTRY
 from omegaml.mongoshim import sanitize_mongo_kwargs, waitForConnection
@@ -483,7 +482,7 @@ class OmegaStore(object):
                               data_store=data_store, **kwargs)
         return backend
 
-    def get_backend(self, name, model_store=None, data_store=None, **kwargs):
+    def get_backend(self, name, model_store=None, data_store=None, kind=None, **kwargs):
         """
         return the backend by a given object name
 
@@ -494,8 +493,9 @@ class OmegaStore(object):
         :return: the backend
         """
         meta = self.metadata(name)
-        if meta is not None and meta.kind in self.defaults.OMEGA_STORE_BACKENDS:
-            return self.get_backend_bykind(meta.kind,
+        kind = kind or meta.kind if meta is not None else None
+        if kind in self.defaults.OMEGA_STORE_BACKENDS:
+            return self.get_backend_bykind(kind,
                                            model_store=model_store,
                                            data_store=data_store,
                                            **kwargs)

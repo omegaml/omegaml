@@ -1,8 +1,11 @@
+from pathlib import Path
+from unittest import skipUnless
+
+import json
 import shutil
 import unittest
-from pathlib import Path
 from tempfile import mkdtemp
-from unittest import skipUnless
+from unittest.mock import patch
 
 from omegaml.backends.repository.basereg import chdir
 from omegaml.backends.repository.orasreg import OrasOciRegistry, parse_ociuri
@@ -35,15 +38,15 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertIsInstance(manifest, dict)
         # -- with repo.tag specified in url
         reg = OrasOciRegistry('oci://example.com/myimage:test')
-        self.assertEqual(reg.url, 'oci://example.com')
+        self.assertEqual(reg.url, 'example.com')
         self.assertEqual(reg.repo, 'myimage:test')
         # -- with namespace/repo:tag specified in url
         reg = OrasOciRegistry('oci://example.com/myspace/myimage:test')
-        self.assertEqual(reg.url, 'oci://example.com/myspace')
+        self.assertEqual(reg.url, 'example.com/myspace')
         self.assertEqual(reg.repo, 'myimage:test')
         # -- with namespace/repo:tag specified in url
         reg = OrasOciRegistry('oci://example.com/myspace/myimage')
-        self.assertEqual(reg.url, 'oci://example.com/myspace')
+        self.assertEqual(reg.url, 'example.com/myspace')
         self.assertEqual(reg.repo, 'myimage:latest')
 
     def test_parse_ociuri(self):
@@ -154,6 +157,28 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'latest')
 
+    def test_list_url(self):
+        """ Test list of repos in url-specified registry """
+        reg = OrasOciRegistry('localhost:22255')
+        contents = {'registry': 'localhost:22255',
+                    'repositories': ['mymodel']}
+        with patch.object(reg, '_oras') as mock_oras:
+            mock_oras.return_value = json.dumps(contents)
+            repos = reg.list()
+        mock_oras.assert_called_with('repo list localhost:22255 --format json')
+        self.assertEqual(repos, contents)
+
+    def test_list_namespaced_url(self):
+        """ Test list of repos in url-specified and namespaced registry """
+        reg = OrasOciRegistry('localhost:22255/user')
+        contents = {'registry': 'localhost:22255/user',
+                    'repositories': ['mymodel']}
+        with patch.object(reg, '_oras') as mock_oras:
+            mock_oras.return_value = json.dumps(contents)
+            repos = reg.list()
+        mock_oras.assert_called_with('repo list localhost:22255/user --format json')
+        self.assertEqual(repos, contents)
+
     def test_artifacts(self):
         """ Test that artifacts are empty initially """
         rpath = self.tmppath
@@ -165,18 +190,32 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertIsInstance(artifacts, list)
         self.assertEqual(len(artifacts), 0)
 
-    def test_artifacts_namespaced(self):
+    def test_artifacts_namespaced_ocidir(self):
         """ Test that artifacts are empty initially """
         rpath = self.tmppath
         lpath = rpath / 'ns' / 'myspace' / 'myimage'
         shutil.rmtree(rpath) if rpath.exists() else None
         reg = OrasOciRegistry(lpath, 'fooimage:scratch')
-        self.assertEqual(reg.url, rpath / 'ns' / 'myspace')
+        self.assertEqual(reg.url, str(rpath / 'ns' / 'myspace'))
         self.assertEqual(reg.repo, 'fooimage:scratch')
         reg.create()
         artifacts = reg.artifacts()
         self.assertIsInstance(artifacts, list)
         self.assertEqual(len(artifacts), 0)
+
+    def test_reg_url(self):
+        """ Test that artifacts are empty initially """
+        url = 'localhost:22255'
+        reg = OrasOciRegistry(url, 'fooimage:scratch')
+        self.assertEqual(reg.url, url)
+        self.assertEqual(reg.repo, 'fooimage:scratch')
+
+    def test_reg_namespaced_url(self):
+        """ Test that artifacts are empty initially """
+        url = 'localhost:22255/user'
+        reg = OrasOciRegistry(url, 'fooimage:scratch')
+        self.assertEqual(reg.url, url)
+        self.assertEqual(reg.repo, 'fooimage:scratch')
 
     def test_manifest(self):
         """ Test that a manifest is correctly created """

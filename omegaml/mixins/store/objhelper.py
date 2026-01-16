@@ -7,22 +7,28 @@ from omegaml.backends.virtualobj import VirtualObjectBackend
 class VirtualHelperBackend(VirtualObjectBackend):
     KIND = 'virtualobj.helper'
 
+    # notes:
+    # -- handler is always called with helper=None to avoid recursive calling
+
     def __init__(self, handler, store, model_store=None, data_store=None, tracking=None, backend=None, **kwargs):
         super().__init__(model_store=model_store, data_store=data_store, tracking=tracking, **kwargs)
         self.handler = handler  # the handler fn (virtualobj)
         self.store = store  # the store where we're at
         self.backend = backend  # the original backend
+        self.kwargs = kwargs  # the original kwargs
 
     def get(self, name, **kwargs):
         meta = self.store.metadata(name)
+        hkwargs = {**kwargs, **dict(helper=False)}
         data = self.handler(method='get', obj=None, name=name, meta=meta, store=self.store, backend=self.backend,
-                            **kwargs)
+                            **hkwargs)
         return data or self.backend.get(name, **kwargs)
 
     def put(self, obj, name, **kwargs):
         meta = self.store.metadata(name)
+        hkwargs = {**kwargs, **dict(helper=False)}
         handled_meta = self.handler(method='put', obj=obj, name=name, meta=meta, store=self.store, backend=self.backend,
-                                    **kwargs)
+                                    **hkwargs)
         meta = handled_meta or self.backend.put(obj, name, **kwargs)
         meta.kind_meta.setdefault('helper', self.handler._handler_name)
         meta.save()
@@ -30,15 +36,18 @@ class VirtualHelperBackend(VirtualObjectBackend):
 
     def drop(self, name, force=False, **kwargs):
         meta = self.store.metadata(name)
-        result = self.handler(method='put', obj=name, meta=meta, force=force, **kwargs)
+        hkwargs = {**kwargs, **dict(helper=False)}
+        result = self.handler(method='put', obj=name, meta=meta, force=force, **hkwargs)
         return self.backend.drop(name, force=force, **kwargs) if result is None else result
 
     def predict(self, modelname, Xname=None, Yname=None, **kwargs):
         meta = self.store.metadata(modelname)
         model = self.get(modelname, **kwargs)
         data = self.data_store.get(Xname)
+        hkwargs = {**kwargs, **dict(helper=False)}
         result = self.handler(method='predict', obj=model, name=modelname, meta=meta, store=self.store,
-                              backend=self.backend, data=data, **kwargs)
+                              backend=self.backend, data=data, **hkwargs)
+        result = result if not None else self.backend.predict(modelname, Xname=Xname, Yname=Yname, **kwargs)
         return result
 
 
@@ -133,8 +142,9 @@ class ObjectHelperMixin:
         meta = self.metadata(name) if name else None
         backend = super().get_backend_byobj(obj, name, model_store=model_store, data_store=data_store, **kwargs)
         kind = getattr(backend, 'KIND', '__nobackend__')
-        helper = helper or (meta.kind_meta.get('helper') if meta is not None else None) or self._resolve_supports(
-            obj=obj, meta=meta, kind=kind)
+        helper = None if helper is False else (
+                helper or (meta.kind_meta.get('helper') if meta is not None else None) or
+                self._resolve_supports(obj=obj, meta=meta, kind=kind))
         if helper:
             return self._get_handler(helper, model_store, data_store, backend)
         return backend
