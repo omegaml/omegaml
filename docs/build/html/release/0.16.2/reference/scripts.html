@@ -1,0 +1,679 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>om.scripts &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="om.runtime" href="runtimes.html" />
+    <link rel="prev" title="om.jobs" href="jobs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../admin/index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">core models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">om.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">om.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jobs.html">om.jobs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">om.scripts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#omegaml.scripts"><code class="docutils literal notranslate"><span class="pre">scripts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backends">Backends</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.package.PythonPackageData"><code class="docutils literal notranslate"><span class="pre">PythonPackageData</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.package.PythonPipSourcedPackageData"><code class="docutils literal notranslate"><span class="pre">PythonPipSourcedPackageData</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend"><code class="docutils literal notranslate"><span class="pre">MLFlowProjectBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend"><code class="docutils literal notranslate"><span class="pre">MLFlowGitProjectBackend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rscripts.RPackageData"><code class="docutils literal notranslate"><span class="pre">RPackageData</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mixins">Mixins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.mixins.store.package.PythonPackageMixin"><code class="docutils literal notranslate"><span class="pre">PythonPackageMixin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.backends.rsystem.rscripts.RScript"><code class="docutils literal notranslate"><span class="pre">RScript</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="runtimes.html">om.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdataframe.html">omegaml.mdataframe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking.html">omegaml.runtime.experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">om.scripts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="om-scripts">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">om.scripts</a><a class="headerlink" href="#om-scripts" title="Link to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#om-scripts" id="id1">om.scripts</a></p>
+<ul>
+<li><p><a class="reference internal" href="#backends" id="id2">Backends</a></p></li>
+<li><p><a class="reference internal" href="#mixins" id="id3">Mixins</a></p></li>
+<li><p><a class="reference internal" href="#helpers" id="id4">Helpers</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<dl class="py data">
+<dt class="sig sig-object py" id="omegaml.scripts">
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">scripts</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaStore(bucket=omegaml,</span> <span class="pre">prefix=scripts/)</span></em><a class="headerlink" href="#omegaml.scripts" title="Link to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="core.html#omegaml.store.base.OmegaStore" title="omegaml.store.base.OmegaStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore</span></code></a> store for scripts</p>
+<p>Methods:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.list" title="omegaml.store.base.OmegaStore.list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.list()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.get" title="omegaml.store.base.OmegaStore.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.get()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.getl" title="omegaml.store.base.OmegaStore.getl"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.getl()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.put" title="omegaml.store.base.OmegaStore.put"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.put()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.drop" title="omegaml.store.base.OmegaStore.drop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.drop()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.exists" title="omegaml.store.base.OmegaStore.exists"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.exists()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.metadata" title="omegaml.store.base.OmegaStore.metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.metadata()</span></code></a></p></li>
+<li><p><a class="reference internal" href="core.html#omegaml.store.base.OmegaStore.help" title="omegaml.store.base.OmegaStore.help"><code class="xref py py-meth docutils literal notranslate"><span class="pre">omegaml.store.base.OmegaStore.help()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>Mixins:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.mixins.store.package.PythonPackageMixin" title="omegaml.mixins.store.package.PythonPackageMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.mixins.store.package.PythonPackageMixin</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>Backends:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.backends.package.PythonPackageData" title="omegaml.backends.package.PythonPackageData"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.package.PythonPackageData</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.package.PythonPipSourcedPackageData" title="omegaml.backends.package.PythonPipSourcedPackageData"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.package.PythonPipSourcedPackageData</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">dash</span></code> (loaded if installed)</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.dashapp.DashAppBackend</span></code></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">mlflow</span></code> (loaded if installed)</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend" title="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.mlflow.localprojects.MLFlowProjectBackend</span></code></a></p></li>
+<li><p><a class="reference internal" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend" title="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend</span></code></a></p></li>
+</ul>
+<p>Backends for <code class="docutils literal notranslate"><span class="pre">R</span></code> (loaded if installed)</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#omegaml.backends.rsystem.rscripts.RPackageData" title="omegaml.backends.rsystem.rscripts.RPackageData"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.backends.rsystem.rscripts.RPackageData</span></code></a></p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<section id="backends">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Backends</a><a class="headerlink" href="#backends" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPackageData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.package.</span></span><span class="sig-name descname"><span class="pre">PythonPackageData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/localpip.html#PythonPackageData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPackageData" title="Link to this definition">¶</a></dt>
+<dd><p>Backend to support locally sourced custom scripts deployment to runtimes cluster</p>
+<p>This supports any local setup.py</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pkg://path/to/setup.py&#39;</span><span class="p">,</span> <span class="s1">&#39;myname&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;myname&#39;</span><span class="p">)</span>
+
+<span class="n">Note</span> <span class="n">that</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">must</span> <span class="n">minimally</span> <span class="n">specify</span> <span class="n">the</span> <span class="n">following</span><span class="o">.</span> <span class="n">The</span>
+<span class="n">name</span> <span class="ow">and</span> <span class="n">packages</span> <span class="n">kwargs</span> <span class="n">must</span> <span class="n">specify</span> <span class="n">the</span> <span class="n">same</span> <span class="n">name</span> <span class="k">as</span> <span class="n">given</span>
+<span class="ow">in</span> <span class="n">put</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># setup.py</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span>
+    <span class="n">setup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;myname&#39;</span><span class="p">,</span> <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;myname&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/">https://packaging.python.org/tutorials/packaging-projects/</a></p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPackageData.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'python.package'</span></em><a class="headerlink" href="#omegaml.backends.package.PythonPackageData.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPackageData.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">localpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/localpip.html#PythonPackageData.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPackageData.get" title="Link to this definition">¶</a></dt>
+<dd><p>Load package from store, install it locally and load.</p>
+<p>This copies the package’s .tar.gz file from om.scripts to a local temp
+path and runs <cite>pip install</cite> on it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the package</p></li>
+<li><p><strong>keep</strong> – keep the packages load path in sys.path, defaults to False</p></li>
+<li><p><strong>localpath</strong> – the local path to store the package</p></li>
+<li><p><strong>install</strong> – if True call pip install on the retrieved package</p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the loaded module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPackageData.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/localpip.html#PythonPackageData.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPackageData.put" title="Link to this definition">¶</a></dt>
+<dd><p>save a python package</p>
+<p>This takes the full path to a setuptools setup.py, or a directory
+containing a setup.py file. It then executes <cite>python setup.py sdist</cite>
+and stores the resulting .tar.gz file in om.scripts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – full path to package file or directory, syntax as
+pkg://path/to/dist.tar.gz or pkg://path/to/setup.py</p></li>
+<li><p><strong>name</strong> – name of package. must be the actual name of the package
+as specified in setup.py</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPackageData.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/localpip.html#PythonPackageData.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPackageData.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPipSourcedPackageData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.package.</span></span><span class="sig-name descname"><span class="pre">PythonPipSourcedPackageData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/remotepip.html#PythonPipSourcedPackageData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPipSourcedPackageData" title="Link to this definition">¶</a></dt>
+<dd><p>Backend to support locally sourced custom scripts deployment to runtimes cluster</p>
+<p>This supports any pip-installable remote source like git, hg, svn, bzr</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># pypi package</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pypi://&lt;pkgname&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;pkgname&gt;&#39;</span><span class="p">)</span>
+
+<span class="c1"># git hosted</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;git+https://github.com/account/repo/&lt;pkgname&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;pkgname&gt;&#39;</span><span class="p">)</span>
+
+<span class="c1"># retrieve the package and call pip install</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul>
+<li><p><cite>pypi://&lt;pkgname&gt;</cite> can be any specification supported by pip, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pypi://&lt;pkgname==version&gt;&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;git+https://....@tag#egg=&lt;pkgname&gt;&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>the package specification is stored as <code class="docutils literal notranslate"><span class="pre">metadata.kind_meta['pip_source']</span></code></p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/">https://packaging.python.org/tutorials/packaging-projects/</a></p></li>
+</ul>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPipSourcedPackageData.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pipsrc.package'</span></em><a class="headerlink" href="#omegaml.backends.package.PythonPipSourcedPackageData.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPipSourcedPackageData.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/remotepip.html#PythonPipSourcedPackageData.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPipSourcedPackageData.get" title="Link to this definition">¶</a></dt>
+<dd><p>Load package from store, install it locally and load.</p>
+<p>This runs <cite>pip install &lt;package spec&gt;</cite>, taking the package specification
+from Metadata.kind_meta[‘pip-source’]. See the put() method for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the package</p></li>
+<li><p><strong>keep</strong> – keep the packages load path in sys.path, defaults to False</p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the loaded module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPipSourcedPackageData.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/remotepip.html#PythonPipSourcedPackageData.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPipSourcedPackageData.put" title="Link to this definition">¶</a></dt>
+<dd><p>save a python package</p>
+<p>This stores a PIP-sourceable package specification in the objects
+<code class="docutils literal notranslate"><span class="pre">Metadata.kind_meta</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s1">&#39;pip_source&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;obj:package spec&gt;&#39;</span> <span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – full path to package file or directory, syntax as
+pkg://path/to/dist.tar.gz or pkg://path/to/setup.py</p></li>
+<li><p><strong>name</strong> – name of package. must be the actual name of the package
+as specified in setup.py</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.package.PythonPipSourcedPackageData.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/package/remotepip.html#PythonPipSourcedPackageData.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.package.PythonPipSourcedPackageData.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.mlflow.localprojects.</span></span><span class="sig-name descname"><span class="pre">MLFlowProjectBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/localprojects.html#MLFlowProjectBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend" title="Link to this definition">¶</a></dt>
+<dd><p>Backend to support storage of MLFlow projects</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;mlflow://path/to/MLProject&#39;</span><span class="p">,</span> <span class="s1">&#39;myproject&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;myproject&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.mlflow.org/docs/latest/projects.html#project-directories">https://www.mlflow.org/docs/latest/projects.html#project-directories</a></p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mlflow.project'</span></em><a class="headerlink" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">localpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/localprojects.html#MLFlowProjectBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>Load MLFlow project from store</p>
+<p>This copies the projects’s .tar.gz file from om.scripts to a local temp
+path and returns the MLFlowProject to it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the package</p></li>
+<li><p><strong>keep</strong> – keep the packages load path in sys.path, defaults to False</p></li>
+<li><p><strong>localpath</strong> – the local path to store the package</p></li>
+<li><p><strong>install</strong> – if True call pip install on the retrieved package</p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the loaded module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/localprojects.html#MLFlowProjectBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>save a MLFlow project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – full path to the MLFlow project directory
+mlflow://path/to/MLProject</p></li>
+<li><p><strong>name</strong> – name to store</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/localprojects.html#MLFlowProjectBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.mlflow.gitprojects.</span></span><span class="sig-name descname"><span class="pre">MLFlowGitProjectBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/gitprojects.html#MLFlowGitProjectBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend" title="Link to this definition">¶</a></dt>
+<dd><p>Backend to support git-sourced MLFlow projects</p>
+<p>This supports any git remote source that MLFlow supports</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;mlflow+ssh://git@github.com/&lt;user&gt;/&lt;repo&gt;.git&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;pkgname&gt;&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;mlflow+https://git@github.com/&lt;user&gt;/&lt;repo&gt;.git&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;pkgname&gt;&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;https://github.com/&lt;user&gt;/&lt;repo&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;pkgname&gt;&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mlflow.project&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/">https://packaging.python.org/tutorials/packaging-projects/</a></p></li>
+<li><p><a class="reference external" href="https://docs.github.com/en/get-started/getting-started-with-git/managing-remote-repositories#changing-a-remote-repositorys-url">https://docs.github.com/en/get-started/getting-started-with-git/managing-remote-repositories#changing-a-remote-repositorys-url</a></p></li>
+</ul>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mlflow.gitproject'</span></em><a class="headerlink" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/gitprojects.html#MLFlowGitProjectBackend.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.get" title="Link to this definition">¶</a></dt>
+<dd><p>Load MLFlow project from git uri</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the loaded module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/gitprojects.html#MLFlowGitProjectBackend.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.put" title="Link to this definition">¶</a></dt>
+<dd><p>save a MLFlow git-sourceable project</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/mlflow/gitprojects.html#MLFlowGitProjectBackend.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RPackageData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.rsystem.rscripts.</span></span><span class="sig-name descname"><span class="pre">RPackageData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RPackageData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RPackageData" title="Link to this definition">¶</a></dt>
+<dd><p>Backend to support R packages</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;R://path/to/app.R&#39;</span><span class="p">,</span> <span class="s1">&#39;myname&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;myname&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>Rscript</p></li>
+<li><p><a class="reference external" href="https://mastering-shiny.org/scaling-packaging.html">https://mastering-shiny.org/scaling-packaging.html</a> (CC BY-NC-ND 4.0)</p></li>
+</ul>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RPackageData.KIND">
+<span class="sig-name descname"><span class="pre">KIND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'package.r'</span></em><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RPackageData.KIND" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RPackageData.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">localpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RPackageData.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RPackageData.get" title="Link to this definition">¶</a></dt>
+<dd><p>Load package from store, install it locally and load.</p>
+<p>This copies the package’s .tar.gz file from om.scripts to a local temp
+path and runs <cite>pip install</cite> on it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the name of the package</p></li>
+<li><p><strong>keep</strong> – keep the packages load path in sys.path, defaults to False</p></li>
+<li><p><strong>localpath</strong> – the local path to store the package</p></li>
+<li><p><strong>install</strong> – if True call pip install on the retrieved package</p></li>
+<li><p><strong>kwargs</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the loaded module (RScript)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RPackageData.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RPackageData.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RPackageData.put" title="Link to this definition">¶</a></dt>
+<dd><p>save a R package</p>
+<p>This takes the full path to a setuptools setup.py, or a directory
+containing a setup.py file. It then executes <cite>python setup.py sdist</cite>
+and stores the resulting .tar.gz file in om.scripts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – full path to package file or directory, syntax as
+pkg://path/to/dist.tar.gz or pkg://path/to/setup.py</p></li>
+<li><p><strong>name</strong> – name of package. must be the actual name of the package
+as specified in setup.py</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the Metadata object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RPackageData.supports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RPackageData.supports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RPackageData.supports" title="Link to this definition">¶</a></dt>
+<dd><p>test if this backend supports this obj</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mixins">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Mixins</a><a class="headerlink" href="#mixins" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.mixins.store.package.PythonPackageMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.mixins.store.package.</span></span><span class="sig-name descname"><span class="pre">PythonPackageMixin</span></span><a class="reference internal" href="../_modules/omegaml/mixins/store/package.html#PythonPackageMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.package.PythonPackageMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Install and load scripts</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.mixins.store.package.PythonPackageMixin.install">
+<span class="sig-name descname"><span class="pre">install</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/mixins/store/package.html#PythonPackageMixin.install"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.mixins.store.package.PythonPackageMixin.install" title="Link to this definition">¶</a></dt>
+<dd><p>install and load packages</p>
+<p>This is a convenience function to install one or more packages at once.
+It is the equivalent of</p>
+<blockquote>
+<div><dl class="simple">
+<dt>for pkg in [‘name1’, ‘name2’]:</dt><dd><p>om.scripts.get(pkg)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>specs</strong> (<em>str</em><em>, </em><em>list</em>) – optional, package name or list of names,
+defaults to self.list()</p></li>
+<li><p><strong>keep</strong> (<em>bool</em>) – optional, will keep any packages installed in sys.path,
+defaults to False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="helpers">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Helpers</a><a class="headerlink" href="#helpers" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RScript">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.backends.rsystem.rscripts.</span></span><span class="sig-name descname"><span class="pre">RScript</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">appdir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RScript"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RScript" title="Link to this definition">¶</a></dt>
+<dd><p>a Python proxy to the R process that runs a script</p>
+<p>This provides the <code class="docutils literal notranslate"><span class="pre">mod.run()</span></code> interface for scripts so that
+we can use the same semantics for R and python scripts.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="omegaml.backends.rsystem.rscripts.RScript.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">om</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/backends/rsystem/rscripts.html#RScript.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.backends.rsystem.rscripts.RScript.run" title="Link to this definition">¶</a></dt>
+<dd><p>run the script in R session</p>
+<dl>
+<dt>Usage:</dt><dd><p>The script must exist as <code class="docutils literal notranslate"><span class="pre">{self.appdir}/app.R</span></code>. It must implement
+the <code class="docutils literal notranslate"><span class="pre">omega_run()</span></code> function.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># app.R
+library(jsonlite)
+omega_run &lt;- function(om, kwargs) {
+   # if om was passed as &quot;0&quot;, this means we&#39;re in a local mode, i.e. must import omegaml
+   om &lt;- if (om == &quot;0&quot;) import(&quot;omegaml&quot;) else om
+   s &lt;- fromJSON(rawToChar(base64_dec(kwargs)))
+   s$message &lt;- &quot;hello from R&quot;
+   return(toJSON(s))
+}
+</pre></div>
+</div>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If an R session is active, will run the script by calling the script’s omega_run function</p></li>
+<li><p>If no R session is active, will use RScript to source the script and run omega_run function</p></li>
+<li><p>Expects the output to be in JSON format</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="jobs.html" class="btn btn-neutral float-left" title="om.jobs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="runtimes.html" class="btn btn-neutral float-right" title="om.runtime" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.16.2
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/reference/scripts.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/reference/scripts.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../0.15.3/reference/scripts.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../0.15.5/reference/scripts.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../0.16.0/reference/scripts.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../0.16.1/reference/scripts.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="scripts.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../0.16.3/reference/scripts.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/reference/scripts.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../0.17.0/reference/scripts.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/reference/scripts.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/reference/scripts.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

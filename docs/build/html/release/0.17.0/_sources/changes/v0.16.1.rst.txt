@@ -1,0 +1,83 @@
+Release notes release/0.16.1
+============================
+
+Released 2024-01-17
+
+Update dependencies, improve tracking semantics, bug fixes.
+
+What’s Changed
+--------------
+
+-  Improve tracking semantics by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/351
+-  fix error raised by tracking when when tensorflow is missing by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/356
+-  Fix virtualobj dashserve by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/355
+-  Enable custom http status by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/354
+-  Enable metadata require by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/357
+-  improve runtime require() semantics by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/358
+-  upgrade dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/359
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.16.0…release/0.16.1
+
+Changes
+~~~~~~~
+
+-  Bump version: 0.16.1-rc2 → 0.16.1
+   `683881c <https://github.com/omegaml/omegaml/commit/683881c>`__
+-  Bump version: 0.16.1-rc1 → 0.16.1-rc2
+   `0207395 <https://github.com/omegaml/omegaml/commit/0207395>`__
+-  Bump version: 0.16.1-dev4 → 0.16.1-rc1
+   `5e1a82c <https://github.com/omegaml/omegaml/commit/5e1a82c>`__
+-  update build bump
+   `6c7324d <https://github.com/omegaml/omegaml/commit/6c7324d>`__
+-  Bump version: 0.16.1-rc1 → 0.16.1-rc2
+   `5f2c1d9 <https://github.com/omegaml/omegaml/commit/5f2c1d9>`__
+-  Merge pull request #360 from omegaml/release-build-0.16.1
+   `7263a43 <https://github.com/omegaml/omegaml/commit/7263a43>`__
+-  Bump version: 0.16.1-dev1 → 0.16.1-rc1
+   `29db143 <https://github.com/omegaml/omegaml/commit/29db143>`__
+-  Merge pull request #359 from omegaml/upgrade-python-311
+   `c1409c0 <https://github.com/omegaml/omegaml/commit/c1409c0>`__
+-  upgrade to python 3.10, 3.11
+   `78eaf38 <https://github.com/omegaml/omegaml/commit/78eaf38>`__
+-  Merge pull request #358 from omegaml/improve-runtime-semantics
+   `ddea7d2 <https://github.com/omegaml/omegaml/commit/ddea7d2>`__
+-  improve runtime require() semantics
+   `7120335 <https://github.com/omegaml/omegaml/commit/7120335>`__
+-  Merge pull request #357 from omegaml/enable-metadata-require
+   `7f53b82 <https://github.com/omegaml/omegaml/commit/7f53b82>`__
+-  Merge pull request #354 from omegaml/enable-custom-http-status
+   `eddcef3 <https://github.com/omegaml/omegaml/commit/eddcef3>`__
+-  update for http status
+   `d18fe1d <https://github.com/omegaml/omegaml/commit/d18fe1d>`__
+-  Merge pull request #355 from omegaml/fix-virtualobj-dashserve
+   `22c3bce <https://github.com/omegaml/omegaml/commit/22c3bce>`__
+-  remove dashserve support, fix virtualobj
+   `6e1ff6c <https://github.com/omegaml/omegaml/commit/6e1ff6c>`__
+-  Merge pull request #356 from omegaml/fix-tensorflow-missing
+   `7c32ce1 <https://github.com/omegaml/omegaml/commit/7c32ce1>`__
+-  Merge pull request #351 from omegaml/improve-tracking-semantics
+   `13c949b <https://github.com/omegaml/omegaml/commit/13c949b>`__
+-  improve tracking semantics
+   `c7b31e3 <https://github.com/omegaml/omegaml/commit/c7b31e3>`__
+-  Merge pull request #326 from omegaml/release-build-0.15.6
+   `86ebc25 <https://github.com/omegaml/omegaml/commit/86ebc25>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix error raised by tracking when when tensorflow is missing
+   `dde6002 <https://github.com/omegaml/omegaml/commit/dde6002>`__
+
+Refactor
+~~~~~~~~
+
+-  refactor runtime proxies to use a common base class
+   `3e4f510 <https://github.com/omegaml/omegaml/commit/3e4f510>`__

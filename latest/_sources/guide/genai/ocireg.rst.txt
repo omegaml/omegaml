@@ -1,7 +1,7 @@
 Model deployment using OCI repositories
 =======================================
 
-.. versionadded:: 0.18
+.. versionadded:: 0.18.0
 
 An OCI repository is a remote service that stores large data and software artifacts, also known
 as (docker) images. They are typically known and used to deploy containerized software, however
