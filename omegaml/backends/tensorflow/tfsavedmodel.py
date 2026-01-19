@@ -14,12 +14,6 @@ from omegaml.backends.basemodel import BaseModelBackend
 class TensorflowSavedModelPredictor(object):
     """
     A predictor model from a TF SavedModel
-
-    .. versionchanged:: NEXT
-        Only supported for tensorflow <= 2.15 and Python <= 3.11
-
-    .. deprecated:: NEXT
-        Use an object helper or a serializer/loader combination instead.
     """
 
     def __init__(self, model_dir):
@@ -135,7 +129,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         return export_dir_base
 
     def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         Predict from a SavedModel
 

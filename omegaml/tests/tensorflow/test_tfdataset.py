@@ -9,7 +9,7 @@ from omegaml.tests.util import tf_perhaps_eager_execution, OmegaTestMixin
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 @skip("requires eager mode which must be enabled once for the whole python session")
 class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
@@ -45,3 +45,8 @@ class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
         for img in ds.take(1):
             print(img.numpy())
             break
+
+
+
+
+

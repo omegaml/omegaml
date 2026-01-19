@@ -6,7 +6,7 @@ from omegaml.tests.util import OmegaTestMixin, tf_in_eager_execution
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelBackend
@@ -82,11 +82,9 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
 
         x_test = np.random.random((100, 20))
-
         def input_fn():
             X = tf.data.Dataset.from_tensor_slices(x_test)
             return X.batch(1)
-
         yhat = [v for v in model.predict(input_fn=input_fn)]
         om.models.put(model, 'estimator-savedmodel',
                       serving_input_fn=serving_input_receiver_fn)
@@ -121,11 +119,9 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
 
         x_test = np.random.random((100, 20))
-
         def input_fn():
             X = tf.data.Dataset.from_tensor_slices(x_test)
             return X.batch(1)
-
         yhat = [v for v in model.predict(input_fn=input_fn)]
         om.models.put(model, 'estimator-savedmodel',
                       serving_input_fn=serving_input_receiver_fn)
@@ -144,7 +140,6 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
         model = self._build_model()
 
         default_batch_size = 1
-
         def serving_input_receiver_fn():
             placeholder = tf.placeholder(dtype=np.float32,
                                          shape=(default_batch_size, 20),
@@ -152,3 +147,6 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
             receiver_tensors = {'X_input': placeholder}
             features = {'X_input': placeholder}
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
+
+
+
