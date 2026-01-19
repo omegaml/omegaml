@@ -22,7 +22,7 @@ class CoreObjectsBackend(BaseDataBackend):
           Metadata.kind used for various objects are defined in omegaml.documents.MDREGISTRY as PANDAS_DFROWS,
           PANDAS_SEROWS, PANDAS_DFGROUP, PYTHON_DATA, PANDAS_HDF
 
-    .. versionadded:: NEXT
+    .. versionadded:: 0.18.0
         refactored from omegaml.store.base.OmegaStore
     """
     KIND = "core.object"
@@ -435,7 +435,7 @@ class CoreObjectsBackend(BaseDataBackend):
                collection.find() as a filter.
         :param sanitize: remove any $op operators in kwargs
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.0
             filters are now specified as **kwargs, not kwargs= (still supported for backwards compatibility)
 
         """

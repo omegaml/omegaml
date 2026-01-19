@@ -257,11 +257,16 @@ pre-publish:
 	echo "view at file://${PWD}/build/html/index.html"
 
 publish: pre-publish
+	# https://github.com/orgs/community/discussions/153969
+	# https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
+	# https://circleci.com/docs/guides/orchestrate/skip-build/
 	cd build/html && tar -czf /tmp/omegamldocs.tgz . 
 	git checkout gh-pages
 	cd ../ && find . -name "*pyc" | xargs rm
-	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "docs: updates ghpages"
+	echo "<!-- Built $(date) -->" >> index.html
+	cd ../ && git rm -rf . && tar -xzf /tmp/omegamldocs.tgz && touch .nojekyll && git add . && git commit -m "docs: updates ghpages [skip ci]"
 	echo "Done. git push --tags and go back to your original branch"
 
 changes:
-	scripts/mkchanges.sh
+	VERSION=$$(cat "$${PWD}/../omegaml/VERSION") && scripts/mkchanges.sh --tag "$${VERSION}"
+	git add ..; git commit --long; git commit -m "update changelog" || echo "nothing to commit"

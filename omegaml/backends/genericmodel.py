@@ -26,7 +26,7 @@ class GenericModelBackend(BaseModelBackend):
     See Also:
         - TestPytorchModels.test_pytorch_model_genericmodel
 
-    .. versionadded:: NEXT
+    .. versionadded:: 0.18.0
         backend kind='python.model' supports custom serializers
     """
     KIND = 'python.model'

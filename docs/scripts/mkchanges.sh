@@ -11,7 +11,7 @@
 ##
 script_dir=$(realpath "$(dirname "$0")")
 source $script_dir/easyoptions || exit
-RELEASE_PATTERNS=${tag:-"release/[02].[0-9]+(.[0-9]+)?$"}
+RELEASE_PATTERNS="${tag:-":"}|release/[02].[0-9]+(.[0-9]+)?$"
 RELEASES=$(git tag | grep -E "$RELEASE_PATTERNS" | xargs)
 CHANGES_DIR=./source/changes
 

@@ -301,7 +301,7 @@ class OmegaSimpleTracker(TrackingProvider):
             dt (datetime): the datetime, defaults to now
             **extra: any other values to store with event
 
-        .. versionadded:: NEXT
+        .. versionadded:: 0.18.0
 
         """
         data = self._common_log_data(event, key, None, step=step, dt=dt, **extra)

@@ -16,7 +16,7 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
     Description:
         Work with models
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.0
          om models put <spec> <name> now supports arbitrary model specifications
     """
     command = 'models'
