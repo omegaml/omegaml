@@ -1,0 +1,10 @@
+Release notes release/0.4
+=========================
+
+Released 2016-11-14
+
+Changes
+~~~~~~~
+
+-  support storing and retrieving series as first-class objects
+   `3967287 <https://github.com/omegaml/omegaml/commit/3967287>`__
