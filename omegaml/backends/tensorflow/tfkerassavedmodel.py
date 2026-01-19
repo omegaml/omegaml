@@ -4,13 +4,6 @@ from .tfsavedmodel import TensorflowSavedModelBackend
 
 
 class TensorflowKerasSavedModelBackend(TensorflowSavedModelBackend):
-    """
-    .. versionchanged:: NEXT
-        Only supported for tensorflow <= 2.15 and Python <= 3.11
-
-    .. deprecated:: NEXT
-        Use an object helper or a serializer/loader combination instead.
-    """
     KIND = 'tfkeras.savedmodel'
 
     @classmethod

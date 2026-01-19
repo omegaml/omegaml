@@ -630,40 +630,23 @@ def ignorewarnings(fn):
 
 
 @ignorewarnings
-def module_available(modname, min=None, max=None):
-    from importlib.metadata import version
-    from packaging.version import Version
+def module_available(modname):
     try:
         import_module(modname)
     except:
         return False
-    if min or max:
-        try:
-            mod_version = version(modname)
-            min_ok = Version(mod_version) >= Version(min) if min else True
-            max_ok = Version(mod_version) <= Version(max) if max else True
-        except Exception as e:
-            logger.warning(f'version check for {modname=} {min=} {max} failed due to {e}')
-        else:
-            if not max_ok:
-                logger.warning((f'require {modname}<={max}, have {modname}=={mod_version}. '
-                                f'Use a model helper for {modname} models.'))
-            if not min_ok:
-                logger.warning((f'require {modname}>={min}, have {modname}=={mod_version}. '
-                                f'Use a model helper for {modname} models.'))
-            return min_ok and max_ok
     return True
 
 
-def tensorflow_available(min=None, max=None):
+def tensorflow_available():
     # https://stackoverflow.com/a/38645250
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
     logging.getLogger('tensorflow').setLevel(logging.ERROR)
-    return module_available('tensorflow', min=min, max=max)
+    return module_available('tensorflow')
 
 
-def keras_available(min=None, max=None):
-    return module_available('keras', min=min, max=max)
+def keras_available():
+    return module_available('keras')
 
 
 def mlflow_available():

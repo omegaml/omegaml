@@ -8,7 +8,7 @@ from omegaml.backends.keras import KerasBackend
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("keras", max='2'), "keras not available")
+@unittest.skipUnless(module_available("keras") or module_available("tensorflow.keras"), "keras not available")
 class KerasBackendTests(TestCase):
     def setUp(self):
         self.om = Omega()
@@ -83,3 +83,9 @@ class KerasBackendTests(TestCase):
         x_test = np.random.random((100, 20))
         result = om.runtime.model('keras-model').predict(x_test).get()
         self.assertEqual(result.shape, (100, 10))
+
+
+
+
+
+

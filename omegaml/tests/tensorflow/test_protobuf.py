@@ -9,7 +9,7 @@ from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
+@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
 class ProtobufDataBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         self.om = Omega()

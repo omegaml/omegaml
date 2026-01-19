@@ -1,5 +1,3 @@
-from packaging.version import Version
-
 try:
     import tensorflow as tf
 except ModuleNotFoundError:
@@ -12,18 +10,13 @@ else:
 
     # compatibility with previous tensorflow versions
     FN_MAP = {}
-    tf_version = Version(tf.__version__)
-    if tf_version < Version('2.0'):
+    if tf.__version__.startswith('1.'):
         FN_MAP['pandas_input_fn'] = getattr(tf.estimator.inputs, 'pandas_input_fn')
         FN_MAP['numpy_input_fn'] = getattr(tf.estimator.inputs, 'numpy_input_fn')
-        FN_MAP['convert_to_tensor'] = getattr(tf.compat.v1, 'convert_to_tensor')
-    elif tf_version < Version('2.6'):
+        FN_MAP['convert_to_tensor']  = getattr(tf.compat.v1, 'convert_to_tensor')
+    elif tf.__version__.startswith('2.'):
         FN_MAP['pandas_input_fn'] = getattr(tf.compat.v1.estimator.inputs, 'pandas_input_fn')
         FN_MAP['numpy_input_fn'] = getattr(tf.compat.v1.estimator.inputs, 'numpy_input_fn')
-        FN_MAP['convert_to_tensor'] = getattr(tf, 'convert_to_tensor')
-    else:
-        FN_MAP['pandas_input_fn'] = getattr(tf, 'convert_to_tensor')
-        FN_MAP['numpy_input_fn'] = getattr(tf, 'convert_to_tensor')
         FN_MAP['convert_to_tensor'] = getattr(tf, 'convert_to_tensor')
 
 

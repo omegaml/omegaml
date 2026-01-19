@@ -465,7 +465,7 @@ def load_framework_support(vars=globals()):
 
     if OMEGA_DISABLE_FRAMEWORKS:
         return
-    if tensorflow_available(max='2.5'):
+    if tensorflow_available():
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
@@ -475,7 +475,7 @@ def load_framework_support(vars=globals()):
     if module_available('openai'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
     #: keras backend
-    if keras_available(max='2.0'):
+    if keras_available():
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_KERAS'])
     #: sqlalchemy backend
     if module_available('sqlalchemy'):

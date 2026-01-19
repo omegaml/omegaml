@@ -11,8 +11,8 @@ install:
 	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
 	pip install --ignore-installed -U pip
 	pip install -U pytest tox tox-conda tox-run-before
-	[ -z "${RUNTESTS}" ] && (pip install gil && gil clone) || echo "env:RUNTESTS set, using packages from pypi only"
-	pip install ${PIPOPTS} --progress-bar off -r requirements.dev -e ".[${EXTRAS}]" "${PIPREQ}" --extra-index-url https://download.pytorch.org/whl/cpu
+	[ -z "${RUNTESTS}" ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "env:RUNTESTS set, using packages from pypi only"
+	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}" --extra-index-url https://download.pytorch.org/whl/cpu
 	(which R && scripts/runtime/setup-r.sh) || echo "R is not installed"
 	scripts/install-oras.sh || echo "oras is not installed"
 
@@ -146,7 +146,4 @@ server:
 
 server-sse:
 	honcho -f scripts/ssechat/Procfile start web server worker sse
-
-lint:
-	ruff check . --select=UP005,UP006 --fix
 

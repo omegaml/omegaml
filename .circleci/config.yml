@@ -73,7 +73,7 @@ jobs:
               make -e test
               conda deactivate
             }
-            dotest 3.12
+            dotest 3.11
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
