@@ -65,6 +65,13 @@
 
       <div class="wy-nav-content">
 
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../../release/0.18.0/index.html">release/0.18.0</a>.
+    
+</div>
+
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -172,7 +179,7 @@
 <span class="linenos"> 87</span><span class="sd">           for the file&#39;s name</span>
 <span class="linenos"> 88</span><span class="sd">        :param version: the version of the object (not supported)</span>
 <span class="linenos"> 89</span>
-<span class="linenos"> 90</span><span class="sd">        .. versionadded: NEXT</span>
+<span class="linenos"> 90</span><span class="sd">        .. versionadded: 0.18.0</span>
 <span class="linenos"> 91</span><span class="sd">            uri specifies a target filename to store the serialized model</span>
 <span class="linenos"> 92</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos"> 93</span>        <span class="c1"># support new backend architecture while keeping back compatibility</span>
@@ -188,7 +195,7 @@
 <span class="linenos">103</span><span class="sd">           for the file&#39;s name</span>
 <span class="linenos">104</span><span class="sd">        :param attributes: attributes for meta data</span>
 <span class="linenos">105</span>
-<span class="linenos">106</span><span class="sd">        .. versionadded: NEXT</span>
+<span class="linenos">106</span><span class="sd">        .. versionadded: 0.18.0</span>
 <span class="linenos">107</span><span class="sd">            local specifies a local filename to store the serialized model</span>
 <span class="linenos">108</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos">109</span>        <span class="c1"># support new backend architecture while keeping back compatibility</span>
@@ -212,7 +219,7 @@
 <span class="linenos">127</span><span class="sd">        Returns:</span>
 <span class="linenos">128</span><span class="sd">            tmpfn or absolute path of serialized file</span>
 <span class="linenos">129</span>
-<span class="linenos">130</span><span class="sd">        .. versionchanged:: NEXT</span>
+<span class="linenos">130</span><span class="sd">        .. versionchanged:: 0.18.0</span>
 <span class="linenos">131</span><span class="sd">            enable custom serializer</span>
 <span class="linenos">132</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos">133</span>        <span class="n">serializer</span> <span class="o">=</span> <span class="n">serializer</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">serializer</span><span class="p">,</span> <span class="s1">&#39;__func__&#39;</span><span class="p">)</span>  <span class="c1"># __func__ is the unbound method</span>
@@ -236,7 +243,7 @@
 <span class="linenos">151</span><span class="sd">        Returns:</span>
 <span class="linenos">152</span><span class="sd">            model instance</span>
 <span class="linenos">153</span>
-<span class="linenos">154</span><span class="sd">        .. versionchanged:: NEXT</span>
+<span class="linenos">154</span><span class="sd">        .. versionchanged:: 0.18.0</span>
 <span class="linenos">155</span><span class="sd">            enable custom loader</span>
 <span class="linenos">156</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos">157</span>        <span class="n">loader</span> <span class="o">=</span> <span class="n">loader</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="p">,</span> <span class="s1">&#39;__func__&#39;</span><span class="p">)</span>  <span class="c1"># __func__ is the unbound method</span>
@@ -495,6 +502,7 @@
       <dd><a href="../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
       <dd><a href="../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../../release/0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../release/0.18.0/index.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
       <dd><a href="../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

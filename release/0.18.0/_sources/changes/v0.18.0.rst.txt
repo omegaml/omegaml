@@ -1,0 +1,89 @@
+Release notes release/0.18.0
+============================
+
+Released 2025-12-16
+
+New features
+------------
+
+-  feature: generative ai lab extension to the server ui by @miraculixx
+   in https://github.com/omegaml/omegaml/pull/502
+-  feat: enable generic generic model backend by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/533
+-  feat: enable rawfiles and models stored to arbitry remote uri by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/534
+-  feat: add dynamic backends implemented as virtualobj helper functions
+   by @miraculixx in
+-  enable documents tagging by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/516
+-  Enable oci export by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/525
+-  feat: enable pytorch model saving using implied helpers by @omegaml
+   in https://github.com/omegaml/omegaml/pull/539
+-  use tracking as the model conversation log by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/499
+-  enable usage tracking on calls to chat.completions provider endpoint
+   by @miraculixx in https://github.com/omegaml/omegaml/pull/520
+-  UI create document index by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/510
+-  UI experiments trace by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/514
+-  Enable async event server by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/519
+
+What else has changed
+---------------------
+
+-  Improve OpenAI compatibility by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/532
+-  Improve OpenAI api compability by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/512
+-  upgrade dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/528
+-  chore: refactor basic Python and Pandas data types handling by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/527
+-  chore: upgrade plotly.js by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/497
+-  release build 0.17.0 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/487
+-  enable model uri to be specified with {PLACEHOLDERS} by @miraculixx
+   in
+-  refactor: move django specific code to commercial edition by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/543
+
+Bugs fixed
+----------
+
+-  fix: setuptools.sandbox is no longer available by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/500
+-  handle len() on empty MDataFrame gracefully by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/507
+-  chore: resolve genai backend tech debt by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/501
+-  fix: readme links by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/508
+   https://github.com/omegaml/omegaml/pull/521
+-  fix usage tracking for streaming responses by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/530
+-  fix display of Celery “connected to” message by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/531
+   https://github.com/omegaml/omegaml/pull/529
+-  fix envinstall fails in weird ways by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/535
+-  chore: fix intermittent build issues by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/540
+-  fix: end streaming on timeout by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/537
+-  fix: cli output uses default logger by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/538
+-  fix: dashboard.jobs results tab fails to show in case of invalid
+   results by @miraculixx in https://github.com/omegaml/omegaml/pull/541
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.17.0…release/0.18-rc2
+
+Chores
+~~~~~~
+
+-  chore: various updates to finalize release 0.18
+   `b56dedc <https://github.com/omegaml/omegaml/commit/b56dedc>`__

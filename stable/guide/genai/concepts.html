@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Concepts in omega-ml Generative AI &mdash; omega-ml 0.18.0-rc2 documentation</title>
+  <title>Concepts in omega-ml Generative AI &mdash; omega-ml 0.18.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -58,6 +58,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#tools">Tools</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#generative-ai-runtime-and-rest-services">Generative AI runtime and REST services</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#multi-model-repository">Multi-model Repository</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#oci-repository-model-deployments">OCI Repository Model Deployments</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitoring">Monitoring</a></li>
 </ul>
 </li>
@@ -122,7 +123,8 @@ allowing users to mix and match according to requirements.</p>
 <li><p><a class="reference internal" href="#tools" id="id6">Tools</a></p></li>
 <li><p><a class="reference internal" href="#generative-ai-runtime-and-rest-services" id="id7">Generative AI runtime and REST services</a></p></li>
 <li><p><a class="reference internal" href="#multi-model-repository" id="id8">Multi-model Repository</a></p></li>
-<li><p><a class="reference internal" href="#monitoring" id="id9">Monitoring</a></p></li>
+<li><p><a class="reference internal" href="#oci-repository-model-deployments" id="id9">OCI Repository Model Deployments</a></p></li>
+<li><p><a class="reference internal" href="#monitoring" id="id10">Monitoring</a></p></li>
 </ul>
 </nav>
 <section id="generative-ai-model">
@@ -208,9 +210,9 @@ stored in the document storage, allowing for efficient retrieval and comparison 
 to store and retrieve the history of a conversation with a model. This is useful for
 maintaining context and providing a more coherent experience for the user.</p>
 <p>In omega-ml, conversation history is automatically stored in its database, and and can be
-retrieved and used to inform the model’s responses. This is particularly useful for chatbots and other
-conversational agents, where maintaining context is crucial for providing relevant responses
-across a longer conversation.</p>
+retrieved and used to inform the model’s responses. This is particularly useful for chatbots
+and other conversational agents, where maintaining context is crucial for providing relevant
+responses across a longer conversation.</p>
 </section>
 <section id="tools">
 <h2><a class="toc-backref" href="#id6" role="doc-backlink">Tools</a><a class="headerlink" href="#tools" title="Link to this heading">¶</a></h2>
@@ -243,8 +245,22 @@ provide guidances on human resources policies.</p>
 and then use these models in different workflows. This allows users to easily switch
 between different models and pipelines, and to reuse them in different workflows.</p>
 </section>
+<section id="oci-repository-model-deployments">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">OCI Repository Model Deployments</a><a class="headerlink" href="#oci-repository-model-deployments" title="Link to this heading">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 0.18.0.</span></p>
+</div>
+<p>AI models tend to be several GB in size, requiring specialized storage. OCI repositories, also
+known as container/docker image repositories, are a perfect match. They have been built to
+support arbitrary storage sizes efficiently and serve as a backbone for deployment to clusters.</p>
+<p>omega-ml’s model store provides transparent support for storing any model into a OCI repository.
+This enables AI teams to use the same simplified approach to deploying customized AI models that
+omega-ml provides for ML models, namely by saving the model to the omega-ml model store and using
+the omega-ml runtime for training and inference. omega-ml transparently handles the storage,
+distribution and runtime loading using a registered OCI repository.</p>
+</section>
 <section id="monitoring">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">Monitoring</a><a class="headerlink" href="#monitoring" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Monitoring</a><a class="headerlink" href="#monitoring" title="Link to this heading">¶</a></h2>
 <p>omega-ml provides a built-in model tracking and monitoring system. This works the same
 way for all models, including generative AI models. The tracking system automatically logs
 all interactions with a model, including the input, output, and any metadata associated with the
@@ -308,6 +324,7 @@ interaction. All interactions are stored to the model repository for later query
       <dd><a href="../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
       <dd><a href="../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../release/0.17.0/guide/genai/concepts.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../release/0.18.0/guide/genai/concepts.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
       <dd><a href="../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

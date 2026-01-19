@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated Drift Monitoring &mdash; omega-ml 0.18.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Understanding the Tracking and Monitoring System" href="basics.html" />
+    <link rel="prev" title="Model Drift" href="modeldrift.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">Classic ML</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../tutorial.html">Tutorial for classic ML</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../datasets/index.html"> Loading datasets for training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../index.html"> Training models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../metrics.html"> Evaluating models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../modelstore.html"> Deploying models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../businessmodels/index.html"> Adding business logic to models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../clusters/restapi.html"> Serving models for real-time predictions</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html"> Tracking and monitoring models</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html">Working with models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../datasets/index.html">Working with datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clusters/index.html">Deployment and Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../../tutorial.html">Tutorial for classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Working with models</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Monitoring model and data drift</a></li>
+      <li class="breadcrumb-item active">Automated Drift Monitoring</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/guide/classicml/models/tracking/automonitoring.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automated-drift-monitoring">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Automated Drift Monitoring</a><a class="headerlink" href="#automated-drift-monitoring" title="Link to this heading">¶</a></h1>
+<p>In a production scenario where models are deployed and serving predictions, it is important to monitor the
+model’s performance and the data it is receiving. omega-ml provides a way to automate this monitoring process
+by attaching a DriftMonitor object to a model, and scheduling it to run at regular intervals.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#automated-drift-monitoring" id="id1">Automated Drift Monitoring</a></p>
+<ul>
+<li><p><a class="reference internal" href="#setting-up-a-model" id="id2">Setting up a model</a></p></li>
+<li><p><a class="reference internal" href="#attaching-a-monitor-to-a-model" id="id3">Attaching a monitor to a model</a></p></li>
+<li><p><a class="reference internal" href="#creating-a-baseline-snapshot" id="id4">Creating a baseline snapshot</a></p></li>
+<li><p><a class="reference internal" href="#run-predictions" id="id5">Run predictions</a></p></li>
+<li><p><a class="reference internal" href="#examine-model-drift" id="id6">Examine model drift</a></p></li>
+<li><p><a class="reference internal" href="#how-model-predictions-are-auto-tracked" id="id7">How model predictions are auto-tracked</a></p></li>
+<li><p><a class="reference internal" href="#manually-capture-a-model-s-predictions" id="id8">Manually capture a model’s predictions</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="setting-up-a-model">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Setting up a model</a><a class="headerlink" href="#setting-up-a-model" title="Link to this heading">¶</a></h2>
+<p>Whether a model is monitored automatically or manually, it must first be put into the omega-ml model store.
+This is the same as for any other model. In this example, we use a scikit-learn LinearRegression model to predict
+housing prices, using the California Housing dataset provided by scikit-learn.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a basic model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_california_housing</span>
+
+<span class="n">california</span> <span class="o">=</span> <span class="n">fetch_california_housing</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">reg</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s1">&#39;california&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="attaching-a-monitor-to-a-model">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Attaching a monitor to a model</a><a class="headerlink" href="#attaching-a-monitor-to-a-model" title="Link to this heading">¶</a></h2>
+<p>Once a model is stored, we can attach a DriftMonitor to the model, and schedule it to run daily.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup the drift monitor</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="s1">&#39;daily&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The DriftMonitor will take snapshots of the input and target features of the model, and compare them to a baseline
+snapshot. If the distribution of the features has changed significantly, the DriftMonitor will raise an alert.</p>
+<p>Upon calling <cite>exp.track(…, monitor=True)</cite>, a new job is created that will run the DriftMonitor at the specified
+schedule. The job will run the DriftMonitor’s <cite>capture()</cite> method, which takes a snapshot of the model’s input and
+target features, and compares them to the baseline snapshot. If drift is detected, the DriftMonitor will raise an
+alert.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The monitoring job is created as follows and stored in <cite>om.jobs</cite> and named as <cite>monitors/{experiment}/{model}</cite>.
+In this case, the job is named <cite>monitors/housing/california</cite>. The job can be started, stopped, and monitored like
+any other job. The job’s code can be changed or extended as needed, for example to add additional steps or to
+send send a custom message to a third-party application.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># configure</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+<span class="c1"># -- the name of the experiment</span>
+<span class="n">experiment</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{experiment}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the name of the model</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{meta.name}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the name of the monitoring provider</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{provider}</span><span class="s1">&#39;</span>
+<span class="c1"># -- the alert rules</span>
+<span class="n">alerts</span> <span class="o">=</span> <span class="p">{</span><span class="n">alerts</span><span class="p">}</span>
+<span class="c1"># snapshot recent state and capture drift</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">,</span> <span class="n">ignore_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">alerts</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-a-baseline-snapshot">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Creating a baseline snapshot</a><a class="headerlink" href="#creating-a-baseline-snapshot" title="Link to this heading">¶</a></h2>
+<p>First, let’s create a baseline snapshot of the model’s input and target features.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s say the model has been running for a few days, and we want to check if there is a concept or model
+drift, that is P(Y|X) has changed.</p>
+</section>
+<section id="run-predictions">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Run predictions</a><a class="headerlink" href="#run-predictions" title="Link to this heading">¶</a></h2>
+<p>Now, let’s simulate a change in the target predictions, relative to the input features. We can do this by
+simulating a number of predictions, however using only a fraction of the input.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+<span class="n">yhat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Since we have defined the experiment to be autotracking, the <cite>predict()</cite> method’s input (X) and output (Y)
+are automatically logged. To investigate, we can check the experiment’s data as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_autotrack_0.png" src="../../../../_images/mon_autotrack_0.png" />
+</section>
+<section id="examine-model-drift">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Examine model drift</a><a class="headerlink" href="#examine-model-drift" title="Link to this heading">¶</a></h2>
+<p>The DriftMonitor will regularily take snapshots of all predictions the current snapshot
+to the baseline snapshot, and log an alert. For illustration, let’s do this manually.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span> <span class="c1"># take a snapshot of the most recent predictions</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;drift&#39;</span><span class="p">,</span> <span class="s1">&#39;alert&#39;</span><span class="p">],</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_autotrack_1.png" src="../../../../_images/mon_autotrack_1.png" />
+<p>The alert indicates that the target predictions have changed significantly relative to the input features.
+To see this, we can get back the alert’s data and plot the drift statistics. These are the same DriftStatistics
+that <cite>mon.compare()</cite> returns.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="s1">&#39;alert&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_autotrack_2.png" src="../../../../_images/mon_autotrack_2.png" />
+</section>
+<section id="how-model-predictions-are-auto-tracked">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">How model predictions are auto-tracked</a><a class="headerlink" href="#how-model-predictions-are-auto-tracked" title="Link to this heading">¶</a></h2>
+<p>When a model is autotracked, omega-ml’s tracking system will automatically log the input (X) and output (Y) of
+the model’s <cite>predict()</cite> method. This is done by intercepting the model’s <cite>predict()</cite> method and logging the data
+to the attached experiment. The requirement is that the <cite>predict()</cite> method is called via omega-ml’s runtime,
+i.e. either using the REST API or by calling <cite>om.runtime.model(‘california’).predict(X)</cite>.</p>
+<p>For example, when we call <cite>model.predict(X)</cite>, the input (X) and output (Y) are logged to the experiment’s data
+store. The data is logged with the event name <cite>predict</cite> and the run number incremented by one.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+<span class="n">yhat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../../_images/mon_autotrack_0.png" src="../../../../_images/mon_autotrack_0.png" />
+<p>Upon calling <cite>mon.snapshot()</cite>, the DriftMonitor will take a snapshot of the most recent predictions by querying
+the tracking system for the most recent data with the event name <cite>predict</cite>. The most recent data is assumed
+to be all data logged since the last snapshot was taken. Alternatively, we can use the <cite>since=</cite> parameter to
+specify a different time range.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()</span> <span class="c1"># take a snapshot of the most recent predictions, this is the same as specifying `since=&#39;last&#39;`</span>
+<span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">&#39;&lt;datetime&gt;`) # take a snapshot of the predictions since a specific datetime</span>
+</pre></div>
+</div>
+</section>
+<section id="manually-capture-a-model-s-predictions">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Manually capture a model’s predictions</a><a class="headerlink" href="#manually-capture-a-model-s-predictions" title="Link to this heading">¶</a></h2>
+<p>In cases where we want to manually capture a model’s predictions, we can do so by calling the <cite>snapshot()</cite> method
+and specifying the input (X) and output (Y) data. In this case, instead of querying the tracking system for the
+most recent data, we provide the data directly.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">california_noisy</span> <span class="o">=</span> <span class="n">california</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california_noisy</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>By subsequently calling the <cite>capture()</cite> method, this latest snapshot is compared to the previous one, and any drift
+event and alert is recorded the same way as the automatic monitoring job would. This is useful when we want to take
+a snapshot of a specific set of predictions, e.g. to simulate a change in the model’s predictions for testing purpose.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modeldrift.html" class="btn btn-neutral float-left" title="Model Drift" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="basics.html" class="btn btn-neutral float-right" title="Understanding the Tracking and Monitoring System" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.18.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../../../latest/guide/classicml/models/tracking/automonitoring.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../../../0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../../../../0.17.0/guide/classicml/models/tracking/automonitoring.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="automonitoring.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
+      <dd><a href="../../../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../../../stable/guide/classicml/models/tracking/automonitoring.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../../master/guide/classicml/models/tracking/automonitoring.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>omegaml.store.base &mdash; omega-ml 0.18.0-rc2 documentation</title>
+  <title>omegaml.store.base &mdash; omega-ml 0.18.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -178,7 +178,7 @@
 <span class="linenos"> 96</span><span class="k">class</span><span class="w"> </span><span class="nc">OmegaStore</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="linenos"> 97</span><span class="w">    </span><span class="sd">&quot;&quot;&quot; The storage backend for models and data</span>
 <span class="linenos"> 98</span>
-<span class="linenos"> 99</span><span class="sd">    .. versionchanged:: NEXT</span>
+<span class="linenos"> 99</span><span class="sd">    .. versionchanged:: 0.18.0</span>
 <span class="linenos">100</span><span class="sd">        refactored all methods handling Python and Pandas datatypes to omegaml.backends.coreobjects.CoreObjectsBackend</span>
 <span class="linenos">101</span><span class="sd">    &quot;&quot;&quot;</span>
 <span class="linenos">102</span>
@@ -468,10 +468,10 @@
 <span class="linenos">372</span><span class="sd">        :param index: (int) the insert position, defaults to -1, which means</span>
 <span class="linenos">373</span><span class="sd">          to append</span>
 <span class="linenos">374</span>
-<span class="linenos">375</span><span class="sd">        .. versionchanged:: NEXT</span>
+<span class="linenos">375</span><span class="sd">        .. versionchanged:: 0.18.0</span>
 <span class="linenos">376</span><span class="sd">            added index to have more control over backend evaluation by .get_backend_byobj()</span>
 <span class="linenos">377</span>
-<span class="linenos">378</span><span class="sd">        .. versionchanged:: NEXT</span>
+<span class="linenos">378</span><span class="sd">        .. versionchanged:: 0.18.0</span>
 <span class="linenos">379</span><span class="sd">            backends can specify cls.KIND_EXT to register additional kinds</span>
 <span class="linenos">380</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos">381</span>        <span class="n">backend_cls</span> <span class="o">=</span> <span class="n">load_class</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
@@ -680,7 +680,7 @@
 <span class="linenos">563</span><span class="sd">        Returns:</span>
 <span class="linenos">564</span><span class="sd">            the first backend that supports the given parameters or None</span>
 <span class="linenos">565</span>
-<span class="linenos">566</span><span class="sd">        .. versionchanged:: NEXT</span>
+<span class="linenos">566</span><span class="sd">        .. versionchanged:: 0.18.0</span>
 <span class="linenos">567</span><span class="sd">            backends are tested in order of MDREGISTRY.KINDS, see .register_backend()</span>
 <span class="linenos">568</span><span class="sd">        &quot;&quot;&quot;</span>
 <span class="linenos">569</span>        <span class="n">model_store</span> <span class="o">=</span> <span class="n">model_store</span> <span class="ow">or</span> <span class="bp">self</span>
@@ -967,6 +967,7 @@
       <dd><a href="../../../../release/0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
       <dd><a href="../../../../release/0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../../release/0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../release/0.18.0/index.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
       <dd><a href="../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>

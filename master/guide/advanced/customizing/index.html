@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customizing omega-ml &mdash; omega-ml 0.18.0-rc2 documentation</title>
+  <title>Customizing omega-ml &mdash; omega-ml 0.18.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -14,14 +14,14 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d809baae"></script>
+      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Implementing a Custom Backend" href="custombackends.html" />
+    <link rel="next" title="Object helpers" href="objhelper.html" />
     <link rel="prev" title="Integrate with Gitlab CI/CD" href="../integration/gitlab.html" /> 
 </head>
 
@@ -57,6 +57,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../environments/index.html">Working with clusters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../integration/index.html">Integration</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Customizing omega-ml</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="objhelper.html">Object helpers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="custombackends.html">Implementing a Custom Backend</a></li>
 </ul>
 </li>
@@ -82,6 +83,13 @@
 
       <div class="wy-nav-content">
 
+<div class="version-warning-banner">
+    
+    You're reading the documentation for a development version.
+    For the latest released version, please have a look at <a href="../../../../release/0.18.0/guide/advanced/customizing/index.html">release/0.18.0</a>.
+    
+</div>
+
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -103,6 +111,10 @@
 <h1>Customizing omega-ml<a class="headerlink" href="#customizing-omega-ml" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="objhelper.html">Object helpers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="objhelper.html#a-basic-object-helper">A basic object helper</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="custombackends.html">Implementing a Custom Backend</a></li>
 </ul>
 </div>
@@ -113,7 +125,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../integration/gitlab.html" class="btn btn-neutral float-left" title="Integrate with Gitlab CI/CD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="custombackends.html" class="btn btn-neutral float-right" title="Implementing a Custom Backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="objhelper.html" class="btn btn-neutral float-right" title="Object helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -164,6 +176,7 @@
       <dd><a href="../../../../release/0.16.3/guide/advanced/customizing/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
       <dd><a href="../../../../release/0.16.4/guide/advanced/customizing/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
       <dd><a href="../../../../release/0.17.0/guide/advanced/customizing/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../../release/0.18.0/guide/advanced/customizing/index.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
       <dd><a href="../../../../release/0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
       <dd><a href="../../../../release/0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
       <dd><a href="../../../../release/0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
