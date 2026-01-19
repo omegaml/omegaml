@@ -90,8 +90,8 @@ if [ ! -z $tags ]; then
     behave_options="-t $tags"
 fi
 
-echo "Running selenium grid locally"
-docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network $docker_resources -e SE_START_VNC=false --name selenium --network-alias selenium selenium/standalone-chrome
+echo "Running selenium grid locally. View at http://localhost:4444, debug at  http://localhost:7900/?autoconnect=1&resize=scale&password=secret"
+docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network $docker_resources -e SE_START_VNC=true --name selenium --network-alias selenium selenium/standalone-chrome
 countdown 10
 echo "Running the livetest image using port: $chrome_debug_port resources: $docker_resources network: $docker_network image: $docker_image env: $docker_env features: $behave_features $LIVETEST_BEHAVE_EXTRA_OPTS" debug: $BEHAVE_DEBUG
 mkdir -p ~/.omegaml

@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 
+from os.path import basename
+from pathlib import Path
+
 import logging
 import os
 import shutil
 import sys
-from os.path import basename
-from pathlib import Path
-
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
@@ -473,6 +473,10 @@ def load_framework_support(vars=globals()):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
     #: openapi backend
     if module_available('openai'):
+        if os.environ.get('ORT_LOGGING_LEVEL', 'ERROR') in ('3', '4', 'ERROR', 'test', 'FATAL'):
+            # respect ORT_LOGGING_LEVEL, due to https://github.com/microsoft/onnxruntime/issues/27092
+            from omegaml.util import silence
+            with silence(): import onnxruntime as ort  # noqa
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
     #: keras backend
     if keras_available():

@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 
+from contextlib import contextmanager
+from importlib import import_module
+from pathlib import Path
+
 import json
 import logging
 import os
@@ -7,19 +11,16 @@ import sys
 import tempfile
 import threading
 import uuid
+import validators
 import warnings
 from base64 import b64encode
+from bson import ObjectId
 from copy import deepcopy
 from datetime import datetime, date, timezone
 from hashlib import sha256
-from importlib import import_module
 from importlib.util import find_spec
-from pathlib import Path
 from shutil import rmtree
 from typing import Iterator, Any
-
-import validators
-from bson import ObjectId
 
 try:
     import urlparse
@@ -829,7 +830,6 @@ def base_loader(_base_config):
 
 from io import StringIO
 
-from contextlib import contextmanager
 import re
 
 
@@ -1415,3 +1415,29 @@ def find_instances(cls):
 
 def raise_(e):
     raise e
+
+
+# due to https://github.com/microsoft/onnxruntime/issues/27092
+# avoid W:onnxruntime:Default, device_discovery.cc:164 DiscoverDevicesForPlatform] GPU device discovery
+
+
+@contextmanager
+def silence():
+    # Save the original file descriptors and stream objects
+    original_stderr_fd = os.dup(2)  # duplicate FD 2 (stderr)
+    original_stderr = sys.stderr  # keep the original TextIOWrapper
+    # Redirect FD 2 to /dev/null
+    devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    os.dup2(devnull_fd, 2)
+    os.close(devnull_fd)  # we no longer need this FD
+    # replace the Python-level stream (so prints to sys.stderr are also silenced)
+    sys.stderr = open(os.devnull, 'w')
+    try:
+        yield
+    finally:
+        # Restore the original OS‑level descriptor
+        os.dup2(original_stderr_fd, 2)
+        os.close(original_stderr_fd)
+        # Restore the original Python stream object
+        sys.stderr.close()  # close the temporary /dev/null file
+        sys.stderr = original_stderr

@@ -124,12 +124,14 @@ jobs:
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
             # TODO consider using https://cibuildwheel.readthedocs.io or https://github.com/getsentry/milksnake or tox
             # PYTHON 3.12 is pending on https://github.com/jupyter/docker-stacks/pull/2072
-            for PYVER in 3.10 3.11; do
+            for PYVER in 3.11 3.12; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
               conda activate omenv$PYVER
-              pip install -e .[dev]
+              # install minimum for tests, remove ai dependencies due to gpu issues raised
+              pip install -e .[dev] --extra-index-url https://download.pytorch.org/whl/cpu
+              pip uninstall -y openai markitdown onnxruntime 
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
               # set livetest options, see Makefile:livetest
@@ -170,7 +172,7 @@ jobs:
           command: |
             # setup conda env
             source miniforge3/etc/profile.d/conda.sh
-            conda create -q -y -n docs python=3.10
+            conda create -q -y -n docs python=3.11
             conda activate docs
             # install sources, start env
             cd omegaml-ce
