@@ -11,7 +11,7 @@ tables = ['tables>=3.7']
 graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
 dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
-jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']
+jupyter_deps = ['jupyterlab<4.5.3', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
 mlflow_deps = ['mlflow-skinny>=1.2']
 tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
@@ -53,7 +53,7 @@ install_deps = [
     'jupyter-client>=4.1.1',
     'ipython>=8.0',  # required for cli shell
     'mongoengine>=0.29',
-    'pandas>2',
+    'pandas>2,<3',  # due to incompatible NDFrame replacing DataFrame
     'numpy>=1.16.4',
     'scipy>=0.17.0',
     'scikit-learn>=1.5',

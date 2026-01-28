@@ -71,9 +71,9 @@ release-docker:
 	: "docker push image sto dockerhub"
 	scripts/livetest.sh --build --tag ${VERSION}
 	# push all images for this version
-	docker images | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | xargs -L1 docker push
+	docker images --format table | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | xargs -L1 docker push
 	# tag and push latest
-	docker images | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | tail -n1 | xargs -I{} docker tag {} omegaml/omegaml:latest
+	docker images --format table | grep -E ".*omegaml/omegaml.*${VERSION}" | xargs -L1 | cut -f 1-2 -d ' ' | tr ' ' : | tail -n1 | xargs -I{} docker tag {} omegaml/omegaml:latest
 	docker push omegaml/omegaml:latest
 	# run livetest to verify the pushed images actually work
 	sleep 5

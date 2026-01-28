@@ -1,5 +1,5 @@
-ARG pyver=3.10
-FROM jupyter/datascience-notebook:python-${pyver}
+ARG pyver=3.11
+FROM quay.io/jupyter/datascience-notebook:python-${pyver}
 ARG  pypi="https://pypi.org/simple"
 ENV  pypi=$pypi
 USER root

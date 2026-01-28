@@ -1,7 +1,6 @@
 from behave import when, then
-from time import sleep
-
 from omegaml.tests.features.util import Notebook, jburl
+from time import sleep
 
 
 @when(u'we open jupyter')
@@ -30,8 +29,8 @@ def create_notebook(ctx):
     """.strip()
     nb.current_cell_exec(code)
     sleep(1)
-    assert nb.current_cell_output() == 'hello'
     nb.save_notebook()
+    assert nb.current_cell_output() == 'hello'
     assert not br.is_text_present('error while saving')
 
 
@@ -62,8 +61,11 @@ def list_datasets(ctx):
     om.datasets.put(['sample'], 'sample', append=False)
     om.datasets.list('sample')
     """.strip()
+    # execute twice to avoid loading.... messages in output
     nb.new_cell_exec(code)
-    sleep(10)
+    sleep(60)
+    nb.current_cell_exec(code)
+    nb.save_notebook()
     current = nb.current_cell_output()
     expected = "['sample']"
     assert expected in current, "Expected {expected}, got {current}".format(**locals())

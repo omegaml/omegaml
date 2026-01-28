@@ -8,3 +8,4 @@ description = "An open source DataOps, MLOps platform for humans"
 dynamic = ["version", "readme", "dependencies", "scripts", "license", "authors", "classifiers",
            "urls", "optional-dependencies" ]
 
+

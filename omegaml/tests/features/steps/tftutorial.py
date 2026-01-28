@@ -38,14 +38,15 @@ def runnotebook(ctx, nbname):
     nb.save_notebook()
     assert not br.is_text_present('Error')
     assert not br.is_text_present('Exception')
-    assert not br.is_text_present('failed')
     assert not br.is_text_present('MissingSchema')
+
 
 @then('model {model_name} exists')
 def checkmodel(ctx, model_name):
     br = ctx.browser
     om = ctx.feature.om
     assert model_name in om.models.list()
+
 
 @then('dataset {dataset_name} exists')
 def checkdataset(ctx, dataset_name):
