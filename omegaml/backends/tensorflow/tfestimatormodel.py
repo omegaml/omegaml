@@ -1,12 +1,12 @@
 # import glob
 import glob
+import logging
 import os
 import tempfile
 from inspect import isfunction
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import dill
-import logging
 
 from omegaml.backends.basemodel import BaseModelBackend
 
@@ -25,6 +25,12 @@ class TFEstimatorModel(object):
         estimator.predict(input_fn=input_fn)
 
         The estimator_fn returns a tf.estimator.Estimator or subclass.
+
+    .. versionchanged:: 0.18.0
+        Only supported for tensorflow <= 2.15 and Python <= 3.11
+
+    .. deprecated:: 0.18.0
+        Use an object helper or a serializer/loader combination instead.
     """
 
     def __init__(self, estimator_fn, model=None, input_fn=None, model_dir=None, v1_compat=False):
@@ -209,7 +215,7 @@ class TFEstimatorModelBackend(BaseModelBackend):
         return meta
 
     def predict(
-          self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         import pandas as pd
         model = self.model_store.get(modelname)
         X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
@@ -220,8 +226,8 @@ class TFEstimatorModelBackend(BaseModelBackend):
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def score(
-          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
+            **kwargs):
         import pandas as pd
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)

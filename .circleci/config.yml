@@ -186,8 +186,9 @@ jobs:
             # make docs
             cd docs
             pip install -r requirements.txt
+            make marknext changes
             [ "$CIRCLE_BRANCH" = "master" ] && make stable || make latest 
-            make multihtml publish
+            make publish
             git push --force --tags origin gh-pages
 workflows:
   version: 2
