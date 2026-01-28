@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windows &mdash; omega-ml 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=56dcb7b8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nb/index.html">Tutorial Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moreinfo.html">More information</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../0.18.0/admin/windows.html">release/0.18.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Windows</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/admin/windows.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="windows">
+<h1>Windows<a class="headerlink" href="#windows" title="Link to this heading">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Should use WSL</p>
+</div>
+<p>working as a client is SUPPORTED
+runtime worker is not NOT OFFICIALLY SUPPORTED on windows due to celery not supporting windows since v4.x
+(however it works, with limits: no concurrency)</p>
+<p># python 3.9
+$ pip install “celery &lt; 5”</p>
+<section id="celery-worker">
+<h2>celery worker<a class="headerlink" href="#celery-worker" title="Link to this heading">¶</a></h2>
+<p>source of issue: <a class="reference external" href="https://www.distributedpython.com/2018/08/21/celery-4-windows/">https://www.distributedpython.com/2018/08/21/celery-4-windows/</a></p>
+<p># using this, prefork should work
+set FORKED_BY_MULTIPROCESSING=1</p>
+<p># it prefork does not work, use –pool solo
+$ celery worker –pool solo -A omegaml.celeryapp -Q win -debuglevel=DEBUG -E</p>
+<p>Pool solo means that there is only 1 worker process, thus no parallel processing.
+You may, however, start multiple solo processes which should give you parallel
+processing nevertheless.</p>
+</section>
+<section id="celery-r-worker">
+<h2>celery R worker<a class="headerlink" href="#celery-r-worker" title="Link to this heading">¶</a></h2>
+<p>R&gt; library(reticulate)
+R&gt; om &lt;- import(“omegaml”)
+R&gt; om$runtimes$rsystem$load()
+R&gt; om$runtimes$rsystem$start_worker(om, queue = “win -E –pool solo”)</p>
+<p>In Windows, R workers support pool solo only.</p>
+</section>
+<section id="setup-ipykernel">
+<h2>setup ipykernel<a class="headerlink" href="#setup-ipykernel" title="Link to this heading">¶</a></h2>
+<p>python -m ipykernel install –name ompython3 –env=omega</p>
+</section>
+<section id="install-r">
+<h2>install r<a class="headerlink" href="#install-r" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://www.biostars.org/p/498049/">https://www.biostars.org/p/498049/</a></p>
+<p>conda config –add channels conda-forge
+conda config –set channel_priority strict
+conda install -c conda-forge r-base</p>
+<p>better: use miniforge and r-essentials</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.15.5
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/admin/windows.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/admin/windows.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../0.15.3/admin/windows.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="windows.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../0.16.0/admin/windows.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../0.16.1/admin/windows.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../0.16.2/admin/windows.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../0.16.3/admin/windows.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/admin/windows.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../0.17.0/admin/windows.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../0.18.0/admin/windows.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
+      <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/admin/windows.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/admin/windows.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,687 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The omegam-ml REST API &mdash; omega-ml 0.17.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Task Automation" href="../pipelines/index.html" />
+    <link rel="prev" title="Understanding the Tracking and Monitoring System" href="../classicml/models/tracking/basics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../genai/index.html">Generative AI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../classicml/index.html">Classic ML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipelines/index.html">Task Automation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Deployment and Operations</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="intro.html">What is the runtime?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mlops.html">Using the runtime for MLOps</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">The omegam-ml REST API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#starting-the-rest-api">Starting the REST API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#api-reference">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#api-semantics">API Semantics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#working-with-data-rest-api">Working with data (REST API)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#working-with-models-rest-api">Working with models (REST API)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#working-with-jobs-rest-api">Working with jobs (REST API)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="logging.html">Logging runtime execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="monitoring.html">Monitoring the runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/index.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/index.html">Advanced features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../admin/index.html">Deploying omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devguide/index.html">Extending omega-ml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes/index.html">Changes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../../0.18.0/guide/clusters/restapi.html">release/0.18.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="../classicml/index.html">Classic ML</a></li>
+          <li class="breadcrumb-item"><a href="../classicml/tutorial.html">Tutorial for classic ML</a></li>
+      <li class="breadcrumb-item active">The omegam-ml REST API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/guide/clusters/restapi.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-omegam-ml-rest-api">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">The omegam-ml REST API</a><a class="headerlink" href="#the-omegam-ml-rest-api" title="Link to this heading">¶</a></h1>
+<p>The REST API provides a direct interface to models and datasets from any
+connected client. Unlike the Python API, the client does not need access
+to either MongoDB or RabbitMQ to make use of omegaml, nor does the client
+need to use the Python language. Use the REST API to interface from any
+third-party system to omegaml.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-omegam-ml-rest-api" id="id1">The omegam-ml REST API</a></p>
+<ul>
+<li><p><a class="reference internal" href="#starting-the-rest-api" id="id2">Starting the REST API</a></p></li>
+<li><p><a class="reference internal" href="#api-reference" id="id3">API Reference</a></p></li>
+<li><p><a class="reference internal" href="#api-semantics" id="id4">API Semantics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#resources" id="id5">Resources</a></p></li>
+<li><p><a class="reference internal" href="#methods-and-responses" id="id6">Methods and Responses</a></p></li>
+<li><p><a class="reference internal" href="#asynchronous-api-execution" id="id7">Asynchronous API execution</a></p></li>
+<li><p><a class="reference internal" href="#authentication-and-authorization" id="id8">Authentication and  Authorization</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#working-with-data-rest-api" id="id9">Working with data (REST API)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#listing-datasets" id="id10">Listing datasets</a></p></li>
+<li><p><a class="reference internal" href="#reading-data" id="id11">Reading data</a></p></li>
+<li><p><a class="reference internal" href="#writing-data" id="id12">Writing data</a></p></li>
+<li><p><a class="reference internal" href="#transform-a-dataframe-to-api-format" id="id13">Transform a DataFrame to API format</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#working-with-models-rest-api" id="id14">Working with models (REST API)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#create-a-model" id="id15">Create a model</a></p></li>
+<li><p><a class="reference internal" href="#fit-a-model" id="id16">Fit a model</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#working-with-jobs-rest-api" id="id17">Working with jobs (REST API)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#listing-jobs" id="id18">Listing jobs</a></p></li>
+<li><p><a class="reference internal" href="#running-a-job" id="id19">Running a job</a></p></li>
+<li><p><a class="reference internal" href="#getting-job-results" id="id20">Getting job results</a></p></li>
+<li><p><a class="reference internal" href="#getting-a-job-report" id="id21">Getting a job report</a></p></li>
+<li><p><a class="reference internal" href="#getting-information-on-a-job" id="id22">Getting information on a job</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="starting-the-rest-api">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Starting the REST API</a><a class="headerlink" href="#starting-the-rest-api" title="Link to this heading">¶</a></h2>
+<p id="gunicorn">The REST API is started by the following command. It starts a <a href="#id23"><span class="problematic" id="id24">`Flask`_</span></a>
+application that provides endpoints for datasets, models, scripts and jobs.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve
+</pre></div>
+</div>
+<p>Access to endpoints can be selectively restricted by specifing <em>rules</em> as
+regular expressions:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># allow all datasets, models, scripts, jobs</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;.*/.*/.*&quot;</span>
+
+<span class="c1"># allow all models, no datasets, scripts and jobs</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/.*/.*&quot;</span>
+
+<span class="c1"># allow only model foo</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/foo/.*&quot;</span>
+
+<span class="c1"># allow only model foo, prediction</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/foo/predict&quot;</span>
+</pre></div>
+</div>
+<p>Rules can be specified in a file, one rule per line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># rules.txt</span>
+model/.*/.*
+scripts/.*/.*
+
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span>--rules<span class="w"> </span>rules.txt
+</pre></div>
+</div>
+<p>Rules can be specified in the <code class="docutils literal notranslate"><span class="pre">OMEGA_RESTAPI_FILTER</span></code> env variable,
+with rules separated by <code class="docutils literal notranslate"><span class="pre">;</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">OMEGA_RESTAPI_FILTER</span><span class="o">=</span><span class="s2">&quot;model/.*/.*&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve
+</pre></div>
+</div>
+</section>
+<section id="api-reference">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">API Reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h2>
+<p>The API reference is accessible online from your omega-ml instance at:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">/api/doc/v1</span></code>- Swagger UI</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">/api/doc/v1/specs/swagger.json</span></code> - the Swagger specs (JSON)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">/api/redoc</span></code> - ReDoc UI, based on Swagger specs</p></li>
+</ul>
+</section>
+<section id="api-semantics">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">API Semantics</a><a class="headerlink" href="#api-semantics" title="Link to this heading">¶</a></h2>
+<p>The omega-ml REST API resources are all of the form
+<code class="code docutils literal notranslate"><span class="pre">/api/version/resource-name/resource-key/?param=value</span></code>.</p>
+<section id="resources">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Resources</a><a class="headerlink" href="#resources" title="Link to this heading">¶</a></h3>
+<p>The valid resource names are:</p>
+<ul class="simple">
+<li><p>dataset - access datasets</p></li>
+<li><p>model - run model tasks like fit, predict</p></li>
+<li><p>job - runs jobs (notebooks)</p></li>
+<li><p>script - runs scripts</p></li>
+<li><p>config - access the user-specific omega-ml configuration <em>Commercial Edition</em></p></li>
+</ul>
+<p>The resource-key and query parameters are optional. If a resource-key
+is not provided, a list of existing resources is returned. If a resource-key
+is provided the API will look up the respective specific resource for this
+key and return its content.</p>
+<p>Note that the dataset and job resources will return dataset and job contents,
+respectively. The model resource will only provide meta data, but not the
+actual contents of the model.</p>
+</section>
+<section id="methods-and-responses">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Methods and Responses</a><a class="headerlink" href="#methods-and-responses" title="Link to this heading">¶</a></h3>
+<p>All resources support a set of HTTP GET, PUT, POST or DELETE methods.</p>
+<ul class="simple">
+<li><p>successful GET =&gt; HTTP 200 OK</p></li>
+<li><p>successful POST =&gt; HTTP 201 created</p></li>
+<li><p>successful PUT =&gt; HTTP 202 accepted</p></li>
+<li><p>successful DELETE =&gt; HTTP 202 accepted</p></li>
+</ul>
+<p><em>Commercial Edition</em></p>
+<ul class="simple">
+<li><p>error due to bad input parameters =&gt; HTTP 400 Bad Request</p></li>
+<li><p>error due to authentication =&gt; HTTP 401 Unauthorized</p></li>
+<li><p>error due to wrong authorization =&gt; HTTP 403 Forbidden</p></li>
+<li><p>error due to non existing resource =&gt; HTTP 404 Not found</p></li>
+<li><p>error due to not allowed method =&gt; HTTP 405 Method not allowed</p></li>
+<li><p>severe server errors =&gt; HTTP 500 Internal Server error</p></li>
+</ul>
+</section>
+<section id="asynchronous-api-execution">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Asynchronous API execution</a><a class="headerlink" href="#asynchronous-api-execution" title="Link to this heading">¶</a></h3>
+<p>The omega-ml REST API by default is synchronous, however model, script
+and notebook tasks can be run asynchronously. To do this, add <code class="code docutils literal notranslate"><span class="pre">async=1</span></code>
+as query parameter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">model</span><span class="o">/</span><span class="n">mymodel</span><span class="o">/</span><span class="err">?</span><span class="n">datax</span><span class="o">=</span><span class="n">sample</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">&amp;</span><span class="n">datay</span><span class="o">=</span><span class="n">sample</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">&amp;</span><span class="k">async</span><span class="o">=</span><span class="mi">1</span>
+<span class="o">=&gt;</span>
+<span class="n">HTTP</span> <span class="mi">202</span><span class="o">/</span><span class="n">ACCEPTED</span>
+<span class="n">Location</span><span class="p">:</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">task</span><span class="o">/</span><span class="n">b552e887</span><span class="o">-</span><span class="mi">9</span><span class="n">ced</span><span class="o">-</span><span class="mf">4e87</span><span class="o">-</span><span class="n">a203</span><span class="o">-</span><span class="mi">0</span><span class="n">a4183e4f461</span><span class="o">/</span><span class="n">result</span>
+</pre></div>
+</div>
+<p>Next the most recent task status result can be queried at the URI given by Location:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">task</span><span class="o">/</span><span class="n">b552e887</span><span class="o">-</span><span class="mi">9</span><span class="n">ced</span><span class="o">-</span><span class="mf">4e87</span><span class="o">-</span><span class="n">a203</span><span class="o">-</span><span class="mi">0</span><span class="n">a4183e4f461</span><span class="o">/</span><span class="n">result</span><span class="err">?</span><span class="n">resource_uri</span><span class="o">=/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">model</span><span class="o">/</span><span class="n">mymodel</span><span class="o">/</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;mymodel&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">},</span>
+ <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
+ <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="s2">&quot;b552e887-9ced-4e87-a203-0a4183e4f461&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="authentication-and-authorization">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Authentication and  Authorization</a><a class="headerlink" href="#authentication-and-authorization" title="Link to this heading">¶</a></h3>
+<p><em>Commercial Edition</em></p>
+<p>From your omega-ml portal, get the userid and api key.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.client.cli.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaRestApiAuth</span>
+<span class="n">auth</span> <span class="o">=</span> <span class="n">OmegaRestApiAuth</span><span class="p">(</span><span class="n">userid</span><span class="p">,</span> <span class="n">apikey</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="working-with-data-rest-api">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Working with data (REST API)</a><a class="headerlink" href="#working-with-data-rest-api" title="Link to this heading">¶</a></h2>
+<section id="listing-datasets">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Listing datasets</a><a class="headerlink" href="#listing-datasets" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+  <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+  <span class="o">=&gt;</span>
+  <span class="p">{</span><span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;next&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+ <span class="s1">&#39;previous&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+<span class="s1">&#39;objects&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">},</span>
+  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample/&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample2&#39;</span><span class="p">},</span>
+  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample2/&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample99&#39;</span><span class="p">},</span>
+  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample99/&#39;</span><span class="p">}]}</span>
+</pre></div>
+</div>
+</section>
+<section id="reading-data">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Reading data</a><a class="headerlink" href="#reading-data" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/sample&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+   <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+   <span class="o">=&gt;</span>
+   <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">&#39;10&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;11&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">&#39;12&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">&#39;13&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">&#39;14&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">&#39;15&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">&#39;16&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">&#39;17&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">&#39;18&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">&#39;19&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+  <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">&#39;20&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;21&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">&#39;22&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">&#39;23&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">&#39;24&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">&#39;25&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">&#39;26&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">&#39;27&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">&#39;28&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">&#39;29&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+  <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+<span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
+<span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>
+  <span class="mi">1</span><span class="p">,</span>
+  <span class="mi">2</span><span class="p">,</span>
+  <span class="mi">3</span><span class="p">,</span>
+  <span class="mi">4</span><span class="p">,</span>
+  <span class="mi">5</span><span class="p">,</span>
+  <span class="mi">6</span><span class="p">,</span>
+  <span class="mi">7</span><span class="p">,</span>
+  <span class="mi">8</span><span class="p">,</span>
+  <span class="mi">9</span><span class="p">,</span>
+  <span class="mi">0</span><span class="p">,</span>
+  <span class="mi">1</span><span class="p">,</span>
+  <span class="mi">2</span><span class="p">,</span>
+  <span class="mi">3</span><span class="p">,</span>
+  <span class="mi">4</span><span class="p">,</span>
+  <span class="mi">5</span><span class="p">,</span>
+  <span class="mi">6</span><span class="p">,</span>
+  <span class="mi">7</span><span class="p">,</span>
+  <span class="mi">8</span><span class="p">,</span>
+  <span class="mi">9</span><span class="p">,</span>
+  <span class="mi">0</span><span class="p">,</span>
+  <span class="mi">1</span><span class="p">,</span>
+  <span class="mi">2</span><span class="p">,</span>
+  <span class="mi">3</span><span class="p">,</span>
+  <span class="mi">4</span><span class="p">,</span>
+  <span class="mi">5</span><span class="p">,</span>
+  <span class="mi">6</span><span class="p">,</span>
+  <span class="mi">7</span><span class="p">,</span>
+  <span class="mi">8</span><span class="p">,</span>
+  <span class="mi">9</span><span class="p">]},</span>
+<span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">,</span>
+<span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
+<span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/None/&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To get a valid dataframe back do as follows.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;values&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is important to set the index to restore the correct row order. This
+is due to Python’s arbitrary order of keys in the <code class="code docutils literal notranslate"><span class="pre">data</span></code> dict.</p>
+</div>
+</section>
+<section id="writing-data">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Writing data</a><a class="headerlink" href="#writing-data" title="Link to this heading">¶</a></h3>
+<p>Writing data is equally straight forward. Note this works for both new
+and existing datasets. By default data is appended to an existing dataset.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+   <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+   <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+   <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+   <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+   <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+   <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+ <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
+ <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
+ <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">}</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/sample/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>To overwrite an existing data set, use <code class="code docutils literal notranslate"><span class="pre">append:</span> <span class="pre">false</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+   <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+   <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+   <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+   <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+   <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+   <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+ <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
+ <span class="s1">&#39;append&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
+ <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">}</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/sample/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="transform-a-dataframe-to-api-format">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Transform a DataFrame to API format</a><a class="headerlink" href="#transform-a-dataframe-to-api-format" title="Link to this heading">¶</a></h3>
+<p>To transform a Pandas DataFrame into the format expected by the API, use
+the following code snippet.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+     <span class="c1"># TODO put logic for this into client lib</span>
+     <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+         <span class="s1">&#39;append&#39;</span><span class="p">:</span> <span class="n">append</span><span class="p">,</span>
+         <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">to_json</span><span class="p">()),</span>
+         <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+         <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;columns&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span>
+             <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+             <span class="c1"># ensure type conversion to object for Py3 tastypie does</span>
+             <span class="c1"># not recognize numpy.int64</span>
+             <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
+         <span class="p">}</span>
+     <span class="p">}</span>
+     <span class="k">return</span> <span class="n">data</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="working-with-models-rest-api">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Working with models (REST API)</a><a class="headerlink" href="#working-with-models-rest-api" title="Link to this heading">¶</a></h2>
+<section id="create-a-model">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Create a model</a><a class="headerlink" href="#create-a-model" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pipeline&#39;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="c1"># step name, model class, kwargs</span>
+            <span class="p">[</span><span class="s1">&#39;LinearRegression&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()],</span>
+        <span class="p">]}</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/&#39;</span><span class="p">,</span>
+                 <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                 <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">201</span><span class="p">]</span><span class="o">&gt;</span>
+<span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;bucket&#39;</span><span class="p">:</span> <span class="s1">&#39;store&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="s1">&#39;2016-01-16 22:05:06.192000&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;sklearn.joblib&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
+</section>
+<section id="fit-a-model">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Fit a model</a><a class="headerlink" href="#fit-a-model" title="Link to this heading">¶</a></h3>
+<p>Create some data first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># a simple data frame to learn</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)})</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="n">datax</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span>
+<span class="n">datay</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;y&#39;</span><span class="p">]])</span>
+
+<span class="c1"># store data</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/datax/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">datax</span><span class="p">))</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/datay/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+             <span class="n">json</span><span class="o">=</span><span class="n">datay</span><span class="p">)</span>
+<span class="o">=&gt;</span>
+<span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Then we can fit the model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/mymodel/fit/?datax=datax&amp;datay=datay&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="s1">&#39;datax&#39;</span><span class="p">:</span> <span class="s1">&#39;datax&#39;</span><span class="p">,</span> <span class="s1">&#39;datay&#39;</span><span class="p">:</span> <span class="s1">&#39;datay&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Subsequently, the model is ready for prediction:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/mymodel/predict/?datax=datax&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="s1">&#39;datax&#39;</span><span class="p">:</span> <span class="s1">&#39;datax&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;datay&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">14.0</span><span class="p">,</span> <span class="mf">16.0</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">]}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="working-with-jobs-rest-api">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Working with jobs (REST API)</a><a class="headerlink" href="#working-with-jobs-rest-api" title="Link to this heading">¶</a></h2>
+<section id="listing-jobs">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Listing jobs</a><a class="headerlink" href="#listing-jobs" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/&#39;</span><span class="p">,</span>
+                      <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;previous&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+           <span class="sa">u</span><span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;next&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="sa">u</span><span class="s1">&#39;objects&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
+              <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:33:49.833000&#39;</span><span class="p">}]}</span>
+</pre></div>
+</div>
+</section>
+<section id="running-a-job">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Running a job</a><a class="headerlink" href="#running-a-job" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/testjob/run/&#39;</span><span class="p">,</span>
+                      <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;1517953074&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;OK&#39;</span><span class="p">},</span>
+ <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">u</span><span class="s1">&#39;results/testjob_1517953074.ipynb&#39;</span><span class="p">],</span>
+ <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:37:54.014000&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-job-results">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Getting job results</a><a class="headerlink" href="#getting-job-results" title="Link to this heading">¶</a></h3>
+<p>To get job results in iPython notebook format, use</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/results/testjob_1517953074.ipynb/&#39;</span><span class="p">,</span>
+                      <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;source_job&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span>
+<span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:36:06.704000&#39;</span><span class="p">,</span>
+<span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;nbformat_minor&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;nbformat&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">&#39;cells&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;execution_count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;cell_type&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;code&#39;</span><span class="p">,</span>
+                         <span class="sa">u</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s2">&quot;print(&#39;hello&#39;)&quot;</span><span class="p">,</span>
+                         <span class="sa">u</span><span class="s1">&#39;outputs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;output_type&#39;</span><span class="p">:</span>
+                                       <span class="sa">u</span><span class="s1">&#39;stream&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;stdout&#39;</span><span class="p">,</span>
+                                       <span class="sa">u</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;hello</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">}],</span>
+                                       <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}}],</span>
+             <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}},</span>
+<span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;results/testjob_1517952965.ipynb&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-a-job-report">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Getting a job report</a><a class="headerlink" href="#getting-a-job-report" title="Link to this heading">¶</a></h3>
+<p>To get job results in HTML format, use</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/export/testjob_1517953074.ipynb/&#39;</span><span class="p">,</span>
+                      <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s2">&quot;&lt;html&gt; ... &lt;/html&gt;&quot;</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;testjob_1517953074.ipynb&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-information-on-a-job">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Getting information on a job</a><a class="headerlink" href="#getting-information-on-a-job" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/testjob/&#39;</span><span class="p">,</span>
+                      <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="o">=&gt;</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;nbformat_minor&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;nbformat&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">&#39;cells&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;execution_count&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;cell_type&#39;</span><span class="p">:</span>
+             <span class="sa">u</span><span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s2">&quot;print(&#39;hello&#39;)&quot;</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">&#39;outputs&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}}],</span>
+             <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
+             <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span>
+             <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:44:59.290000&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../classicml/models/tracking/basics.html" class="btn btn-neutral float-left" title="Understanding the Tracking and Monitoring System" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipelines/index.html" class="btn btn-neutral float-right" title="Task Automation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.17.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../../0.13.7/guide/clusters/restapi.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../../0.14.0/guide/clusters/restapi.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../../0.15.1/guide/clusters/restapi.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../../0.15.2/guide/clusters/restapi.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../../latest/guide/clusters/restapi.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../../0.15.3/guide/clusters/restapi.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../../0.15.5/guide/clusters/restapi.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../../0.16.0/guide/clusters/restapi.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../../0.16.1/guide/clusters/restapi.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../../0.16.2/guide/clusters/restapi.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../../0.16.3/guide/clusters/restapi.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../../0.16.4/guide/clusters/restapi.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="restapi.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../../0.18.0/guide/clusters/restapi.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
+      <dd><a href="../../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="../../../0.9/index.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../../stable/guide/clusters/restapi.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../master/guide/clusters/restapi.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local setup using Vagrant &mdash; omega-ml 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7ca4e891" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            omega-ml
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Administration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devguide/index.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../screenshots.html">Screenshots</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">omega-ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+
+<div class="version-warning-banner">
+    
+    You're reading an old version of this documentation.
+    If you want up-to-date information, please have a look at <a href="../../0.18.0/index.html">release/0.18.0</a>.
+    
+</div>
+
+
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Local setup using Vagrant</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/admin/omegamlvagrant.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="local-setup-using-vagrant">
+<h1>Local setup using Vagrant<a class="headerlink" href="#local-setup-using-vagrant" title="Link to this heading">¶</a></h1>
+<p>omega|ml comes with a Vagrant resourcefile that can be used to spin off a
+local machine that has spark, omega|ml and hadoop all configured, integrated and ready to use.</p>
+<section id="pre-requisites">
+<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Link to this heading">¶</a></h2>
+<p>Before you spin up the Vagrant machine, please make sure that you have a
+working rabbitmq and mongodb installations and map the relative omega|ml
+variables to the same, which can be easily done using.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export OMEGA_MONGO_URL=mongodb://&lt;host ip&gt;:27017/omega
+$ export OMEGA_BROKER=amqp://guest@&lt;host ip&gt;:5672//
+</pre></div>
+</div>
+</section>
+<section id="start-up-vagrant-machine">
+<h2>Start up vagrant machine<a class="headerlink" href="#start-up-vagrant-machine" title="Link to this heading">¶</a></h2>
+<p>To start the vagrant machine, go to the installation directory of
+omegaml, which would generally be
+<code class="docutils literal notranslate"><span class="pre">&lt;libdir&gt;/omegaml/omegaml/resources/spark_vagrant</span></code> where <code class="docutils literal notranslate"><span class="pre">libdir</span></code>
+would be the location where you installed omegaml.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># cd &lt;libdir&gt;/omegaml/omegaml/resources/spark_vagrant</span>
+<span class="c1"># vagrant up</span>
+</pre></div>
+</div>
+<p>This will take a while and spin off a virtualbox with spark &amp; omega|ml on
+it.</p>
+</section>
+<section id="using-the-vagrant-machine">
+<h2>Using the vagrant machine<a class="headerlink" href="#using-the-vagrant-machine" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>Open a web browser and browse <a class="reference external" href="http://localhost:18888">http://localhost:18888</a> . This is the
+ipython notebook server.</p></li>
+<li><p>Start a python notebook.</p></li>
+<li><p>Run your code snippets.</p></li>
+<li><p>To have omega|ml run periodic jobs, create a notebook prefixing job_
+to its name and the first cell with job parameters. Which should look
+something like below</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># omegaml.script:</span>
+<span class="c1">#   run-at: &quot;*/1 * * * *&quot;</span>
+<span class="c1">#   results-store: gridfs</span>
+<span class="c1">#   author: exsys@nixify.com</span>
+<span class="c1">#   name: Gaurav Ghimire</span>
+</pre></div>
+</div>
+<p>In the above configuration, below points are to be noted :</p>
+<ul class="simple">
+<li><p>all job configurations should be valid yaml files.</p></li>
+<li><p>all lines must start with # .</p></li>
+<li><p>the first line should always be omegaml.script.</p></li>
+<li><p>run-at: <cite>*/1 * * * *</cite> defines the time interval in ‘cron’
+like schedule, this is scheduled to run every minute</p></li>
+<li><p>results-store: gridfs , results-store can either be s3 or gridfs</p>
+<ul>
+<li><p>s3 would store the results in pre-configured S3 bucket/path.</p></li>
+<li><p>gridfs would store the results as result_.ipynb on same
+collection.</p></li>
+<li><p>author and name are author identifiers, not used for now, but
+may later be used for say email results.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Link to this heading">¶</a></h2>
+<p>To see omega|ml and ipython logs</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>@host$ vagrant ssh
+@vm$ tail -f /tmp/celeryd.log
+@vm$ tail -f /tmp/ipython.log
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025 (c) omegaml.io by one2seven GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+
+      </div>
+    </section>
+  </div>
+  <!-- version plugin for rtd template without sidebar -->
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: release/0.9
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../0.11.3/index.html" class="version-ref-0.11.3">0.11.3</a></dd>
+      <dd><a href="../../../0.11.4/index.html" class="version-ref-0.11.4">0.11.4</a></dd>
+      <dd><a href="../../../0.12.0/index.html" class="version-ref-0.12.0">0.12.0</a></dd>
+      <dd><a href="../../../0.13.0/index.html" class="version-ref-0.13.0">0.13.0</a></dd>
+      <dd><a href="../../../0.13.2/index.html" class="version-ref-0.13.2">0.13.2</a></dd>
+      <dd><a href="../../../0.13.4/index.html" class="version-ref-0.13.4">0.13.4</a></dd>
+      <dd><a href="../../../0.13.5/index.html" class="version-ref-0.13.5">0.13.5</a></dd>
+      <dd><a href="../../../0.13.6/index.html" class="version-ref-0.13.6">0.13.6</a></dd>
+      <dd><a href="../../../0.13.7/index.html" class="version-ref-0.13.7">0.13.7</a></dd>
+      <dd><a href="../../../0.14.0/index.html" class="version-ref-0.14.0">0.14.0</a></dd>
+      <dd><a href="../../../0.15.1/index.html" class="version-ref-0.15.1">0.15.1</a></dd>
+      <dd><a href="../../../0.15.2/index.html" class="version-ref-0.15.2">0.15.2</a></dd>
+      <dd><a href="../../../latest/index.html" class="version-ref-latest">latest</a></dd>
+      <dd><a href="../../0.15.3/index.html" class="version-ref-release/0.15.3">0.15.3</a></dd>
+      <dd><a href="../../0.15.5/index.html" class="version-ref-release/0.15.5">0.15.5</a></dd>
+      <dd><a href="../../0.16.0/index.html" class="version-ref-release/0.16.0">0.16.0</a></dd>
+      <dd><a href="../../0.16.1/index.html" class="version-ref-release/0.16.1">0.16.1</a></dd>
+      <dd><a href="../../0.16.2/index.html" class="version-ref-release/0.16.2">0.16.2</a></dd>
+      <dd><a href="../../0.16.3/index.html" class="version-ref-release/0.16.3">0.16.3</a></dd>
+      <dd><a href="../../0.16.4/index.html" class="version-ref-release/0.16.4">0.16.4</a></dd>
+      <dd><a href="../../0.17.0/index.html" class="version-ref-release/0.17.0">0.17.0</a></dd>
+      <dd><a href="../../0.18.0/index.html" class="version-ref-release/0.18.0">0.18.0</a></dd>
+      <dd><a href="../../0.4/index.html" class="version-ref-release/0.4">0.4</a></dd>
+      <dd><a href="../../0.5/index.html" class="version-ref-release/0.5">0.5</a></dd>
+      <dd><a href="omegamlvagrant.html" class="version-ref-release/0.9">0.9</a></dd>
+      <dd><a href="../../../stable/index.html" class="version-ref-stable">stable</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../master/index.html">master</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
