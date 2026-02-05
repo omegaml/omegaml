@@ -1,10 +1,11 @@
+import pymongo
 import string
 import warnings
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
+from copy import deepcopy
 from marshmallow import fields, Schema
-
-from omegaml.util import markup
+from omegaml.util import markup, ensure_index
 
 
 class SignatureMixin:
@@ -497,6 +498,162 @@ class ModelSignatureMixin(SignatureMixin):
 
     def _pre_fit_transform(self, modelname, Xname, **kwargs):
         return self._resolve_dataset_defaults(modelname, Xname, **kwargs)
+
+
+class DatasetIndexesMixin:
+    """Indexes for datasets.
+
+    Enables adding dataset index specifications to a dataset for reference
+    and consistent recreation.
+
+    Metadata:
+        * ``.attributes['indexes']`` → ``{'<key>': <sort order>}``
+
+    .. versionadded:: NEXT
+        Enable consistent indexes specification in metadata.
+    """
+
+    @classmethod
+    def supports(cls, store, **kwargs):
+        """Return True if the store can hold indexed datasets.
+
+        Args:
+            store: Storage backend object that provides a ``prefix`` attribute.
+            **kwargs: Additional keyword arguments (currently ignored).
+
+        Returns:
+            bool: ``True`` when ``store.prefix`` equals ``'data/'``, otherwise
+            ``False``.
+        """
+        return store.prefix in ('data/')
+
+    def link_indexes(self, name, idx_specs):
+        """Add an index specification to a dataset’s metadata.
+
+        The method normalizes ``idx_specs`` (accepting the canonical string
+        representation ``'+colA,-colB'`` or a mapping) and stores the resulting
+        list in ``metadata.attributes['indexes']``.
+
+        Args:
+            name (str): Name of the dataset whose metadata should be updated.
+            idx_specs (str | dict | list[dict]): Index specification(s). Accepted
+                forms:
+
+                * **String** – comma‑separated ``+``, ``-``, ``@`` or ``*`` tokens,
+                  e.g. ``'+date,-price'``.
+                * **Mapping** – ``{field: sort_order}`` where ``sort_order`` is a
+                  MongoDB constant (``pymongo.ASCENDING``,
+                  ``pymongo.DESCENDING`` etc.).
+                * **Iterable of mappings** – a list/tuple of the above.
+
+        Returns:
+            Metadata: The saved metadata object for *name*.
+        """
+        meta = self.metadata(name)
+
+        # Convert canonical string like '+colA,-colB' to a dict.
+        if isinstance(idx_specs, str):
+            mapping = {
+                "+": pymongo.ASCENDING,
+                "-": pymongo.DESCENDING,
+                "@": pymongo.GEO2D,
+                "*": pymongo.GEOSPHERE,
+            }
+            idx_specs = {
+                item[1:]: mapping[item[0]]
+                for item in idx_specs.split(",")
+                if item
+            }
+        # Normalize to a list of dicts.
+        idx_specs = (
+            idx_specs
+            if isinstance(idx_specs, (list, tuple))
+            else [idx_specs]
+        )
+        meta.attributes.setdefault("indexes", [])
+        meta.attributes["indexes"].extend(idx_specs)
+        return meta.save()
+
+    def ensure_indexes(self, name, idx_specs=None, replace=False):
+        """Ensure that the required indexes exist for a dataset.
+
+        If the underlying backend implements its own ``ensure_indexes`` method,
+        that method is delegated to, otherwise MongoDB’s ``create_index`` is
+        used via :func:`ensure_index`. When ``replace`` is ``True`` any existing
+        index with the same name will be dropped and recreated.
+
+        Args:
+            name (str): Dataset name.
+            idx_specs (dict | list[dict] | None, optional): Index specification(s).
+                When omitted, the method reads the specifications from
+                ``metadata.attributes['indexes']``.
+            replace (bool, optional): If ``True`` drop and recreate any existing
+                index with the same definition. Defaults to ``False``.
+
+        Returns:
+            Metadata: Updated metadata after the operation.
+        """
+        meta = self.metadata(name)
+        indexes_specs = idx_specs or meta.attributes.get("indexes")
+        # call backend's method if available
+        backend = self.get_backend(name)
+        if hasattr(backend, "ensure_indexes"):
+            # Backend‑specific implementation.
+            return backend.ensure_indexes(name, specs=indexes_specs)
+        # no backend method, we process
+        coll = self.collection(name)
+        # deepcopy to avoid mutating caller‑provided spec objects.
+        for one_ix_specs in deepcopy(indexes_specs):
+            kwargs = one_ix_specs.pop("create_index_kwargs", {})
+            ensure_index(coll, one_ix_specs, replace=replace, **kwargs)
+        # persist any explicit specifications back to metadata.
+        if idx_specs is not None:
+            self.link_indexes(name, indexes_specs)
+        return meta.save()
+
+    def list_indexes(self, name):
+        """List all indexes defined on a dataset collection.
+
+        Args:
+            name (str): Dataset name.
+
+        Returns:
+            dict: Mapping of ``index_name`` → ``spec_string`` where the spec
+            string uses ``+`` for ascending and ``-`` for descending, e.g.
+            ``'+field1,-field2'``.
+        """
+        index_map = {
+            idx["name"]: ",".join(
+                f"+{k}" if v == 1 else f"-{k}"
+                for k, v in idx["key"].items()
+            )
+            for idx in self.collection(name).list_indexes()
+        }
+        return index_map
+
+    def drop_indexes(self, name, idxname=None):
+        """Drop one or all non‑default indexes from a dataset collection.
+
+        Args:
+            name (str): Dataset name.
+            idxname (str, optional): Specific index name to drop. If omitted,
+                all indexes except the implicit ``_id`` index are removed.
+
+        Returns:
+            Metadata: Metadata after clearing the ``indexes`` attribute.
+        """
+        meta = self.metadata(name)
+        if idxname is None:
+            idx_to_drop = self.list_indexes(name).keys()
+        else:
+            idx_to_drop = [idxname]
+        for idx in idx_to_drop:
+            # Never drop the automatic ``_id`` index.
+            if idx.startswith("_id"):
+                continue
+            self.collection(name).drop_index(idx)
+        meta.attributes["indexes"] = []
+        return meta.save()
 
 
 schema_name = lambda s: getattr(s, '__name__', s.__class__.__name__)

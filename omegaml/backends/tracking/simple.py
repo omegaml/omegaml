@@ -1,21 +1,19 @@
+import dill
 import importlib
+import numpy as np
 import os
+import pandas as pd
 import platform
+import pymongo
 import warnings
 from base64 import b64encode, b64decode
 from datetime import date
 from itertools import chain
-from typing import Iterable
-from uuid import uuid4
-
-import dill
-import numpy as np
-import pandas as pd
-import pymongo
-
 from omegaml.backends.tracking.base import TrackingProvider
 from omegaml.documents import Metadata
 from omegaml.util import _raise, ensure_index, batched, signature, tryOr, ensurelist
+from typing import Iterable
+from uuid import uuid4
 
 
 class NoTrackTracker(TrackingProvider):
@@ -576,18 +574,29 @@ class OmegaSimpleTracker(TrackingProvider):
         if not force and self._store.exists(self._data_name):
             return
         coll = self._store.collection(self._data_name)
+        meta = self._store.metadata(self._data_name)
         idxs = [
+            # fast retrieval by run, event, key
             {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
              'data.experiment': pymongo.ASCENDING},
+            # fast retrieval by dt, event, key
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
              'data.experiment': pymongo.ASCENDING},
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING},
             # fast retrieval by event, key, userid across all runs
             {'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING, 'data.userid': pymongo.ASCENDING,
              'data.experiment': pymongo.ASCENDING},
+            # optimize self._latest_run - this is O(1) retrieval of max(run)
+            {'data.run': pymongo.DESCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING,
+             'create_index_kwargs': dict(partialFilterExpression={"data.event": "start"})},
         ]
+        # add additional indexes from metadata
+        idxs.extend(meta.attributes.get('indexes', [])) if meta else None
+        # TODO use DatasetIndexesMixin
+        # self._store.ensure_indexes(self._data_name, idx_specs=idxs, replace=force)
         for specs in idxs:
-            ensure_index(coll, specs)
+            kwargs = specs.pop('create_index_kwargs', {})
+            ensure_index(coll, specs, **kwargs)
         # self._store.put(coll, self._data_name)
 
     def restore_artifact(self, *args, **kwargs):
