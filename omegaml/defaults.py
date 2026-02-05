@@ -185,6 +185,7 @@ OMEGA_STORE_MIXINS = [
     'omegaml.mixins.store.extdmeta.SignatureMixin',
     'omegaml.mixins.store.extdmeta.ScriptSignatureMixin',
     'omegaml.mixins.store.extdmeta.ModelSignatureMixin',
+    'omegaml.mixins.store.extdmeta.DatasetIndexesMixin',
     'omegaml.mixins.store.requests.RequestCache',
     'omegaml.mixins.store.passthrough.PassthroughMixin',
     'omegaml.mixins.store.tracking.TrackableMetadataMixin',

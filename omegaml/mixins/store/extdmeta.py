@@ -4,7 +4,7 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from marshmallow import fields, Schema
 
-from omegaml.util import markup
+from omegaml.util import markup, ensure_index
 
 
 class SignatureMixin:
@@ -497,6 +497,69 @@ class ModelSignatureMixin(SignatureMixin):
 
     def _pre_fit_transform(self, modelname, Xname, **kwargs):
         return self._resolve_dataset_defaults(modelname, Xname, **kwargs)
+
+
+class DatasetIndexesMixin:
+    """ Indexes for datasets
+
+    Enables adding dataset index specifications to a dataset for reference
+    and consistent recreation
+
+    Metadata:
+        * `.attributes['indexes']` => {'<key>' => sort order }
+
+    .. versionadded:: NEXT
+        enable consistent indexes specification in metadata
+
+    TODO: add unit test
+    """
+
+    @classmethod
+    def supports(cls, store, **kwargs):
+        return store.prefix in ('data/')
+
+    def link_indexes(self, name, idx_specs):
+        """ Add indexes specification for a dataset
+
+        Args:
+            name (str): name of dataset
+            idx_specs (list[dict]): list of specs as { field => sort order }
+
+        Returns:
+            Metadata
+        """
+        meta = self.metadata(name)
+        meta.attributes['indexes'] = idx_specs
+        meta.save()
+        return meta
+
+    def ensure_indexes(self, name, idx_specs=None, replace=False):
+        """ Ensure indexes are created on dataset
+
+        For collection based datasets uses ensure_index() to create
+        indexes. If the dataset's backend provides an .ensure_indexes()
+        method, it will be called instead.
+
+        Args:
+            name (str): name of dataset
+            idx_specs (dict): optional, specs as field => sort order
+            replace (bool): if True recreates any existing indexes, defaults to False
+
+        Returns:
+            Metadata
+        """
+        meta = self.metadata(name)
+        indexes_specs = idx_specs or meta.attributes.get('indexes')
+        meta.attributes['indexes'] = indexes_specs
+        backend = self.get_backend(name)
+        if hasattr(backend, 'ensure_indexes'):
+            meta = backend.ensure_indexes(name, specs=indexes_specs)
+        else:
+            coll = self.collection(name)
+            for one_ix_specs in indexes_specs:
+                kwargs = dict(one_ix_specs).pop('create_index_kwargs', {})
+                ensure_index(coll, one_ix_specs, replace=replace, **kwargs)
+        return meta.save()
 
 
 schema_name = lambda s: getattr(s, '__name__', s.__class__.__name__)
