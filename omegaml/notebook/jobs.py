@@ -1,19 +1,17 @@
 from __future__ import absolute_import
 
 import datetime
-import re
-from io import StringIO, BytesIO
-from uuid import uuid4
-
 import gridfs
+import re
 import yaml
 from croniter import croniter
+from io import StringIO, BytesIO
 from jupyter_client import AsyncKernelManager
 from nbformat import read as nbread, write as nbwrite, v4 as nbv4, NotebookNode
-
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.notebook.jobschedule import JobSchedule
+from uuid import uuid4
 
 
 class NotebookBackend(BaseDataBackend):
@@ -420,7 +418,7 @@ class NotebookMixin:
                 cp.preprocess(notebook, resources)
             ep = ExecutePreprocessor(**ep_kwargs)
             ep.preprocess(notebook, resources)
-        except Exception as e:
+        except (BaseException, Exception) as e:
             status = 'ERROR'
             message = str(e)
         else:
