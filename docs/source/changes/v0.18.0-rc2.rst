@@ -1,0 +1,10 @@
+Release notes release/0.18.0-rc2
+================================
+
+Released 2025-12-16
+
+Chores
+~~~~~~
+
+-  chore: various updates to finalize release 0.18
+   `b56dedc <https://github.com/omegaml/omegaml/commit/b56dedc>`__
