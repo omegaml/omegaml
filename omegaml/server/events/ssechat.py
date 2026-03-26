@@ -3,15 +3,13 @@ import json
 import logging
 import threading
 from datetime import timedelta, datetime
+from flask import Response, request, abort, Blueprint, current_app
 from hashlib import pbkdf2_hmac
+from jose import jwe
 from time import sleep
 from uuid import uuid4
 
-from flask import Response, request, abort, Blueprint, current_app
-from jose import jwe
-
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
-from omegaml.client.auth import AuthenticationEnv
 from omegaml.util import utcnow
 
 TIMEOUT = 100  # timeout in seconds
@@ -20,12 +18,15 @@ logger = logging.getLogger(__name__)
 bp = Blueprint('ssechat', __name__)
 context = threading.local()
 
-auth_env = AuthenticationEnv.active()
-
 
 class Streamable(StreamableResourceMixin):
     def __init__(self, om):
         self.om = om
+
+
+def get_auth_env():
+    from omegaml.client.auth import AuthenticationEnv
+    return AuthenticationEnv.active()
 
 
 def authorized(fn):
@@ -111,6 +112,7 @@ def authorized(fn):
             abort(401, description=message)
         # -- establish omega session
         try:
+            auth_env = get_auth_env()
             context.userid = userid
             context.apikey = auth_token
             context.qualifier = payload.get('qualifier')
