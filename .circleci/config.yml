@@ -50,6 +50,8 @@ jobs:
             bash Miniforge3-Linux-x86_64.sh -b
             sudo apt update 
             sudo apt install -y docker-compose
+            # avoid installing packages newer than 7 days ago
+            pip config set global.uploaded_prior_to "$(date -d '7 days ago' -Iseconds --utc)" >/dev/null || true
             pip3 install tox tox-run-before tox-conda
       - run:
           name: Run unit tests
