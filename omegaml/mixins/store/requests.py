@@ -94,6 +94,10 @@ class RequestCache:
             try:
                 # if cached is False, we query the original metadata, yet still cache
                 meta = self._request_cache[name] if cached else _base_meta()
+                # reset gridfile to non-cached state (if it has been read prior)
+                # -- this avoids a later EOF failure when the gridfile is read multiple times in the same request
+                # -- TODO test this works (e.g. with closed gridfiles)
+                meta.gridfile.seek(0) if cached else None
             except:
                 meta = _base_meta()
             # we only cache valid metadata objects
