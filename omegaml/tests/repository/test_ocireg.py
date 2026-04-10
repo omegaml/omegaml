@@ -1,8 +1,9 @@
+from pathlib import Path
+from unittest import TestCase, skipUnless, skip
+
 import shutil
 import unittest
 from shutil import rmtree
-from unittest import TestCase, skipUnless, skip
-
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from omegaml import Omega
@@ -118,27 +119,27 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         om.models.put('ocidir:///tmp/registry', 'ocireg')
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/registry')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry')
         self.assertEqual(reg.repo, None)
         # -- image on get
         reg = om.models.get('ocireg', image='myimage:latest')
-        self.assertEqual(str(reg.url), '/tmp/registry')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry')
         self.assertEqual(reg.repo, 'myimage:latest')
         # -- with image
         om.models.put('ocidir:///tmp/registry/myimage:latest', 'ocireg', replace=True)
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/registry')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry')
         self.assertEqual(reg.repo, 'myimage:latest')
         # -- no image with a long registry path
         om.models.put('ocidir:///tmp/data/artifacts/registry', 'ocireg', replace=True)
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/data/artifacts/registry')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/data/artifacts/registry')
         self.assertEqual(reg.repo, None)
         # -- image on get
         reg = om.models.get('ocireg', image='myimage:latest')
-        self.assertEqual(str(reg.url), '/tmp/data/artifacts/registry')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/data/artifacts/registry')
         self.assertEqual(reg.repo, 'myimage:latest')
 
     def test_putget_ocidir_namespaced(self):
@@ -147,27 +148,27 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         om.models.put('ocidir:///tmp/registry/ns/namespace', 'ocireg')
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/registry/ns/namespace')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry/ns/namespace')
         self.assertEqual(reg.repo, None)
         # -- image on get
         reg = om.models.get('ocireg', image='myimage:latest')
-        self.assertEqual(str(reg.url), '/tmp/registry/ns/namespace')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry/ns/namespace')
         self.assertEqual(reg.repo, 'myimage:latest')
         # -- with image
         om.models.put('ocidir:///tmp/registry/ns/namespace/myimage:latest', 'ocireg', replace=True)
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/registry/ns/namespace')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/registry/ns/namespace')
         self.assertEqual(reg.repo, 'myimage:latest')
         # -- no image with a long registry path
         om.models.put('ocidir:///tmp/data/artifacts/registry/ns/namespace', 'ocireg', replace=True)
         reg = om.models.get('ocireg')
         self.assertIsInstance(reg, OrasOciRegistry)
-        self.assertEqual(str(reg.url), '/tmp/data/artifacts/registry/ns/namespace')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/data/artifacts/registry/ns/namespace')
         self.assertEqual(reg.repo, None)
         # -- image on get
         reg = om.models.get('ocireg', image='myimage:latest')
-        self.assertEqual(str(reg.url), '/tmp/data/artifacts/registry/ns/namespace')
+        self.assertEqual(str(reg.url), 'ocidir:///tmp/data/artifacts/registry/ns/namespace')
         self.assertEqual(reg.repo, 'myimage:latest')
 
     def test_putget_model(self):
@@ -187,6 +188,23 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         # get model back from oci registry
         model = om.models.get('regmodel')
         self.assertIsInstance(model, LinearRegression)
+
+    def test_putget_directories(self):
+        import omegaml
+        om = self.om
+        # create an empty oci registry
+        rmtree('/tmp/registry', ignore_errors=True)
+        om.models.put('ocidir:///tmp/registry', 'ocireg')
+        # save a complete directory, zip up
+        # -- expect to store a zip file
+        basedir = Path(omegaml.__file__).parent / 'example' / 'demo'
+        meta = om.models.put(basedir, 'myfile', repo='ocireg')
+        repo = om.models.get('ocireg')
+        print(repo.artifacts('myfile:latest'))
+        # get back
+        extracted = om.models.get('myfile')
+        self.assertTrue(extracted.is_dir())
+        self.assertTrue((extracted / 'demo').is_dir())
 
     @skip("TODO not currently supported")
     def test_putget_multimodels(self):
