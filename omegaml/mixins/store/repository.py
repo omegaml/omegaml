@@ -42,10 +42,9 @@ class RepositoryStorageMixin:
             repo, image = repo.rsplit('/', 1) if '/' in repo else (repo, name)
             reg: ArtifactRepository = self.get(repo, image=image)
             assert reg is not None, f"repository {repo} not found in {self.prefix}"
-            key = self.object_store_key(name, 'serialized')
             # create directory to export to
             repo_uri = Path(f'{self.tmppath}/{self.prefix}')  # repo files
-            obj_uri = Path(f'{self.tmppath}/{self.prefix}/{key}')  # serialized model
+            obj_uri = Path(f'{self.tmppath}/{self.prefix}') / 'modelfile.rps'  # serialized model
             rmtree(repo_uri, ignore_errors=True)
             obj_uri.parent.mkdir(parents=True, exist_ok=True)
             # serialize obj to a local file, using original backend
@@ -64,6 +63,7 @@ class RepositoryStorageMixin:
             sync['repo'] = f'{repo}/{target_repo}'
             with chdir(obj_uri.parent):
                 reg.add(obj_repo_uri, repo=target_repo)  # add to repo
+            rmtree(obj_uri.parent, ignore_errors=True)
         else:
             meta = super().put(obj, name, *args, **kwargs)
         return meta.save()
@@ -79,9 +79,9 @@ class RepositoryStorageMixin:
             repo, image = repo.rsplit('/', 1) if '/' in repo else (repo, name)
             reg: ArtifactRepository = self.get(repo)
             # TODO repo_uri / obj_uri come from ArtifactRepository to use its cache
-            key = self.object_store_key(name, 'serialized')
-            repo_uri = f'{self.tmppath}/{self.prefix}'  # repo files
-            obj_uri = f'{self.tmppath}/{self.prefix}/{key}'  # serialized model
+            repo_uri = Path(f'{self.tmppath}/{self.prefix}')  # repo files
+            obj_uri = Path(f'{self.tmppath}/{self.prefix}') / 'modelfile.rps'  # serialized model
+            rmtree(obj_uri.parent, ignore_errors=True)
             # source_repo = reg.tag(repo)  # get latest tag, if not specified
             reg.extract(repo_uri, repo=image)  # pull repo and extract to it
             backend = self.get_backend(name, **kwargs)  # type: BaseModelBackend
