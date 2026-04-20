@@ -991,6 +991,26 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
         self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
 
+    def test_raw_files_local(self):
+        store = self._make_store()
+        # test we can write from a file-like object
+        data = "some data"
+        # saving an open file implicitely
+        file_like = BytesIO(data.encode('utf-8'))
+        meta = store.put(file_like, 'myfile')
+        localFile = Path('/tmp/myfile')
+        # local file does not exist already
+        localFile.unlink(missing_ok=True)
+        store.get('myfile', local=localFile)
+        with open(localFile, 'r') as fin:
+            data_ = fin.read()
+            self.assertEqual(data_, data)
+        # localFile exists already
+        store.get('myfile', local=localFile, replace=True)
+        with open(localFile, 'r') as fin:
+            data_ = fin.read()
+            self.assertEqual(data_, data)
+
     def test_raw_files_uri(self):
         store = self._make_store()
         # test we can write from a file-like object to uri

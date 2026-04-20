@@ -44,7 +44,8 @@ class PythonRawFileBackend(BaseDataBackend):
             return False
         return True
 
-    def get(self, name, local=None, mode='wb', open_kwargs=None, chunksize=None, uri=None, extract=None, **kwargs):
+    def get(self, name, local=None, mode='wb', open_kwargs=None, chunksize=None, uri=None, extract=None, replace=False,
+            **kwargs):
         """
         get a stored file as a file-like object with binary contents or a local file
 
@@ -62,6 +63,7 @@ class PythonRawFileBackend(BaseDataBackend):
             extract (bool): optional, defaults to False. If True and the file is a zipfile, the file will be
               extracted to the local= path. Defaults to True if local is a directory or if
               uri exists as a local path; in this case uri is the local path.
+            replace (bool): if True, an existing local file will be overwritten
             **kwargs: any kwargs passed to datasets.metadata()
 
         Returns:
@@ -90,14 +92,16 @@ class PythonRawFileBackend(BaseDataBackend):
             as_file_local = '{local}/{name}'.format(**locals()) if not extract else local
             local = local if is_filename else as_file_local
             open_kwargs = open_kwargs or {}
-            if extract and zipfile.is_zipfile(outf):
+            is_zipfile = zipfile.is_zipfile(outf)
+            outf.seek(0)  # ensure we're back to 0 offset after zipfile.is_zipfile()
+            if extract and is_zipfile:
                 if Path(target_dir).is_file():
                     target_dir = Path(target_dir).with_suffix('.unzipped')
                     local = target_dir
                 os.makedirs(target_dir, exist_ok=True)
                 with zipfile.ZipFile(outf) as zip:
                     zip.extractall(path=target_dir)
-            elif not Path(local).exists():
+            elif replace or not Path(local).exists():
                 with smart_open.open(local, mode=mode, **open_kwargs) as flocal:
                     while data := outf.read(chunksize):
                         flocal.write(data)
