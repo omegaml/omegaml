@@ -1,15 +1,16 @@
+from pathlib import Path
+
 import logging
 import os
+import requests
 import subprocess
-from pathlib import Path
 from pprint import pprint
 from subprocess import call
 from time import sleep
 
-import requests
-
 from omegaml.client.cli import deploy
 from omegaml.client.docoptparser import CommandBase
+from omegaml.client.userconf import ensure_api_url
 from omegaml.client.util import get_omega
 from omegaml.mixins.store.imexport import OmegaExporter
 
@@ -30,6 +31,7 @@ class RuntimeCommandBase(CommandBase):
       om runtime deploy [<deploy-action>] [--steps=<deployfile>] [--specs=<specs>] [--select=<filter>] [--dry] [options]
       om runtime (control|inspect|celery) [<celery-command>...] [--worker=<worker>] [--queue=<queue>] [--celery-help] [--flags <celery-flags>] [options]
       om runtime (export|import) [<prefix/name>...] [--path=<path>] [--compress] [--list] [--promote] [options]
+      om runtime api <kind> <name>
 
       Options:
       --async             don't wait for results, will print taskid
@@ -499,3 +501,20 @@ class RuntimeCommandBase(CommandBase):
             arcfile = exp.from_archive(archive, pattern=pattern, progressfn=print, promote=promote)
             self.print("Imported objects:")
             self.print(arcfile)
+
+    def api(self):
+        om = get_omega(self.args)
+        kind = self.args.get('<kind>')
+        name = self.args.get('<name>')
+        apiurl = self.args.get('--apiurl')
+        userid = om.runtime.auth.userid
+        apikey = om.runtime.auth.apikey
+        qualifier = om.runtime.auth.qualifier
+        # SEC: CWE-918
+        # -- url is validated according to OWASP recommendation by ensure_api_url
+        apiurl = ensure_api_url(apiurl, om.defaults, key='OMEGA_RESTAPI_URL')
+        curlcmd = (f'curl -X PUT -H "Content-Type: application/json" '
+                   f'-H "Qualifier: {qualifier}" '
+                   f'-H "Authorization: ApiKey {userid}:{apikey}" '
+                   f'{apiurl}/api/v1/{kind}/{name}?datax=sample')
+        print(curlcmd)
