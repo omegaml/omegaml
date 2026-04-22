@@ -1,9 +1,10 @@
+from pathlib import Path
+
 import json
 import logging
 import os
 import shutil
 import tarfile
-from pathlib import Path
 from urllib.parse import urlparse
 
 from omegaml.backends.repository.basereg import ArtifactRepository, c, f
@@ -32,6 +33,10 @@ class OrasOciRegistry(ArtifactRepository):
         reg.add('/path/to/file')
         reg.add(['/path/to/file1', '/path/to/file2'])
         reg.add('/path/to/dir')
+
+    .. versionchanged:: NEXT
+        reg.url now includes the protocol oci:// or ocidir://, if specified. use reg.uri
+        to get back the path without protocol
     """
 
     def __init__(self, url, repo=None, namespace=None):
@@ -39,9 +44,6 @@ class OrasOciRegistry(ArtifactRepository):
         repo = repo or (f'{image}:{tag}' if image and tag else None)
         url = str(url)  # allow for url:Path
         url = url.replace(f'/{image}', '').replace(f':{tag}', '') if (image or tag) else url
-        if protocol == 'ocidir':
-            url = Path(url.replace('ocidir://', ''))
-            url.mkdir(parents=True, exist_ok=True)
         super().__init__(url, repo=repo, namespace=namespace)
         self.cache = Path('/tmp') / '.oras' / 'cache'
         os.environ.setdefault('ORAS_CACHE', str(self.cache))
@@ -62,16 +64,25 @@ class OrasOciRegistry(ArtifactRepository):
         cmd = f"login {self.url} -u {user} --password {token}"
         self._oras(cmd)  # subprocess.run wrapper, no output expected
 
-    def ocidir(self, url=None, opt='--oci-layout'):
-        """Return the CLI option for local OCI layout if the URL is a path.
+    def ociurl(self, url=None, dir_opt='--oci-layout'):
+        """Return the correct cli options for the oras command
 
         Args:
-            opt (str|bool): Option string to return when URL points to a filesystem path.
+            dir_opt (str|bool): Option string to return when URL points to a filesystem path.
 
         Returns:
-            str: opt if the url exists as a filesystem path, otherwise empty string.
+            str: the url as required for the oras command, prefixed with appropriate options
         """
-        return opt if Path(url or self.url).exists() else ''
+        if url.startswith('ocidir://') or url.startswith('oci:///'):
+            url = Path(url.replace('ocidir://', ''))
+            url.mkdir(parents=True, exist_ok=True)
+        elif url.startswith('oci://'):
+            url = url.replace('oci://', '')
+        return f'{dir_opt} {url}' if Path(url or self.url).exists() else url
+
+    @property
+    def uri(self):
+        return self.url.replace('oci://', '').replace('ocidir://')
 
     def create(self, repo=None, exists_ok=False):
         """Create an (empty) repository on the registry.
@@ -91,7 +102,7 @@ class OrasOciRegistry(ArtifactRepository):
             raise ValueError(f'{self.url}/{repo} already exists')
         if not exists:
             self._validate('repo', **x(locals()))
-            self._oras((f'push {self.ocidir()} {self.url}/{repo} '
+            self._oras((f'push {self.ociurl(self.url)}/{repo} '
                         f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'))
         return self.manifest(repo)
 
@@ -126,7 +137,7 @@ class OrasOciRegistry(ArtifactRepository):
             paths[i] = f'{paths[i]}:{t}' if t else paths[i]
         paths_to_add = ' '.join(str(p) for p in paths)
         # oras push will replace any previously existing manifest for the same repo:tag
-        cmd = f"push {self.ocidir()} {self.url}/{repo_path} {paths_to_add} --format json"
+        cmd = f"push {self.ociurl(self.url)}/{repo_path} {paths_to_add} --format json"
         output = self._oras(cmd)  # No output expected
         result = output | f(json.loads)
         return result
@@ -151,13 +162,13 @@ class OrasOciRegistry(ArtifactRepository):
                 self._validate('url', 'repo', **x(locals()))
                 for artifact in self.artifacts(repo=repo):
                     digest = artifact['digest']
-                    cmd = f'blob delete --force {self.ocidir()} {self.url}/{drepo}@{digest}'
+                    cmd = f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
                     self._oras(cmd)
 
-                cmd = f'manifest delete --force {self.ocidir()} {self.url}/{repo}'
+                cmd = f'manifest delete --force {self.ociurl(self.url)}/{repo}'
                 self._oras(cmd)
             else:
-                cmd = f'blob delete --force {self.ocidir()} {self.url}/{drepo}@{digest}'
+                cmd = f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
                 self._oras(cmd)
         elif not force:
             raise ValueError(f'{repo} does not exist (no tags)')
@@ -203,7 +214,7 @@ class OrasOciRegistry(ArtifactRepository):
                 is_tar = False
                 is_gzip = False
                 filename = lpath / Path(a.get('annotations', {}).get('org.opencontainers.image.title')).name
-            cmd = f"blob fetch {self.ocidir()} -o {filename} {self.url}/{repo_path}@{digest}"
+            cmd = f"blob fetch -o {filename} {self.ociurl(self.url)}/{repo_path}@{digest}"
             self._oras(cmd)
             if is_tar:
                 # extract tar blobs into destination directory
@@ -233,7 +244,7 @@ class OrasOciRegistry(ArtifactRepository):
         """
         repo = repo or self.repo
         self._validate('repo', **x(locals()))
-        cmd = f"manifest fetch {self.ocidir()} {self.url}/{repo}"
+        cmd = f"manifest fetch {self.ociurl(self.url)}/{repo}"
         output = self._oras(cmd) | f(json.loads)
         return output
 
@@ -264,7 +275,7 @@ class OrasOciRegistry(ArtifactRepository):
         repo = repo or self.repo
         repo = repo.split(':')[0]
         self._validate('repo', **x(locals()))
-        cmd = f'repo tags {self.ocidir()} {self.url}/{repo} --format json'
+        cmd = f'repo tags {self.ociurl(self.url)}/{repo} --format json'
         output = self._oras(cmd) | f(json.loads)
         return output['tags']
 

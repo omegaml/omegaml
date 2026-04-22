@@ -1,9 +1,10 @@
-import os
 from pathlib import Path
-from warnings import warn
 
+import os
 import smart_open
+import zipfile
 from mongoengine import GridFSProxy
+from warnings import warn
 
 
 class BackendBaseCommon:
@@ -34,7 +35,7 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, (str, Path)) and os.path.exists(obj)
+        return isinstance(obj, (str, Path)) and (os.path.exists(obj) or Path(obj).exists())
 
     def _store_to_file(self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None,
                        open_kwargs=None, **kwargs):
@@ -63,24 +64,44 @@ class BackendBaseCommon:
                 except Exception as e:
                     warn('deleting {filename} resulted in {e}'.format(**locals()))
                     pass
+        is_directory = self._is_path(obj) and Path(obj).is_dir()
+        is_file = self._is_path(obj) and Path(obj).is_file()
         if uri:
             open_kwargs = open_kwargs or {}
             chunksize = chunksize or 1024 * 1024 * 4  # 4MB default
             gridfile = None
-            if self._is_path(obj):
-                uri = str(uri).format(key=filename, filename=filename)
+            uri = str(uri).format(key=filename, filename=filename)
+            if is_file:
                 with (smart_open.open(obj, 'rb') as infile,
                       smart_open.open(uri, 'wb', **open_kwargs) as outfile):
                     while data := infile.read(chunksize):
                         outfile.write(data)
+            elif is_directory:
+                basedir = Path(obj)
+                with smart_open.open(uri, 'wb') as fout:
+                    with zipfile.ZipFile(fout, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+                        for fn in basedir.glob('**'):
+                            arcname = fn.relative_to(basedir.parent)
+                            zipf.write(fn, arcname)
             else:
                 with smart_open.open(uri, 'wb', **open_kwargs) as outfile:
                     while data := obj.read(chunksize):
                         outfile.write(data)
         else:
-            if self._is_path(obj):
+            if is_file:
                 with open(obj, 'rb') as fin:
                     fileid = store.fs.put(fin, filename=filename, encoding=encoding)
+            elif is_directory:
+                basedir = Path(obj)
+                tmpfn = Path(store.tmppath) / filename
+                with open(tmpfn, 'wb') as fout:
+                    with zipfile.ZipFile(fout, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+                        for fn in basedir.glob('**'):
+                            arcname = fn.relative_to(basedir.parent)
+                            zipf.write(fn, arcname)
+                with open(tmpfn, 'rb') as fin:
+                    fileid = store.fs.put(fin, filename=filename, encoding=encoding)
+                tmpfn.unlink()
             else:
                 fileid = store.fs.put(obj, filename=filename, encoding=encoding)
             gridfile = GridFSProxy(grid_id=fileid,

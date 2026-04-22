@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from shutil import rmtree
 
 from omegaml.backends.basemodel import BaseModelBackend
@@ -81,7 +82,7 @@ class RepositoryStorageMixin:
             # source_repo = reg.tag(repo)  # get latest tag, if not specified
             reg.extract(repo_uri, repo=image)  # pull repo and extract to it
             backend = self.get_backend(name, **kwargs)  # type: BaseModelBackend
-            obj = backend.get(name, uri=obj_uri)
+            obj = backend.get(name, uri=obj_uri, **kwargs)
         else:
             obj = super().get(name, *args, **kwargs)
         return obj

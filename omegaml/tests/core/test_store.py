@@ -1,24 +1,23 @@
-from __future__ import absolute_import
-
-import gc
-import unittest
-import uuid
-import warnings
-from datetime import timedelta, datetime
-from io import BytesIO
 from pathlib import Path
 from unittest import skip
 
 import dill
+import gc
 import gridfs
 import joblib
 import pandas as pd
 import pymongo
 import smart_open
+import unittest
+import uuid
+import warnings
+from datetime import timedelta, datetime
+from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
 from pymongo.errors import OperationFailure
+from shutil import rmtree
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
@@ -992,6 +991,26 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(data.encode('utf-8'), store.get('myfile').read())
         self.assertEqual(data.encode('utf-8'), meta.gridfile.read())
 
+    def test_raw_files_local(self):
+        store = self._make_store()
+        # test we can write from a file-like object
+        data = "some data"
+        # saving an open file implicitely
+        file_like = BytesIO(data.encode('utf-8'))
+        meta = store.put(file_like, 'myfile')
+        localFile = Path('/tmp/myfile')
+        # local file does not exist already
+        localFile.unlink(missing_ok=True)
+        store.get('myfile', local=localFile)
+        with open(localFile, 'r') as fin:
+            data_ = fin.read()
+            self.assertEqual(data_, data)
+        # localFile exists already
+        store.get('myfile', local=localFile, replace=True)
+        with open(localFile, 'r') as fin:
+            data_ = fin.read()
+            self.assertEqual(data_, data)
+
     def test_raw_files_uri(self):
         store = self._make_store()
         # test we can write from a file-like object to uri
@@ -1018,6 +1037,74 @@ class StoreTests(unittest.TestCase):
         Path(meta.uri).unlink()
         with self.assertRaises(FileNotFoundError):
             store.get('myfile')
+
+    def test_raw_files_zipped(self):
+        import zipfile
+        import omegaml
+        store = self._make_store()
+        # save a complete directory, zip up
+        # -- expect gridfile to store a zip file
+        basedir = Path(omegaml.__file__).parent / 'example' / 'demo'
+        meta = store.put(basedir, 'myfile')
+        self.assertTrue(zipfile.is_zipfile(meta.gridfile))
+        fout = store.get('myfile')
+        self.assertTrue(zipfile.is_zipfile(fout))
+        # get back as a zipfile
+        # -- local= is a filename (with extension), so we get a zip file
+        localfile = Path(store.tmppath) / 'myfile.zip'
+        extracted = store.get('myfile', local=localfile)
+        self.assertTrue(extracted.is_file())
+        self.assertTrue(localfile.is_file())
+        # extract zip file to a path
+        # -- local= is a directory (no extension), so we get an extracted file
+        tmpdir = Path(store.tmppath) / 'myfile'
+        extracted = store.get('myfile', local=tmpdir)
+        self.assertTrue(Path(extracted).is_dir())
+        self.assertTrue(tmpdir.is_dir())
+        self.assertTrue((tmpdir / 'demo').is_dir())
+        rmtree(tmpdir)
+        # extract zip file to a path with extension
+        # -- local= is a directory (with extension), so we have to extract=True
+        tmpdir = Path(store.tmppath) / 'myfile.explode'
+        extracted = store.get('myfile', local=tmpdir, extract=True)
+        self.assertTrue(Path(extracted).is_dir())
+        self.assertTrue(tmpdir.is_dir())
+        self.assertTrue((tmpdir / 'demo').is_dir())
+        rmtree(tmpdir)
+        # extract zip file to path that exists
+        # -- local is a directory that exists, so we don't have to extract=True
+        tmpdir = Path(store.tmppath) / 'myfile.explode'
+        tmpdir.mkdir()
+        extracted = store.get('myfile', local=tmpdir)
+        self.assertTrue(Path(extracted).is_dir())
+        self.assertTrue(tmpdir.is_dir())
+        self.assertTrue((tmpdir / 'demo').is_dir())
+        rmtree(tmpdir)
+
+    def test_raw_files_zipped_uri(self):
+        import zipfile
+        import omegaml
+        store = self._make_store()
+        # save a complete directory to a uri path, zip up
+        # -- expect gridfile to store a zip file
+        basedir = Path(omegaml.__file__).parent / 'example' / 'demo'
+        repodir = Path(store.tmppath) / 'myfile'
+        meta = store.put(basedir, 'myfile', uri=repodir)
+        self.assertTrue(zipfile.is_zipfile(repodir))
+        # get back the file, extract to a directory
+        # -- expected extracted contains the original files
+        extracted = store.get('myfile', local=repodir.parent / 'extracted')
+        self.assertTrue(extracted.is_dir())
+        self.assertTrue((extracted / 'demo').is_dir())
+        # get back the file as a zip file
+        # -- get back the zip file
+        extracted = store.get('myfile', local=repodir, extract=False)
+        self.assertTrue(zipfile.is_zipfile(extracted))
+        # get back the file as a zip file
+        # -- read from a specific location, write to local, extract
+        extracted = store.get('myfile', local=repodir.parent / 'extracted', uri=repodir)
+        self.assertTrue(extracted.is_dir())
+        self.assertTrue((extracted / 'demo').is_dir())
 
     def test_bucket(self):
         # test different buckets actually separate objects by the same name
