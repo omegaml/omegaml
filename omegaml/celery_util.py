@@ -1,8 +1,7 @@
 import getpass
 import sys
-from contextlib import contextmanager
-
 from celery import Task
+from contextlib import contextmanager
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -152,7 +151,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def logging(self):
         kwargs = self.request.kwargs or {}
         logging = kwargs.get('__logging', False)
-        if isinstance(logging, tuple):
+        if isinstance(logging, (tuple, list)):
             logname, level = logging
             if logname is True:
                 logname = 'root'
