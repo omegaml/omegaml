@@ -1,12 +1,11 @@
 import json
 import unittest
-from hashlib import pbkdf2_hmac
-from unittest.mock import patch
-from uuid import uuid4
-
 from flask import Flask
+from hashlib import pbkdf2_hmac
 from jose import jwe
 from jose.exceptions import JWEError
+from unittest.mock import patch, MagicMock
+from uuid import uuid4
 
 from omegaml import Omega
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
@@ -165,8 +164,10 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         for auth_kind in ('Bearer', 'ApiKey'):
             with (self.app.test_client() as client,
                   patch('omegaml.server.events.ssechat.stream_result') as stream_result,
-                  patch('omegaml.server.events.ssechat.auth_env') as auth_env):
-                auth_env.get_omega_from_apikey.side_effect = om
+                  patch('omegaml.server.events.ssechat.get_auth_env') as get_auth_env):
+                auth_env = MagicMock()
+                get_auth_env.return_value = auth_env
+                auth_env.get_omega_from_apikey.return_value = om
                 for k, v in cookies.items():
                     client.set_cookie(k, v)
                 if auth_kind == 'ApiKey':
