@@ -46,7 +46,7 @@ ai_deps = [
     'gunicorn[gevent]',  # required for async sse event server in scripts/ssechat
 ]
 test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
-client_deps = (tables + dashserve_deps)
+client_deps = (tables + dashserve_deps + graph_deps)
 install_deps = [
     'celery>5,<6.0',
     'joblib>=0.9.4',

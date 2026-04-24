@@ -15,6 +15,15 @@ class OmegaViewMixin:
 
     @property
     def om(self):
+        current_om = flask.current_app.current_om
+        if self.qualifiers and self.qualifier != getattr(current_om.defaults, 'OMEGA_QUALIFIER', None):
+            self.logger.debug(f'switching qualifier to {self.qualifier}')
+            from omegaml import setup
+            flask.current_app.current_om = om = setup(qualifier=self.qualifier)
+            # FIXME if setup() does not actually switch to the right qualifier, we should issue an error
+            if getattr(current_om.defaults, 'OMEGA_QUALIFIER', None) == self.qualifier:
+                session['bucket'] = 'default'
+        self.logger.debug(f'getting bucket {self.bucket}')
         flask.current_app.current_om = om = flask.current_app.current_om[self.bucket];
         om.status()  # start monitoring on first access
         return om
@@ -30,6 +39,20 @@ class OmegaViewMixin:
         # force bucket to be set in session
         current = self.bucket
         return self.om.buckets
+
+    @property
+    def qualifier(self):
+        qualifier = self.request.args.get('qualifier')
+        session['qualifier'] = qualifier if qualifier is not None else session.get('qualifier')
+        return session.get('qualifier')
+
+    @property
+    def qualifiers(self):
+        from flask import current_app
+        app = current_app
+        # force bucket to be set in session
+        current = self.qualifier
+        return app.qualifiers
 
     @property
     def store(self):

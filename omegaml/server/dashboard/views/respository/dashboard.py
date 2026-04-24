@@ -17,7 +17,9 @@ class Metadata:
 class DashboardView(BaseView):
     @route('/index')
     def index(self):
-        session['bucket'] = self.request.args.get('bucket')
+        # force processing of request args
+        session['bucket'] = self.request.args.get('bucket') or session.get('bucket')
+        session['qualifier'] = self.request.args.get('qualifier') or session.get('qualifier')
         return redirect(url_for('omega-server.models_view_list'))
         return render_template('dashboard/index.html',
                                segment='index', buckets=self.buckets)

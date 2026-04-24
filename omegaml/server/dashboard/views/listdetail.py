@@ -14,10 +14,10 @@ class ListDetailMixin(mixin_for(BaseView)):
     def view_list(self, template=None):
         template = template or self.list_template.format(self=self)
         items = self.members()
+        context = self.context_data()
         return render_template(f"dashboard/{template}",
-                               segment=self.segment,
                                items=items,
-                               buckets=self.buckets)
+                               **context)
 
     @fv.route('/{self.segment}/<path:name>')
     def view_detail(self, name, template=None):
@@ -50,6 +50,7 @@ class ListDetailMixin(mixin_for(BaseView)):
         return {
             'segment': self.segment,
             'buckets': self.buckets,
+            'qualifiers': self.qualifiers,
         }
 
     def _default_markdown(self, meta):

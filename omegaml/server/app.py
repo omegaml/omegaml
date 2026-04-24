@@ -6,11 +6,13 @@ TODO: check all CDN dependencies, e.g. toastui
 
 import logging
 import os
+import requests
 import warnings
 from flask import Flask, redirect
 from flask_session import Session
 from matplotlib import pyplot as plt
 
+from omegaml.client.userconf import ensure_api_url
 from omegaml.server.config import CONFIG_MAP
 from omegaml.server.logutil import configure_logging, logutil_flask
 from omegaml.server.restapi.util import AwareJSONEncoder
@@ -33,10 +35,15 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
         app = Flask(__name__,
                     static_url_path=f'{url_prefix}/static')
         should_debug = os.getenv('DEBUG', '0')[0].lower() in ('1', 'y', 't')
-        config = CONFIG_MAP['dev'] if should_debug else CONFIG_MAP['live']
+        if should_debug:
+            config = CONFIG_MAP['dev']
+            logging.basicConfig(level='DEBUG', force=True)
+            app.logger.setLevel('DEBUG')
+        else:
+            config = CONFIG_MAP['live']
+            configure_logging(settings=app.config)
+            logutil_flask(app)
         app.config.from_object(config)
-        configure_logging(settings=app.config)
-        logutil_flask(app)
         Session(app)
 
         # simulate user
@@ -75,6 +82,8 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     js_routes(app)
     # TODO support multiple instances with different userid/qualifier combinations
     app.current_om = setup_omega()
+    app.qualifiers = [q for q in getattr(app.current_om, 'OMEGA_QUALIFIER', []) if q != 'default']
+    app.qualifiers = ['developer:sandbox', 'developer:live']
     # use our custom json_dumps function
     # -- see https://stackoverflow.com/a/65129122/890242
     app.jinja_env.policies['json.dumps_function'] = json_dumps_np
@@ -102,6 +111,21 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
         return dict(cards_enabled=cards_enabled)
 
     return app
+
+
+def get_cloud_config(app, apiurl=None):
+    om = app.current_om
+    huburl = ensure_api_url(apiurl, om.defaults)
+    user = om.runtime.auth.userid
+    qualifier = om.runtime.auth.qualifier
+    headers = {'Qualifier': qualifier}
+    auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
+    resp = requests.get(f'{huburl}/api/config/dashboard',
+                        auth=auth, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
+    config = data.get('data', {})
+    return config
 
 
 def setup_omega(**kwargs):
