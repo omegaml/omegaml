@@ -10,6 +10,7 @@ import joblib
 import pandas as pd
 import pymongo
 import smart_open
+import tarfile
 import unittest
 import uuid
 import warnings
@@ -17,11 +18,6 @@ from datetime import timedelta, datetime
 from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
-from pandas.testing import assert_frame_equal, assert_series_equal
-from pymongo.errors import OperationFailure
-from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
-
 from omegaml.backends.coreobjects import CoreObjectsBackend
 from omegaml.backends.genericmodel import GenericModelBackend
 from omegaml.backends.rawdict import PandasRawDictBackend
@@ -33,6 +29,10 @@ from omegaml.store import OmegaStore
 from omegaml.store.combined import CombinedOmegaStoreMixin
 from omegaml.store.queryops import humanize_index
 from omegaml.util import delete_database, json_normalize, migrate_unhashed_datasets
+from pandas.testing import assert_frame_equal, assert_series_equal
+from pymongo.errors import OperationFailure
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression, LinearRegression
 
 
 class StoreTests(unittest.TestCase):
@@ -1277,3 +1277,39 @@ class StoreTests(unittest.TestCase):
         Path(meta.uri).unlink()
         with self.assertRaises(FileNotFoundError):
             store.get('mymodel', loader=loader)
+
+    def test_generic_model_serializing_directory(self):
+        class FooModel:
+            def predict(self, *args, **kwargs):
+                return 42
+
+        # enable custom serializers
+        store = self._make_store(bucket='foo', prefix='models/')
+        store.register_backend(GenericModelBackend.KIND, GenericModelBackend)
+
+        # define serializer and loader callables
+        # -- returns a directory, which triggers creation of tgz
+        def serializer(store, model, filename, **kwargs):
+            dirname = Path(filename)
+            dirname.mkdir(parents=True)
+            with open(dirname / 'modelfile.custom', 'wb') as fout:
+                dill.dump(model, fout)
+            return dirname
+
+        # expects a filename= to be a directory
+        def loader(store, infile, filename=None, **kwargs):
+            with open(Path(filename) / 'modelfile.custom', 'rb') as fin:
+                return dill.load(fin)
+
+        # -- use generic backend by specifying kind='python.model'
+        model = FooModel()
+        meta = store.put(model, 'mymodel', kind='python.model', serializer=serializer)
+        self.assertEqual(meta.kind, GenericModelBackend.KIND)
+        with tarfile.open(fileobj=meta.gridfile) as tf:
+            self.assertTrue(GenericModelBackend._magictgz in (Path(fn).name for fn in tf.getnames()))
+        # load model
+        model_ = store.get('mymodel', loader=loader)
+        self.assertEqual(model_.predict(), 42)
+        # -- test loading without specific loader logic
+        with self.assertRaises(IsADirectoryError):
+            store.get('mymodel')
