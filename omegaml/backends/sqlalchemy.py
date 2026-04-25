@@ -1,15 +1,15 @@
+from logging import warning
+
 import logging
 import os
+import sqlalchemy
 import string
 import warnings
 from getpass import getuser
 from hashlib import sha256
-from logging import warning
-from urllib.parse import quote_plus
-
-import sqlalchemy
 from packaging.version import Version
 from sqlalchemy.exc import StatementError
+from urllib.parse import quote_plus
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive, signature
@@ -51,6 +51,19 @@ ENGINE_KWARGS = dict(echo=False, pool_pre_ping=True, pool_recycle=3600)
 # -- pool_recylce=N - do not reuse connections older than N seconds
 
 logger = logging.getLogger(__name__)
+
+try:
+    # disable pydbc pooling in favor of SQLAlchemy pooling, as recommended by sqlalchemy docs
+    # see: https://github.com/mkleehammer/pyodbc/wiki/The-pyodbc-Module#pooling
+    #      https://docs.sqlalchemy.org/en/14/dialects/mssql.html#pyodbc-pooling-connection-close-behavior
+    #      https://docs.sqlalchemy.org/en/20/dialects/mssql.html#pyodbc-pooling-connection-close-behavior
+    import pyodbc
+
+    # we do this here to ensure this is done at the earliest possible time, independent of actual connections
+    # -- this is only effective before the first pyodbc connection
+    pyodbc.pooling = False
+except:
+    pass  # noqa
 
 
 class SQLAlchemyBackend(BaseDataBackend):

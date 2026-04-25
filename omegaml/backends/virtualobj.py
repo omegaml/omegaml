@@ -1,9 +1,8 @@
 import builtins
+import dill
 import sys
 import types
 import warnings
-
-import dill
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import tryOr
@@ -272,6 +271,7 @@ class _DillDip:
         # if isinstance(obj, type):
         #    obj = obj()
         self._check(obj)
+        # FIXME respect as_source before _dill_main
         data = (self._dill_main(obj, **dill_kwargs) or
                 self._dill_types_or_function(obj, as_source=as_source, **dill_kwargs) or
                 self._dill_dill(obj, **dill_kwargs))
@@ -323,6 +323,7 @@ class _DillDip:
     def _dill_source(self, obj, as_source=False, **dill_kwargs):
         # include source code along dill
         try:
+            # FIXME: include python version
             source = dill.source.getsource(obj, lstrip=True)
             source_obj = {'__dipped__': self.__calories,
                           'source': ''.join(source),
@@ -356,6 +357,7 @@ class _DillDip:
         from omegaml.backends.genai.models import GenAIModelHandler, virtual_genai
         # re-compile source obj in __main__
         if self.isdipped(obj):
+            # FIXME and check python version; if not the same don't load the dill object (it may load but still not be executable)
             if 'dill' in obj:
                 try:
                     obj = dill.loads(obj['dill'])
