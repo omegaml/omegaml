@@ -1,9 +1,7 @@
 from unittest import TestCase, skipUnless
 
 import dill
-
 from omegaml.backends.genericmodel import GenericModelBackend
-from omegaml.backends.pytorch import PytorchModelBackend
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
@@ -15,6 +13,9 @@ except:
     class TestPytorchModels(OmegaTestMixin, TestCase):
         pass
 else:
+    from omegaml.backends.pytorch import PytorchModelBackend
+
+
     @skipUnless(module_available('torch'), "skipping due to pytorch is not installed")
     class TestPytorchModels(OmegaTestMixin, TestCase):
         def setUp(self):

@@ -54,11 +54,19 @@ class BaseModelBackend(BackendBaseCommon):
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
 
+    #: model serializer - save a model instance to a filename (or directory)
     serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
+    #: model deserializer - load a model instance from a filename (or directory)
     loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile or filename)
+    #: return the equivalent of the predict() function, defaults to obj.predict()
     infer = lambda obj, **kwargs: getattr(obj, 'predict')
+    #: transform the input data into model predict() format, defaults to np.array(data).reshape(-1, -1)
     reshape = lambda data, **kwargs: reshaped(data)
-    types = None
+    #: the types this backend can store, defaults to (object,),
+    #: used as isinstance(obj, self.types). override .supports() for more complex logic
+    types = (object,)
+    #: tgz magic file, used to signal a serialized model was packaged by this class
+    _magictgz = '.omegaml.tgz'
 
     def __init__(self, model_store=None, data_store=None, tracking=None, **kwargs):
         assert model_store, "Need a model store"
@@ -130,17 +138,24 @@ class BaseModelBackend(BackendBaseCommon):
 
         .. versionchanged:: 0.18.0
             enable custom serializer
+
+        .. versionchanged: NEXT
+            enable multi-file serialized models
         """
         serializer = serializer or getattr(self.serializer, '__func__')  # __func__ is the unbound method
         kwargs.setdefault('key', key)
         tmpfn = serializer(self, model, tmpfn, **kwargs) or tmpfn
-        tmpfn = Path(tmpfn)
-        fn_tgz = Path(tmpfn).parent / 's' / Path(tmpfn).name
-        shutil.rmtree(fn_tgz.parent, ignore_errors=True)
-        fn_tgz.parent.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(fn_tgz, 'w:') as fout:
-            fout.add(tmpfn, arcname=tmpfn.relative_to(tmpfn.parent))
-        return fn_tgz
+        modelfn = Path(tmpfn)
+        if modelfn.is_dir():
+            fn_tgz = Path(tmpfn).parent / 's' / self._magictgz
+            shutil.rmtree(fn_tgz, ignore_errors=True)
+            fn_tgz.parent.mkdir(parents=True, exist_ok=True)
+            with open(modelfn / self._magictgz, 'w') as fout:
+                fout.write('# tgz packaged by omegaml')
+            with tarfile.open(fn_tgz, 'w:') as fout:
+                fout.add(modelfn, arcname=modelfn.relative_to(modelfn.parent))
+            modelfn = fn_tgz
+        return str(modelfn)
 
     def _extract_model(self, infile, key, tmpfn, loader=None, **kwargs):
         """
@@ -160,27 +175,50 @@ class BaseModelBackend(BackendBaseCommon):
 
         .. versionchanged:: 0.18.0
             enable custom loader
+
+        .. versionchanged: NEXT
+            enable multi-file serialized models
         """
         loader = loader or getattr(self.loader, '__func__')  # __func__ is the unbound method
-        fn_tgz = Path(tmpfn).parent / 's' / Path(tmpfn).name
-        fn_dir = Path(tmpfn).parent / 'x' / Path(tmpfn).name
-        shutil.rmtree(fn_tgz.parent, ignore_errors=True)
-        shutil.rmtree(fn_dir, ignore_errors=True)
-        fn_tgz.parent.mkdir(parents=True, exist_ok=True)
-        fn_dir.mkdir(parents=True, exist_ok=True)
-        # -- write the tgz created by _package_model to a temp tgz file
-        with open(fn_tgz, mode='wb') as fout:
-            fout.write(infile.read())
-        # -- extract contents, we get back what the serializer wrote
-        with tarfile.open(fn_tgz, mode='r') as fin:
-            fin.extractall(fn_dir)
-        # call the loader
-        files = list(fn_dir.glob('**/*'))
-        infile = open(files[-1], 'rb') if len(files) == 1 else None
-        kwargs.setdefault('key', key)
-        kwargs.setdefault('filename', files[0])
+
+        def is_omegaml_tgz(infile):
+            try:
+                with tarfile.open(fileobj=infile) as tf:
+                    if self._magictgz not in (Path(fn).name for fn in tf.getnames()):
+                        raise ValueError(f'no {self._magictgz} file found')
+            except (tarfile.TarError, ValueError):
+                return False
+            infile.open()
+            infile.seek(0)
+            return True
+
+        if is_omegaml_tgz(infile):
+            fn_tgz = Path(tmpfn).parent / 's' / 'modelfile.tgz'
+            fn_dir = Path(tmpfn).parent / 'x'
+            shutil.rmtree(fn_tgz.parent, ignore_errors=True)
+            shutil.rmtree(fn_dir, ignore_errors=True)
+            fn_tgz.parent.mkdir(parents=True, exist_ok=True)
+            fn_dir.mkdir(parents=True, exist_ok=True)
+            # -- write the tgz created by _package_model to a temp tgz file
+            with open(fn_tgz, mode='wb') as fout:
+                fout.write(infile.read())
+            # -- extract contents, we get back what the serializer wrote
+            with tarfile.open(fn_tgz, mode='r') as fin:
+                fin.extractall(fn_dir)
+            # -- remove the omegaml magic to avoid manifest issues
+            (fn_dir / self._magictgz).unlink(missing_ok=True)
+            # call the loader
+            files = list(fn_dir.glob('**/*'))
+            infile = open(files[-1], 'rb') if len(files) == 1 else None
+            infile.close() if len(files) == 1 else None
+            kwargs.setdefault('key', key)
+            kwargs.setdefault('filename', files[0])
+        else:
+            kwargs.setdefault('key', key)
+            kwargs.setdefault('filename', tmpfn)
+        # finally, load the model
         obj = loader(self, infile, **kwargs)
-        infile.close() if len(files) == 1 else None
+        shutil.rmtree(tmpfn, ignore_errors=True)
         return obj
 
     def _remove_path(self, path):
