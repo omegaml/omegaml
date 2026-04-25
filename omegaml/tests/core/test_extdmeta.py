@@ -5,12 +5,11 @@ import unittest
 from datetime import datetime
 from marshmallow import Schema, fields, ValidationError
 from numpy.testing import assert_array_equal
-from sklearn.linear_model import LinearRegression
-
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
-from omegaml.mixins.store.extdmeta import SignatureMixin, ModelSignatureMixin, ScriptSignatureMixin
+from omegaml.mixins.store.extdmeta import SignatureMixin, ModelSignatureMixin, ScriptSignatureMixin, DatasetIndexesMixin
 from omegaml.tests.util import OmegaTestMixin
+from sklearn.linear_model import LinearRegression
 
 
 class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
@@ -19,6 +18,7 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
     def setUp(self):
         om = self.om = Omega()
         om.datasets.register_mixin(SignatureMixin)
+        om.datasets.register_mixin(DatasetIndexesMixin)
         om.models.register_mixin(ModelSignatureMixin)
         om.scripts.register_mixin(ScriptSignatureMixin)
         super().clean()
@@ -386,6 +386,21 @@ class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('404', specs['paths']['/api/service/mymodel']['post']['responses'])
         self.assertIn('mymodel_404', specs['definitions'])
         self.assertIn('message', specs['definitions']['mymodel_404']['properties'])
+
+    def test_datasets_idx_specs(self):
+        om = self.om
+        df = pd.DataFrame({'x': range(10), 'y': range(10, 0, -1)})
+        meta = om.datasets.put(df, 'test')
+        om.datasets.link_indexes('test', {'x': +1, 'y': -1})
+        om.datasets.ensure_indexes('test')
+        om.datasets.link_indexes('test', '-x,+y')
+        meta = om.datasets.ensure_indexes('test')
+        self.assertEqual(meta.attributes['indexes'], [{'x': 1, 'y': -1}, {'x': -1, 'y': 1}])
+        indexes = om.datasets.list_indexes('test')
+        self.assertTrue(any(idx in ('+x,-y', '-x,+y') for idx in indexes.values()))
+        om.datasets.drop_indexes('test')
+        indexes = om.datasets.list_indexes('test')
+        self.assertFalse(any(idx in ('+x,-y', '-x,+y') for idx in indexes.values()))
 
 
 @virtualobj
