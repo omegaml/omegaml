@@ -1,9 +1,12 @@
-import os
 from pathlib import Path
+
+import os
+import smart_open
+from getpass import getuser
+from mongoengine import GridFSProxy
 from warnings import warn
 
-import smart_open
-from mongoengine import GridFSProxy
+from omegaml.util import KeepMissing
 
 
 class BackendBaseCommon:
@@ -161,3 +164,23 @@ class BackendBaseCommon:
     def _call_handler(self):
         # by default the data store handles _pre and _post methods in self.perform()
         return self.data_store
+
+    def _resolve_placeholders(self, creds, secrets=None):
+        """ resolve placeholders in a uri or other string with secrets obtained from env and om.defaults
+
+        Will replace all {placeholders} from om.defaults and the os environment, in that order. env variables
+        are only used if om.defaults.OMEGA_ALLOW_ENV_CONFIG is True.
+
+        Args:
+            creds (str): the string containing placeholders
+            secrets (dict): optional, additional secrets
+
+        Returns:
+            str: resolved creds string
+        """
+        values = ({k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
+                  if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict())
+        values.update(**self.data_store.defaults)
+        values.update(secrets or {})
+        user = getattr(self.data_store.defaults, 'OMEGA_USERID', getuser())
+        return creds.format_map(KeepMissing({**values, "userid": user}))

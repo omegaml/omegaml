@@ -1,9 +1,9 @@
+from http import HTTPStatus
+
 import logging
 import os
 import sys
 import warnings
-from http import HTTPStatus
-
 from mongoengine import disconnect
 
 from omegaml import Omega

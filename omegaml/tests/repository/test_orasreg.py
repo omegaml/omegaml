@@ -1,8 +1,10 @@
+from pathlib import Path
+from unittest import skipUnless
+
 import shutil
 import unittest
-from pathlib import Path
 from tempfile import mkdtemp
-from unittest import skipUnless
+from unittest.mock import patch
 
 from omegaml.backends.repository.basereg import chdir
 from omegaml.backends.repository.orasreg import OrasOciRegistry, parse_ociuri
@@ -49,57 +51,57 @@ class TestOrasRegistry(unittest.TestCase):
     def test_parse_ociuri(self):
         # full spec
         url = 'oci://ghcr.io/user/myimage:tag'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'tag')
         # registry only
         url = 'oci://ghcr.io'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io')
         self.assertEqual(namespace, '')
         self.assertEqual(image, '')
         self.assertEqual(tag, '')
         # registry without namespace, image
         url = 'oci://ghcr.io/myimage:tag'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io')
         self.assertEqual(namespace, '')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'tag')
         # registry with namespace
         url = 'oci://ghcr.io/user'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, '')
         self.assertEqual(tag, '')
         # registry with namespace and image
         url = 'oci://ghcr.io/user/image'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'image')
         self.assertEqual(tag, 'latest')
         # implied oci:// without namespace, with image
         url = 'ghcr.io/image:latest'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io')
         self.assertEqual(namespace, '')
         self.assertEqual(image, 'image')
         self.assertEqual(tag, 'latest')
         # implied oci:// with namespace and image
         url = 'ghcr.io/user/image'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'oci')
-        self.assertEqual(url, 'ghcr.io')
+        self.assertEqual(url, 'oci://ghcr.io/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'image')
         self.assertEqual(tag, 'latest')
@@ -107,49 +109,49 @@ class TestOrasRegistry(unittest.TestCase):
     def test_parse_ociuri_dir(self):
         # full spec
         url = 'ocidir:///tmp/registry/ns/user/myimage:tag'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry/ns/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'tag')
         # registry only
         url = 'ocidir:///tmp/registry'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry')
         self.assertEqual(namespace, '')
         self.assertEqual(image, '')
         self.assertEqual(tag, '')
         # registry without namespace, image
         url = 'ocidir:///tmp/registry/myimage:tag'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry')
         self.assertEqual(namespace, '')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'tag')
         # registry with namespace
         url = 'ocidir:///tmp/registry/ns/user'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry/ns/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, '')
         self.assertEqual(tag, '')
         # registry with namespace and image
         url = 'ocidir:///tmp/registry/ns/user/myimage'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry/ns/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'latest')
         # just a path
         url = '/tmp/registry/ns/user/myimage'
-        protocol, url, namespace, image, tag = parse_ociuri(url)
+        protocol, url, namespace, image, tag, auth = parse_ociuri(url)
         self.assertEqual(protocol, 'ocidir')
-        self.assertEqual(url, '/tmp/registry')
+        self.assertEqual(url, 'ocidir:///tmp/registry/ns/user')
         self.assertEqual(namespace, 'user')
         self.assertEqual(image, 'myimage')
         self.assertEqual(tag, 'latest')
@@ -170,8 +172,8 @@ class TestOrasRegistry(unittest.TestCase):
         rpath = self.tmppath
         lpath = rpath / 'ns' / 'myspace' / 'myimage'
         shutil.rmtree(rpath) if rpath.exists() else None
-        reg = OrasOciRegistry(lpath, 'fooimage:scratch')
-        self.assertEqual(reg.url, rpath / 'ns' / 'myspace')
+        reg = OrasOciRegistry(f'file://{lpath}', 'fooimage:scratch')
+        self.assertEqual(reg.url, 'file://' + str(rpath / 'ns' / 'myspace'))
         self.assertEqual(reg.repo, 'fooimage:scratch')
         reg.create()
         artifacts = reg.artifacts()
@@ -247,6 +249,16 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertTrue((epath / 'files' / 'myfile.txt').exists())
         self.assertTrue((epath / 'files' / 'otherfile.txt').exists())
         self.assertTrue((epath / 'readme.txt').exists())
+
+    def test_ociuri_with_credentials(self):
+        reg = OrasOciRegistry('oci://myuser:mykey@ghcr.io', 'orasimage:test')
+        self.assertEqual(reg.url, 'oci://ghcr.io')
+        self.assertEqual(reg.auth, ('myuser', 'mykey'))
+        with (patch.object(reg, 'login') as mock_login,
+              patch.object(reg, '_oras') as mock_oras):
+            reg.manifest()
+            mock_login.assert_called_with('myuser', 'mykey')
+            mock_oras.assert_called_once()
 
     def _make_files(self, rpath):
         subdir = rpath / 'myfiles'
