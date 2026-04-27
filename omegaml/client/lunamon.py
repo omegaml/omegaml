@@ -9,9 +9,10 @@ import os
 import pymongo
 import weakref
 from datetime import datetime
-from omegaml.util import inprogress
 from time import sleep
 from yaspin import yaspin
+
+from omegaml.util import inprogress
 
 
 class LunaMonitor:
@@ -386,7 +387,7 @@ class LunaMonitor:
         def _w(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
-            except Exception as e:
+            except TypeError as e:
                 return fn()
 
         return _w
@@ -452,11 +453,11 @@ class OmegaMonitors(LunaMonitorChecks):
     """ Luna monitors to run for omegaml instances """
     resource_var = 'om'
 
-    def check_stores(self):
+    def check_stores(self, monitor=None, **kwargs):
         with pymongo.timeout(1):
             self.om.datasets.list()
 
-    def check_runtime(self):
+    def check_runtime(self, monitor=None, **kwargs):
         with pymongo.timeout(1):
             if self.om.runtime.celeryapp.conf.get('CELERY_ALWAYS_EAGER'):
                 # local runtime in principle always works
@@ -484,7 +485,7 @@ class OmegaMonitors(LunaMonitorChecks):
         with pymongo.timeout(monitor.timeout):
             self.om.datasets.mongodb.command('ping')
 
-    def check_broker(self):
+    def check_broker(self, monitor=None, **kwargs):
         with pymongo.timeout(1):
             self.om.runtime.celeryapp.control.ping()
 

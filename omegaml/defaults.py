@@ -7,6 +7,7 @@ import logging
 import os
 import shutil
 import sys
+
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
@@ -256,8 +257,8 @@ OMEGA_MONITORING_MIXINS = {
 }
 #: session cache settings for cachetools.TTLCache
 OMEGA_SESSION_CACHE = {
-    'maxsize': 1,  # cache at most one session
-    'ttl': 3600,  # keep it for 1 hour
+    'maxsize': 5,  # max sessions cached
+    'ttl': 60 * 30,  # keep it for 30 minutes
 }
 #: allow overrides from local env upon retrieving config from hub (disable in workers)
 OMEGA_ALLOW_ENV_CONFIG = truefalse(os.environ.get('OMEGA_ALLOW_ENV_CONFIG', '1'))
@@ -528,6 +529,7 @@ def setup_logging():
         'pymongo.serverSelection': 'ERROR',
         # kombu, celery tend to be too verbose
         'kombu': 'ERROR',
+        'celery.backends': 'ERROR',
         'celery.utils.functional': 'ERROR',
         # omgea store is too verbose
         'omegaml.store.base': 'ERROR',

@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-from contextlib import contextmanager
 from importlib import import_module
 from pathlib import Path
 
@@ -15,6 +14,7 @@ import validators
 import warnings
 from base64 import b64encode
 from bson import ObjectId
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, date, timezone
 from hashlib import sha256
@@ -921,7 +921,7 @@ def raises(fn, wanted_ex):
     return True
 
 
-def dict_merge(destination, source, delete_on='__delete__', subset=None):
+def dict_merge(destination, source, delete_on='__delete__', subset=None, override=True):
     """
     Merge two dictionaries, including sub dicts
 
@@ -933,6 +933,8 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
             be deleted in the destination dict. Defaults to '__delete__'
         subset (callable): optional, only merge item
             if subset(key, value) is True
+        override (bool): optional, if True overwrites existing value,
+            defaults to  True
 
     See Also:
         https://stackoverflow.com/a/20666342/890242
@@ -944,14 +946,14 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None):
         elif isinstance(value, dict):
             # get node or create one
             node = destination.setdefault(key, {})
-            dict_merge(node, value, delete_on=delete_on)
+            dict_merge(node, value, delete_on=delete_on, override=override)
         elif isinstance(value, list):
             node = destination.setdefault(key, [])
             node.extend(value)
         else:
             if value == dict_merge.DELETE and key in destination:
                 del destination[key]
-            else:
+            elif override or key not in destination:
                 destination[key] = value
     return destination
 

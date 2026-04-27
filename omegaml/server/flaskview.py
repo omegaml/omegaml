@@ -54,3 +54,7 @@ class FlaskView:
     def userid(self):
         # TODO use flask session to get the actual user id
         return flask.session.get('userid')  # default should be and anonymous user or raise some error
+
+    @property
+    def logger(self):
+        return flask.current_app.logger
