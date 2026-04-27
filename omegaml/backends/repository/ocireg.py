@@ -26,7 +26,7 @@ class OCIRegistryBackend(BaseModelBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        return str(obj).startswith('oci://') or str(obj).startswith('ocidir://')
+        return any(str(obj).startswith(prefix) for prefix in ('oci://', 'ocidir://', 'file://'))
 
     def put(self, obj, name, asname=None, **kwargs):
         """ store a reference to an oci registry
@@ -79,4 +79,5 @@ class OCIRegistryBackend(BaseModelBackend):
     def _get_registry(self, meta, image=None):
         # TODO resolve placeholders
         url = meta.kind_meta['url']
+        url = self._resolve_placeholders(url)
         return OrasOciRegistry(url, repo=image)

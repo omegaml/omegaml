@@ -7,10 +7,11 @@ from omegaml.util import tryOr
 
 
 class ArtifactRepository:
-    def __init__(self, url, repo=None, namespace=None):
+    def __init__(self, url, repo=None, namespace=None, auth=None):
         self.url = url
         self.repo = repo
         self.namespace = namespace
+        self.auth = auth
 
     def login(self, user, token):
         raise NotImplementedError
