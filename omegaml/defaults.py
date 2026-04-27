@@ -7,6 +7,7 @@ import logging
 import os
 import shutil
 import sys
+import warnings
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
@@ -467,7 +468,15 @@ def load_framework_support(vars=globals()):
 
     if OMEGA_DISABLE_FRAMEWORKS:
         return
-    if tensorflow_available():
+    #: transformers
+    if module_available('transformers', load=False):
+        # ensure legacy keras using tf-keras module
+        # -- https://github.com/huggingface/transformers/issues/34761
+        os.environ.setdefault('TF_USE_LEGACY_KERAS', "1")
+        if module_available('keras') and not os.environ.get("TF_USE_LEGACY_KERAS") == "1":
+            warnings.warn('transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
+                          ' https://github.com/huggingface/transformers/issues/34761 for details')
+    if tensorflow_available(max='2.15', py_max='3.11'):
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
@@ -481,7 +490,7 @@ def load_framework_support(vars=globals()):
             with silence(): import onnxruntime as ort  # noqa
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
     #: keras backend
-    if keras_available():
+    if keras_available(max='2.0', py_max='3.11'):
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_KERAS'])
     #: sqlalchemy backend
     if module_available('sqlalchemy'):

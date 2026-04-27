@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from importlib import import_module
 from pathlib import Path
 
+import importlib
 import json
 import logging
 import os
@@ -14,7 +15,6 @@ import validators
 import warnings
 from base64 import b64encode
 from bson import ObjectId
-from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, date, timezone
 from hashlib import sha256
@@ -631,30 +631,55 @@ def ignorewarnings(fn):
 
 
 @ignorewarnings
-def module_available(modname):
+def module_available(modname, min=None, max=None, load=True, py_min=None, py_max=None):
+    from importlib.metadata import version
+    from packaging.version import Version
     try:
-        import_module(modname)
-    except:
+        if load:
+            import_module(modname)
+        elif importlib.util.find_spec(modname) is None:
+            raise ModuleNotFoundError(modname)
+    except (TypeError, ModuleNotFoundError) as e:
         return False
+    if py_min or py_max or min or max:
+        try:
+            mod_version = version(modname)
+            py_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+            min_ok = Version(mod_version) >= Version(min) if min else True
+            max_ok = Version(mod_version) <= Version(max) if max else True
+            py_min_ok = Version(py_version) >= Version(py_min) if py_min else True
+            py_max_ok = Version(py_version) <= Version(py_max) if py_max else True
+        except Exception as e:
+            logger.warning(f'version check for {modname=} {min=} {max} failed due to {e}')
+            return False
+        else:
+            min = min or 'any'
+            max = max or 'any'
+            py_min = py_min or 'any'
+            py_max = py_max or 'any'
+            if any(bool(v) is False for v in (min_ok, max_ok, py_min_ok, py_max_ok)):
+                logger.warning((f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
+                                f'Use a model helper for {modname} models.'))
+            return all(v for v in (min_ok, max_ok, py_min_ok, py_max_ok))
     return True
 
 
-def tensorflow_available():
+def tensorflow_available(min=None, max=None, py_min=None, py_max=None):
     # https://stackoverflow.com/a/38645250
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
     logging.getLogger('tensorflow').setLevel(logging.ERROR)
-    return module_available('tensorflow')
+    return module_available('tensorflow', min=min, max=max, py_min=py_min, py_max=py_max)
 
 
-def keras_available():
-    return module_available('keras')
+def keras_available(min=None, max=None, py_min=None, py_max=None):
+    return module_available('keras', min=min, max=max, py_min=py_min, py_max=py_max)
 
 
-def mlflow_available():
+def mlflow_available(min=None, max=None, py_min=None, py_max=None):
     # -- ignore pydantic warning
     # -- TODO remove this once mlflow has fixed pydantic v2 migration issue
     # see https://github.com/mlflow/mlflow/pull/13023
-    available = module_available('mlflow')
+    available = module_available('mlflow', min=min, max=max, py_min=py_min, py_max=py_max)
     return available
 
 
@@ -830,6 +855,7 @@ def base_loader(_base_config):
 
 from io import StringIO
 
+from contextlib import contextmanager
 import re
 
 
