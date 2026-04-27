@@ -19,7 +19,7 @@ class KerasBackend(BaseModelBackend):
             is_keras_native = isinstance(obj, (Sequential, Model))
         return is_tf_keras or is_keras_native
 
-    def _package_model(self, model, key, tmpfn):
+    def _package_model(self, model, key, tmpfn, **kwargs):
         # https://www.tensorflow.org/api_docs/python/tf/keras/models/save_model
         # defaults to h5 since TF 2.x. We keep with h5 for simplicity for now
         import tensorflow as tf
@@ -27,9 +27,9 @@ class KerasBackend(BaseModelBackend):
         model.save(tmpfn, **kwargs)
         return tmpfn
 
-    def _extract_model(self, infile, key, tmpfn):
+    def _extract_model(self, infile, key, tmpfn, **kwargs):
         # override to implement model loading
-        from keras.engine.saving import load_model
+        from keras.src.saving.legacy.save import load_model
         with open(tmpfn, 'wb') as pkgf:
             pkgf.write(infile.read())
         return load_model(tmpfn)
@@ -76,8 +76,8 @@ class KerasBackend(BaseModelBackend):
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def score(
-          self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-          **kwargs):
+            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
+            **kwargs):
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)

@@ -1,17 +1,20 @@
-import unittest
 from unittest import TestCase
 
 import numpy as np
+import unittest
 
-from omegaml import Omega
 from omegaml.backends.keras import KerasBackend
+from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("keras") or module_available("tensorflow.keras"), "keras not available")
-class KerasBackendTests(TestCase):
+@unittest.skipUnless(
+    module_available("keras", max='2.0', py_max='3.11') or
+    module_available("tensorflow", max='2.15', py_max='3.11'),
+    "keras not available")
+class KerasBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
-        self.om = Omega()
+        super().setUp()
         self.om.models.register_backend(KerasBackend.KIND, KerasBackend)
 
     def _build_model(self, fit=False):
@@ -83,9 +86,3 @@ class KerasBackendTests(TestCase):
         x_test = np.random.random((100, 20))
         result = om.runtime.model('keras-model').predict(x_test).get()
         self.assertEqual(result.shape, (100, 10))
-
-
-
-
-
-

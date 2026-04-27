@@ -1,11 +1,11 @@
-import glob
-import os
-import tempfile
-from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import glob
 import numpy as np
+import os
+import tempfile
 import tensorflow as tf
+from shutil import rmtree
 from tensorflow.python.framework.ops import EagerTensor
 
 from omegaml.backends.basemodel import BaseModelBackend

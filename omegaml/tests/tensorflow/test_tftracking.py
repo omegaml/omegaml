@@ -1,6 +1,5 @@
-import unittest
-
 import pandas as pd
+import unittest
 
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
@@ -8,7 +7,9 @@ from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow"), "tensorflow is not installed")
+@unittest.skipUnless(
+    module_available("tensorflow", max='2.15', py_max='3.11'),
+    "keras not available")
 class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
     """
     notes on framework versions v.v. tracing
