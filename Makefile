@@ -19,7 +19,7 @@ install:
 test:
 	# add -x to fail on first error
 	# PATH is required for tensorflow images
-	unset DJANGO_SETTINGS_MODULE; PATH=${HOME}/.local/bin:${PATH} OMEGA_TEST_MODE=1 pytest -v -s --instafail --log-level=DEBUG --tb=native ${TESTS}
+	unset DJANGO_SETTINGS_MODULE; PATH=${HOME}/.local/bin:${PATH} OMEGA_TEST_MODE=1 TF_USE_LEGACY_KERAS=1 pytest -v -s --instafail --log-level=DEBUG --tb=native ${TESTS}
 
 freeze:
 	echo "Writing pip requirements to requirements.txt"

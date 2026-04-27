@@ -41,6 +41,9 @@ ai_deps = [
     'openai',
     'markitdown[pdf]',
     'torch',
+    'transformers[torch]',
+    'sentence-transformers',
+    'tf-keras',  # https://github.com/orgs/community/discussions/118713
     'pgvector',
     'psycopg2-binary',  # required for pgvector
     'gunicorn[gevent]',  # required for async sse event server in scripts/ssechat
