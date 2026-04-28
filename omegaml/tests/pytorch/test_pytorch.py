@@ -1,6 +1,7 @@
 from unittest import TestCase, skipUnless
 
 import dill
+
 from omegaml.backends.genericmodel import GenericModelBackend
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import OmegaTestMixin
@@ -110,6 +111,7 @@ else:
                 if method == 'put':
                     torch.save(obj, fnpath, pickle_module=dill)
                     meta = store.put(fnpath, name)
+                    fnpath.unlink(missing_ok=True)
                     return meta
                 # load model
                 if method == 'get':
