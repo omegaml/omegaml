@@ -2,10 +2,11 @@ from unittest import TestCase
 
 import os
 from io import StringIO
+from unittest.mock import patch
+
 from omegaml import Omega
 from omegaml.client.auth import AuthenticationEnv
 from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
-from unittest.mock import patch
 
 
 class BareObj(object):
@@ -96,6 +97,7 @@ class ConfigurationTests(TestCase):
             defaults.update_from_env = _real_base_config.update_from_env
             defaults.load_user_extensions = lambda *args, **kwargs: None
             defaults.load_framework_support = lambda *args, **kwargs: None
+            defaults.is_test_run = True
             setup = om.setup
             defaults.MY_OWN_SETTING = 'foo'
             settings(reload=True)
@@ -129,6 +131,14 @@ class ConfigurationTests(TestCase):
                 defaults.load_user_extensions = lambda *args, **kwargs: None
                 defaults.load_framework_support = lambda *args, **kwargs: None
                 defaults.OMEGA_MY_OWN_SETTING = 'foo'
+                # -- try with default auth env, which is insecure
+                with self.assertRaises(SystemError):
+                    defaults.OMEGA_AUTH_ENV = 'omegaml.client.auth.AuthenticationEnv'
+                    AuthenticationEnv.active()
+                    om = get_omega_from_apikey('foo', 'bar')
+                # -- try without an explicit auth env, which defaults to secure
+                defaults.OMEGA_AUTH_ENV = None
+                AuthenticationEnv.auth_env = None
                 om = get_omega_from_apikey('foo', 'bar')
                 self.assertEqual(om.defaults.OMEGA_MY_OWN_SETTING, 'updated-foo')
                 self.assertEqual(om.datasets.mongo_url, 'updated-foo')
@@ -165,7 +175,17 @@ class ConfigurationTests(TestCase):
                 defaults.load_config_file = _real_base_config.load_config_file
                 defaults.update_from_env = _real_base_config.update_from_env
                 defaults.load_framework_support = lambda *args, **kwargs: None
+                defaults.is_test_run = True
                 defaults.OMEGA_MY_OWN_SETTING = 'foo'
+                # -- try with default auth env, which is insecure
+                with self.assertRaises(SystemError):
+                    defaults.OMEGA_AUTH_ENV = 'omegaml.client.auth.AuthenticationEnv'
+                    AuthenticationEnv.active()
+                    om = get_omega_from_apikey('foo', 'bar')
+                # -- try without an explicit auth env, which defaults to secure
+                defaults.OMEGA_AUTH_ENV = None
+                AuthenticationEnv.auth_env = None
+                om = get_omega_from_apikey('foo', 'bar')
                 om = get_omega_from_apikey('foo', 'bar')
                 self.assertIsNotNone(om.defaults.OMEGA_USER_EXTENSIONS)
                 self.assertIn('test.backend', om.defaults.OMEGA_STORE_BACKENDS)
