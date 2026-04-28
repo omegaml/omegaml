@@ -96,6 +96,9 @@ class OrasOciRegistry(ArtifactRepository):
 
         Returns:
             dict: the manifest for the repository, equivalenet of reg.manifest()
+
+        See Also:
+            - https://oras.land/docs/how_to_guides/manifest_config/
         """
         repo = repo or self.repo
         exists = self.exists()

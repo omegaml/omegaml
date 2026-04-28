@@ -13,9 +13,9 @@ dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab<4.5.3', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
 mlflow_deps = ['mlflow-skinny>=1.2']
-tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
+tf_deps = ['tensorflow-cpu>2,<2.16']  # due to 2.16 dropping support for tf-estimators
 dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
-            'pytest-instafail', 'tox']
+            'pytest-instafail', 'tox', 'ruff']
 # required to avoid backtracking (falling below some versions)
 backtracking_deps = [
     'json5>0.9',

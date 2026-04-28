@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
+from typing import TypeVar
+
 import flask
 from flask import session
-from typing import TypeVar, Type
 
 from omegaml.server.flaskview import route, FlaskView
 
