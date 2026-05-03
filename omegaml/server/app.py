@@ -82,8 +82,7 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     js_routes(app)
     # TODO support multiple instances with different userid/qualifier combinations
     app.current_om = setup_omega()
-    app.qualifiers = [q for q in getattr(app.current_om, 'OMEGA_QUALIFIER', []) if q != 'default']
-    app.qualifiers = ['developer:sandbox', 'developer:live']
+    app.qualifiers = [q for q in getattr(app.current_om.defaults, 'OMEGA_QUALIFIERS', []) if q != 'default']
     # use our custom json_dumps function
     # -- see https://stackoverflow.com/a/65129122/890242
     app.jinja_env.policies['json.dumps_function'] = json_dumps_np

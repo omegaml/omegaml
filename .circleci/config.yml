@@ -46,10 +46,9 @@ jobs:
       - run:
           name: setup env
           command: |
-            curl -L -O --silent --show-error "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
-            bash Miniforge3-Linux-x86_64.sh -b
             sudo apt update 
             sudo apt install -y docker-compose
+            omegaml-ce/scripts/setup-miniforge.sh
             # avoid installing packages newer than 7 days ago
             pip config set global.uploaded_prior_to "$(date -d '7 days ago' -Iseconds --utc)" >/dev/null || true
             pip3 install tox tox-run-before tox-conda

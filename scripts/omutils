@@ -24,3 +24,15 @@ function compose_exec() {
   local service="$1"; shift
   docker exec -i $(docker-compose ps -q $service) $@
 }
+
+function activate_conda() {
+    source ~/miniforge3/etc/profile.d/conda.sh || source /opt/conda/etc/profile.d/conda.sh
+    cur_env=`conda info | grep "active environment" | cut -d ":" -f 2 | xargs`
+    if [ $cur_env == "None" ]; then
+       echo "conda setting up base env"
+       cur_env=base
+       echo "conda activate base" >> ~/.bashrc
+    fi
+    echo "activating conda env $cur_env"
+    conda activate $cur_env
+}

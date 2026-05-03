@@ -1,10 +1,9 @@
 from __future__ import absolute_import
 
 import flask
-from flask import session
-from typing import TypeVar, Type
-
+from flask import session, abort
 from omegaml.server.flaskview import route, FlaskView
+from typing import TypeVar, Type
 
 
 class OmegaViewMixin:
@@ -16,15 +15,19 @@ class OmegaViewMixin:
     @property
     def om(self):
         current_om = flask.current_app.current_om
-        if self.qualifiers and self.qualifier != getattr(current_om.defaults, 'OMEGA_QUALIFIER', None):
+        current_qualifier = getattr(current_om.defaults, 'OMEGA_QUALIFIER', None)
+        if self.qualifiers and self.qualifier != current_qualifier:
             self.logger.debug(f'switching qualifier to {self.qualifier}')
             from omegaml import setup
-            flask.current_app.current_om = om = setup(qualifier=self.qualifier)
-            # FIXME if setup() does not actually switch to the right qualifier, we should issue an error
+            try:
+                flask.current_app.current_om = om = setup(qualifier=self.qualifier)
+            except:
+                # FIXME if setup() does not actually switch to the right qualifier, we should issue an error
+                abort(401)
             if getattr(current_om.defaults, 'OMEGA_QUALIFIER', None) == self.qualifier:
                 session['bucket'] = 'default'
         self.logger.debug(f'getting bucket {self.bucket}')
-        flask.current_app.current_om = om = flask.current_app.current_om[self.bucket];
+        flask.current_app.current_om = om = flask.current_app.current_om[self.bucket]
         om.status()  # start monitoring on first access
         return om
 

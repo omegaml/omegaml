@@ -37,18 +37,22 @@ sec_deps = [
     'pymongo>=4.10',  # https://github.com/advisories/GHSA-cr6f-gf5w-vhrc
 ]
 # dependencies for generative ai support
-ai_deps = [
+ai_inf_deps = [
     'openai',
     'markitdown[pdf]',
-    'torch',
-    'transformers[torch]',
-    'sentence-transformers',
-    'tf-keras',  # https://github.com/orgs/community/discussions/118713
     'pgvector',
     'psycopg2-binary',  # required for pgvector
     'gunicorn[gevent]',  # required for async sse event server in scripts/ssechat
 ]
-test_deps = (tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_deps)
+ai_dev_deps = [
+    'torch',
+    'transformers[torch]',
+    'sentence-transformers',
+    'tf-keras',  # https://github.com/orgs/community/discussions/118713
+]
+all_deps = (tables + graph_deps + dashserve_deps + jupyter_deps +
+            mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps)
+test_deps = all_deps + ai_dev_deps
 client_deps = (tables + dashserve_deps + graph_deps)
 install_deps = [
     'celery>5,<6.0',
@@ -127,10 +131,11 @@ setup(
     ],
     install_requires=install_deps + sec_deps,
     extras_require={
-        'all': test_deps,
+        'all': all_deps,
         'client': client_deps,
-        'ai': ai_deps,
-        'dev': dev_deps,
+        'ai': ai_dev_deps + ai_inf_deps,
+        'ai-inf': ai_inf_deps,
+        'dev': dev_deps + test_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],
