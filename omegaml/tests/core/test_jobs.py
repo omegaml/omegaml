@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
-import os
-from datetime import timedelta
 from unittest import TestCase, skip
 
+import os
+from cron_descriptor import Options
+from datetime import timedelta
 from nbformat import v4
 
 from omegaml import Omega
@@ -433,6 +434,7 @@ class JobTests(TestCase):
 
     def test_jobschedule_maker(self):
         # basics
+        JobSchedule.cron_descriptor_options = Options(use_24hour_time_format=False)
         sched = JobSchedule(minute='*')
         self.assertEqual(sched.text, 'Every minute')
         sched2 = JobSchedule.from_cron(sched.cron)
