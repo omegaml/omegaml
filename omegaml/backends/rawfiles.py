@@ -1,4 +1,4 @@
-from os.path import dirname, basename
+from os.path import basename, dirname
 from pathlib import Path
 
 import io
@@ -8,6 +8,7 @@ import smart_open
 import zipfile
 
 from omegaml.backends.basedata import BaseDataBackend
+from omegaml.util import tryOr
 
 try:
     from smart_open import open
@@ -46,19 +47,19 @@ class PythonRawFileBackend(BaseDataBackend):
         return True
 
     def get(
-        self,
-        name,
-        local=None,
-        mode='wb',
-        open_kwargs=None,
-        chunksize=None,
-        uri=None,
-        extract=None,
-        replace=False,
-        **kwargs,
+            self,
+            name,
+            local=None,
+            mode='wb',
+            open_kwargs=None,
+            chunksize=None,
+            uri=None,
+            extract=None,
+            replace=False,
+            **kwargs,
     ):
         """
-        get a stored file as a file-like object with binary contents or a local file
+        get a stored file as a file-like object with binary contents, or copy contents to a local file
 
         Args:
             name (str): the name of the file
@@ -95,10 +96,19 @@ class PythonRawFileBackend(BaseDataBackend):
         else:
             uri = meta.uri
         if uri:
-            outf = open(uri, mode='rb')
+            outf = smart_open.open(uri, mode='rb')
         else:
             outf = self.data_store.metadata(name, **kwargs).gridfile
         if local:
+            # cases:
+            # a. local is a filename (has an extension, is not a directory)
+            #    => output contents to file, don't extract
+            # b. stored file is a zip file, local is a directory (filename without extension)
+            #    => extract, unless extract is False
+            #    => if False, error
+            # c. store file is omegaml-zipped, local is a directory (filename without extension)
+            #    => extract, unless extract is False
+            #    => if False, error
             is_filename = not Path(local).is_dir() and (Path(local).is_file() or Path(local).suffix != '')
             target_dir = dirname(local) if is_filename and not extract else local
             extract = extract if extract is not None else not is_filename
@@ -116,19 +126,23 @@ class PythonRawFileBackend(BaseDataBackend):
                 with zipfile.ZipFile(outf) as zip:
                     omega_zipped = any(basename(fn) == self._magicszip for fn in zip.namelist())
                     # cases b, c
-                    if extract or (omega_zipped and extract is True):
+                    should_extract = extract or (omega_zipped and extract is True)
+                    if should_extract:
                         zip.extractall(path=target_dir)
-                    # remove directory marker to avoid manifest issues
-                    for fn in target_dir.glob(f'**/{self._magicszip}'):
-                        fn.unlink(missing_ok=True)
-                outf.seek(0)  # ensure we're back to 0 offset after zipfile.Zipfile()
-            not_extracted = (is_zipfile is False) or (is_zipfile and not extract)
-            if not_extracted and (replace or not Path(local).exists()):
-                with smart_open.open(local, mode=mode, **open_kwargs) as flocal:
-                    while data := outf.read(chunksize):
-                        flocal.write(data)
+                        # remove directory marker to avoid manifest issues
+                        for fn in target_dir.glob(f'**/{self._magicszip}'):
+                            fn.unlink(missing_ok=True)
+                if not should_extract:
+                    outf.seek(0)
+                    if local != uri:
+                        self._from_store_to_local(outf, local=local, mode=mode, open_kwargs=open_kwargs)
+            elif Path(local).exists() and not replace:
+                logger.warning(f'{local} exists already, no data written, specify replace=True')
             else:
-                logger.warning(f'{local} exists already, no data written')
+                # case a
+                outf.seek(0)
+                self._from_store_to_local(outf, local=local, mode=mode, open_kwargs=open_kwargs)
+            tryOr(lambda: outf.close(), False)
             return Path(local)
         return filelike(outf)
 

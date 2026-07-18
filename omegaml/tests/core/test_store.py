@@ -1,26 +1,26 @@
+import gc
+import tarfile
+import unittest
+import uuid
+import warnings
+from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
+from shutil import rmtree
 from unittest import skip
 
 import dill
-import gc
 import gridfs
 import joblib
 import pandas as pd
 import pymongo
 import smart_open
-import tarfile
-import unittest
-import uuid
-import warnings
-from datetime import timedelta, datetime
-from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
 from pymongo.errors import OperationFailure
-from shutil import rmtree
 from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from omegaml.backends.coreobjects import CoreObjectsBackend
 from omegaml.backends.genericmodel import GenericModelBackend
@@ -65,7 +65,7 @@ class StoreTests(unittest.TestCase):
         result = lr.predict(X)
         # package locally
         backend = ScikitLearnBackend(model_store=store,
-                                     data_store=store)
+            data_store=store)
         # v2 of the ScikitLearnBackend no longer supports testing these methods
         # test put(), get() instead
         zipfname = backend._v1_package_model(lr, 'models/foo')
@@ -212,21 +212,21 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['_created'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
-                         now.replace(second=0, microsecond=0))
+            now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, default value
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp='CREATED')
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['CREATED'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
-                         now.replace(second=0, microsecond=0))
+            now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, value as tuple
         now = datetime.utcnow() - timedelta(days=1)
         store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['CREATED'].unique()[0])
         self.assertEqual(_created.replace(second=0, microsecond=0),
-                         now.replace(second=0, microsecond=0))
+            now.replace(second=0, microsecond=0))
         # set a day in the past to avoid accidentally creating the current
         # datetime in mongo
         now = datetime.now() - timedelta(days=1)
@@ -235,7 +235,7 @@ class StoreTests(unittest.TestCase):
         # compare the data
         _created = pd.to_datetime(df2['_created'].unique()[0])
         self.assertEqual(_created.replace(microsecond=0),
-                         now.replace(microsecond=0))
+            now.replace(microsecond=0))
 
     def test_get_dataframe_filter(self):
         # create some dataframe
@@ -391,10 +391,10 @@ class StoreTests(unittest.TestCase):
         store = self._make_store(prefix='')
         midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
                                      [u'one', u'two']],
-                             codes=[
-                                 [0, 0, 1, 1, 2, 2, 3, 3],
-                                 [0, 1, 0, 1, 0, 1, 0, 1]],
-                             names=[u'first', u'second'])
+            codes=[
+                [0, 0, 1, 1, 2, 2, 3, 3],
+                [0, 1, 0, 1, 0, 1, 0, 1]],
+            names=[u'first', u'second'])
         df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
         store.put(df, 'mydata')
         dfx = store.get('mydata')
@@ -658,7 +658,7 @@ class StoreTests(unittest.TestCase):
         # Meta is to silence lint on import error
         Meta = store._Metadata
         metas = Meta.objects(name='foo', prefix=store.prefix,
-                             bucket=store.bucket).all()
+            bucket=store.bucket).all()
         self.assertEqual(len(metas), 1)
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2))
@@ -811,8 +811,8 @@ class StoreTests(unittest.TestCase):
         """ test storing a pandas series with it's own index """
         from string import ascii_lowercase
         series = pd.Series(range(10),
-                           name='foo',
-                           index=(c for c in ascii_lowercase[0:10]))
+            name='foo',
+            index=(c for c in ascii_lowercase[0:10]))
         store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
@@ -821,9 +821,9 @@ class StoreTests(unittest.TestCase):
     def test_store_series_timeindex(self):
         """ test storing a pandas series with it's own index """
         series = pd.Series(range(10),
-                           name='foo',
-                           index=pd.date_range(datetime(2016, 1, 1),
-                                               datetime(2016, 1, 10)))
+            name='foo',
+            index=pd.date_range(datetime(2016, 1, 1),
+                datetime(2016, 1, 10)))
         store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
@@ -841,7 +841,7 @@ class StoreTests(unittest.TestCase):
         """ test storing naive datetimes """
         df = pd.DataFrame({
             'x': pd.date_range(datetime(2016, 1, 1),
-                               datetime(2016, 1, 10))
+                datetime(2016, 1, 10))
         })
         store = self._make_store()
         store.put(df, 'test-date', append=False)
@@ -1041,6 +1041,7 @@ class StoreTests(unittest.TestCase):
 
     def test_raw_files_zipped(self):
         import zipfile
+
         import omegaml
         store = self._make_store()
         # save a complete directory, zip up
@@ -1084,6 +1085,7 @@ class StoreTests(unittest.TestCase):
 
     def test_raw_files_zipped_uri(self):
         import zipfile
+
         import omegaml
         store = self._make_store()
         # save a complete directory to a uri path, zip up
@@ -1094,18 +1096,24 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(zipfile.is_zipfile(repodir))
         # get back the file, extract to a directory
         # -- expected extracted contains the original files
-        extracted = store.get('myfile', local=repodir.parent / 'extracted')
+        local_target = Path(repodir.parent / 'extracted1')
+        extracted = store.get('myfile', local=local_target)
         self.assertTrue(extracted.is_dir())
         self.assertTrue((extracted / 'demo').is_dir())
+        rmtree(local_target, ignore_errors=False)
         # get back the file as a zip file
         # -- get back the zip file
-        extracted = store.get('myfile', local=repodir, extract=False)
+        local_target = Path(repodir.parent / 'extracted2')
+        extracted = store.get('myfile', local=local_target, extract=False)
         self.assertTrue(zipfile.is_zipfile(extracted))
+        rmtree(local_target, ignore_errors=False)
         # get back the file as a zip file
         # -- read from a specific location, write to local, extract
-        extracted = store.get('myfile', local=repodir.parent / 'extracted', uri=repodir)
+        local_target = Path(repodir.parent / 'extracted3')
+        extracted = store.get('myfile', local=local_target, uri=repodir)
         self.assertTrue(extracted.is_dir())
         self.assertTrue((extracted / 'demo').is_dir())
+        rmtree(local_target, ignore_errors=False)
 
     def test_bucket(self):
         # test different buckets actually separate objects by the same name

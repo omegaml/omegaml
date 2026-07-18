@@ -63,13 +63,13 @@ class f:
 
 @contextmanager
 def chdir(path):
-    """ temporarily change the working directory to `path`
+    """temporarily change the working directory to `path`
 
     This uses `os.chdir` to change the directory and restores it
     after the `with` block finishes.
 
     Args:
-        path (str): path to change the working directory to
+        path (str|Path): path to change the working directory to
 
     Usage:
         with chdir('/path/to/directory'):

@@ -10,12 +10,12 @@ from omegaml.util import module_available
 try:
     import torch
 except:
+
     @skipUnless(module_available('torch'), "skipping due to pytorch is not installed")
     class TestPytorchModels(OmegaTestMixin, TestCase):
         pass
 else:
     from omegaml.backends.pytorch import PytorchModelBackend
-
 
     @skipUnless(module_available('torch'), "skipping due to pytorch is not installed")
     class TestPytorchModels(OmegaTestMixin, TestCase):
@@ -40,6 +40,7 @@ else:
             def torchmodel(store=None, data=None, **kwargs):
                 import dill
                 import torch
+
                 # -- note we use a custom loader
                 loader = lambda store, infile, **kwargs: torch.load(infile, pickle_module=dill)
                 model = store.get('torchmodel.pth', loader=loader)
@@ -73,6 +74,7 @@ else:
             def torchmodel(store=None, data=None, **kwargs):
                 import dill
                 import torch
+
                 model = torch.load(store.get('torchmodel.pth'), pickle_module=dill)
                 data = torch.tensor(data, dtype=torch.float)
                 return model(data)
@@ -103,6 +105,7 @@ else:
                 import torch
                 import dill
                 from pathlib import Path
+
                 # support (obj, virtualobj) syntax to save a virtualobj along with obj?
                 # prepare paths
                 fnpath = Path(store.tmppath) / f'saved_{name}.pth'
@@ -162,6 +165,7 @@ else:
             def torchmodel(store=None, data=None, **kwargs):
                 import dill
                 import torch
+
                 model = torch.load(store.get('torchmodel.pth'), pickle_module=dill)
                 data = torch.tensor(data, dtype=torch.float)
                 return model(data)
@@ -198,6 +202,7 @@ else:
             def torchmodel(store=None, data=None, **kwargs):
                 import dill
                 import torch
+
                 model = torch.load(store.get('torchmodel.pth'), pickle_module=dill)
                 data = torch.tensor(data, dtype=torch.float)
                 return model(data)
@@ -219,6 +224,7 @@ else:
 
         def test_pytorch_model_implied_helper(self):
             import torch.nn as nn
+
             om = self.om
 
             # create a helper for model saving, loading and prediction

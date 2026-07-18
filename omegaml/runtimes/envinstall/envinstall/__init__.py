@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def run(om, *args, package=None, requirements=None, action='install', options=None, **kwargs):
-    """ install packages in user environment
+    """install packages in user environment
 
     Installation:
         # from the command line
