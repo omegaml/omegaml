@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   test:
     working_directory: /home/circleci
@@ -190,7 +190,6 @@ jobs:
             make multihtml publish
             git push --force --tags origin gh-pages
 workflows:
-  version: 2
   workflow:
     jobs:
       - test:
