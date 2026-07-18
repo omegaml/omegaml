@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import json
 import logging
 import os
 import shutil
 import tarfile
+from pathlib import Path
 from urllib.parse import urlparse
 
 from omegaml.backends.repository.basereg import ArtifactRepository, c, f
@@ -43,10 +42,14 @@ class OrasOciRegistry(ArtifactRepository):
         protocol, _url, _namespace, image, tag, auth = parse_ociuri(url)
         repo = repo or (f'{image}:{tag}' if image and tag else None)
         url = str(_url)  # allow for url:Path
-        url = url.replace(f'/{image}', '').replace(f':{tag}', '') if (image or tag) else url
+        url = (
+            url.replace(f"/{image}", "").replace(f":{tag}", "")
+            if (image or tag)
+            else url
+        )
         super().__init__(url, repo=repo, namespace=namespace, auth=auth)
-        self.cache = Path('/tmp') / '.oras' / 'cache'
-        os.environ.setdefault('ORAS_CACHE', str(self.cache))
+        self.cache = Path("/tmp") / ".oras" / "cache"
+        os.environ.setdefault("ORAS_CACHE", str(self.cache))
 
     def __repr__(self):
         """Return a short representation showing the registry URL and repo."""
@@ -61,10 +64,11 @@ class OrasOciRegistry(ArtifactRepository):
 
         This calls `oras login <url> -u <user> --password <token>`.
         """
-        cmd = f"login {self.url} -u {user} --password {token}"
+        url = self.ociurl(self.url).split("/")[0]
+        cmd = f"login {url} -u {user} --password {token}"
         self._oras(cmd)  # subprocess.run wrapper, no output expected
 
-    def ociurl(self, url=None, dir_opt='--oci-layout'):
+    def ociurl(self, url=None, dir_opt="--oci-layout"):
         """Return the correct cli options for the oras command
 
         Args:
@@ -73,8 +77,12 @@ class OrasOciRegistry(ArtifactRepository):
         Returns:
             str: the url as required for the oras command, prefixed with appropriate options
         """
-        if url.startswith('ocidir://') or url.startswith('oci:///') or url.startswith('file://'):
-            url = Path(url.replace('ocidir://', ''))
+        if (
+            url.startswith("ocidir://")
+            or url.startswith("oci:///")
+            or url.startswith("file://")
+        ):
+            url = Path(url.replace("ocidir://", ""))
             url.mkdir(parents=True, exist_ok=True)
         elif url.startswith('oci://'):
             url = url.replace('oci://', '')
@@ -98,17 +106,22 @@ class OrasOciRegistry(ArtifactRepository):
             dict: the manifest for the repository, equivalenet of reg.manifest()
         """
         repo = repo or self.repo
+        self._ensure_login()
         exists = self.exists()
         if not exists_ok and exists:
-            raise ValueError(f'{self.url}/{repo} already exists')
+            raise ValueError(f"{self.url}/{repo} already exists")
         if not exists:
             self._validate('repo', **x(locals()))
-            self._oras((f'push {self.ociurl(self.url)}/{repo} '
-                        f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'))
+            self._oras(
+                (
+                    f'push {self.ociurl(self.url)}/{repo} '
+                    f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'
+                )
+            )
         return self.manifest(repo)
 
     def add(self, paths, repo=None, types=None):
-        """ Add files to the repository with optional media types.
+        """Add files to the repository with optional media types.
 
         Adding files adds a layer for each file. If a repo:tag exists already,
         a new manifest will be created (i.e. files are not added but replace)
@@ -130,7 +143,7 @@ class OrasOciRegistry(ArtifactRepository):
             paths = [paths]
         # ensure every path has a corresponding type entry
         types = types + [''] * len(paths)
-        types = types[:len(paths)]
+        types = types[: len(paths)]
         for i, t in enumerate(types):
             p = Path(paths[i])
             if not p.is_dir():
@@ -164,7 +177,9 @@ class OrasOciRegistry(ArtifactRepository):
                 self._validate('url', 'repo', **x(locals()))
                 for artifact in self.artifacts(repo=repo):
                     digest = artifact['digest']
-                    cmd = f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
+                    cmd = (
+                        f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
+                    )
                     self._oras(cmd)
 
                 cmd = f'manifest delete --force {self.ociurl(self.url)}/{repo}'
@@ -215,8 +230,15 @@ class OrasOciRegistry(ArtifactRepository):
                 # keep plain files as is; infer filename from OCI annotation title
                 is_tar = False
                 is_gzip = False
-                filename = lpath / Path(a.get('annotations', {}).get('org.opencontainers.image.title')).name
-            cmd = f"blob fetch -o {filename} {self.ociurl(self.url)}/{repo_path}@{digest}"
+                filename = (
+                    lpath
+                    / Path(
+                        a.get('annotations', {}).get('org.opencontainers.image.title')
+                    ).name
+                )
+            cmd = (
+                f"blob fetch -o {filename} {self.ociurl(self.url)}/{repo_path}@{digest}"
+            )
             self._oras(cmd)
             if is_tar:
                 # extract tar blobs into destination directory
@@ -309,7 +331,7 @@ class OrasOciRegistry(ArtifactRepository):
         return [m['digest'] for m in artifacts]
 
     def list(self):
-        """ list repos in registry """
+        """list repos in registry"""
         url = self.url
         self._validate('list', **x(locals()))
         self._ensure_login()
@@ -339,23 +361,29 @@ class OrasOciRegistry(ArtifactRepository):
             '.tgz': 'application/vnd.oci.image.layer.v1.tar+gzip',
             '.bin': 'application/octet-stream',
         }
-        return COMMON_TYPES.get(Path(p).suffix) or COMMON_TYPES.get('.bin')  # default to binary
+        return COMMON_TYPES.get(Path(p).suffix) or COMMON_TYPES.get(
+            '.bin'
+        )  # default to binary
 
     def _validate(self, *ops, repo=None, url=None, **kwargs):
         # validate current settings before operation is called
         repo = repo or self.repo
         url = url or self.url
         CHECKS = {
-            'repo': lambda: (repo is not None, "no repository (image), specify repo='name:tag'"),
-            'url': lambda: (url is not None, "no registry (url or ocidir), specify OCIOrasRegistry(url|path)")
+            'repo': lambda: (
+                repo is not None,
+                "no repository (image), specify repo='name:tag'",
+            ),
+            'url': lambda: (
+                url is not None,
+                "no registry (url or ocidir), specify OCIOrasRegistry(url|path)",
+            ),
         }
         OPERATIONS = {
-            'push': ['repo'],
-            'list': ['url'],
+            "push": ["repo"],
+            "list": ["url"],
         }
-        checks_as_ops = {
-            k: [k] for k, v in CHECKS.items()
-        }
+        checks_as_ops = {k: [k] for k, v in CHECKS.items()}
         OPERATIONS.update(**checks_as_ops)
         for op in ops:
             for check in OPERATIONS[op]:
@@ -379,7 +407,7 @@ def x(kwargs):
 
 
 def parse_ociuri(ociuri):
-    """ parse OCI URI into components
+    """parse OCI URI into components
 
     Args:
         ociuri (str): string representing an OCI URI or
@@ -395,8 +423,12 @@ def parse_ociuri(ociuri):
     """
     # infer scheme
     ociuri = str(ociuri)  # force string of Path() instances
-    valid_uri = any(ociuri.startswith(prefix) for prefix in ('file://', 'ocidir://', 'oci://'))
-    implied_scheme = 'ocidir' if any(ociuri.startswith(prefix) for prefix in ('.', '/')) else 'oci'
+    valid_uri = any(
+        ociuri.startswith(prefix) for prefix in ('file://', 'ocidir://', 'oci://')
+    )
+    implied_scheme = (
+        'ocidir' if any(ociuri.startswith(prefix) for prefix in ('.', '/')) else 'oci'
+    )
     # parse ociuri
     ociuri = f'{implied_scheme}://{ociuri}' if not valid_uri else ociuri
     parsed = urlparse(ociuri)
@@ -408,7 +440,9 @@ def parse_ociuri(ociuri):
         image, tag = ocidir.name.split(':') if ':' in ocidir.name else ('', 'latest')
         if '/ns/' in parsed.path:
             url, namespace = str(ocidir.parent if image else ocidir).split('/ns/')
-            namespace, image = namespace.split('/', 1) if '/' in namespace else (namespace, image)
+            namespace, image = (
+                namespace.split('/', 1) if '/' in namespace else (namespace, image)
+            )
         else:
             url, namespace = str(ocidir.parent if image else ocidir), ''
         tag = tag if image else ''
@@ -433,7 +467,9 @@ def parse_ociuri(ociuri):
         # rebuild canonical url
         url = f'{protocol}://{bare_netloc}' + (f'/{namespace}' if namespace else '')
     else:
-        raise ValueError(f'cannot parse {ociuri}, only protocols oci://, ocidir://, file:// are supported')
+        raise ValueError(
+            f'cannot parse {ociuri}, only protocols oci://, ocidir://, file:// are supported'
+        )
     return protocol, url, namespace, image, tag, auth
 
 

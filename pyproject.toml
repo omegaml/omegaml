@@ -8,3 +8,11 @@ description = "An open source DataOps, MLOps platform for humans"
 dynamic = ["version", "readme", "dependencies", "scripts", "license", "authors", "classifiers",
            "urls", "optional-dependencies" ]
 
+[tool.ruff.format]
+# disable quote reformatting
+quote-style = "preserve"
+
+[tool.ruff.lint]
+# - Q000,Q001 disable quote reformatting 
+ignore = ["Q000", "Q001"]
+

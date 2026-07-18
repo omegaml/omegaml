@@ -1,11 +1,11 @@
-from pathlib import Path
-
 import os
-import smart_open
 import zipfile
 from getpass import getuser
-from mongoengine import GridFSProxy
+from pathlib import Path
 from warnings import warn
+
+import smart_open
+from mongoengine import GridFSProxy
 
 from omegaml.util import KeepMissing
 
@@ -14,8 +14,9 @@ class BackendBaseCommon:
     """
     common base for storage backends
     """
+
     #: magic file, used to signal a filed was zipped by _store_to_file()
-    _magicszip = '.omegaml.szip'
+    _magicszip = ".omegaml.szip"
 
     def _tmp_packagefn(self, store, name):
         """
@@ -40,10 +41,22 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, (str, Path)) and (os.path.exists(obj) or Path(obj).exists())
+        return isinstance(obj, (str, Path)) and (
+            os.path.exists(obj) or Path(obj).exists()
+        )
 
-    def _store_to_file(self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None,
-                       open_kwargs=None, **kwargs):
+    def _store_to_file(
+        self,
+        store,
+        obj,
+        filename,
+        encoding=None,
+        replace=False,
+        uri=None,
+        chunksize=None,
+        open_kwargs=None,
+        **kwargs,
+    ):
         """
         Use this method to store file-like objects to the store's gridfs, or a remote uri
 
@@ -66,11 +79,11 @@ class BackendBaseCommon:
             if obj is a directory, it will be zipped-up before storing to the file. See also PythonRawFileBackend.get()
         """
         if replace:
-            for fileobj in store.fs.find({'filename': filename}):
+            for fileobj in store.fs.find({"filename": filename}):
                 try:
                     store.fs.delete(fileobj._id)
                 except Exception as e:
-                    warn('deleting {filename} resulted in {e}'.format(**locals()))
+                    warn("deleting {filename} resulted in {e}".format(**locals()))
                     pass
         is_directory = self._is_path(obj) and Path(obj).is_dir()
         is_file = self._is_path(obj) and Path(obj).is_file()
@@ -80,52 +93,62 @@ class BackendBaseCommon:
             gridfile = None
             uri = str(uri).format(key=filename, filename=filename)
             if is_file:
-                with (smart_open.open(obj, 'rb') as infile,
-                      smart_open.open(uri, 'wb', **open_kwargs) as outfile):
+                with (
+                    smart_open.open(obj, "rb") as infile,
+                    smart_open.open(uri, "wb", **open_kwargs) as outfile,
+                ):
                     while data := infile.read(chunksize):
                         outfile.write(data)
             elif is_directory:
                 basedir = Path(obj)
-                with open(basedir / self._magicszip, 'w') as fout:
-                    fout.write('# zipped by omegaml')
-                with smart_open.open(uri, 'wb') as fout:
-                    with zipfile.ZipFile(fout, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
-                        for fn in basedir.glob('**'):
+                with open(basedir / self._magicszip, "w") as fout:
+                    fout.write("# zipped by omegaml")
+                with smart_open.open(uri, "wb") as fout:
+                    with zipfile.ZipFile(
+                        fout, "w", compression=zipfile.ZIP_DEFLATED
+                    ) as zipf:
+                        # note pathlib glob pattern **/* matches any path, any file
+                        # - see https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language
+                        for fn in basedir.glob("**/*"):
                             arcname = fn.relative_to(basedir.parent)
                             zipf.write(fn, arcname)
                 (basedir / self._magicszip).unlink(missing_ok=True)
             else:
-                with smart_open.open(uri, 'wb', **open_kwargs) as outfile:
+                with smart_open.open(uri, "wb", **open_kwargs) as outfile:
                     while data := obj.read(chunksize):
                         outfile.write(data)
         else:
             if is_file:
-                with open(obj, 'rb') as fin:
+                with open(obj, "rb") as fin:
                     fileid = store.fs.put(fin, filename=filename, encoding=encoding)
             elif is_directory:
                 basedir = Path(obj)
                 tmpfn = Path(store.tmppath) / filename
-                with open(basedir / self._magicszip, 'w') as fout:
-                    fout.write('# zipped by omegaml')
-                with open(tmpfn, 'wb') as fout:
-                    with zipfile.ZipFile(fout, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
-                        for fn in basedir.glob('**'):
+                with open(basedir / self._magicszip, "w") as fout:
+                    fout.write("# zipped by omegaml")
+                with open(tmpfn, "wb") as fout:
+                    with zipfile.ZipFile(
+                        fout, "w", compression=zipfile.ZIP_DEFLATED
+                    ) as zipf:
+                        for fn in basedir.glob("**/*"):
                             arcname = fn.relative_to(basedir.parent)
                             zipf.write(fn, arcname)
-                with open(tmpfn, 'rb') as fin:
+                with open(tmpfn, "rb") as fin:
                     fileid = store.fs.put(fin, filename=filename, encoding=encoding)
                 (basedir / self._magicszip).unlink(missing_ok=True)
                 tmpfn.unlink()
             else:
                 fileid = store.fs.put(obj, filename=filename, encoding=encoding)
-            gridfile = GridFSProxy(grid_id=fileid,
-                                   db_alias=store._dbalias,
-                                   key=filename,
-                                   collection_name=store._fs_collection)
+            gridfile = GridFSProxy(
+                grid_id=fileid,
+                db_alias=store._dbalias,
+                key=filename,
+                collection_name=store._fs_collection,
+            )
         return gridfile
 
     def perform(self, method, *args, **kwargs):
-        """ perform a model action, wrapped by pre-action/post-action calls
+        """perform a model action, wrapped by pre-action/post-action calls
 
         This is a helper method for the OmegaRuntime tasks to call model
         actions that require pre/post processing. The pre/post action methods
@@ -180,10 +203,12 @@ class BackendBaseCommon:
         pre_nop = lambda *args, **kwargs: (args, kwargs)
         post_nop = lambda v, *args, **kwargs: v
         do_call = getattr(self, method, None)
-        pre_call = getattr(self._call_handler, f'_pre_{method}', pre_nop)
-        post_call = getattr(self._call_handler, f'_post_{method}', post_nop)
-        common_kwargs = dict(data_store=getattr(self, 'data_store'),
-                             model_store=getattr(self, 'model_store'))
+        pre_call = getattr(self._call_handler, f"_pre_{method}", pre_nop)
+        post_call = getattr(self._call_handler, f"_post_{method}", post_nop)
+        common_kwargs = dict(
+            data_store=getattr(self, "data_store"),
+            model_store=getattr(self, "model_store"),
+        )
         args, kwargs = pre_call(*args, **kwargs)
         try:
             result = do_call(*args, **kwargs)
@@ -198,7 +223,7 @@ class BackendBaseCommon:
         return self.data_store
 
     def _resolve_placeholders(self, creds, secrets=None):
-        """ resolve placeholders in a uri or other string with secrets obtained from env and om.defaults
+        """resolve placeholders in a uri or other string with secrets obtained from env and om.defaults
 
         Will replace all {placeholders} from om.defaults and the os environment, in that order. env variables
         are only used if om.defaults.OMEGA_ALLOW_ENV_CONFIG is True.
@@ -210,9 +235,16 @@ class BackendBaseCommon:
         Returns:
             str: resolved creds string
         """
-        values = ({k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
-                  if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict())
+        values = (
+            {
+                k: v
+                for k, v in os.environ.items()
+                if k.isupper() and isinstance(v, (str, bytes))
+            }
+            if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG
+            else dict()
+        )
         values.update(**self.data_store.defaults)
         values.update(secrets or {})
-        user = getattr(self.data_store.defaults, 'OMEGA_USERID', getuser())
+        user = getattr(self.data_store.defaults, "OMEGA_USERID", getuser())
         return creds.format_map(KeepMissing({**values, "userid": user}))
