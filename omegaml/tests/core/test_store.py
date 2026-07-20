@@ -1,26 +1,26 @@
+import gc
+import tarfile
+import unittest
+import uuid
+import warnings
+from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
+from shutil import rmtree
 from unittest import skip
 
 import dill
-import gc
 import gridfs
 import joblib
 import pandas as pd
 import pymongo
 import smart_open
-import tarfile
-import unittest
-import uuid
-import warnings
-from datetime import timedelta, datetime
-from io import BytesIO
 from mongoengine.connection import disconnect
 from mongoengine.errors import DoesNotExist, FieldDoesNotExist
 from pandas.testing import assert_frame_equal, assert_series_equal
 from pymongo.errors import OperationFailure
-from shutil import rmtree
 from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from omegaml.backends.coreobjects import CoreObjectsBackend
 from omegaml.backends.genericmodel import GenericModelBackend
@@ -1041,6 +1041,7 @@ class StoreTests(unittest.TestCase):
 
     def test_raw_files_zipped(self):
         import zipfile
+
         import omegaml
         store = self._make_store()
         # save a complete directory, zip up
@@ -1050,6 +1051,7 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(zipfile.is_zipfile(meta.gridfile))
         fout = store.get('myfile')
         self.assertTrue(zipfile.is_zipfile(fout))
+        fout.close()
         # get back as a zipfile
         # -- local= is a filename (with extension), so we get a zip file
         localfile = Path(store.tmppath) / 'myfile.zip'
@@ -1084,6 +1086,7 @@ class StoreTests(unittest.TestCase):
 
     def test_raw_files_zipped_uri(self):
         import zipfile
+
         import omegaml
         store = self._make_store()
         # save a complete directory to a uri path, zip up
@@ -1099,10 +1102,11 @@ class StoreTests(unittest.TestCase):
         self.assertTrue((extracted / 'demo').is_dir())
         # get back the file as a zip file
         # -- get back the zip file
-        extracted = store.get('myfile', local=repodir, extract=False)
+        extracted = store.get('myfile', local=repodir.parent / 'extracted.zip', extract=False)
         self.assertTrue(zipfile.is_zipfile(extracted))
         # get back the file as a zip file
         # -- read from a specific location, write to local, extract
+        rmtree(repodir.parent / 'extracted')
         extracted = store.get('myfile', local=repodir.parent / 'extracted', uri=repodir)
         self.assertTrue(extracted.is_dir())
         self.assertTrue((extracted / 'demo').is_dir())

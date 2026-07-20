@@ -42,23 +42,13 @@ class BackendBaseCommon:
 
     def _is_path(self, obj):
         return isinstance(obj, (str, Path)) and (
-            os.path.exists(obj) or Path(obj).exists()
+                os.path.exists(obj) or Path(obj).exists()
         )
 
-    def _store_to_file(
-        self,
-        store,
-        obj,
-        filename,
-        encoding=None,
-        replace=False,
-        uri=None,
-        chunksize=None,
-        open_kwargs=None,
-        **kwargs,
-    ):
+    def _store_to_file(self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None,
+                       open_kwargs=None, **kwargs):
         """
-        Use this method to store file-like objects to the store's gridfs, or a remote uri
+        Use this method to store file-like objects to the store's gridfs, or a remote uri, zip-compress if a directory
 
         Args:
             store (OmegaStore): the store whose .fs filesystem access will be used
@@ -70,7 +60,8 @@ class BackendBaseCommon:
                by gridfs. defaults to False
             uri (str): if True a local or remote file url compatible with smart_open
             chunksize (int): optional, if uri is specified this is used to read in chunks, as obj.read(chunksize)
-            open_kwargs (dict): optional, if uri is specified, this is used to open uri, as in smart_open.open(uri, **open_kwargs)
+            open_kwargs (dict): optional, if uri is specified, this is used to open uri, as in smart_open.open(uri,
+            **open_kwargs)
 
         Returns:
             gridfile (GridFSProxy|None): assignable to Metadata.gridfile, None if uri= was specified for compatibility
@@ -105,7 +96,7 @@ class BackendBaseCommon:
                     fout.write("# zipped by omegaml")
                 with smart_open.open(uri, "wb") as fout:
                     with zipfile.ZipFile(
-                        fout, "w", compression=zipfile.ZIP_DEFLATED
+                            fout, "w", compression=zipfile.ZIP_DEFLATED
                     ) as zipf:
                         # note pathlib glob pattern **/* matches any path, any file
                         # - see https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language
@@ -128,7 +119,7 @@ class BackendBaseCommon:
                     fout.write("# zipped by omegaml")
                 with open(tmpfn, "wb") as fout:
                     with zipfile.ZipFile(
-                        fout, "w", compression=zipfile.ZIP_DEFLATED
+                            fout, "w", compression=zipfile.ZIP_DEFLATED
                     ) as zipf:
                         for fn in basedir.glob("**/*"):
                             arcname = fn.relative_to(basedir.parent)
@@ -146,6 +137,28 @@ class BackendBaseCommon:
                 collection_name=store._fs_collection,
             )
         return gridfile
+
+    def _from_store_to_local(
+            self, fileobj, local=None, mode=None, open_kwargs=None, chunksize=None, **kwargs):
+        """ store gridfile to a local file
+
+        Args:
+            fileobj (filelike|str): the file or uri to save to a local file
+            local (str|Path): the local path, must be a valid file name
+            mode (str): the mode to use, defaults to 'wb'
+            open_kwargs (dict): optional, kwargs to pass to smart_open
+            chunksize (int): chunksize, defaults to 4MB
+            **kwargs: optional kwargs used as open_kwargs, if not specified
+
+        Returns:
+            None
+        """
+        open_kwargs = open_kwargs or kwargs
+        mode = mode or 'wb'
+        chunksize = chunksize or 1024 * 1024 * 4
+        with smart_open.open(local, mode=mode, **open_kwargs) as flocal:
+            while data := fileobj.read(chunksize):
+                flocal.write(data)
 
     def perform(self, method, *args, **kwargs):
         """perform a model action, wrapped by pre-action/post-action calls
