@@ -41,12 +41,11 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, (str, Path)) and (
-                os.path.exists(obj) or Path(obj).exists()
-        )
+        return isinstance(obj, (str, Path)) and (os.path.exists(obj) or Path(obj).exists())
 
-    def _store_to_file(self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None,
-                       open_kwargs=None, **kwargs):
+    def _store_to_file(
+        self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None, open_kwargs=None, **kwargs
+    ):
         """
         Use this method to store file-like objects to the store's gridfs, or a remote uri, zip-compress if a directory
 
@@ -73,7 +72,7 @@ class BackendBaseCommon:
             for fileobj in store.fs.find({"filename": filename}):
                 try:
                     store.fs.delete(fileobj._id)
-                except Exception as e:
+                except Exception:
                     warn("deleting {filename} resulted in {e}".format(**locals()))
                     pass
         is_directory = self._is_path(obj) and Path(obj).is_dir()
@@ -84,10 +83,7 @@ class BackendBaseCommon:
             gridfile = None
             uri = str(uri).format(key=filename, filename=filename)
             if is_file:
-                with (
-                    smart_open.open(obj, "rb") as infile,
-                    smart_open.open(uri, "wb", **open_kwargs) as outfile,
-                ):
+                with smart_open.open(obj, "rb") as infile, smart_open.open(uri, "wb", **open_kwargs) as outfile:
                     while data := infile.read(chunksize):
                         outfile.write(data)
             elif is_directory:
@@ -95,9 +91,7 @@ class BackendBaseCommon:
                 with open(basedir / self._magicszip, "w") as fout:
                     fout.write("# zipped by omegaml")
                 with smart_open.open(uri, "wb") as fout:
-                    with zipfile.ZipFile(
-                            fout, "w", compression=zipfile.ZIP_DEFLATED
-                    ) as zipf:
+                    with zipfile.ZipFile(fout, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
                         # note pathlib glob pattern **/* matches any path, any file
                         # - see https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language
                         for fn in basedir.glob("**/*"):
@@ -118,9 +112,7 @@ class BackendBaseCommon:
                 with open(basedir / self._magicszip, "w") as fout:
                     fout.write("# zipped by omegaml")
                 with open(tmpfn, "wb") as fout:
-                    with zipfile.ZipFile(
-                            fout, "w", compression=zipfile.ZIP_DEFLATED
-                    ) as zipf:
+                    with zipfile.ZipFile(fout, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
                         for fn in basedir.glob("**/*"):
                             arcname = fn.relative_to(basedir.parent)
                             zipf.write(fn, arcname)
@@ -131,16 +123,12 @@ class BackendBaseCommon:
             else:
                 fileid = store.fs.put(obj, filename=filename, encoding=encoding)
             gridfile = GridFSProxy(
-                grid_id=fileid,
-                db_alias=store._dbalias,
-                key=filename,
-                collection_name=store._fs_collection,
+                grid_id=fileid, db_alias=store._dbalias, key=filename, collection_name=store._fs_collection
             )
         return gridfile
 
-    def _from_store_to_local(
-            self, fileobj, local=None, mode=None, open_kwargs=None, chunksize=None, **kwargs):
-        """ store gridfile to a local file
+    def _from_store_to_local(self, fileobj, local=None, mode=None, open_kwargs=None, chunksize=None, **kwargs):
+        """store gridfile to a local file
 
         Args:
             fileobj (filelike|str): the file or uri to save to a local file
@@ -219,7 +207,7 @@ class BackendBaseCommon:
         pre_call = getattr(self._call_handler, f"_pre_{method}", pre_nop)
         post_call = getattr(self._call_handler, f"_post_{method}", post_nop)
         common_kwargs = dict(
-            data_store=getattr(self, "data_store"),
+            data_store=getattr(self, "data_store"),  # fmt:asis
             model_store=getattr(self, "model_store"),
         )
         args, kwargs = pre_call(*args, **kwargs)
@@ -249,11 +237,7 @@ class BackendBaseCommon:
             str: resolved creds string
         """
         values = (
-            {
-                k: v
-                for k, v in os.environ.items()
-                if k.isupper() and isinstance(v, (str, bytes))
-            }
+            {k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
             if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG
             else dict()
         )

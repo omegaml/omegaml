@@ -133,7 +133,8 @@ class PythonRawFileBackend(BaseDataBackend):
                             fn.unlink(missing_ok=True)
                     else:
                         outf.seek(0)
-                        self._from_store_to_local(outf, local=local, mode=mode, open_kwargs=open_kwargs)
+                        if local != uri:
+                            self._from_store_to_local(outf, local=local, mode=mode, open_kwargs=open_kwargs)
             elif Path(local).exists() and not replace:
                 logger.warning(f'{local} exists already, no data written, specify replace=True')
             else:

@@ -12,10 +12,23 @@ graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
 dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab<4.5.3', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
-mlflow_deps = ['mlflow-skinny>=1.2']
+mlflow_deps = ['mlflow-skinny>=1.2', "skops"]
 tf_deps = ['tensorflow-cpu>2']  # note 2.16 drops support for tf-estimators
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
-            'pytest-instafail', 'tox', 'ruff']
+dev_deps = [
+    'pytest',
+    'twine',
+    'flake8',
+    'mock',
+    'behave',
+    'splinter[selenium]',
+    'ipdb',
+    'bumpversion',
+    'pip-tools',
+    'pytest-instafail',
+    'tox',
+    'tox-run-before',
+    'ruff',
+]
 # required to avoid backtracking (falling below some versions)
 backtracking_deps = [
     'json5>0.9',
@@ -48,12 +61,12 @@ ai_dev_deps = [
     'torch',
     'transformers[torch]',
     'sentence-transformers',
+    'torchvision',  # due to transformers lazy, imported in TestCase.assertRaises
     'tf-keras',  # https://github.com/orgs/community/discussions/118713
 ]
-all_deps = (tables + graph_deps + dashserve_deps + jupyter_deps +
-            mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps)
+all_deps = tables + graph_deps + dashserve_deps + jupyter_deps + mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps
 test_deps = all_deps + ai_dev_deps
-client_deps = (tables + dashserve_deps + graph_deps)
+client_deps = tables + dashserve_deps + graph_deps
 install_deps = [
     'celery>5,<6.0',
     'joblib>=0.9.4',
@@ -133,11 +146,8 @@ setup(
     extras_require={
         'all': all_deps,
         'client': client_deps,
-        'ai': ai_dev_deps + ai_inf_deps,
-        'ai-inf': ai_inf_deps,
+        'ai': ai_inf_deps + ai_dev_deps,
         'dev': dev_deps + test_deps,
     },
-    entry_points={
-        'console_scripts': ['om=omegaml.client.cli:climain'],
-    }
+    entry_points={'console_scripts': ['om=omegaml.client.cli:climain']},
 )

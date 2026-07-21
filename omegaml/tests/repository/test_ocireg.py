@@ -13,6 +13,9 @@ from omegaml.backends.repository.orasreg import OrasOciRegistry
 from omegaml.mixins.store.repository import RepositoryStorageMixin
 from omegaml.tests.util import OmegaTestMixin
 
+import torch
+from sentence_transformers import CrossEncoder
+
 
 @skipUnless(shutil.which('oras') is not None, "oras executable cannot be found on PATH")
 class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
@@ -193,6 +196,7 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
     @skip('shall be resolved by vllm support')
     def test_putget_directories(self):
         import omegaml
+
         om = self.om
         # create an empty oci registry
         rmtree('/tmp/registry', ignore_errors=True)
@@ -220,7 +224,7 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         # OR each layer is one file/artifact.
         # .put(..., repo='myimage') => creates a ONE layer image/tag
         # store models and ensure gridfile is not used
-        for (model, name) in zip((model1, model2), ('linreg', 'logreg')):
+        for model, name in zip((model1, model2), ('linreg', 'logreg')):
             meta = om.models.put(model, name, repo='ocireg/myimage')
             self.assertEqual(meta.gridfile.read(), None)
         reg = om.models.get('ocireg')
@@ -228,10 +232,7 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
 
     def test_resolve_uri_placeholders(self):
         om = self.om
-        os.environ.update(
-            OMEGA_GHCR_USERID='myuser',
-            OMEGA_GHCR_APIKEY='myapikey',
-        )
+        os.environ.update(OMEGA_GHCR_USERID='myuser', OMEGA_GHCR_APIKEY='myapikey')
         om.models.put('oci://{OMEGA_GHCR_USERID}:{OMEGA_GHCR_APIKEY}@ghcr.io', 'ocireg')
         reg = om.models.get('ocireg')
         self.assertEqual(reg.url, 'oci://ghcr.io')
@@ -257,8 +258,6 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         self.assertIsInstance(model, LinearRegression)
 
     def test_transformer_repo(self):
-        import torch
-        from sentence_transformers import CrossEncoder
         model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2", activation_fn=torch.nn.Sigmoid())
 
         from omegaml.backends.virtualobj import virtualobj
@@ -268,6 +267,7 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
             print("transformers helper", method, store, kwargs)
 
             if method == 'put':
+
                 def serializer(store, model, filename, **kwargs):
                     print('serializer', kwargs)
                     model.save_pretrained(str(filename))
@@ -277,9 +277,11 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
                 return store.put(obj, name, kind='python.model', serializer=serializer, uri=uri, helper=False)
 
             if method == 'get':
+
                 def loader(store, infile, filename=None, **kwargs):
                     print('loader', infile, filename, kwargs)
                     from sentence_transformers import CrossEncoder
+
                     model = CrossEncoder(str(filename))
                     return model
 
