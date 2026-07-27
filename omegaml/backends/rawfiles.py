@@ -21,6 +21,7 @@ class PythonRawFileBackend(BaseDataBackend):
     """
     OmegaStore backend to support arbitrary files
     """
+
     KIND = 'python.file'
 
     @classmethod
@@ -44,8 +45,18 @@ class PythonRawFileBackend(BaseDataBackend):
             return False
         return True
 
-    def get(self, name, local=None, mode='wb', open_kwargs=None, chunksize=None, uri=None, extract=None, replace=False,
-            **kwargs):
+    def get(
+        self,
+        name,
+        local=None,
+        mode='wb',
+        open_kwargs=None,
+        chunksize=None,
+        uri=None,
+        extract=None,
+        replace=False,
+        **kwargs,
+    ):
         """
         get a stored file as a file-like object with binary contents or a local file
 
@@ -103,8 +114,9 @@ class PythonRawFileBackend(BaseDataBackend):
                     local = target_dir
                 os.makedirs(target_dir, exist_ok=True)
                 with zipfile.ZipFile(outf) as zip:
-                    extract = extract or any(basename(fn) == self._magicszip for fn in zip.namelist())
-                    if extract:
+                    omega_zipped = any(basename(fn) == self._magicszip for fn in zip.namelist())
+                    # cases b, c
+                    if extract or (omega_zipped and extract is True):
                         zip.extractall(path=target_dir)
                     # remove directory marker to avoid manifest issues
                     for fn in target_dir.glob(f'**/{self._magicszip}'):
@@ -137,8 +149,7 @@ class PythonRawFileBackend(BaseDataBackend):
         """
         self.data_store.drop(name, force=True)
         storekey = self.data_store.object_store_key(name, 'file', hashed=True)
-        gridfile = self._store_to_file(self.data_store, obj, storekey, encoding=encoding, uri=uri,
-                                       **kwargs)
+        gridfile = self._store_to_file(self.data_store, obj, storekey, encoding=encoding, uri=uri, **kwargs)
         return self.data_store._make_metadata(
             name=name,
             prefix=self.data_store.prefix,
@@ -146,7 +157,8 @@ class PythonRawFileBackend(BaseDataBackend):
             kind=self.KIND,
             attributes=attributes,
             uri=str(uri or ''),
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
 
 def filelike(obj):

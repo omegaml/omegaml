@@ -8,20 +8,25 @@ Feature: omegaml feature testing
      Then we can predict a result
 
   @notebook
+  Scenario: work with jobs
+    Given we have a connection to omegaml
+    When we save the quickstart notebook
+
+  @notebook.deprecated
   Scenario: work with notebook
     Given we have a connection to omegaml
     When we open jupyter
     When we create a notebook
     Then we can list datasets in omegaml
 
-  @nbfolders
+  @nbfolders.depcreated
   Scenario: create notebook folders
     Given we have a connection to omegaml
     When we open jupyter
     When we create a folder
     Then we can add a notebook in the folder
 
-  @tutorial
+  @tutorial.depcreated
   Scenario: omegaml base features tutorial
     Given we have a connection to omegaml
     When we open jupyter
@@ -29,7 +34,7 @@ Feature: omegaml feature testing
     When we run the notebook omegaml-tutorial
     Then model iris-model exists
 
-  @tfkeras
+  @tfkeras.depcreated
   Scenario: tfkeras-tutorial
     Given we have a connection to omegaml
     When we open jupyter
@@ -37,7 +42,7 @@ Feature: omegaml feature testing
     When we run the notebook tfkeras-tutorial
     Then model tfkeras-flower-savedmodel exists
 
-  @tfestimator
+  @tfestimator.depcreated
   Scenario: tfestimator-tutorial
     Given we have a connection to omegaml
     When we open jupyter
@@ -45,7 +50,7 @@ Feature: omegaml feature testing
     When we run the notebook tfestimator-tutorial
     Then model tf-model-mnist-fn exists
 
-  @snowflake
+  @snowflake.depcreated
   Scenario: snowflake-plugin
     Given we have a connection to omegaml
     When we store snowflake credentials in secrets
@@ -54,7 +59,7 @@ Feature: omegaml feature testing
     When we run the notebook a-snowflake-plugin-demo
     Then dataset mysnowflake exists
 
-  @omxiotools
+  @omxiotools.depcreated
   Scenario: omx_iotools
     Given we have a connection to omegaml
     When we open jupyter

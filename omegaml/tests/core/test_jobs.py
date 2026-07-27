@@ -2,18 +2,21 @@ from __future__ import absolute_import
 
 import os
 from datetime import timedelta
+from pathlib import Path
 from unittest import TestCase, skip
 
-from nbformat import v4
+from cron_descriptor import Options
+from nbformat import NotebookNode, v4
+from nbformat import write as nbwrite
 
 from omegaml import Omega
 from omegaml.documents import Metadata
 from omegaml.notebook.jobs import JobSchedule, NotebookBackend
-from omegaml.util import settings as omegaml_settings, settings
+from omegaml.util import settings
+from omegaml.util import settings as omegaml_settings
 
 
 class JobTests(TestCase):
-
     def setUp(self):
         super().setUp()
         for omx in (self.om, self.om['bucket']):
@@ -251,8 +254,7 @@ class JobTests(TestCase):
 
     def test_run_nonexistent_job(self):
         om = self.om
-        self.assertRaises(
-            AssertionError, om.jobs.run_notebook, 'dummys.ipynb')
+        self.assertRaises(AssertionError, om.jobs.run_notebook, 'dummys.ipynb')
 
     def test_scheduled_job_with_omegaml_block(self):
         om = self.om
@@ -433,6 +435,7 @@ class JobTests(TestCase):
 
     def test_jobschedule_maker(self):
         # basics
+        JobSchedule.cron_descriptor_options = Options(use_24hour_time_format=False)
         sched = JobSchedule(minute='*')
         self.assertEqual(sched.text, 'Every minute')
         sched2 = JobSchedule.from_cron(sched.cron)
@@ -520,22 +523,32 @@ class JobTests(TestCase):
             ('every 2 months, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, every 2 months'),
             ('every 2nd month, monday-friday, at 06:00', 'At 06:00 AM, Monday through Friday, only in February'),
             ('every 5 minutes, every day, hour 6', 'Every 5 minutes, between 06:00 AM and 06:59 AM'),
-            ('every 5 minutes, every working day, hour 6',
-             'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday'),
-            ('every 5 minutes, on workdays, hours 6/7',
-             'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday'),
+            (
+                'every 5 minutes, every working day, hour 6',
+                'Every 5 minutes, between 06:00 AM and 06:59 AM, Monday through Friday',
+            ),
+            (
+                'every 5 minutes, on workdays, hours 6/7',
+                'Every 5 minutes, at 06:00 AM and 07:00 AM, Monday through Friday',
+            ),
             ('every 5 minutes, on workdays, in april', 'Every 5 minutes, Monday through Friday, only in April'),
             ('every 5 minutes, on weekends, in april', 'Every 5 minutes, Saturday through Sunday, only in April'),
-            ('every 5 minutes, from monday to friday, in april',
-             'Every 5 minutes, Monday through Friday, only in April'),
-            ('at 5 minutes, every hour, monday to friday, april',
-             'At 5 minutes past the hour, Monday through Friday, only in April'),
+            (
+                'every 5 minutes, from monday to friday, in april',
+                'Every 5 minutes, Monday through Friday, only in April',
+            ),
+            (
+                'at 5 minutes, every hour, monday to friday, april',
+                'At 5 minutes past the hour, Monday through Friday, only in April',
+            ),
             ('1st day of month, at 06:00', 'At 06:00 AM, on day 1 of the month'),
             ('mon-fri, 06:00', 'At 06:00 AM, Monday through Friday'),
             ('every 2 hours, 5 minute, weekdays', 'At 5 minutes past the hour, every 2 hours, Monday through Friday'),
             ('every 2nd hour, 5 minute, weekdays', 'At 02:05 AM, Monday through Friday'),
-            ('every 5 minutes, from monday to friday, in april',
-             'Every 5 minutes, Monday through Friday, only in April'),
+            (
+                'every 5 minutes, from monday to friday, in april',
+                'Every 5 minutes, Monday through Friday, only in April',
+            ),
             ('every 4 hours, at 0 minutes, Monday through Friday', 'Every 4 hours, Monday through Friday'),
         ]
         for text, expected in texts:
@@ -619,3 +632,17 @@ class JobTests(TestCase):
         outpath = '/tmp/test.pdf'
         om.jobs.export(resultnb_name, outpath, 'pdf')
         self.assertTrue(os.path.exists(outpath))
+
+    def test_store_ipynb(self):
+        om = self.om
+        code = "print('hello')"
+        cells = []
+        cells.append(v4.new_code_cell(source=code))
+        notebook = v4.new_notebook(cells=cells)
+        nb_path = Path(om.datasets.tmppath) / 'test.ipynb'
+        nbwrite(notebook, nb_path)
+        meta = om.jobs.put(nb_path, 'testjob', kind='script.ipynb')
+        self.assertEqual(meta.name, 'testjob.ipynb')
+        self.assertEqual(meta.kind, 'script.ipynb')
+        nb_restored = om.jobs.get('testjob')
+        self.assertIsInstance(nb_restored, NotebookNode)

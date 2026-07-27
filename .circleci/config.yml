@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   test:
     working_directory: /home/circleci
@@ -51,7 +51,7 @@ jobs:
             omegaml-ce/scripts/setup-miniforge.sh
             # avoid installing packages newer than 7 days ago
             pip config set global.uploaded_prior_to "$(date -d '7 days ago' -Iseconds --utc)" >/dev/null || true
-            pip3 install tox tox-run-before tox-conda
+            pip3 install tox
       - run:
           name: Run unit tests
           command: |
@@ -65,7 +65,7 @@ jobs:
             docker exec -i $(docker ps -qf name=mongo) mongosh < scripts/mongoinit.js
             function dotest() {
               export VER=$1
-              export EXTRAS=all,dev
+              export EXTRAS=all,dev,test
               conda env remove -q -y -n omenv$VER || echo ""
               echo "Testing with python $VER"
               conda create -q -y -n omenv$VER python=$VER
@@ -74,7 +74,7 @@ jobs:
               make -e test
               conda deactivate
             }
-            dotest 3.11
+            dotest 3.12
             docker-compose down --remove-orphans
           shell: /bin/bash -l -eo pipefail
       - store_artifacts:
@@ -95,7 +95,7 @@ jobs:
             bash Miniforge3-Linux-x86_64.sh -b
             sudo apt update
             sudo apt install -y docker-compose
-            pip3 install tox tox-run-before tox-conda
+            pip3 install tox
       - run:
           name: run tests in multiple images
           command: |
@@ -124,15 +124,13 @@ jobs:
             chmod -R 777 /tmp/testlogs
             # build python specific wheel to allow dependency matching, e.g. tensorflow 2.5 requires py3.9
             # TODO consider using https://cibuildwheel.readthedocs.io or https://github.com/getsentry/milksnake or tox
-            # PYTHON 3.12 is pending on https://github.com/jupyter/docker-stacks/pull/2072
-            for PYVER in 3.11 3.12; do
+            for PYVER in 3.11 3.12 3.13; do
               echo "Building distribution for $PYVER"
               # setup pyenv and build
               conda create -q -y -n omenv$PYVER python=$PYVER
               conda activate omenv$PYVER
               # install minimum for tests, remove ai dependencies due to gpu issues raised
-              pip install -e .[dev] --extra-index-url https://download.pytorch.org/whl/cpu
-              pip uninstall -y openai markitdown onnxruntime 
+              pip install -e .[dev,test] --find-links https://download.pytorch.org/whl/cpu
               # set bdist_wheel options, see Makefile:dist
               export DISTTAGS="--python-tag py$(echo $PYVER | tr -d .)"
               # set livetest options, see Makefile:livetest
@@ -149,6 +147,8 @@ jobs:
             done
       - store_artifacts:
           path: /tmp/screenshots
+      - store_artifacts:
+          path: /tmp/testlogs
   docs:
     # https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
     working_directory: /home/circleci
@@ -167,13 +167,13 @@ jobs:
             bash Miniforge3-Linux-x86_64.sh -b
             sudo apt update 
             sudo apt install -y docker-compose pandoc
-            pip3 install tox tox-run-before tox-conda
+            pip3 install tox
       - run:
           name: generate latest docs
           command: |
             # setup conda env
             source miniforge3/etc/profile.d/conda.sh
-            conda create -q -y -n docs python=3.11
+            conda create -q -y -n docs python=3.12
             conda activate docs
             # install sources, start env
             cd omegaml-ce
@@ -192,7 +192,6 @@ jobs:
             make multihtml publish
             git push --force --tags origin gh-pages
 workflows:
-  version: 2
   workflow:
     jobs:
       - test:

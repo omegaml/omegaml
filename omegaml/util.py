@@ -1,8 +1,5 @@
 from __future__ import absolute_import
 
-from importlib import import_module
-from pathlib import Path
-
 import importlib
 import json
 import logging
@@ -11,16 +8,19 @@ import sys
 import tempfile
 import threading
 import uuid
-import validators
 import warnings
 from base64 import b64encode
-from bson import ObjectId
 from copy import deepcopy
-from datetime import datetime, date, timezone
+from datetime import date, datetime, timezone
 from hashlib import sha256
+from importlib import import_module
 from importlib.util import find_spec
+from pathlib import Path
 from shutil import rmtree
-from typing import Iterator, Any
+from typing import Any, Iterator
+
+import validators
+from bson import ObjectId
 
 try:
     import urlparse
@@ -106,7 +106,6 @@ def settings(reload=False):
         return __settings
     try:
         # see if we're running as a django app
-        from django.contrib.auth.models import User
         from django.conf import settings as djsettings  # @UnresolvedImport
         try:
             getattr(djsettings, 'SECRET_KEY')
@@ -237,8 +236,9 @@ def get_labeledpoints(Xname, Yname):
     """
     returns a labeledpoint RDD from the datasets provided
     """
-    import omegaml as om
     from pyspark.mllib.regression import LabeledPoint
+
+    import omegaml as om
     # import from datastore
     X = om.datasets.get(Xname)
     Y = om.datasets.get(Yname)
@@ -432,8 +432,8 @@ def reshaped(data):
     """
     check if data is 1d and if so reshape to a column vector
     """
-    import pandas as pd
     import numpy as np
+    import pandas as pd
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 1:
             data = data.values.reshape(-1, 1)
@@ -456,8 +456,8 @@ def gsreshaped(data):
 
     see https://stackoverflow.com/a/49241326
     """
-    import pandas as pd
     import numpy as np
+    import pandas as pd
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 2 and data.shape[1] == 1:
             data = data.values.reshape(-1)
@@ -566,7 +566,7 @@ class PickableCollection(object):
         options = state.get('options', {})
         options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
         client = MongoClient(url, authSource=state['credentials']['source'],
-                             uuidRepresentation='standard', **options)
+            uuidRepresentation='standard', **options)
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -633,6 +633,7 @@ def ignorewarnings(fn):
 @ignorewarnings
 def module_available(modname, min=None, max=None, load=True, py_min=None, py_max=None):
     from importlib.metadata import version
+
     from packaging.version import Version
     try:
         if load:
@@ -827,8 +828,8 @@ def base_loader(_base_config):
         return _omega, 'custom'
 
     def load_commercial():
-        from omegaee import omega as _omega
         from omegaee import eedefaults as _base_config_ee
+        from omegaee import omega as _omega
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
         # ensure django settings are reloaded
         settings(reload=True)
@@ -853,10 +854,9 @@ def base_loader(_base_config):
     return _omega
 
 
-from io import StringIO
-
-from contextlib import contextmanager
 import re
+from contextlib import contextmanager
+from io import StringIO
 
 
 def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None, msg='could not read {}',
@@ -889,9 +889,10 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
     """
     # source: https://gist.github.com/miraculixx/900a28a94c375b7259b1f711b93417d3
     import json
-    import yaml
     import logging
     import pathlib
+
+    import yaml
 
     parsers = parsers or (json.load, yaml.safe_load, json.loads)
     pathlike = lambda s: pathlib.Path(s).exists()
@@ -1064,7 +1065,7 @@ class MongoEncoder(json.JSONEncoder):
         # TODO improve for speed
         import numpy as np
         try:
-            from pandas.api.types import is_integer_dtype, is_float_dtype, is_array_like
+            from pandas.api.types import is_array_like, is_float_dtype, is_integer_dtype
         except:
             is_integer_dtype = lambda v: isinstance(v, int)
             is_float_dtype = lambda v: isinstance(v, float)
@@ -1225,8 +1226,8 @@ class KeepMissing(dict):
 
 def sec_validate_url(url):
     assert validators.url(url,
-                          skip_ipv4_addr=True,
-                          skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
+        skip_ipv4_addr=True,
+        skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
     assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
     return True
 
@@ -1402,13 +1403,21 @@ def failsafe_yaspin(mock=False):
 
     def yaspin_available():
         try:
-            from yaspin import yaspin
-        except:
+            pass
+        except Exception:
             return False
         return True
 
+    def show_progress():
+        try:
+            from omegaml.defaults import OMEGA_SHOW_PROGRESS
+            return OMEGA_SHOW_PROGRESS
+        except Exception:
+            pass
+        return False
+
     may_spin = (is_running_in_jupyter() or (not is_piped() and terminal_ok()))
-    mock = True if mock else not may_spin
+    mock = True if mock or not show_progress() else not may_spin
 
     if not mock and yaspin_available():
         from yaspin import yaspin

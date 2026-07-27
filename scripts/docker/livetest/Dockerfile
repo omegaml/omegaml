@@ -14,4 +14,4 @@ RUN  ln -fs $(find / -type d -wholename '*/omegaml/tests/features') /app/feature
 #ensure PYTHONUSERBASE is created
 USER jovyan
 RUN pip install --ignore-installed --user -U six
-RUN jupyter lab build
+#RUN jupyter lab build --dev-build=False --minimize=False

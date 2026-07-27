@@ -1,8 +1,9 @@
 import builtins
-import dill
 import sys
 import types
 import warnings
+
+import dill
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import tryOr
@@ -130,7 +131,7 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+            tracking=self.tracking, **kwargs)
 
     def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -139,7 +140,7 @@ class VirtualObjectBackend(BaseDataBackend):
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
         return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+            tracking=self.tracking, **kwargs)
 
     def score(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -148,7 +149,7 @@ class VirtualObjectBackend(BaseDataBackend):
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
         return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+            tracking=self.tracking, **kwargs)
 
     def run(self, scriptname, *args, **kwargs):
         # run as a script
@@ -179,7 +180,7 @@ class VirtualObjectBackend(BaseDataBackend):
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
         return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
-                       tracking=self.tracking, **kwargs)
+            tracking=self.tracking, **kwargs)
 
 
 def virtualobj(fn):
@@ -388,6 +389,12 @@ class _DillDip:
     def isdipped(self, data_or_obj):
         obj = tryOr(lambda: dill.loads(data_or_obj), None) if not isinstance(data_or_obj, dict) else data_or_obj
         return isinstance(obj, dict) and obj.get('__dipped__') == self.__calories
+
+    def dump(self, filelike, obj, **kwargs):
+        filelike.write(self.dumps(obj, **kwargs))
+
+    def load(self, filelike):
+        return self.loads(filelike.read())
 
 
 dilldip = _DillDip()

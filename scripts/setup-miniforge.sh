@@ -15,8 +15,8 @@ source $script_dir/omutils
 
 # use a version that is at least 30 days old to ensure we have a vulunerability cooldown period
 # --version and sha from https://github.com/conda-forge/miniforge/releases
-MINIFORGE_VERSION=26.1.1-2
-MINIFORGE_VERSION_SHA256=sha256:831421c1f32d8b510e0ef7f261aaabdbf567bdbba37373432d492621b824ab1f
+MINIFORGE_VERSION=26.3.2-3
+MINIFORGE_VERSION_SHA256=sha256:848194851a98903134187fbb4ab50efe87b003e0c0f808f97644b7524a62bf2c
 MINIFORGE_SCRIPT=Miniforge3-Linux-x86_64.sh
 
 function setup() {

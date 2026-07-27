@@ -1,14 +1,16 @@
 # -- FILE: features/environment.py
 # CONTAINS: Browser fixture setup and teardown
-import nbformat
 import os
+
+import nbformat
 from behave import fixture, use_fixture
-from behave.model_core import Status
+from behave.model_type import Status
+from selenium.webdriver import ChromeOptions
+from splinter import Browser
+
 from omegaml import settings
 from omegaml.tests.features.util import istrue
 from omegaml.tests.util import clear_om
-from selenium.webdriver import ChromeOptions
-from splinter import Browser
 
 
 @fixture
@@ -31,9 +33,9 @@ def splinter_browser(context):
         options.set_capability('browserName', 'chrome')
         options.add_argument('--window-size=1024,768')
         context.browser = Browser('remote',
-                                  browser='Chrome',
-                                  command_executor=selenium_address,
-                                  options=options)
+            browser='Chrome',
+            command_executor=selenium_address,
+            options=options)
     else:
         # start local browser
         if headless:
@@ -77,7 +79,7 @@ def after_step(context, step):
     clean_stepname = step.name.replace('.', '_').replace('/', '_')
     context.screenshotfn = os.path.join(context.screenshot_path, clean_stepname + '.png')
     context.browser.screenshot(context.screenshotfn)
-    if context.debug and step.status in (Status.failed, "failed"):
+    if context.debug and step.status not in (Status.passed, 'passed'):
         # -- ENTER DEBUGGER: Zoom in on failure location.
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb

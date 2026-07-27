@@ -2,15 +2,15 @@
 VERSION=$(shell cat omegaml/VERSION)
 
 # run using make -e to override by env variables
-EXTRAS:=dev
+EXTRAS:=dev,test
 PIPREQ:=pip
 DISTTAGS:=""
 
 install:
 	# in some images pip is outdated, some packages are system-level installed
 	# https://stackoverflow.com/questions/49911550/how-to-upgrade-disutils-package-pyyaml
-	pip install --ignore-installed -U pip
-	pip install -U pytest tox tox-conda tox-run-before
+	pip install -U pip
+	pip install -U pytest tox
 	[ -z "${RUNTESTS}" ] && (pip install gil && gil clone && pip install -r requirements.dev) || echo "env:RUNTESTS set, using packages from pypi only"
 	pip install ${PIPOPTS} --progress-bar off -e ".[${EXTRAS}]" "${PIPREQ}" --find-links https://download.pytorch.org/whl/cpu
 	(which R && scripts/runtime/setup-r.sh) || echo "R is not installed"
@@ -39,7 +39,7 @@ dist: sanity
 	twine check dist/*.whl
 
 livetest: dist
-	scripts/livetest.sh --local --build
+	scripts/livetest.sh --local --build --tags=connect,notebook
 
 devtest:
 	scripts/devtest.sh --headless

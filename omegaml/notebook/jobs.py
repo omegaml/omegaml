@@ -1,17 +1,23 @@
 from __future__ import absolute_import
 
 import datetime
-import gridfs
 import re
+from io import BytesIO, StringIO
+from pathlib import Path
+from uuid import uuid4
+
+import gridfs
 import yaml
 from croniter import croniter
-from io import StringIO, BytesIO
 from jupyter_client import AsyncKernelManager
-from nbformat import read as nbread, write as nbwrite, v4 as nbv4, NotebookNode
+from nbformat import NotebookNode
+from nbformat import read as nbread
+from nbformat import v4 as nbv4
+from nbformat import write as nbwrite
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.documents import MDREGISTRY
 from omegaml.notebook.jobschedule import JobSchedule
-from uuid import uuid4
 
 
 class NotebookBackend(BaseDataBackend):
@@ -43,7 +49,7 @@ class NotebookBackend(BaseDataBackend):
         """ store a notebook job
 
         Args:
-            obj (str|NotebookNode): the notebook object or the notebook's code as a string
+            obj (str|NotebookNode|filelike): the notebook object or the notebook's code as a string
             name (str): the name of the job
             attributes (dict): the attributes to store with the job
 
@@ -52,14 +58,24 @@ class NotebookBackend(BaseDataBackend):
         """
         if not name.endswith('.ipynb'):
             name += '.ipynb'
-        if isinstance(obj, str):
+        if isinstance(obj, (str, Path)) and Path(obj).is_file():
+            with Path(obj).open() as fin:
+                value = fin.read()
+        elif isinstance(obj, str):
             return self.store.create(obj, name)
-        sbuf = StringIO()
+        elif hasattr(obj, 'read') and hasattr(obj, 'seek'):
+            obj.seek(0)
+            value = obj.read()
+        elif isinstance(obj, NotebookNode):
+            # nbwrite expects string, fs.put expects bytes
+            sbuf = StringIO()
+            nbwrite(obj, sbuf, version=4)
+            sbuf.seek(0)
+            value = sbuf.getvalue()
+        else:
+            raise ValueError('cannote store {type(obj}}, require obj:str|NotebookNode|filelike')
         bbuf = BytesIO()
-        # nbwrite expects string, fs.put expects bytes
-        nbwrite(obj, sbuf, version=4)
-        sbuf.seek(0)
-        bbuf.write(sbuf.getvalue().encode('utf8'))
+        bbuf.write(value.encode('utf8'))
         bbuf.seek(0)
         # see if we have a file already, if so replace the gridfile
         meta = self.store.metadata(name)
@@ -67,11 +83,11 @@ class NotebookBackend(BaseDataBackend):
             filename = uuid4().hex
             fileid = self._store_to_file(self.store, bbuf, filename)
             meta = self.store._make_metadata(name=name,
-                                             prefix=self.store.prefix,
-                                             bucket=self.store.bucket,
-                                             kind=self.KIND,
-                                             attributes=attributes,
-                                             gridfile=fileid)
+                prefix=self.store.prefix,
+                bucket=self.store.bucket,
+                kind=self.KIND,
+                attributes=attributes,
+                gridfile=fileid)
             meta = meta.save()
         else:
             filename = uuid4().hex
@@ -430,7 +446,7 @@ class NotebookMixin:
             del ep
         # record results
         meta_results = self.put(notebook,
-                                'results/{name}_{ts}'.format(**locals()))
+            'results/{name}_{ts}'.format(**locals()))
         meta_results.attributes['source_job'] = name
         meta_results.save()
         job_results = meta_job.attributes.get('job_results', [])
@@ -599,10 +615,10 @@ class NotebookMixin:
         :return: the (data, resources) tuple as returned by nbconvert. For
            format html data is the HTML's body, for PDF it is the pdf file contents
         """
-        from traitlets.config import Config
         from nbconvert import SlidesExporter
         from nbconvert.exporters.html import HTMLExporter
         from nbconvert.exporters.pdf import PDFExporter
+        from traitlets.config import Config
 
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
         # (exporter class, filemode, config-values
