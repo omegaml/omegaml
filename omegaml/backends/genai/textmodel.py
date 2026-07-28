@@ -219,32 +219,40 @@ class TextModelBackend(GenAIBaseBackend):
             # model is a stored model, load it
             model = self.model_store.get(
                 model,
-                prompt=prompt,
-                template=template,
-                data_store=data_store,
-                pipeline=pipeline,
-                tools=tools,
-                documents=documents,
-                strategy=strategy,
-                tracking=self.tracking,
-                **kwargs,
+                **{
+                    **dict(
+                        prompt=prompt,
+                        template=template,
+                        data_store=data_store,
+                        pipeline=pipeline,
+                        tools=tools,
+                        documents=documents,
+                        strategy=strategy,
+                        tracking=self.tracking,
+                    ),
+                    **params,
+                },
             )
 
         else:
             model = TextModel(
                 base_url,
                 model,
-                api_key=creds,
-                prompt=prompt,
-                template=template,
-                data_store=data_store,
-                pipeline=pipeline,
-                tools=tools,
-                tracking=self.tracking,
-                provider=provider,
-                documents=documents,
-                strategy=strategy,
-                **params,
+                **{
+                    **dict(
+                        api_key=creds,
+                        prompt=prompt,
+                        template=template,
+                        data_store=data_store,
+                        pipeline=pipeline,
+                        tools=tools,
+                        tracking=self.tracking,
+                        provider=provider,
+                        documents=documents,
+                        strategy=strategy,
+                    ),
+                    **params,
+                },
             )
         return model
 
@@ -405,9 +413,14 @@ class TextModel(GenAIModel):
         self.tools = tools
         self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
         self.documents = documents
-        self.strategy = strategy or {
-            # kwargs to pass to DocumentIndex.retrieve()
-            'retrieve': {'top': 1}
+        self.strategy = {
+            **{
+                # kwargs to pass to DocumentIndex.retrieve()
+                'retrieve': {'top': 1},
+                # system role
+                'system_role': 'developer',
+            },
+            **(strategy or {}),
         }
 
     def __repr__(self):
@@ -569,7 +582,7 @@ class TextModel(GenAIModel):
         conversation_id = conversation_id or uuid4().hex
         # if the client sends in messages, don't recall past conversations (they are already in messages)
         messages = messages or self.conversation(conversation_id, raw=True)
-        system_message_missing = not any(m.get('role') == 'system' for m in messages)
+        system_message_missing = not any(m.get('role') in ('system', 'developer') for m in messages)
         empty = lambda d: d.empty if isinstance(d, pd.DataFrame) else not d
         if empty(messages) or system_message_missing:
             # no message history, insert the system message to start off the conversation)
@@ -662,7 +675,11 @@ class TextModel(GenAIModel):
         return self.pipeline_fn(*args, **kwargs)
 
     def _system_message(self, prompt, conversation_id=None):
-        return {"role": "system", "content": prompt, "conversation_id": conversation_id or uuid4().hex}
+        return {
+            "role": self.strategy['system_role'],
+            "content": prompt,
+            "conversation_id": conversation_id or uuid4().hex,
+        }
 
     def _do_complete(
         self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False, **kwargs
