@@ -40,12 +40,14 @@ try:
 except:
     pass
 
-#: override by setting om.defaults.SQLALCHEMY_ALWAYS_CACHE
-ALWAYS_CACHE = True
+#: override by setting env/om.defaults.SQLALCHEMY_ALWAYS_CACHE
+ALWAYS_CACHE = bool(os.environ.get('SQLALCHEMY_ALWAYS_CACHE', True) in (True, '1', 'y'))
 # -- enabled by default as this is the least-surprised option
 # -- consistent with sqlalchemy connection pooling defaults
-#: kwargs for create_engine()
-ENGINE_KWARGS = dict(echo=False, pool_pre_ping=True, pool_recycle=3600)
+#: kwargs for create_engine(), override by env/om.defaults.SQLALCHEMY_POOL_RECYCLE=N(seconds), SQLALCHEMY_POOL_PREPING=0|1
+ENGINE_KWARGS = dict(echo=False,
+                     pool_pre_ping=bool(os.environ.get('SQLALCHEMY_POOL_PREPING', True) in (True, '1', 'y')),
+                     pool_recycle=int(os.environ.get('SQLALCHEMY_POOL_RECYCLE', 3600)))
 # -- echo=False - do not log to stdout
 # -- pool_pre_ping=True - always check, re-establish connection if no longer working
 # -- pool_recylce=N - do not reuse connections older than N seconds
@@ -298,6 +300,9 @@ class SQLAlchemyBackend(BaseDataBackend):
                 logger.debug(f'preparing a cursor for sql {sql} with parameters {sqlvars}')
                 result = connection.execute(stmt, sqlvars)
                 keep = True
+            # FIXME this is confused with the engine cache. get_connection(keep=) should only be
+            #       relevant to to engine cache, while get(keep=) should only be relevant to the connection
+            #       the way it is now these two things are confused, may result in connections not being closed
             if not keep:
                 connection.close()
             return result
@@ -429,7 +434,7 @@ class SQLAlchemyBackend(BaseDataBackend):
                                                      attributes=attributes)
         return metadata.save()
 
-    def _get_connection(self, name, connection_str, secrets=None, keep=False):
+    def _get_connection(self, name, connection_str, secrets=None, keep=None, engine_kwargs=None):
         import sqlalchemy as sqa
         # passwords should be encoded
         # https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
@@ -439,6 +444,14 @@ class SQLAlchemyBackend(BaseDataBackend):
         }
         connection = None
         cache_key = None
+        _default_engine_kwargs = getattr(self.data_store.defaults,
+                                         'SQLALCHEMY_ENGINE_KWARGS',
+                                         ENGINE_KWARGS)
+        _default_keep = getattr(self.data_store.defaults,
+                                'SQLALCHEMY_ALWAYS_CACHE',
+                                ALWAYS_CACHE)
+        engine_kwargs = engine_kwargs or ENGINE_KWARGS
+        keep = keep if keep is not None else _default_keep
         try:
             # SECDEV: the cache key is a secret in order to avoid privilege escalation
             # -- if it is not secret, user A could create the connection (=> cache)
