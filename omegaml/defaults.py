@@ -1,20 +1,20 @@
 from __future__ import absolute_import
 
+from os.path import basename
+from pathlib import Path
+
 import logging
 import os
 import shutil
 import sys
 import warnings
-from os.path import basename
-from pathlib import Path
 
-from omegaml.util import dict_merge, inprogress, markup, mlflow_available, tryOr
+from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
 cmd_args = (basename(v) for v in sys.argv)
-truefalse = lambda v: (v if isinstance(v, bool) else
-                       any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
+truefalse = lambda v: (v if isinstance(v, bool) else any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = truefalse(os.environ.get('OMEGA_TEST_MODE'))
 is_test_run |= len(set(test_runners) & set(cmd_args)) and 'omegaml-ce' in str(Path().cwd())
@@ -27,9 +27,11 @@ OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 #: the temp directory used by omegaml processes
 OMEGA_TMP = os.environ.get('OMEGA_TMP', '/tmp')
 #: the fully qualified mongodb database URL, including the database name
-OMEGA_MONGO_URL = (os.environ.get('OMEGA_MONGO_URL') or
-                   os.environ.get('MONGO_URL') or
-                   'mongodb://admin:foobar@localhost:27017/omega')
+OMEGA_MONGO_URL = (
+    os.environ.get('OMEGA_MONGO_URL')  # default URL
+    or os.environ.get('MONGO_URL')  # typical mongo URL in paas denvironments
+    or 'mongodb://admin:foobar@localhost:27017/omega'  # fallback default
+)
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
 #: bucket backwards compatibility
@@ -52,9 +54,11 @@ OMEGA_MONGO_SSL_KWARGS = {
 #: if set forces eager execution of runtime tasks
 OMEGA_LOCAL_RUNTIME = truefalse(os.environ.get('OMEGA_LOCAL_RUNTIME', False))
 #: the celery broker name or URL
-OMEGA_BROKER = (os.environ.get('OMEGA_BROKER') or
-                os.environ.get('RABBITMQ_URL') or
-                'amqp://admin:foobar@localhost:5672//')
+OMEGA_BROKER = (
+    os.environ.get('OMEGA_BROKER')  # omega broker url
+    or os.environ.get('RABBITMQ_URL')  # typical rabbitmq url in paas
+    or 'amqp://admin:foobar@localhost:5672//'  # default fallback url
+)
 #: is the worker considered inside the same cluster as the client
 OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', False))
 #: (deprecated) the collection used to store ipython notebooks
@@ -90,8 +94,8 @@ OMEGA_CELERY_CONFIG = {
     'CELERY_TRACK_STARTED': True,
     'CELERYBEAT_SCHEDULE': {
         'execute_scripts': {
-            'task': 'omegaml.notebook.tasks.execute_scripts',
-            'schedule': 60,
+            'task': 'omegaml.notebook.tasks.execute_scripts',  # the task to execute
+            'schedule': 60,  # frequency in seconds
         }
     },
     'CELERYD_TASK_SOFT_TIME_LIMIT': OMEGA_TASK_TIMEOUT,  # seconds
@@ -105,10 +109,12 @@ OMEGA_CELERY_CONFIG = {
 #: enable cloud worker routing
 OMEGA_TASK_ROUTING_ENABLED = truefalse(os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False))
 #: celery task packages
-OMEGA_CELERY_IMPORTS = ['omegaml',
-                        'omegaml.notebook',
-                        'omegaml.backends.package',
-                        'omegaml.backends.monitoring']
+OMEGA_CELERY_IMPORTS = [  #
+    'omegaml',
+    'omegaml.notebook',
+    'omegaml.backends.package',
+    'omegaml.backends.monitoring',
+]
 #: REST API available objects
 OMEGA_RESTAPI_FILTER = os.environ.get('OMEGA_RESTAPI_FILTER', '.*/.*/.*')
 #: rest API URL, this is used by a client to connect to the server
@@ -140,11 +146,11 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
     'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
 }
-OMEGA_STORE_BACKENDS_KERAS = {
-    'keras.h5': 'omegaml.backends.keras.KerasBackend',
+OMEGA_STORE_BACKENDS_KERAS = {  #
+    'keras.h5': 'omegaml.backends.keras.KerasBackend'
 }
-OMEGA_STORE_BACKENDS_SQL = {
-    'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend',
+OMEGA_STORE_BACKENDS_SQL = {  #
+    'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend'
 }
 OMEGA_STORE_BACKENDS_MLFLOW = {
     'mlflow.model': 'omegaml.backends.mlflow.models.MLFlowModelBackend',
@@ -162,8 +168,8 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
 }
-OMEGA_STORE_BACKENDS_OPTIONAL = {
-    'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'},
+OMEGA_STORE_BACKENDS_OPTIONAL = {  #
+    'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'}
 }
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
@@ -221,8 +227,8 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
 #: jobs mixins
-OMEGA_JOBPROXY_MIXINS = [
-    'omegaml.runtimes.mixins.nbtasks.JobTasks',
+OMEGA_JOBPROXY_MIXINS = [  #
+    'omegaml.runtimes.mixins.nbtasks.JobTasks'
 ]
 #: user extensions
 OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
@@ -306,7 +312,7 @@ def update_from_env(vars=globals()):
     # -- top-level OMEGA_*
     for k in [k for k in os.environ.keys() if k.startswith('OMEGA')]:
         nv = os.environ.get(k, None) or vars.get(k)
-        vars[k] = (truefalse(nv) if isinstance(vars.get(k), bool) else nv)
+        vars[k] = truefalse(nv) if isinstance(vars.get(k), bool) else nv
     # -- OMEGA_CELERY_CONFIG updates
     for k in [k for k in os.environ.keys() if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
@@ -314,6 +320,7 @@ def update_from_env(vars=globals()):
     # -- debug if required
     if '--print-omega-defaults' in sys.argv:
         from pprint import pprint
+
         vars = {k: v for k, v in vars.items() if k.startswith('OMEGA')}
         pprint(vars)
     return vars
@@ -344,8 +351,9 @@ def update_from_obj(obj, vars=globals(), attrs=None):
     has_k = lambda o, k: hasattr(o, k) if as_attrs(o) else k in o
     get_k = lambda o, k: getattr(o, k) if as_attrs(o) else o[k]
     set_k = lambda o, k, v: setattr(o, k, v) if as_attrs(o) else o.__setitem__(k, v)
-    set_default = lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k,
-        o.get(k) or d)
+    set_default = (
+        lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k, o.get(k) or d)
+    )
     # update any
     target = attrs or vars
     for k in [k for k in keys(obj) if k.isupper()]:
@@ -393,7 +401,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
         location of the config file or None if not found
     """
     try:
-        from appdirs import site_config_dir, user_config_dir
+        from appdirs import user_config_dir, site_config_dir
     except:
         # we don't have appdirs installed, this can happen during setup.py. fake it
         user_config_dir = lambda *args: os.path.expanduser('~/.config/omegaml')
@@ -448,6 +456,7 @@ def load_user_extensions(vars=globals()):
                 omvar.update(v)
             elif k == 'EXTENSION_LOADER':
                 from importlib import import_module
+
                 mod = import_module(v)
                 if hasattr(mod, 'run'):
                     mod.run(vars)
@@ -496,7 +505,9 @@ def load_framework_support(vars=globals()):
         if os.environ.get('ORT_LOGGING_LEVEL', 'ERROR') in ('3', '4', 'ERROR', 'test', 'FATAL'):
             # respect ORT_LOGGING_LEVEL, due to https://github.com/microsoft/onnxruntime/issues/27092
             from omegaml.util import silence
-            with silence(): import onnxruntime as ort  # noqa
+
+            with silence():
+                import onnxruntime as ort  # noqa
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_OPENAI'])
     #: keras backend
     if keras_available(max='2.0', py_max='3.11'):
@@ -523,11 +534,12 @@ def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     update_from_config(vars, config_file=config_file)
     if is_cli_run:
         import warnings
+
         warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def setup_logging():
-    """ set logging options according to OMEGA_LOGLEVEL
+    """set logging options according to OMEGA_LOGLEVEL
 
     .. versionchanged:: 0.18.0
         pymongo, kombu loggers are set to ERROR to reduce verbosity, root loger to OMEGA_LOGLEVEL
