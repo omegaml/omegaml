@@ -3,8 +3,8 @@ import logging
 import os
 import re
 from collections import namedtuple
-from copy import deepcopy
 from getpass import getuser
+from itertools import chain
 from pprint import pformat
 from urllib.parse import parse_qs, urljoin, urlsplit
 from uuid import uuid4
@@ -16,9 +16,9 @@ from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
-from omegaml.backends.tracking import OmegaSimpleTracker, NoTrackTracker
+from omegaml.backends.tracking import NoTrackTracker, OmegaSimpleTracker
 from omegaml.store import OmegaStore
-from omegaml.util import ensure_list, tryOr, KeepMissing, ensure_dict, utcnow, raise_
+from omegaml.util import KeepMissing, dict_merge, ensure_dict, ensure_list, raise_, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +107,16 @@ class TextModelBackend(GenAIBaseBackend):
                omegaml.genai.textmodel.PROVIDERS)
             tools (list): optional, the list of tool names stored in om.models
             documents (str): optional, the name of a document store stored in om.datasets
-            strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete')
+            strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete', 'agentic')
             apikey (str): optional, the api key to use, if <credentials> is not part of the URL
             **kwargs:
 
         Returns:
             metadata (Metadata): the TextModel's metadata object
+
+        .. versionchanged:: NEXT
+            strategy=dict(agentic=True) causes model.complete() to recursively resolve tool calls until no
+            further tools are called by the model. See model.complete() for details
         """
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
@@ -219,32 +223,40 @@ class TextModelBackend(GenAIBaseBackend):
             # model is a stored model, load it
             model = self.model_store.get(
                 model,
-                prompt=prompt,
-                template=template,
-                data_store=data_store,
-                pipeline=pipeline,
-                tools=tools,
-                documents=documents,
-                strategy=strategy,
-                tracking=self.tracking,
-                **kwargs,
+                **{
+                    **dict(
+                        prompt=prompt,
+                        template=template,
+                        data_store=data_store,
+                        pipeline=pipeline,
+                        tools=tools,
+                        documents=documents,
+                        strategy=strategy,
+                        tracking=self.tracking,
+                    ),
+                    **params,
+                },
             )
 
         else:
             model = TextModel(
                 base_url,
                 model,
-                api_key=creds,
-                prompt=prompt,
-                template=template,
-                data_store=data_store,
-                pipeline=pipeline,
-                tools=tools,
-                tracking=self.tracking,
-                provider=provider,
-                documents=documents,
-                strategy=strategy,
-                **params,
+                **{
+                    **dict(
+                        api_key=creds,
+                        prompt=prompt,
+                        template=template,
+                        data_store=data_store,
+                        pipeline=pipeline,
+                        tools=tools,
+                        tracking=self.tracking,
+                        provider=provider,
+                        documents=documents,
+                        strategy=strategy,
+                    ),
+                    **params,
+                },
             )
         return model
 
@@ -371,6 +383,7 @@ class TextModel(GenAIModel):
     .. versionchanged:: 0.18.0
         the ./openai/messages dataset has been replaced by standard experiment tracking
         (use om.datasets to access prior conversations)
+
     """
 
     def __init__(
@@ -399,15 +412,25 @@ class TextModel(GenAIModel):
         self.prompt = prompt or 'You are a helpful assistant.'
         self.data_store = data_store
         self.tracking = tracking
-        self.provider = PROVIDERS[provider](api_key=self.api_key, base_url=self.base_url, model=self.model)
+        self.provider = PROVIDERS[provider](
+            api_key=self.api_key, base_url=self.base_url, model=self.model, tracking=self.tracking
+        )
         self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
         self.trace_fn = trace
-        self.tools = tools
-        self.tools_specs = [self._get_function_spec(tool) for tool in tools] if tools else None
+        self.tools = tools or []
         self.documents = documents
-        self.strategy = strategy or {
-            # kwargs to pass to DocumentIndex.retrieve()
-            'retrieve': {'top': 1}
+        self.strategy = {
+            # defaults
+            **{
+                # kwargs to pass to DocumentIndex.retrieve()
+                'retrieve': {'top': 1},
+                # system role
+                'system_role': 'developer',
+                # agentic behavior
+                'agentic': False,
+            },
+            # override by user provided
+            **(strategy or {}),
         }
 
     def __repr__(self):
@@ -442,7 +465,7 @@ class TextModel(GenAIModel):
             if not methods or method in methods:
                 print(f"tracing method={method}", pformat(kwargs))
 
-        self.trace_fn = fn or tracefn
+        self.trace_fn = fn if callable(fn) else tracefn
         return self
 
     def embed(self, documents, dimensions=None, raw=False, conversation_id=None, **kwargs):
@@ -464,6 +487,8 @@ class TextModel(GenAIModel):
         stream=False,
         use_tools=True,
         trace=None,
+        agentic=False,
+        tools=None,
         **kwargs,
     ):
         """complete a prompt
@@ -490,13 +515,29 @@ class TextModel(GenAIModel):
             use_tools (bool): optional, defaults to True. If True, and tools have been specified for the model, the
                model is asked to choose a tool for execution, and any chosen tool will be executed by TextModel as
                part of the completion. If False, no tools will be provided to the model.
+            agentic (bool): optional, defaults to False. If True, will recursively resolve tool calls until no further
+                tools are called by the model. This implies tools=True if tools are present. Tool calls are not
+                streamed. This can also be set permanently by saving a model with models.put(..., strategy={
+                'agentic': True})
             **kwargs:
 
         Returns:
             response (dict|iterator): if stream==False, returns a dict of all model responses, if stream==True
               returns an iterator of streamed responses.
+
+        .. versionchanged:: NEXT
+            TextModel.complete(..., agentic=True) will recursively resolve calls until no further tools are
+            called by the model. This implies tools=True if tools are present. Tool calls are not streamed. This
+            can also be set permanently by saving a model with models.put(..., strategy={'agentic': True})
         """
         self.trace(trace) if locals().get('trace') else None
+
+        agentic = agentic or self.strategy.get('agentic', False)
+        if agentic:
+            conversation_id = conversation_id or uuid4().hex
+            use_tools = True
+        if tools:
+            self.tools.extend(tools)
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
@@ -506,28 +547,58 @@ class TextModel(GenAIModel):
             conversation_id, response, _, response_message, raw_response = r
             return response_message if not raw else response
 
-        if not chat and conversation_id is None:
-            responses = self._do_complete(
-                prompt, messages=messages, data=data, stream=stream, use_tools=use_tools, raw=raw, **kwargs
-            )
-            response_parser = parse_completion_response
-        else:
-            # chat or conversation id provided
-            responses = self._do_chat(
-                prompt,
-                messages=messages,
-                conversation_id=conversation_id,
-                data=data,
-                stream=stream,
-                use_tools=use_tools,
-                raw=raw,
-                **kwargs,
-            )
-            response_parser = parse_chat_response
-        # return response(s)
-        # -- parse, then check if parsed is a valid object (avoid passing on a generator)
-        parsed_gen = (response_parser(response) for response in responses)
-        response_gen = (parsed for parsed in parsed_gen if isinstance(parsed, (list, dict, tuple)))
+        def generate_response_stream_once(prompt, messages, use_tools):
+            if not chat and conversation_id is None:
+                responses = self._do_complete(
+                    prompt, messages=messages, data=data, stream=stream, use_tools=use_tools, raw=raw, **kwargs
+                )
+                response_parser = parse_completion_response
+            else:
+                # chat or conversation id provided
+                responses = self._do_chat(
+                    prompt,
+                    messages=messages,
+                    conversation_id=conversation_id,
+                    data=data,
+                    stream=stream,
+                    use_tools=use_tools,
+                    raw=raw,
+                    **kwargs,
+                )
+                response_parser = parse_chat_response
+            # return response(s)
+            # -- parse, then check if parsed is a valid object (avoid passing on a generator)
+            parsed_gen = (response_parser(response) for response in responses)
+            response_gen = (parsed for parsed in parsed_gen if isinstance(parsed, (list, dict, tuple)))
+            return response_gen
+
+        def generate_response_loop(prompt, messages, use_tools):
+            turn_prompt = prompt
+            intermediate_results = None
+            while True:
+                response = None
+                tool_calls = None
+                # the stream may contain multiple partial toolcall messages
+                # -- first, generate the full stream until it stops
+                # -- then, check for tool calls across the consolidate stream
+                for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
+                    try:
+                        if not raw and intermediate_results:
+                            # FIXME move to conversation state
+                            response.setdefault('intermediate_results', []).append(intermediate_results)
+                            intermediate_results = None
+                        yield response
+                        tool_calls = self._has_tool_calls(response)
+                    except Exception as e:
+                        logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
+                if response and tool_calls and (agentic or use_tools):
+                    intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
+                    turn_prompt = tool_prompts
+                    continue
+                else:
+                    break
+
+        response_gen = generate_response_loop(prompt, messages, use_tools)
         return response_gen if stream else [response for response in response_gen][-1]
 
     def chat(self, prompt, conversation_id=None, raw=False, stream=False, use_tools=True, **kwargs):
@@ -555,7 +626,7 @@ class TextModel(GenAIModel):
         responses = self._do_chat(prompt, conversation_id=conversation_id, stream=stream, use_tools=use_tools, **kwargs)
 
         def response_parser(r):
-            conversation_id, response, prompt_response, response_message, raw_response = r
+            (conversation_id, response, prompt_response, response_message, raw_response) = r
             return conversation_id, (response if raw else response_message)
 
         response_gen = (response_parser(response) for response in responses if response)
@@ -569,7 +640,7 @@ class TextModel(GenAIModel):
         conversation_id = conversation_id or uuid4().hex
         # if the client sends in messages, don't recall past conversations (they are already in messages)
         messages = messages or self.conversation(conversation_id, raw=True)
-        system_message_missing = not any(m.get('role') == 'system' for m in messages)
+        system_message_missing = not any(m.get('role') in ('system', 'developer') for m in messages)
         empty = lambda d: d.empty if isinstance(d, pd.DataFrame) else not d
         if empty(messages) or system_message_missing:
             # no message history, insert the system message to start off the conversation)
@@ -587,50 +658,85 @@ class TextModel(GenAIModel):
             stream=stream,
             **kwargs,
         )
-        to_store = []
         for response in responses:
             response, prompt_message, response_message, raw_response = response
-            finish_reason = response_message.get('finish_reason')
-            consolidated = finish_reason == 'stop.consolidated'
-            if not stream or (stream and consolidated):
-                # only store consolidated responses
-                # -- if streaming, response_message is merged from all choices[0].delta
-                # -- if not streaming, response_message is the choices[0].message
-                # wrapping in deepcopy() to avoid modification by the data store (e.g. adding _id)
-                to_store.extend([deepcopy(prompt_message), deepcopy(response_message)])
-            if not consolidated:
-                # the stop.consolidated message is internal to TextModel, do not return it
-                yield conversation_id, response, prompt_message, response_message, raw_response
-        self._log_events('conversation', conversation_id, to_store)
+            yield (conversation_id, response, prompt_message, response_message, raw_response)
+
+    def _handle_toolcalls(self, response, tool_calls, conversation_id):
+        results, tool_prompts = self._call_tools(tool_calls, conversation_id)
+        tool_prompts = (
+            self.pipeline(
+                method='toolcall',
+                prompt_message=None,  # FIXME
+                response_message=response,
+                messages=None,  # FIXME
+                tool_prompts=tool_prompts,
+                tool_results=results,
+                template=None,  # FIXME
+                conversation_id=conversation_id,
+            )
+            or tool_prompts
+        )
+        return results, tool_prompts
 
     def _call_tools(self, tool_calls, conversation_id):
         # process tool calls
-        results = []
+        tool_results = []
         tool_prompts = []
         for tool_call in tool_calls:
-            tool = [
-                (ts, tf) for ts, tf in zip(self.tools_specs, self.tools) if tf.__name__ == tool_call['function']['name']
-            ]
-            if tool:
-                tool, tool_func = tool[0]
-                tool_kwargs = json.loads(tool_call['function']['arguments'])
+            tool_specs_callables = zip(self.tools_specs(self.tools), self.tools)
+            tool_name = tool_call['function'].get('name')
+            tool_id = tool_call.get('id')
+            tool_args = tool_call['function'].get('arguments', '')
+            matched_tool = [(ts, tf) for ts, tf in tool_specs_callables if tf.__name__ == tool_name]
+            if matched_tool:
+                tool, tool_func = matched_tool[0]
                 try:
-                    tool_result = tool_func(**tool_kwargs)
+                    tool_args = json.loads(tool_args)
+                    # parse e.g. '{"args": ["is 10 correct?"], "kwargs": {}}'
+                    if isinstance(tool_args, dict) and "args" in tool_args and "kwargs" in tool_args:
+                        real_args = (
+                            tuple(tool_args["args"]) if isinstance(tool_args["args"], list) else tool_args["args"]
+                        )
+                        real_kwargs = tool_args.get("kwargs", {})
+                    else:
+                        # parse e.g. '{"prompt": "how are you"}'
+                        real_args = []
+                        real_kwargs = tool_args
+                    tool_result = tool_func(*real_args, **real_kwargs)
                 except Exception as e:
                     tool_result = str(e)
-                tool_response = {"role": "assistant", "content": tool_result, "conversation_id": conversation_id}
-                results.append(tool_response)
-                tool_prompts.append({"role": "tool", "tool_call_id": tool_call["id"], "content": str(tool_result)})
+                tool_result = json.dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
+                tool_response = {"role": "tool", "tool_call_id": tool_id, "content": str(tool_result)}
+                tool_results.append(tool_result)
+                tool_prompts.append(tool_response)
                 self._log_events(
                     'toolcall',
                     conversation_id,
                     {
-                        'name': tool_call['function']['name'],
-                        'too_call_id': tool_call['id'],
-                        'arguments': tool_kwargs,
+                        'name': tool_name,  # fmt:asis
+                        'too_call_id': tool_id,
+                        'arguments': tool_args,
                         'result': str(tool_result),
                     },
                 )
+            else:
+                # invalid tool call
+                tool_result = 'tool call was invalid'
+                tool_response = {"role": "tool", "tool_call_id": tool_id, "content": str(tool_result)}
+                tool_results.append(tool_result)
+                tool_prompts.append(tool_response)
+                self._log_events(
+                    'error',
+                    conversation_id,
+                    {
+                        'name': tool_name,  # fmt:asis
+                        'too_call_id': tool_id,
+                        'arguments': tool_args,
+                        'result': str(tool_result),
+                    },
+                )
+        results = {'tool_calls': tool_calls, 'tool_prompts': tool_prompts, 'tool_results': tool_results}
         return results, tool_prompts
 
     def conversation(self, conversation_id=None, raw=False, **filter):
@@ -654,15 +760,22 @@ class TextModel(GenAIModel):
             # FIXME fillna('') is deprecated for numeric columns (handle in serialization?)
             messages.fillna('', inplace=True)
             columns = list(set(messages.columns) & {'key', 'role', 'content', 'finish_reason', 'dt'})
-            return messages[columns] if not raw else messages.to_dict('records')
+            return messages[columns] if not raw else list(messages['value'].to_dict().values())
         return pd.DataFrame() if not raw else []
 
     def pipeline(self, *args, **kwargs):
         self.trace_fn(*args, **kwargs) if callable(self.trace_fn) else None
-        return self.pipeline_fn(*args, **kwargs)
+        return self.pipeline_fn(*args, **kwargs) or False
+
+    def tools_specs(self, tools):
+        return [self._get_function_spec(tool) for tool in tools]
 
     def _system_message(self, prompt, conversation_id=None):
-        return {"role": "system", "content": prompt, "conversation_id": conversation_id or uuid4().hex}
+        return {
+            "role": self.strategy['system_role'],
+            "content": prompt,
+            "conversation_id": conversation_id or uuid4().hex,
+        }
 
     def _do_complete(
         self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False, **kwargs
@@ -670,6 +783,10 @@ class TextModel(GenAIModel):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or []
         kwargs.update(self.strategy.get('complete', {}))
+        kwargs.update(stream=stream)
+        # prepare tools
+        if self.tools:
+            kwargs.update(tools=self.tools_specs(self.tools), tool_choice='auto')
         # prepare template
         _template = self._prepare_template(self.template, data=data)
         template = (
@@ -712,9 +829,6 @@ class TextModel(GenAIModel):
             # augment last message only
             messages[-1] = self._augment_message(messages[-1], documents=self.documents, template=template)
             prompt_message = messages[-1]
-        # prepare tools
-        if self.tools:
-            kwargs.update(tools=self.tools_specs, tool_choice='auto')
         # prepare messages
         _default_messages = messages
         messages = (
@@ -736,93 +850,65 @@ class TextModel(GenAIModel):
             template=template,
             conversation_id=conversation_id,
             **kwargs,
-        ) or self.provider.complete(messages=messages, stream=stream, model=self.model, **kwargs)
+        )
+        # finally call the model provider, if needed
+        self._log_events('conversation', conversation_id, prompt_message)
+        response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
 
-        def maybe_call_tools(response, prompt_message, response_message, use_tools=False, as_delta=False):
-            """prepare calling tools, optionally actually call the selected tool"""
-            if 'delta' in response['choices'][0]:
-                message = response['choices'][0]['delta']
-            else:
-                message = response['choices'][0]['message']
-            if self.tools and 'tool_calls' in message:
-                # call tools
-                response_message['tool_calls'] = message['tool_calls']
-                tool_calls = [tool for tool in message['tool_calls']]
-            else:
-                tool_calls = None
-            if use_tools and tool_calls:
-                tool_calls = (
-                    self.pipeline(
-                        method='toolprepare',
-                        prompt_message=prompt_message,
-                        tool_calls=tool_calls,
-                        template=template,
-                        conversation_id=conversation_id,
-                        **kwargs,
+        def capture_tool_calls(
+            response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
+        ):
+            """capture toolcalls across stream messages to consolidate into a single, fully formatted toolcall
+
+            Combines previously streamed 'tool_calls' messages into a properly formatted, combined tool call. This
+            is because tool calls can be sent as partial specifications across several streamed messages
+
+            See Also:
+                - https://developers.openai.com/api/docs/guides/function-calling#streaming
+                - https://www.perplexity.ai/search/718b5969-fce4-4ad6-bd4b-e1fe66de9d8e
+            """
+            tool_message = self._get_response_message(response_message)
+            should_call = response['choices'][0].get('finish_reason') == 'tool_calls'
+            if should_call and self.tools:
+                if chunks:
+                    # consolidate previous chunks, if any
+                    # -- in streaming mode, tool_calls can be sent in multiple chunks
+                    # -- merge partial tool_calls by index
+                    tool_calls_map = {}
+                    chunked_msgs = (self._get_response_message(c) for c in chunks)
+                    chunked_calls = (c.get('tool_calls') for c in chunked_msgs if 'tool_calls' in c)
+                    partial_calls = chain.from_iterable(c for c in chunked_calls)
+                    for partial_call in partial_calls:
+                        idx = partial_call.get('index', 0)
+                        tool_calls_map.setdefault(idx, tool_message.get('tool_calls') or {})
+                        dict_merge(tool_calls_map[idx], partial_call)
+                    # -- finalize tool call message
+                    tool_calls = list(sorted(tool_calls_map.values(), key=lambda v: v.get('index')))
+                else:
+                    tool_calls = tool_message.get('tool_calls')
+                if use_tools and tool_calls:
+                    tool_calls = (
+                        self.pipeline(
+                            method='toolprepare',
+                            prompt_message=prompt_message,
+                            response_message=response_message,
+                            messages=messages,
+                            tool_calls=tool_calls,
+                            template=template,
+                            conversation_id=conversation_id,
+                            **kwargs,
+                        )
+                        or tool_calls
                     )
-                    or tool_calls
-                )
-                results, tool_prompts = self._call_tools(tool_calls, conversation_id)
-                # ask llm to respond to tool results
-                # -- avoid recursive tool calls
-                # -- never stream results
-                kkwargs = dict(kwargs)
-                kkwargs.pop('stream', None)
-                kkwargs.pop('tools', None)
-                kkwargs.pop('tool_choice', None)
-                toolcall_messages = messages + [response_message] + tool_prompts
-                toolcall_messages = (
-                    self.pipeline(
-                        method='toolcall',
-                        prompt_message=prompt_message,
-                        messages=toolcall_messages,
-                        tool_prompts=tool_prompts,
-                        tool_results=results,
-                        template=template,
-                        conversation_id=conversation_id,
-                        **kwargs,
-                    )
-                    or toolcall_messages
-                )
-                response = self.provider.complete(messages=toolcall_messages, model=self.model, **kkwargs)
-                self._track_usage(response, conversation_id)
-                tooled_response, tooled_prompt_message, tooled_response_message, raw_response = resolve_response(
-                    response, prompt_message, use_tools=False
-                )
-                tooled_response_message['intermediate_results'] = {
-                    'tool_calls': tool_calls,
-                    'tool_prompts': tool_prompts,
-                    'tool_results': results,
-                }
-                tooled_response_message = (
-                    self.pipeline(
-                        method='toolresult',
-                        response_message=tooled_response_message,
-                        prompt_message=prompt_message,
-                        messages=toolcall_messages,
-                        template=template,
-                        conversation_id=conversation_id,
-                        **kwargs,
-                    )
-                    or tooled_response_message
-                )
-                if as_delta:
-                    # ensure the tool response is shown as a delta chunk
-                    message = tooled_response_message.get('message') or tooled_response_message
-                    if raw:
-                        tooled_response['choices'][0]['delta'] = message
-                    else:
-                        tooled_response['delta'] = message
-                return tooled_response, prompt_message, tooled_response_message
+                    response_message['tool_calls'] = tool_calls
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
             raw_response = response.to_dict() if hasattr(response, 'to_dict') else response
-            if raw:
-                # native response message
-                # Ref: https://platform.openai.com/docs/api-reference/chat/get
-                response_message = response['choices'][0]['message']
-            elif 'error' in response:
+            if len(raw_response['choices']) == 0:
+                # this should not happen per the protocol - if it does, simulate an empty delta
+                raw_response['choices'].append({'message': {'content': None}})
+            if 'error' in response:
                 return (
                     response,
                     prompt_message,
@@ -832,14 +918,11 @@ class TextModel(GenAIModel):
                         "conversation_id": conversation_id,
                         "error": response['error'],
                     },
+                    raw_response,
                 )
-            else:
-                response_message = {
-                    "role": response['choices'][0]['message'].get('role'),
-                    "content": tryOr(lambda: response['choices'][0]['message'].get('content'), None),
-                    "conversation_id": conversation_id,
-                }
-            response, prompt_message, response_message = maybe_call_tools(
+            response_message = response['choices'][0]['message']
+            response_message.setdefault('conversation_id', conversation_id)
+            response, prompt_message, response_message = capture_tool_calls(
                 response, prompt_message, response_message, use_tools=use_tools
             )
             response_message = (
@@ -878,23 +961,32 @@ class TextModel(GenAIModel):
 
             """
             raw_response = chunk.to_dict() if hasattr(chunk, 'to_dict') else chunk
+            # consolidate content
+            content = ''.join(
+                c['choices'][0]['delta'].get('content') or ''  # fmt:asis
+                for c in chunks
+            ) + str(chunk['choices'][0]['delta'].get('content') or '')
+            reasoning = ''.join(
+                c['choices'][0]['delta'].get('reasoning') or ''  # fmt:asis
+                for c in chunks
+            ) + str(chunk['choices'][0]['delta'].get('reasoning') or '')
             if chunk['choices']:
-                content = ''.join(c['choices'][0]['delta'].get('content') or '' for c in chunks) + str(
-                    chunk['choices'][0]['delta'].get('content') or ''
-                )
                 if raw:
                     response_message = chunk['choices'][0]['delta']
                 else:
-                    # consolidate content
                     response_message = {
                         "role": chunk['choices'][0]['delta'].get('role'),
                         "delta": chunk['choices'][0]['delta'].get('content'),
+                        'reasoning': reasoning,
                         "content": content,
                         "conversation_id": conversation_id,
-                        "finish_reason": chunk['choices'][0]['finish_reason'],
+                        "tool_calls": chunk['choices'][0]['delta'].get('tool_calls'),
+                        "finish_reason": chunk['choices'][0].get('finish_reason'),
                     }
-                response, prompt_message, response_message = maybe_call_tools(
-                    chunk, prompt_message, response_message, use_tools=use_tools, as_delta=True
+                    # response_message.update(consolidated)
+                response_message.setdefault('conversation_id', conversation_id)
+                response, prompt_message, response_message = capture_tool_calls(
+                    chunk, prompt_message, response_message, use_tools=use_tools, as_delta=True, chunks=chunks
                 )
                 response_message = (
                     self.pipeline(
@@ -908,33 +1000,39 @@ class TextModel(GenAIModel):
                     )
                     or response_message
                 )
-                # consolidate response
-                consolidated_response.update(response_message)
-                consolidated_response['content'] = content
             else:
-                response_message = {}
+                content = ''
+            # consolidate response
+            consolidated_response.update({'content': content, 'reasoning': reasoning})
+            consolidated_response.update(response_message)
             chunks.append(raw_response)
             return response, prompt_message, response_message, raw_response
 
         if stream:
             chunks = []
             consolidated_response = {}
-            finalized = False
-            for chunk in response:
-                try:
-                    self._track_usage(chunk, conversation_id)
-                    resolved = resolve_chunk(
-                        response, chunk, chunks, prompt_message, consolidated_response, use_tools=use_tools
-                    )
-                except Exception as e:
-                    logger.warning(f"could not process chunk {chunk.get('id')} due to {e}")
-                    self._log_events('error', conversation_id, [chunk])
-                else:
-                    if not finalized:
+            # -- wrap generator in try/finally to ensure we capture consolidated response even if client aborts
+            try:
+                for chunk in response:
+                    try:
+                        self._track_usage(chunk, conversation_id)
+                        resolved = resolve_chunk(
+                            response, chunk, chunks, prompt_message, consolidated_response, use_tools=use_tools
+                        )
+                    except Exception as e:
+                        logger.warning(f"could not process chunk {chunk.get('id')} due to {e}", exc_info=True)
+                        self._log_events(
+                            'error', conversation_id, f'could not process stream chunk due to {e} {chunk=}'
+                        )
+                        response_message = {'error': f'could not process stream chunk for {conversation_id=}'}
+                        consolidated_response.update(response_message)
+                        yield response, prompt_message, response_message, response_message
+                    else:
                         yield resolved
-                finalized = consolidated_response.get('intermediate_results') is not None
-            consolidated_response['finish_reason'] = 'stop.consolidated'
-            yield response, prompt_message, consolidated_response, chunks[-1] if chunks else {}
+            finally:
+                # log consolidated response only
+                if consolidated_response:
+                    self._log_events('conversation', conversation_id, consolidated_response)
         else:
             try:
                 self._track_usage(response, conversation_id)
@@ -942,6 +1040,8 @@ class TextModel(GenAIModel):
             except Exception as e:
                 logger.warning(f"Could not process chunk {response.get('id')} due to {e}")
                 self._log_events('error', conversation_id, [response])
+            finally:
+                self._log_events('conversation', conversation_id, self._get_response_message(response))
 
     def _parsed_completion(self, response):
         return response['choices'][0]['message'].get('content')
@@ -949,6 +1049,21 @@ class TextModel(GenAIModel):
     def _prepare_template(self, template, data=None):
         _template = (template or '').format_map(safeformat(data or {}))
         return template
+
+    def _get_response_message(self, response):
+        # return the current response message or chunk
+        if 'role' in response:
+            # that's already a message
+            return response
+        if 'delta' in response['choices'][0]:
+            message = response['choices'][0]['delta']
+        else:
+            message = response['choices'][0]['message']
+        return message
+
+    def _has_tool_calls(self, response):
+        message = self._get_response_message(response)
+        return message.get('tool_calls') or []
 
     def _get_function_spec(self, func):
         """
@@ -1040,10 +1155,11 @@ class TextModel(GenAIModel):
 class Provider:
     URL_REGEX = None
 
-    def __init__(self, api_key, base_url, model=None, **kwargs):
+    def __init__(self, api_key, base_url, model=None, tracking=None, **kwargs):
         self.api_key = api_key
         self.base_url = base_url
         self.model = model
+        self.tracking = tracking
 
     def embed(self, documents, dimensions=None, **kwargs):
         raise NotImplementedError
