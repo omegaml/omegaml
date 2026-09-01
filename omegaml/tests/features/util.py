@@ -1,11 +1,10 @@
-import warnings
-
 import os
+import warnings
+from time import sleep
+from urllib.parse import urlparse, urlunparse
 
 import yaml
 from selenium.webdriver.common.keys import Keys
-from time import sleep
-from urllib.parse import quote, urlparse, urlunparse
 
 istrue = lambda v: (
     (v.lower() in ('yes', '1', 'y', 'true', 't'))
@@ -166,8 +165,8 @@ class Notebook:
             sleep(1)
         item = [el for el in br.find_by_css('.jp-DirListing-itemText') if el.value.startswith(name)][0]
         item.double_click()
-        sleep(2) # wait for the notebook to open
-        self.last_notebook # switch to last window
+        sleep(2)  # wait for the notebook to open
+        self.last_notebook  # switch to last window
         return self
 
     def restart(self, wait=False):
@@ -218,8 +217,8 @@ class Notebook:
     def save_notebook(self):
         self.nbcell.type(SAVE_NOTEBOOK)
         br = self.browser
-        if br.is_text_present('Rename'):
-            br.find_by_text('Rename')[0].click()
+        if elms := br.find_by_text('Rename and Save'):
+            elms[0].click()
 
 
 def get_admin_secrets(scope=None, keys=None):

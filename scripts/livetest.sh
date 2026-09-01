@@ -60,11 +60,7 @@ if [ "$build" == "yes" ]; then
    $script_dir/distrelease.sh --buildarg $pypi --pyver $pyver --distname omegaml --version $docker_tag
 fi
 
-# prepare to run
-echo "Preparing to run"
-pushd $script_dir/..
-mkdir -p /tmp/screenshots
-# only build livetest image if requested
+# build livetest image if requested
 if [ -z "$nobuild" ]; then
   echo "Building livetest image using $pypi"
   docker rmi -f $docker_image
@@ -73,10 +69,16 @@ if [ -z "$nobuild" ]; then
   popd
 fi
 
+# prepare to run
+echo "Preparing to run"
+pushd $script_dir/..
+mkdir -p /tmp/screenshots
 if [[ ! -z $debug ]]; then
    export BEHAVE_DEBUG="-e BEHAVE_DEBUG=1"
 fi
-
+if [ ! -z $tags ]; then
+    behave_options="-t $tags"
+fi
 
 # get omegaml running
 echo "Running omegaml in docker-compose "
@@ -86,10 +88,6 @@ echo "giving the services time to spin up"
 countdown 30
 
 # actually run the livetest
-if [ ! -z $tags ]; then
-    behave_options="-t $tags"
-fi
-
 echo "Running selenium grid locally. View at http://localhost:4444, debug at  http://localhost:7900/?autoconnect=1&resize=scale&password=secret"
 docker run -d -it -p 4444:4444 -p 7900:7900 $docker_network $docker_resources -e SE_START_VNC=true --name selenium --network-alias selenium selenium/standalone-chrome
 countdown 10

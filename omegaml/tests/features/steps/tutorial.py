@@ -1,4 +1,6 @@
-from behave import given, when, then
+import os
+
+from behave import given, then, when
 
 from omegaml.tests.features.util import get_admin_secrets
 
@@ -51,3 +53,12 @@ def store_secrets(ctx, scope, dataset):
     secrets = get_admin_secrets(scope)
     om.datasets.put(secrets, dataset, append=False)
     assert 'secrets' in om.datasets.list()
+
+
+@when('we save the {nbname} notebook')
+def store_tutorial_notebook(ctx, nbname):
+    om = ctx.feature.om
+    nbfname = os.path.join(ctx.nbfiles, '{nbname}.ipynb'.format(**locals()))
+    meta = om.jobs.put(nbfname, nbname, replace=True, kind='script.ipynb')
+    assert meta.name == f'{nbname}.ipynb'
+    assert meta.kind == 'script.ipynb'

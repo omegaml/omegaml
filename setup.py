@@ -1,7 +1,7 @@
 import glob
 import os
 
-from setuptools import setup, find_namespace_packages
+from setuptools import find_namespace_packages, setup
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 version = open(os.path.join(os.path.dirname(__file__), 'omegaml', 'VERSION')).readlines()[0]
@@ -12,10 +12,23 @@ graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
 dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
 jupyter_deps = ['jupyterlab<4.5.3', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
-mlflow_deps = ['mlflow-skinny>=1.2']
-tf_deps = ['tensorflow>2,<2.16']  # due to 2.16 dropping support for tf-estimators
-dev_deps = ['pytest', 'twine', 'flake8', 'mock', 'behave', 'splinter[selenium]', 'ipdb', 'bumpversion', 'pip-tools',
-            'pytest-instafail', 'tox']
+mlflow_deps = ['mlflow-skinny>=1.2;python_version>"3.11"', "skops"]
+tf_deps = ['tensorflow-cpu>2;python_version<"3.14"']  # due to https://github.com/tensorflow/tensorflow/issues/102890
+dev_deps = [
+    'pytest',
+    'twine',
+    'flake8',
+    'mock',
+    'behave',
+    'splinter[selenium]',
+    'ipdb',
+    'bumpversion',
+    'pip-tools',
+    'pytest-instafail',
+    'tox',
+    'tox-run-before',
+    'ruff',
+]
 # required to avoid backtracking (falling below some versions)
 backtracking_deps = [
     'json5>0.9',
@@ -29,6 +42,7 @@ backtracking_deps = [
     'asttokens>=2.4',
     'anyio>=3.7',
     'tomli>=2.0.0',
+    'ruff',
 ]
 # required based on github dependency advisories
 sec_deps = [
@@ -48,10 +62,11 @@ ai_dev_deps = [
     'torch',
     'transformers[torch]',
     'sentence-transformers',
+    'torchvision',  # due to transformers lazy, imported in TestCase.assertRaises
     'tf-keras',  # https://github.com/orgs/community/discussions/118713
 ]
 all_deps = (tables + graph_deps + dashserve_deps + jupyter_deps +
-            mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps)
+            mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps + ai_dev_deps)
 test_deps = all_deps + ai_dev_deps
 client_deps = (tables + dashserve_deps + graph_deps)
 install_deps = [
@@ -133,9 +148,9 @@ setup(
     extras_require={
         'all': all_deps,
         'client': client_deps,
-        'ai': ai_dev_deps + ai_inf_deps,
-        'ai-inf': ai_inf_deps,
-        'dev': dev_deps + test_deps,
+        'ai': ai_inf_deps + ai_dev_deps,
+        'dev': dev_deps,
+        'test': dev_deps + test_deps,
     },
     entry_points={
         'console_scripts': ['om=omegaml.client.cli:climain'],

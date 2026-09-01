@@ -6,7 +6,7 @@ from omegaml.tests.util import OmegaTestMixin, tf_in_eager_execution
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("tensorflow"), "tensorflow not available")
+@unittest.skipUnless(module_available("tensorflow", max='2.15'), "tensorflow not available")
 class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelBackend

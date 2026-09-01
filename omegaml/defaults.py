@@ -1,15 +1,14 @@
 from __future__ import absolute_import
 
-from os.path import basename
-from pathlib import Path
-
 import logging
 import os
 import shutil
 import sys
 import warnings
+from os.path import basename
+from pathlib import Path
 
-from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
+from omegaml.util import dict_merge, inprogress, markup, mlflow_available, tryOr
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
@@ -271,6 +270,8 @@ OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 OMEGA_EVENTS_STREAMER_URL = os.environ.get('OMEGA_EVENTS_STREAMER_URL', '/events/chat/completions')
 #: vector db
 OMEGA_VECTORDB_URL = os.environ.get('OMEGA_VECTORDB_URL', 'vector+mongodb://')
+#: show loading progress, defaults to True, set to '0' to disable
+OMEGA_SHOW_PROGRESS = truefalse(os.environ.get('OMEGA_SHOW_PROGRESS', '1'))
 
 
 # =========================================
@@ -344,7 +345,7 @@ def update_from_obj(obj, vars=globals(), attrs=None):
     get_k = lambda o, k: getattr(o, k) if as_attrs(o) else o[k]
     set_k = lambda o, k, v: setattr(o, k, v) if as_attrs(o) else o.__setitem__(k, v)
     set_default = lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k,
-                                                                                                         o.get(k) or d)
+        o.get(k) or d)
     # update any
     target = attrs or vars
     for k in [k for k in keys(obj) if k.isupper()]:
@@ -392,7 +393,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
         location of the config file or None if not found
     """
     try:
-        from appdirs import user_config_dir, site_config_dir
+        from appdirs import site_config_dir, user_config_dir
     except:
         # we don't have appdirs installed, this can happen during setup.py. fake it
         user_config_dir = lambda *args: os.path.expanduser('~/.config/omegaml')
@@ -464,7 +465,7 @@ def load_user_extensions(vars=globals()):
 def load_framework_support(vars=globals()):
     # load framework-specific backends
     # -- note we do this here to ensure this happens after config updates
-    from omegaml.util import tensorflow_available, keras_available, module_available
+    from omegaml.util import keras_available, module_available, tensorflow_available
 
     if OMEGA_DISABLE_FRAMEWORKS:
         return
@@ -476,15 +477,20 @@ def load_framework_support(vars=globals()):
         # -- # https://stackoverflow.com/a/38645250
         os.environ.setdefault('TF_USE_LEGACY_KERAS', "1")
         os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', "3")
+        os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', "0")
         if module_available('keras') and not os.environ.get("TF_USE_LEGACY_KERAS") == "1":
             warnings.warn('transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
                           ' https://github.com/huggingface/transformers/issues/34761 for details')
     if tensorflow_available(max='2.15', py_max='3.11'):
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = os.environ.get('TF_CPP_MIN_LOG_LEVEL') or '3'
+        os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', "3")
+        os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', "0")
         logging.getLogger('tensorflow').setLevel(logging.ERROR)
         vars['OMEGA_STORE_BACKENDS'].update(vars['OMEGA_STORE_BACKENDS_TENSORFLOW'])
+    #: load torch, transformers
+    if module_available('transformers', load=True):
+        pass  # this is just to load torch transformers after tensorflow
     #: openapi backend
     if module_available('openai'):
         if os.environ.get('ORT_LOGGING_LEVEL', 'ERROR') in ('3', '4', 'ERROR', 'test', 'FATAL'):

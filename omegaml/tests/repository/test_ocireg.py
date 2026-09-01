@@ -13,6 +13,9 @@ from omegaml.backends.repository.orasreg import OrasOciRegistry
 from omegaml.mixins.store.repository import RepositoryStorageMixin
 from omegaml.tests.util import OmegaTestMixin
 
+import torch
+from sentence_transformers import CrossEncoder
+
 
 @skipUnless(shutil.which('oras') is not None, "oras executable cannot be found on PATH")
 class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
@@ -257,8 +260,6 @@ class TestOCIRegistryBackend(OmegaTestMixin, TestCase):
         self.assertIsInstance(model, LinearRegression)
 
     def test_transformer_repo(self):
-        import torch
-        from sentence_transformers import CrossEncoder
         model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2", activation_fn=torch.nn.Sigmoid())
 
         from omegaml.backends.virtualobj import virtualobj

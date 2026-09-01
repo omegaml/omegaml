@@ -1,6 +1,8 @@
-from behave import when, then
-from omegaml.tests.features.util import Notebook, jburl
 from time import sleep
+
+from behave import then, when
+
+from omegaml.tests.features.util import Notebook, jburl
 
 
 @when(u'we open jupyter')
@@ -57,7 +59,12 @@ def list_datasets(ctx):
     nb = Notebook(br)
     nb.last_notebook
     code = """
-    import omegaml as om
+    import omegaml as om 
+    om.setup()
+    """.strip()
+    nb.new_cell_exec(code)
+    sleep(60)
+    code = """
     om.datasets.put(['sample'], 'sample', append=False)
     om.datasets.list('sample')
     """.strip()

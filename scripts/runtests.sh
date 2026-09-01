@@ -44,7 +44,7 @@
 ##
 ##    image       the account/image:tag
 ##    test-spec   the names of the tests passed to make install (via TESTS variable)
-##    extras      the packages [extras] to be installed, optional, defaults to [dev]
+##    extras      the packages [extras] to be installed, optional, defaults to [dev,test]
 ##    pipreq      additional pip requirements, optional
 ##    pipopts     additional pip options, optional
 ##    dockeropts  additional docker run options to create the container
@@ -136,7 +136,7 @@ function runimage() {
   test_logtar=$test_logbase/$(dirname $image)_$(basename $image)_$test_label.tgz
   # start test container
   mkdir -p $test_logdir
-  extras=${extras:-dev}
+  extras=${extras:-"dev,test"}
   pipreq=${pipreq:-pip}
   docker rm -f omegaml-test
   if [[ -z $verbose ]]; then
@@ -164,7 +164,7 @@ function runimage() {
              -e RUNTESTS=yes \
              -e GRANT_SUDO=yes \
              -e TESTS="$tests" \
-             -e EXTRAS="dev,$extras" \
+             -e EXTRAS="dev,test$extras" \
              -e PIPREQ="$pipreq" \
              -e PIPOPTS="$pipopts" \
              -v $sources_dir:$test_base \

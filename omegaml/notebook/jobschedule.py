@@ -1,3 +1,4 @@
+import cron_descriptor
 import datetime
 from celery.schedules import crontab
 from croniter import croniter
@@ -49,7 +50,12 @@ class JobSchedule(object):
 
     Raises:
         ValueError if the given specification is not correct
+
+    .. versionchanged:: NEXT
+        the .text property returns times in 24-hour format. Use JobSchedule.cron_descriptor_options to change format.
     """
+    # default cron descriptor options
+    cron_descriptor_options = cron_descriptor.Options(use_24hour_time_format=True)
 
     def __init__(self, text=None, minute='*', hour='*', weekday='*',
                  monthday='*', month='*', at=None):
@@ -115,9 +121,12 @@ class JobSchedule(object):
 
     @property
     def text(self):
-        """ return the human readable representation of the schedule """
-        from cron_descriptor import get_description
-        return get_description(self.cron)
+        """ return the human readable representation of the schedule
+
+        .. versionchanged:: NEXT
+            use JobSchedule.cron_descriptor_options to change format, see https://pypi.org/project/cron-descriptor/
+        """
+        return cron_descriptor.get_description(self.cron, self.cron_descriptor_options)
 
     def next_times(self, n=None, last_run=None):
         """ return the n next times of this schedule, staring from the last run
