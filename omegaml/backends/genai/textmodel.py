@@ -476,6 +476,9 @@ class TextModel(GenAIModel):
         transformed = (d.get('embedding', d) for d in response.get('data', response))
         return response if raw else list(transformed)
 
+	def generate(self, prompt, raw=False):
+        return self.complete(prompt, raw=raw)
+
     def complete(
         self,
         prompt,

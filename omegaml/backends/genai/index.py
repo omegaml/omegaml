@@ -336,7 +336,8 @@ class DocumentLoader:
         for fn in files:
             result = self.md.convert(fn)
             document = result.text_content
-            yield document, dict(source=fn)
+            # return document tuple (contents, attributes)
+            yield document, dict(source=str(fn))
 
     def _from_url(self, path):
         result = self.md.convert(path)
