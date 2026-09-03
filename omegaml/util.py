@@ -1356,6 +1356,8 @@ def inprogress(text="running {fn}", **__kwargs):
                 warnings.simplefilter("ignore", append=True)
                 return fn(*args, **kwargs)
 
+        wrapper.__name__ = fn.__name__
+        inprogress.__name__ = fn.__name__
         return wrapper
 
     return decorator

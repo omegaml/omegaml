@@ -397,6 +397,11 @@ class _DillDip:
         return self.loads(filelike.read())
 
 
+def tool(fn):
+    setattr(fn, '_omega_virtual', True)
+    return fn
+
+
 dilldip = _DillDip()
 # enable recursive tracing of globals
 # -- fixes https://github.com/uqfoundation/dill/issues/255
