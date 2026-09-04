@@ -22,9 +22,11 @@ class ConversationReplay:
         if isinstance(target, EventAgent):
             self.model = target._model
             target._model = self
-        if isinstance(target, ConversationModel):
+        elif isinstance(target, ConversationModel):
             self.model = target
             target.provider = self.as_provider()
+        else:
+            raise ValueError(f'expected {target=} type in (EventAgent,ConversationModel), got {type(target)}')
 
     def add(self, prompt, response=None, messages=None, tool_calls=None):
         """add a prompt and its response to the list of replayable messages

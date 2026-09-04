@@ -4,6 +4,7 @@ import platform
 import warnings
 from base64 import b64decode, b64encode
 from collections.abc import Iterable
+from copy import deepcopy
 from datetime import date
 from itertools import chain
 from uuid import uuid4
@@ -512,7 +513,8 @@ class OmegaSimpleTracker(TrackingProvider):
         filter = self._build_data_filter(experiment, run, event, step, key, since, end, extra)
 
         def read_data(cursor):
-            data = pd.DataFrame.from_records(cursor)
+            # remove mongodb weakly referenced objects
+            data = pd.DataFrame.from_records(deepcopy(data) for data in cursor)
             if 'dt' in data.columns:
                 data['dt'] = pd.to_datetime(data['dt'], errors='coerce')
                 data.sort_values('dt', inplace=True)
