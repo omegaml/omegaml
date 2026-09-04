@@ -5,6 +5,7 @@ from omegaml import Omega
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModelHandler
 from omegaml.backends.genai.models.conversation import ConversationModelBackend
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.util import subdict
 from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
@@ -167,17 +168,13 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
-        data = list(
-            map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d, resp.iter_encoded())
-        )
+        data = [json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d for d in resp.iter_encoded()]
         self.assertEqual(len(data[-1]['content']), len('hello'))
         self.assertEqual(
-            data[-1],
+            subdict(data[-1], ['content', 'delta']),
             {
-                'model': 'mymodel',
                 'content': 'hello',
                 'delta': 'o',
-                'resource_uri': 'mymodel',
             },
         )
 

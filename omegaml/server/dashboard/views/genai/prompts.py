@@ -29,7 +29,7 @@ class AIPromptsView(AIRepositoryView):
     def context_data(self, **kwargs):
         context = super().context_data()
         context.update({
-            'availableModels': self.om.models.list('llms/*', kind=['genai.text', 'genai.llm']),
+            'availableModels': self.om.models.list('llms/*'),
             'availableDocuments': self.om.datasets.list(kind='pgvector.conx'),
             'availableTools': self.om.models.list('tools/*'),
             'availablePipelines': self.om.models.list('pipelines/*'),
@@ -42,8 +42,7 @@ class AIPromptsView(AIRepositoryView):
             lambda m: m.name.startswith('_'),
             lambda m: m.name.startswith('experiments/'),
         )
-        kind = ['genai.text', 'genai.llm']
-        items = [m for m in self.store.list('prompts/*', kind=kind, raw=True) if not any(e(m) for e in excludes)]
+        items = [m for m in self.store.list('prompts/*', raw=True) if not any(e(m) for e in excludes)]
         return items
 
     @fv.route('/{self.segment}/new')

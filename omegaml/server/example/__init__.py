@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-from omegaml import settings
+from omegaml import settings as settings
 from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import clear_om
+from omegaml.tests.util import clear_om as clear_om
 
 
 def create_testdata(om):
@@ -55,12 +55,12 @@ def create_ai_testdata(om):
     om.models.put('openai+http://localhost:11434/v1;model=tinyllama:latest', 'llms/mymodel')
 
 
-if __name__ == '__main__':
+def create_all_testdata():
     import omegaml as om
 
     om._base_config.OMEGA_LOCAL_RUNTIME = True
     settings(reload=True)
     om = om.setup()
     clear_om(om)
-    # create_testdata(om)
+    create_testdata(om)
     create_ai_testdata(om)

@@ -3,10 +3,11 @@ from uuid import uuid4
 from jinja2.sandbox import SandboxedEnvironment
 
 from omegaml.backends.genai.retrieval.index import DocumentIndex
+from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 from omegaml.util import utcnow
 
 
-class AugmentationMixin:
+class AugmentationMixin(ConversationModelMixinBase):
     @property
     def _default_template(self):
         return """
